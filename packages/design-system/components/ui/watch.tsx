@@ -1,5 +1,3 @@
-"use client";
-
 import { watch } from "@repo/design-system/lib/watch";
 import { type ReactNode, useEffect, useRef } from "react";
 

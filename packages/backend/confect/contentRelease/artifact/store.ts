@@ -1,4 +1,3 @@
-import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import {
   DatabaseReader,
@@ -8,6 +7,7 @@ import { loadArtifactFacts } from "@repo/backend/confect/contentRelease/artifact
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import type { SignedArtifactHeader } from "@repo/backend/confect/contentRelease/parse";
 import { Effect } from "effect";
 
 /**
@@ -20,7 +20,7 @@ import { Effect } from "effect";
 export const storeContentArtifact = Effect.fn(
   "contentRelease.storeContentArtifact"
 )(function* (
-  artifact: SignedContentArtifact,
+  artifact: SignedArtifactHeader,
   artifactJson: string,
   retainUntil: number
 ) {

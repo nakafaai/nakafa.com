@@ -1,5 +1,3 @@
-"use client";
-
 import type { AreaAnimationType } from "@repo/design-system/components/evilcharts/charts/area/paint";
 import {
   type ChartBrushOptions,

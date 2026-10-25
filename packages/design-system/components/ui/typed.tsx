@@ -1,5 +1,3 @@
-"use client";
-
 import { useReducedMotion } from "@mantine/hooks";
 import { animate } from "motion";
 import { useMotionValue, useMotionValueEvent } from "motion/react";

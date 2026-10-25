@@ -2,6 +2,10 @@
   "name": "@repo/analytics",
   "version": "0.1.2",
   "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*.ts"
+  },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "test": "vitest run",
@@ -9,10 +13,10 @@
   },
   "dependencies": {
     "@repo/utilities": "workspace:*",
+    "@tanstack/react-start": "1.169.3",
     "effect": "catalog:",
     "posthog-js": "1.438.12",
-    "posthog-node": "^5.56.2",
-    "server-only": "catalog:"
+    "posthog-node": "^5.56.2"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

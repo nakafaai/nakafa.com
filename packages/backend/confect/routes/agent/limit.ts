@@ -33,7 +33,7 @@ export const enforceAgentReadLimit = Effect.fn("agent.enforceReadLimit")(
   }
 );
 
-/** Derives a pseudonymous quota key from the trusted Vercel client address. */
+/** Derives a pseudonymous quota key from the client address that the edge Worker sets from Cloudflare. */
 const readClientKey = Effect.fn("agent.readClientKey")(function* (
   request: Request
 ) {

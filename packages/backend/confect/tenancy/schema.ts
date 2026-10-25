@@ -1,6 +1,7 @@
 import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { TenantPolicies } from "@repo/backend/confect/tenancy/policy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -21,21 +22,32 @@ export const Email = Schema.String.check(
  * in the subject of its invitation email, where a line break would end the
  * header.
  */
+/**
+ * A school's name as its tenant holds it: one line of two to 120 characters. A school
+ * that holds a two-character name keeps it, so reads never refuse a stored school.
+ */
 export const TenantName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
   Schema.isMinLength(2),
   Schema.isMaxLength(120)
 );
+/** A name a school is given or renamed to: at least three characters, on one line. */
+export const SchoolName = TenantName.check(Schema.isMinLength(3));
 export const TenantKind = Schema.Literals(["school", "foundation"]);
 /** A suspended tenant stays readable and refuses every write. */
 export const TenantStatus = Schema.Literals(["active", "suspended"]);
 
+/**
+ * A unit's name. A school with one level names its unit after the school, which
+ * runs to 120 characters, and a school with more levels adds a level label to
+ * that name, so the limit holds both.
+ */
 export const UnitName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
   Schema.isMinLength(1),
-  Schema.isMaxLength(80)
+  Schema.isMaxLength(160)
 );
 export const UnitLevel = Schema.Literals([
   "paud",
@@ -83,6 +95,11 @@ export const ClaimMethod = Schema.Literals([
  * `break-glass` removes an unclaimed Owner and invites a replacement.
  */
 export const PersonReason = Schema.Literals(["break-glass"]);
+/**
+ * The roles that one invite gives at once: a teacher, or an Admin, whom only an
+ * Owner may name (`authorizeOwnerRole`).
+ */
+export const InvitedRole = BuiltinRole.pick(["admin", "teacher"]);
 
 /** Binds a Person to at most one Nakafa account. */
 export const Account = Schema.Union([
@@ -179,9 +196,11 @@ export const TenantSettings = tenantValidator.mapFields(
 export const tenantSettings = (tenant: typeof tenantValidator.Type) =>
   Struct.pick(tenant, Struct.keys(TenantSettings.fields));
 /**
- * The fields of a unit that its school sets: the language of its content and
- * the time zone of its clocks. The language of the interface is not stored; it
- * follows the learner's `NEXT_LOCALE` cookie (ADR 0032).
+ * The fields of a unit that its school sets: the default language of the school's
+ * pages and the time zone of its clocks. The language of the interface is not
+ * stored; it follows the learner's `NAKAFA_LOCALE` cookie (ADR 0032). The stored
+ * name `contentLanguage` stays: the `unit.locale.set` journal entries hold it, so a
+ * rename would have to keep both names readable in the journal.
  */
 export const unitFields = {
   contentLanguage: AppLocaleCodeSchema,

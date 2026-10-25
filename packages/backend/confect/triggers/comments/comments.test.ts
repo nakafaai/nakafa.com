@@ -48,9 +48,6 @@ describe("triggers/comments/comments", () => {
           text: `Reply ${index}`,
           parentId,
           replyToUserId: author.userId,
-          replyToText: "Parent",
-          upvoteCount: 0,
-          downvoteCount: 0,
           replyCount: 0,
         });
       }
@@ -160,8 +157,6 @@ describe("triggers/comments/comments", () => {
           slug,
           text: `Reply ${index}`,
           threadId: rootId,
-          upvoteCount: 0,
-          downvoteCount: 0,
           userId: author.userId,
         });
         await ctx.db.insert("commentLikes", {

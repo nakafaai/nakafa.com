@@ -1,5 +1,7 @@
 # ADR 0001: Native Agent conversations with Confect domain operations
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+
 ## Status
 
 Accepted architecture for Nina and learning engagement.
@@ -458,7 +460,7 @@ space, is one sentence to the segmenter, so a cut in it falls back to the end
 of a paragraph, a line, or a word.
 
 Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
-`NEXT_PUBLIC_CAS_URL`. The CAS key must match the
+`MATH_CAS_URL`. The CAS key must match the
 production CAS service, and its URL is `https://cas.nakafa.com`. These are
 backend action configuration, not Next.js environment inputs. Resolve CAS
 configuration before asking the math specialist to generate tool calls, so a

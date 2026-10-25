@@ -5,7 +5,7 @@ from sympy.stats import Bernoulli, Binomial, E, Normal, P, Poisson, Uniform, var
 
 from cas import parse
 from cas.format import expression_text, item, result, step
-from cas.schema import MathRequest, MathResult
+from cas.schema import MAX_BINOMIAL_TRIALS, MAX_POISSON_BOUND, MathRequest, MathResult
 
 EQUALS = expression_text("equals", "=")
 
@@ -141,7 +141,7 @@ def _cumulative_probability(
     request: MathRequest, distribution: sp.Basic, variable: sp.Symbol
 ) -> MathResult:
     """Compute the probability that a random variable is below an upper bound."""
-    upper = parse.expression(request.upper)
+    upper = _event_bound(request, request.upper)
     inclusive = _inclusive(request.inclusive)
     output = P(_upper_event(distribution, upper, inclusive))
     relation = _upper_relation(inclusive)
@@ -173,8 +173,8 @@ def _interval_probability(
     request: MathRequest, distribution: sp.Basic, variable: sp.Symbol
 ) -> MathResult:
     """Compute the probability that a random variable falls between two bounds."""
-    lower = parse.expression(request.lower)
-    upper = parse.expression(request.upper)
+    lower = _event_bound(request, request.lower)
+    upper = _event_bound(request, request.upper)
     lower_inclusive = _inclusive(request.lowerInclusive)
     upper_inclusive = _inclusive(request.upperInclusive)
     output = P(
@@ -215,7 +215,7 @@ def _point_probability(
     request: MathRequest, distribution: sp.Basic, variable: sp.Symbol
 ) -> MathResult:
     """Compute the probability that a random variable equals one value."""
-    point = parse.expression(request.point)
+    point = _event_bound(request, request.point)
     output = P(sp.Eq(distribution, point))
     primary = expression_text(
         f"P({variable} = {point})",
@@ -245,7 +245,7 @@ def _tail_probability(
     request: MathRequest, distribution: sp.Basic, variable: sp.Symbol
 ) -> MathResult:
     """Compute the probability that a random variable is above a lower bound."""
-    lower = parse.expression(request.lower)
+    lower = _event_bound(request, request.lower)
     inclusive = _inclusive(request.inclusive)
     output = P(_lower_event(distribution, lower, inclusive))
     relation = _lower_relation(inclusive)
@@ -329,7 +329,7 @@ def _distribution(request: MathRequest, variable: sp.Symbol) -> sp.Basic:
     if name == "binomial":
         return Binomial(
             str(variable),
-            parse.expression(_parameter(name, parameters, "n")),
+            _binomial_trials(_parameter(name, parameters, "n")),
             parse.expression(_parameter(name, parameters, "p")),
         )
     if name == "normal":
@@ -350,6 +350,28 @@ def _distribution(request: MathRequest, variable: sp.Symbol) -> sp.Basic:
         )
 
     raise ValueError(f"Unsupported distribution: {name}")
+
+
+def _event_bound(request: MathRequest, value: str | None) -> sp.Expr:
+    """Parse a bound of an event. SymPy sums a Poisson event term by term."""
+    bound = parse.expression(value)
+    if (
+        request.distribution == "poisson"
+        and bound.is_integer is True
+        and abs(bound) > MAX_POISSON_BOUND
+    ):
+        raise ValueError(f"Poisson event bounds may be at most {MAX_POISSON_BOUND}.")
+
+    return bound
+
+
+def _binomial_trials(value: str) -> sp.Expr:
+    """Parse the trial count, because SymPy sums the binomial terms one by one."""
+    trials = parse.expression(value)
+    if trials.is_integer is True and trials > MAX_BINOMIAL_TRIALS:
+        raise ValueError(f"Binomial trials may be at most {MAX_BINOMIAL_TRIALS}.")
+
+    return trials
 
 
 def _parameter(distribution: str, parameters: dict[str, str], name: str) -> str:

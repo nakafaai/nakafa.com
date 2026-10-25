@@ -81,8 +81,40 @@ const setPolicy = FunctionImpl.make(
   })
 );
 
+/**
+ * Renames the school. The name is one line of three to 120 characters, and the
+ * change is journaled. The name that is already stored writes and records
+ * nothing, and the answer is the name stored.
+ */
+const setName = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "setName",
+  Effect.fn("tenancy.settings.setName")(function* ({ name }) {
+    const { person, tenant } = yield* Member;
+    if (tenant.name === name) {
+      return name;
+    }
+    yield* (yield* DatabaseWriter)
+      .table("tenants")
+      .replace(
+        tenant._id,
+        Struct.assign(Struct.omit(tenant, ["_creationTime", "_id"]), {
+          name,
+        })
+      )
+      .pipe(Effect.orDie);
+    yield* tenantAuthority.record(personActor(person), tenant, {
+      name,
+      type: "tenant.name.set",
+    });
+    return name;
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(setLocale),
+  Layer.provide(setName),
   Layer.provide(setPolicy),
   Layer.provide(session),
   Layer.provide(member),

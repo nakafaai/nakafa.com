@@ -7,6 +7,7 @@ import {
 } from "@/e2e/support/fonts";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { settleRouter } from "@/e2e/support/navigation/settle";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
 import { appRoutes } from "@/e2e/support/route";
@@ -23,14 +24,8 @@ const verifyQuranTypefaceScope = Effect.fn(
   const warnings = yield* collectUnusedPreloads(
     page,
     Effect.gen(function* () {
-      // The desktop sidebar links to the Quran, so this page prefetches its
-      // route; the prefetch must not preload the Quran typeface here.
-      const quranPrefetch = page.waitForRequest(
-        (request) =>
-          new URL(request.url()).pathname === appRoutes.quran &&
-          request.headers()["next-router-prefetch"] !== undefined,
-        { timeout: readinessTimeoutMilliseconds }
-      );
+      // The desktop sidebar links to the Quran. Intent over that link preloads
+      // the Quran route, and the preload must not load the Quran typeface here.
       const href = appRoutes.tryout;
       yield* Effect.promise(() =>
         page.goto(href, { waitUntil: "domcontentloaded" })
@@ -41,7 +36,13 @@ const verifyQuranTypefaceScope = Effect.fn(
         href,
         readinessTimeoutMilliseconds
       );
-      yield* Effect.promise(() => quranPrefetch);
+      const quranLink = page
+        .locator(`a[href="${appRoutes.quran}"]:visible`)
+        .first();
+      yield* settleRouter(
+        page,
+        Effect.promise(() => quranLink.hover())
+      );
       yield* Effect.promise(() => page.waitForLoadState("networkidle"));
     })
   );
@@ -85,7 +86,7 @@ const readQuranTextFonts = Effect.fn("NakafaE2E.readQuranTextFonts")(function* (
 });
 
 /**
- * A surah page renders Quran text, so next/font preloads the Quran typeface
+ * A surah page renders Quran text, so the font loader preloads the Quran typeface
  * there: the Arabic subset for the words and the Latin subset for the spaces
  * between them. The next surah view draws its text in the cached typeface.
  */

@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { parseSources } from "#scripts/check/source";
 
-const VIEW = "apps/www/components/example.tsx";
+const VIEW = "apps/www/src/components/example.tsx";
 
 /** Inspects one TSX module with the React policy alone. */
 function inspect(sourceText: string, file = VIEW) {
@@ -126,7 +126,7 @@ declare function declared(): void;`);
     Effect.gen(function* () {
       const violations = yield* inspect(
         "export function build() { const render = () => null; return render; }",
-        "apps/www/lib/example.ts"
+        "apps/www/src/lib/example.ts"
       );
       assert.deepStrictEqual(violations, []);
     })
@@ -168,7 +168,7 @@ export const Theme = createContext("light");`);
     "rejects useContext and module-level stores in every import form",
     () =>
       Effect.gen(function* () {
-        const file = "apps/www/lib/theme.ts";
+        const file = "apps/www/src/lib/theme.ts";
         const violations = yield* inspectState(
           `
 import React, { useContext as read } from "react";

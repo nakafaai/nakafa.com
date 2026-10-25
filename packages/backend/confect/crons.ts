@@ -9,6 +9,7 @@ import { SWEEP_INTERVAL } from "@repo/backend/confect/nina/deadline";
 import { Cron, Duration } from "effect";
 
 const { internal } = refs;
+const BILLING_EVENT_CLEANUP_INTERVAL_HOURS = 24;
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
@@ -23,6 +24,14 @@ const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
  * never starts.
  */
 export default CronJobs.make()
+  .add(
+    CronJob.make(
+      "delete expired billing webhooks",
+      Duration.hours(BILLING_EVENT_CLEANUP_INTERVAL_HOURS),
+      internal.billing.events.cleanup,
+      {}
+    )
+  )
   .add(
     CronJob.make(
       "reclaim unused Nina files",

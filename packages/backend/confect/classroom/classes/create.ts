@@ -1,4 +1,3 @@
-import type { GenericId } from "@confect/core";
 import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -14,6 +13,7 @@ import {
   classSubjectKey,
   classView,
 } from "@repo/backend/confect/classroom/class";
+import { freeAddress } from "@repo/backend/confect/classroom/classes/address";
 import spec from "@repo/backend/confect/classroom/classes.spec";
 import {
   ClassAddressEmpty,
@@ -23,40 +23,11 @@ import {
   ClassSubjectRequired,
   ClassSubjectTaken,
 } from "@repo/backend/confect/classroom/errors";
+import { insertGeneral } from "@repo/backend/confect/classroom/forum/general";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Cohort } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Clock, Effect, Option } from "effect";
-
-/** Whether another class of the period already uses this address. */
-const addressTaken = Effect.fnUntraced(function* (
-  periodId: GenericId.GenericId<"tenantPeriods">,
-  slug: string
-) {
-  return yield* (yield* DatabaseReader)
-    .table("classes")
-    .index("by_periodId_and_slug", (query) =>
-      query.eq("periodId", periodId).eq("slug", slug)
-    )
-    .first()
-    .pipe(Effect.map(Option.isSome), Effect.orDie);
-});
-
-/**
- * The first address from the base that no class of the period holds: the base,
- * then the base with -2, -3, and so on. Each step is one indexed read, and the
- * walk ends at the first free address, so it visits only the taken ones.
- */
-const freeAddress = (
-  periodId: GenericId.GenericId<"tenantPeriods">,
-  base: string,
-  suffix: number
-): Effect.Effect<string, never, DatabaseReader> => {
-  const slug = suffix === 1 ? base : `${base}-${suffix}`;
-  return Effect.flatMap(addressTaken(periodId, slug), (taken) =>
-    taken ? freeAddress(periodId, base, suffix + 1) : Effect.succeed(slug)
-  );
-};
 
 /**
  * Creates an active class of a cohort, named for its subject and its cohort. An
@@ -64,7 +35,10 @@ const freeAddress = (
  * cohort holds classes that name a subject. An active class of the cohort may not
  * have the same name or the same subject, and a cohort holds at most CLASS_LIMIT
  * classes, archived ones included. The address is the name's letters and digits,
- * unique within the period.
+ * with a number after it when a class of the period, or of another unit that no
+ * archive locks, already holds it, so an address names one live class of the school.
+ * The class's general channel is written in the same transaction, so every class has
+ * one from its creation.
  */
 export const create = FunctionImpl.make(
   databaseSchema,
@@ -128,7 +102,7 @@ export const create = FunctionImpl.make(
     if (base === "") {
       return yield* new ClassAddressEmpty();
     }
-    const slug = yield* freeAddress(cohort.periodId, base, 1);
+    const slug = yield* freeAddress(cohort, base);
     const now = yield* Clock.currentTimeMillis;
     const classId = yield* (yield* DatabaseWriter)
       .table("classes")
@@ -147,6 +121,7 @@ export const create = FunctionImpl.make(
         ...(subject === undefined ? {} : { subject }),
       })
       .pipe(Effect.orDie);
+    yield* insertGeneral(classId, cohort.tenantId, now);
     const created = yield* reader
       .table("classes")
       .get(classId)

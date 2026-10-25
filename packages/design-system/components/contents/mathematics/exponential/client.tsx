@@ -1,5 +1,3 @@
-"use client";
-
 import { type ComponentProps, lazy, Suspense } from "react";
 
 const Plot = lazy(() =>

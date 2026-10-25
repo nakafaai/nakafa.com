@@ -1,0 +1,22 @@
+import type { ReactNode } from "react";
+import { AiContextProvider } from "@/components/ai/context";
+import { ContentViewsProvider } from "@/lib/content/views/context";
+import { SearchContextProvider } from "@/lib/search/context";
+
+/**
+ * Mounts shared feature-state providers for the marketing, main, and tryout
+ * route groups.
+ *
+ * These stores are intentionally scoped below the app-wide runtime providers so
+ * `auth` stays free of unrelated search, AI, and content view state.
+ *
+ */
+export function SharedProviders({ children }: { children: ReactNode }) {
+  return (
+    <SearchContextProvider>
+      <ContentViewsProvider>
+        <AiContextProvider>{children}</AiContextProvider>
+      </ContentViewsProvider>
+    </SearchContextProvider>
+  );
+}

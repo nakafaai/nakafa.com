@@ -2,7 +2,7 @@ import { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/anal
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
-  discardSignedResponses,
+  ACCEPTANCE_ORIGIN,
   initializeLocalRuntime,
   leaseReservedLocalRuntime,
   localApplicationEnvironment,
@@ -44,11 +44,26 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  * checks first, which prove nothing about the built app, and every browser
  * suite run would repeat what the local verification already runs on the same
  * commit.
+ *
+ * The start serves the build through Vite's preview server, which runs the Worker
+ * in workerd (the Alchemy plugin of apps/www/vite.config.ts). The served app takes
+ * the port that the browser suites open. `--strictPort` fails an occupied port
+ * instead of moving to another, and Portless stays out of acceptance.
  * @see https://man7.org/linux/man-pages/man1/nice.1.html
  */
 const applicationCommands = {
   build: ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"],
-  start: ["pnpm", "run", "start"],
+  start: [
+    "pnpm",
+    "--dir",
+    "apps/www",
+    "exec",
+    "vite",
+    "preview",
+    "--strictPort",
+    "--port",
+    new URL(ACCEPTANCE_ORIGIN).port,
+  ],
 } as const;
 
 /** Starts only the owned native database for a normal app build or start. */
@@ -64,18 +79,14 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
     );
   }
   const runtime = reserved.value;
+  const environment = localApplicationEnvironment(runtime);
   const command = runBuildCommand(
     root,
     [...applicationCommands[operation], ...args],
-    localApplicationEnvironment(runtime)
+    environment
   );
   if (operation === "build") {
-    // The cache is cleared once the backend is ready, right before the build
-    // reads it, so nothing written while the backend started can survive.
-    return yield* withLocalBackend(
-      runtime,
-      discardSignedResponses(root).pipe(Effect.andThen(command))
-    );
+    return yield* withLocalBackend(runtime, command);
   }
   // The served app proxies analytics to the stand-in reserved at prepare. It
   // claims its port first, so an occupied port fails before Convex starts.

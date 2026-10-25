@@ -68,6 +68,7 @@ export const sittingKind = Kind.make("sitting", "examSittings", {
       type: Schema.Literal("sitting.finish"),
     }),
     Schema.Struct({ type: Schema.Literal("sitting.close") }),
+    Schema.Struct({ type: Schema.Literal("sitting.cancel") }),
   ],
   published: [],
   relations: ["examAuthor"],

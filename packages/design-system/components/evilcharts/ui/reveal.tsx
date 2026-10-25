@@ -1,5 +1,3 @@
-"use client";
-
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import { m } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";

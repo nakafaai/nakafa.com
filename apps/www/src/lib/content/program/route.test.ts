@@ -1,0 +1,291 @@
+// @vitest-environment node
+
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { createTestPublication } from "@repo/backend/test/content/publication";
+import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
+import { Array as Arr, Effect, Layer } from "effect";
+import { readPublishedProgramRoute } from "@/lib/content/program/route";
+import { activateTestRelease } from "@/test/active";
+import { previewIdProjection, previewProjection } from "@/test/content-preview";
+import {
+  readTestPublishedRoute,
+  testCurriculumRowJson,
+  testProgramClass,
+  testProgramContexts,
+  testProgramGroups,
+  testProgramRowJson,
+  testProgramSubject,
+} from "@/test/content-program";
+import { resetTestRuntimeCache } from "@/test/store";
+
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const revision = "a".repeat(40);
+
+/** Builds one complete route-model response from real Merdeka rows. */
+function routeResponse(overrides?: {
+  readonly managed?: boolean;
+  readonly materialJson?: readonly string[];
+  readonly programJson?: null | string;
+  readonly routeJson?: null | string;
+}) {
+  return {
+    activeManifestHash: `sha256:${"b".repeat(64)}`,
+    activeReleaseId: "program-release",
+    alternateJson: [
+      testCurriculumRowJson(testProgramSubject),
+      testCurriculumRowJson(
+        readTestPublishedRoute("kurikulum/merdeka/kelas-11/matematika", "id")
+      ),
+      testCurriculumRowJson(
+        readTestPublishedRoute("lehrplaene/merdeka/klasse-11/mathematik", "de")
+      ),
+    ],
+    ancestorJson: [
+      testCurriculumRowJson(readTestPublishedRoute("curriculum/merdeka")),
+      testCurriculumRowJson(testProgramClass),
+    ],
+    childJson: [],
+    contextJson: Arr.map(testProgramContexts, testCurriculumRowJson),
+    groupJson: Arr.map(testProgramGroups, testCurriculumRowJson),
+    managed: overrides?.managed ?? true,
+    materialJson: overrides?.materialJson ?? [
+      canonicalizeMaterialProjection(previewProjection),
+    ],
+    programJson:
+      overrides?.programJson === undefined
+        ? testProgramRowJson()
+        : overrides.programJson,
+    routeJson:
+      overrides?.routeJson === undefined
+        ? testCurriculumRowJson(testProgramSubject)
+        : overrides.routeJson,
+    snapshotId: `sha256:${"c".repeat(64)}`,
+    sourceRevision: revision,
+  };
+}
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+describe("published program route", () => {
+  beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease("program-release");
+    runtimeQueryMock.mockReset();
+  });
+  it.effect("reaches Convex once for each route of each release", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValue(Effect.succeed(routeResponse()));
+      const path = testProgramSubject.publicPath;
+
+      yield* readPublishedProgramRoute("en", path);
+      yield* readPublishedProgramRoute("en", path);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+
+      // The response does not describe another path, so that read fails its
+      // checks; it still has to reach Convex.
+      yield* readPublishedProgramRoute("en", `${path}/other`).pipe(
+        Effect.ignore
+      );
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+      activateTestRelease("program-release-next");
+      yield* readPublishedProgramRoute("en", path);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(3);
+    })
+  );
+  it.effect(
+    "reads signed curriculum models and preserves managed absence",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeProgramRuntimeSource();
+        const context = yield* createTestPublication(fixture.source);
+        runtimeQueryMock.mockImplementation(context.query);
+        const model = yield* readPublishedProgramRoute(
+          "en",
+          "curriculum/technical-program-1"
+        );
+        expect(model).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          program: {
+            key: "technical-program-1",
+          },
+          route: {
+            title: "Technical Program 1",
+          },
+        });
+        expect(
+          yield* readPublishedProgramRoute("en", "curriculum/missing-program")
+        ).toMatchObject({
+          activeReleaseId: fixture.state.activeReleaseId,
+          program: null,
+          route: null,
+        });
+      })
+  );
+  it("fails fast when a test route is not part of the signed fixture", () => {
+    expect(() => readTestPublishedRoute("curriculum/missing")).toThrow(
+      "Missing published route fixture: en/curriculum/missing"
+    );
+  });
+  it.effect("decodes one complete real curriculum route model", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(routeResponse()));
+      const model = yield* readPublishedProgramRoute(
+        "en",
+        testProgramSubject.publicPath
+      );
+      expect(model).toMatchObject({
+        activeReleaseId: "program-release",
+        alternates: [
+          {
+            appLocale: "en",
+          },
+          {
+            appLocale: "id",
+          },
+          {
+            appLocale: "de",
+          },
+        ],
+        ancestors: [
+          {
+            level: "track",
+          },
+          {
+            level: "class",
+          },
+        ],
+        contexts: expect.any(Array),
+        groups: expect.any(Array),
+        materials: [
+          {
+            metadata: {
+              title: "Function Concept",
+            },
+          },
+        ],
+        program: {
+          key: "merdeka",
+        },
+        route: {
+          publicPath: testProgramSubject.publicPath,
+        },
+        sourceRevision: revision,
+      });
+    })
+  );
+  it.effect("rejects an unmanaged family", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed(
+          routeResponse({
+            managed: false,
+            materialJson: [],
+            programJson: null,
+            routeJson: null,
+          })
+        )
+      );
+      const failure = yield* readPublishedProgramRoute(
+        "en",
+        testProgramSubject.publicPath
+      ).pipe(Effect.flip);
+      expect(failure).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
+    })
+  );
+  it.effect("distinguishes a managed missing route", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed(
+          routeResponse({
+            materialJson: [],
+            programJson: null,
+            routeJson: null,
+          })
+        )
+      );
+      const model = yield* readPublishedProgramRoute(
+        "en",
+        "curriculum/missing"
+      );
+      expect(model).toMatchObject({
+        activeReleaseId: "program-release",
+        program: null,
+        route: null,
+        sourceRevision: revision,
+      });
+    })
+  );
+  it.effect.each([
+    [
+      "invalid active release",
+      {
+        ...routeResponse(),
+        activeReleaseId: "invalid release",
+      },
+    ],
+    [
+      "managed route without an active release",
+      {
+        ...routeResponse(),
+        activeReleaseId: null,
+      },
+    ],
+    [
+      "missing program",
+      routeResponse({
+        programJson: null,
+      }),
+    ],
+    [
+      "mismatched route",
+      routeResponse({
+        routeJson: testCurriculumRowJson(testProgramClass),
+      }),
+    ],
+    [
+      "foreign material locale",
+      routeResponse({
+        materialJson: [canonicalizeMaterialProjection(previewIdProjection)],
+      }),
+    ],
+  ] as const)("rejects a %s", ([_name, response]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(response));
+      const failure = yield* readPublishedProgramRoute(
+        "en",
+        testProgramSubject.publicPath
+      ).pipe(Effect.flip);
+      expect(failure).toMatchObject({
+        _tag: "PublishedProjectionError",
+      });
+    })
+  );
+});

@@ -1,6 +1,7 @@
 import { assert } from "@effect/vitest";
 import type { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { replaceContentSnapshot } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
 import {
   tryoutCatalogNodeIdentity,
   tryoutPlacementIdentity,
@@ -170,9 +171,10 @@ export async function insertHistoryAttempt(
   ctx: MutationCtx,
   historical = false,
   options?: {
-    readonly answerCompiledCode?: string;
+    readonly answerBodyText?: string;
+    readonly answerContentTree?: ContentTreeElement;
     readonly answerRawMdx?: string;
-    readonly compiledCode?: string;
+    readonly bodyText?: string;
     readonly rawMdx?: string;
   }
 ) {

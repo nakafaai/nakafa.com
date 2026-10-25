@@ -9,4 +9,5 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["setLocale"]: RegisteredConvexFunction.register({ ...definitions["setLocale"], handler: forward(definitions["setLocale"].handler) }),
 ["setPolicy"]: RegisteredConvexFunction.register({ ...definitions["setPolicy"], handler: forward(definitions["setPolicy"].handler) }),
+["setName"]: RegisteredConvexFunction.register({ ...definitions["setName"], handler: forward(definitions["setName"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../tenancy/settings.spec")["default"]>;

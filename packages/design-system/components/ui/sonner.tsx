@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Alert02Icon,
   InformationCircleIcon,
@@ -10,9 +8,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { cn } from "cn";
 import { Schema } from "effect";
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 const ToasterStyleSchema = Schema.Struct({
@@ -87,7 +85,7 @@ function Toaster({
   /** The name of the region that holds the notifications, in the reader's language. */
   containerAriaLabel: string;
 }) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const appearance = getThemeAppearance(resolvedTheme);
 
   return (

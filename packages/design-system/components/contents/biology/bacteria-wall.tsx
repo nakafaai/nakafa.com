@@ -1,5 +1,3 @@
-"use client";
-
 import { BacterialWallStack } from "@repo/design-system/components/contents/biology/bacteria-wall-stack";
 import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import type { ReactNode } from "react";

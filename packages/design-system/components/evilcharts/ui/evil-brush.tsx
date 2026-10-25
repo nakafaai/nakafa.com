@@ -1,5 +1,3 @@
-"use client";
-
 import { EvilBrushPreview } from "@repo/design-system/components/evilcharts/ui/brush-preview";
 import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";

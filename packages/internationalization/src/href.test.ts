@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  localizeInternalHref,
   normalizeLocalizedInternalHref,
+  publicInternalHref,
   splitLocalePathname,
 } from "@repo/internationalization/src/href";
-
-const TEST_LOCALES = ["de", "en", "id"] as const;
 
 describe("localized internal href normalization", () => {
   it.each([
@@ -42,10 +42,30 @@ describe("splitLocalePathname", () => {
   ])(
     "splits pathname %s at its leading locale",
     (pathname, locale, segments) => {
-      expect(splitLocalePathname(pathname, TEST_LOCALES)).toEqual({
+      expect(splitLocalePathname(pathname)).toEqual({
         locale,
         publicSegments: segments,
       });
     }
   );
+});
+
+describe("localized internal href", () => {
+  it.each([
+    ["/materi/x", "id", "/id/materi/x"],
+    ["/", "en", "/en"],
+    ["/id/materi/x", "id", "/id/materi/x"],
+    ["/search?q=a#b", "de", "/de/search?q=a#b"],
+  ] as const)("leads %s with the locale %s", (href, locale, expected) => {
+    expect(localizeInternalHref(href, locale)).toBe(expected);
+  });
+
+  it.each([
+    ["/curricula/merdeka", "id", "/id/kurikulum/merdeka"],
+    ["/curricula/merdeka", "en", "/en/curriculum/merdeka"],
+    ["/curricula/merdeka", "de", "/de/lehrplaene/merdeka"],
+    ["/", "de", "/de"],
+  ] as const)("maps %s to its public path on %s", (href, locale, expected) => {
+    expect(publicInternalHref(href, locale)).toBe(expected);
+  });
 });

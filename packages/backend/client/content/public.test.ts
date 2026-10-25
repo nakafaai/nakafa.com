@@ -58,7 +58,6 @@ const RendererJsonSchema = Schema.fromJsonString(
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
 
-vi.mock("server-only", () => ({}));
 vi.mock("@nakafa/aksara-contracts/runtime/verify", () => ({
   verifyContentRuntimeExchange: verifyMock,
 }));

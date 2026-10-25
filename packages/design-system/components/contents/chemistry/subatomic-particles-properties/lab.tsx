@@ -1,5 +1,3 @@
-"use client";
-
 import { useMediaQuery } from "@mantine/hooks";
 import { useThree } from "@react-three/fiber";
 import {
@@ -35,11 +33,11 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+import { useTranslations } from "use-intl";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
@@ -83,7 +81,7 @@ export function SubatomicParticlePropertiesLab({
   description,
   labels,
 }: SubatomicParticlePropertiesLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const useVerticalToggle = useMediaQuery(
     TAILWIND_MEDIA_QUERIES.belowSm,
     false

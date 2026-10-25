@@ -268,6 +268,9 @@ describe("report of the waits of the newest turns", () => {
     // Two turns settled before turns stored waits hold none, and the fixture's
     // own turn is still queued.
     const fixture = await createNinaTest({ history: 2, now: NOW });
+    await fixture.t.mutation((ctx) =>
+      ctx.db.patch("users", fixture.identity.userId, { credits: 100 })
+    );
     // The learner stops a turn before its run starts it: it settles with no wait.
     await queueAt(fixture, 10_000, "stopped");
     vi.setSystemTime(NOW + 11_000);

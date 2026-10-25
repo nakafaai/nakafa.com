@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import type {
   MeasurementToolId,
@@ -40,7 +38,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { useTheme } from "next-themes";
+import { useTheme } from "@repo/design-system/providers/theme";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
@@ -61,14 +59,13 @@ interface MeasurementToolsLabProps {
  * camera movement.
  *
  * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance
- * @see https://nextjs.org/docs/app/getting-started/server-and-client-components
  */
 export function MeasurementToolsLab({
   title,
   description,
   labels,
 }: MeasurementToolsLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [selectedToolId, setSelectedToolId] =
     useState<MeasurementToolId>(LENGTH_TOOL_ID);
   const [measurements, setMeasurements] = useState(createInitialMeasurements);

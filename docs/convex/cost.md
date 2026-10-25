@@ -395,4 +395,3 @@ bounded pages.
 - [Convex automatic query caching](https://docs.convex.dev/realtime)
 - [Convex backup pricing](https://docs.convex.dev/database/backup-restore)
 - [Convex usage attribution](https://docs.convex.dev/platform-apis/track-usage)
-- [Next.js `use cache` keys](https://nextjs.org/docs/app/api-reference/directives/use-cache#cache-keys)

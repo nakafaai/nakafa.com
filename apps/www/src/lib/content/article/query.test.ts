@@ -1,0 +1,147 @@
+import { describe, expect, it } from "@effect/vitest";
+import {
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
+import { encodeArticlePublicationCursor } from "@repo/contents/publication";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Option } from "effect";
+import {
+  getArticleNextSearch,
+  readArticlePageCursor,
+  shouldResetArticlePublicationCursor,
+  stripArticlePagination,
+} from "@/lib/content/article/query";
+
+const manifest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
+const releaseId = ReleaseIdSchema.make("release-article");
+
+describe("article catalog query", () => {
+  it("decodes initial and release-bound cursors", () => {
+    expect(Option.getOrNull(readArticlePageCursor({}))).toEqual({
+      cursor: null,
+      expectedManifestHash: null,
+      expectedReleaseId: null,
+    });
+    expect(
+      Option.getOrNull(
+        readArticlePageCursor({
+          cursor: "next page",
+          manifest,
+          release: releaseId,
+        })
+      )
+    ).toEqual({
+      cursor: "next page",
+      expectedManifestHash: manifest,
+      expectedReleaseId: releaseId,
+    });
+  });
+
+  it("rejects incomplete and oversized query values", () => {
+    expect(Option.isNone(readArticlePageCursor({ cursor: "next" }))).toBe(true);
+    expect(
+      Option.isNone(
+        readArticlePageCursor({
+          cursor: "x".repeat(4097),
+          manifest,
+          release: releaseId,
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("removes release pagination while preserving unrelated query state", () => {
+    expect(
+      stripArticlePagination(
+        "?cursor=next&manifest=source&release=source&ref=locale&ref=agent"
+      )
+    ).toBe("?ref=locale&ref=agent");
+    expect(
+      stripArticlePagination("?cursor=next&manifest=source&release=source")
+    ).toBe("");
+  });
+
+  it("resets unsupported cursors at the current article publication", () => {
+    const identity = {
+      expectedManifestHash: manifest,
+      expectedReleaseId: releaseId,
+    };
+    const current = encodeArticlePublicationCursor(
+      encodeJsonText([
+        "en",
+        "politics",
+        "2026-08-22",
+        "articles/politics/current",
+        1,
+        "article-id",
+      ])
+    );
+
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: "native-predecessor-position",
+      })
+    ).toBe(true);
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: "article-publication:v1:[]",
+      })
+    ).toBe(true);
+    expect(
+      shouldResetArticlePublicationCursor({ ...identity, cursor: current })
+    ).toBe(false);
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: encodeArticlePublicationCursor("{"),
+      })
+    ).toBe(false);
+    expect(
+      shouldResetArticlePublicationCursor({
+        cursor: null,
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+      })
+    ).toBe(false);
+  });
+
+  it("builds the search of the next page only for complete page identities", () => {
+    expect(
+      getArticleNextSearch({
+        activeManifestHash: manifest,
+        activeReleaseId: releaseId,
+        nextCursor: "next page",
+      })
+    ).toEqual(
+      Option.some({
+        cursor: "next page",
+        manifest,
+        release: releaseId,
+      })
+    );
+    expect(
+      getArticleNextSearch({
+        activeManifestHash: manifest,
+        activeReleaseId: releaseId,
+        nextCursor: null,
+      })
+    ).toEqual(Option.none());
+    expect(
+      getArticleNextSearch({
+        activeManifestHash: null,
+        activeReleaseId: releaseId,
+        nextCursor: "next",
+      })
+    ).toEqual(Option.none());
+    expect(
+      getArticleNextSearch({
+        activeManifestHash: manifest,
+        activeReleaseId: null,
+        nextCursor: "next",
+      })
+    ).toEqual(Option.none());
+  });
+});

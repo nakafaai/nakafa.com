@@ -1,0 +1,375 @@
+import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { useMediaQuery } from "@mantine/hooks";
+import exams from "@repo/backend/confect/_generated/refs/exams";
+import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import {
+  Sheet,
+  SheetHeader,
+  SheetPopup,
+  SheetTitle,
+} from "@repo/design-system/components/ui/sheet";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { Array as Arr, Option } from "effect";
+import { useState } from "react";
+import { useTranslations } from "use-intl";
+import {
+  type DashboardAttempt,
+  dashboardArgs,
+} from "@/components/exams/sitting/change";
+import {
+  useMayProctor,
+  useSittingData,
+  useSittingStore,
+} from "@/components/exams/sitting/context";
+import {
+  AddMinutesDialog,
+  AllowDeviceDialog,
+  LockDialog,
+  UnlockDialog,
+} from "@/components/exams/sitting/dialogs";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
+import { TableEmpty } from "@/components/shared/table/frame";
+import { isLostAccess } from "@/components/tenant/refusal";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
+
+/** The dialog of a panel action that is open, or none. */
+type PanelDialog = "add-minutes" | "allow-device" | "lock" | "unlock";
+
+/** How many signals one page of the panel's list holds, the first one and each one after it. */
+const SIGNAL_PAGE_SIZE = 20;
+
+/** The copy key of each state of an attempt, as the panel names it. */
+const stateLabels: Record<
+  DashboardAttempt["state"],
+  "state-closing" | "state-in-progress" | "state-locked" | "state-submitted"
+> = {
+  closing: "state-closing",
+  inProgress: "state-in-progress",
+  locked: "state-locked",
+  submitted: "state-submitted",
+};
+
+/** The copy key of each signal of a student's screen, as the panel names it. */
+const signalLabels: Record<
+  NonNullable<DashboardAttempt["latestSignal"]>["kind"],
+  | "signal-blur"
+  | "signal-copy"
+  | "signal-disconnect"
+  | "signal-exit"
+  | "signal-fullscreenExit"
+  | "signal-paste"
+  | "signal-return"
+  | "signal-secondTab"
+> = {
+  blur: "signal-blur",
+  copy: "signal-copy",
+  disconnect: "signal-disconnect",
+  exit: "signal-exit",
+  fullscreenExit: "signal-fullscreenExit",
+  paste: "signal-paste",
+  return: "signal-return",
+  secondTab: "signal-secondTab",
+};
+
+/**
+ * The panel of the selected student: a pane along the page's right edge on a wide screen, beside
+ * the seats it leaves in view, and a sheet on a phone.
+ * It shows the student's state, the latest signal, and the actions that the proctor may take.
+ * The panel stays closed until a seat is selected. The seat the reader is on reads the panel's
+ * data first, so the panel opens with its signals already on screen.
+ */
+export function SittingPanel() {
+  return (
+    <>
+      <WarmedSeat />
+      <SelectedPanel />
+    </>
+  );
+}
+
+/** The panel of the seat that is selected, which holds the seat's panel data as it opens. */
+function SelectedPanel() {
+  const t = useTranslations("Exams");
+  const { sittingId, slug, value } = useSittingData();
+  const selected = useSittingStore((state) => state.selected);
+  const choose = useSittingStore((state) => state.choose);
+  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
+  // A seat on a later page reads that page, which the seats already subscribe to.
+  const later = useQuery(
+    exams.sittings.dashboard,
+    selected === null || selected.cursor === null
+      ? "skip"
+      : dashboardArgs({ sittingId, slug }, selected.cursor)
+  );
+  const laterPage = QueryResult.isSuccess(later)
+    ? later.value.attempts.page
+    : [];
+  const page = selected?.cursor === null ? value.attempts.page : laterPage;
+  const current = Option.getOrUndefined(
+    Arr.findFirst(page, (row) => row.id === selected?.attemptId)
+  );
+
+  /** Closes the panel by clearing the selection. */
+  function close() {
+    choose(null);
+  }
+
+  if (isDesktop) {
+    if (current === undefined) {
+      return null;
+    }
+    return (
+      <aside
+        aria-label={t("panel-label")}
+        className="w-80 shrink-0 border-s p-4"
+      >
+        <StudentPanel attempt={current} onClose={close} />
+      </aside>
+    );
+  }
+
+  return (
+    <Sheet
+      onOpenChange={(open) => {
+        if (!open) {
+          close();
+        }
+      }}
+      open={current !== undefined}
+    >
+      <SheetPopup keepMounted side="bottom">
+        <SheetHeader>
+          <SheetTitle>{t("panel-label")}</SheetTitle>
+        </SheetHeader>
+        {current === undefined ? null : (
+          <div className="px-4 pb-4">
+            <StudentPanel attempt={current} onClose={close} />
+          </div>
+        )}
+      </SheetPopup>
+    </Sheet>
+  );
+}
+
+/**
+ * The content of the panel for one student. The actions follow the table of ADR 0013: a lock
+ * for an attempt in progress, an unlock for a locked one, and added minutes for either. A
+ * second device is allowed in every state. The actions show only when the page lists them for
+ * the viewer, so a viewer who may only view sees the signals and no action.
+ */
+function StudentPanel({
+  attempt,
+  onClose,
+}: {
+  readonly attempt: DashboardAttempt;
+  readonly onClose: () => void;
+}) {
+  const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
+  const mayProctor = useMayProctor();
+  const [dialog, setDialog] = useState<PanelDialog | null>(null);
+  const takesMinutes =
+    attempt.state === "inProgress" || attempt.state === "locked";
+
+  return (
+    <div className="grid gap-4">
+      <div className="flex items-center gap-3">
+        <PersonAvatar className="size-9" mascot={attempt.mascot ?? undefined} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium">{attempt.name}</p>
+          <p className="text-muted-foreground text-sm">
+            {t(stateLabels[attempt.state])}
+          </p>
+        </div>
+        <Button
+          aria-label={tCommon("close")}
+          onClick={onClose}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          <HugeIcons icon={Cancel01Icon} />
+        </Button>
+      </div>
+      <div className="grid gap-2">
+        <p className="text-muted-foreground text-sm">{t("signals")}</p>
+        <SignalList attemptId={attempt.id} key={attempt.id} />
+      </div>
+      {mayProctor ? (
+        <div className="flex flex-wrap gap-2">
+          {attempt.state === "inProgress" ? (
+            <Button
+              onClick={() => setDialog("lock")}
+              size="sm"
+              type="button"
+              variant="destructive"
+            >
+              {t("lock")}
+            </Button>
+          ) : null}
+          {attempt.state === "locked" ? (
+            <Button
+              onClick={() => setDialog("unlock")}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {t("unlock")}
+            </Button>
+          ) : null}
+          {takesMinutes ? (
+            <Button
+              onClick={() => setDialog("add-minutes")}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {t("add-minutes")}
+            </Button>
+          ) : null}
+          <Button
+            onClick={() => setDialog("allow-device")}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {t("allow-device")}
+          </Button>
+        </div>
+      ) : null}
+      <LockDialog
+        attemptId={attempt.id}
+        name={attempt.name}
+        onOpenChange={(next) => setDialog(next ? "lock" : null)}
+        open={dialog === "lock"}
+      />
+      <UnlockDialog
+        attemptId={attempt.id}
+        name={attempt.name}
+        onOpenChange={(next) => setDialog(next ? "unlock" : null)}
+        open={dialog === "unlock"}
+      />
+      <AddMinutesDialog
+        attemptId={attempt.id}
+        name={attempt.name}
+        onOpenChange={(next) => setDialog(next ? "add-minutes" : null)}
+        open={dialog === "add-minutes"}
+      />
+      <AllowDeviceDialog
+        attemptId={attempt.id}
+        name={attempt.name}
+        onOpenChange={(next) => setDialog(next ? "allow-device" : null)}
+        open={dialog === "allow-device"}
+      />
+    </div>
+  );
+}
+
+/**
+ * The seat the reader is on reads what its panel shows, so the panel's first frame has it. A seat
+ * on a later page reads that page too, which the panel reads when it opens.
+ */
+function WarmedSeat() {
+  const onSeat = useSittingStore((state) => state.onSeat);
+  if (onSeat === null) {
+    return null;
+  }
+  // A read that fails here stays out of the page: the panel reads the same data when it opens.
+  return (
+    <ErrorBoundary fallback={null} key={onSeat.attemptId} report={false}>
+      <SeatPanelData attemptId={onSeat.attemptId} cursor={onSeat.cursor} />
+    </ErrorBoundary>
+  );
+}
+
+/** Subscribes to one seat's panel data without rendering it. */
+function SeatPanelData({
+  attemptId,
+  cursor,
+}: {
+  readonly attemptId: DashboardAttempt["id"];
+  readonly cursor: string | null;
+}) {
+  const { sittingId, slug } = useSittingData();
+  useQuery(
+    exams.sittings.dashboard,
+    cursor === null ? "skip" : dashboardArgs({ sittingId, slug }, cursor)
+  );
+  useFirstSignalPage(attemptId);
+  return null;
+}
+
+/**
+ * The first page of one attempt's signals, read by a plain query. A plain query with the same
+ * arguments shares its subscription, so a seat that warmed it already has the page when the panel
+ * reads it. A paginated query keeps its own page per instance, so the list cannot share it.
+ */
+function useFirstSignalPage(attemptId: DashboardAttempt["id"]) {
+  const { slug, value } = useSittingData();
+  return useQuery(exams.sittings.signals, {
+    attemptId,
+    paginationOpts: { cursor: null, numItems: SIGNAL_PAGE_SIZE },
+    sittingId: value.sitting.id,
+    slug,
+  });
+}
+
+/**
+ * The signals of one attempt, newest first. The first page is the one the seat read on intent, so
+ * the list is complete when the panel opens. A page loads as the list reaches its end, through an
+ * intersection sentinel rather than a button, so the list grows as the proctor scrolls.
+ */
+function SignalList({
+  attemptId,
+}: {
+  readonly attemptId: DashboardAttempt["id"];
+}) {
+  const t = useTranslations("Exams");
+  const { slug, value } = useSittingData();
+  const firstPage = useFirstSignalPage(attemptId);
+  const signals = usePaginatedPreloaded(
+    exams.sittings.signals,
+    { attemptId, sittingId: value.sitting.id, slug },
+    { initialNumItems: SIGNAL_PAGE_SIZE },
+    QueryResult.isSuccess(firstPage)
+      ? Option.some(firstPage.value)
+      : Option.none()
+  );
+
+  if (PaginatedQueryResult.isFailure(signals) && isLostAccess(signals.error)) {
+    throw signals.error;
+  }
+  if (PaginatedQueryResult.isLoadingFirstPage(signals)) {
+    return null;
+  }
+  const failure = PaginatedQueryResult.isFailure(signals) ? (
+    <DataFailure onRetry={reloadPage} />
+  ) : null;
+
+  return (
+    <div className="grid gap-2 text-sm">
+      {failure}
+      {Arr.isReadonlyArrayEmpty(signals.results) && failure === null ? (
+        <TableEmpty
+          act="reading"
+          description={t("signals-empty")}
+          title={t("signals-empty-title")}
+        />
+      ) : null}
+      {Arr.map(signals.results, (signal) => (
+        <p key={`${signal.at}-${signal.kind}`}>
+          {t(signalLabels[signal.kind])}
+        </p>
+      ))}
+      {PaginatedQueryResult.isCanLoadMore(signals) ? (
+        <Intersection onIntersect={() => signals.loadMore(SIGNAL_PAGE_SIZE)} />
+      ) : null}
+    </div>
+  );
+}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createOperationalException,
   decodeOperationalExceptionProperties,
+  operationalErrorName,
   operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -62,6 +63,32 @@ describe("operational exception privacy", () => {
         source: "chat-api",
       }).name
     ).toBe("OperationalError(chat-api.saveTitle)");
+  });
+
+  it("keeps the error class name and never the message", () => {
+    expect(operationalErrorName(new TypeError("secret user@example.com"))).toBe(
+      "TypeError"
+    );
+    const failure = new Error("boom");
+    failure.name = "InvalidStateError";
+    expect(operationalErrorName(failure)).toBe("InvalidStateError");
+  });
+
+  it("drops an error name that is not a bounded identifier", () => {
+    const failure = new Error("boom");
+    failure.name = "user@example.com";
+    expect(operationalErrorName(failure)).toBeUndefined();
+    failure.name = "E".repeat(129);
+    expect(operationalErrorName(failure)).toBeUndefined();
+    expect(operationalErrorName({ name: "TypeError" })).toBeUndefined();
+    expect(
+      Option.isNone(
+        decodeOperationalExceptionProperties({
+          error_name: "user@example.com",
+          source: "mermaid-render",
+        })
+      )
+    ).toBe(true);
   });
 
   it("forwards a bounded request user agent for traffic classification", () => {

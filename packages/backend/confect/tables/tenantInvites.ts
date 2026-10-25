@@ -4,4 +4,5 @@ export default Table.make(() => tenantInviteValidator)
   .index("by_channel_email_and_state_status", ["channel.email", "state.status"])
   .index("by_personId_and_state_status", ["personId", "state.status"])
   .index("by_state_status_and_expiresAt", ["state.status", "expiresAt"])
+  .index("by_tenantId_and_channel_email", ["tenantId", "channel.email"])
   .index("by_tenantId_and_state_status", ["tenantId", "state.status"]);

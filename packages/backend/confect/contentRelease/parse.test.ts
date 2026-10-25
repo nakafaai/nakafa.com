@@ -10,6 +10,7 @@ import {
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
+  decodeArtifactHeaderJson,
   decodeArtifactJson,
   decodeItemJson,
   decodeProjectionJson,
@@ -36,6 +37,7 @@ import {
 } from "@repo/backend/test/content/material";
 import { TEST_QUESTION_PROJECTION } from "@repo/backend/test/content/question";
 import {
+  TEST_ARTIFACT_HASH,
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -116,6 +118,28 @@ describe("contentRelease/parse", () => {
         expect(encodeRendererJson(renderer)).toBe(testRendererJson());
         expect(proof.releaseId).toBe(TEST_RELEASE_ID);
       })
+  );
+
+  it.live("reads only the header fields of a signed artifact", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeArtifactHeaderJson(testArtifactJson())).toEqual({
+        artifactHash: TEST_ARTIFACT_HASH,
+        payload: {
+          artifactLocale: "en",
+          compilerConfigHash: TEST_DIGEST,
+          contentKey: "test:head-0",
+          rendererDomain: "mathematics",
+          sourceHash: TEST_DIGEST,
+        },
+      });
+      const headerOnly = testArtifactJson().replace(
+        '"contentTree":{"$node":"element","name":"fragment","props":{},"children":[]}',
+        '"contentTree":"not-a-tree"'
+      );
+      expect(yield* decodeArtifactHeaderJson(headerOnly)).toMatchObject({
+        artifactHash: TEST_ARTIFACT_HASH,
+      });
+    })
   );
 
   it.live("rejects unknown fields in a signed artifact", () =>
@@ -206,6 +230,7 @@ describe("contentRelease/parse", () => {
             decodeReleaseJson("{}").pipe(Effect.flip),
             decodeItemJson("{}").pipe(Effect.flip),
             decodeArtifactJson("{}").pipe(Effect.flip),
+            decodeArtifactHeaderJson("{}").pipe(Effect.flip),
             decodeProjectionJson("{}").pipe(Effect.flip),
             decodeProofJson("{}").pipe(Effect.flip),
             decodeRendererJson("{}").pipe(Effect.flip),
@@ -218,7 +243,7 @@ describe("contentRelease/parse", () => {
         );
 
         expect(Exit.isFailure(malformed)).toBe(true);
-        expect(failures).toHaveLength(10);
+        expect(failures).toHaveLength(11);
         expect(
           Arr.every(
             failures,

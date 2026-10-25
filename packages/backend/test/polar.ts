@@ -1,6 +1,6 @@
 import type { models, webhooks } from "@polar-sh/sdk/2026-10";
 import posthogTest from "@posthog/convex/test";
-import type { StoredPolarCustomer } from "@repo/backend/confect/customers/polar/spec";
+import type { StoredPolarCustomer } from "@repo/backend/confect/billing/polar/spec";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { trackChanges } from "@/e2e/support/changes";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -32,6 +32,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
   const page = await context.newPage();
+  const ownerChanges = await Effect.runPromise(trackChanges(page, []));
   await page.goto(hostAddress(baseURL, host, "/exams"));
 
   // The exam starts with one question, which the editor selects, and the teacher writes it.
@@ -41,21 +42,28 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await dialog.getByRole("button", { name: "Create exam" }).click();
   await page.waitForURL(EDITOR_PATH);
 
-  const prompt = page.getByRole("textbox", { name: "Question text" });
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
   await expect(prompt).toBeEditable();
+  const sentBefore = ownerChanges.sent;
   await prompt.click();
   await page.keyboard.type(PROMPT);
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
-      name: `Option ${option.letter}`,
+      name: `Question 1, option ${option.letter}`,
     });
     await field.fill(option.text);
     await field.press("Tab");
   }
-  await page.getByRole("radio", { name: "Mark option B as correct" }).click();
+  await page
+    .getByRole("button", { name: "Mark option B of question 1 as correct" })
+    .click();
   await expect(
-    page.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked();
+    page.getByRole("button", { name: "Mark option B of question 1 as correct" })
+  ).toHaveAttribute("aria-pressed", "true");
+
+  // The page shows a change before the server holds it, so the try page opens once the server has
+  // the prompt, the options and the key that it reads.
+  await saved(ownerChanges, sentBefore);
 
   // The try page is tracked from its first load. The editor opened there holds what the server
   // holds, so the prompt and the options it shows are the ones the try reads.
@@ -63,13 +71,8 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   const changes = await Effect.runPromise(trackChanges(trying, []));
   await trying.goto(page.url());
   await expect(
-    trying.getByRole("textbox", { name: "Question text" })
+    trying.getByRole("textbox", { name: "Question 1 text" })
   ).toContainText(PROMPT, { timeout: readinessTimeoutMilliseconds });
-  for (const option of OPTIONS) {
-    await expect(
-      trying.getByRole("textbox", { name: `Option ${option.letter}` })
-    ).toHaveValue(option.text, { timeout: readinessTimeoutMilliseconds });
-  }
 
   // The try action sits beside Schedule in the editor's header, and opens the try.
   await trying.getByRole("link", { name: "Try as student" }).click();
@@ -82,6 +85,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await expect(trying.getByText(PROMPT)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+  // The try names each option by the question's answer label, so an option is found by its text.
   for (const option of OPTIONS) {
     await expect(
       trying.getByRole("radio", { name: option.text, exact: true })

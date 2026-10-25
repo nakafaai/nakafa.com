@@ -149,6 +149,29 @@ describe("tenancy/assignments assign", () => {
   );
 
   it.effect(
+    "reads a cohort with no homeroom teacher once its teacher is removed, and keeps the cohort readable",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* smpPeriod(fixture);
+        const made = yield* cohort(fixture, period.id, "7A");
+        yield* fixture.as("admin").mutation(assign, {
+          cohortId: made.id,
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        const read = yield* fixture
+          .as("admin")
+          .query(cohorts.get, { cohortId: made.id, slug: nf });
+        expect(read).toMatchObject({ homeroom: null, id: made.id });
+      })
+  );
+
+  it.effect(
     "refuses a teacher who already leads another cohort of the period",
     () =>
       Effect.gen(function* () {

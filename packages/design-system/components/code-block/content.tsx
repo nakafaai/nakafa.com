@@ -1,15 +1,13 @@
-"use client";
-
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";
 import {
   type CodeHighlightOptions,
   highlightCode,
 } from "@repo/design-system/lib/code-block/highlight";
+import type { CodeOptionsMultipleThemes } from "@shikijs/core";
 import { Effect, Fiber, Schema } from "effect";
 import type { HTMLAttributes } from "react";
 import { useEffect, useMemo, useState } from "react";
-import type { CodeOptionsMultipleThemes } from "shiki";
 
 /** Highlighting options plus the exact source used by the text fallback. */
 type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {

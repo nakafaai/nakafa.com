@@ -1,5 +1,3 @@
-"use client";
-
 import type { StyleProps } from "@repo/design-system/components/evilcharts/charts/composed/bars";
 import {
   ActiveDot,

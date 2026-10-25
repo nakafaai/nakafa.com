@@ -128,7 +128,7 @@ function callStep(toolName: string, input: object, toolCallId: string) {
 }
 
 const casConfig = ConfigProvider.fromUnknown({
-  NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
+  MATH_CAS_URL: "https://math.example.invalid",
   MATH_CAS_API_KEY: "test",
 });
 
@@ -241,7 +241,7 @@ describe("math Agent execution", () => {
           Effect.provideService(
             ConfigProvider.ConfigProvider,
             ConfigProvider.fromUnknown({
-              NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
+              MATH_CAS_URL: "https://math.example.invalid",
               MATH_CAS_API_KEY: "test",
             })
           )

@@ -245,10 +245,10 @@ describe("comments/queries", () => {
     });
 
     expect(signedIn.page).toMatchObject([
-      { _id: root, liked: true, likeCount: 1, replyCount: 1, viewerVote: 1 },
+      { _id: root, liked: true, likeCount: 1, replyCount: 1 },
     ]);
     expect(signedOut.page).toMatchObject([
-      { _id: root, liked: false, likeCount: 1, viewerVote: null },
+      { _id: root, liked: false, likeCount: 1 },
     ]);
   });
 
@@ -262,8 +262,6 @@ describe("comments/queries", () => {
       ctx.db.insert("comments", {
         slug,
         text: "Ditulis sebelum hitungan suka",
-        upvoteCount: 0,
-        downvoteCount: 0,
         replyCount: 0,
         userId: author.userId,
       })
@@ -276,11 +274,8 @@ describe("comments/queries", () => {
 
     expect(page.page).toMatchObject([
       {
-        downvoteCount: 0,
         likeCount: 0,
         liked: false,
-        upvoteCount: 0,
-        viewerVote: null,
       },
     ]);
   });

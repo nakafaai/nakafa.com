@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { SeedRefused } from "@repo/backend/confect/acceptance/seed";
+import { ExamTitle } from "@repo/backend/confect/exams/exam";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
@@ -11,10 +12,11 @@ import { Schema } from "effect";
  */
 const CROWD_MAX = 150;
 
-/** What the acceptance seed answers: the exam, its sitting, and the sitting's token. */
+/** What the acceptance seed answers: the exam, its title, its sitting, and the sitting's token. */
 const SittingSeed = Schema.Struct({
   examId: Id("exams"),
   sittingId: Id("examSittings"),
+  title: ExamTitle,
   token: Schema.String,
 });
 
@@ -31,6 +33,8 @@ export default GroupSpec.make().addFunction(
       ),
       email: Email,
       slug: TenantSlug,
+      /** Whether the seed also schedules a room for the next day, which a browser test reads as an upcoming room. */
+      upcoming: Schema.optionalKey(Schema.Boolean),
     }),
     returns: () => SittingSeed,
     error: () => SeedRefused,

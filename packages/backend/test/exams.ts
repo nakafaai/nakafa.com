@@ -1,5 +1,4 @@
 import type { GenericId } from "@confect/core";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -7,7 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import type { tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Every exam row, for a test that expects none or one. */
 export const examRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -19,27 +18,35 @@ export const questionRows = Effect.flatMap(DatabaseReader, (reader) =>
   reader.table("examQuestions").index("by_creation_time").take(300)
 );
 
-/** The content language of the test exams: Indonesian. */
-export const LANGUAGE = Schema.decodeSync(DeliveryLanguageSchema)("id");
-
 /** The fixture the exam tests seed. */
 type ExamFixture = Effect.Success<typeof tenancyFixture>;
 
 const { create, open } = refs.public.exams.exams;
+
+/** The accounts that write an exam in the tests: the teacher, or the school's Admin. */
+export type ExamAuthor = "admin" | "teacher";
+
+/** An exam in the SMP unit, written by one account and opened by it: its ID, and its questions in order. */
+export const examBy = Effect.fn("test.exams.examBy")(function* (
+  fixture: ExamFixture,
+  author: ExamAuthor,
+  title: string
+) {
+  const writer = fixture.as(author);
+  const made = yield* writer.mutation(create, {
+    scope: { kind: "unit", unitId: fixture.units.smp },
+    slug: nf,
+    title,
+  });
+  return yield* writer.query(open, { examId: made.id, slug: nf });
+});
 
 /** A teacher's exam in the unit the teacher teaches, opened: its ID, and its questions in order. */
 export const teacherExam = Effect.fn("test.exams.teacherExam")(function* (
   fixture: ExamFixture,
   title: string
 ) {
-  const teacher = fixture.as("teacher");
-  const made = yield* teacher.mutation(create, {
-    language: LANGUAGE,
-    scope: { kind: "unit", unitId: fixture.units.smp },
-    slug: nf,
-    title,
-  });
-  return yield* teacher.query(open, { examId: made.id, slug: nf });
+  return yield* examBy(fixture, "teacher", title);
 });
 
 /** Archives one unit of the school, which locks the edits of the exams and documents in it. */

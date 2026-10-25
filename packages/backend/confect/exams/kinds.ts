@@ -6,10 +6,22 @@ import { tenant, unit } from "@repo/backend/confect/tenancy/kinds";
 const examEditors: (typeof RuleRole.Type)[] = ["admin", "teacher"];
 
 /**
+ * The school roles that view the rooms of an exam: the editors, and the Principal and the
+ * Deputy, who view every room the sitting view allows them (the roles of `sitting.view`).
+ */
+const roomViewers: (typeof RuleRole.Type)[] = [
+  "admin",
+  "teacher",
+  "principal",
+  "deputy",
+];
+
+/**
  * One school exam draft. Its scope is the tenant or one unit, and an Owner, an Admin,
  * or a Teacher whose grant covers the scope may view and edit it. An archived unit
  * locks the edits of its exams. A student and an integration client reach neither
- * action.
+ * action. `exam.rooms` opens the exam's rooms to the viewers of the rooms, and each room
+ * is then decided by its own sitting view.
  */
 export const examKind = Kind.make("exam", "exams", {
   actions: {
@@ -18,6 +30,12 @@ export const examKind = Kind.make("exam", "exams", {
       grantedBy: "roles",
       relations: [],
       roles: examEditors,
+    },
+    "exam.rooms": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: roomViewers,
     },
     "exam.view": {
       access: "read",
@@ -35,7 +53,7 @@ export const examKind = Kind.make("exam", "exams", {
  * Creating an exam is decided on the scope it covers, as a document is: the tenant
  * for a tenant-wide exam, the unit for a unit exam. The tenant and the unit each take
  * the `exam.edit` action of their own, and the `exam.view` action that lets the school
- * show its exams to their editors.
+ * show its exams to their editors, and the `exam.rooms` action that opens its rooms.
  */
 const tenantExams = Kind.extend(tenant, {
   actions: {
@@ -44,6 +62,12 @@ const tenantExams = Kind.extend(tenant, {
       grantedBy: "roles",
       relations: [],
       roles: examEditors,
+    },
+    "exam.rooms": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: roomViewers,
     },
     "exam.view": {
       access: "read",
@@ -63,6 +87,12 @@ const unitExams = Kind.extend(unit, {
       grantedBy: "roles",
       relations: [],
       roles: examEditors,
+    },
+    "exam.rooms": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: roomViewers,
     },
     "exam.view": {
       access: "read",

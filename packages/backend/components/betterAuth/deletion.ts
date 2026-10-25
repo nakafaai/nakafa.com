@@ -66,7 +66,6 @@ export const deleteUserVerificationPage = mutation({
   }),
   handler: (ctx, args) =>
     deleteUserVerificationPageProgram(ctx, args.authId, args.cursor).pipe(
-      Effect.withTracerTiming(false),
       RegisteredFunction.runHandlerPromise(UserCleanupErrorWire, {
         scheduler: new EffectScheduler.MixedScheduler("sync"),
       })

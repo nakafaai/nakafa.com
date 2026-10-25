@@ -1,5 +1,3 @@
-"use client";
-
 import { useMergedRef } from "@mantine/hooks";
 import type { Point } from "@repo/design-system/lib/toy/flight";
 import { createScatter, type Place } from "@repo/design-system/lib/toy/scatter";
@@ -44,7 +42,7 @@ export function useToys() {
  * Nothing listens until a toy is taken: the root holds one press listener, and
  * the pointer, the scroll and the frames exist only while a hand holds a toy.
  * The module carries the code of a drag, so a page that does not need its toys
- * at first paint loads it with `next/dynamic` when their part nears the screen.
+ * at first paint loads it with `React.lazy` when their part nears the screen.
  */
 export function Toys({
   children,

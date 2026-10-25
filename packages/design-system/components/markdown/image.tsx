@@ -1,5 +1,5 @@
+import { Image } from "@repo/design-system/components/image";
 import { cn } from "cn";
-import Image from "next/image";
 import { type ComponentProps, memo } from "react";
 
 const DEFAULT_MARKDOWN_IMAGE_WIDTH = 720;
@@ -44,7 +44,6 @@ export const MarkdownImage = memo(
         loading="lazy"
         src={src}
         title={title}
-        unoptimized
         width={resolvedWidth}
       />
     );

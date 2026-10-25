@@ -1,5 +1,3 @@
-"use client";
-
 import {
   HYDROGEN_1_ID,
   ISOTOPE_SAMPLE_IDS,

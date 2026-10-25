@@ -1,8 +1,11 @@
-import { Array as Arr, Predicate, Schema } from "effect";
+import { Array as Arr, Option, Predicate, Schema } from "effect";
 
 const shortTextSchema = Schema.String.check(Schema.isMaxLength(128));
 const identityTextSchema = Schema.String.check(Schema.isMaxLength(512));
 const componentStackSchema = Schema.String.check(Schema.isMaxLength(4096));
+const errorNameSchema = Schema.String.check(
+  Schema.isPattern(/^[A-Za-z_$][\w$]{0,127}$/u)
+);
 const sourceSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
   Schema.check(Schema.isMaxLength(128))
 );
@@ -16,8 +19,8 @@ const OperationalExceptionPropertiesSchema = Schema.Struct({
   convex_error_code: Schema.optional(shortTextSchema),
   cookie_name: Schema.optional(shortTextSchema),
   countryKey: Schema.optional(shortTextSchema),
-  error_digest: Schema.optional(identityTextSchema),
   error_location: Schema.optional(shortTextSchema),
+  error_name: Schema.optional(errorNameSchema),
   gateway_error_type: Schema.optional(shortTextSchema),
   gateway_model_id: Schema.optional(identityTextSchema),
   gateway_retryable: Schema.optional(Schema.Boolean),
@@ -26,14 +29,9 @@ const OperationalExceptionPropertiesSchema = Schema.Struct({
   language: Schema.optional(shortTextSchema),
   locale: Schema.optional(shortTextSchema),
   method: Schema.optional(shortTextSchema),
-  nextjs_digest: Schema.optional(identityTextSchema),
   operation: Schema.optional(shortTextSchema),
   programKey: Schema.optional(identityTextSchema),
-  render_source: Schema.optional(shortTextSchema),
-  revalidate_reason: Schema.optional(shortTextSchema),
   route_path: Schema.optional(identityTextSchema),
-  route_type: Schema.optional(shortTextSchema),
-  router_kind: Schema.optional(shortTextSchema),
   source: sourceSchema,
   surahNumber: Schema.optional(Schema.Finite),
   verseNumber: Schema.optional(Schema.Finite),
@@ -99,6 +97,17 @@ function deriveOperationalExceptionName(
   );
   const scope = Arr.join([properties.source, ...refinements], ".");
   return `${operationalExceptionName}(${scope})`;
+}
+
+/**
+ * Returns the class name of a caught error, such as `TypeError` or the name of
+ * a `DOMException`, when it is a plain identifier. The class name tells failure
+ * kinds apart while the message, which can carry user content, stays out.
+ */
+export function operationalErrorName(error: unknown) {
+  return Predicate.isError(error)
+    ? Option.getOrUndefined(Schema.decodeOption(errorNameSchema)(error.name))
+    : undefined;
 }
 
 /** Removes messages, causes, and arbitrary payloads while retaining code frames. */

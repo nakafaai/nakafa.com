@@ -1,5 +1,7 @@
 # ADR 0017: Shared Client State Has Two Homes, And Streamed Content Keeps Its Context
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+
 ## Status
 
 Accepted. Amended on 13 October 2026: the assessment player and the school
@@ -69,10 +71,10 @@ pending with that action (`entangleAsyncAction` in react-dom 19.3.0), and
 Next.js dispatches navigation inside `startTransition`
 (`dist/client/components/app-router-instance.js` in next 16.4.0). A transition
 that held a send would therefore hold the learner's next navigation until the
-server answered. The chat store (`apps/www/components/ai/chat/store.client.ts`)
+server answered. The chat store (`apps/www/src/components/ai/chat/store.ts`)
 holds the pending flags of a send, a stop, or a retry. The admission
-(`apps/www/components/ai/chat/admission.tsx`) holds its prompt, and the tray
-(`apps/www/components/ai/input.tsx`) holds the files that wait for it. The
+(`apps/www/src/components/ai/chat/admission.tsx`) holds its prompt, and the tray
+(`apps/www/src/components/ai/input.tsx`) holds the files that wait for it. The
 navigation tests in `apps/www/e2e/chat/leave.browser.ts` check that a learner
 can leave while an admission is pending. Rename, sharing, and delete need no pending state: they
 update the loaded lists optimistically and roll back on failure.
@@ -81,7 +83,7 @@ update the loaded lists optimistically and roll back on failure.
 
 ### The player
 
-The player of a running try-out section (`apps/www/components/player`) is the
+The player of a running try-out section (`apps/www/src/components/player`) is the
 one player for try-outs and, in program wave B, for school exams (ADR 0031). It
 follows both homes. What only the learner and the player's observers write,
 namely the current question, the view, the open overlay, and the request to

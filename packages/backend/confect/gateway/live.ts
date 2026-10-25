@@ -14,7 +14,7 @@ import { Effect, Layer } from "effect";
  * It needs no Buffer in the global scope, which the default Convex runtime does
  * not have. The provider's chat adapter encodes the bytes of a file with
  * `btoa`. The AI SDK packages read the global `Buffer` without a guard in two
- * places only, both in the file encoders of the Vercel gateway client
+ * places only, both in the file encoders of the AI gateway client
  * (`@ai-sdk/gateway`: `maybeEncodeFileParts` of its language model and
  * `maybeEncodeBatchFileParts` of its batch client). No model call here reaches
  * that client (`scripts/check/gateway.ts` rejects its import).

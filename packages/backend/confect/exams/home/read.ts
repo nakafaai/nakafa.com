@@ -1,0 +1,193 @@
+import type { GenericId } from "@confect/core";
+import type {
+  ExamSittingsDoc,
+  TenantUnitsDoc,
+} from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { requireAuth } from "@repo/backend/confect/auth/session";
+import { examAuthority } from "@repo/backend/confect/exams/authority";
+import { examSummary } from "@repo/backend/confect/exams/exam";
+import {
+  HOME_DRAFT_LIMIT,
+  HOME_ROOM_LIMIT,
+} from "@repo/backend/confect/exams/home/bounds";
+import { closedResults } from "@repo/backend/confect/exams/home/results";
+import {
+  sittingAuthority,
+  withExam,
+} from "@repo/backend/confect/exams/sittings/authority";
+import { TENANT_UNIT_LIMIT } from "@repo/backend/confect/exams/sittings/mine";
+import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
+import {
+  tenantAuthority,
+  unitAuthority,
+} from "@repo/backend/confect/tenancy/authority";
+import { readSetup } from "@repo/backend/confect/tenancy/setup";
+import { Array as Arr, Clock, Duration, Effect, Order } from "effect";
+
+/**
+ * The most exams of the viewer that the drafts read examines, newest created first. A draft older than
+ * these is not listed, so the read stays bounded when the viewer's newer exams are locked.
+ */
+const HOME_DRAFT_SCAN = 16;
+
+/** How far ahead the school home looks for a scheduled sitting, in milliseconds. */
+const UPCOMING_WINDOW_MS = Duration.toMillis(Duration.days(14));
+
+/** The unit action that opens the rooms of an exam. The viewers of rooms are the viewers of sittings. */
+const ROOMS_ACTION = "exam.rooms";
+
+/** The sittings in the order the home lists them: the earliest opening first. */
+const byOpening = Order.mapInput(
+  Order.Number,
+  (sitting: Pick<ExamSittingsDoc, "opensAt">) => sitting.opensAt
+);
+
+/**
+ * Whether the viewer may open the rooms of a unit, which the viewers of rooms hold. The home reads
+ * the rooms of the units that pass, so its reads stay on the units the viewer can see, and each room
+ * is still decided by its own sitting authority.
+ */
+const watchesRooms = Effect.fn("exams.home.watchesRooms")(function* (
+  unit: TenantUnitsDoc
+) {
+  const actions = yield* unitAuthority.allowed(unit);
+  return Arr.contains(actions, ROOMS_ACTION);
+});
+
+/** The rooms of one unit that run now, which are the open ones, in their opening order. */
+const openRows = Effect.fn("exams.home.openRows")(function* (
+  unitId: ExamSittingsDoc["unitId"]
+) {
+  return yield* (yield* DatabaseReader)
+    .table("examSittings")
+    .index("by_unitId_and_state_and_opensAt", (query) =>
+      query.eq("unitId", unitId).eq("state", "open")
+    )
+    .take(HOME_ROOM_LIMIT)
+    .pipe(Effect.orDie);
+});
+
+/**
+ * The rooms of one unit that open within the window from now, in their opening order. The window
+ * includes its two ends, so a room that opens exactly fourteen days from now is listed.
+ */
+const upcomingRows = Effect.fn("exams.home.upcomingRows")(function* (
+  unitId: ExamSittingsDoc["unitId"],
+  now: number
+) {
+  return yield* (yield* DatabaseReader)
+    .table("examSittings")
+    .index("by_unitId_and_state_and_opensAt", (query) =>
+      query
+        .eq("unitId", unitId)
+        .eq("state", "scheduled")
+        .gte("opensAt", now)
+        .lte("opensAt", now + UPCOMING_WINDOW_MS)
+    )
+    .take(HOME_ROOM_LIMIT)
+    .pipe(Effect.orDie);
+});
+
+/** Whether the viewer's sitting view allows the room, which the room's own authority decides. */
+const canView = Effect.fn("exams.home.canView")(function* (
+  row: ExamSittingsDoc
+) {
+  const actions = yield* withExam(row).pipe(
+    Effect.flatMap(sittingAuthority.allowed)
+  );
+  return Arr.contains(actions, "sitting.view");
+});
+
+/**
+ * The first rooms of the candidates that the viewer may view, earliest opening first, at most
+ * `HOME_ROOM_LIMIT`. Each candidate is decided by its own sitting authority, so no room reaches a viewer
+ * who may not see it.
+ */
+const firstViewable = Effect.fn("exams.home.firstViewable")(function* (
+  rows: readonly ExamSittingsDoc[]
+) {
+  const viewable = yield* Effect.filter(rows, canView);
+  return Arr.take(Arr.sort(viewable, byOpening), HOME_ROOM_LIMIT);
+});
+
+/**
+ * The exams of one school that the author created and may still edit, newest created first. The author
+ * is the account that `exams.create` records, so a draft is the author's own exam. The index reads the
+ * author's newest `HOME_DRAFT_SCAN` exams and keeps the ones the author may edit. Convex allows one
+ * paginated read per function, so the scan is one bounded read. The result tells whether the read stopped
+ * at a bound, because an older draft may then exist beyond the drafts listed.
+ */
+const draftsOf = Effect.fn("exams.home.drafts")(function* (
+  tenantId: GenericId.GenericId<"tenants">,
+  author: GenericId.GenericId<"users">
+) {
+  const rows = yield* (yield* DatabaseReader)
+    .table("exams")
+    .index(
+      "by_tenantId_and_createdBy",
+      (query) => query.eq("tenantId", tenantId).eq("createdBy", author),
+      "desc"
+    )
+    .take(HOME_DRAFT_SCAN)
+    .pipe(Effect.orDie);
+  const editable = yield* Effect.filter(rows, (row) =>
+    examAuthority
+      .allowed(row)
+      .pipe(Effect.map((actions) => Arr.contains(actions, "exam.edit")))
+  );
+  const kept = Arr.take(editable, HOME_DRAFT_LIMIT);
+  return {
+    bounded: rows.length >= HOME_DRAFT_SCAN || kept.length >= HOME_DRAFT_LIMIT,
+    drafts: Arr.map(kept, (row) => ({
+      ...examSummary(row),
+      createdAt: row.createdAt,
+    })),
+  };
+});
+
+/**
+ * The school home's exam reads for the caller, in one bounded call. Every read is an index read
+ * with a small limit over the school's active units, and each room, result, and draft is decided by
+ * its own authority before it is returned. A caller who holds no room, result, or exam action gets
+ * four empty lists. A caller who manages the school gets the school's setup in the same call.
+ */
+export const readHome = Effect.fn("exams.home.read")(function* () {
+  const member = yield* Member;
+  const { appUser } = yield* requireAuth().pipe(Effect.orDie);
+  const reader = yield* DatabaseReader;
+  const now = yield* Clock.currentTimeMillis;
+  const units = yield* reader
+    .table("tenantUnits")
+    .index("by_tenantId_and_status", (query) =>
+      query.eq("tenantId", member.tenant._id).eq("status", "active")
+    )
+    .take(TENANT_UNIT_LIMIT)
+    .pipe(Effect.orDie);
+  const watched = yield* Effect.filter(units, watchesRooms);
+  const running = Arr.flatten(
+    yield* Effect.forEach(watched, (unit) => openRows(unit._id))
+  );
+  const upcoming = Arr.flatten(
+    yield* Effect.forEach(watched, (unit) => upcomingRows(unit._id, now))
+  );
+  const live = yield* firstViewable(
+    Arr.filter(running, (row) => row.closesAt > now)
+  );
+  const next = yield* firstViewable(upcoming);
+  const can = yield* tenantAuthority.allowed(member.tenant);
+  const drafts = yield* draftsOf(member.tenant._id, appUser._id);
+  const home = {
+    canManageSetup: Arr.contains(can, "tenant.manage"),
+    closed: yield* closedResults(watched),
+    draftsBounded: drafts.bounded,
+    drafts: drafts.drafts,
+    live: yield* sittingViews(live),
+    next: yield* sittingViews(next),
+  };
+  if (!home.canManageSetup) {
+    return home;
+  }
+  return { ...home, setup: yield* readSetup(member.tenant._id) };
+});

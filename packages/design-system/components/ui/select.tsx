@@ -2,8 +2,6 @@
  * WARNING: If you want to use select in dialog, sheet, or any modal component, use DropdownMenu instead.
  */
 
-"use client";
-
 import { Select as SelectPrimitive } from "@base-ui/react/select";
 import {
   ArrowDown01Icon,

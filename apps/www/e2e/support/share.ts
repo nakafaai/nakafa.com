@@ -24,8 +24,12 @@ export const SHARE_TOKEN = /^[A-Za-z0-9_-]{43}$/u;
 export const ACCESS_TITLE = en.Ai["private-chat-error"];
 /** The description of that card, which says the chat is not available to this viewer. */
 export const UNAVAILABLE_COPY = en.Ai["chat-unavailable"];
-/** The path of the proxy that forwards a page's analytics to the runtime's stand-in. */
-const ANALYTICS_PATH = "/_nakafa/";
+/**
+ * Whether a request is a PostHog ingest call: a capture or a batch. The browser
+ * sends them straight to the proxy host, so the page's origin is not the test.
+ */
+const isAnalyticsRequest = (url: URL) =>
+  url.pathname === "/e/" || url.pathname === "/batch/";
 
 /** The title in the header of a chat page. */
 const chatTitle = (page: Page) =>
@@ -227,7 +231,7 @@ export const watchRequests = (page: Page) => {
      */
     pageviews: () =>
       Arr.flatMap(MutableList.toArray(sent), (request) => {
-        if (!new URL(request.url()).pathname.startsWith(ANALYTICS_PATH)) {
+        if (!isAnalyticsRequest(new URL(request.url()))) {
           return [];
         }
         const events = Option.match(

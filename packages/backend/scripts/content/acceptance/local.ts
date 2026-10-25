@@ -63,6 +63,12 @@ export const LocalRuntimeJson = Schema.fromJsonString(RuntimeManifest);
 const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
 /**
+ * The origin that the served acceptance app listens on. The browser suites
+ * open it, and the stand-in analytics and the app's own origin name it.
+ */
+export const ACCEPTANCE_ORIGIN = "http://localhost:3000";
+
+/**
  * One inert backend environment for signed reads in local production builds.
  * Google sign-in stays disabled; each runtime adds its own session signing key
  * as `JWKS`, so synthetic learners can sign in locally. The acceptance seeds run
@@ -78,7 +84,7 @@ const localEnvironment = {
   LOGIN_CARD_SECRET: "acceptance-local-login-card-secret",
   [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: "build-api-edge-secret",
   [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: "build-mcp-edge-secret",
-  NEXT_PUBLIC_POLAR_SERVER: "sandbox",
+  VITE_POLAR_SERVER: "sandbox",
   OPENWEATHER_API_KEY: "build-disabled",
   POLAR_ACCESS_TOKEN: "build-disabled",
   POLAR_WEBHOOK_SECRET: "build-disabled",
@@ -88,7 +94,7 @@ const localEnvironment = {
   POSTHOG_PROJECT_TOKEN: "build-disabled",
   RESEND_API_KEY: "build-disabled",
   RESEND_WEBHOOK_SECRET: "build-disabled",
-  SITE_URL: "http://localhost:3000",
+  SITE_URL: ACCEPTANCE_ORIGIN,
   VAULT_ROOT_KEYS: "local:YWNjZXB0YW5jZS1sb2NhbC12YXVsdC1yb290LWtleSE=",
 };
 
@@ -104,12 +110,12 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     CONVEX_SITE_URL: runtime.site,
     CONVEX_URL: runtime.query,
     NAKAFA_CONVEX_SITE_URL: runtime.site,
-    NEXT_PUBLIC_APP_URL: localEnvironment.SITE_URL,
-    NEXT_PUBLIC_CONVEX_SITE_URL: runtime.site,
-    NEXT_PUBLIC_CONVEX_URL: runtime.query,
-    NEXT_PUBLIC_POSTHOG_KEY: "phc_local_acceptance",
-    NEXT_PUBLIC_POSTHOG_UI_HOST: "http://localhost:3000",
-    POSTHOG_PROXY_HOST: runtime.analytics,
+    VITE_APP_URL: localEnvironment.SITE_URL,
+    VITE_CONVEX_SITE_URL: runtime.site,
+    VITE_CONVEX_URL: runtime.query,
+    VITE_POSTHOG_KEY: "phc_local_acceptance",
+    VITE_POSTHOG_UI_HOST: ACCEPTANCE_ORIGIN,
+    VITE_POSTHOG_PROXY_HOST: runtime.analytics,
     SITE_URL: localEnvironment.SITE_URL,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
@@ -134,29 +140,6 @@ const directoryIdentity = Effect.fn("contentAcceptance.directoryIdentity")(
     return { directory, directoryInode: info.ino.value };
   }
 );
-
-/**
- * Next reuses cached fetch responses across builds, but every runtime signs with
- * a new random key, and any other build may write the same cache. Responses
- * signed by another key can never verify, so every acceptance build starts
- * without them and cleanup leaves none behind. A cache redirected outside the
- * checkout is refused, so the removal never reaches a shared cache.
- */
-export const discardSignedResponses = Effect.fn(
-  "contentAcceptance.discardSignedResponses"
-)(function* (root: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const cache = `${root}/apps/www/.next/cache`;
-  if (!(yield* fs.exists(cache))) {
-    return;
-  }
-  if ((yield* fs.realPath(cache)) !== cache) {
-    return yield* acceptanceRuntimeError(
-      "The Next.js build cache must belong to this checkout."
-    );
-  }
-  yield* fs.remove(`${cache}/fetch-cache`, { force: true, recursive: true });
-});
 
 /** Reserves one private runtime without changing the checkout's Convex selection. */
 export const reserveLocalRuntime = Effect.fn(
@@ -394,8 +377,6 @@ export const cleanLocalRuntime = Effect.fn(
   }
   const runtime = reserved.value;
   yield* assertLocalPortsFree(runtime);
-  // A failed cache removal leaves the runtime in place for a clean retry.
-  yield* discardSignedResponses(root);
   yield* releaseLocalRuntime(runtime);
 });
 

@@ -6,18 +6,22 @@ import {
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import { agentTrustKeys } from "@repo/backend/keys";
+import {
+  DeployStageSchema,
+  PRODUCTION_DEPLOY_STAGE,
+} from "@repo/utilities/stage";
 import { Array as Arr, Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
 const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
 const AgentTrustSchema = Schema.Struct({
   key: TrustedKeySchema,
+  stage: DeployStageSchema,
   target: Schema.URLFromString,
-  vercel: Schema.UndefinedOr(Schema.String),
 }).check(
-  Schema.makeFilter(({ target, vercel }) => {
+  Schema.makeFilter(({ stage, target }) => {
     if (
-      vercel === "production" ||
+      stage === PRODUCTION_DEPLOY_STAGE ||
       target.username.length > 0 ||
       target.password.length > 0
     ) {
@@ -39,20 +43,19 @@ const hasAgentKey =
   agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID !== undefined ||
   agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY !== undefined;
 const agentKey = hasAgentKey
-  ? // Convex and Next load this immutable trust configuration at module startup.
+  ? // Convex and the app load this immutable trust configuration at module startup.
     // Synchronous schema validation fails before any publication or artifact read.
     Schema.decodeUnknownSync(AgentTrustSchema)({
       key: {
         keyId: agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID,
         publicKeyPem: agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY,
       },
+      stage: agentEnvironment.NAKAFA_DEPLOY_STAGE,
       target:
-        agentEnvironment.CONVEX_CLOUD_URL ??
-        agentEnvironment.NEXT_PUBLIC_CONVEX_URL,
-      vercel: agentEnvironment.VERCEL_ENV,
+        agentEnvironment.CONVEX_CLOUD_URL ?? agentEnvironment.VITE_CONVEX_URL,
     }).key
   : undefined;
-const trustedContentKeys =
+export const trustedContentKeys =
   agentKey === undefined
     ? TRUSTED_CONTENT_KEYS
     : [...TRUSTED_CONTENT_KEYS, agentKey];

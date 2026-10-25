@@ -6,11 +6,11 @@ import {
   MutationRunner,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import spec from "@repo/backend/confect/customers/actions/sessions.spec";
 import { validateCheckoutRequest } from "@repo/backend/confect/customers/checkout/impl";
 import { createAdmittedCheckoutSession } from "@repo/backend/confect/customers/checkout/session";
 import { checkoutSessionIoError } from "@repo/backend/confect/customers/checkout/spec";
-import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import { requireCustomer } from "@repo/backend/confect/customers/sync/impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Clock, Effect, flow, Layer } from "effect";

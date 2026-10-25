@@ -8,6 +8,7 @@ import { ExamAccess } from "@repo/backend/confect/exams/access";
 import {
   AnswersDoNotFit,
   ExamEmpty,
+  ExamFrozen,
   ExamFull,
   KeyDoesNotFit,
   QuestionHistoryLong,
@@ -41,7 +42,8 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => QuestionView,
-      error: () => Schema.Union([AccessDenied, DocumentTooLarge, ExamFull]),
+      error: () =>
+        Schema.Union([AccessDenied, DocumentTooLarge, ExamFrozen, ExamFull]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(
@@ -57,6 +59,7 @@ export default GroupSpec.make()
         Schema.Union([
           AccessDenied,
           DocumentTooLarge,
+          ExamFrozen,
           ExamFull,
           QuestionHistoryLong,
         ]),
@@ -71,7 +74,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => QuestionOrder,
-      error: () => Schema.Union([AccessDenied, ExamEmpty]),
+      error: () => Schema.Union([AccessDenied, ExamEmpty, ExamFrozen]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(
@@ -84,7 +87,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => QuestionOrder,
-      error: () => AccessDenied,
+      error: () => Schema.Union([AccessDenied, ExamFrozen]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(
@@ -104,6 +107,7 @@ export default GroupSpec.make()
           AccessDenied,
           AnswersDoNotFit,
           DocumentTooLarge,
+          ExamFrozen,
           KeyDoesNotFit,
           RevisionStale,
         ]),

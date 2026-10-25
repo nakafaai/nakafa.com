@@ -17,9 +17,10 @@ const PATCHED_DEPENDENCIES_PATTERN = /^patchedDependencies:/mu;
 const IGNORED_DIRECTORIES = HashSet.make(
   ".cache",
   ".git",
-  ".next",
+  ".output",
   ".turbo",
   ".venv",
+  ".vercel",
   "coverage",
   "dist",
   "node_modules",

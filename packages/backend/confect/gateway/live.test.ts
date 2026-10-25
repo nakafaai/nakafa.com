@@ -152,7 +152,7 @@ describe("The production gateway", () => {
       serviceToken.mockResolvedValue("service-token");
       fetch.mockResolvedValue(Response.json(completion));
       return Effect.gen(function* () {
-        // The Vercel gateway client reads the global Buffer to encode file
+        // The AI gateway client reads the global Buffer to encode file
         // bytes, and the Convex gateway adapter does not. With the global gone,
         // the bytes still reach the request as base64.
         vi.stubGlobal("Buffer", undefined);

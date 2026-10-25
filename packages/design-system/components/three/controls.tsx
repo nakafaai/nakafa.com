@@ -4,7 +4,6 @@ import { GridIcon, GridOffIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { useTranslations } from "next-intl";
 import {
   createContext,
   type ReactNode,
@@ -12,6 +11,7 @@ import {
   useLayoutEffect,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 

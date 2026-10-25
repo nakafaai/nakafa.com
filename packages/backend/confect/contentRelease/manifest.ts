@@ -12,6 +12,10 @@ import {
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
+  isBootstrapCandidate,
+  requireCurrentBase,
+} from "@repo/backend/confect/contentRelease/generation";
+import {
   ensureState,
   type ReleaseRole,
 } from "@repo/backend/confect/contentRelease/model";
@@ -170,6 +174,11 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     }
     yield* validateRecoveryBase(signed.manifest, canonicalRenderer, state);
   }
+  const bootstrap =
+    role === "candidate" && isBootstrapCandidate(signed.manifest, state);
+  if (!bootstrap) {
+    yield* requireCurrentBase(signed.manifest.releaseId, state);
+  }
   yield* validateExistingSnapshots(signed.manifest);
   const families = yield* deriveReleaseFamilies(signed.manifest);
   const now = yield* Clock.currentTimeMillis;
@@ -177,6 +186,7 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   const row = {
     ...releaseReachability(signed),
     baseFamilies: families.base,
+    ...(bootstrap ? { bootstrap: true } : {}),
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,

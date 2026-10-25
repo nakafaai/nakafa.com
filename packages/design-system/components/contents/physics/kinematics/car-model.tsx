@@ -1,5 +1,3 @@
-"use client";
-
 import { useGLTF } from "@react-three/drei";
 import { tintMaterial } from "@repo/design-system/components/three/material";
 import { Array as Arr, HashSet } from "effect";

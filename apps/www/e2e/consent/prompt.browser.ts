@@ -21,7 +21,7 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
+import { APP_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { compactViewport } from "@/e2e/support/viewport";
 
@@ -49,7 +49,7 @@ test("the usage data prompt is in the server HTML, paints before app code, and s
           expect(await response?.text()).toContain(PROMPT_DESCRIPTION);
           await expect(page.getByText(PROMPT_DESCRIPTION)).toBeVisible();
 
-          await page.unroute(NEXT_CHUNK_PATH);
+          await page.unroute(APP_CHUNK_PATH);
           await page.reload({ waitUntil: "load" });
 
           await expect(page.getByText(PROMPT_DESCRIPTION)).toBeVisible();
@@ -88,7 +88,7 @@ test("a visitor who already decided gets no prompt before the page hydrates", as
             expect(page.getByText(PROMPT_DESCRIPTION)).toBeHidden()
           );
 
-          yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
+          yield* Effect.promise(() => page.unroute(APP_CHUNK_PATH));
           yield* Effect.promise(() => page.reload({ waitUntil: "load" }));
 
           yield* Effect.promise(() =>
@@ -203,7 +203,7 @@ test("a browser privacy signal hides the prompt before and after the page hydrat
             expect(page.getByText(PROMPT_DESCRIPTION)).toBeHidden()
           );
 
-          yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
+          yield* Effect.promise(() => page.unroute(APP_CHUNK_PATH));
           yield* Effect.promise(() => page.reload({ waitUntil: "load" }));
 
           yield* Effect.promise(() =>

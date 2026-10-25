@@ -1,5 +1,3 @@
-"use client";
-
 import { usePromptInputFiles } from "@repo/design-system/components/ai/input-files";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";

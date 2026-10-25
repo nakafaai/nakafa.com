@@ -1,5 +1,3 @@
-"use client";
-
 import { Match, Schema } from "effect";
 import { useEffect, useEffectEvent, useState } from "react";
 

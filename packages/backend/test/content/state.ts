@@ -13,6 +13,10 @@ import {
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
+  CURRENT_CONTENT_GENERATION,
+  contentGenerationValidator,
+} from "@repo/backend/confect/contentRelease/generation";
+import {
   INITIAL_MODEL_SLOT,
   modelSlotValidator,
 } from "@repo/backend/confect/contentRelease/models/slot";
@@ -53,6 +57,7 @@ type TestReleaseEnvelope = typeof TestReleaseEnvelopeSchema.Type;
 
 const TestReleaseOptionsSchema = Schema.Struct({
   ...TestReleaseEnvelopeSchema.fields,
+  bootstrap: Schema.optional(Schema.Boolean),
   ownership: Schema.Struct({
     base: Schema.Array(ContentFamilySchema),
     result: Schema.Array(ContentFamilySchema),
@@ -62,6 +67,8 @@ type TestReleaseOptions = typeof TestReleaseOptionsSchema.Type;
 
 const TestStateOptionsSchema = Schema.Struct({
   active: Schema.optional(TestIdentitySchema),
+  /** Omitted means current when an active release is set; null leaves the generation unrecorded. */
+  generation: Schema.optional(Schema.NullOr(contentGenerationValidator)),
   article: Schema.optional(TestIdentitySchema),
   articleSlot: Schema.optional(modelSlotValidator),
   candidate: Schema.optional(TestIdentitySchema),
@@ -132,6 +139,7 @@ export async function insertZeroRelease(
   };
   await ctx.db.insert("contentReleases", {
     ...testStoredReachability(releaseJson),
+    ...(options.bootstrap ? { bootstrap: true } : {}),
     ...(aborted
       ? { abortedAt: now, abortedRows: 0, abortingAt: now }
       : {
@@ -174,7 +182,12 @@ export async function insertTestState(
   options: TestStateOptions
 ) {
   const now = Date.UTC(2026, 6, 23, 12);
+  const generation =
+    options.generation === undefined
+      ? options.active && CURRENT_CONTENT_GENERATION
+      : options.generation;
   await ctx.db.insert("contentState", {
+    ...(generation ? { activeContentGeneration: generation } : {}),
     ...(options.active
       ? {
           activeManifestHash: options.active.manifestHash,
@@ -349,6 +362,7 @@ export async function insertActiveRelease(
     verifiedAt: now,
   });
   await ctx.db.insert("contentState", {
+    activeContentGeneration: CURRENT_CONTENT_GENERATION,
     activeManifestHash: active.manifestHash,
     activeReleaseId,
     activeSequence: 1,

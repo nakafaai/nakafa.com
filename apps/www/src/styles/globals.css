@@ -1,0 +1,77 @@
+@import "@repo/design-system/styles/globals.css";
+@import "@repo/design-system/styles/theme.css";
+@import "@repo/design-system/styles/katex.css";
+
+/*
+ * The surah header is one row at every width, and it is exactly this tall, so the
+ * verse anchors that scroll past it agree with it. The row must fit inside it,
+ * which the landing test checks.
+ */
+:root {
+  --surah-header-height: 4rem;
+}
+
+/*
+ * A part of a marketing page rises into place as it scrolls into view: it starts
+ * 1.5rem low and clear, and rests once 60% of its entry has passed. The scroll
+ * drives it, so it needs no script, runs off the main thread, and never hides a
+ * part that is on the screen when the page loads, which is past its entry and
+ * rests. Browsers without scroll-driven animation, and readers who ask for less
+ * motion, see every part at rest. --rise-delay starts a part later in its entry,
+ * so a product card follows its words.
+ */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+@utility rise-on-scroll {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: rise-in var(--ease-out) both;
+      animation-timeline: view();
+      animation-range: entry var(--rise-delay, 0%) entry
+        calc(var(--rise-delay, 0%) + 60%);
+    }
+  }
+}
+
+/*
+ * A verse anchor scrolls the sticky headers above it into view, so the verse's
+ * number row lands right under them: the app header and the surah header below
+ * lg, and the surah header alone from lg, where the app header is hidden.
+ */
+@utility quran-verse-anchor {
+  scroll-margin-top: calc(
+    var(--app-header-top, 4rem) +
+    var(--surah-header-height)
+  );
+
+  @media (width >= 64rem) {
+    scroll-margin-top: var(--surah-header-height);
+  }
+}
+
+/*
+ * The app shell keeps its page clear of the desktop sidebar with this offset.
+ * It is registered as a length so it can slide with the sidebar when the
+ * learner opens or closes it; a lock change bypasses it and never animates.
+ */
+@property --app-sidebar-offset {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0rem;
+}
+
+/*
+ * The header's account slot is chosen by the signed-in hint before the first
+ * frame. The inline script sets `data-signed-in` on the root, so both slots are
+ * rendered and the one that matches shows, with no account state at first paint.
+ * Without the attribute the visitor slot shows.
+ */
+:root[data-signed-in="yes"] [data-account="visitor"],
+:root:not([data-signed-in="yes"]) [data-account="member"] {
+  display: none;
+}

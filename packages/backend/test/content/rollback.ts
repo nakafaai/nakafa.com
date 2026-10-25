@@ -1,3 +1,4 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { assert } from "@effect/vitest";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
@@ -6,17 +7,29 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { MAX_CONTENT_TREE_BYTES } from "@nakafa/aksara-contracts/limits";
 import {
   ACTIVE_APP_LOCALE_CODES,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
+  canonicalizeRollbackPage,
   canonicalizeRollbackSnapshotEntry,
+  MAX_ROLLBACK_PAGE_BYTES,
+  type RollbackPage,
+  type RollbackRecord,
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import {
+  type ContentTreeElement,
+  canonicalizeContentTree,
+} from "@nakafa/aksara-contracts/tree";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { rollbackRecord } from "@repo/backend/confect/contentRelease/rollback/state";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type schema from "@repo/backend/convex/schema";
 import {
   insertTestArtifact,
   testArtifactJson,
@@ -37,7 +50,8 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import type { TestConvex } from "convex-test";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
 type RollbackFixtureFamily = "material" | "question";
@@ -158,10 +172,10 @@ async function insertVersion(
     readonly sourceHash?: typeof Sha256HashSchema.Type;
     readonly sourcePath: string;
   },
-  compiledCode: string,
+  bodyText: string,
   artifactJson = testArtifactJson({
     artifactHash: options.artifactHash,
-    compiledCode,
+    bodyText,
     contentKey: options.contentKey,
     rendererDomain: options.rendererDomain,
   })
@@ -194,10 +208,11 @@ export async function insertRollbackItem(
   ctx: MutationCtx,
   index: number,
   previousExists: boolean,
-  compiledCode = "return {};",
+  bodyText = "Technical fixture",
   options?: {
     readonly authenticatedArtifact?: boolean;
     readonly contentKey?: typeof ContentKeySchema.Type;
+    readonly currentArtifactJson?: string;
     readonly currentProjectionJson?: string;
     readonly currentSourcePath?: typeof CorpusSourcePathSchema.Type;
     readonly delivery?: ContentDeliveryClass;
@@ -214,7 +229,7 @@ export async function insertRollbackItem(
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const signedArtifact = options?.authenticatedArtifact
     ? await Effect.runPromise(
-        testSignedArtifact(rendererDomain, { compiledCode, contentKey })
+        testSignedArtifact(rendererDomain, { bodyText, contentKey })
       )
     : undefined;
   const currentHash =
@@ -304,8 +319,10 @@ export async function insertRollbackItem(
         : { sourceHash: signedArtifact?.payload.sourceHash }),
       sourcePath: currentSourcePath,
     },
-    compiledCode,
-    signedArtifact ? encodeJsonText(signedArtifact) : undefined
+    bodyText,
+    signedArtifact
+      ? encodeJsonText(signedArtifact)
+      : options?.currentArtifactJson
   );
   if (previousExists) {
     await insertVersion(
@@ -322,7 +339,111 @@ export async function insertRollbackItem(
         sequence: 0,
         sourcePath: priorSourcePath,
       },
-      compiledCode
+      bodyText
     );
   }
+}
+
+/**
+ * The reference for the page walk that prepareRollback replaced: every candidate page is
+ * canonicalized whole before the next row is considered, and the accepted page once more.
+ */
+function perRowCanonicalPage(
+  afterIndex: number,
+  total: number,
+  rows: readonly RollbackRecord[]
+) {
+  const pageOf = (records: readonly RollbackRecord[]): RollbackPage => {
+    const nextIndex = Option.match(Arr.last(records), {
+      onNone: () => afterIndex,
+      onSome: (record) => record.index,
+    });
+    return {
+      done: nextIndex === total - 1,
+      nextIndex,
+      records,
+      rollbackOf: TEST_RELEASE_ID,
+      rollbackOfManifestHash: TEST_MANIFEST_HASH,
+      total,
+    };
+  };
+  let accepted: RollbackRecord[] = [];
+  for (const record of rows) {
+    const candidate = pageOf([...accepted, record]);
+    const bytes = new TextEncoder().encode(
+      canonicalizeRollbackPage(candidate)
+    ).byteLength;
+    if (bytes > MAX_ROLLBACK_PAGE_BYTES) {
+      break;
+    }
+    accepted = [...accepted, record];
+  }
+  return canonicalizeRollbackPage(pageOf(accepted));
+}
+
+/** Computes the page text prepareRollback must return for the same stored rows. */
+export function expectedRollbackPage(
+  t: TestConvex<typeof schema>,
+  afterIndex: number,
+  limit: number,
+  total: number
+) {
+  return t.query(async (ctx) => {
+    const rows = await ctx.db
+      .query("contentItems")
+      .withIndex("by_releaseId_and_index", (query) =>
+        query.eq("releaseId", TEST_RELEASE_ID).gt("index", afterIndex)
+      )
+      .take(limit);
+    const records = await Effect.runPromise(
+      Effect.forEach(rows, (row) => rollbackRecord(row)).pipe(
+        Effect.map((transitions) =>
+          Arr.map(transitions, ({ record }) => record)
+        ),
+        Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+      )
+    );
+    return perRowCanonicalPage(afterIndex, total, records);
+  });
+}
+
+/** Props per element in the props-dense fixture tree. */
+const PROPS_PER_ELEMENT = 62;
+
+/** Builds a fragment of em elements with 62 props each, filling the tree to just under its ceiling. */
+function propsDenseTree(): ContentTreeElement {
+  const props: Record<string, string> = {};
+  for (let index = 0; index < PROPS_PER_ELEMENT; index += 1) {
+    props[`p${index}`] = "x";
+  }
+  const element: ContentTreeElement = {
+    $node: "element",
+    name: "em",
+    props,
+    children: [],
+  };
+  const elementBytes = new TextEncoder().encode(
+    canonicalizeContentTree(element)
+  ).byteLength;
+  const count = Math.floor(
+    (MAX_CONTENT_TREE_BYTES - 4 * 1024) / (elementBytes + 1)
+  );
+  return {
+    $node: "element",
+    name: "fragment",
+    props: {},
+    children: Arr.makeBy(count, () => element),
+  };
+}
+
+/**
+ * The props-dense signed artifact of one rollback row, in the text its fixture writes. Its props keep
+ * insertion order, so the text is not the canonical form that ingress stores.
+ */
+export function propsDenseArtifactJson(index: number) {
+  return testArtifactJson({
+    artifactHash: rollbackArtifactHash(index, "current"),
+    contentKey: `test:head-${index}`,
+    contentTree: propsDenseTree(),
+  });
 }

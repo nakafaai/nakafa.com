@@ -1,14 +1,20 @@
 {
+  "DataTable": {
+    "no-results": "No results.",
+    "reset": "Reset"
+  },
   "School": {
     "account-settings": "Account settings",
     "back-to-learning": "Back to Nakafa",
+    "classes": "Classes",
     "for-you": "For you",
     "home": "Home",
-    "next-exam-title": "Your school's exams",
-    "next-exam-description": "Write questions, schedule a sitting, and watch it live.",
-    "next-exam-footer": "Students see an exam only once it is scheduled.",
-    "next-exam-action": "Open exams",
-    "language": "Language",
+    "greeting-morning": "Good morning, {name}",
+    "greeting-afternoon": "Good afternoon, {name}",
+    "greeting-evening": "Good evening, {name}",
+    "tile-live": "Live now",
+    "tile-drafts": "Drafts",
+    "tile-minutes-left": "{count, plural, one {# minute left} other {# minutes left}}",
     "role": {
       "admin": "Admin",
       "auditor": "Auditor",
@@ -24,8 +30,64 @@
       "teacher": "Teacher"
     },
     "sign-in-title": "Sign in to {school}",
-    "signed-in": "You are signed in.",
-    "signed-in-as": "You are signed in as {role}."
+    "sittings-empty": "Your teacher has not scheduled a sitting yet.",
+    "refused-title": "Your access to this school has changed.",
+    "refused-description": "Ask an admin of this school to check your access, or go back to Nakafa.",
+    "answers-saved": "Answers saved",
+    "quiet-staff": "No sitting is running, and none opens in the next 14 days.",
+    "setup-invites": "Review pending invites",
+    "setup-students": "Invite students",
+    "setup-teacher": "Invite a teacher",
+    "setup-unit": "Add a school",
+    "tile-result-pending": "Not released",
+    "tile-result-released": "Released",
+    "tile-results": "Results",
+    "tile-setup": "Setup",
+    "metric-live": "Live now",
+    "metric-live-period": "Rooms running",
+    "metric-next": "Next 14 days",
+    "metric-next-period": "Rooms opening soon",
+    "metric-waiting": "Waiting for release",
+    "metric-waiting-period": "Results to release",
+    "metric-drafts": "Drafts",
+    "metric-drafts-period": "Exams you may edit",
+    "tile-schedule": "Schedule",
+    "tile-now": "Now",
+    "now-left": "{count, plural, one {minute left} other {minutes left}}",
+    "live-progress": "{percent}% of the time has passed",
+    "setup-progress": "{done} of {total} steps",
+    "now-until-open": "{count, plural, one {minute until it opens} other {minutes until it opens}}",
+    "sitting-open-now": "Open now",
+    "draft-created": "Created {age}",
+    "schedule-bound": "The schedule draws only the first {count} rooms.",
+    "results-bound": "Only the newest {count} results are listed.",
+    "all-exams": "All exams"
+  },
+  "SchoolEntry": {
+    "card-code-description": "Only for your first sign-in or after a new card is printed.",
+    "card-code-label": "Card code",
+    "card-expired": "This card has expired. Ask your teacher or admin for a new card.",
+    "card-invalid": "The username or card code is not right.",
+    "card-rate-limited": "Too many tries from this device. Wait a few minutes and try again.",
+    "card-used": "This card was already used. Ask your teacher or admin for a new card.",
+    "failed": "Signing in failed. Try again.",
+    "outsider-card": "Sign in with a card",
+    "outsider-description": "{account} is not a member of {school}.",
+    "outsider-card-hint": "Not a Google address? Ask your school's admin how you sign in.",
+    "outsider-switch": "Switch account",
+    "outsider-title": "Not a member",
+    "password-description": "At least 8 characters.",
+    "password-label": "Password",
+    "password-too-long": "The password is too long.",
+    "password-too-short": "The password is too short.",
+    "sign-in-refused": "The username or password is not right, so check both or ask your teacher if it keeps failing.",
+    "submit": "Sign in",
+    "submitting": "Signing in...",
+    "username-action": "Sign in with a username",
+    "username-footer": "The card code works once, and sets the password you sign in with.",
+    "username-label": "School username",
+    "outsider-hint": "If an admin invited this address, the invite can take a moment to appear. Check again, or ask an admin to send it again. If the invite went to another address, sign in with that one.",
+    "outsider-check-again": "Check again"
   },
   "Exams": {
     "token": "Token",
@@ -36,7 +98,8 @@
     "filter-needs-attention": "Needs attention",
     "filter-finished": "Finished",
     "seats-label": "Student seats",
-    "seats-empty": "No student has entered this sitting yet.",
+    "seats-empty": "No student is expected in this sitting.",
+    "seat-waiting": "Not entered yet.",
     "filter-empty": "No student matches this filter.",
     "panel-label": "Student session",
     "state-in-progress": "In progress",
@@ -91,48 +154,94 @@
     "student-enter": "Enter sitting",
     "student-enter-footer": "Your proctor gives you the token.",
     "student-token-placeholder": "Enter the token from your proctor",
-    "student-token-refused": "The token does not match. Check it and try again.",
-    "student-too-many-tries": "Too many tries. Wait a minute and try again.",
-    "student-not-in-sitting": "You are not in this sitting.",
-    "student-not-open": "This sitting has not opened yet.",
-    "student-closed": "This sitting has closed.",
-    "student-locked-school": "This sitting is locked, so it takes no entries and records no signals.",
-    "student-attempt-closed": "This attempt has closed.",
-    "student-second-device": "This attempt belongs to another device. Ask your proctor to allow a second device.",
-    "student-device-retired": "Your proctor retired this device from the attempt.",
-    "student-locked": "Your proctor has locked this sitting, so you cannot answer.",
-    "student-unavailable": "This sitting is not open to you.",
+    "student-token-refused": "The token does not match, so check it and try again.",
+    "student-too-many-tries": "Too many tries, so wait a minute and try again.",
+    "student-not-in-sitting": "You are not in this sitting, so ask your proctor if you think this is wrong.",
+    "student-not-open": "This sitting has not opened yet, so come back at its opening time.",
+    "student-closed": "This sitting has closed, so ask your teacher about another sitting.",
+    "student-locked-school": "This sitting is locked, so ask your teacher what to do next.",
+    "student-no-answer": "No answer",
+    "student-attempt-closed": "This attempt has closed, so ask your proctor if you think the time was wrong.",
+    "student-second-device": "This attempt belongs to another device, so ask your proctor to allow a second device.",
+    "student-device-retired": "Your proctor retired this device, so ask your proctor which device you may use.",
+    "student-locked": "Your proctor locked this attempt, so wait until it is unlocked before you answer.",
+    "student-unavailable": "This sitting is not open to you, so ask your teacher if you think this is wrong.",
     "finish-title": "Finish the exam?",
     "finish-description": "You cannot change your answers after you finish.",
     "answers-in": "Your answers are in.",
     "title": "Exams",
     "empty": "There are no exams yet.",
+    "exams-search": "Find an exam",
     "untitled": "Untitled exam",
     "title-label": "Exam title",
     "unavailable": "This exam is not available.",
+    "frozen-note": "This exam is scheduled, so its questions are fixed.",
+    "archived-note": "This school is archived, so its exams are read-only until it is restored.",
+    "room-cancel": "Cancel room",
+    "room-cancel-title": "Cancel this room?",
+    "room-cancel-description": "Students cannot enter it. The exam's questions can change again once no room of it remains.",
+    "room-cancel-confirm": "Cancel room",
     "questions": "Questions",
     "question": "Question {number}",
     "option": "Option {letter}",
-    "correct": "Correct answer",
-    "correct-option": "Mark option {letter} as correct",
+    "option-of": "Question {number}, option {letter}",
+    "option-add": "Add option",
     "no-key": "This question has no answer key yet.",
     "move-up": "Move up",
+    "move-up-of": "Move question {number} up",
     "move-down": "Move down",
+    "move-down-of": "Move question {number} down",
+    "more-actions-of": "More actions for question {number}",
     "remove": "Remove question",
+    "remove-of": "Remove question {number}",
     "remove-title": "Remove this question?",
     "remove-description": "The question and its answers leave this exam.",
     "create": "Create exam",
     "create-description": "The exam starts with one question.",
     "unit": "Unit",
     "whole-school": "Whole school",
-    "language": "Language",
     "add-question": "Add question",
     "copy": "Copy question",
+    "copy-of": "Copy question {number}",
     "prompt-label": "Question text",
     "prompt-placeholder": "Write the question here.",
+    "results-title": "Results",
+    "results-name": "Student",
+    "results-status": "Status",
+    "results-score": "Score",
+    "results-search": "Search by name",
+    "results-answered": "Answered",
+    "results-pending": "Pending",
+    "results-finished": "Finished",
+    "results-empty-title": "No results yet",
+    "results-empty": "Results appear here once students finish the sitting.",
+    "results-unavailable": "You cannot view these results.",
+    "results-share": "{share}% correct",
+    "results-counted": "Based on {counted} answers.",
+    "results-incomplete": "Only the first {counted} answers are counted.",
+    "results-answers": "Answers",
+    "results-no-answers": "No student has answered this question yet.",
+    "results-no-match": "No matching students",
+    "verdict-correct": "Correct",
+    "verdict-incorrect": "Incorrect",
+    "verdict-pending": "Waiting for review",
+    "release-title": "Release the results to students?",
+    "release-description": "Each student sees their own score and answers once you release them.",
+    "release-action": "Release results",
+    "release-footer": "Students see their results after you release them.",
+    "release-wait-footer": "The exam author or the Admin releases the results once the sitting closes.",
+    "released-footer": "Students can see their results.",
+    "student-results-title": "Your result",
+    "student-score": "{points} of {total} correct",
+    "student-results-footer": "Your teacher releases the results after the sitting closes.",
+    "student-answer": "Your answer: {letters}",
+    "student-answers": "Your answers",
+    "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",
     "schedule-title": "Schedule exam",
-    "schedule-description": "Students of the unit take it in the room from the start, for its length.",
+    "schedule-description": "The students of the unit, or of the class you choose, take it in the room from the start, for its length.",
+    "audience": "Who takes it",
+    "audience-unit": "The whole unit",
     "room": "Room",
     "room-placeholder": "Lab 2",
     "starts": "Starts",
@@ -140,9 +249,55 @@
     "length-minutes": "{count, plural, one {# minute} other {# minutes}}",
     "schedule-keys": "Mark the correct answer of every question first.",
     "schedule-past": "The start has passed. Choose a later time.",
+    "rooms-title": "Rooms",
+    "rooms-empty": "No rooms yet",
+    "rooms-empty-description": "Each room appears here once the exam is scheduled.",
+    "rooms-empty-action": "Open the exam",
+    "rooms-filter-empty": "No room is in this state",
+    "rooms-filter-empty-description": "Choose another state to see the other rooms.",
+    "rooms-unavailable": "You cannot view the rooms of this exam.",
+    "rooms-group": "Group",
+    "rooms-opens": "Opens",
+    "rooms-closes": "Closes",
+    "rooms-state": "State",
+    "room-state-scheduled": "Scheduled",
+    "room-state-open": "Open",
+    "room-state-closed": "Closed",
+    "state-all": "All states",
     "try-action": "Try as student",
     "try-finish": "Finish trying",
-    "try-note": "Answers here are not saved."
+    "try-note": "Answers here are not saved.",
+    "pages": "Pages",
+    "pages-label": "Exam pages",
+    "page-no-key": "No key yet",
+    "add-below": "Add question below",
+    "add-below-of": "Add question below question {number}",
+    "question-text": "Question {number} text",
+    "option-placeholder": "Option text",
+    "key-option": "Mark option {letter} of question {number} as correct",
+    "option-remove-of": "Remove option {letter} of question {number}",
+    "grid": "Grid view",
+    "fullscreen": "Full screen",
+    "fullscreen-exit": "Exit full screen",
+    "zoom": "Zoom",
+    "student-retry": "This sitting could not load, so try again in a moment.",
+    "student-opens-at": "This sitting opens {time}.",
+    "student-scheduled-footer": "The token field opens with the sitting.",
+    "student-back-home": "Back to home",
+    "flag-question": "Flag for review",
+    "seat-last-activity": "Last activity {time}.",
+    "title-needed": "The exam needs a title before you can create it.",
+    "title-too-long": "The title can have at most {count} characters.",
+    "no-unit-description": "An exam belongs to a unit. Add or restore one in the settings first.",
+    "no-unit-action": "Open units",
+    "no-unit-member": "An exam belongs to a unit. Ask an admin of this school to add one.",
+    "schedule-keys-numbered": "{count, plural, one {Mark the correct answer of question {questions} first.} other {Mark the correct answer of questions {questions} first.}}",
+    "room-needed": "Give the room a name first.",
+    "starts-needed": "Choose when the sitting starts.",
+    "seats-empty-title": "No seat yet",
+    "seats-filter-title": "No seat matches",
+    "signals-empty-title": "No signal yet",
+    "student-start": "Start exam"
   },
   "SchoolSettings": {
     "school": "School",
@@ -153,6 +308,7 @@
     "periods": "Periods",
     "units": "Units",
     "roles": "Roles and access",
+    "members": "Members",
     "invites": "Invites",
     "students": "Student accounts",
     "clients": "API clients",
@@ -172,6 +328,11 @@
     "logo-remove-title": "Remove the logo?",
     "logo-remove-description": "The school shows its animal again until a new logo is uploaded.",
     "logo-remove-confirm": "Remove logo",
+    "name-title": "School name",
+    "name-description": "Every page of this school and its invitation emails show this name.",
+    "name-label": "Name",
+    "name-invalid": "Use 3 to 120 characters on one line.",
+    "name-footer": "Every name change is recorded in the audit trail.",
     "policy-students": "Students",
     "policy-students-description": "What students may do in this school.",
     "policy-students-footer": "Every policy change is recorded in the audit trail.",
@@ -187,8 +348,15 @@
     "level-other": "Other",
     "unit-level-line": "Level {level}.",
     "unit-archived-description": "This school is archived and refuses changes until it is restored.",
+    "unit-add": "Add school",
+    "unit-add-title": "Add a school",
+    "unit-add-description": "A school has its own level, periods, and classes.",
+    "unit-add-name": "Name",
+    "unit-add-level": "Level",
+    "unit-add-submit": "Add school",
+    "unit-add-footer": "A new school opens with no period. Add one on the Periods page.",
     "unit-time-zone": "Time zone",
-    "unit-content-language": "Content language",
+    "unit-page-language": "Page language",
     "unit-archive-footer": "An archived school stays readable.",
     "unit-restore-footer": "Restoring the school makes it editable again.",
     "unit-restore": "Restore",
@@ -214,11 +382,58 @@
     "period-rename": "Rename",
     "period-rename-save": "Save",
     "periods-empty": "No period yet.",
+    "periods-search": "Find a period",
+    "cohorts": "Cohorts",
+    "cohorts-description": "The groups of students who learn together in each period.",
+    "cohort-create": "Add cohort",
+    "cohort-name": "Name",
+    "cohort-name-placeholder": "7A",
+    "cohort-grade": "Grade",
+    "cohort-grade-placeholder": "Choose a grade",
+    "cohort-status": "Status",
+    "cohort-active": "Active",
+    "cohort-archived": "Archived",
+    "cohort-rename": "Rename",
+    "cohort-rename-save": "Save",
+    "cohort-archive": "Archive",
+    "cohort-add-footer": "A new cohort starts active.",
+    "cohorts-empty": "No cohort yet.",
+    "cohorts-search": "Find a cohort",
+    "cohorts-no-period-title": "No active period.",
+    "cohorts-no-period": "Open a period first, and its cohorts appear here.",
+    "cohorts-unavailable": "The cohorts of this unit cannot be shown.",
+    "cohorts-unavailable-description": "Choose another unit to see its cohorts.",
+    "cohort-unavailable": "This cohort cannot be opened here.",
+    "cohort-unavailable-description": "This cohort may belong to another school or no longer exist. Choose a cohort from the cohorts list.",
+    "placement-add": "Add student",
+    "placement-add-footer": "A student belongs to one cohort in each period.",
+    "placement-student": "Student",
+    "placement-move": "Move",
+    "placement-move-footer": "The student leaves this cohort for the one you choose.",
+    "placement-move-to": "Move to",
+    "placement-move-save": "Move",
+    "cohort-members-search": "Find a student",
+    "cohort-members-description": "The students placed in this cohort appear here.",
+    "cohort-members-empty": "No student yet.",
+    "homeroom-title": "Homeroom teacher",
+    "homeroom-teacher": "Teacher",
+    "homeroom-none": "None yet.",
+    "homeroom-footer": "Choose the teacher who leads this cohort.",
+    "homeroom-remove-footer": "Removing the teacher leaves the cohort without one.",
+    "homeroom-archived": "An archived cohort keeps its homeroom teacher as it was.",
+    "homeroom-save": "Save",
+    "homeroom-remove": "Remove",
     "invites-description": "The invites that wait to be accepted, and when they expire.",
     "invite-name": "Name",
     "invite-email": "Email",
     "invite-expires": "Expires",
     "invite-resend": "Send again",
+    "invite-expired": "Expired",
+    "invite-card": "Issue a login card",
+    "invite-card-description": "The invitee signs in with this login name and the card code, which the school shows once.",
+    "invite-card-submit": "Issue card",
+    "invite-google-note": "An address without Google signs in with a login card from the admin.",
+    "invite-google-admin-note": "An Admin needs a Google address, because an Admin gets no login card.",
     "invite-revoke": "Revoke",
     "invite-revoke-title": "Revoke this invite?",
     "invite-revoke-description": "The address can no longer accept this invite.",
@@ -241,6 +456,7 @@
     "audit-who": "Who",
     "audit-change": "Change",
     "audit-empty": "Nothing has changed yet.",
+    "audit-search": "Find a change",
     "audit-operator": "Nakafa staff",
     "audit-system": "System",
     "audit-label": {
@@ -251,7 +467,8 @@
       "card": {
         "issued": "Login card issued",
         "reissued": "Login card reissued",
-        "redeemed": "Login card used"
+        "redeemed": "Login card used",
+        "printed": "Login card printed"
       },
       "class": {
         "created": "Classroom added",
@@ -267,9 +484,10 @@
         "stored": "Grading scheme version added"
       },
       "cohort": {
-        "created": "Class added",
-        "renamed": "Class renamed",
-        "archived": "Class archived"
+        "created": "Cohort added",
+        "renamed": "Cohort renamed",
+        "archived": "Cohort archived",
+        "restored": "Cohort restored"
       },
       "connection": {
         "connected": "Connection added",
@@ -294,7 +512,8 @@
         "created": "Period added",
         "opened": "Period opened",
         "archived": "Period archived",
-        "rename": "Period renamed"
+        "rename": "Period renamed",
+        "restored": "Period restored"
       },
       "person": {
         "claimed": "Account joined",
@@ -329,7 +548,13 @@
         "changeToken": "Exam sitting token changed",
         "allowDevice": "Second device allowed for an exam attempt",
         "finish": "Exam attempt finished",
-        "close": "Exam sitting closed"
+        "close": "Exam sitting closed",
+        "cancel": "Exam room cancelled"
+      },
+      "exam": {
+        "results": {
+          "released": "Exam results released"
+        }
       },
       "tenant": {
         "provisioned": "School opened",
@@ -340,6 +565,9 @@
         "logo": {
           "removed": "Logo removed",
           "set": "Logo changed"
+        },
+        "name": {
+          "set": "School name changed"
         },
         "policy": {
           "set": "Setting changed"
@@ -393,19 +621,36 @@
     "login-person": "Person",
     "login-issued": "Issued",
     "logins-empty": "No login card issued yet.",
+    "logins-search": "Find a login name",
+    "members-empty": "No one has joined the school yet.",
+    "members-empty-description": "Add a teacher or an admin on the invitations page, or add a student.",
+    "members-search": "Find a name",
+    "member-name": "Name",
+    "member-status": "Status",
+    "member-roles": "Roles",
+    "member-status-label": {
+      "cardIssued": "Card issued",
+      "invited": "Invited",
+      "joined": "Joined",
+      "notInvited": "Not invited"
+    },
+    "member-remove": "Remove",
+    "member-remove-title": "Remove this member?",
+    "member-remove-description": "The person leaves the school, and its roles end.",
+    "member-remove-confirm": "Remove",
     "invite-action": "Invite",
     "invites-footer": "Invite a person who has no account yet.",
     "invite-dialog-title": "Invite a person",
     "invite-dialog-description": "The person gets an invitation at this email address, and signs in with it.",
-    "invite-person": "Person",
-    "invite-person-placeholder": "Choose a person",
-    "invite-none-left": "Every active person of this school already has an account.",
+    "invite-role": "Role",
+    "invite-footer": "The invitation waits at this address until it is used.",
     "invite-locale": "Language of the email",
     "invite-submit": "Invite",
     "grant-person": "Person",
     "client-add": "Create client",
     "client-add-description": "A client connects another system to this school.",
     "clients-empty": "No client connects yet.",
+    "clients-search": "Find a client",
     "client-create": "Create",
     "client-scope": "Covers",
     "client-name-placeholder": "Name of the system",
@@ -437,17 +682,57 @@
     "roles-guide": "Role guide",
     "roles-assign-dialog": "Give a role",
     "roles-assign-description": "The person holds the role across the whole school.",
+    "roles-search": "Find a person",
     "roles-empty": "No one holds a role yet.",
-    "card-issue": "Issue card",
     "card-issue-title": "Login card",
-    "card-issue-description": "A login card lets a student sign in with a login name and a code.",
     "card-login-name": "Login name",
     "card-login-name-placeholder": "Login name",
-    "card-issue-footer": "The code is shown once.",
     "card-reissue": "Reissue card",
-    "card-code-title": "Login card code",
     "card-code-description": "Give the code to the student, because it will not be shown again.",
-    "invites-empty": "No invite is waiting."
+    "card-student": "Student",
+    "card-username": "Username",
+    "card-code": "Code",
+    "card-expires": "Valid until",
+    "card-qr-label": "QR code with the card code",
+    "card-copy": "Copy code",
+    "card-copied": "Copied",
+    "card-print": "Print card",
+    "card-print-footer": "Print sends the card to your printer.",
+    "student-add": "Add student",
+    "student-add-title": "Add a student",
+    "student-add-description": "The student gets a login name and a first login card, added together.",
+    "student-add-name": "Name",
+    "student-add-footer": "Print the card before you close it, because the code is shown once.",
+    "student-add-submit": "Add student",
+    "invites-empty": "No invite is waiting.",
+    "invites-search": "Find an invitee",
+    "cohort-restore": "Restore",
+    "period-restore": "Restore",
+    "no-unit-title": "No active unit yet",
+    "no-unit-description": "Periods and cohorts belong to an active unit. Restore or add one first.",
+    "no-unit-action": "Open units",
+    "cohorts-no-period-action": "Open periods",
+    "members-empty-action": "Open invitations",
+    "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
+    "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
+    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
+  },
+  "Classroom": {
+    "tabs-home": "Home",
+    "tabs-forum": "Forum",
+    "general-channel": "General",
+    "channels-title": "Channel",
+    "channels-empty": "No channel yet",
+    "channels-empty-description": "This class has no channel yet.",
+    "add-channel": "Add channel",
+    "add-channel-title": "Add a topic channel",
+    "add-channel-description": "Everyone in the class reads a topic channel, and its name shows in the list.",
+    "channel-name": "Channel name",
+    "channel-name-taken": "Another channel of this class has this name.",
+    "channel-limit-reached": "This class holds the most channels it can.",
+    "add-submit": "Add",
+    "channel-name-needed": "Give the channel a name first.",
+    "channel-name-too-long": "The name can have at most {count} characters."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
@@ -456,7 +741,7 @@
     "name-title": "What is your school called?",
     "name-label": "School name",
     "name-placeholder": "Harapan Bangsa",
-    "name-error": "Enter a name of at least 2 characters.",
+    "name-error": "Enter a name of at least 3 characters.",
     "address-label": "Address",
     "address-free": "Available",
     "address-taken": "Another school uses this address.",
@@ -561,7 +846,9 @@
     "founder-link": "Talk to the founder",
     "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
     "finish": "Open school",
-    "required-error": "Choose an answer."
+    "required-error": "Choose an answer.",
+    "school-limit-line": "Founding more schools needs a conversation first.",
+    "address-check-failed": "We could not check this address. Type it again to check it."
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
@@ -574,6 +861,7 @@
   "Common": {
     "load-error": "We could not load this data. Please try again.",
     "load-error-retry": "We could not load this data.",
+    "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
     "breadcrumb": "Breadcrumb",
     "sidebar": "Sidebar",
@@ -588,6 +876,8 @@
     "version": "Version {version}",
     "beta": "Beta",
     "about": "About",
+    "about-nakafa": "About Nakafa",
+    "learn-more": "Learn more",
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark",
@@ -694,7 +984,6 @@
     "former-official": "Former Official",
     "chat": "Chat",
     "no-chats": "No chats yet.",
-    "chats-by-link": "A shared chat opens with its link.",
     "try-out": "Try out",
     "try-out-short": "Tryout",
     "search-country-placeholder": "Search country...",
@@ -959,7 +1248,8 @@
     "time-one": "1 minute left",
     "shortcut-step": "Previous or next question",
     "shortcut-pick": "Choose an option",
-    "shortcut-navigator": "Question navigator"
+    "shortcut-navigator": "Question navigator",
+    "cell-flagged": "{state, select, answered {Question {number}, answered, flagged for review} other {Question {number}, unanswered, flagged for review}}"
   },
   "Utils": {
     "clear-search": "Clear search",
@@ -970,6 +1260,7 @@
     "search-help": "Type to start searching...",
     "search-error": "An error occurred while searching.",
     "search-title": "Search Learning Materials",
+    "search-results": "Search results",
     "search-description": "Search free learning materials, educational articles, practice exercises, and study resources. Find the topic you are studying."
   },
   "Home": {
@@ -1032,7 +1323,7 @@
     "chat": "Chat",
     "chat-description": "Use the AI learning assistant for homework help, concept explanations, and study conversations.",
     "subscriptions": "Subscriptions",
-    "subscriptions-description": "Manage Nakafa Pro, 3,000 monthly AI credits, and your payment portal.",
+    "subscriptions-description": "Manage Nakafa Pro, {credits, number} monthly AI credits, and your payment portal.",
     "manage": "Manage",
     "plan-free": "Free",
     "plan-pro": "Pro",
@@ -1113,7 +1404,32 @@
     "divider": "Divider",
     "more": "More",
     "style": "Text style",
-    "text": "Normal text"
+    "text": "Normal text",
+    "insert": "Insert a block",
+    "subscript": "Subscript",
+    "superscript": "Superscript",
+    "table": "Table",
+    "table-actions": "Table actions",
+    "row-before": "Row above",
+    "row-after": "Row below",
+    "row-delete": "Delete row",
+    "column-before": "Column left",
+    "column-after": "Column right",
+    "column-delete": "Delete column",
+    "table-delete": "Delete table",
+    "formula": "Formula",
+    "equation": "Equation",
+    "formula-edit": "Edit formula",
+    "formula-invalid": "This formula cannot be drawn:",
+    "latex": "LaTeX",
+    "image": "Image",
+    "image-add": "Add image",
+    "image-alt": "Alt text",
+    "image-alt-hint": "What a student who cannot see the image needs to know",
+    "image-cancel": "Cancel",
+    "image-delete": "Delete image",
+    "image-edit": "Edit alt text",
+    "image-save": "Save"
   },
   "Memory": {
     "remember": "Let Nina save and use memories",
@@ -1142,6 +1458,14 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "image-refused-size": {
+      "title": "The image was not added.",
+      "description": "Choose an image of at most 2 MB."
+    },
+    "image-refused-type": {
+      "title": "The image was not added.",
+      "description": "Choose a PNG, JPEG, WebP, or GIF image."
+    },
     "school-logo-size": {
       "title": "The logo was not saved.",
       "description": "Choose a logo of at most 1 MB."
@@ -1155,6 +1479,42 @@
     },
     "school-address-copied": {
       "title": "The address was copied."
+    },
+    "school-refusal-not-student": {
+      "title": "Not a student of this school.",
+      "description": "Only a student of this school can be placed in a cohort."
+    },
+    "school-refusal-graduated": {
+      "title": "Already graduated from this school.",
+      "description": "A graduated student cannot be placed in a cohort again."
+    },
+    "school-refusal-unit-limit": {
+      "title": "No room for another school.",
+      "description": "An organisation holds a set number of schools."
+    },
+    "school-refusal-address-member": {
+      "title": "They already belong to this school.",
+      "description": "Change their role under Roles and access."
+    },
+    "school-refusal-already-placed": {
+      "title": "Already placed in this period.",
+      "description": "Move the student from their current cohort instead."
+    },
+    "school-refusal-placement-limit": {
+      "title": "Placement limit reached.",
+      "description": "This student already holds the most cohort placements."
+    },
+    "school-refusal-not-teacher": {
+      "title": "Not an active teacher.",
+      "description": "Only an active teacher of this school can lead a cohort."
+    },
+    "school-refusal-teacher-has-homeroom": {
+      "title": "Already leads another cohort.",
+      "description": "A teacher leads one cohort in each period."
+    },
+    "school-refusal-cohort-has-homeroom": {
+      "title": "This cohort already has a teacher.",
+      "description": "Remove the current teacher to choose another."
     },
     "action-error": {
       "title": "We could not complete this action.",
@@ -1338,9 +1698,182 @@
       "title": "Too many schools today.",
       "description": "Try again tomorrow."
     },
+    "school-login-account": {
+      "title": "A school login cannot open a school.",
+      "description": "Sign in with your own account to open one."
+    },
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
+    },
+    "undo": {
+      "title": "Undo archive"
+    },
+    "school-cohort-archived": {
+      "title": "Class archived."
+    },
+    "school-period-archived": {
+      "title": "Period archived."
+    },
+    "sitting-not-in": {
+      "title": "You are not in this sitting.",
+      "description": "Ask your proctor if you think this is wrong."
+    },
+    "sitting-locked": {
+      "title": "This sitting is locked.",
+      "description": "Ask your teacher what to do next."
+    },
+    "sitting-attempt-closed": {
+      "title": "This attempt has closed.",
+      "description": "Ask your proctor if you think the time was wrong."
+    },
+    "sitting-attempt-locked": {
+      "title": "This attempt is locked.",
+      "description": "Wait until your proctor unlocks it, then try again."
+    },
+    "sitting-second-device": {
+      "title": "Another device holds this attempt.",
+      "description": "Ask your proctor to allow a second device."
+    },
+    "sitting-device-retired": {
+      "title": "This device was retired.",
+      "description": "Ask your proctor which device you may use."
+    },
+    "sitting-response-refused": {
+      "title": "This answer does not fit.",
+      "description": "Choose the options again."
+    },
+    "sitting-question-missing": {
+      "title": "Question not in this exam.",
+      "description": "Reload the sitting to see its questions."
+    },
+    "school-refusal-period-dates": {
+      "title": "The period dates are not valid.",
+      "description": "Choose two dates, and make the start come before the end."
+    },
+    "school-refusal-period-overlaps": {
+      "title": "This period overlaps another period.",
+      "description": "Choose dates that no other period of this school uses."
+    },
+    "school-refusal-period-active": {
+      "title": "Another period is already active.",
+      "description": "Archive the active period before you open this one."
+    },
+    "school-refusal-period-not-active": {
+      "title": "This period is not active.",
+      "description": "Only an active period can be archived."
+    },
+    "school-refusal-cohort-name-taken": {
+      "title": "This cohort name is already used.",
+      "description": "Choose another name for this period."
+    },
+    "school-refusal-cohort-limit": {
+      "title": "No more cohorts fit this period.",
+      "description": "Add the cohort to another period instead."
+    },
+    "school-refusal-address-invited": {
+      "title": "This address already has an invite.",
+      "description": "Resend the pending invite from the invitations page."
+    },
+    "school-refusal-invite-domain": {
+      "title": "This email domain is not allowed.",
+      "description": "Use an address from a domain that this school admits."
+    },
+    "school-refusal-invite-pending": {
+      "title": "This person has a pending invite.",
+      "description": "Resend the pending invite instead."
+    },
+    "school-refusal-invite-expired": {
+      "title": "This invite has expired.",
+      "description": "Invite the person again to send a new one."
+    },
+    "school-refusal-invite-not-pending": {
+      "title": "This invite is no longer pending.",
+      "description": "Refresh the invitations to see its current state."
+    },
+    "school-refusal-invite-rate-limited": {
+      "title": "Too many invites were sent.",
+      "description": "Wait a while, then send this invite again."
+    },
+    "school-refusal-person-claimed": {
+      "title": "This person already has an account.",
+      "description": "Ask the person to sign in with that account."
+    },
+    "school-refusal-access": {
+      "title": "Your school access has changed.",
+      "description": "Ask an admin of this school to check your access."
+    },
+    "school-refusal-action-closed": {
+      "title": "An action is closed to API clients.",
+      "description": "Remove it from the client, then create the client again."
+    },
+    "school-refusal-promotion-state": {
+      "title": "This period cannot open yet.",
+      "description": "Apply the promotion into this period first."
+    },
+    "school-refusal-last-owner": {
+      "title": "The last owner cannot be removed.",
+      "description": "Give the owner role to another person first."
+    },
+    "school-refusal-grant-role": {
+      "title": "This role cannot be given here.",
+      "description": "Choose another role for this person."
+    },
+    "school-refusal-grant-scope": {
+      "title": "Owners hold the whole school only.",
+      "description": "Choose the whole school as the scope of this role."
+    },
+    "school-refusal-grant-limit": {
+      "title": "This person holds enough roles.",
+      "description": "Remove one role before you give another."
+    },
+    "school-refusal-person-inactive": {
+      "title": "This person is no longer active.",
+      "description": "Invite the person again to restore access."
+    },
+    "school-refusal-person-kind": {
+      "title": "This role does not fit this person.",
+      "description": "Choose a role that fits this kind of person."
+    },
+    "school-refusal-temporary-role": {
+      "title": "This role cannot be temporary.",
+      "description": "Give owners and admins a permanent grant."
+    },
+    "school-refusal-login-name-refused": {
+      "title": "This login name is not allowed.",
+      "description": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen."
+    },
+    "school-refusal-login-name-taken": {
+      "title": "This login name is already used.",
+      "description": "Choose another login name for this student."
+    },
+    "school-refusal-login-exists": {
+      "title": "This person has a login name.",
+      "description": "Change the name on the person's page instead."
+    },
+    "school-refusal-login-missing": {
+      "title": "This person has no login name yet.",
+      "description": "Give the person a login name first."
+    },
+    "school-refusal-person-not-placed": {
+      "title": "This student is not in this period.",
+      "description": "Place the student in a cohort of this period first."
+    },
+    "school-refusal-card-missing": {
+      "title": "No card to print yet.",
+      "description": "Issue a login card for this student first."
+    },
+    "school-refusal-card-role": {
+      "title": "Only students get a login card.",
+      "description": "Cards are issued to students only."
+    },
+    "school-refusal-npsn-invalid": {
+      "title": "The NPSN is not valid.",
+      "description": "A national school number has eight digits."
+    },
+    "school-refusal-npsn-taken": {
+      "title": "This NPSN is already used.",
+      "description": "Another unit of this school already has it."
     }
   },
   "Ai": {

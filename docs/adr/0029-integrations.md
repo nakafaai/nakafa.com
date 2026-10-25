@@ -1,5 +1,7 @@
 # ADR 0029: Integrations Are Projections Of The Access Catalog, Served Through Effect HttpApi
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+
 ## Status
 
 Accepted on 13 October 2026 with the owner's approval of the School blueprint,
@@ -365,14 +367,13 @@ The decision:
   leaves without that, and the Convex components above keep the package in the
   lock anyway.
 
-The 19 files that import `convex-helpers`:
+The 18 files that import `convex-helpers`:
 
 - `packages/backend/confect/functions.ts`: `customMutation`, `customCtx`, and
   `Triggers`, which wrap every mutation.
 - `packages/backend/components/betterAuth/deletion.ts`: `stream`.
-- Fourteen trigger files under `packages/backend/confect/triggers`, which import
-  only the `Change` type: `chats/chats.ts`, `comments/commentVotes.ts`,
-  `comments/comments.ts`, `contents/views.ts`, `forums/postReactions.ts`,
+- Thirteen trigger files under `packages/backend/confect/triggers`, which import
+  only the `Change` type: `chats/chats.ts`, `comments/comments.ts`, `contents/views.ts`, `forums/postReactions.ts`,
   `forums/posts.ts`, `forums/reactions.ts`, `materials/groups.ts`,
   `schools/classMembers.ts`, `schools/classes.ts`, `schools/members.ts`,
   `schools/schools.ts`, `subscriptions/subscriptions.ts`, and `tryouts/scores.ts`.

@@ -1,5 +1,3 @@
-"use client";
-
 import { Bar } from "@repo/design-system/components/evilcharts/charts/composed/bar";
 import { Line } from "@repo/design-system/components/evilcharts/charts/composed/line";
 import {

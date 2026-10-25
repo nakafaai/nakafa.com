@@ -18,6 +18,17 @@ import {
 } from "@repo/backend/test/tryout/source";
 import { Effect } from "effect";
 
+const readTryoutHistoryMock = vi.hoisted(() => vi.fn());
+vi.mock(
+  "@repo/backend/confect/tryouts/runtime/history/read",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@repo/backend/confect/tryouts/runtime/history/read")
+    >()),
+    readTryoutHistory: readTryoutHistoryMock,
+  })
+);
+
 const identity = {
   countryKey: TRYOUT_START_COUNTRY,
   examKey: TRYOUT_START_EXAM,
@@ -264,6 +275,164 @@ describe("attempt page authorization and frozen routes", () => {
                 ...identity,
                 kind: "current",
                 sectionKey: TRYOUT_START_SECTION,
+              },
+            })
+          )
+        ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "answers a running section without bodies when its content is not signed",
+    () =>
+      Effect.gen(function* () {
+        const { client, started } = yield* startFixture("visible");
+        const request = {
+          ...identity,
+          kind: "current" as const,
+          sectionKey: TRYOUT_START_SECTION,
+        };
+        const [section, redirected] = yield* Effect.promise(() =>
+          Promise.all([
+            client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+              request,
+            }),
+            client.query(api.tryouts.queries.attemptPage.getSection, {
+              request,
+            }),
+          ])
+        );
+        expect(redirected).toMatchObject({
+          attemptId: started.attemptId,
+          kind: "redirect",
+        });
+        expect(section).toMatchObject({
+          attempt: {
+            attemptId: started.attemptId,
+            kind: "retained",
+            page: { section: { sectionKey: TRYOUT_START_SECTION } },
+          },
+        });
+        expect(section?.bodies).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "keeps a running section with its bodies private to its owner",
+    () =>
+      Effect.gen(function* () {
+        const { started, t } = yield* startFixture("visible");
+        const other = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            seedAuthenticatedUser(ctx, {
+              now: TRYOUT_START_NOW,
+              suffix: "other-section-bodies",
+            })
+          )
+        );
+        const otherClient = t.withIdentity({
+          subject: other.authUserId,
+          sessionId: other.sessionId,
+        });
+        expect(
+          yield* Effect.promise(() =>
+            otherClient.query(
+              api.tryouts.queries.attemptPage.getSectionWithBodies,
+              {
+                request: {
+                  attemptId: started.attemptId,
+                  kind: "retained",
+                  locale: "id",
+                  publicPath: sectionPath,
+                },
+              }
+            )
+          )
+        ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "answers a running section with the signed bodies its history read returns",
+    () =>
+      Effect.gen(function* () {
+        const { client, started } = yield* startFixture("visible");
+        yield* Effect.promise(() =>
+          client.mutation(api.tryouts.mutations.sections.start, {
+            attemptId: started.attemptId,
+            sectionKey: TRYOUT_START_SECTION,
+          })
+        );
+        const body = {
+          bundleJson: "bundle",
+          items: [],
+          rendererJson: "renderer",
+        };
+        readTryoutHistoryMock.mockReturnValue(Effect.succeed(body));
+        const page = yield* Effect.promise(() =>
+          client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+            request: {
+              ...identity,
+              kind: "current",
+              sectionKey: TRYOUT_START_SECTION,
+            },
+          })
+        );
+        expect(page?.bodies).toEqual([body]);
+        expect(readTryoutHistoryMock).toHaveBeenCalledExactlyOnceWith({
+          attemptId: started.attemptId,
+          selectors: expect.any(Array),
+        });
+      })
+  );
+
+  it.effect(
+    "answers the composed section for a retained URL and nothing for other URLs",
+    () =>
+      Effect.gen(function* () {
+        const { client, started } = yield* startFixture("visible");
+        yield* Effect.promise(() =>
+          client.mutation(api.tryouts.mutations.sections.start, {
+            attemptId: started.attemptId,
+            sectionKey: TRYOUT_START_SECTION,
+          })
+        );
+        const body = {
+          bundleJson: "bundle",
+          items: [],
+          rendererJson: "renderer",
+        };
+        readTryoutHistoryMock.mockReturnValue(Effect.succeed(body));
+        const retained = yield* Effect.promise(() =>
+          client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+            request: {
+              attemptId: started.attemptId,
+              kind: "retained",
+              locale: "id",
+              publicPath: sectionPath,
+            },
+          })
+        );
+        expect(retained?.bodies).toEqual([body]);
+        expect(
+          yield* Effect.promise(() =>
+            client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+              request: {
+                ...identity,
+                kind: "current",
+                sectionKey: `${TRYOUT_START_SECTION}-other`,
+              },
+            })
+          )
+        ).toBeNull();
+        expect(
+          yield* Effect.promise(() =>
+            client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+              request: {
+                attemptId: started.attemptId,
+                kind: "retained",
+                locale: "id",
+                publicPath: `${setPath}/${TRYOUT_START_SECTION}-other`,
               },
             })
           )

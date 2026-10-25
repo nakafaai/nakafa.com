@@ -1,5 +1,3 @@
-"use client";
-
 import { createBiologyItemStore } from "@repo/design-system/components/contents/biology/context";
 import {
   BIOLOGY_DEFAULT_ITEM_INDEX,
@@ -25,21 +23,18 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 /** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */
-const BiologyStage = dynamic(
-  () =>
-    import("@repo/design-system/components/contents/biology/stage").then(
-      ({ BiologyStage }) => BiologyStage
-    ),
-  { loading: SceneSpinner }
+const BiologyStage = lazy(() =>
+  import("@repo/design-system/components/contents/biology/stage").then(
+    (module) => ({ default: module.BiologyStage })
+  )
 );
 
 export interface BiologyLabCalloutProps {
@@ -102,7 +97,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   scene: ComponentType<BiologySceneProps<Item>>;
   view?: NarrowCameraPose;
 }) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [store] = useState(() => createBiologyItemStore(defaultItemIndex));
   const colors = useMemo(
     () => getBiologySceneColors(resolvedTheme),
@@ -162,9 +157,11 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
         render={<section />}
       >
         {live ? (
-          <BiologyStage colors={colors} store={store} view={view}>
-            <Scene item={selectedItem} />
-          </BiologyStage>
+          <Suspense fallback={<SceneSpinner />}>
+            <BiologyStage colors={colors} store={store} view={view}>
+              <Scene item={selectedItem} />
+            </BiologyStage>
+          </Suspense>
         ) : null}
       </VisualCardBody>
 

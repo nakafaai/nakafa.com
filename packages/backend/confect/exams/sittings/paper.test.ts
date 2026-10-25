@@ -142,7 +142,7 @@ describe("exams/sittings paper", () => {
   );
 
   it.effect(
-    "refuses the paper of a locked attempt, which is closed to the student",
+    "refuses the paper of a locked attempt with the lock, not a closed attempt",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -161,7 +161,7 @@ describe("exams/sittings paper", () => {
         const failure = yield* paperOf(fixture, made.id, deviceOf(1)).pipe(
           Effect.flip
         );
-        expect(failure).toMatchObject({ _tag: "AttemptClosed" });
+        expect(failure).toMatchObject({ _tag: "AttemptLocked" });
       })
   );
 
@@ -211,6 +211,31 @@ describe("exams/sittings paper", () => {
           Effect.flip
         );
         expect(failure).toMatchObject({ _tag: "NotInSitting" });
+      })
+  );
+
+  it.effect(
+    "refuses the paper of a locked attempt once its deadline has passed, as a closed attempt",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        yield* fixture.as("teacher").mutation(lock, {
+          attemptId: entered.attempt,
+          reason: "other",
+          sittingId: made.id,
+          slug: nf,
+        });
+        vi.setSystemTime(CLOSES);
+        const failure = yield* paperOf(fixture, made.id, deviceOf(1)).pipe(
+          Effect.flip
+        );
+        expect(failure).toMatchObject({ _tag: "AttemptClosed" });
       })
   );
 });

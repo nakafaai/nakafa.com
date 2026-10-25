@@ -1,5 +1,3 @@
-"use client";
-
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   type TriangleLabels,
@@ -21,10 +19,9 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
-import dynamic from "next/dynamic";
-import { useLocale, useTranslations } from "next-intl";
+import { ClientOnly } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   Button,
   Group,
@@ -33,26 +30,20 @@ import {
   Label,
   NumberField,
 } from "react-aria-components";
+import { useLocale, useTranslations } from "use-intl";
 
-// Next owns this client-only import boundary so offscreen lessons do not load WebGL.
-const TriangleScene = dynamic(
-  () =>
-    import(
-      "@repo/design-system/components/contents/mathematics/triangle/scene"
-    ).then((module) => module.TriangleScene),
-  {
-    loading: ScenePlaceholder,
-    ssr: false,
-  }
+// The client-only import boundary keeps offscreen lessons from loading WebGL.
+const TriangleScene = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/mathematics/triangle/scene"
+  ).then((module) => ({ default: module.TriangleScene }))
 );
 
 // Keep KaTeX outside the page's initial component graph until the scene is visible.
-const TriangleReadout = dynamic(
-  () =>
-    import(
-      "@repo/design-system/components/contents/mathematics/triangle/readout"
-    ).then((module) => module.TriangleReadout),
-  { ssr: false }
+const TriangleReadout = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/mathematics/triangle/readout"
+  ).then((module) => ({ default: module.TriangleReadout }))
 );
 
 interface Props {
@@ -144,7 +135,11 @@ function Content() {
       </VisualCardToolbar>
       <VisualCardBody className="relative" data-scene="triangle">
         {isNearViewport ? (
-          <TriangleScene angle={angleValue} />
+          <Suspense fallback={<ScenePlaceholder />}>
+            <ClientOnly fallback={<ScenePlaceholder />}>
+              <TriangleScene angle={angleValue} />
+            </ClientOnly>
+          </Suspense>
         ) : (
           <ScenePlaceholder />
         )}
@@ -159,7 +154,11 @@ function Content() {
       <CoordinateControls />
       {isNearViewport ? (
         <VisualCardFooter>
-          <TriangleReadout angle={angleValue} />
+          <Suspense fallback={null}>
+            <ClientOnly fallback={null}>
+              <TriangleReadout angle={angleValue} />
+            </ClientOnly>
+          </Suspense>
         </VisualCardFooter>
       ) : null}
     </>

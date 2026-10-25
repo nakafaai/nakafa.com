@@ -1,0 +1,319 @@
+// @vitest-environment node
+
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Effect, Option } from "effect";
+import { createElement } from "react";
+import { executePreviewArtifact } from "@/lib/content/preview/artifact";
+import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
+import { readQuestionPreview } from "@/lib/content/preview/question";
+import {
+  makeReadyManifest,
+  previewConfig,
+  previewManifestHash,
+  previewWireArtifact,
+} from "@/test/content-preview";
+import {
+  makeQuestionFailedManifest,
+  makeQuestionPendingManifest,
+  makeQuestionReadyManifest,
+  questionAnswerHash,
+  questionPreviewTarget,
+  questionPromptHash,
+  questionPromptProjection,
+} from "@/test/preview-question";
+
+vi.mock("@/lib/content/preview/artifact", () => ({
+  executePreviewArtifact: vi.fn(),
+}));
+vi.mock("@/lib/content/preview/manifest", () => ({
+  readPreviewSnapshot: vi.fn(),
+}));
+
+const snapshotMock = vi.mocked(readPreviewSnapshot);
+const executeMock = vi.mocked(executePreviewArtifact);
+type QuestionPreviewInput = Parameters<typeof readQuestionPreview>[0];
+const input: QuestionPreviewInput = {
+  appLocale: questionPreviewTarget.section.appLocale,
+  publicPath: questionPreviewTarget.section.publicPath ?? "",
+};
+
+const QUESTION_ELEMENT = createElement("p", null, "question");
+const ANSWER_ELEMENT = createElement("p", null, "answer");
+
+/** Runs one preview while preserving its typed domain failures. */
+function runPreview(request = input) {
+  return readQuestionPreview(request);
+}
+
+/** Returns one expected preview failure. */
+function runFailure(request = input) {
+  return readQuestionPreview(request).pipe(Effect.flip);
+}
+
+/** Supplies one exact provider snapshot to the reader boundary. */
+function provideManifest(
+  manifest: ReturnType<typeof makeQuestionReadyManifest>
+) {
+  snapshotMock.mockReturnValueOnce(
+    Effect.succeedSome({ config: previewConfig, manifest })
+  );
+}
+
+beforeEach(() => {
+  snapshotMock.mockReset();
+  executeMock.mockReset();
+  executeMock.mockImplementation(({ previewArtifact }) =>
+    Effect.succeed({
+      artifact: previewWireArtifact,
+      element:
+        previewArtifact.artifactHash === questionAnswerHash
+          ? ANSWER_ELEMENT
+          : QUESTION_ELEMENT,
+    })
+  );
+});
+
+describe("local question preview", () => {
+  it.effect(
+    "leaves production and unrelated routes on their existing source",
+    () =>
+      Effect.gen(function* () {
+        snapshotMock.mockReturnValueOnce(Effect.succeedNone);
+        expect(yield* runPreview()).toEqual(Option.none());
+
+        snapshotMock.mockReturnValueOnce(
+          Effect.succeedSome({
+            config: previewConfig,
+            manifest: makeReadyManifest(previewManifestHash),
+          })
+        );
+        expect(yield* runPreview()).toEqual(Option.none());
+
+        provideManifest(makeQuestionReadyManifest(previewManifestHash));
+        expect(
+          yield* runPreview({
+            ...input,
+            publicPath: `${input.publicPath}-other`,
+          })
+        ).toEqual(Option.none());
+        expect(executeMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("fails closed while the selected question compiles or fails", () =>
+    Effect.gen(function* () {
+      snapshotMock
+        .mockReturnValueOnce(
+          Effect.succeedSome({
+            config: previewConfig,
+            manifest: makeQuestionPendingManifest(),
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeedSome({
+            config: previewConfig,
+            manifest: makeQuestionFailedManifest(),
+          })
+        );
+
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewPendingError",
+        revision: 1,
+      });
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewCompileError",
+        code: "MDX_PARSE",
+        message: "Compilation failed.",
+      });
+    })
+  );
+
+  it.effect("renders one authenticated prompt with its authored response", () =>
+    Effect.gen(function* () {
+      const manifest = makeQuestionReadyManifest(previewManifestHash);
+      provideManifest(manifest);
+
+      const result = Option.getOrThrow(yield* runPreview());
+
+      expect(result).toMatchObject({
+        Answer: null,
+        Question: QUESTION_ELEMENT,
+        response: {
+          kind: "single-choice",
+          options: [
+            {
+              isCorrect: true,
+              label: "Correct",
+              optionKey: "option-1",
+              order: 1,
+            },
+            {
+              isCorrect: false,
+              label: "Incorrect",
+              optionKey: "option-2",
+              order: 2,
+            },
+          ],
+        },
+        selectedBodyKind: "question",
+      });
+      expect(executeMock).toHaveBeenCalledOnce();
+      expect(executeMock).toHaveBeenCalledWith(
+        expect.objectContaining({ previewArtifact: manifest.artifacts[0] })
+      );
+    })
+  );
+
+  it.effect("preserves multiple-choice and category response formats", () =>
+    Effect.gen(function* () {
+      const multipleManifest = makeQuestionReadyManifest(previewManifestHash);
+      const response = questionPromptProjection.response;
+      if (
+        response.kind !== "single-choice" &&
+        response.kind !== "multiple-choice"
+      ) {
+        return yield* Effect.die("Expected one option-based test response.");
+      }
+      provideManifest({
+        ...multipleManifest,
+        artifacts: [
+          {
+            ...multipleManifest.artifacts[0],
+            projection: {
+              ...questionPromptProjection,
+              response: {
+                kind: "multiple-choice",
+                options: Arr.append(
+                  Arr.map(response.options, (option) => ({
+                    ...option,
+                    isCorrect: true,
+                  })),
+                  {
+                    isCorrect: false,
+                    label: "Another option",
+                    optionKey: "option-3",
+                    order: 3,
+                  }
+                ),
+              },
+            },
+          },
+        ],
+      });
+      const multiple = Option.getOrThrow(yield* runPreview());
+      expect(multiple.response).toMatchObject({ kind: "multiple-choice" });
+
+      const categoryManifest = makeQuestionReadyManifest(previewManifestHash);
+      provideManifest({
+        ...categoryManifest,
+        artifacts: [
+          {
+            ...categoryManifest.artifacts[0],
+            projection: {
+              ...questionPromptProjection,
+              response: {
+                categories: [
+                  { categoryKey: "category-1", label: "True", order: 1 },
+                  { categoryKey: "category-2", label: "False", order: 2 },
+                ],
+                kind: "category",
+                statements: [
+                  {
+                    correctCategoryKey: "category-1",
+                    label: "The statement is correct.",
+                    order: 1,
+                    statementKey: "statement-1",
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      });
+      const category = Option.getOrThrow(yield* runPreview());
+
+      expect(category.response).toMatchObject({ kind: "category" });
+      expect(executeMock).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect("renders the ordered prompt and entitled answer artifacts", () =>
+    Effect.gen(function* () {
+      const manifest = makeQuestionReadyManifest(previewManifestHash, "answer");
+      provideManifest(manifest);
+
+      const result = Option.getOrThrow(yield* runPreview());
+
+      expect(result).toMatchObject({
+        Answer: ANSWER_ELEMENT,
+        Question: QUESTION_ELEMENT,
+        selectedBodyKind: "answer",
+      });
+      expect(executeMock).toHaveBeenCalledTimes(2);
+      expect(executeMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          previewArtifact: expect.objectContaining({
+            artifactHash: questionPromptHash,
+          }),
+        })
+      );
+      expect(executeMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          previewArtifact: expect.objectContaining({
+            artifactHash: questionAnswerHash,
+          }),
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "rejects a prompt or answer projection from another content family",
+    () =>
+      Effect.gen(function* () {
+        const materialProjection =
+          makeReadyManifest(previewManifestHash).artifacts[0].projection;
+        const promptManifest = makeQuestionReadyManifest(previewManifestHash);
+        provideManifest({
+          ...promptManifest,
+          artifacts: [
+            { ...promptManifest.artifacts[0], projection: materialProjection },
+          ],
+        });
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
+
+        const answerManifest = makeQuestionReadyManifest(
+          previewManifestHash,
+          "answer"
+        );
+        provideManifest({
+          ...answerManifest,
+          artifacts: [
+            answerManifest.artifacts[0],
+            { ...answerManifest.artifacts[1], projection: materialProjection },
+          ],
+        });
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
+      })
+  );
+
+  it.effect("rejects an answer manifest that loses its second artifact", () =>
+    Effect.gen(function* () {
+      const manifest = makeQuestionReadyManifest(previewManifestHash, "answer");
+      provideManifest({ ...manifest, artifacts: [manifest.artifacts[0]] });
+
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewIntegrityError",
+        check: "artifact",
+      });
+    })
+  );
+});

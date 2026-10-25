@@ -6,7 +6,6 @@ import {
   NavigationRequestError,
   readErrorText,
 } from "@/e2e/support/navigation/failure";
-import { settlePrefetch } from "@/e2e/support/navigation/settle";
 
 const DETACHED_ELEMENT_MESSAGE = "Element is not attached to the DOM";
 const VIEWPORT_RETRY_MILLISECONDS = 100;
@@ -61,6 +60,12 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
   }
 });
 
+/**
+ * Waits until the client router has started on the page. TanStack's history
+ * writes its route key into the state of the current entry when the router is
+ * created, which can happen before hydration finishes, so the key does not
+ * prove hydration. `waitForHydratedLink` checks the Link itself.
+ */
 export const waitForCommittedAppRouter = Effect.fn(
   "NakafaE2E.waitForCommittedAppRouter"
 )(function* (
@@ -72,9 +77,7 @@ export const waitForCommittedAppRouter = Effect.fn(
   const committedState = yield* Effect.tryPromise({
     try: () =>
       page.waitForFunction(
-        () =>
-          window.history.state?.__NA === true &&
-          window.history.state?.__PRIVATE_NEXTJS_INTERNALS_TREE !== undefined,
+        () => window.history.state?.__TSR_key !== undefined,
         undefined,
         { timeout: timeoutMilliseconds }
       ),
@@ -107,6 +110,41 @@ export const waitForCommittedAppRouter = Effect.fn(
       }),
   });
 });
+
+/**
+ * Waits until React has attached its props to the Link. React writes them when
+ * it hydrates an element, and a Link without them has no event handlers yet,
+ * so a press before then is not handled by the router.
+ */
+const waitForHydratedLink = Effect.fn("NakafaE2E.waitForHydratedLink")(
+  function* (
+    link: Locator,
+    sourceHref: string,
+    targetHref: string,
+    timeoutMilliseconds: number
+  ) {
+    yield* Effect.tryPromise({
+      try: () =>
+        expect
+          .poll(
+            () =>
+              link.evaluate((node) =>
+                Object.keys(node).some((key) => key.startsWith("__reactProps$"))
+              ),
+            { timeout: timeoutMilliseconds }
+          )
+          .toBe(true),
+      catch: (error) =>
+        new NavigationReadinessTimeout({
+          errorText: readErrorText(error),
+          href: targetHref,
+          phase: "hydration",
+          sourceHref,
+          timeoutMilliseconds,
+        }),
+    });
+  }
+);
 
 const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
   function* (
@@ -163,8 +201,9 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
 );
 
 /**
- * Loads one source route and returns its hydrated target Link in the viewport,
- * once the route's router is quiet.
+ * Loads one source route, waits until its router has started and the target
+ * Link has been hydrated, and returns the Link in the viewport. The caller
+ * shows intent toward the Link and settles the router before it presses.
  */
 export const prepareClientNavigation = Effect.fn(
   "NakafaE2E.prepareClientNavigation"
@@ -176,38 +215,19 @@ export const prepareClientNavigation = Effect.fn(
   findLink: () => Effect.Effect<Locator, E, R>
 ) {
   yield* loadSourceRoute(page, sourceHref, targetHref, timeoutMilliseconds);
-
-  /**
-   * Next.js commits `__NA` and its internal tree in HistoryUpdater's
-   * useInsertionEffect. Link callback refs are mounted in that commit. The
-   * installed `instant()` lock owns exact-target prefetch completion after the
-   * interaction begins, so readiness prepares the real target Link and lets
-   * every other prefetch of the route settle first. The requests are counted
-   * from here, after the source document replaced the last one, because a
-   * request the last document left open never ends.
-   *
-   * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/app-router.tsx
-   * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/app-dir/link.tsx
-   * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/navigation-testing-lock.ts
-   */
-  return yield* settlePrefetch(
+  yield* waitForCommittedAppRouter(
     page,
+    sourceHref,
     targetHref,
-    Effect.gen(function* () {
-      yield* waitForCommittedAppRouter(
-        page,
-        sourceHref,
-        targetHref,
-        timeoutMilliseconds
-      );
-      const link = yield* findLink();
-      yield* ensureLinkInViewport(
-        link,
-        sourceHref,
-        targetHref,
-        timeoutMilliseconds
-      );
-      return link;
-    })
+    timeoutMilliseconds
   );
+  const link = yield* findLink();
+  yield* waitForHydratedLink(link, sourceHref, targetHref, timeoutMilliseconds);
+  yield* ensureLinkInViewport(
+    link,
+    sourceHref,
+    targetHref,
+    timeoutMilliseconds
+  );
+  return link;
 });

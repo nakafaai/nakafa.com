@@ -1,5 +1,3 @@
-"use client";
-
 import { Array as Arr, Option, Schema } from "effect";
 import { Curve, type CurveProps } from "recharts";
 

@@ -1,5 +1,5 @@
 import { marked } from "@repo/design-system/components/nina/mark";
-import { Wake } from "@repo/design-system/components/nina/wake.client";
+import { Wake } from "@repo/design-system/components/nina/wake";
 import { Picture } from "@repo/design-system/components/ui/picture";
 import { scene } from "@repo/mascot/nina/figure";
 import type { Options } from "@repo/mascot/nina/options";

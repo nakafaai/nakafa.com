@@ -1,0 +1,114 @@
+// @vitest-environment node
+
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import {
+  createTestPublication,
+  makeRuntimeSource,
+} from "@repo/backend/test/content/publication";
+import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
+import { Effect, Layer } from "effect";
+import {
+  readPublishedTryoutSitemap,
+  readPublishedTryoutSitemapCount,
+} from "@/lib/content/tryout/sitemap";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
+
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) =>
+        Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: runtimeQueryMock,
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args))),
+    },
+  };
+});
+describe("published try-out sitemap", () => {
+  beforeEach(() => {
+    runtimeQueryMock.mockReset();
+    resetTestRuntimeCache();
+    activateTestRelease("release-tryout");
+  });
+  it.effect("asks Convex once for the count and each page of a release", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockImplementation((reference) =>
+        Effect.succeed(
+          reference.convexFunctionName.endsWith("sitemapCount")
+            ? { pageCount: 1, routeCount: 1 }
+            : { paths: ["try-out/indonesia"] }
+        )
+      );
+
+      for (const _ of [1, 2, 3]) {
+        yield* readPublishedTryoutSitemapCount("en");
+        yield* readPublishedTryoutSitemap("en", 0);
+      }
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+      activateTestRelease("release-tryout-next");
+      yield* readPublishedTryoutSitemapCount("en");
+      yield* readPublishedTryoutSitemap("en", 0);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
+    })
+  );
+  it.effect.each(APP_LOCALE_CODES)(
+    "reads the complete authenticated %s route inventory",
+    (locale) =>
+      Effect.gen(function* () {
+        const fixture = yield* makeTryoutRuntimeSource();
+        const context = yield* createTestPublication(fixture.source);
+        runtimeQueryMock.mockImplementation(context.query);
+        expect(yield* readPublishedTryoutSitemapCount(locale)).toEqual({
+          pageCount: 1,
+          routeCount: 5,
+        });
+        expect(yield* readPublishedTryoutSitemap(locale, 0)).toEqual({
+          paths: [
+            "try-out/indonesia",
+            "try-out/indonesia/tka",
+            "try-out/indonesia/tka/matematika-wajib",
+            "try-out/indonesia/tka/matematika-wajib/set-1",
+            "try-out/indonesia/tka/matematika-wajib/set-1/matematika-wajib",
+          ],
+        });
+        expect(yield* readPublishedTryoutSitemap(locale, 1)).toBeNull();
+        expect(yield* readPublishedTryoutSitemap(locale, -1)).toBeNull();
+      })
+  );
+  it.effect(
+    "fails closed when the authenticated release has no try-out snapshot",
+    () =>
+      Effect.gen(function* () {
+        const inactive = yield* createTestPublication(
+          (yield* makeRuntimeSource()).source
+        );
+        runtimeQueryMock.mockImplementation(inactive.query);
+        expect(
+          yield* readPublishedTryoutSitemapCount("id").pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ReleaseError",
+          code: "CONTENT_RELEASE_MISSING",
+        });
+      })
+  );
+});

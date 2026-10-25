@@ -34,8 +34,6 @@ function createFetchFailure(code?: string) {
   return new TypeError("fetch failed", { cause });
 }
 
-vi.mock("server-only", () => ({}));
-
 /** Creates one response with the immutable network URL populated. */
 function createResponse(
   body: BodyInit | null,
@@ -126,7 +124,7 @@ describe("content runtime transport", () => {
             "x-nakafa-content-token": target.token,
           },
           method: "POST",
-          redirect: "error",
+          redirect: "manual",
           signal: expect.any(AbortSignal),
         })
       );

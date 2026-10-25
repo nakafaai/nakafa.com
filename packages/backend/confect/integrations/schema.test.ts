@@ -42,6 +42,15 @@ describe("integrations/schema", () => {
     ]).toEqual([true, false, false]);
   });
 
+  it("holds a client name to 80 characters", () => {
+    const named = (name: string) =>
+      Schema.is(integrationClientValidator)({ ...active, name });
+    expect([named("A".repeat(80)), named("A".repeat(81))]).toEqual([
+      true,
+      false,
+    ]);
+  });
+
   it("refuses an active client that holds no digest, or a revocation time", () => {
     expect(
       Schema.is(integrationClientValidator)({ ...active, secretHash: null })

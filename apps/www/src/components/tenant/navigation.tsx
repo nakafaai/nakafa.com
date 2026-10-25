@@ -1,0 +1,88 @@
+import {
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { useMatchRoute } from "@tanstack/react-router";
+import { useTranslations } from "use-intl";
+import { TenantClassesGroup } from "@/components/tenant/classes/nav";
+import { useTenant } from "@/components/tenant/context";
+import { TenantSidebarGroup } from "@/components/tenant/group";
+import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
+import { Link, useRouteMatched } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
+
+/**
+ * Renders the navigation of the school sidebar. The settings sections replace it
+ * on a settings route for a viewer who may manage the school, and otherwise the
+ * school's own groups show: the exams for a viewer who may open them, then the
+ * management group, with the settings entry, only for a viewer who may manage the
+ * school. The viewer's classes come last, when the viewer has any, so they never
+ * move the groups above them.
+ */
+export function TenantNavigation() {
+  const { canManage, canOpenExams, slug } = useTenant();
+  const isSettings = useRouteMatched("/school/$slug/settings", {
+    exact: false,
+  });
+  const matchRoute = useMatchRoute();
+  const t = useTranslations("School");
+  const tExams = useTranslations("Exams");
+  const tSettings = useTranslations("SchoolSettings");
+
+  if (canManage && isSettings) {
+    return <SchoolSettingsNav />;
+  }
+
+  return (
+    <>
+      <TenantSidebarGroup label={t("for-you")}>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={
+              matchRoute({ params: { slug }, to: "/school/$slug" }) !== false
+            }
+            render={
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                params={{ slug }}
+                to="/school/$slug"
+              />
+            }
+          >
+            {t("home")}
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        {canOpenExams ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={
+                matchRoute({
+                  fuzzy: true,
+                  params: { slug },
+                  to: "/school/$slug/exams",
+                }) !== false
+              }
+              render={<Link params={{ slug }} to="/school/$slug/exams" />}
+            >
+              {tExams("title")}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
+      </TenantSidebarGroup>
+      {canManage ? (
+        <TenantSidebarGroup label={tSettings("manage-group")}>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              render={
+                <Link params={{ slug }} to="/school/$slug/settings/profile" />
+              }
+            >
+              {tSettings("manage-settings")}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </TenantSidebarGroup>
+      ) : null}
+      <TenantClassesGroup />
+    </>
+  );
+}

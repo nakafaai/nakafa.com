@@ -46,7 +46,7 @@ function fill<Row extends Record<string, Value>>(
 /** Creates one signed artifact at the largest wire size Aksara accepts. */
 export function ceilingArtifactJson(artifactHash: string) {
   const json = (length: number) =>
-    testArtifactJson({ artifactHash, compiledCode: "x".repeat(length) });
+    testArtifactJson({ artifactHash, bodyText: "x".repeat(length) });
   // Six-digit code lengths keep the byte length's width, so every extra code
   // byte adds exactly one wire byte.
   const base = 100_000;

@@ -1,5 +1,3 @@
-"use client";
-
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import {
   CodeBlockContext,

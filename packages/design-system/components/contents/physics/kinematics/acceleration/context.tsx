@@ -1,5 +1,3 @@
-"use client";
-
 import type { AccelerationLabels } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { createContext, type ReactNode, use } from "react";
 

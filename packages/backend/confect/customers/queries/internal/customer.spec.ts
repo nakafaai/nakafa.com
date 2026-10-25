@@ -4,7 +4,7 @@ import customersTable from "@repo/backend/confect/_generated/tables/customers";
 import {
   PolarCustomerWebhookTargetIoError,
   polarCustomerWebhookTargetValidator,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
   .addFunction(

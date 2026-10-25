@@ -26,7 +26,7 @@ export const PACKAGE_MANAGER = "pnpm@11.28.5";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "24.21.0";
-const CONTRACT_PACKAGE_VERSION = "0.51.0";
+const CONTRACT_PACKAGE_VERSION = "1.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.5";
 /**
@@ -81,6 +81,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-list",
       "@tiptap/extension-subscript",
       "@tiptap/extension-superscript",
+      "@tiptap/extension-table",
       "@tiptap/extension-underline",
       "@tiptap/starter-kit",
     ],
@@ -93,6 +94,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-highlight",
       "@tiptap/extension-list",
       "@tiptap/extension-paragraph",
+      "@tiptap/extension-table",
       "@tiptap/extension-text",
       "@tiptap/extension-underline",
       "@tiptap/extensions",
@@ -100,6 +102,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/pm",
       "@tiptap/react",
       "@tiptap/starter-kit",
+      "@tiptap/suggestion",
     ],
   ],
   [
@@ -113,6 +116,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-list",
       "@tiptap/extension-subscript",
       "@tiptap/extension-superscript",
+      "@tiptap/extension-table",
       "@tiptap/extension-underline",
       "@tiptap/pm",
       "@tiptap/starter-kit",
@@ -169,12 +173,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     allowed: ["7.0.2", "catalog:", "npm:typescript@7.0.2"],
     dependency: "typescript",
-    minimumDeclarations: 1,
-  },
-  { approved: "16.4.2", dependency: "next", minimumDeclarations: 1 },
-  {
-    approved: "16.4.2",
-    dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
   { approved: "1.47.0", dependency: "convex", minimumDeclarations: 1 },
@@ -264,6 +262,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-transform",
   },
+  // The math input of the exam editor. It is MIT, and it loads only when a formula
+  // popover opens, so no page's first JavaScript holds it. Its version moves only when
+  // a reviewed release is adopted.
+  {
+    approved: "0.111.1",
+    declarationPaths: ["packages/design-system/package.json"],
+    dependency: "mathlive",
+  },
   ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
     approved: TIPTAP_COHORT_VERSION,
     declarationPaths: Arr.map(
@@ -300,7 +306,7 @@ export const REGISTRY_REVIEWS = [
   [
     "mermaid@latest",
     "12.1.0",
-    "Mermaid 12 requires Safari 17.4 while Nakafa supports the Next.js Safari 16.4 browser floor.",
+    "Mermaid 12 requires Safari 17.4 while Nakafa supports the Safari 16.4 browser floor.",
   ],
   [
     "effect@latest",
@@ -359,11 +365,6 @@ export const REGISTRY_REVIEWS = [
     "Signed content contracts move with the exact Effect peer cohort.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
-  [
-    "next@latest",
-    "16.4.2",
-    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release. 16.4.1 fixes three advisories that affect 16.4.0: GHSA-673q-mjm6-r5xr (typed arrays returned from `use cache` functions, critical, with no workaround), GHSA-2464-fhr4-w9xw (Image Optimization with SVG inputs, critical, fixed by sharp 0.35.5 or later, which the lock resolves), and GHSA-p3m5-59mp-jv5r (Server Actions in the App Router, high). 16.4.2 fixes Turbopack and Pages Router issues, and its release notes name no App Router, caching, prefetching or config change.",
-  ],
   [
     "convex@latest",
     "1.47.0",
@@ -425,7 +426,7 @@ export const REGISTRY_REVIEWS = [
   [
     "afdocs@latest",
     "0.22.2",
-    "AFDocs 0.21 adds the page-size-transfer check. A cached surah page serves 0.73 to 0.88 MB; its first render after a deploy or a publication also carries the stream Next.js embeds for Partial Prefetching and serves up to 1.24 MB, so agent-docs.config.yml sets the pass line at 1.5 MB. AFDocs 0.22 adds the markdown-link-portability check, which the agent Markdown passes because site paths are written as absolute URLs. That check sends its first requests right after three checks that only compute, and for 50 large pages they hold the event loop longer than the 5 seconds a Node server keeps an idle connection, so the checker reused connections that the local server had closed (fetch failed, ECONNRESET). The start script of apps/www therefore keeps idle connections for 70 seconds, as a production proxy does.",
+    "AFDocs 0.21 adds the page-size-transfer check. A cached surah page serves 0.73 to 0.88 MB; its first render after a deploy or a publication also carries the prefetch stream of the retired framework and serves up to 1.24 MB, so agent-docs.config.yml sets the pass line at 1.5 MB. AFDocs 0.22 adds the markdown-link-portability check, which the agent Markdown passes because site paths are written as absolute URLs. That check sends its first requests right after three checks that only compute, and for 50 large pages they hold the event loop longer than the 5 seconds a Node server keeps an idle connection, so the checker reused connections that the local server had closed (fetch failed, ECONNRESET). The start script of apps/www therefore keeps idle connections for 70 seconds, as a production proxy does.",
   ],
 ];
 
@@ -456,6 +457,7 @@ export const OBSOLETE_DEPENDENCIES = {
   "@effect/sql": IN_EFFECT,
   "@effect/workflow": IN_EFFECT,
   "date-fns":
-    "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/lib/i18n/date.ts does",
+    "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/src/lib/i18n/date.ts does",
   nanoid: "randomUuid from @repo/utilities/uuid",
+  next: "TanStack Start and TanStack Router, which the www app runs on",
 };

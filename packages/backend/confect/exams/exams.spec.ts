@@ -1,5 +1,4 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GrantScope } from "@repo/backend/confect/access/schema";
@@ -10,7 +9,11 @@ import {
   ExamTitle,
   ExamView,
 } from "@repo/backend/confect/exams/exam";
-import { ScheduleResult } from "@repo/backend/confect/exams/sittings/contract";
+import { HomeView } from "@repo/backend/confect/exams/home/contract";
+import {
+  ScheduleCohort,
+  ScheduleResult,
+} from "@repo/backend/confect/exams/sittings/contract";
 import {
   KeysMissing,
   ScheduleInvalid,
@@ -36,7 +39,6 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "create",
       args: () => ({
-        language: DeliveryLanguageSchema,
         scope: GrantScope,
         slug: TenantSlug,
         title: ExamTitle,
@@ -50,6 +52,14 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({ slug: TenantSlug }),
       item: () => ExamSummary,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "home",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => HomeView,
+      error: () => Schema.Never,
     })
   )
   .addFunction(
@@ -86,4 +96,12 @@ export default GroupSpec.make()
       returns: () => ScheduleResult,
       error: () => Schema.Union([AccessDenied, KeysMissing, ScheduleInvalid]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "cohorts",
+      args: () => ({ slug: TenantSlug, unitId: Id("tenantUnits") }),
+      returns: () => Schema.Array(ScheduleCohort),
+      error: () => AccessDenied,
+    })
   );

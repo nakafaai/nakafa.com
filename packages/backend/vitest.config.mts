@@ -17,6 +17,8 @@ const coverageExcludes = [
   "confect/http.ts",
   "confect/test.*.ts",
   "test/**",
+  // A declarative constant with no executable behavior to cover.
+  "client/comments/list.ts",
 ];
 
 export default mergeConfig(config, {

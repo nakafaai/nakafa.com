@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { decodePolarSubscription } from "@repo/backend/confect/customers/polar/payload";
+import { decodePolarSubscription } from "@repo/backend/confect/billing/polar/payload";
 import { convertToDatabaseSubscription } from "@repo/backend/confect/subscriptions/row";
 import { Effect } from "effect";
 

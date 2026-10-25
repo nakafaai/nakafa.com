@@ -1,0 +1,489 @@
+import { Ref } from "@confect/core";
+import { HttpClient } from "@confect/js";
+import refs from "@repo/backend/confect/_generated/refs";
+
+const layerMock = vi.hoisted(() => vi.fn());
+
+// @vitest-environment node
+
+// Node tests isolate Next navigation imports while real semantic renderers execute.
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { createTestPublication } from "@repo/backend/test/content/publication";
+import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
+import { makeLandingSource } from "@repo/backend/test/tryout/landing";
+import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
+import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import type { FunctionReference } from "convex/server";
+import { Array as Arr, Effect, Layer, Option, Predicate } from "effect";
+import { renderToStaticMarkup } from "react-dom/server";
+import type { SignedContentAccess } from "@/components/tryout/content/model";
+import {
+  loadSignedTryoutContent,
+  loadTryoutQuestion,
+  renderSignedTryoutRows,
+} from "@/components/tryout/content/signed";
+import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
+
+const TEST_RELEASE_ID = "release-signed-test";
+
+const runtimeKeysMock = vi.hoisted(() => vi.fn());
+const runtimeSiteMock = vi.hoisted(() => vi.fn());
+const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
+const sessionMock = vi.hoisted(() => vi.fn());
+const queryMock = vi.hoisted(() =>
+  vi.fn<
+    (
+      functionReference: FunctionReference<"query">,
+      encodedArgs: unknown
+    ) => PromiseLike<unknown>
+  >()
+);
+const siteUrl = "https://runtime.example.test";
+const attemptQuery = refs.public.tryouts.queries.content.getBatch;
+vi.mock("@confect/js", async (importOriginal) => {
+  const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
+  return {
+    HttpClient: {
+      ...HttpClient,
+      layer: (...args: Parameters<typeof HttpClient.layer>) => {
+        layerMock(...args);
+        return Layer.effect(
+          HttpClient.HttpClient,
+          Effect.gen(function* () {
+            const client = yield* HttpClient.HttpClient;
+            return {
+              ...client,
+              query: (reference, ...[args]) => {
+                assert(args !== undefined);
+                return Ref.runWithCodec(
+                  reference,
+                  args,
+                  queryMock,
+                  (cause) => new HttpClient.HttpClientError({ cause })
+                );
+              },
+            };
+          })
+        ).pipe(Layer.provide(HttpClient.layer(...args)));
+      },
+    },
+  };
+});
+vi.mock(
+  "@/lib/content/store/memory",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock("@tanstack/react-start/server", () => ({
+  getRequest: () => new Request("https://nakafa.test/en/try-out"),
+}));
+vi.mock("@/lib/auth/session.server", () => ({
+  readSessionMemo: sessionMock,
+}));
+vi.mock("@repo/site/keys", () => ({
+  contentRuntimeKeys: runtimeKeysMock,
+}));
+vi.mock("@/env.public", () => ({
+  clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
+}));
+vi.mock("@/env", () => ({
+  env: {
+    get VITE_CONVEX_SITE_URL() {
+      return runtimeSiteMock();
+    },
+  },
+}));
+vi.mock("@repo/backend/content/trust", async () => {
+  const { TEST_KEY_RESOLVER } = await import(
+    "@repo/backend/test/content/proof"
+  );
+  return {
+    contentKeyResolver: TEST_KEY_RESOLVER,
+    trustedContentKeys: [],
+  };
+});
+type AttemptContentModule =
+  typeof import("@repo/backend/client/content/attempt");
+const verifyAttemptSpy = vi.hoisted(() =>
+  vi.fn<AttemptContentModule["verifyAttemptContent"]>()
+);
+vi.mock("@repo/backend/client/content/attempt", async (importOriginal) => {
+  const actual = await importOriginal<AttemptContentModule>();
+  verifyAttemptSpy.mockImplementation(actual.verifyAttemptContent);
+  return { ...actual, verifyAttemptContent: verifyAttemptSpy };
+});
+
+/** Selects a public question through the real active Convex catalog query. */
+const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
+  bodyText?: string
+) {
+  const source = yield* makeTryoutRuntimeSource(bodyText, makeLandingSource());
+  const runtime = yield* createTestPublication(source.source);
+  const featured = yield* runtime.query(
+    refs.public.tryouts.queries.catalog.getFeaturedQuestion,
+    {
+      appLocale: "en",
+    }
+  );
+  return {
+    runtime,
+    question: featured.question,
+  };
+});
+
+/** Routes the app transport into real session and retained membership queries. */
+const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
+  function* (options?: Parameters<typeof insertHistoryAttempt>[2]) {
+    const t = createConvexTestWithBetterAuth();
+    const seed = yield* Effect.promise(() =>
+      t.mutation((ctx) => insertHistoryAttempt(ctx, true, options))
+    );
+    const owned = t.withIdentity({
+      subject: seed.identity.authUserId,
+      sessionId: seed.identity.sessionId,
+    });
+    const access: SignedContentAccess = {
+      answers: Arr.filter(
+        seed.request.selectors,
+        (selector) => selector.delivery === "entitled"
+      ),
+      kind: "signed",
+      previewAnswers: [],
+      questions: Arr.filter(
+        seed.request.selectors,
+        (selector) => selector.delivery === "authenticated"
+      ),
+    };
+    queryMock.mockImplementation((functionReference, encodedArgs) => {
+      expect(layerMock).toHaveBeenLastCalledWith("https://test.convex.cloud", {
+        auth: "technical-session-token",
+      });
+      assert(Predicate.isObject(encodedArgs));
+      return owned.query(functionReference, encodedArgs);
+    });
+    const question = yield* Effect.fromNullishOr(access.questions[0]);
+    const answer = yield* Effect.fromNullishOr(access.answers[0]);
+    return {
+      access,
+      answer,
+      attemptId: seed.request.attemptId,
+      owned,
+      question,
+      seed,
+      t,
+    };
+  }
+);
+/** Loads the attempt's signed content and returns the failure it must end in. */
+const loadFailure = (
+  fixture: Effect.Success<ReturnType<typeof readOwnedFixture>>
+) =>
+  loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(Effect.flip);
+
+beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease(TEST_RELEASE_ID);
+  vi.setSystemTime(TRYOUT_TEST_NOW);
+  fetchMock.mockReset();
+  queryMock.mockReset();
+  sessionMock
+    .mockReset()
+    .mockReturnValue(
+      Effect.succeed(
+        Effect.succeed({ convexToken: Option.some("technical-session-token") })
+      )
+    );
+  runtimeSiteMock.mockReset().mockReturnValue(siteUrl);
+  runtimeKeysMock.mockReset().mockImplementation(() => {
+    throw new ContentRuntimeConfigurationError({
+      key: "CONTENT_RUNTIME_TOKEN",
+    });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("signed try-out execution", () => {
+  it.effect(
+    "renders complete original question and answer bodies after release compaction",
+    () =>
+      Effect.gen(function* () {
+        const rawMdx =
+          "Question opening.\n\nAll original conditions.\n\nFinal question paragraph.";
+        const answerMdx =
+          "Answer opening.\n\nEvery original explanation step.\n\nFinal answer paragraph.";
+        const fixture = yield* readOwnedFixture({
+          answerBodyText: answerMdx,
+          answerRawMdx: answerMdx,
+          bodyText: rawMdx,
+          rawMdx,
+        });
+        const rendered = yield* loadSignedTryoutContent(
+          fixture.attemptId,
+          fixture.access
+        );
+        expect(rendered.questions).toHaveLength(1);
+        expect(rendered.answers).toHaveLength(1);
+        const question = yield* Effect.fromNullishOr(rendered.questions[0]);
+        const answer = yield* Effect.fromNullishOr(rendered.answers[0]);
+        const questionMarkup = renderToStaticMarkup(question.content);
+        const answerMarkup = renderToStaticMarkup(answer.answer);
+        for (const paragraph of rawMdx.split("\n\n")) {
+          expect(questionMarkup).toContain(paragraph);
+        }
+        for (const paragraph of answerMdx.split("\n\n")) {
+          expect(answerMarkup).toContain(paragraph);
+        }
+        expect(question).toMatchObject({
+          contentHash: fixture.question.contentHash,
+          sourcePath: fixture.question.sourcePath,
+          sourceRevision: fixture.question.sourceRevision,
+        });
+        expect(answer).toMatchObject({
+          contentHash: fixture.answer.contentHash,
+          sourcePath: fixture.answer.sourcePath,
+          sourceRevision: fixture.answer.sourceRevision,
+        });
+        expect(queryMock).toHaveBeenCalledOnce();
+        expect(runtimeKeysMock).not.toHaveBeenCalled();
+        expect(fetchMock).not.toHaveBeenCalled();
+      })
+  );
+  it.effect(
+    "rejects a missing ordered item at the real exchange boundary before executing MDX",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture({
+          bodyText: "Incomplete exchange body",
+        });
+        const row = yield* Effect.promise(() =>
+          fixture.owned.query(
+            Ref.getFunctionReference(attemptQuery),
+            fixture.seed.request
+          )
+        );
+        expect(row).not.toBeNull();
+        const found = yield* Effect.fromNullishOr(row);
+        queryMock.mockResolvedValue({
+          ...found,
+          items: Arr.take(found.items, 1),
+        });
+        expect(yield* loadFailure(fixture)).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause: {
+            _tag: "ContentRuntimeVerificationError",
+            cause: {
+              _tag: "ContentRuntimeMismatchError",
+              reason: "selectorCount",
+            },
+          },
+        });
+        expect(queryMock).toHaveBeenCalledOnce();
+      })
+  );
+  it.effect(
+    "rejects an empty exported access before transport or caching",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture();
+        expect(
+          yield* loadSignedTryoutContent(fixture.attemptId, {
+            kind: "signed",
+            questions: [],
+            answers: [],
+            previewAnswers: [],
+          }).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause: "Protected content batch is empty.",
+        });
+        expect(queryMock).not.toHaveBeenCalled();
+      })
+  );
+  it.effect(
+    "preserves a missing live credential as a typed configuration cause",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readFixture();
+        expect(
+          yield* loadTryoutQuestion(fixture.question).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause: {
+            _tag: "ContentRuntimeConfigurationError",
+            key: "CONTENT_RUNTIME_TOKEN",
+          },
+        });
+        expect(fetchMock).not.toHaveBeenCalled();
+      })
+  );
+  it.effect(
+    "rejects an authenticated body whose tree uses an unlisted component before caching it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture({
+          answerContentTree: {
+            $node: "element",
+            children: [
+              {
+                $node: "element",
+                children: [],
+                name: "NoSuchComponent",
+                props: {},
+              },
+            ],
+            name: "fragment",
+            props: {},
+          },
+        });
+        expect(
+          yield* loadSignedTryoutContent(fixture.attemptId, {
+            kind: "signed",
+            questions: [],
+            answers: [fixture.answer],
+            previewAnswers: [],
+          }).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause: {
+            _tag: "ContentRuntimeVerificationError",
+            cause: {
+              _tag: "ArtifactTreeComponentUnlistedError",
+              componentName: "NoSuchComponent",
+              contentKey: fixture.answer.contentKey,
+            },
+          },
+        });
+      })
+  );
+  it.effect("rechecks attempt access on every load after rendering", () =>
+    Effect.gen(function* () {
+      const fixture = yield* readOwnedFixture({
+        bodyText: "Complete retained body",
+      });
+      yield* loadSignedTryoutContent(fixture.attemptId, fixture.access);
+      // Access is read again for every load, so a revoked attempt never renders.
+      yield* Effect.promise(() =>
+        fixture.t.mutation((ctx) =>
+          ctx.db.patch("users", fixture.seed.identity.userId, {
+            deletedAt: TRYOUT_TEST_NOW,
+          })
+        )
+      );
+      expect(yield* loadFailure(fixture)).toMatchObject({
+        _tag: "ContentRuntimeVerificationError",
+        cause: {
+          _tag: "ContentRuntimeMissingError",
+        },
+      });
+      expect(queryMock).toHaveBeenCalledTimes(2);
+    })
+  );
+  it.effect(
+    "rejects absent or failed sessions before querying any attempt",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture();
+        sessionMock.mockReturnValueOnce(
+          Effect.succeed(Effect.succeed({ convexToken: Option.none() }))
+        );
+        expect(yield* loadFailure(fixture)).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause: "Try-out content requires an active session.",
+        });
+        const cause = new TypeError("Session transport unavailable.");
+        sessionMock.mockReturnValueOnce(Effect.fail(cause));
+        expect(yield* loadFailure(fixture)).toBe(cause);
+        expect(queryMock).not.toHaveBeenCalled();
+      })
+  );
+  it.effect(
+    "preserves live authorization failures without entering rendering",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture();
+        const cause = new HttpClient.HttpClientError({
+          cause: new TypeError("Authorization query unavailable."),
+        });
+        queryMock.mockRejectedValueOnce(cause.cause);
+        expect(yield* loadFailure(fixture)).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+          cause,
+        });
+      })
+  );
+
+  it.effect(
+    "renders the rows a section read returned without a second Convex read",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture({
+          bodyText: "Read once body",
+        });
+        const row = yield* Effect.promise(() =>
+          fixture.owned.query(
+            Ref.getFunctionReference(attemptQuery),
+            fixture.seed.request
+          )
+        );
+        const found = yield* Effect.fromNullishOr(row);
+        queryMock.mockClear();
+        const rendered = yield* renderSignedTryoutRows(fixture.access, [found]);
+        expect(queryMock).not.toHaveBeenCalled();
+        expect(rendered.questions).toHaveLength(1);
+        expect(
+          yield* renderSignedTryoutRows(fixture.access, []).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+        expect(
+          yield* renderSignedTryoutRows(fixture.access, [null]).pipe(
+            Effect.flip
+          )
+        ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+      })
+  );
+
+  it.effect(
+    "verifies the same rows once and keeps the verified batch for those bytes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture({
+          bodyText: "Kept batch",
+        });
+        const row = yield* Effect.promise(() =>
+          fixture.owned.query(
+            Ref.getFunctionReference(attemptQuery),
+            fixture.seed.request
+          )
+        );
+        const found = yield* Effect.fromNullishOr(row);
+        verifyAttemptSpy.mockClear();
+        const first = yield* renderSignedTryoutRows(fixture.access, [found]);
+        const second = yield* renderSignedTryoutRows(fixture.access, [found]);
+        expect(
+          renderToStaticMarkup(
+            Arr.head(second.questions).pipe(Option.getOrThrow).content
+          )
+        ).toBe(
+          renderToStaticMarkup(
+            Arr.head(first.questions).pipe(Option.getOrThrow).content
+          )
+        );
+        expect(verifyAttemptSpy).toHaveBeenCalledOnce();
+      })
+  );
+});

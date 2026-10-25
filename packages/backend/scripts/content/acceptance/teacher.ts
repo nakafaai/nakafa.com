@@ -1,9 +1,6 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
   encodeArguments,
-  signInInvitedMember,
+  seedMember,
 } from "@repo/backend/scripts/content/acceptance/member";
 import {
   type AcceptanceMode,
@@ -28,24 +25,22 @@ export const teacherAddress = (slug: string) =>
 export const createAcceptanceTeacher = Effect.fn(
   "contentAcceptance.createTeacher"
 )(function* (root: string, slug: string, output: string) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
-    return yield* acceptanceRuntimeError(
-      "Run pnpm acceptance:prepare and start acceptance before creating a teacher."
-    );
-  }
   const args = yield* encodeArguments({
     email: teacherAddress(slug),
     locale: "id",
     name: "Acceptance Teacher",
     slug,
   });
-  yield* runLocalConvex(runtime, "teacher seed", [
-    "run",
-    "tenancy/seed:teacher",
-    args,
-  ]);
-  yield* signInInvitedMember(runtime, teacherAddress(slug), output);
+  yield* seedMember(
+    root,
+    {
+      address: teacherAddress(slug),
+      args,
+      label: "teacher",
+      seed: "tenancy/seed:teacher",
+    },
+    output
+  );
 });
 
 /** The usage of the teacher mode: the school of the Teacher, then the file for the session cookie. */

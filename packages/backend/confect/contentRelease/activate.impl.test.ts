@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
+  BOOTSTRAP,
   CANDIDATE,
   expectedReceipt,
   RECOVERY,
+  seedRetiredCandidate,
   seedVerifiedPair,
 } from "@repo/backend/test/activation/fixture";
 import { insertReleaseItem } from "@repo/backend/test/content/model";
@@ -396,4 +399,50 @@ describe("contentRelease/activate", () => {
       );
     })
   );
+
+  it("activates a bootstrap over the retired generation with no retained inverse", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => seedRetiredCandidate(ctx, { bootstrap: true }));
+    const bootstrapArgs = {
+      manifestHash: BOOTSTRAP.manifestHash,
+      releaseId: BOOTSTRAP.releaseId,
+      rendererJson: testRendererJson(),
+    };
+
+    await expect(t.mutation(prepare, bootstrapArgs)).resolves.toEqual({
+      kind: "prepared",
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    const activation = await t.mutation(activate, bootstrapArgs);
+    const repeated = await t.mutation(activate, bootstrapArgs);
+    const stored = await t.run(async (ctx) => ({
+      release: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (query) =>
+          query.eq("releaseId", BOOTSTRAP.releaseId)
+        )
+        .unique(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+
+    expect(activation).toEqual({
+      kind: "activated",
+      receipt: expectedReceipt(BOOTSTRAP),
+    });
+    expect(repeated).toEqual({
+      kind: "completed",
+      receipt: expectedReceipt(BOOTSTRAP),
+    });
+    expect(stored.release).toMatchObject({
+      bootstrap: true,
+      status: "completed",
+    });
+    expect(stored.state).toMatchObject({
+      activeContentGeneration: CURRENT_CONTENT_GENERATION,
+      activeReleaseId: BOOTSTRAP.releaseId,
+      activeSequence: BOOTSTRAP.sequence,
+    });
+    expect(stored.state?.candidateReleaseId).toBeUndefined();
+    expect(stored.state?.recoveryReleaseId).toBeUndefined();
+  });
 });

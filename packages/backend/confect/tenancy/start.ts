@@ -1,6 +1,7 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { NewCurrency, NewTimeZone } from "@repo/backend/confect/tenancy/locale";
 import {
+  SchoolName,
   TenantName,
   UnitLevel,
   UnitName,
@@ -36,9 +37,10 @@ export const SchoolSize = Schema.Literals(["s", "m", "l", "xl"]);
 const StartLevels = Schema.Array(UnitLevel).check(Schema.isUnique());
 
 /**
- * What a new school takes from its country: the currency of its plan, the
- * language of its content, the zones its schools keep time in with the first as
- * the default, and the month its school year starts.
+ * What a new school takes from its country: the currency of its plan, the default
+ * language of its school's pages (stored as `contentLanguage`), the zones its
+ * schools keep time in with the first as the default, and the month its school
+ * year starts.
  */
 export const CountryDefaults = Schema.Struct({
   contentLanguage: AppLocaleCodeSchema,
@@ -47,7 +49,13 @@ export const CountryDefaults = Schema.Struct({
   zones: Schema.NonEmptyArray(NewTimeZone),
 });
 
-/** Each country's defaults, read where a school is opened and tested once for its rules. */
+/**
+ * Each country's defaults, read where a school is opened and tested once for its rules.
+ * The page language of DE, GB and ID is the language whose registry entry names that
+ * country (`packages/internationalization/data/lang.ts`). The values stay explicit here:
+ * that registry lives in a package of the web runtime, which the Convex backend does not
+ * depend on.
+ */
 export const countryDefaults = {
   DE: {
     contentLanguage: "de",
@@ -112,7 +120,7 @@ export const startZone = (
 export const StartAnswer = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("name"),
-    name: TenantName,
+    name: SchoolName,
     slug: TenantSlug,
   }),
   Schema.Struct({ kind: Schema.Literal("country"), value: StartCountry }),
@@ -150,7 +158,7 @@ export const StartDraft = Schema.Struct({
  */
 export const startArgs = {
   country: StartCountry,
-  name: TenantName,
+  name: SchoolName,
   role: StartRole,
   size: SchoolSize,
   slug: TenantSlug,

@@ -1,0 +1,160 @@
+import "@tanstack/react-start/server-only";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { PreviewArtifact } from "@nakafa/aksara-contracts/preview/artifact";
+import {
+  previewDocumentRoute,
+  type QuestionAnswerPreviewDocument,
+  type QuestionPromptPreviewDocument,
+} from "@nakafa/aksara-contracts/preview/document";
+import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
+import {
+  QuestionAnswerProjectionSchema,
+  QuestionPromptProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/question";
+import { Effect, Option, Schema } from "effect";
+import { executePreviewArtifact } from "@/lib/content/preview/artifact";
+import type { PreviewConfig } from "@/lib/content/preview/config";
+import {
+  PreviewCompileError,
+  PreviewIntegrityError,
+  PreviewPendingError,
+} from "@/lib/content/preview/errors";
+import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
+
+type QuestionPreviewDocument =
+  | QuestionAnswerPreviewDocument
+  | QuestionPromptPreviewDocument;
+type ReadyPreviewManifest = typeof PreviewReadySchema.Type;
+/** Exact try-out route identity requested by one server boundary. */
+const QuestionPreviewInputSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
+  publicPath: Schema.String,
+});
+type QuestionPreviewInput = typeof QuestionPreviewInputSchema.Type;
+/** Decodes one prompt projection without leaking a generic parse failure. */
+function decodePromptProjection(artifact: PreviewArtifact) {
+  return Schema.decodeUnknownEffect(QuestionPromptProjectionSchema)(
+    artifact.projection,
+    { onExcessProperty: "error" }
+  ).pipe(
+    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
+  );
+}
+/** Decodes one answer projection without weakening the manifest contract. */
+function decodeAnswerProjection(artifact: PreviewArtifact) {
+  return Schema.decodeUnknownEffect(QuestionAnswerProjectionSchema)(
+    artifact.projection,
+    { onExcessProperty: "error" }
+  ).pipe(
+    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
+  );
+}
+/** Authenticates and executes an exact manifest-owned artifact reference. */
+function executeArtifact(
+  config: PreviewConfig,
+  document: QuestionPreviewDocument,
+  manifest: ReadyPreviewManifest,
+  previewArtifact: PreviewArtifact
+) {
+  return executePreviewArtifact({
+    config,
+    document,
+    manifest,
+    previewArtifact,
+  });
+}
+/** Authenticates the answer of an answer question; prompt-only questions have none. */
+const readReadyAnswer = Effect.fn("NakafaContent.readReadyQuestionAnswer")(
+  function* (
+    manifest: ReadyPreviewManifest,
+    document: QuestionPreviewDocument,
+    config: PreviewConfig
+  ) {
+    if (document.identity.bodyKind === "question") {
+      return null;
+    }
+    const answerArtifact = manifest.artifacts[1];
+    if (answerArtifact === undefined) {
+      return yield* new PreviewIntegrityError({ check: "artifact" });
+    }
+    yield* decodeAnswerProjection(answerArtifact);
+    const renderedAnswer = yield* executeArtifact(
+      config,
+      document,
+      manifest,
+      answerArtifact
+    );
+    return renderedAnswer.element;
+  }
+);
+/** Authenticates one ready prompt or the ordered prompt-answer closure. */
+const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
+  function* (
+    manifest: ReadyPreviewManifest,
+    document: QuestionPreviewDocument,
+    config: PreviewConfig
+  ) {
+    const promptArtifact = manifest.artifacts[0];
+    const promptProjection = yield* decodePromptProjection(promptArtifact);
+    const renderedPrompt = yield* executeArtifact(
+      config,
+      document,
+      manifest,
+      promptArtifact
+    );
+    const Answer = yield* readReadyAnswer(manifest, document, config);
+    return {
+      Answer,
+      Question: renderedPrompt.element,
+      appLocale: document.target.section.appLocale,
+      metadata: promptProjection.metadata,
+      response: promptProjection.response,
+      selectedBodyKind: document.identity.bodyKind,
+      target: document.target,
+    };
+  }
+);
+
+/** Authenticated prompt and optional answer rendered by the actual Nakafa app. */
+export type QuestionPreviewContent = Effect.Success<
+  ReturnType<typeof readReadyQuestion>
+>;
+
+/** Reports whether one selected question owns the requested public route. */
+function matchesQuestionRoute(
+  document: QuestionPreviewDocument,
+  input: QuestionPreviewInput
+) {
+  const route = previewDocumentRoute(document);
+  return (
+    route.appLocale === input.appLocale && route.publicPath === input.publicPath
+  );
+}
+/** Reads a matching local question before any published catalog lookup. */
+export const readQuestionPreview = Effect.fn(
+  "NakafaContent.readQuestionPreview"
+)(function* (input: QuestionPreviewInput) {
+  const snapshot = yield* readPreviewSnapshot();
+  if (Option.isNone(snapshot)) {
+    return Option.none<QuestionPreviewContent>();
+  }
+  const { config, manifest } = snapshot.value;
+  const document = manifest.document;
+  if (
+    document.family !== "question" ||
+    !matchesQuestionRoute(document, input)
+  ) {
+    return Option.none<QuestionPreviewContent>();
+  }
+  if (manifest.status === "pending") {
+    return yield* new PreviewPendingError({ revision: manifest.revision });
+  }
+  if (manifest.status === "failed") {
+    return yield* new PreviewCompileError({
+      code: manifest.failure.code,
+      message: manifest.failure.message,
+      revision: manifest.revision,
+    });
+  }
+  return Option.some(yield* readReadyQuestion(manifest, document, config));
+});

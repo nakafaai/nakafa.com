@@ -63,6 +63,7 @@ describe("access/kind declarations", () => {
       "integration.manage",
       "document.edit",
       "exam.edit",
+      "exam.rooms",
       "exam.view",
     ]);
     expect(
@@ -86,6 +87,7 @@ describe("access/kind declarations", () => {
       "card.issued",
       "card.reissued",
       "card.redeemed",
+      "card.printed",
       "grant.created",
       "grant.ended",
       "person.reactivated",

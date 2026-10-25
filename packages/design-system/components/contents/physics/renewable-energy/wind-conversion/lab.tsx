@@ -1,5 +1,3 @@
-"use client";
-
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -19,8 +17,8 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -63,7 +61,7 @@ export function WindEnergyConversionLab({
   title,
 }: WindEnergyConversionLabProps) {
   const [windSpeed, setWindSpeed] = useState(DEFAULT_WIND_SPEED);
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const colors = getWindSceneColors(resolvedTheme);
 
   function handleSpeedChange(nextValue: number) {

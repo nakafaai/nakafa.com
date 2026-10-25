@@ -1,5 +1,4 @@
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type {
   ExamQuestionsDoc,
   ExamSittingsDoc,
@@ -9,6 +8,11 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import {
+  firstActiveUnit,
+  required,
+  tenantOf,
+} from "@repo/backend/confect/acceptance/lookup";
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { activeOwners, assignRole } from "@repo/backend/confect/access/grant";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
@@ -23,7 +27,8 @@ import { placeQuestion } from "@repo/backend/confect/exams/questions/place";
 import { openSitting } from "@repo/backend/confect/exams/sittings/closing";
 import { createSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
-import { Array as Arr, Clock, Effect, Option, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Clock, Effect } from "effect";
 
 /** The title of the seeded exam. */
 const EXAM_TITLE = "Ujian Acceptance";
@@ -34,20 +39,38 @@ const ROOM = "Lab 2";
 /** One hour, the length of the seeded sitting after it opens. */
 const SITTING_LENGTH_MS = 60 * 60 * 1000;
 
+/** The room of the seeded upcoming sitting, which opens the next day. */
+const UPCOMING_ROOM = "Lab 3";
+
+/** One day, how far ahead the seeded upcoming sitting opens. */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /** The key of a seeded question: its first option is the correct answer. */
 const FIRST_OPTION_KEY: Arr.NonEmptyReadonlyArray<InteractionKey> = [
   { correct: ["option-1"], interaction: "choice", kind: "choice" },
 ];
 
-/** A prompt of one paragraph with the text, in the stored form that the editor writes. */
-const promptText = (text: string) =>
-  `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"${text}"}]}]}`;
+/**
+ * The paragraphs of the second question's prompt. They mix Indonesian, Arabic and English, so a
+ * browser test reads each paragraph in its own direction (e2e/school/multilingual.browser.ts).
+ */
+const MIXED_PARAGRAPHS: Arr.NonEmptyReadonlyArray<string> = [
+  "Soal kedua: baca teks berikut dengan cermat.",
+  "مرحبا بكم في الامتحان، اقرأ النص بعناية.",
+  "Read the passage and answer the question below.",
+];
 
-/** The value of a lookup that must find one row. A missing row ends the seed with a defect that names it. */
-const required = <A>(lookup: Option.Option<A>, missing: string) =>
-  Option.match(lookup, {
-    onNone: () => Effect.die(missing),
-    onSome: Effect.succeed,
+/** One paragraph of a prompt, in the stored form that the editor writes. */
+const paragraphNode = (text: string) => ({
+  content: [{ text, type: "text" }],
+  type: "paragraph",
+});
+
+/** A prompt of paragraphs with their text, in the stored form that the editor writes. */
+const promptText = (paragraphs: Arr.NonEmptyReadonlyArray<string>) =>
+  encodeJsonText({
+    content: Arr.map(paragraphs, paragraphNode),
+    type: "doc",
   });
 
 /**
@@ -94,30 +117,6 @@ const seatCrowd = Effect.fn("exams.seed.crowd")(function* (crowd: {
   );
 });
 
-/** The school with the slug. */
-const tenantOf = Effect.fn("exams.seed.tenant")(function* (slug: string) {
-  const found = yield* (yield* DatabaseReader)
-    .table("tenants")
-    .index("by_slug", (query) => query.eq("slug", slug))
-    .first()
-    .pipe(Effect.orDie);
-  return yield* required(found, "No school has this slug.");
-});
-
-/** The first active unit of the school, which the seeded grant and sitting use. */
-const firstActiveUnit = Effect.fn("exams.seed.unit")(function* (
-  tenantId: ExamsDoc["tenantId"]
-) {
-  const found = yield* (yield* DatabaseReader)
-    .table("tenantUnits")
-    .index("by_tenantId_and_status", (query) =>
-      query.eq("tenantId", tenantId).eq("status", "active")
-    )
-    .first()
-    .pipe(Effect.orDie);
-  return yield* required(found, "The school has no active unit.");
-});
-
 /**
  * The user of the Owner who signed in first, as the author of the seeded exam. An Owner who
  * has not signed in holds no user to author it.
@@ -146,12 +145,12 @@ const ownerUserId = Effect.fn("exams.seed.owner")(function* (
 const seedQuestion = Effect.fn("exams.seed.question")(function* (
   exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
   after: ExamQuestionsDoc["_id"] | null,
-  text: string
+  paragraphs: Arr.NonEmptyReadonlyArray<string>
 ) {
   const prompt = yield* createDocument({
     scope: exam.scope,
     tenantId: exam.tenantId,
-    text: yield* storedDocument(promptText(text)).pipe(Effect.orDie),
+    text: yield* storedDocument(promptText(paragraphs)).pipe(Effect.orDie),
   }).pipe(Effect.orDie);
   const answers = yield* encodeAnswers(newChoiceAnswers());
   const key = yield* encodeKey(FIRST_OPTION_KEY);
@@ -170,6 +169,7 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   readonly crowd?: number;
   readonly email: string;
   readonly slug: string;
+  readonly upcoming?: boolean;
 }) {
   yield* requireAcceptanceSeed();
   const reader = yield* DatabaseReader;
@@ -199,15 +199,11 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   }).pipe(Effect.orDie);
   const now = yield* Clock.currentTimeMillis;
   const scope: GrantScope = { kind: "unit", unitId: unit._id };
-  const language = yield* Schema.decodeEffect(DeliveryLanguageSchema)(
-    unit.contentLanguage
-  ).pipe(Effect.orDie);
   const examId = yield* (yield* DatabaseWriter)
     .table("exams")
     .insert({
       createdAt: now,
       createdBy: yield* ownerUserId(tenant._id),
-      language,
       questions: [],
       scope,
       tenantId: tenant._id,
@@ -217,12 +213,12 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   const first = yield* seedQuestion(
     { _id: examId, questions: [], scope, tenantId: tenant._id },
     null,
-    "Soal pertama."
+    ["Soal pertama."]
   );
   yield* seedQuestion(
     { _id: examId, questions: [first], scope, tenantId: tenant._id },
     first,
-    "Soal kedua."
+    MIXED_PARAGRAPHS
   );
   const exam = yield* reader.table("exams").get(examId).pipe(Effect.orDie);
   const made = yield* createSitting({
@@ -242,5 +238,21 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
     sittingId: made.id,
     tenantId: tenant._id,
   });
-  return { examId, sittingId: made.id, token: made.token };
+  if (args.upcoming === true) {
+    yield* createSitting({
+      actor: systemActor,
+      closesAt: now + DAY_MS + SITTING_LENGTH_MS,
+      exam,
+      opensAt: now + DAY_MS,
+      place: { cohortId: null, unitId: unit._id },
+      room: UPCOMING_ROOM,
+      tenantId: tenant._id,
+    }).pipe(Effect.orDie);
+  }
+  return {
+    examId,
+    sittingId: made.id,
+    title: EXAM_TITLE,
+    token: made.token,
+  };
 });

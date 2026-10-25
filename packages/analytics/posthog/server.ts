@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { keys } from "@repo/analytics/keys";
 import {
@@ -48,11 +48,11 @@ function getServerAnalytics() {
   }
 
   const runtimeKeys = getAnalyticsKeys();
-  serverAnalytics = new PostHog(runtimeKeys.NEXT_PUBLIC_POSTHOG_KEY, {
+  serverAnalytics = new PostHog(runtimeKeys.VITE_POSTHOG_KEY, {
     disableGeoip: true,
     disableSurveys: true,
     enableExceptionAutocapture: false,
-    host: runtimeKeys.POSTHOG_PROXY_HOST,
+    host: runtimeKeys.VITE_POSTHOG_PROXY_HOST,
     flushAt: 1,
     flushInterval: 0,
     personProfiles: "never",
@@ -75,7 +75,6 @@ function getServerAnalytics() {
  *
  * Docs:
  * https://posthog.com/docs/error-tracking/capture
- * https://posthog.com/docs/error-tracking/installation/nextjs
  * https://posthog.com/docs/web-analytics/bot-detection
  */
 export const captureServerException = Effect.fn(

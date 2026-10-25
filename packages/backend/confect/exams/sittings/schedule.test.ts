@@ -154,6 +154,56 @@ describe("exams/sittings schedule", () => {
   );
 
   it.effect(
+    "refuses a schedule for a cohort of a planned or an archived period, as invalid for its cohort",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Rombel");
+        const cohorts = yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            return yield* Effect.forEach(
+              ["planned", "archived"] as const,
+              (status) =>
+                Effect.gen(function* () {
+                  const periodId = yield* writer.table("tenantPeriods").insert({
+                    end: "2026-12-19",
+                    name: status,
+                    start: "2026-07-13",
+                    status,
+                    tenantId: fixture.tenants.nf,
+                    unitId: fixture.units.smp,
+                  });
+                  return yield* writer.table("tenantCohorts").insert({
+                    grade: 10,
+                    name: `10${status}`,
+                    nameKey: `10${status}`,
+                    periodId,
+                    status: "active",
+                    tenantId: fixture.tenants.nf,
+                    unitId: fixture.units.smp,
+                  });
+                })
+            );
+          })
+        );
+        const failures = yield* Effect.forEach(cohorts, (cohortId) =>
+          scheduleSitting(fixture, {
+            closesAt: CLOSES_AT,
+            examId,
+            group: { cohortId, kind: "cohort" },
+            opensAt: OPENS_AT,
+          }).pipe(Effect.flip)
+        );
+        expect(failures).toMatchObject([
+          { _tag: "ScheduleInvalid", reason: "cohort" },
+          { _tag: "ScheduleInvalid", reason: "cohort" },
+        ]);
+      })
+  );
+
+  it.effect(
     "refuses a schedule of an exam with a question that has no fitting key, and names its number",
     () =>
       Effect.gen(function* () {

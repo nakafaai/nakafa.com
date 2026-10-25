@@ -1,4 +1,3 @@
-import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 import { StageArtifactBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_ARTIFACT_BATCH_BYTES,
@@ -22,15 +21,24 @@ import {
   loadStaged,
 } from "@repo/backend/confect/contentRelease/model";
 import {
-  decodeArtifactJson,
+  decodeArtifactHeaderJson,
   decodeItemJson,
+  type SignedArtifactHeader,
 } from "@repo/backend/confect/contentRelease/parse";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
-import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
 import { getConvexSize } from "convex/values";
 import { Array as Arr, Clock, Effect, Schema, Struct } from "effect";
 
-/** Decodes one bounded artifact batch through the shared wire contract. */
+/** The batch identity of the shared artifact batch contract, without its artifacts. */
+const StageArtifactBatchKeySchema = Schema.Struct(
+  Struct.pick(StageArtifactBatchInputSchema.fields, ["batchIndex", "releaseId"])
+);
+
+/**
+ * Decodes one bounded artifact batch. Each artifact is read only for its staged identity: the
+ * Node ingress action decoded, authenticated and canonicalized it before this mutation runs, and
+ * activation authenticates every stored body again, so the stored bytes are the action's own.
+ */
 const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(function* (
   releaseId: string,
   batchIndex: number,
@@ -50,9 +58,12 @@ const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(function* (
       `Artifact batch ${batchIndex} exceeds its bounded transport contract.`
     );
   }
-  const artifacts = yield* Effect.forEach(artifactJson, decodeArtifactJson);
-  return yield* Schema.decodeUnknownEffect(StageArtifactBatchInputSchema)({
-    artifacts,
+  const entries = yield* Effect.forEach(artifactJson, (source) =>
+    decodeArtifactHeaderJson(source).pipe(
+      Effect.map((artifact) => ({ artifact, artifactJson: source }))
+    )
+  );
+  yield* Schema.decodeEffect(StageArtifactBatchKeySchema)({
     batchIndex,
     releaseId,
   }).pipe(
@@ -64,13 +75,14 @@ const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(function* (
         })
     )
   );
+  return entries;
 });
 /** Persists one immutable artifact and marks its exact staged item ready. */
 const stageArtifact = Effect.fn("contentRelease.stageArtifact")(function* (
   releaseId: string,
   batchIndex: number,
   batchHash: string,
-  artifact: SignedContentArtifact,
+  artifact: SignedArtifactHeader,
   artifactJson: string,
   now: number
 ) {
@@ -130,16 +142,12 @@ export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
   ) {
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const { artifacts } = yield* decodeBatch(releaseId, batchIndex, sources);
-    const entries = Arr.map(artifacts, (artifact) => ({
-      artifact,
-      artifactJson: encodeArtifactJson(artifact),
-    }));
+    const entries = yield* decodeBatch(releaseId, batchIndex, sources);
     const values = Arr.map(entries, ({ artifactJson }) => artifactJson);
     const identities = Arr.dedupe(
-      Arr.map(artifacts, ({ artifactHash }) => artifactHash)
+      Arr.map(entries, ({ artifact }) => artifact.artifactHash)
     );
-    if (identities.length !== artifacts.length) {
+    if (identities.length !== entries.length) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
         `Artifact batch ${batchIndex} repeats one immutable hash.`

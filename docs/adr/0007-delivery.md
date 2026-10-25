@@ -1,5 +1,7 @@
 # ADR 0007: Static Public Lessons And Reactive Learner Context
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+
 ## Decision
 
 Public lesson content, metadata, structured data, canonical links, and Markdown
@@ -57,7 +59,7 @@ contextual visit cannot first record a canonical view and then a placement view.
   of each page; it needs a release in every entry's key first, and a check on
   Vercel that the header changes nothing at the CDN.
 - A read that depends only on the active release goes through the content
-  store (`apps/www/lib/content/store`), which keeps its answer in the Vercel
+  store (`apps/www/src/lib/content/store`), which keeps its answer in the Vercel
   Runtime Cache. That cache is shared by every instance and survives a deploy,
   while `use cache` keys include the build, so a deploy and every new instance
   used to read Convex again. A store key holds a version constant, the release
@@ -90,16 +92,12 @@ contextual visit cannot first record a canonical view and then a placement view.
   anything, and a try-out page below the count of its release is the only one
   that is read, so a request can never create a stored or cached entry for an
   id that the release does not list.
-- Social images carry a CDN lifetime of an hour, a stale day, and a CDN tag. An
-  image changes only when its route changes, and a route changes only with a
-  release, so the activation of a release purges the tag once, as it purges the
-  sitemap. The hour is the lifetime of the content entries an image is rendered
-  from: the instance that renders the first image after a purge may still hold
-  the previous release in its memory for up to that hour, and a longer CDN
-  lifetime would keep that render long after its source was fresh again. A
-  purge that fails is logged and never fails the activation, because a stale
-  image is cosmetic and its lifetime bounds it.
-  A deployment has its own CDN cache key, so only a release needs the purge.
+- Social images carry a CDN lifetime of an hour and a stale day, and no CDN tag.
+  An image changes only when its route changes, and a route changes only with a
+  release, so the hour bounds how long a stale image can last. The hour is the
+  lifetime of the content entries an image is rendered from: an instance may
+  hold the previous release in its memory for up to that hour, and a longer CDN
+  lifetime would keep that render long after its source was fresh again.
   The brand image that answers a route inside a content namespace (articles,
   material, the Quran or try-out) that the release does not list is kept for
   five minutes only, because the next release may add the route. A page outside

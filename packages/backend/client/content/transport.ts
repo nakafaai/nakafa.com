@@ -35,7 +35,8 @@ import {
 } from "effect/http";
 
 /**
- * The Fetch client for the private runtime: never cached, never redirected,
+ * The Fetch client for the private runtime: never cached, never followed (a
+ * redirect answers as it arrives, and the status check refuses it),
  * and kept out of telemetry because every request carries the runtime
  * credential. Only the Fetch client honors those options, so this module
  * provides it instead of accepting any HTTP client.
@@ -45,7 +46,7 @@ const ContentHttpClient = FetchClient.pipe(
     Layer.merge(
       Layer.succeed(FetchHttpClient.RequestInit, {
         cache: "no-store",
-        redirect: "error",
+        redirect: "manual",
       }),
       Layer.succeed(HttpClient.TracerDisabledWhen, () => true)
     )

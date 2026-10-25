@@ -54,7 +54,7 @@ export const runBuildCommand = Effect.fn("contentAcceptance.runBuildCommand")(
       extendEnv: true,
       // Turbo's wrapper forwards SIGTERM, duplicating the process-group signal.
       killSignal: "SIGINT",
-      // Let Portless finish its 10-second descendant shutdown before escalating.
+      // Let the build and the served app stop their children before escalating.
       forceKillAfter: "15 seconds",
       stdin: "inherit",
       stdout: "inherit",
@@ -89,9 +89,8 @@ export const localConvexEnvironment = {
   CONVEX_SELF_HOSTED_URL: undefined,
   CONVEX_SITE_URL: undefined,
   CONVEX_URL: undefined,
+  NAKAFA_DEPLOY_STAGE: undefined,
   NETLIFY: undefined,
-  VERCEL: undefined,
-  VERCEL_ENV: undefined,
   VITE_CONVEX_SITE_URL: undefined,
   VITE_CONVEX_URL: undefined,
   WORKERS_CI: undefined,

@@ -2,7 +2,7 @@ import pytest
 
 from cas import matrix
 from cas.engine import run
-from cas.schema import MathRequest
+from cas.schema import MAX_SYMBOLIC_MATRIX_DIMENSION, MathRequest
 
 
 def test_matrix_determinant() -> None:
@@ -209,3 +209,31 @@ def test_unknown_matrix_operation_raises() -> None:
                 operation="unknown",
             )
         )
+
+
+def test_matrix_refuses_a_symbolic_matrix_beyond_the_dimension_bound() -> None:
+    size = MAX_SYMBOLIC_MATRIX_DIMENSION + 1
+    rows = [[f"a{row}{column}" for column in range(size)] for row in range(size)]
+
+    with pytest.raises(ValueError, match="A matrix with symbols may be at most"):
+        run(MathRequest(kind="math", matrix=rows, operation="determinant"))
+
+
+def test_matrix_accepts_a_symbolic_matrix_at_the_dimension_bound() -> None:
+    size = MAX_SYMBOLIC_MATRIX_DIMENSION
+    rows = [[f"a{row}{column}" for column in range(size)] for row in range(size)]
+
+    result = run(MathRequest(kind="math", matrix=rows, operation="determinant"))
+
+    assert result.status == "verified"
+
+
+def test_matrix_accepts_a_numeric_matrix_beyond_the_symbolic_bound() -> None:
+    size = MAX_SYMBOLIC_MATRIX_DIMENSION + 1
+    rows = [
+        ["1" if row == column else "0" for column in range(size)] for row in range(size)
+    ]
+
+    result = run(MathRequest(kind="math", matrix=rows, operation="determinant"))
+
+    assert result.status == "verified"

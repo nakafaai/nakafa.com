@@ -8,8 +8,8 @@ import { createSchool, hostAddress } from "@/e2e/support/school";
  * request header in which the proxy names its language, as e2e/state/missing
  * explains.
  */
-const STANDALONE_ADDRESS = "/_not-found";
-const LOCALE_HEADER = "x-next-intl-locale";
+const STANDALONE_ADDRESS = "/_missing";
+const LOCALE_HEADER = "x-nakafa-locale";
 
 /** A school address that no school holds, so the school host answers not found. */
 const UNKNOWN_SCHOOL = "zz-unknown";
@@ -72,7 +72,7 @@ test("the not-found page of an unknown school links to Nakafa, because the schoo
   baseURL,
 }) => {
   // The proxy rewrites the unknown school to the standalone not-found page.
-  // On Vercel the rewrite reaches the app's page; a local production build
+  // On the edge the rewrite reaches the app's page; a local production build
   // draws the app's page only at its own address and answers the rewrite with
   // the framework's built-in page. So the page is opened at its address on the
   // school host, with the language header the proxy sets.
@@ -102,7 +102,7 @@ test("a school root keeps its address with no locale prefix, even for a visitor 
   await context.close();
 });
 
-test("the NEXT_LOCALE cookie chooses the language of a school host before Accept-Language", async ({
+test("the NAKAFA_LOCALE cookie chooses the language of a school host before Accept-Language", async ({
   browser,
   baseURL,
 }) => {
@@ -110,7 +110,7 @@ test("the NEXT_LOCALE cookie chooses the language of a school host before Accept
   const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
   const context = await browser.newContext(INDONESIAN_VISITOR);
   await context.addCookies([
-    { name: "NEXT_LOCALE", url: schoolHome, value: "de" },
+    { name: "NAKAFA_LOCALE", url: schoolHome, value: "de" },
   ]);
   const page = await context.newPage();
 

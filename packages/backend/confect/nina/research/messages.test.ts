@@ -35,9 +35,9 @@ describe("research agent messages", () => {
       Arr.join(
         [
           "# User Request",
-          "Cache Components berubah apa menurut pihak pembuat Next.js sendiri?",
+          "Server Components berubah apa menurut pihak pembuat React sendiri?",
           "# Research Objective",
-          "Find official Next.js 16 Cache Components changes.",
+          "Find official React 19 Server Components changes.",
         ],
         "\n\n"
       ),
@@ -46,11 +46,11 @@ describe("research agent messages", () => {
 
     expect(messages[0]?.content).toContain("# User Request");
     expect(messages[0]?.content).toContain(
-      "Cache Components berubah apa menurut pihak pembuat Next.js sendiri?"
+      "Server Components berubah apa menurut pihak pembuat React sendiri?"
     );
     expect(messages[0]?.content).toContain("# Research Objective");
     expect(messages[0]?.content).toContain(
-      "Find official Next.js 16 Cache Components changes."
+      "Find official React 19 Server Components changes."
     );
   });
 

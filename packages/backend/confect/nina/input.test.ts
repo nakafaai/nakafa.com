@@ -3,26 +3,22 @@ import { RegisteredFunction } from "@confect/server";
 import { createThread, saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { languageModel } from "@repo/backend/confect/gateway/model";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
-import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import {
   appendNinaTurn,
   createNinaTest,
+  fundLearner,
   ninaModel,
   ninaModelFor,
 } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
+import { createLearnerTest } from "@repo/backend/test/nina/learner";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
@@ -34,7 +30,6 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 }));
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
-const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const CONTEXT = "Runtime facts";
 
 /** Reads the model input of the fixture's turn, or the typed failure's reason. */
@@ -332,6 +327,7 @@ describe("The cached prefix of the model input", () => {
     provider.languageModel.mockReturnValue(model);
     vi.setSystemTime(Date.UTC(2026, 9, 11, 9));
     const f = await createNinaTest({ history: 1 });
+    await fundLearner(f);
     await f.t.action(run, { turnId: f.turnId });
     vi.setSystemTime(Date.UTC(2026, 9, 11, 10));
     const next = await appendNinaTurn(f, { prompt: "And at infinity?" });
@@ -365,6 +361,7 @@ describe("The cached prefix of the model input", () => {
     const model = ninaModelFor(2);
     provider.languageModel.mockReturnValue(model);
     const f = await createNinaTest();
+    await fundLearner(f);
     await f.t.action(run, { turnId: f.turnId });
     const next = await appendNinaTurn(f, {
       prompt: "And here?",
@@ -382,6 +379,7 @@ describe("The cached prefix of the model input", () => {
     const model = ninaModelFor(2);
     provider.languageModel.mockReturnValue(model);
     const f = await createFocusTest();
+    await fundLearner(f);
     await f.focusTurn();
     await f.t.action(run, { turnId: f.turnId });
     const next = await appendNinaTurn(f, { prompt: "And the other choices?" });
@@ -405,41 +403,11 @@ const ASK = {
 } as const;
 
 /** A learner who asks and retries through admission, with each admitted turn generated. */
-async function learner() {
-  const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now: Date.UTC(2026, 9, 11), credits: 40 })
-  );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
-  let requests = 0;
-  /** Admits one turn as the browser does, generates its answer, and returns its receipt. */
-  async function converse(
-    input: typeof NinaInput.Encoded,
-    chatId?: Docs["chats"]["_id"]
-  ) {
-    requests += 1;
-    const receipt = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await owner.mutation(start, {
-        requestId: `request-${requests}`,
-        ...(chatId === undefined ? {} : { chatId }),
-        input,
-      })
-    );
-    await t.action(run, { turnId: receipt.turnId });
-    return receipt;
-  }
-  return { converse, t };
-}
-
 describe("Nina model input after a retry", () => {
   it("holds the question once, through admission and generation, however often it is retried and from whichever asking", async () => {
     const model = ninaModelFor(4);
     provider.languageModel.mockReturnValue(model);
-    const { converse, t } = await learner();
+    const { converse, t } = await createLearnerTest();
     const first = await converse(ASK);
     const second = await converse(
       { kind: "retry", order: first.order },
@@ -463,7 +431,7 @@ describe("Nina model input after a retry", () => {
   it("names the page the learner retries from, not the page the question was asked on", async () => {
     const model = ninaModelFor(3);
     provider.languageModel.mockReturnValue(model);
-    const { converse } = await learner();
+    const { converse } = await createLearnerTest();
     const first = await converse(ASK);
     // The question was asked on the home page. The learner retries it on the
     // chat page, then back on the home page.

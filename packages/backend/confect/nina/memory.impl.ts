@@ -180,7 +180,7 @@ const remove = FunctionImpl.make(
  * Puts back the memory that `remove` deleted, with every field it had
  * (`restoreMemory`). No page calls it now. A web build from before the Undo
  * toast went can still call it until 12 hours after the production deploy that
- * ships this change (deploy day plus 12 hours, the www skew window).
+ * ships this change (deploy day plus 12 hours, the www deploy window).
  * Owner: pull request #1099, which takes the Undo toast out of the Memory page.
  * Its cleanup change, which runs once that time has passed, deletes `restore`,
  * `purge`, the `keepRestore` write in `remove`, and the restore store and table

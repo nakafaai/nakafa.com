@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import {
   CAMERA_POSITION,
@@ -33,8 +31,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Effect } from "effect";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useState } from "react";
 
@@ -70,7 +68,7 @@ export function VectorConceptLab({
   description,
   labels,
 }: VectorConceptLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [loadX, setLoadX] = useState(0);
   const colors = getSceneColors(resolvedTheme);
   const vectorState = useMemo(

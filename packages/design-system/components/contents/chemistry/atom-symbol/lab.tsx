@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ATOM_SYMBOL_SAMPLE_IDS,
   ATOM_SYMBOL_SAMPLES,

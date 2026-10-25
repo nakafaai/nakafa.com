@@ -4,14 +4,15 @@ import { DateTime, Effect, Option, Schema } from "effect";
 
 /**
  * The shapes in which a class writes a school's time: a date, a time, a date
- * and a time, or a relative day, which reads `today` or `yesterday` and falls
- * back to the date on any other day.
+ * and a time, a relative day, which reads `today` or `yesterday` and falls
+ * back to the date on any other day, or a weekday with a time.
  */
 export const SchoolTimeFormat = Schema.Literals([
   "date",
   "dateTime",
   "relativeDay",
   "time",
+  "weekdayTime",
 ]);
 
 export type SchoolTimeFormat = typeof SchoolTimeFormat.Type;
@@ -40,6 +41,7 @@ const FORMAT_OPTIONS = {
   dateTime: { dateStyle: "medium", timeStyle: "short" },
   relativeDay: { dateStyle: "medium" },
   time: { timeStyle: "short" },
+  weekdayTime: { hour: "2-digit", minute: "2-digit", weekday: "short" },
 } satisfies Record<SchoolTimeFormat, Intl.DateTimeFormatOptions>;
 
 /**

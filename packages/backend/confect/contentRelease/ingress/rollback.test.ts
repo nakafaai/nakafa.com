@@ -1,11 +1,8 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
-  isRollbackUpsert,
   MAX_ROLLBACK_PAGE_BYTES,
   RollbackPageSchema,
-  type RollbackRecord,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
@@ -24,11 +21,14 @@ import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   activateAuthenticatedRelease,
+  decodeRollbackResponse,
+  inflateRecord,
   insertRollbackItems,
   insertRollbackRoutes,
   readRollbackEnvelope,
   UnexpectedRollbackTestState,
 } from "@repo/backend/test/rollback/ingress";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
 import { Cause, Effect, Exit, Schema } from "effect";
 
@@ -84,10 +84,11 @@ const runRollback = Effect.fn("test.contentRelease.runRollback")(function* (
   request: RollbackReadRequest
 ) {
   const runtimeServices = yield* Effect.context<never>();
-  return yield* Effect.promise(() =>
+  const text = yield* Effect.promise(() =>
     target.action((ctx) =>
       Effect.runPromiseWith(runtimeServices)(
         readRollback(request).pipe(
+          Effect.map((page) => encodeJsonText(page)),
           Effect.provideService(
             ContentVerificationKeyResolver,
             TEST_KEY_RESOLVER
@@ -97,6 +98,7 @@ const runRollback = Effect.fn("test.contentRelease.runRollback")(function* (
       )
     )
   );
+  return yield* decodeRollbackResponse(text);
 });
 
 /** Runs one rollback read against caller-supplied query chunk bytes. */
@@ -108,7 +110,7 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
     pages: readonly string[]
   ) {
     const runtimeServices = yield* Effect.context<never>();
-    return yield* Effect.promise(() =>
+    const text = yield* Effect.promise(() =>
       target.action((ctx) => {
         const runQuery = vi.spyOn(ctx, "runQuery");
         runQuery.mockResolvedValueOnce(envelope);
@@ -117,6 +119,7 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
         }
         return Effect.runPromiseWith(runtimeServices)(
           readRollback(request).pipe(
+            Effect.map((page) => encodeJsonText(page)),
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
@@ -126,6 +129,7 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
         );
       })
     );
+    return yield* decodeRollbackResponse(text);
   }
 );
 
@@ -196,26 +200,6 @@ const readBodySource = Effect.fn("test.contentRelease.readBodySource")(
   }
 );
 
-/** Inflates one authenticated artifact so its record crosses the page ceiling. */
-function inflateRecord(record: RollbackRecord, byteLength: number) {
-  const { current } = record;
-  if (!isRollbackUpsert(current)) {
-    throw new Error("Expected an authenticated rollback upsert state.");
-  }
-  return {
-    ...record,
-    current: {
-      ...current,
-      artifact: Schema.decodeSync(SignedContentArtifactSchema)({
-        ...current.artifact,
-        payload: {
-          ...current.artifact.payload,
-          compiledCode: "x".repeat(byteLength),
-        },
-      }),
-    },
-  } satisfies RollbackRecord;
-}
 describe("content publication rollback reads", () => {
   it.effect(
     "aggregates safe body query transactions into one external page",
@@ -402,7 +386,7 @@ describe("content publication rollback reads", () => {
         Schema.fromJsonString(RollbackPageSchema)
       )({
         ...page,
-        records: [inflateRecord(record, MAX_ROLLBACK_PAGE_BYTES)],
+        records: [yield* inflateRecord(record, MAX_ROLLBACK_PAGE_BYTES)],
       });
       const message = yield* rollbackFailure(
         readRollbackPages(t, request, envelope, [oversized])
@@ -455,7 +439,10 @@ describe("content publication rollback reads", () => {
           Schema.fromJsonString(RollbackPageSchema)
         )({
           ...page,
-          records: [first, inflateRecord(second, MAX_ROLLBACK_PAGE_BYTES)],
+          records: [
+            first,
+            yield* inflateRecord(second, MAX_ROLLBACK_PAGE_BYTES),
+          ],
         });
         const response = yield* readRollbackPages(t, request, envelope, [
           inflated,

@@ -1,5 +1,3 @@
-"use client";
-
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";

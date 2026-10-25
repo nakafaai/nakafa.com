@@ -29,7 +29,7 @@ type PricingTransitionObservation =
 
 declare global {
   interface Window {
-    __nakafaPricingTransition?: PricingTransitionObservation;
+    __pricingTransition?: PricingTransitionObservation;
   }
 }
 
@@ -69,7 +69,7 @@ const installPricingTransitionObserver = Effect.fn(
         before: null,
         layoutShift: 0,
       };
-      window.__nakafaPricingTransition = observation;
+      window.__pricingTransition = observation;
 
       const readRect = (element: Element): PricingRect => {
         const rect = element.getBoundingClientRect();
@@ -198,13 +198,13 @@ export const observeStablePricingReload = Effect.fn(
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
   yield* Effect.promise(() =>
     page.waitForFunction(
-      () => Boolean(window.__nakafaPricingTransition?.after),
+      () => Boolean(window.__pricingTransition?.after),
       undefined,
       { timeout: readinessTimeoutMilliseconds }
     )
   );
   const observation = yield* Effect.promise(() =>
-    page.evaluate(() => window.__nakafaPricingTransition)
+    page.evaluate(() => window.__pricingTransition)
   );
   yield* Effect.sync(() => expect(observation).toBeDefined());
   return observation;

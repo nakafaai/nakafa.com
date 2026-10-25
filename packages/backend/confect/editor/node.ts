@@ -64,7 +64,8 @@ export const MarkSchema = Schema.Struct({
 
 /**
  * The node types that the assessment editor reads (ADR 0028). Its schema holds the
- * blocks and the text that Tiptap's StarterKit keeps, and its root is `doc`, which
+ * blocks and the text that Tiptap's StarterKit keeps, the tables of `@repo/editor`, and
+ * its root is `doc`, which
  * no step holds. A step or a snapshot with another type fails to load in every
  * editor that opens it, and the contract allows some types that no editor reads, so
  * the server refuses them. `assessment.test.ts` pins this list to the editor's schema.
@@ -75,9 +76,16 @@ export const NodeTypeSchema = Schema.Literals([
   "codeBlock",
   "hardBreak",
   "heading",
+  "image",
   "listItem",
+  "mathBlock",
+  "mathInline",
   "orderedList",
   "paragraph",
+  "table",
+  "tableCell",
+  "tableHeader",
+  "tableRow",
   "text",
 ]);
 

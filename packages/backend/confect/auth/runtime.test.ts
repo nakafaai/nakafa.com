@@ -216,7 +216,7 @@ describe("auth/runtime", () => {
         vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
         vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
         const test = createConvexTestWithBetterAuth();
-        // The Next.js handler sends the host the browser asked for in these two
+        // The auth handler sends the host the browser asked for in these two
         // headers, and the Convex route restores it before Better Auth answers.
         const response = yield* Effect.promise(() =>
           test.fetch("/api/auth/sign-out", {
@@ -329,7 +329,6 @@ describe("auth/runtime", () => {
     ["GET", "/api/auth/reset-password/legacy-token?callbackURL=%2Fen"],
     ["POST", "/api/auth/set-password"],
     ["POST", "/api/auth/sign-in/email"],
-    ["POST", "/api/auth/sign-in/username"],
     ["POST", "/api/auth/sign-up/email"],
     ["POST", "/api/auth/verify-password"],
   ] as const)(

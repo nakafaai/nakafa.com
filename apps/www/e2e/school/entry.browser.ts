@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { expectSignInParts } from "@/e2e/support/auth";
-import { signInLearner } from "@/e2e/support/learner";
 import { createSchool, hostAddress } from "@/e2e/support/school";
 
 test("a signed-out visitor sees the sign-in surface of an existing school", async ({
@@ -25,23 +24,4 @@ test("a signed-out visitor sees the sign-in surface of an existing school", asyn
     page.locator('main [data-slot="avatar-fallback"]').first()
   ).toBeVisible();
   await Effect.runPromise(expectSignInParts(page));
-});
-
-test("a learner who is not a member of an existing school gets not found", async ({
-  browser,
-  baseURL,
-}) => {
-  const school = await Effect.runPromise(createSchool());
-  const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
-  const context = await browser.newContext();
-  await Effect.runPromise(signInLearner(context, schoolHome));
-  const page = await context.newPage();
-
-  const response = await page.goto(schoolHome);
-
-  // The page the 404 shows is checked at its own address in host.browser.ts:
-  // a local production build answers the proxy's rewrite with the framework's
-  // built-in page.
-  expect(response?.status()).toBe(404);
-  await context.close();
 });

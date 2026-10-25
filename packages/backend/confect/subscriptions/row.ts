@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import type { PolarSubscriptionSource } from "@repo/backend/confect/customers/polar/payload";
+import type { PolarSubscriptionSource } from "@repo/backend/confect/billing/polar/payload";
 import type { SubscriptionRecurringInterval } from "@repo/backend/confect/subscriptions/schema";
 import type { WithoutSystemFields } from "convex/server";
 

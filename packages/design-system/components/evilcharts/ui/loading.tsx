@@ -1,5 +1,3 @@
-"use client";
-
 import { LoadingShimmer } from "@repo/design-system/components/evilcharts/ui/shimmer";
 import type { ComponentProps } from "react";
 import {

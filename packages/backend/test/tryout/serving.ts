@@ -33,7 +33,7 @@ import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 export const makeTryoutRuntimeSource = Effect.fn(
   "RuntimeSnapshotTest.tryoutSource"
 )(function* (
-  compiledCode?: string,
+  bodyText?: string,
   input?: {
     readonly catalog: readonly TryoutCatalogRow[];
     readonly placements: readonly TryoutPlacement[];
@@ -55,14 +55,12 @@ export const makeTryoutRuntimeSource = Effect.fn(
         testSignedArtifact(placement.rendererDomain, {
           contentKey: placement.questionContentKey,
           artifactLocale: placement.questionArtifactLocale,
-          compiledCode:
-            compiledCode ??
-            'return { default: function TechnicalQuestion() { return "Technical question"; } };',
+          bodyText: bodyText ?? "Technical question",
         }),
         testSignedArtifact(placement.rendererDomain, {
           contentKey: placement.answerContentKey,
           artifactLocale: placement.answerArtifactLocale,
-          ...(compiledCode === undefined ? {} : { compiledCode }),
+          ...(bodyText === undefined ? {} : { bodyText }),
         }),
       ])
     )

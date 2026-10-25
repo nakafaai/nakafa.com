@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 interface Props {
   videoId: string;
@@ -25,7 +25,7 @@ export function Youtube({ videoId }: Props) {
         </CardTitle>
       </CardHeader>
       <div className="aspect-video">
-        <YoutubePlayer videoId={videoId} />
+        <YoutubePlayer label={t("play")} videoId={videoId} />
       </div>
       <CardFooter className="justify-end border-t pb-6">
         <Button

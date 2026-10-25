@@ -4,14 +4,14 @@ import sympy as sp
 
 from cas import parse
 from cas.format import expression_text, item, result, step
-from cas.schema import MathRequest, MathResult
+from cas.schema import MAX_SYMBOLIC_MATRIX_DIMENSION, MathRequest, MathResult
 
 EQUALS = expression_text("equals", "=")
 
 
 def run(request: MathRequest) -> MathResult:
     """Run exact linear algebra operations on matrix inputs."""
-    matrix = parse.matrix(request.matrix)
+    matrix = _parse_matrix(request.matrix)
     operation = request.operation
 
     if operation == "determinant":
@@ -54,7 +54,7 @@ def run(request: MathRequest) -> MathResult:
             items=[item("eigenvector", vector) for vector in matrix.eigenvects()],
         )
     elif operation == "matrix_multiply":
-        right_matrix = parse.matrix(request.right_matrix)
+        right_matrix = _parse_matrix(request.right_matrix)
         _require_multipliable(matrix, right_matrix)
         output = matrix * right_matrix
         steps = []
@@ -78,6 +78,21 @@ def run(request: MathRequest) -> MathResult:
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )
+
+
+def _parse_matrix(rows: list[list[str]]) -> sp.Matrix:
+    """Parse a matrix, and refuse a symbolic one beyond the dimension bound."""
+    matrix = parse.matrix(rows)
+    # SymPy's determinant, inverse, and row reduction grow fast with symbols.
+    if matrix.free_symbols and max(matrix.rows, matrix.cols) > (
+        MAX_SYMBOLIC_MATRIX_DIMENSION
+    ):
+        raise ValueError(
+            "A matrix with symbols may be at most "
+            f"{MAX_SYMBOLIC_MATRIX_DIMENSION} by {MAX_SYMBOLIC_MATRIX_DIMENSION}."
+        )
+
+    return matrix
 
 
 def _require_square(matrix: sp.Matrix, name: str) -> None:

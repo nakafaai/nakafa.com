@@ -1,10 +1,8 @@
-"use client";
-
 import { useIntersection } from "@mantine/hooks";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 const DOT_DELAYS = [0, 250, 500];
 

@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { denied, nf, otherSchoolTeacher } from "@repo/backend/test/editor";
-import { archiveUnit, examRows, LANGUAGE } from "@repo/backend/test/exams";
+import { archiveUnit, examRows } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { create, list, open, rename } = refs.public.exams.exams;
+const { cohorts, create, list, open, rename } = refs.public.exams.exams;
 
 /** One minute, so two exams made in turn have different creation times. */
 const LATER = TENANCY_NOW + 60_000;
@@ -27,7 +28,6 @@ describe("exams/exams", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Matematika",
@@ -37,7 +37,6 @@ describe("exams/exams", () => {
           slug: nf,
         });
         expect(opened).toMatchObject({
-          language: LANGUAGE,
           title: "PTS Matematika",
         });
         expect(opened.questions).toHaveLength(1);
@@ -74,7 +73,6 @@ describe("exams/exams", () => {
         const other = yield* fixture
           .as("teacher")
           .mutation(create, {
-            language: LANGUAGE,
             scope,
             slug: nf,
             title: "Lain",
@@ -83,7 +81,6 @@ describe("exams/exams", () => {
         const student = yield* fixture
           .as("student")
           .mutation(create, {
-            language: LANGUAGE,
             scope: { kind: "tenant" },
             slug: nf,
             title: "Siswa",
@@ -107,21 +104,18 @@ describe("exams/exams", () => {
           slug: nf,
         };
         yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Seluruh sekolah",
         });
         vi.setSystemTime(LATER);
         yield* fixture.as("teacher").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "Kelas SMP",
         });
         vi.setSystemTime(LATEST);
         yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.sma },
           slug: nf,
           title: "Kelas SMA",
@@ -149,7 +143,6 @@ describe("exams/exams", () => {
         const teacher = fixture.as("teacher");
         for (let index = 0; index < 21; index += 1) {
           yield* teacher.mutation(create, {
-            language: LANGUAGE,
             scope: { kind: "unit", unitId: fixture.units.smp },
             slug: nf,
             title: `Ujian ${index + 1}`,
@@ -170,13 +163,11 @@ describe("exams/exams", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const school = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Seluruh sekolah",
         });
         const unit = yield* fixture.as("teacher").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "Kelas SMP",
@@ -200,13 +191,11 @@ describe("exams/exams", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const school = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Seluruh sekolah",
         });
         const outside = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.sma },
           slug: nf,
           title: "Kelas SMA",
@@ -245,7 +234,6 @@ describe("exams/exams", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "Ulangan",
@@ -261,6 +249,93 @@ describe("exams/exams", () => {
           .mutation(rename, { examId: made.id, slug: nf, title: "Terkunci" })
           .pipe(Effect.flip);
         expect(archived).toMatchObject(denied("condition"));
+      })
+  );
+
+  it.effect(
+    "opens an exam of an archived unit as archived, and an exam of a live unit as editable",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const live = yield* teacher.mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "Hidup",
+        });
+        expect(
+          yield* teacher.query(open, { examId: live.id, slug: nf })
+        ).toMatchObject({ archived: false });
+        yield* fixture.run(archiveUnit(fixture.units.smp));
+        expect(
+          yield* teacher.query(open, { examId: live.id, slug: nf })
+        ).toMatchObject({ archived: true });
+      })
+  );
+});
+
+describe("exams/exams cohorts", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(TENANCY_NOW);
+  });
+
+  it.effect(
+    "lists the active cohorts of the unit's active period to a teacher, and no archived cohort",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const unitId = fixture.units.smp;
+        const before = yield* teacher.query(cohorts, { slug: nf, unitId });
+        expect(before).toEqual([]);
+        const ids = yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            const periodId = yield* writer.table("tenantPeriods").insert({
+              end: "2026-12-19",
+              name: "Ganjil",
+              start: "2026-07-13",
+              status: "active",
+              tenantId: fixture.tenants.nf,
+              unitId,
+            });
+            const active = yield* writer.table("tenantCohorts").insert({
+              grade: 10,
+              name: "10A",
+              nameKey: "10a",
+              periodId,
+              status: "active",
+              tenantId: fixture.tenants.nf,
+              unitId,
+            });
+            yield* writer.table("tenantCohorts").insert({
+              grade: 10,
+              name: "10B",
+              nameKey: "10b",
+              periodId,
+              status: "archived",
+              tenantId: fixture.tenants.nf,
+              unitId,
+            });
+            return { active };
+          })
+        );
+        const listed = yield* teacher.query(cohorts, { slug: nf, unitId });
+        expect(listed).toEqual([{ id: ids.active, name: "10A" }]);
+      })
+  );
+
+  it.effect(
+    "refuses the cohorts of a unit the caller may not schedule in",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const refused = yield* fixture
+          .as("student")
+          .query(cohorts, { slug: nf, unitId: fixture.units.smp })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "AccessDenied" });
       })
   );
 });

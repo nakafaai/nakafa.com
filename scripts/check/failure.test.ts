@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { effectFindings } from "#scripts/check/effect";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
-const CODE = "apps/www/lib/example.ts";
+const CODE = "apps/www/src/lib/example.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("FailurePolicyTest.findings")(function* (
@@ -71,37 +71,37 @@ export function other(cause: unknown) {
         assert.deepStrictEqual(
           yield* fileFindings([
             {
-              file: "apps/www/components/guard.tsx",
+              file: "apps/www/src/components/guard.tsx",
               sourceText:
                 'export function useCard() { if (!ready) throw new Error("outside provider"); return ready; }\n',
             },
             {
-              file: "apps/www/app/[locale]/page.tsx",
+              file: "apps/www/src/[locale]/page.tsx",
               sourceText:
                 'export default function Page() { throw new Error("no page"); }\n',
             },
             {
-              file: "apps/www/app/api/route.ts",
+              file: "apps/www/src/api/route.ts",
               sourceText:
                 'export function GET() { throw new Error("no route"); }\n',
             },
             {
-              file: "apps/www/lib/read.ts",
+              file: "apps/www/src/lib/read.ts",
               sourceText:
                 'export const read = () => { throw new Error("read"); };\n',
             },
             {
-              file: "apps/www/lib/client.ts",
+              file: "apps/www/src/lib/client.ts",
               sourceText:
                 '"use client";\nexport const read = () => { throw new Error("client"); };\n',
             },
             {
-              file: "apps/www/lib/hook.ts",
+              file: "apps/www/src/lib/hook.ts",
               sourceText:
                 'import { useState } from "react";\nexport const read = () => { throw new Error("hook"); };\n',
             },
             {
-              file: "apps/www/next.config.ts",
+              file: "apps/www/vite.config.ts",
               sourceText:
                 'export const config = () => { throw new Error("config"); };\n',
             },
@@ -117,8 +117,8 @@ export function other(cause: unknown) {
             },
           ]),
           [
-            "apps/www/app/api/route.ts:1 throw",
-            "apps/www/lib/read.ts:1 throw",
+            "apps/www/src/api/route.ts:1 throw",
+            "apps/www/src/lib/read.ts:1 throw",
             "scripts/tool.ts:1 throw",
           ]
         );

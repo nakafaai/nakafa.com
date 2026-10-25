@@ -4,6 +4,7 @@ import {
   validateAbortedRelease,
 } from "@repo/backend/confect/contentRelease/abort";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { requireRollbackable } from "@repo/backend/confect/contentRelease/generation";
 import {
   loadRelease,
   loadState,
@@ -33,6 +34,7 @@ export const acceptProgram = Effect.fn("contentRelease.accept")(function* (
   recoveryId: string
 ) {
   const candidate = yield* loadRelease(releaseId);
+  yield* requireRollbackable(candidate);
   const recovery = yield* loadRelease(recoveryId);
   const signed = yield* validateRecoveryRelation(candidate, recovery);
   if (recovery.status === "aborted") {

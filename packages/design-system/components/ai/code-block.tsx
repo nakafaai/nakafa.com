@@ -1,11 +1,9 @@
-"use client";
-
 import {
   Copy01Icon,
   Download01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboard";
@@ -13,7 +11,6 @@ import { getCodeFileExtension } from "@repo/design-system/lib/code-block/languag
 import { downloadFile } from "@repo/design-system/lib/files/download";
 import { cn } from "cn";
 import { Effect, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   createContext,
@@ -23,6 +20,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 
 /** One code sample and the language it is written in. */
 const CodeSourceSchema = Schema.Struct({

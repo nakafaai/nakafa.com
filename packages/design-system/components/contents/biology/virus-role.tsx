@@ -1,5 +1,3 @@
-"use client";
-
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria-parts";
 import {
   useBiologyColors,

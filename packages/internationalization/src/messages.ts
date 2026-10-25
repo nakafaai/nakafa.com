@@ -1,4 +1,5 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { Struct } from "effect";
 
 const loadEnglishMessages = () =>
   Promise.all([
@@ -42,9 +43,20 @@ const loadMessagesByLocale = {
 /**
  * Loads one reviewed dictionary, with the words of the standalone pages in it,
  * at the framework Promise boundary.
- * https://nextjs.org/docs/messages/next-prerender-current-time
  */
 export async function loadLocaleMessages(locale: AppLocaleCode) {
   const [messages, standalone] = await loadMessagesByLocale[locale]();
   return { ...messages.default, ...standalone.default };
+}
+
+/**
+ * The messages of one route: only the namespaces that the route renders, picked
+ * from the locale's dictionary at the framework Promise boundary. The first HTML
+ * of the route then carries those strings and no others.
+ */
+export async function getRouteMessages<
+  const Namespace extends keyof Awaited<ReturnType<typeof loadLocaleMessages>>,
+>(locale: AppLocaleCode, namespaces: readonly Namespace[]) {
+  const messages = await loadLocaleMessages(locale);
+  return Struct.pick(messages, namespaces);
 }

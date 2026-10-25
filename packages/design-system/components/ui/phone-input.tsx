@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowDown01Icon,
   Call02Icon,
@@ -24,7 +22,6 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
 import type React from "react";
 import { useMemo, useState } from "react";
 import {
@@ -33,6 +30,7 @@ import {
   default as PhoneInputPrimitive,
 } from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
+import { useTranslations } from "use-intl";
 import { VList } from "virtua";
 
 const countrySearchIcon = <HugeIcons className="size-4" icon={Search02Icon} />;

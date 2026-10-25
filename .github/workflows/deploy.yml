@@ -1,0 +1,86 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [aksara-release]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Stage to deploy. Production deploys run only from main.
+        type: choice
+        options: [staging, prod]
+        default: staging
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'prod' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'prod' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # The GitHub environment of the stage holds that stage's values and nothing else.
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.stage == 'staging' && 'staging' || 'production' }}
+    env:
+      # The one name of the deploy identity. The build reads it too: the prerender and the
+      # static artifacts run in this process, before any Worker binding exists.
+      NAKAFA_DEPLOY_STAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'prod' }}
+      NAKAFA_RELEASE_SHA: ${{ github.sha }}
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Guard the stage
+        shell: bash
+        run: |
+          case "$NAKAFA_DEPLOY_STAGE" in
+            prod)
+              if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+                echo "Production deploys run only from main." >&2
+                exit 1
+              fi
+              ;;
+            staging) ;;
+            *)
+              echo "Unknown stage: $NAKAFA_DEPLOY_STAGE" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/install
+
+      - name: Load the environment's values
+        env:
+          ENVIRONMENT_SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT_VARIABLES: ${{ toJSON(vars) }}
+        run: node scripts/github/environment.ts
+
+      - name: Deploy Convex
+        working-directory: packages/backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: pnpm codegen && pnpm exec convex deploy --yes
+
+      - name: Set up uv for the CAS engine
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.13.5"
+
+      - name: Deploy the Cloudflare stack
+        working-directory: apps/www
+        run: pnpm exec alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes

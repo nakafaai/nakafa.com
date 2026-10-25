@@ -175,6 +175,8 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.sealedAt()).toEqual(expect.any(Number));
   });
 
+  // Running the whole scheduled chain of a failed turn takes 5 to 7 s alone, so this
+  // test gets a longer budget than the 5 s default. Its other tests take milliseconds.
   it("seals a failed turn, and keeps its failed prompt free of the planted text", async () => {
     provider.languageModel.mockReturnValue(
       new MockLanguageModelV4({
@@ -192,7 +194,9 @@ describe("Sealing a settled Nina turn", () => {
     expect(plantedIn(await storedRowsIn(f.t, f.receipt.threadId, []))).toEqual(
       []
     );
-  });
+    // The failure path runs the whole turn and its scheduled work: about 9 s alone
+    // on a loaded machine, so it gets a budget of its own, as other convex-test suites do.
+  }, 30_000);
 
   it("seals a cancelled turn, and keeps its prompt failed as settlement left it", async () => {
     const f = await askedIn(PLANTED.prompt);

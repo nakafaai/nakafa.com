@@ -1,21 +1,13 @@
+import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { Schema } from "effect";
 
 /** Production deployment identity shared by trusted content boundaries. */
 export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
-const ProtectedVercelIdentity = Schema.Struct({
-  deployment: Schema.String.check(Schema.isPattern(/^dpl_[A-Za-z0-9]+$/)),
-  environment: Schema.Literal("production"),
-  git: Schema.Struct({
-    branch: Schema.Literal("main"),
-    commit: Schema.String.check(Schema.isPattern(/^[0-9a-f]{40}$/)),
-    owner: Schema.Literal("nakafaai"),
-    provider: Schema.Literal("github"),
-    repository: Schema.Literal("nakafa.com"),
-  }),
-  marker: Schema.Literal("1"),
-  project: Schema.Literal("prj_QfxvXBST46wuSTOXPn4PE32NqbF4"),
-  target: Schema.Literal("production"),
+
+/** The deploy identity of the production Worker, which the Alchemy stack binds at deploy time. */
+const ProtectedDeployIdentity = Schema.Struct({
+  stage: Schema.Literal(PRODUCTION_DEPLOY_STAGE),
 });
 
-/** Recognizes the one protected production host before granting content access. */
-export const isProtectedProduction = Schema.is(ProtectedVercelIdentity);
+/** Recognizes the production stage before granting protected content access. */
+export const isProtectedProduction = Schema.is(ProtectedDeployIdentity);

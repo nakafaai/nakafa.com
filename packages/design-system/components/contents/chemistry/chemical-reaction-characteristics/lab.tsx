@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import {
   createReactionCueStore,
@@ -34,11 +32,11 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.35;
@@ -75,7 +73,7 @@ export function ChemicalReactionCharacteristicsLab({
   description,
   labels,
 }: ReactionCharacteristicsLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [store] = useState(() => createReactionCueStore(GAS_CUE_ID));
   const selectedCueId = useStore(store, (state) => state.cueId);
   const selectCue = useStore(store, (state) => state.selectCue);

@@ -1,5 +1,3 @@
-"use client";
-
 import { PARABOLIC_SCENE } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";

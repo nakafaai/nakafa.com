@@ -11,7 +11,7 @@ describe("extractDomain", () => {
     expect(extractDomain("https://www.react.dev/reference/react")).toBe(
       "react"
     );
-    expect(extractDomain("nextjs.org/docs")).toBe("nextjs");
+    expect(extractDomain("react.dev/learn")).toBe("react");
   });
 
   it("returns an empty label for invalid or public-suffix-only values", () => {

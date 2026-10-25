@@ -1,5 +1,3 @@
-"use client";
-
 import { codeBlockDarkModeVariants } from "@repo/design-system/components/code-block/variants";
 import {
   type CodeBlockData,

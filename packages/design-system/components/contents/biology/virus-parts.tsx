@@ -1,5 +1,3 @@
-"use client";
-
 import {
   BIOLOGY_SMALL_RING_POINT_COUNT,
   type BiologySceneColors,

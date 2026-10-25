@@ -1,5 +1,3 @@
-"use client";
-
 import { TerminalIcon } from "@hugeicons/core-free-icons";
 import {
   type ProgrammingIcon,
@@ -22,8 +20,8 @@ import {
 import { filenameIconMap } from "@repo/design-system/lib/code-block/icons";
 import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 /** Native toolbar attributes for the code-block header surface. */
 type CodeBlockHeaderProps = HTMLAttributes<HTMLDivElement>;

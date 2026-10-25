@@ -6,7 +6,7 @@ Nakafa is a source-available educational platform for structured learning,
 assessments, Quran study, and political analysis. The production site is
 [nakafa.com](https://nakafa.com).
 
-This repository owns the React and Next.js applications, design system,
+This repository owns the React applications on TanStack Start, design system,
 transactional Convex backend, renderer implementations, user state, and
 product integrations. The separate
 [Aksara repository](https://github.com/nakafaai/aksara) owns authored content
@@ -21,7 +21,7 @@ authored content source or publication path.
 - Node.js 24
 - pnpm 11.28.5
 - Turborepo
-- Next.js 16 and React 19
+- TanStack Start and React 19
 - Native TypeScript 7
 - Convex
 - Vitest
@@ -60,14 +60,14 @@ certificate authority, and registers local DNS entries for running apps.
 
 Run `pnpm dev` for hot reload. The canonical checkout serves
 `https://nakafa.local.nakafa.com`; worktrees receive their own prefix, such as
-`https://ci.nakafa.local.nakafa.com`. The web, CAS, and email preview servers
-receive separate names. Use `pnpm exec portless list` to inspect active routes,
+`https://ci.nakafa.local.nakafa.com`. The web and email preview servers
+receive separate names. CAS runs as Cloudflare Workers, so it has no local server. Use `pnpm exec portless list` to inspect active routes,
 `pnpm exec portless get nakafa` to obtain this checkout's web URL, and
 `pnpm exec portless doctor` to check the proxy, DNS, and certificate trust.
 
 Set `SITE_URL` in `apps/www/.env.local` and the selected development backend
-to that exact web origin. Set `NEXT_PUBLIC_CONVEX_URL` and
-`NEXT_PUBLIC_CONVEX_SITE_URL` to the same main dev deployment. The shared
+to that exact web origin. Set `VITE_CONVEX_URL` and
+`VITE_CONVEX_SITE_URL` to the same main dev deployment. The shared
 deployment carries one `SITE_URL`, which backs auth and checkout, so a
 worktree on its own origin must use an isolated development deployment
 instead of the shared one. Google's client configuration must include the
@@ -129,22 +129,21 @@ changed. To refresh the fixture, clean it and repeat preparation. Update the
 pinned Aksara revision deliberately when the acceptance contract needs new
 reviewed examples.
 
-Protected Vercel builds run only after a protected main merge. The web build command
-deploys Convex functions before building Next.js because prerendering queries
-those functions. Vercel supplies `NEXT_PUBLIC_CONVEX_URL`, which the runtime
-guard verifies against the protected production deployment. Convex's `--cmd`
-runs before the backend deployment and cannot be used for this ordering.
-Builds query bounded real published samples and verify the signed content with
-the current renderer. App builds do not export or import production tables or
-release history. Full corpus validation remains in Aksara's publication and
-renderer compatibility checks.
+Production deploys run from GitHub Actions only after a merge to `main`. The
+deploy workflow deploys the Convex backend with its deploy key, then runs
+`alchemy deploy` for the stage. The Alchemy stack in `apps/www/alchemy.run.ts`
+builds the web app and deploys it to Cloudflare Workers. App builds query bounded
+real published samples and verify the signed content with the current renderer.
+They do not export or import production tables or release history. Full corpus
+validation remains in Aksara's publication and renderer compatibility checks.
+See ADR 0037.
 
 ## Repository layout
 
-- `apps/www`: main Next.js application at `https://nakafa.local.nakafa.com`
-- `apps/mcp`: frameworkless Vercel ingress for the Convex MCP runtime
-- `apps/api`: frameworkless Vercel ingress for the Convex REST runtime
-- `apps/cas`: Python CAS service at `https://cas.nakafa.local.nakafa.com`
+- `apps/www`: main TanStack Start application at `https://nakafa.local.nakafa.com`
+- `apps/mcp`: Cloudflare Worker edge for the Convex MCP runtime
+- `apps/api`: Cloudflare Worker edge for the Convex REST runtime
+- `apps/cas`: CAS math engine, a Python Durable Object behind a TypeScript front at `https://cas.nakafa.com`
 - `apps/email`: email preview application at `https://email.nakafa.local.nakafa.com`
 - `packages/backend`: Confect schema, functions, workflows, native Agent capabilities, and integrations
 - `packages/design-system`: shared React components and renderer implementations
@@ -199,7 +198,7 @@ Nakafa consumes only authenticated current Aksara contracts and signed
 publication artifacts.
 
 The shared `@nakafa/aksara-contracts/locale` module is the only locale source
-of truth. English, Indonesian, and German are active. Next.js routing, API
+of truth. English, Indonesian, and German are active. TanStack Start routing, API
 validation, Convex validators, AI language handling, date formatting, checkout
 localization, and sitemap generation derive from that contract. Do not add a
 second app-local locale list.
@@ -227,9 +226,9 @@ Open Source Definition.
 
 | Area | License or policy |
 | --- | --- |
-| Software source code | [Nakafa Source Available License 1.0](LICENSE) |
-| Educational content, articles, exercises, datasets, and media | [Nakafa Content License 1.0](CONTENT_LICENSE.md) |
-| Names, logos, domains, product names, UI identity, and brand assets | [Nakafa Trademark and Brand Policy](TRADEMARKS.md) |
+| Software source code | [Nakafa Source Available License 2.0](LICENSE) |
+| Educational content, articles, exercises, datasets, and media | [Nakafa Content License 2.0](CONTENT_LICENSE.md) |
+| Names, logos, domains, product names, UI identity, and brand assets | [Nakafa Trademark and Brand Policy 2.0](TRADEMARKS.md) |
 
 Commercial, hosted, redistribution, modification, white-label, rebrand, and
 AI-training uses require prior written permission from PT. Nakafa Tekno

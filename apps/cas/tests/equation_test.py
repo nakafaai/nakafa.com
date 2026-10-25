@@ -1,7 +1,7 @@
 import pytest
 
 from cas.engine import run
-from cas.schema import MathRequest
+from cas.schema import MAX_SYSTEM_WORK, MathRequest
 
 
 def test_solve_equation() -> None:
@@ -541,3 +541,103 @@ def test_roots_rejects_partial_symbolic_result() -> None:
                 variable="x",
             )
         )
+
+
+def test_solve_refuses_a_system_beyond_the_work_bound() -> None:
+    symbols = " + ".join(f"a{index}" for index in range(MAX_SYSTEM_WORK))
+
+    with pytest.raises(ValueError, match="equations times symbols"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="solve",
+                expression=f"x + {symbols} = 0",
+                variables=["x"],
+            )
+        )
+
+
+def test_solve_accepts_a_system_at_the_work_bound() -> None:
+    symbols = " + ".join(f"a{index}" for index in range(MAX_SYSTEM_WORK - 2))
+
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="solve",
+            expression=f"x + {symbols} = 0",
+            variables=["x"],
+        )
+    )
+
+    assert result.status == "verified"
+
+
+def test_solve_refuses_a_nonlinear_system_with_parameters() -> None:
+    with pytest.raises(
+        ValueError, match="nonlinear system may have at most 2 unknowns"
+    ):
+        run(
+            MathRequest(
+                kind="math",
+                operation="solve",
+                expressions=["a*x^2 + b*y - 1", "x - y"],
+                variables=["x", "y"],
+            )
+        )
+
+
+def test_solve_refuses_a_nonlinear_system_with_three_unknowns() -> None:
+    with pytest.raises(
+        ValueError, match="nonlinear system may have at most 2 unknowns"
+    ):
+        run(
+            MathRequest(
+                kind="math",
+                operation="solve",
+                expressions=["x*y - 1", "y*z - 2", "x*z - 3"],
+                variables=["x", "y", "z"],
+            )
+        )
+
+
+def test_solve_accepts_a_numeric_nonlinear_system_of_two_unknowns() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="solve",
+            expressions=["x^2 + y^2 - 25", "x - y"],
+            variables=["x", "y"],
+        )
+    )
+
+    assert result.status == "verified"
+
+
+def test_solve_accepts_a_linear_system_of_three_unknowns_with_parameters() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="solve",
+            expressions=[
+                "a*x + b*y + c*z - 1",
+                "d*x + e*y + f*z - 2",
+                "g*x + h*y + i*z - 3",
+            ],
+            variables=["x", "y", "z"],
+        )
+    )
+
+    assert result.status == "verified"
+
+
+def test_solve_accepts_a_single_unknown_nonlinear_equation_with_parameters() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="solve",
+            expression="x^2 + a*x + b = 0",
+            variables=["x"],
+        )
+    )
+
+    assert result.status == "verified"

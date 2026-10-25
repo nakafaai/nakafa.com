@@ -7,7 +7,7 @@ import { Array as Arr, Effect, Record, Schema } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
-/** Wire literals a client or the Vercel bridge sends or receives. */
+/** Wire literals that a client or the edge Worker sends or receives. */
 const MCP_PATH = "/internal/mcp";
 export const MCP_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 export const MCP_SECRET_ENVIRONMENT = "NAKAFA_MCP_EDGE_SECRET";

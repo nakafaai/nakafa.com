@@ -77,11 +77,11 @@ const rows = await ctx.runQuery(components.nina.messages.listMessagesByThreadId,
         yield* inspect(
           `import { listUIMessages } from "@convex-dev/agent";
 const rows = await ctx.runQuery(components.nina.messages.listMessagesByThreadId, args);`,
-          "apps/www/lib/example.ts"
+          "apps/www/src/lib/example.ts"
         ),
         [
-          `apps/www/lib/example.ts: ${RULE_AGENT}.`,
-          `apps/www/lib/example.ts: ${RULE_COMPONENT}.`,
+          `apps/www/src/lib/example.ts: ${RULE_AGENT}.`,
+          `apps/www/src/lib/example.ts: ${RULE_COMPONENT}.`,
         ]
       );
     })

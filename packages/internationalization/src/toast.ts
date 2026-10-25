@@ -31,7 +31,7 @@ export type ToastDescriptionKey = {
  * named here.
  */
 export const ToastValuesSchema = Schema.Struct({ size: Schema.Finite });
-/** The values of one toast message, which the Toaster passes to next-intl. */
+/** The values of one toast message, which the Toaster passes to the locale seam. */
 export type ToastValues = typeof ToastValuesSchema.Type;
 
 /**
@@ -56,8 +56,8 @@ export type ToastValueKey = typeof ToastValueKeySchema.Type;
  * leaves 254px. The icon takes 16px with a -3px start and a 4px end margin,
  * and a 6px gap follows it: 254px less 17px less 6px leaves 231px of text.
  *
- * The toast sets 13px text in Inter (`font-sans`). Next ships Inter's metrics
- * (`next/dist/server/capsize-font-metrics.json`, `xWidthAvg` over 2048 units):
+ * The toast sets 13px text in Inter (`font-sans`). Inter's metrics as the
+ * framework's font metrics file records them (`xWidthAvg` over 2048 units):
  * 988 at weight 500, the title, and 978 at weight 400, the description. A
  * character is 13 × 988 / 2048 ≈ 6.27px in a title and 13 × 978 / 2048 ≈ 6.21px
  * in a description. A title line holds 231 / 6.27 ≈ 36.8 characters, so 36

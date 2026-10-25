@@ -1,5 +1,7 @@
 # ADR 0014: Every Model Call Goes Through One Gateway Module
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+
 ## Status
 
 Superseded by ADR 0019, which moves every model call to the Convex AI gateway.

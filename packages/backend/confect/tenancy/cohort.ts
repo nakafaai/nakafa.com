@@ -19,9 +19,13 @@ export const CohortName = Schema.String.check(
 /** A cohort is active until it is archived, and an archived cohort stays readable. */
 export const CohortStatus = Schema.Literals(["active", "archived"]);
 
-/** A cohort's school year, an integer from 1 to 13. */
+/** The first and the last school year a cohort may hold. */
+export const COHORT_GRADE_MIN = 1;
+export const COHORT_GRADE_MAX = 13;
+
+/** A cohort's school year, an integer from COHORT_GRADE_MIN to COHORT_GRADE_MAX. */
 export const CohortGrade = Schema.Int.check(
-  Schema.isBetween({ minimum: 1, maximum: 13 })
+  Schema.isBetween({ minimum: COHORT_GRADE_MIN, maximum: COHORT_GRADE_MAX })
 );
 
 /** The name in the form that uniqueness and order compare: the lowercase name. */

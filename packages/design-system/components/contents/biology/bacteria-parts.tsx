@@ -1,5 +1,3 @@
-"use client";
-
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
 import { Array as Arr } from "effect";

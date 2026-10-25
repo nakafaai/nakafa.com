@@ -22,7 +22,7 @@ describe("Effect-native rule scopes", () => {
       assert.deepStrictEqual(
         yield* findings([
           {
-            file: "apps/www/next.config.ts",
+            file: "apps/www/vite.config.ts",
             sourceText:
               "export const config = [JSON.parse(text), Object.keys(value)];\ntry {\n  load();\n} catch {\n  skip();\n}\n",
           },
@@ -32,7 +32,7 @@ describe("Effect-native rule scopes", () => {
               'import { defineConfig } from "vitest/config";\nexport default defineConfig(JSON.parse(text), Object.keys(value));\n',
           },
         ]),
-        ["apps/www/next.config.ts try-catch"]
+        ["apps/www/vite.config.ts try-catch"]
       );
     })
   );
@@ -139,7 +139,7 @@ describe("Effect-native rule scopes", () => {
       assert.deepStrictEqual(
         yield* findings([
           {
-            file: "apps/www/components/toast.tsx",
+            file: "apps/www/src/components/toast.tsx",
             sourceText: "export const hide = () => setTimeout(close, 1);\n",
           },
           {
@@ -148,16 +148,16 @@ describe("Effect-native rule scopes", () => {
               'import { useEffect } from "react";\nexport const hide = () => setTimeout(close, 1);\n',
           },
           {
-            file: "apps/www/lib/portal.ts",
+            file: "apps/www/src/lib/portal.ts",
             sourceText:
               'import { createPortal } from "react-dom";\nexport const hide = () => setTimeout(close, 1);\n',
           },
           {
-            file: "apps/www/lib/poll.ts",
+            file: "apps/www/src/lib/poll.ts",
             sourceText: "export const poll = () => setInterval(refresh, 1);\n",
           },
         ]),
-        ["apps/www/lib/poll.ts timer"]
+        ["apps/www/src/lib/poll.ts timer"]
       );
     })
   );
@@ -167,7 +167,7 @@ describe("Effect-native rule scopes", () => {
       assert.deepStrictEqual(
         yield* findings([
           {
-            file: "apps/www/lib/retry.ts",
+            file: "apps/www/src/lib/retry.ts",
             sourceText:
               'import type { ReactNode } from "react";\nimport { type FC } from "react";\nexport const retry = (run: () => void) => setTimeout(run, 300);\n',
           },
@@ -177,7 +177,7 @@ describe("Effect-native rule scopes", () => {
               'import { useEffect } from "react";\nexport const poll = () => setInterval(refresh, 1);\n',
           },
         ]),
-        ["apps/www/lib/retry.ts timer"]
+        ["apps/www/src/lib/retry.ts timer"]
       );
     })
   );
@@ -189,36 +189,36 @@ describe("Effect-native rule scopes", () => {
       assert.deepStrictEqual(
         yield* findings([
           {
-            file: "apps/www/lib/hooks.ts",
+            file: "apps/www/src/lib/hooks.ts",
             sourceText: `export { useState } from "react";\n${timer}`,
           },
           {
-            file: "apps/www/lib/all.ts",
+            file: "apps/www/src/lib/all.ts",
             sourceText: `export * from "react-dom";\n${timer}`,
           },
           {
-            file: "apps/www/lib/types.ts",
+            file: "apps/www/src/lib/types.ts",
             sourceText: `export type { ReactNode } from "react";\n${timer}`,
           },
           {
-            file: "apps/www/lib/names.ts",
+            file: "apps/www/src/lib/names.ts",
             sourceText: `export { type FC } from "react";\n${timer}`,
           },
           {
-            file: "apps/www/lib/helper.ts",
+            file: "apps/www/src/lib/helper.ts",
             sourceText: `export { helper } from "./helper";\n${timer}`,
           },
           {
-            file: "apps/www/lib/local.ts",
+            file: "apps/www/src/lib/local.ts",
             sourceText:
               "const retry = (run: () => void) => setTimeout(run, 300);\nexport { retry };\n",
           },
         ]),
         [
-          "apps/www/lib/helper.ts timer",
-          "apps/www/lib/local.ts timer",
-          "apps/www/lib/names.ts timer",
-          "apps/www/lib/types.ts timer",
+          "apps/www/src/lib/helper.ts timer",
+          "apps/www/src/lib/local.ts timer",
+          "apps/www/src/lib/names.ts timer",
+          "apps/www/src/lib/types.ts timer",
         ]
       );
     })
@@ -234,7 +234,7 @@ describe("Effect-native rule scopes", () => {
             "packages/backend/confect/test.helpers.ts",
             "packages/backend/confect/test.setup.ts",
             "scripts/load.ts",
-            "apps/www/lib/load.ts",
+            "apps/www/src/lib/load.ts",
           ])
         ),
         [

@@ -247,7 +247,7 @@ describe("research scrape tool", () => {
     Effect.gen(function* () {
       readsPage(
         {
-          markdown: "Search...\n\n# DevTools\n\n[Sign Up](https://vercel.com)",
+          markdown: "Search...\n\n# DevTools\n\n[Sign Up](https://example.com)",
           metadata: {
             description: "Debug and inspect AI SDK applications with DevTools",
             title: "AI SDK Core: DevTools",

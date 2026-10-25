@@ -1,0 +1,65 @@
+import { MAIN_DOMAIN } from "@repo/site/domains";
+import { Config, Effect, HashSet, Option, Schema } from "effect";
+
+const DEVELOPMENT_ENVIRONMENT = "development";
+const developmentOrigins = HashSet.make(
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:3002"
+);
+const corsNodeEnvironment = Config.String("NODE_ENV").pipe(
+  Config.withDefault("production")
+);
+const decodeUrl = Schema.decodeUnknownOption(Schema.URLFromString);
+
+/** Reports whether one parsed URL belongs to an allowed Nakafa origin. */
+function isAllowedUrl(url: URL, allowDevelopmentOrigins: boolean) {
+  if (allowDevelopmentOrigins && HashSet.has(developmentOrigins, url.origin)) {
+    return true;
+  }
+  if (url.protocol !== "https:" || url.port !== "") {
+    return false;
+  }
+  return (
+    url.hostname === MAIN_DOMAIN || url.hostname.endsWith(`.${MAIN_DOMAIN}`)
+  );
+}
+
+/** Decodes and validates one untrusted Origin or Referer header. */
+function isAllowedHeader(value: string, allowDevelopmentOrigins: boolean) {
+  const decoded = decodeUrl(value);
+  if (Option.isNone(decoded)) {
+    return false;
+  }
+  return isAllowedUrl(decoded.value, allowDevelopmentOrigins);
+}
+
+/**
+ * Validates the authoritative browser origin for a WWW API request.
+ *
+ * Origin takes precedence when present. Referer is consulted only for
+ * same-origin requests whose browser omitted Origin.
+ */
+export const isCorsRequestAllowed = Effect.fn("security.cors.isRequestAllowed")(
+  function* (request: Request) {
+    const allowDevelopmentOrigins =
+      (yield* corsNodeEnvironment) === DEVELOPMENT_ENVIRONMENT;
+    const origin = request.headers.get("origin");
+    if (origin !== null) {
+      return isAllowedHeader(origin, allowDevelopmentOrigins);
+    }
+    const referer = request.headers.get("referer");
+    if (referer === null) {
+      return false;
+    }
+    return isAllowedHeader(referer, allowDevelopmentOrigins);
+  }
+);
+
+/** Creates the uniform response for a rejected browser origin. */
+export function createCorsForbiddenResponse() {
+  return new Response("Access denied.", {
+    headers: { "Content-Type": "text/plain" },
+    status: 403,
+  });
+}

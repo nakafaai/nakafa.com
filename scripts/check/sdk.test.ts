@@ -214,7 +214,7 @@ import "effect";
           'import { generateText } from "ai";\nexport default generateText;\n'
         ),
         source(
-          "apps/www/lib/agent.spec.ts",
+          "apps/www/src/lib/agent.spec.ts",
           'import { Agent } from "@convex-dev/agent";\nexport default Agent;\n'
         ),
       ]);

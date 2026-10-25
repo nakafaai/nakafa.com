@@ -3,10 +3,10 @@ import { Array as Arr, Effect } from "effect";
 import { parseSources } from "#scripts/check/source";
 import { inspectToastSource } from "#scripts/check/toasts";
 
-const COMPONENT = "apps/www/components/example/toast.tsx";
+const COMPONENT = "apps/www/src/components/example/toast.tsx";
 const HELPER = "packages/design-system/lib/toast/notify.ts";
 const TOASTER = "packages/design-system/components/ui/sonner.tsx";
-const TEST_MODULE = "apps/www/components/example/toast.test.ts";
+const TEST_MODULE = "apps/www/src/components/example/toast.test.ts";
 const TEST_HELPER = "packages/design-system/components/pool/test.fixture.ts";
 const SONNER_RULE =
   "import { toast } from @repo/design-system/lib/toast/notify instead of sonner, which only the Toaster and that helper import";

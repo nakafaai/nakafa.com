@@ -1,9 +1,17 @@
+"use client";
+
 import {
   formatInterval,
   type Interval,
   intervalSeparator,
 } from "@repo/design-system/components/contents/mathematics/interval";
 import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+import {
+  positionOf,
+  type SegmentBounds,
+  segmentBounds,
+  segmentEdge,
+} from "@repo/design-system/components/contents/mathematics/segment";
 import { solutionSetMath } from "@repo/design-system/components/contents/mathematics/solution";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
@@ -19,8 +27,8 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
   variants: {
@@ -36,19 +44,12 @@ const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
   },
 });
 
-const NUMBER_LINE_SEGMENT_EDGE = {
-  bothInfinity: "bothInfinity",
-  endInfinity: "endInfinity",
-  finite: "finite",
-  startInfinity: "startInfinity",
-} as const;
-
 /** One authored segment of a number line. */
 export interface NumberLineSegment {
   /** The background color of the segment */
   backgroundColor?: string;
-  /** The end value of the segment */
-  end: number;
+  /** The end value of the segment. A missing end draws a ray to the right edge of the axis. */
+  end?: number;
   /** Whether the end value is inclusive */
   endInclusive?: boolean;
   /** Custom label for the end point (e.g., fraction in LaTeX) */
@@ -59,8 +60,8 @@ export interface NumberLineSegment {
   shaded?: boolean;
   /** Whether the segment should show points */
   showPoints?: boolean;
-  /** The start value of the segment */
-  start: number;
+  /** The start value of the segment. A missing start draws a ray to the left edge of the axis. */
+  start?: number;
   /** Whether the start value is inclusive */
   startInclusive?: boolean;
   /** Custom label for the start point (e.g., fraction in LaTeX) */
@@ -87,33 +88,8 @@ interface NumberLineConfig {
   segments: readonly NumberLineSegment[];
 }
 
-/**
- * Selects the segment end-cap shape from infinite bounds.
- */
-function getSegmentEdge({
-  isStartInfinity,
-  isEndInfinity,
-}: {
-  isEndInfinity: boolean;
-  isStartInfinity: boolean;
-}) {
-  if (isStartInfinity && isEndInfinity) {
-    return NUMBER_LINE_SEGMENT_EDGE.bothInfinity;
-  }
-
-  if (isStartInfinity) {
-    return NUMBER_LINE_SEGMENT_EDGE.startInfinity;
-  }
-
-  if (isEndInfinity) {
-    return NUMBER_LINE_SEGMENT_EDGE.endInfinity;
-  }
-
-  return NUMBER_LINE_SEGMENT_EDGE.finite;
-}
-
 /** Returns the finite bounds that should contribute to the number-line range. */
-function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
+function getFiniteSegmentValues({ end, start }: SegmentBounds) {
   const hasFiniteStart = Number.isFinite(start);
   const hasFiniteEnd = Number.isFinite(end);
 
@@ -134,7 +110,9 @@ function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
 
 /** The interval the scale draws: the range of its segments, with a margin of fifteen percent on each side. */
 function drawnScale({ max, min, segments }: NumberLineConfig): Interval {
-  const allValues = Arr.flatMap(segments, getFiniteSegmentValues);
+  const allValues = Arr.flatMap(segments, (segment) =>
+    getFiniteSegmentValues(segmentBounds(segment))
+  );
 
   const rangeMin = min ?? (allValues.length > 0 ? Math.min(...allValues) : -10);
   const rangeMax = max ?? (allValues.length > 0 ? Math.max(...allValues) : 10);
@@ -146,43 +124,29 @@ function drawnScale({ max, min, segments }: NumberLineConfig): Interval {
 function NumberLineBody({ config }: { config: NumberLineConfig }) {
   const { segments } = config;
   const scale = drawnScale(config);
-  const paddedMin = scale.min;
-  const paddedMax = scale.max;
-  const paddedRange = paddedMax - paddedMin;
-
-  const getPosition = (value: number) => {
-    if (value === Number.NEGATIVE_INFINITY) {
-      return 0;
-    }
-    if (value === Number.POSITIVE_INFINITY) {
-      return 100;
-    }
-    return ((value - paddedMin) / paddedRange) * 100;
-  };
 
   const processedSegments = Arr.map(segments, (segment, index) => {
-    const startPos = getPosition(segment.start);
-    const endPos = getPosition(segment.end);
+    const bounds = segmentBounds(segment);
+    const startPos = positionOf(bounds.start, scale);
+    const endPos = positionOf(bounds.end, scale);
     const width = endPos - startPos;
 
     const shaded = segment.shaded ?? true;
     const bgColor = segment.backgroundColor;
+    const edge = segmentEdge(bounds);
 
-    const isStartInfinity = segment.start === Number.NEGATIVE_INFINITY;
-    const isEndInfinity = segment.end === Number.POSITIVE_INFINITY;
-
-    const showPoints =
-      segment.showPoints ?? !(isStartInfinity || isEndInfinity);
+    const showPoints = segment.showPoints ?? edge === "finite";
 
     return {
       ...segment,
+      ...bounds,
       startPos,
       endPos,
       width,
       shaded,
       bgColor,
       showPoints,
-      edge: getSegmentEdge({ isStartInfinity, isEndInfinity }),
+      edge,
       index,
     };
   });

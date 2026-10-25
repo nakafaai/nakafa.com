@@ -1,5 +1,3 @@
-"use client";
-
 import type { GlbbLabels } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import { createContext, type ReactNode, use } from "react";
 

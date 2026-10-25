@@ -235,7 +235,7 @@ def _numeric_division_step(expr: sp.Expr):
     if not expr.is_Mul:
         return None
 
-    args = [parse.expression(str(arg)) for arg in expr.args]
+    args = [parse.expression(str(arg), bounded=False) for arg in expr.args]
     reciprocal = next(
         (
             (index, arg)
@@ -304,7 +304,7 @@ def _transform_steps(operation: str, expr: sp.Expr, output: sp.Expr) -> list:
 
 def _factored_rational(expr: sp.Expr) -> sp.Expr:
     """Factor the numerator and denominator without cancelling them."""
-    combined = parse.expression(str(sp.together(expr)))
+    combined = parse.expression(str(sp.together(expr)), bounded=False)
     numerator, denominator = combined.as_numer_denom()
     factored_numerator = sp.factor(numerator)
     factored_denominator = sp.factor(denominator)

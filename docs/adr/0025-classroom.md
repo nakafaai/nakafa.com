@@ -29,7 +29,7 @@ before #1051 deleted the web app:
   follows a mention: `git grep` finds no inbox and no notification under
   `packages/backend/confect/classes`.
 - Its viewport was 38 files under
-  `apps/www/components/school/classes/forum/conversation` (33 in `viewport` and 5
+  `apps/www/src/components/school/classes/forum/conversation` (33 in `viewport` and 5
   in `data/scroll`, 15 of them tests, counted with `git ls-tree`), and its
   transcript used Virtua. Main holds none of these files now.
 
@@ -44,7 +44,7 @@ The design system already holds Nina's chat primitives: `Message`,
 `MessageContent`, and `MessageFooter` (`message.tsx`), `Bubble` and
 `BubbleContent` (`bubble.tsx`), `Attachment` and its parts (`attachment.tsx`),
 and `MessageScroller` and its parts (`scroller.tsx`), over `@shadcn/react` 0.3.1.
-`apps/www/components/ai/transcript.tsx` composes them for Nina with `autoScroll`
+`apps/www/src/components/ai/transcript.tsx` composes them for Nina with `autoScroll`
 and `defaultScrollPosition="last-anchor"`.
 
 ## Decision
@@ -186,7 +186,7 @@ work. It runs in the two engines that `apps/www/playwright.config.ts` runs,
 Chromium and WebKit (WebKit for `visual/cards.browser.ts` alone today). The
 caret rectangle comes from the field of the composer. A textarea, such as the one
 of Nina's composer (`PromptInputTextarea`, used in
-`apps/www/components/ai/input.tsx`), offers no caret rectangle, and a Tiptap
+`apps/www/src/components/ai/input.tsx`), offers no caret rectangle, and a Tiptap
 editor offers one through ProseMirror. The spike therefore also decides which
 field the forum composer is. Status of the spike: planned, in program wave B.
 
@@ -318,7 +318,7 @@ The persisted snapshots and the navigation history of ADR 0005 are two of them.
 | Part | Status |
 | --- | --- |
 | The first School's forum backend: `schoolClassForums`, `schoolClassForumPosts`, and `confect/classes/forums` | Deleted, as K11 decides: the contract release of ADR 0011 (#1037) removed its code and rows, and the drop release removed its tables and its two aggregates |
-| The first School's forum screens and viewport in `apps/www/components/school` | Deleted from main by #1051 |
+| The first School's forum screens and viewport in `apps/www/src/components/school` | Deleted from main by #1051 |
 | ADR 0005, and the glossary section `Forum Conversation` | Deleted by #1037 |
 | `Message`, `Bubble`, `Attachment`, and `MessageScroller` in `packages/design-system/components/ui` | Live |
 | `Marker`, `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, program wave B, from the registry |

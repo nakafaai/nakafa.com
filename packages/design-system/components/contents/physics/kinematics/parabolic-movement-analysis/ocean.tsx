@@ -1,5 +1,3 @@
-"use client";
-
 import { useFrame, useLoader } from "@react-three/fiber";
 import {
   PROJECTILE_SCENE,

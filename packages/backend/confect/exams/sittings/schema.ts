@@ -81,7 +81,11 @@ export const examSittingValidator = Schema.Struct({
   examId: Id("exams"),
   jobs: Schema.Array(JobId),
   opensAt: Schema.Finite,
+  resultsReleasedAt: Schema.optionalKey(Schema.Finite),
+  resultsReleasedBy: Schema.optionalKey(Id("tenantPeople")),
   room: RoomName,
+  /** The Person who scheduled the sitting, when a Person did; a room a system scheduled has none. */
+  scheduledBy: Schema.optionalKey(Id("tenantPeople")),
   state: SittingState,
   tenantId: Id("tenants"),
   tokenHash: Schema.String,

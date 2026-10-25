@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { assignmentsTo } from "#scripts/check/assignments";
 import { parseSources } from "#scripts/check/source";
 
-const VIEW = "apps/www/components/example.tsx";
+const VIEW = "apps/www/src/components/example.tsx";
 const NAME = "ON";
 
 /** Joins the lines of one module. */

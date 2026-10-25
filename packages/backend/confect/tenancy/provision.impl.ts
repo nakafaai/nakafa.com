@@ -8,10 +8,8 @@ import { assignRole } from "@repo/backend/confect/access/grant";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { readAddress } from "@repo/backend/confect/tenancy/address";
-import {
-  personAuthority,
-  tenantAuthority,
-} from "@repo/backend/confect/tenancy/authority";
+import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
+import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
 import {
   inviteToSchool,
@@ -33,7 +31,7 @@ import { Array as Arr, Effect, Layer } from "effect";
  * `actor`, which is the system for Nakafa staff's command and the operator for
  * the console. The school's key is written in the same transaction but is not
  * journaled, because ADR 0016 lists what the journal records and a key is not
- * among them. The invitation email starts with the transaction, in the content language of the
+ * among them. The invitation email starts with the transaction, in the page language of the
  * first school, and an account that already holds the address claims the Person
  * moments later.
  */
@@ -91,23 +89,7 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
   const units = yield* Effect.forEach(args.units, (draft) =>
     createUnit(actor, tenantId, draft).pipe(Effect.map((unit) => unit._id))
   );
-  const ownerId = yield* writer
-    .table("tenantPeople")
-    .insert({
-      account: { state: "unclaimed" },
-      kind: "member",
-      name: args.owner.name,
-      status: "active",
-      tenantId,
-    })
-    .pipe(Effect.orDie);
-  const owner = yield* reader
-    .table("tenantPeople")
-    .get(ownerId)
-    .pipe(Effect.orDie);
-  yield* personAuthority.record(actor, owner, {
-    type: "person.created",
-  });
+  const owner = yield* createPerson(actor, tenantId, args.owner.name);
   const invite = yield* writeInvite(
     actor,
     owner,
@@ -118,7 +100,7 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
   yield* assignRole(actor, owner, "owner", { kind: "tenant" }).pipe(
     Effect.orDie
   );
-  return { invite: invite._id, owner: ownerId, tenant: tenantId, units };
+  return { invite: invite._id, owner: owner._id, tenant: tenantId, units };
 });
 
 /** The acceptance command's invite, as the system, so the journal names no staff member. */

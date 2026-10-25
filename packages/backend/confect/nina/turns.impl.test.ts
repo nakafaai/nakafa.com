@@ -83,7 +83,7 @@ describe("native Nina admission", () => {
       turns: await ctx.db.query("ninaTurns").collect(),
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
     }));
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.turns).toHaveLength(1);
     const events = Arr.filter(state.jobs, (job) =>
       job.name.includes("deliverProductEvent")
@@ -124,7 +124,7 @@ describe("native Nina admission", () => {
         }
       ),
     }));
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.turns).toHaveLength(1);
     expect(state.turns[0]).toMatchObject({
       promptMessageId: first.promptMessageId,
@@ -160,7 +160,7 @@ describe("native Nina admission", () => {
   });
 
   it("starts a turn for a context hint of the longest length a page writes, and for a longer one", async () => {
-    const { t, owner } = await fixture();
+    const { t, owner } = await fixture(120);
     const withHint = (requestId: string, length: number) => ({
       requestId,
       input: {
@@ -304,7 +304,7 @@ describe("native Nina admission", () => {
   });
 
   it("refuses a third open turn before any credit is held, and frees a place when one settles", async () => {
-    const { t, owner, identity } = await fixture(20);
+    const { t, owner, identity } = await fixture(120);
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, { ...args, requestId: "one" })
@@ -319,7 +319,7 @@ describe("native Nina admission", () => {
       turns: await ctx.db.query("ninaTurns").collect(),
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
-    expect(refused.user?.credits).toBe(10);
+    expect(refused.user?.credits).toBe(20);
     expect(refused.chats).toHaveLength(2);
     expect(refused.turns).toHaveLength(2);
     expect(refused.ledger).toHaveLength(2);
@@ -338,7 +338,7 @@ describe("native Nina admission", () => {
   });
 
   it("reads the learner's open turns once for an admission, and once more only after it settled a stopped turn", async () => {
-    const { t, owner } = await fixture(20);
+    const { t, owner } = await fixture(120);
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, { ...args, requestId: "one" })
@@ -357,7 +357,7 @@ describe("native Nina admission", () => {
   });
 
   it("holds no place for an open turn past its deadline, so a settlement that keeps failing cannot lock the learner out", async () => {
-    const { t, owner } = await fixture(20);
+    const { t, owner } = await fixture(120);
     await owner.mutation(start, { ...args, requestId: "one" });
     await owner.mutation(start, { ...args, requestId: "two" });
     const deadline = Duration.toMillis(TURN_DEADLINE);
@@ -377,7 +377,7 @@ describe("native Nina admission", () => {
   });
 
   it("counts only the learner's own open turns", async () => {
-    const { t, owner } = await fixture(20);
+    const { t, owner } = await fixture(120);
     await owner.mutation(start, { ...args, requestId: "one" });
     await owner.mutation(start, { ...args, requestId: "two" });
     const other = await t.mutation((ctx) =>

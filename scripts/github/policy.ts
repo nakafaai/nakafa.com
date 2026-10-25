@@ -34,8 +34,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 1,
-    reason: "Checkout is pinned to the latest reviewed stable release.",
+    expectedUsages: 2,
+    reason:
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit.",
   },
   {
     action: "pnpm/setup",
@@ -45,6 +46,15 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     expectedUsages: 1,
     reason:
       "The signed successor action owns Node and pnpm. The store stays uncached because a cold install beats restoring it on hosted runners.",
+  },
+  {
+    action: "astral-sh/setup-uv",
+    approvedSha: "07a047e608db84b3d8c06cd9a7c7dcc9c355c18e",
+    expectedInputs: { version: "0.13.5" },
+    expectedTag: "v10.3.2",
+    expectedUsages: 1,
+    reason:
+      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys.",
   },
   {
     action: "actions/upload-artifact",
@@ -68,9 +78,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "package-manager-cache": "false",
     },
     expectedTag: "v7.0.0",
-    expectedUsages: 2,
+    expectedUsages: 3,
     reason:
-      "CLI publication and verification pin Node without dependency caching.",
+      "CLI publication, its verification, and the deploy job pin Node without dependency caching. The deploy job runs the environment loader on that Node.",
   },
 ]);
 

@@ -2,7 +2,6 @@
 
 import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
-  canonicalizeRollbackPage,
   canonicalizeRollbackRecord,
   isRollbackUpsert,
   MAX_ROLLBACK_PAGE_BYTES,
@@ -30,6 +29,7 @@ import {
   matchManifest,
 } from "@repo/backend/confect/contentRelease/ingress/current";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
+import { rollbackPageBytes } from "@repo/backend/confect/contentRelease/rollback/page";
 import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
@@ -102,15 +102,6 @@ function makeRoutePage(
     rollbackOfManifestHash: request.rollbackOfManifestHash,
     total,
   };
-}
-/** Computes exact canonical bytes without repeatedly serializing prior records. */
-function rollbackPageBytes(page: RollbackPage, recordBytes: number) {
-  const wrapper = canonicalizeRollbackPage({
-    ...page,
-    records: [],
-  });
-  const separators = Math.max(0, page.records.length - 1);
-  return textEncoder.encode(wrapper).byteLength + recordBytes + separators;
 }
 /** Requires one query chunk to continue the exact aggregate cursor. */
 const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(

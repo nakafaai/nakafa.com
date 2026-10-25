@@ -87,6 +87,7 @@ describe("exams seed sitting", () => {
           )
         );
         expect(exam).toMatchObject({ title: "Ujian Acceptance" });
+        expect(made.title).toBe(exam.title);
         expect(exam.questions).toHaveLength(2);
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toContain(made.sittingId);
@@ -139,6 +140,43 @@ describe("exams seed sitting", () => {
         expect(Arr.every(attempts, (row) => row.state === "inProgress")).toBe(
           true
         );
+      })
+  );
+
+  it.effect(
+    "opens an upcoming sitting of the same exam in a second room a day later, when the seed names one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const user = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("users")
+              .get(fixture.users.student.userId)
+              .pipe(Effect.orDie)
+          )
+        );
+        const made = yield* fixture.internal.mutation(seed, {
+          email: addressOf(user.email),
+          slug: nf,
+          upcoming: true,
+        });
+        const sittings = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("examSittings")
+              .index("by_examId_and_opensAt", (query) =>
+                query.eq("examId", made.examId)
+              )
+              .collect()
+              .pipe(Effect.orDie)
+          )
+        );
+        expect(sittings).toMatchObject([
+          { opensAt: TENANCY_NOW, room: "Lab 2" },
+          { opensAt: TENANCY_NOW + 24 * 60 * 60 * 1000, room: "Lab 3" },
+        ]);
       })
   );
 

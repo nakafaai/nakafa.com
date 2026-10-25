@@ -2,15 +2,15 @@ import {
   accountUnavailableCode,
   accountUnavailableMessage,
 } from "@repo/backend/confect/auth/spec";
+import type {
+  CheckoutSessionResult,
+  PolarCheckoutError,
+} from "@repo/backend/confect/billing/polar/spec";
 import {
   type CheckoutAdmission,
   type CheckoutSessionIoError,
   CheckoutUnavailable,
 } from "@repo/backend/confect/customers/checkout/spec";
-import type {
-  CheckoutSessionResult,
-  PolarCheckoutError,
-} from "@repo/backend/confect/customers/polar/spec";
 import { Effect } from "effect";
 
 /** Returns a new checkout only if the post-Polar admission remains active. */

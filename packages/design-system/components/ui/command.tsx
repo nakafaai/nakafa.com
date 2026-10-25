@@ -1,5 +1,3 @@
-"use client";
-
 import type { AutocompleteRootProps } from "@base-ui/react/autocomplete";
 import { Dialog as CommandDialogPrimitive } from "@base-ui/react/dialog";
 import { Search02Icon } from "@hugeicons/core-free-icons";
@@ -162,6 +160,10 @@ function Command<ItemValue>({
   );
 }
 
+/**
+ * The search field of a command dialog. It does not autofocus: a kept-mounted dialog
+ * mounts hidden, so the dialog takes focus when it opens, through its `initialFocus`.
+ */
 function CommandInput({
   className,
   showClear = true,
@@ -170,7 +172,6 @@ function CommandInput({
   return (
     <div className="px-2.5 py-1.5" data-slot="command-input-wrapper">
       <AutocompleteInput
-        autoFocus
         className={cn(
           "border-transparent! bg-transparent! shadow-none before:hidden focus-visible:border-transparent focus-visible:ring-0 has-focus-visible:ring-0",
           className

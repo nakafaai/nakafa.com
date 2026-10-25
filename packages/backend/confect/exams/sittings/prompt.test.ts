@@ -189,7 +189,7 @@ describe("exams/sittings prompt", () => {
   );
 
   it.effect(
-    "refuses the prompt of a locked attempt, which is closed to the student",
+    "refuses the prompt of a locked attempt with the lock, not a closed attempt",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -211,7 +211,7 @@ describe("exams/sittings prompt", () => {
           questionId,
           sittingId: made.id,
         }).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "AttemptClosed" });
+        expect(failure).toMatchObject({ _tag: "AttemptLocked" });
       })
   );
 });

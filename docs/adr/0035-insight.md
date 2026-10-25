@@ -93,7 +93,7 @@ arrive as content.
 - Insight is off in a school until the school's DPIA is recorded. The DPIA record
   holds its version, its date, the reviewer, and the modules it switches on, and
   Settings shows it under Security, as the blueprint's DPIA card (ADR 0027 and the
-  settings structure of `apps/www/lib/settings/school.ts`).
+  settings structure of `apps/www/src/lib/settings/school.ts`).
 - The gate is a Condition in access (ADR 0012), so `insight.view` is refused with
   its reason while no DPIA is recorded. It is not a flag in the UI. The UI reads
   the refusal from the viewer's capabilities (GLOSSARY, Viewer capabilities).
