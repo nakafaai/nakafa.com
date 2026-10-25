@@ -52,18 +52,16 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
     status === "complete" ? creditsCharged(turn.usage, turn.credits) : 0;
   yield* refundCredits(turn, turn._id, turn.credits - charged);
   // The hold's first usage row may name the pack it drew from, so its metadata keeps that.
+  // The turn holds that row, so a missing one is a defect, as the patch below treats it.
   const holdUsage = yield* reader
     .table("creditTransactions")
     .get(turn.transactionId)
-    .pipe(
-      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.orDie
-    );
+    .pipe(Effect.orDie);
   yield* writer
     .table("creditTransactions")
     .patch(turn.transactionId, {
       metadata: {
-        ...holdUsage?.metadata,
+        ...holdUsage.metadata,
         chatId: turn.chatId,
         turnId: turn._id,
         phase: status,

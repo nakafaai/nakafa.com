@@ -20,9 +20,13 @@ import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 9, 25, 12);
 
+const polarGateway = vi.hoisted(() => ({ refundOrder: vi.fn() }));
+vi.mock("@repo/backend/confect/billing/polar/live", () => ({ polarGateway }));
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
+  polarGateway.refundOrder.mockReset().mockReturnValue(Effect.void);
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -118,7 +122,7 @@ describe("billing/topup", () => {
     expect(stored.ledger).toEqual([["purchase", 1000]]);
   });
 
-  it("keeps the payment on record and grants no pack to a learner without Pro", async () => {
+  it("keeps the payment on record, grants no pack and refunds the order of a learner without Pro", async () => {
     const t = createBillingTestConvex();
     const learner = await t.mutation((ctx) => seedLearner(ctx, false));
     const outcome = await t.mutation((ctx) =>
@@ -129,6 +133,29 @@ describe("billing/topup", () => {
     expect(stored.payments).toEqual([["credits", "succeeded"]]);
     expect(stored.lots).toHaveLength(0);
     expect(stored.ledger).toEqual([]);
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(polarGateway.refundOrder).toHaveBeenCalledExactlyOnceWith({
+      orderId: "order_topup_1",
+      refundableAmount: 499,
+    });
+  });
+
+  it("refunds nothing for an order without Pro that charged nothing", async () => {
+    const t = createBillingTestConvex();
+    const learner = await t.mutation((ctx) => seedLearner(ctx, false));
+    const outcome = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        applyTopUpPaid({ ...orderOf(learner), refundableAmount: 0 })
+      )
+    );
+    expect(outcome).toBe("withoutPro");
+    expect(
+      await t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      )
+    ).toEqual([]);
+    expect(polarGateway.refundOrder).not.toHaveBeenCalled();
   });
 
   it("removes the unused credits of a refunded pack and keeps the credits already spent", async () => {
