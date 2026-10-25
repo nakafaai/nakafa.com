@@ -1,11 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
-import { tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Email } from "@repo/backend/confect/tenancy/schema";
+import {
+  invitePerson,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const memberships = refs.public.tenancy.memberships.list;
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
+/** The address the Owner's account is invited to the other school with. */
+const OWNER_ADDRESS = Schema.decodeSync(Email)("owner@harapan.example.test");
 
 describe("tenancy/memberships", () => {
   it.effect("lists only the caller's own active member Persons", () =>
@@ -31,6 +38,34 @@ describe("tenancy/memberships", () => {
         "other",
       ]);
     })
+  );
+
+  it.effect(
+    "lists the school an account joined last first, so a new school leads the menu",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(
+          invitePerson(fixture.tenants.other, OWNER_ADDRESS, {
+            account: {
+              claimedAt: TENANCY_NOW,
+              method: "invite",
+              state: "claimed",
+              userId: fixture.users.owner.userId,
+            },
+            invite: {
+              at: TENANCY_NOW,
+              status: "accepted",
+              userId: fixture.users.owner.userId,
+            },
+          })
+        );
+        const owner = yield* fixture.as("owner").query(memberships, firstPage);
+        expect(Arr.map(owner.page, (item) => item.tenant.slug)).toEqual([
+          "other",
+          "nf",
+        ]);
+      })
   );
 
   it.effect(
