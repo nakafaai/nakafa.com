@@ -54,6 +54,7 @@ export function useResendKeptAnswers({
                   response: answer.response,
                   sittingId,
                   slug,
+                  version: answer.version,
                 },
                 answer.answeredAt
               )

@@ -1,6 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
+import { PlayerModeParamSchema } from "@/components/player/mode";
 
 /** The rows a list asks for on its first page: at least one, and at most one hundred. */
 const PageSize = Schema.Int.check(
@@ -30,6 +31,13 @@ export const ExamInput = Schema.Struct({
 export const SittingInput = Schema.Struct({
   sittingId: Id("examSittings"),
   slug: TenantSlug,
+});
+
+/** One sitting as a student reads it, with the view that the address asks for, which the server resolves. */
+export const StudentSittingInput = Schema.Struct({
+  sittingId: Id("examSittings"),
+  slug: TenantSlug,
+  view: PlayerModeParamSchema,
 });
 
 /** The overview of one sitting's results and the first page of its students. */

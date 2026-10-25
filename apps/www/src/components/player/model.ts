@@ -1,7 +1,3 @@
-import type {
-  RenderableSpec,
-  Selection,
-} from "@repo/backend/confect/response/model";
 import { Schema } from "effect";
 
 /**
@@ -17,13 +13,14 @@ export const PlayerCellModel = Schema.Struct({
 export type PlayerCellModel = typeof PlayerCellModel.Type;
 
 /**
- * What the player knows of one question: enough to mark it in the navigator
- * and to answer it from the keyboard. A section numbers its questions from 1
- * in their frozen order, so the position of a question in the list is its
- * number.
+ * What the player knows of one question: enough to mark it in the navigator and to pick an option of it from the
+ * keyboard. A section numbers its questions from 1 in their frozen order, so the position of a question in the
+ * list is its number.
  */
 export interface PlayerQuestionModel extends PlayerCellModel {
-  /** Saves a choice for this question; `null` clears it. */
-  readonly answer: (selection: Selection | null) => void;
-  readonly responseSpec: RenderableSpec;
+  /**
+   * Picks the option at `index` of this question, the way the digit keys do. It answers `true` when the question
+   * took the pick, and `false` when the question has no option at that index or takes no single choice.
+   */
+  readonly pick: (index: number) => boolean;
 }

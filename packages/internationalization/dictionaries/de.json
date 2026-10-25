@@ -1743,6 +1743,10 @@
       "title": "Diese Antwort passt nicht.",
       "description": "Wähle die Optionen erneut."
     },
+    "sitting-stale-answer": {
+      "title": "Eine neuere Antwort ist gespeichert.",
+      "description": "Ihr Test zeigt jetzt die neuere Antwort."
+    },
     "sitting-question-missing": {
       "title": "Aufgabe gehört nicht dazu.",
       "description": "Lade die Sitzung neu, um die Aufgaben zu sehen."

@@ -126,11 +126,11 @@ describe("player store", () => {
     const store = listOfThree();
 
     store.getState().observe("b");
-    expect(store.getState()).toMatchObject({ current: "b", observed: null });
+    expect(store.getState()).toMatchObject({ current: "b" });
 
     store.getState().goTo("c");
     store.getState().observe("b");
-    expect(store.getState()).toMatchObject({ current: "c", observed: "b" });
+    expect(store.getState()).toMatchObject({ current: "c", pinned: true });
   });
 
   it("keeps a held question while the page stays where the hold left it", () => {
@@ -144,7 +144,6 @@ describe("player store", () => {
     expect(store.getState()).toMatchObject({
       anchor: 480,
       current: "c",
-      observed: "b",
       pinned: true,
     });
   });
@@ -159,9 +158,27 @@ describe("player store", () => {
 
     expect(store.getState()).toMatchObject({
       anchor: null,
-      current: "b",
-      observed: null,
+      current: "c",
       pinned: false,
+    });
+    store.getState().observe("b");
+    expect(store.getState()).toMatchObject({ current: "b" });
+  });
+
+  it("keeps a jump's question while the navigator's scroll lock moves the page", () => {
+    const store = listOfThree();
+    store.getState().goTo("c");
+    store.getState().observe("b");
+    store.getState().anchorAt(480);
+    store.getState().open("navigator");
+
+    store.getState().moved(462);
+
+    expect(store.getState()).toMatchObject({
+      anchor: 480,
+      current: "c",
+      overlay: "navigator",
+      pinned: true,
     });
   });
 
@@ -236,7 +253,6 @@ describe("player store", () => {
 
     expect(store.getState()).toMatchObject({
       current: "a",
-      observed: "c",
       pinned: true,
     });
   });
