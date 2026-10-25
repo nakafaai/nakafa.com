@@ -21,7 +21,7 @@ const LONE_SURROGATE = /[\uD800-\uDFFF]/gu;
  * made changes, so that the next build makes the sections of every document
  * again instead of trusting the version it stored for them.
  */
-const SECTION_FORMAT = "1";
+const SECTION_FORMAT = "2";
 
 /**
  * Names what the sections of a document are made from: the section format, the

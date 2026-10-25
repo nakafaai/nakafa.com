@@ -75,7 +75,7 @@ describe("section build", () => {
     expect(await sources()).toHaveLength(9);
     expect(
       Arr.every(await sources(), ({ version }) =>
-        Str.startsWith("1:google/gemini-embedding-2:sha256:")(version)
+        Str.startsWith("2:google/gemini-embedding-2:sha256:")(version)
       )
     ).toBe(true);
   });
