@@ -36,8 +36,9 @@ const PAGE_EVENTS = ["focusin", "pointerdown"] as const;
 /**
  * The canvas of the exam: every question as a page, stacked in order with one gap between them,
  * on a muted ground that scrolls. Each page is its paper at the chosen zoom, and an add button as
- * wide as the pages, below the last one, adds a question at the end. The page the teacher is on follows the scroll,
- * so the footer's position names it. A frozen exam shows its pages without the add button.
+ * wide as the pages, below the last one, adds a question at the end. The page the teacher is on
+ * follows the scroll and the teacher's hand, so the footer's position and the panel name it. A
+ * frozen exam shows its pages without the add button.
  */
 export function ExamCanvas({
   canvas,

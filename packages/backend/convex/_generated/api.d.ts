@@ -4548,6 +4548,7 @@ export declare const api: {
             questions: Array<{
               number: number;
               optionIds: Array<string>;
+              points: number;
               response: Array<string>;
               verdict: "correct" | "incorrect" | "pending";
             }>;
@@ -4563,6 +4564,7 @@ export declare const api: {
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
+              points: number;
             }>;
             releasedAt: number | null;
             sitting: {
