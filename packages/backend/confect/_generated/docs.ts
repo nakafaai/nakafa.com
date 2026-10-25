@@ -47,8 +47,6 @@ export type ContentStateDoc = Document.Document<typeof schemaDefinition, "conten
 export type CreditResetPeriodsDoc = Document.Document<typeof schemaDefinition, "creditResetPeriods">;
 export type CreditTransactionsDoc = Document.Document<typeof schemaDefinition, "creditTransactions">;
 export type CurriculumRoutesDoc = Document.Document<typeof schemaDefinition, "curriculumRoutes">;
-export type CustomerDeletionTombstonesDoc = Document.Document<typeof schemaDefinition, "customerDeletionTombstones">;
-export type CustomersDoc = Document.Document<typeof schemaDefinition, "customers">;
 export type EditorClientsDoc = Document.Document<typeof schemaDefinition, "editorClients">;
 export type EditorDocumentsDoc = Document.Document<typeof schemaDefinition, "editorDocuments">;
 export type EditorSnapshotsDoc = Document.Document<typeof schemaDefinition, "editorSnapshots">;
@@ -96,7 +94,6 @@ export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
 export type SchoolLoginsDoc = Document.Document<typeof schemaDefinition, "schoolLogins">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
-export type SubscriptionsDoc = Document.Document<typeof schemaDefinition, "subscriptions">;
 export type TenantAssignmentsDoc = Document.Document<typeof schemaDefinition, "tenantAssignments">;
 export type TenantCohortMembersDoc = Document.Document<typeof schemaDefinition, "tenantCohortMembers">;
 export type TenantCohortsDoc = Document.Document<typeof schemaDefinition, "tenantCohorts">;
@@ -173,8 +170,6 @@ export interface Docs {
   creditResetPeriods: CreditResetPeriodsDoc;
   creditTransactions: CreditTransactionsDoc;
   curriculumRoutes: CurriculumRoutesDoc;
-  customerDeletionTombstones: CustomerDeletionTombstonesDoc;
-  customers: CustomersDoc;
   editorClients: EditorClientsDoc;
   editorDocuments: EditorDocumentsDoc;
   editorSnapshots: EditorSnapshotsDoc;
@@ -222,7 +217,6 @@ export interface Docs {
   quranSearch: QuranSearchDoc;
   schoolLogins: SchoolLoginsDoc;
   snapshotBatches: SnapshotBatchesDoc;
-  subscriptions: SubscriptionsDoc;
   tenantAssignments: TenantAssignmentsDoc;
   tenantCohortMembers: TenantCohortMembersDoc;
   tenantCohorts: TenantCohortsDoc;

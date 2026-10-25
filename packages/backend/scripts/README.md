@@ -44,19 +44,6 @@ Cache is in memory, so a response that one runtime signed is never read by
 another.
 These commands never read production tables or use production credentials.
 
-## Customer verification
-
-```sh
-bun --filter @repo/backend customers:verify
-bun --filter @repo/backend customers:verify:prod
-```
-
-These commands verify user, customer, and subscription cohesion without
-changing content ownership.
-
-`customers/verify.ts` is a read-only operational integrity check. It does not
-change customer, subscription, or content state.
-
 ## Dev deployment scripts
 
 The release gate, the judgment measurement and the model test of knowledge

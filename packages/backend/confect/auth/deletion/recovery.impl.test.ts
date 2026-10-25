@@ -110,12 +110,12 @@ it.each([true, false])(
     expect(state.scheduled).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          name: "customers/deletion/workflow:launchDeletedUserCleanup",
+          name: "auth/deletion/workflow:launchDeletedUserCleanup",
           scheduledTime: NOW,
           state: { kind: "pending" },
         }),
         expect.objectContaining({
-          name: "customers/deletion/workflow:finalizeDeletedUserCleanup",
+          name: "auth/deletion/workflow:finalizeDeletedUserCleanup",
           scheduledTime: NOW + ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
           state: { kind: "pending" },
         }),

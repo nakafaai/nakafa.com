@@ -76,7 +76,7 @@ export const finalizeAccountDeletion = Effect.fn(
     const finalizedAt = yield* Clock.currentTimeMillis;
     const continueCleanup = scheduler.runAfter(
       Duration.zero,
-      refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+      refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
       {
         authId,
         ...(expectedPreparation === undefined ? {} : { expectedPreparation }),
@@ -118,12 +118,12 @@ export const finalizeAccountDeletion = Effect.fn(
       .pipe(Effect.orDie);
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.customers.deletion.workflow.launchDeletedUserCleanup,
+      refs.internal.auth.deletion.workflow.launchDeletedUserCleanup,
       { authId, userId: user._id }
     );
     yield* scheduler.runAfter(
       Duration.millis(ACCOUNT_DELETION_RECONCILIATION_DELAY_MS),
-      refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+      refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
       { authId }
     );
   },

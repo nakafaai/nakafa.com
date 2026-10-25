@@ -1,13 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
-import { products } from "@repo/backend/confect/billing/polar/products";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  insertPolarAccount,
+  insertProSubscription,
+} from "@repo/backend/test/billing";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import type { FunctionArgs } from "convex/server";
-import { DateTime } from "effect";
 
 const startAccessArgs: FunctionArgs<
   typeof api.tryouts.queries.access.getStartAccess
@@ -54,33 +56,8 @@ describe("tryouts/queries/access", () => {
         now: TRYOUT_TEST_NOW,
         suffix: "start-access-included",
       });
-      await ctx.db.insert("customers", {
-        externalId: seeded.authUserId,
-        id: "advisory-customer",
-        metadata: {},
-        userId: seeded.userId,
-      });
-      const timestamp = DateTime.formatIso(
-        DateTime.makeUnsafe(TRYOUT_TEST_NOW)
-      );
-      await ctx.db.insert("subscriptions", {
-        amount: null,
-        cancelAtPeriodEnd: false,
-        checkoutId: null,
-        createdAt: timestamp,
-        currency: null,
-        currentPeriodEnd: null,
-        currentPeriodStart: timestamp,
-        customerId: "advisory-customer",
-        endedAt: null,
-        id: "advisory-subscription",
-        metadata: {},
-        modifiedAt: null,
-        productId: products.pro.id,
-        recurringInterval: null,
-        startedAt: timestamp,
-        status: "active",
-      });
+      const accountId = await insertPolarAccount(ctx, seeded.userId);
+      await insertProSubscription(ctx, accountId, { currentPeriodEnd: null });
       return seeded;
     });
     const authed = t.withIdentity({

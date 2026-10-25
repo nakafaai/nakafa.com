@@ -1,13 +1,13 @@
+import {
+  checkoutLocaleValidator,
+  polarCheckoutLocaleValidator,
+} from "@repo/backend/confect/billing/locale";
 import { chatTypeValidator } from "@repo/backend/confect/chats/schema";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
   graphContentIdValidator,
   learningGraphIdentityValidator,
 } from "@repo/backend/confect/contents/graph";
-import {
-  checkoutLocaleValidator,
-  polarCheckoutLocaleValidator,
-} from "@repo/backend/confect/customers/checkout/localization";
 import {
   contentTypeValidator,
   localeValidator,
@@ -127,4 +127,3 @@ export const productAnalyticsEventValidator = Schema.Union([
     }),
   }),
 ]);
-export type ProductAnalyticsEvent = typeof productAnalyticsEventValidator.Type;

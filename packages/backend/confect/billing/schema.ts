@@ -215,3 +215,20 @@ export const billingEventDeliveryValidator = Schema.Struct({
   payload: Schema.String,
 });
 export type BillingEventDelivery = typeof billingEventDeliveryValidator.Type;
+
+/** What applying one stored delivery did: it is processed, or it names a Polar customer Nakafa must link before it can apply. */
+export const billingEventAppliedValidator = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("processed") }),
+  Schema.Struct({
+    kind: Schema.Literal("unknownCustomer"),
+    customerId: Schema.String,
+  }),
+]).pipe(Schema.toTaggedUnion("kind"));
+
+/** One unprocessed Polar delivery the sweep reads, with the fields it logs. */
+export const unprocessedBillingEventValidator = Schema.Struct({
+  eventId: Id("billingEvents"),
+  key: Schema.String,
+  receivedAt: Schema.Finite,
+  type: Schema.String,
+});

@@ -4,6 +4,7 @@ import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import access from "@repo/backend/confect/_generated/refs/access";
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import comments from "@repo/backend/confect/_generated/refs/comments";
@@ -11,7 +12,6 @@ import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import consents from "@repo/backend/confect/_generated/refs/consents";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import contents from "@repo/backend/confect/_generated/refs/contents";
-import customers from "@repo/backend/confect/_generated/refs/customers";
 import editor from "@repo/backend/confect/_generated/refs/editor";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import identity from "@repo/backend/confect/_generated/refs/identity";
@@ -24,7 +24,6 @@ import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import operators from "@repo/backend/confect/_generated/refs/operators";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import records from "@repo/backend/confect/_generated/refs/records";
-import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import users from "@repo/backend/confect/_generated/refs/users";
@@ -97,6 +96,7 @@ const convexNameOf = (value: unknown): Option.Option<string> =>
 const domainModules = {
   access,
   auth,
+  billing,
   chats,
   classroom,
   comments,
@@ -104,7 +104,6 @@ const domainModules = {
   consents,
   contentRelease,
   contents,
-  customers,
   editor,
   exams,
   identity,
@@ -117,7 +116,6 @@ const domainModules = {
   operators,
   posts,
   records,
-  subscriptions,
   tenancy,
   tryouts,
   users,

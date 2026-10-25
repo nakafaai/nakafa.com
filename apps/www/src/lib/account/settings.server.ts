@@ -1,8 +1,7 @@
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { products } from "@repo/backend/confect/billing/polar/products";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect } from "effect";
@@ -131,8 +130,8 @@ export const subscriptionsScreenHandler = accountHandler(
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
       const subscription = yield* readRequired(
-        subscriptions.queries.hasActiveSubscription,
-        { productId: products.pro.id },
+        billing.queries.hasActiveSubscription,
+        {},
         token
       );
       const t = createTranslator({

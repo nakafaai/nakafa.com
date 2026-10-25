@@ -69,7 +69,7 @@ const recoverAccountDeletion = FunctionImpl.make(
         Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
       ),
       finalize: runMutation(
-        refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+        refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
         {
           authId: args.authId,
           expectedPreparation: args.expectedPreparation,

@@ -7,7 +7,9 @@ vi.stubGlobal("fetch", polarFetch);
 
 const configured = Effect.provideService(
   ConfigProvider.ConfigProvider,
-  ConfigProvider.fromEnv({ env: { POLAR_ACCESS_TOKEN: "polar_test" } })
+  ConfigProvider.fromEnv({
+    env: { POLAR_ACCESS_TOKEN: "polar_test", POLAR_SERVER: "sandbox" },
+  })
 );
 
 beforeEach(() => polarFetch.mockReset());
@@ -15,26 +17,22 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("Polar client configuration", () => {
   it.effect(
-    "sends each request to the environment the deployment selects, sandbox by default",
+    "sends each request to the environment the deployment selects",
     () =>
       Effect.gen(function* () {
         const cases = [
           {
             env: {
               POLAR_ACCESS_TOKEN: "polar_test",
-              VITE_POLAR_SERVER: "production",
+              POLAR_SERVER: "production",
             },
             origin: "https://api.polar.sh",
           },
           {
             env: {
               POLAR_ACCESS_TOKEN: "polar_test",
-              VITE_POLAR_SERVER: "sandbox",
+              POLAR_SERVER: "sandbox",
             },
-            origin: "https://sandbox-api.polar.sh",
-          },
-          {
-            env: { POLAR_ACCESS_TOKEN: "polar_test" },
             origin: "https://sandbox-api.polar.sh",
           },
         ];
@@ -85,8 +83,9 @@ describe("Polar client configuration", () => {
           { POLAR_ACCESS_TOKEN: "" },
           {
             POLAR_ACCESS_TOKEN: "polar_test",
-            VITE_POLAR_SERVER: "invalid",
+            POLAR_SERVER: "invalid",
           },
+          { POLAR_ACCESS_TOKEN: "polar_test" },
         ]) {
           const error = yield* readPolarClient().pipe(
             Effect.provideService(
