@@ -1,5 +1,10 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  ActionCtx as ActionCtxService,
+  DatabaseReader,
+  MutationRunner,
+} from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import {
   accountUnavailableCode,
@@ -7,14 +12,16 @@ import {
 } from "@repo/backend/confect/auth/spec";
 import { findAccount } from "@repo/backend/confect/billing/accounts";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
+import { ensureProviderCustomer } from "@repo/backend/confect/billing/customer";
 import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
 import {
   checkoutLocaleValidator,
   getPolarCheckoutLocale,
   polarCheckoutLocaleValidator,
 } from "@repo/backend/confect/billing/locale";
-import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
+import { PolarServer } from "@repo/backend/confect/billing/polar/catalog";
 import { readPolarServer } from "@repo/backend/confect/billing/polar/client";
+import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import {
   type PolarCheckoutError,
   PolarCheckoutError as PolarCheckoutFailure,
@@ -26,11 +33,12 @@ import {
   type CheckoutRequestInput,
   type CheckoutSessionIoError,
   CheckoutUnavailable,
+  checkoutSessionIoError,
   InvalidCheckoutSuccessUrl,
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/confect/billing/spec";
 import { readSiteUrls } from "@repo/backend/confect/site/config";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Clock, Effect, flow, Option, Schema } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
 
@@ -40,13 +48,15 @@ const invalidSuccessUrl = (message: string) =>
     message,
   });
 
-/** A checkout request once it is checked: the Pro product, the Polar language, and the return URL. */
+/** A checkout request once it is checked: the Polar server, the Polar language, and the return URL. */
 const validCheckoutRequestValidator = Schema.Struct({
   locale: checkoutLocaleValidator,
   polarLocale: polarCheckoutLocaleValidator,
-  productId: Schema.String,
+  server: PolarServer,
   successUrl: Schema.String,
 });
+
+type ValidCheckoutRequest = typeof validCheckoutRequestValidator.Type;
 
 /** Validates the redirect a caller controls before Polar is contacted. The success URL stays on a site of this deployment. */
 export const validateCheckoutRequest = Effect.fn(
@@ -75,9 +85,9 @@ export const validateCheckoutRequest = Effect.fn(
   return {
     locale: input.locale,
     polarLocale: getPolarCheckoutLocale(input.locale),
-    productId: polarProductIdFor("pro.monthly", server),
+    server,
     successUrl: input.successUrl,
-  } satisfies typeof validCheckoutRequestValidator.Type;
+  } satisfies ValidCheckoutRequest;
 });
 
 /** Revalidates account access after Polar IO without gating sales on analytics. */
@@ -103,7 +113,7 @@ export const admitCheckoutProgram = Effect.fn("billing.checkout.admitCheckout")(
  * Returns the Polar checkout only if the account is still admitted once Polar has
  * answered. A deletion that starts during the Polar call withholds the checkout.
  */
-export const createAdmittedCheckoutSession = Effect.fn(
+const createAdmittedCheckoutSession = Effect.fn(
   "billing.checkout.createAdmittedSession"
 )(function* (operations: {
   readonly admitCheckout: Effect.Effect<
@@ -166,4 +176,58 @@ export const holdsPro = Effect.fn("billing.checkout.holdsPro")(function* (
     }
   }
   return false;
+});
+
+/**
+ * Starts one hosted Polar checkout for a learner's personal account. The
+ * checkout is admitted again once Polar has answered, so a deletion that starts
+ * meanwhile withholds it. `requiresPro` also withholds it when Pro ended meanwhile.
+ */
+export const createLearnerCheckout = Effect.fn(
+  "billing.checkout.createLearnerCheckout"
+)(function* (input: {
+  readonly appUserId: Docs["users"]["_id"];
+  readonly productIds: readonly string[];
+  readonly request: ValidCheckoutRequest;
+  readonly requiresPro: boolean;
+}) {
+  const ctx = yield* ActionCtxService;
+  const { runMutation } = yield* MutationRunner;
+  const { request } = input;
+  const requestMetadata = yield* Effect.tryPromise({
+    try: () => ctx.meta.getRequestMetadata(),
+    catch: checkoutSessionIoError,
+  });
+  const customerId = yield* ensureProviderCustomer(input.appUserId);
+  const checkout = yield* createAdmittedCheckoutSession({
+    createCheckout: polarGateway.createCheckoutSession({
+      customerId,
+      customerIpAddress: requestMetadata.ip,
+      locale: request.polarLocale,
+      productIds: input.productIds,
+      successUrl: request.successUrl,
+    }),
+    admitCheckout: Clock.currentTimeMillis.pipe(
+      Effect.flatMap((timestamp) =>
+        runMutation(refs.internal.billing.checkout.admitCheckout, {
+          event: {
+            name: "checkout started",
+            properties: {
+              checkout_locale: request.polarLocale,
+              customer_ip_available: requestMetadata.ip !== null,
+              locale: request.locale,
+              product_count: input.productIds.length,
+              product_id: Arr.join(input.productIds, ","),
+            },
+          },
+          requiresPro: input.requiresPro,
+          timestamp,
+          userId: input.appUserId,
+        })
+      ),
+      Effect.mapError(checkoutSessionIoError),
+      Effect.catchDefect(flow(checkoutSessionIoError, Effect.fail))
+    ),
+  });
+  return { url: checkout.url };
 });

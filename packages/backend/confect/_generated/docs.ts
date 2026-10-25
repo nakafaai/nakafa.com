@@ -9,6 +9,7 @@ export type AccountDeletionReceiptsDoc = Document.Document<typeof schemaDefiniti
 export type ArticleBucketsDoc = Document.Document<typeof schemaDefinition, "articleBuckets">;
 export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "articleCatalog">;
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
+export type AssessmentFlagsDoc = Document.Document<typeof schemaDefinition, "assessmentFlags">;
 export type BillingAccountsDoc = Document.Document<typeof schemaDefinition, "billingAccounts">;
 export type BillingCountersDoc = Document.Document<typeof schemaDefinition, "billingCounters">;
 export type BillingEventsDoc = Document.Document<typeof schemaDefinition, "billingEvents">;
@@ -44,6 +45,7 @@ export type ContentSectionStateDoc = Document.Document<typeof schemaDefinition, 
 export type ContentSectionsDoc = Document.Document<typeof schemaDefinition, "contentSections">;
 export type ContentSnapshotsDoc = Document.Document<typeof schemaDefinition, "contentSnapshots">;
 export type ContentStateDoc = Document.Document<typeof schemaDefinition, "contentState">;
+export type CreditLotsDoc = Document.Document<typeof schemaDefinition, "creditLots">;
 export type CreditResetPeriodsDoc = Document.Document<typeof schemaDefinition, "creditResetPeriods">;
 export type CreditTransactionsDoc = Document.Document<typeof schemaDefinition, "creditTransactions">;
 export type CurriculumRoutesDoc = Document.Document<typeof schemaDefinition, "curriculumRoutes">;
@@ -132,6 +134,7 @@ export interface Docs {
   articleBuckets: ArticleBucketsDoc;
   articleCatalog: ArticleCatalogDoc;
   articleCategories: ArticleCategoriesDoc;
+  assessmentFlags: AssessmentFlagsDoc;
   billingAccounts: BillingAccountsDoc;
   billingCounters: BillingCountersDoc;
   billingEvents: BillingEventsDoc;
@@ -167,6 +170,7 @@ export interface Docs {
   contentSections: ContentSectionsDoc;
   contentSnapshots: ContentSnapshotsDoc;
   contentState: ContentStateDoc;
+  creditLots: CreditLotsDoc;
   creditResetPeriods: CreditResetPeriodsDoc;
   creditTransactions: CreditTransactionsDoc;
   curriculumRoutes: CurriculumRoutesDoc;

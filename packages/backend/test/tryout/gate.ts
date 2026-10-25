@@ -2,7 +2,6 @@ import { Ref } from "@confect/core";
 import { assert } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { AttemptRefused } from "@repo/backend/confect/assessment/gate/refusal";
-import type { rules } from "@repo/backend/confect/assessment/gate/rules";
 import type { Selection } from "@repo/backend/confect/response/model";
 import {
   createConvexTestWithBetterAuth,
@@ -44,10 +43,16 @@ const sectionNotActive = Failure.make({
   code: "TRYOUT_SECTION_NOT_ACTIVE",
 });
 
-/** The error each try-out function declares for each refusal, by write. */
+/**
+ * The error each try-out function declares for each refusal, by write. A try-out never
+ * produces the window, place, or device refusals, which map as production maps them, so
+ * each map stays total.
+ */
 export const tryoutRefusals = {
   answer: {
     AttemptClosed: attemptNotActive,
+    Closed: attemptNotActive,
+    DeviceRetired: attemptNotActive,
     Expired: Failure.make({
       _tag: "TryoutResponseError",
       code: "TRYOUT_EXPIRED",
@@ -57,22 +62,28 @@ export const tryoutRefusals = {
       _tag: "TryoutResponseError",
       code: "TRYOUT_PLACEMENT_NOT_FOUND",
     }),
+    NotOpen: attemptNotActive,
     OtherDevice: attemptNotActive,
+    PlaceLocked: attemptNotActive,
     SectionClosed: sectionNotActive,
   },
   finish: {
     AttemptClosed: attemptNotActive,
+    Closed: attemptNotActive,
+    DeviceRetired: attemptNotActive,
     Expired: attemptNotActive,
     Locked: attemptNotActive,
     Missing: Failure.make({
       _tag: "TryoutAttemptStateError",
       code: "TRYOUT_ATTEMPT_NOT_FOUND",
     }),
+    NotOpen: attemptNotActive,
     OtherDevice: attemptNotActive,
+    PlaceLocked: attemptNotActive,
     SectionClosed: sectionNotActive,
   },
 } satisfies Record<
-  keyof typeof rules,
+  "answer" | "finish",
   Record<AttemptRefused["reason"]["_tag"], Failure>
 >;
 
@@ -274,6 +285,12 @@ export const seedTryoutGate = Effect.gen(function* () {
       await ctx.db.patch(seeded.attemptId, { expiresAt: GATE_NOW });
       await ctx.db.patch(seeded.sectionAttemptId, { expiresAt: GATE_NOW });
     },
+    "expire-attempt-status": (ctx) =>
+      ctx.db.patch(seeded.attemptId, {
+        completedAt: GATE_NOW,
+        endReason: "time-expired",
+        status: "expired",
+      }),
     "expire-section": (ctx) =>
       ctx.db.patch(seeded.sectionAttemptId, { expiresAt: GATE_NOW }),
   };

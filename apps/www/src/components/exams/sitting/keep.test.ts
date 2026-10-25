@@ -4,12 +4,10 @@ import { KeyValueStore } from "effect/persistence";
 import {
   confirmAnswer,
   confirmAnswerIn,
-  flagIn,
   forgetAttempt,
   type KeptAttempt,
   keepAnswer,
   keepAnswerIn,
-  keepFlag,
   keptAnswersFor,
   readKept,
   submittedKeysOf,
@@ -18,11 +16,15 @@ import {
 const SITTING = "sitting-a";
 const ATTEMPT = "attempt-a";
 const QUESTION = "question-a";
-const NOTHING: KeptAttempt = { answers: {}, flagged: [] };
+const NOTHING: KeptAttempt = { answers: {} };
 const RESPONSE = ["option-b"];
 
-/** The answer of one choice, chosen at a device time. */
-const answerAt = (answeredAt: number) => ({ answeredAt, response: RESPONSE });
+/** The answer of one choice, chosen at a device time and numbered with a version. */
+const answerAt = (answeredAt: number) => ({
+  answeredAt,
+  response: RESPONSE,
+  version: 1,
+});
 
 describe("keepAnswerIn", () => {
   it("keeps the answer for its question in place of the one kept before", () => {
@@ -54,7 +56,6 @@ describe("keptAnswersFor", () => {
         "question-b": answerAt(2),
         "question-other-paper": answerAt(3),
       },
-      flagged: [],
     };
     expect(
       keptAnswersFor(kept, ["question-b", QUESTION, "question-c"])
@@ -79,14 +80,6 @@ describe("submittedKeysOf", () => {
         { attempt: "closing", attemptId: "attempt-d", id: "sitting-d" },
       ])
     ).toEqual([{ attemptId: "attempt-a", sittingId: "sitting-a" }]);
-  });
-});
-
-describe("flagIn", () => {
-  it("lists a flagged question once, and unlists it", () => {
-    const flagged = flagIn(flagIn(NOTHING, QUESTION, true), QUESTION, true);
-    expect(flagged.flagged).toEqual([QUESTION]);
-    expect(flagIn(flagged, QUESTION, false).flagged).toEqual([]);
   });
 });
 
@@ -120,20 +113,6 @@ describe("the browser's kept state of an attempt", () => {
     )
   );
 
-  it.effect("keeps the flags of an attempt, apart from the answers", () =>
-    scoped(
-      Effect.gen(function* () {
-        yield* keepFlag(SITTING, ATTEMPT, QUESTION, true);
-        expect(yield* readKept(SITTING, ATTEMPT)).toEqual({
-          answers: {},
-          flagged: [QUESTION],
-        });
-        yield* keepFlag(SITTING, ATTEMPT, QUESTION, false);
-        expect((yield* readKept(SITTING, ATTEMPT)).flagged).toEqual([]);
-      })
-    )
-  );
-
   it.effect("keeps each attempt apart", () =>
     scoped(
       Effect.gen(function* () {
@@ -147,7 +126,6 @@ describe("the browser's kept state of an attempt", () => {
     scoped(
       Effect.gen(function* () {
         yield* keepAnswer(SITTING, ATTEMPT, QUESTION, answerAt(1));
-        yield* keepFlag(SITTING, ATTEMPT, QUESTION, true);
         yield* forgetAttempt(SITTING, ATTEMPT);
         expect(yield* readKept(SITTING, ATTEMPT)).toEqual(NOTHING);
       })

@@ -15,6 +15,7 @@ import { useTranslations } from "use-intl";
 import {
   type PriceProps,
   PricingPrice,
+  PricingYearly,
 } from "@/components/marketing/about/pricing/price";
 import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
 import { Link } from "@/lib/routing/link";
@@ -116,8 +117,9 @@ export function PricingCards({
             </PlanHeading>
             <p className="text-muted-foreground">{t("pro-description")}</p>
           </CardHeader>
-          <CardContent className="grid content-start">
+          <CardContent className="grid content-start gap-1">
             <PricingPrice Price={Price} period={t("pro-period")} plan="pro" />
+            <PricingYearly />
           </CardContent>
           <CardContent>
             <ul className="grid gap-3">

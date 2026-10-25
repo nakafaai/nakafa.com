@@ -51,7 +51,7 @@ export function PlayerFinish({
         variant="destructive"
       >
         <HugeIcons icon={StopIcon} />
-        {label}
+        <span className="max-sm:sr-only">{label}</span>
       </Button>
       <ResponsiveDialog
         description={description}

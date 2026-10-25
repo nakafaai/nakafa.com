@@ -189,7 +189,7 @@ describe("exams/sittings prompt", () => {
   );
 
   it.effect(
-    "refuses the prompt of a locked attempt with the lock, not a closed attempt",
+    "reads the prompt of a locked attempt, whose paper stays on screen read-only",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -206,12 +206,12 @@ describe("exams/sittings prompt", () => {
           sittingId: made.id,
           slug: nf,
         });
-        const failure = yield* promptOf(fixture, {
+        const prompt = yield* promptOf(fixture, {
           deviceId: deviceOf(1),
           questionId,
           sittingId: made.id,
-        }).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "AttemptLocked" });
+        });
+        expect(prompt).toMatchObject({ prompt: expect.any(String) });
       })
   );
 });

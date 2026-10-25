@@ -84,8 +84,9 @@ function PlayerNext() {
 }
 
 /**
- * Opens the navigator sheet on the number of the current question; the sidebar replaces it from the large
- * breakpoint. A screen that puts it in its header passes no footer child.
+ * Opens the navigator sheet; the sidebar replaces it from the large breakpoint. The button names the
+ * current question number for assistive technology, and shows only the grid, because the question's own
+ * heading already shows the number. A screen that puts it in its header passes no footer child.
  */
 export function PlayerOpener() {
   const t = useTranslations("Player");
@@ -97,13 +98,13 @@ export function PlayerOpener() {
       aria-haspopup="dialog"
       aria-keyshortcuts="G"
       aria-label={t("navigator-open", { number })}
-      className="min-w-16 font-mono tabular-nums lg:hidden"
+      className="lg:hidden"
       onClick={() => open("navigator")}
+      size="icon"
       type="button"
       variant="outline"
     >
       <HugeIcons icon={GridViewIcon} />
-      {number}
     </Button>
   );
 }

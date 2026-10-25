@@ -1,106 +1,36 @@
-import type { Ref } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
-import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { QueryResult } from "@confect/react";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
-import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { Activity } from "react";
-import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { CardSection } from "@/components/shared/card/section";
-import { useBillingNavigation } from "@/lib/billing/checkout";
-import { isActiveLocale } from "@/lib/i18n/active";
-
-interface UserSettingsSubscriptionsProps {
-  initialSubscription: Ref.Returns<
-    typeof billingRefs.queries.hasActiveSubscription
-  >;
-}
+import { UserSettingsCredits } from "@/components/user/settings/credits";
+import { UserSettingsPlan } from "@/components/user/settings/plan";
+import type { BillingOverview } from "@/lib/billing/plan";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
- * Renders the subscription card from the value the settings route already
- * resolved, so the plan action never swaps between two labels.
+ * The billing settings: the plan card and the Nina credits card. The settings
+ * route resolves the overview first, so both cards show it before the live query
+ * answers, and no action swaps between two labels.
  */
 export function UserSettingsSubscriptions({
-  initialSubscription,
-}: UserSettingsSubscriptionsProps) {
-  const locale = useLocale();
-  const t = useTranslations("Auth");
-  const tPricing = useTranslations("Pricing");
-
-  const billing = useBillingNavigation();
-
+  initialOverview,
+}: {
+  initialOverview: BillingOverview;
+}) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
-  const subscription = useQuery(
-    billingRefs.queries.hasActiveSubscription,
-    isAuthenticated ? {} : "skip"
+  const live = usePreloadedQueryResult(
+    billingRefs.queries.overview,
+    isAuthenticated ? {} : "skip",
+    initialOverview
   );
-  if (QueryResult.isFailure(subscription)) {
-    throw subscription.error;
+  if (QueryResult.isFailure(live)) {
+    throw live.error;
   }
-  const hasSubscription = QueryResult.isSuccess(subscription)
-    ? subscription.value
-    : initialSubscription;
-  const handleCheckout = () => {
-    if (!isActiveLocale(locale)) {
-      return;
-    }
-
-    billing.openCheckout({
-      locale,
-      source: "settings-checkout",
-    });
-  };
-
-  const handleManageSubscription = () => {
-    if (!isActiveLocale(locale)) {
-      return;
-    }
-
-    billing.openPortal({
-      source: "settings-portal",
-    });
-  };
+  const overview = QueryResult.isSuccess(live) ? live.value : initialOverview;
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("subscriptions")}</CardTitle>
-        <CardDescription>
-          {t("subscriptions-description", {
-            credits: getPlanCreditConfig("pro").amount,
-          })}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-4">
-          <Activity mode={hasSubscription ? "visible" : "hidden"}>
-            <Button
-              disabled={billing.isPending || !isActiveLocale(locale)}
-              onClick={handleManageSubscription}
-            >
-              <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
-              {t("manage")}
-            </Button>
-          </Activity>
-          <Activity mode={hasSubscription ? "hidden" : "visible"}>
-            <Button
-              disabled={billing.isPending || !isActiveLocale(locale)}
-              onClick={handleCheckout}
-            >
-              <Spinner icon={PartyIcon} isLoading={billing.isPending} />
-              {tPricing("pro-cta")}
-            </Button>
-          </Activity>
-        </div>
-      </CardContent>
-    </CardSection>
+    <>
+      <UserSettingsPlan overview={overview} />
+      <UserSettingsCredits overview={overview} />
+    </>
   );
 }

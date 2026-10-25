@@ -180,6 +180,28 @@ describe("billing/polar/live", () => {
   );
 
   it.effect(
+    "refunds an order's net amount in Polar, and maps a failed refund to the refund error",
+    () =>
+      Effect.gen(function* () {
+        const order = { orderId: "order_1", refundableAmount: 499 };
+        polarFetch.mockResolvedValueOnce(reply(201, { id: "refund_1" }));
+        expect(yield* polarGateway.refundOrder(order)).toBeUndefined();
+        const request = sentRequest(0);
+        expect(request.method).toBe("POST");
+        expect(new URL(request.url).pathname).toBe("/v1/refunds/");
+        expect(yield* Effect.promise(() => request.json())).toMatchObject({
+          amount: 499,
+          order_id: "order_1",
+          reason: "other",
+        });
+        polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+        expect(yield* failureOf(polarGateway.refundOrder(order))).toBe(
+          "PolarRefundError"
+        );
+      })
+  );
+
+  it.effect(
     "loads the customer of a Nakafa user ID, and returns none for a user Polar does not know",
     () =>
       Effect.gen(function* () {

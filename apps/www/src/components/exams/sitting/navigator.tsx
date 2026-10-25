@@ -1,5 +1,4 @@
 import { Array as Arr } from "effect";
-import { useFlags } from "@/components/exams/sitting/marks";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 
@@ -10,21 +9,19 @@ function isAnswered(question: PaperQuestion) {
 
 /**
  * The navigator of the paper: every question's number, in the paper's order. A click goes to that
- * question, and a flagged question carries its flag. The answered state follows the paper, so an answer
- * shows here as soon as the student chooses it.
+ * question, and a flagged question carries its flag. The answered and flagged states follow the paper, so an
+ * answer or a flag shows here as soon as the student makes it.
  */
 export function SittingNavigator({
   questions,
 }: {
   readonly questions: readonly PaperQuestion[];
 }) {
-  const flagged = useFlags((state) => state.flagged);
-
   return (
     <PlayerGrid
       questions={Arr.map(questions, (question) => ({
         answered: isAnswered(question),
-        flagged: Arr.contains(flagged, question.id),
+        flagged: question.flagged,
         key: question.id,
       }))}
     />

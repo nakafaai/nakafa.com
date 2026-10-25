@@ -1,11 +1,7 @@
 import { useWindowEvent } from "@mantine/hooks";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr, Option } from "effect";
-import {
-  pickOption,
-  readKeyTarget,
-  readPlayerKey,
-} from "@/components/player/keyboard";
+import { readKeyTarget, readPlayerKey } from "@/components/player/keyboard";
 import type { PlayerQuestionModel } from "@/components/player/model";
 import {
   focusNavigator,
@@ -40,14 +36,19 @@ function useNavigatorToggle() {
 
 /**
  * Binds the player keys to the window: the arrows step, `1` to `5` pick an
- * option of a single-choice question, and `G` opens and closes the navigator.
+ * option of a single-choice question, `M` marks the current question for review
+ * through `onMark`, and `G` opens and closes the navigator. A key that the
+ * current question takes is prevented, so the page never acts on it as well.
  */
 export function PlayerKeys({
   locked,
+  onMark,
   questions,
 }: {
   /** Answers are read-only because time ran out. */
   locked: boolean;
+  /** Marks the question for review, when the player has marks. */
+  onMark?: (questionKey: string) => void;
   questions: readonly PlayerQuestionModel[];
 }) {
   const current = usePlayer((state) => state.current);
@@ -71,18 +72,18 @@ export function PlayerKeys({
     } else if (action.kind === "navigator") {
       event.preventDefault();
       toggleNavigator();
-    } else {
-      const picked = Option.flatMap(
-        Arr.findFirst(questions, (question) => question.key === current),
-        (question) =>
-          Option.map(
-            pickOption(question.responseSpec, action.index),
-            (selection) => ({ question, selection })
-          )
-      );
-      if (Option.isSome(picked)) {
+    } else if (action.kind === "mark") {
+      if (onMark !== undefined && current !== null) {
         event.preventDefault();
-        picked.value.question.answer(picked.value.selection);
+        onMark(current);
+      }
+    } else {
+      const picked = Arr.findFirst(
+        questions,
+        (question) => question.key === current
+      );
+      if (Option.isSome(picked) && picked.value.pick(action.index)) {
+        event.preventDefault();
       }
     }
   });
