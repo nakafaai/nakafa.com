@@ -4,7 +4,7 @@ import { stageProgram } from "@repo/backend/confect/contentRelease/artifacts";
 import spec from "@repo/backend/confect/contentRelease/artifacts.spec";
 import { Effect, Layer } from "effect";
 
-/** Decodes one bounded artifact batch through the shared wire contract. */
+/** Stages one bounded artifact batch from the header of each authenticated artifact. */
 const stageArtifactBatch = FunctionImpl.make(
   databaseSchema,
   spec,

@@ -3,7 +3,7 @@ import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { stageReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 
-/** Decodes one bounded artifact batch through the shared wire contract. */
+/** Stages one bounded artifact batch from the header of each authenticated artifact. */
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({
     name: "stageArtifactBatch",
