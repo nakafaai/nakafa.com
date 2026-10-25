@@ -3,8 +3,6 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { handleStartError } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
-import { negotiateDocument } from "@/lib/llms/negotiate.server";
-import { readOgAliasRedirect } from "@/lib/og/alias";
 import { readProfileGate } from "@/lib/profile/gate";
 import {
   createNotFoundRequest,
@@ -22,6 +20,8 @@ import {
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
+import { isUnmatchedPath } from "@/lib/routing/unmatched";
+import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
 
 /** The router's answer to one request, which may fail with the error Start throws. */
@@ -43,7 +43,7 @@ function toUncaughtRequestError(cause: unknown) {
 /**
  * Routes one request to the router. A failure that escapes the router is
  * reported here and answered with Start's error response, so the router's answer
- * handles its own failures before the negotiation sees them.
+ * handles its own failures before the response leaves the decision chain.
  */
 const answerRouted = Effect.fn("www.routing.answer.routed")(function* (
   request: Request,
@@ -75,7 +75,7 @@ const answerNotFound = Effect.fn("www.routing.answer.notFound")(function* (
 });
 
 /**
- * Answers a request that no address decision answered, after the negotiation:
+ * Answers a request that no address decision answered:
  * the not-found page of a document that the projection does not own, then the
  * locale redirect when the request has one, or else the router's page.
  */
@@ -101,30 +101,28 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
 
 /**
  * Answers one request before the router runs. The address and the headers alone
- * decide each answer, in this order: a host under the production domain that
- * names no school moves to the main site, a social image alias moves to the image
- * that the build wrote for its route, a non-canonical slash spelling moves to its
- * canonical address, and a
- * non-public spelling moves to its public address. A school tree path, a refused
- * school page and a removed address answer not found, and a migrated or moved
- * address moves to its successor. A raw user address answers not found, and a
- * document that the source does not own answers not found (ADR 0026). The
- * negotiation then answers Markdown or 406, and the router answers the rest after
- * the locale redirects. Each not-found answer is the app's own page, in the
- * locale of the address.
+ * decide each answer, in this order: an address that names no route answers the
+ * static not-found page; a host under the production domain that names no school
+ * moves to the main site; a non-canonical slash spelling moves to its canonical
+ * address; a non-public spelling moves to its public address. A school tree path, a
+ * refused school page and a removed address answer not found, and a migrated or
+ * moved address moves to its successor. A raw user address answers not found, and a
+ * document that the source does not own answers not found (ADR 0026). The router
+ * answers the rest after the locale redirects. Each not-found answer is the app's
+ * own page, in the locale of the address. Markdown is never negotiated: an agent
+ * reads a page's `.md` twin, which the build writes beside its HTML.
  */
 export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   request: Request,
   route: RouterHandler
 ) {
+  if (isUnmatchedPath(new URL(request.url).pathname)) {
+    return yield* answerUnmatchedRequest(request);
+  }
+
   const mainSite = readMainSiteRedirect(request);
   if (Option.isSome(mainSite)) {
     return mainSite.value;
-  }
-
-  const image = readOgAliasRedirect(request);
-  if (Option.isSome(image)) {
-    return image.value;
   }
 
   const slash = readSlashRedirectResponse(request);
@@ -179,7 +177,7 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
     return yield* answerNotFound(request, sourceRejection, route);
   }
 
-  return yield* negotiateDocument(request, answerRouter(request, route)).pipe(
+  return yield* answerRouter(request, route).pipe(
     Effect.mapError(toUncaughtRequestError)
   );
 });

@@ -189,9 +189,9 @@ describe("curriculum artwork", () => {
     ).toBeUndefined();
   });
 
-  it("uses generated artwork for the index and deeper routes", () => {
+  it("uses the curriculum section image for the index and deeper routes", () => {
     expect(getCurriculumIndexSocialImage("de", "lehrplaene")).toBe(
-      "/de/og/lehrplaene/image.png"
+      "/de/og/curriculum/image.png"
     );
     expect(
       getCurriculumRouteSocialImage(
@@ -199,7 +199,7 @@ describe("curriculum artwork", () => {
         LearningProgramKeySchema.make("merdeka"),
         testProgramClass
       )
-    ).toBe("/en/og/curriculum/merdeka/class-11/image.png");
+    ).toBe("/en/og/curriculum/image.png");
   });
 
   it("uses stable program identity only at a program root", () => {

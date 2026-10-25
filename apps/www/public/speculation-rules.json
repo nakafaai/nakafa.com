@@ -1,0 +1,21 @@
+{
+  "prerender": [
+    {
+      "eagerness": "moderate",
+      "where": {
+        "or": [
+          { "href_matches": "/*/articles/*" },
+          { "href_matches": "/*/curriculum/*" },
+          { "href_matches": "/*/kurikulum/*" },
+          { "href_matches": "/*/lehrplaene/*" },
+          { "href_matches": "/*/subjects/*" },
+          { "href_matches": "/*/materi/*" },
+          { "href_matches": "/*/faecher/*" },
+          { "href_matches": "/*/quran/*" },
+          { "href_matches": "/*/contributor" },
+          { "href_matches": "/*/pricing" }
+        ]
+      }
+    }
+  ]
+}
