@@ -17,6 +17,7 @@ const SittingReason = Schema.Literals([
   "SittingClosed",
   "SittingLocked",
   "SittingNotOpen",
+  "StaleAnswer",
 ]);
 type SittingReason = typeof SittingReason.Type;
 
@@ -58,6 +59,7 @@ const sentences: Record<SittingReason, typeof EntryMessage.Type | undefined> = {
   SittingClosed: "student-closed",
   SittingLocked: "student-locked-school",
   SittingNotOpen: "student-not-open",
+  StaleAnswer: undefined,
 };
 
 /**
@@ -99,6 +101,10 @@ const toasts: Record<SittingReason, ToastCopy | undefined> = {
     title: "sitting-locked.title",
   },
   SittingNotOpen: undefined,
+  StaleAnswer: {
+    description: "sitting-stale-answer.description",
+    title: "sitting-stale-answer.title",
+  },
 };
 
 /** The reason that a failed call names, or none when the error names no sitting reason. */

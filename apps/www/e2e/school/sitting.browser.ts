@@ -98,6 +98,12 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
     )
   ).toBeVisible();
 
+  // A locked paper reads only: its navigator stays on screen, and its options are closed.
+  await expect(
+    student.getByRole("complementary", { name: "Questions" })
+  ).toBeVisible();
+  await expect(student.getByRole("radio").first()).toBeDisabled();
+
   await proctor.getByRole("button", { name: "Unlock", exact: true }).click();
   await dialog.getByRole("combobox").click();
   await proctor.getByRole("option", { name: "Power outage" }).click();
@@ -273,8 +279,8 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     navigator.getByRole("button", { exact: true, name: "Question 1, answered" })
   ).toBeVisible();
 
-  // A reload brings back the flag. The server never holds a flag, so only the browser's kept state can show
-  // it. The answer is not checked here: the server may hold it already, so the check would pass either way.
+  // A reload brings back the flag from the server's shared flags table, so the flag survives a closed tab. The
+  // answer is not checked here: the server may hold it already, so the check would pass either way.
   await student.reload();
   await expect(
     navigator.getByRole("button", {

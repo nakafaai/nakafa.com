@@ -13,12 +13,14 @@ import {
 } from "@repo/design-system/components/ui/questionnaire";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
-import { redirect, useNavigate } from "@tanstack/react-router";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { useConvex } from "convex/react";
-import { Array as Arr, Effect } from "effect";
-import { useState, useTransition } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import { OnboardingOption } from "@/components/programs/onboarding/choice";
 import { getOnboardingDestination } from "@/components/programs/onboarding/destination";
 import { useSaveOnboardingAnswerMutation } from "@/components/programs/onboarding/mutation";
@@ -53,7 +55,35 @@ import {
 import { requireConvexOnline } from "@/lib/convex/online";
 import { useCurrentLocale } from "@/lib/routing/link";
 
-/** Runs the complete resumable questionnaire inside the shared entry shell. */
+/**
+ * Where a status sends the account away from the questionnaire: a visitor to sign in, and an account
+ * that has no question left to its destination. An account that must answer stays.
+ */
+function exitHref(
+  status: { readonly isAuthenticated: boolean; readonly isRequired: boolean },
+  intent: PostAuthIntentResolution,
+  locale: Locale
+): Option.Option<string> {
+  if (!status.isAuthenticated) {
+    return Option.some(
+      localizeInternalHref(getPostAuthSignInHref(intent), locale)
+    );
+  }
+  if (!status.isRequired) {
+    const destination = getPostAuthDestination(intent, locale);
+    return Option.some(
+      localizeInternalHref(destination.href, destination.locale)
+    );
+  }
+  return Option.none();
+}
+
+/**
+ * Runs the complete resumable questionnaire inside the shared entry shell. The live status waits
+ * for the session, and a status that says the account must leave sends it away with a client
+ * navigation, never a redirect thrown in render, which the router would show as a broken page.
+ * The regions, one line each, stand in two columns, so every question fits a laptop's screen.
+ */
 export function OnboardingQuestionnaire({
   initialProfile,
   intent,
@@ -65,15 +95,25 @@ export function OnboardingQuestionnaire({
   const tCommon = useTranslations("Common");
   const locale = useCurrentLocale();
   const navigate = useNavigate();
-  const reactiveStatus = useQuery(onboarding.queries.getStatus, {});
+  // The status needs the session, which Convex learns a moment after the page draws: read before
+  // that, it says the account is signed out and the page would send a signed-in learner away.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const reactiveStatus = useQuery(
+    onboarding.queries.getStatus,
+    isSettled ? {} : "skip"
+  );
   const profile = QueryResult.isSuccess(reactiveStatus)
     ? reactiveStatus.value.profile
     : initialProfile;
-  const [draftAnswer, setDraftAnswer] = useState<OnboardingAnswer | null>(null);
+  // Every answer the learner chose, one per question, stays on top of the server's profile, so an
+  // earlier answer whose save has not landed yet is still chosen on the next question.
+  const [draftAnswers, setDraftAnswers] = useState<readonly OnboardingAnswer[]>(
+    []
+  );
   const answers = getOnboardingAnswers(
-    draftAnswer
-      ? applyOnboardingAnswer(profile, draftAnswer, profile?.updatedAt ?? 0)
-      : profile
+    Arr.reduce(draftAnswers, profile, (current, answer) =>
+      applyOnboardingAnswer(current, answer, current?.updatedAt ?? 0)
+    )
   );
   const [activeItem, setActiveItem] = useState<OnboardingItemName>(() =>
     getInitialOnboardingItem(getOnboardingAnswers(initialProfile))
@@ -82,32 +122,32 @@ export function OnboardingQuestionnaire({
   const saveAnswer = useSaveOnboardingAnswerMutation(initialProfile);
   const finish = useMutation(onboarding.mutations.finish);
   const convex = useConvex();
+  const exitTo =
+    QueryResult.isSuccess(reactiveStatus) && !isFinishing
+      ? Option.getOrNull(exitHref(reactiveStatus.value, intent, locale))
+      : null;
+
+  // A status that says the account must leave sends it away with a client navigation.
+  useEffect(() => {
+    if (exitTo !== null) {
+      navigate({ href: exitTo, replace: true });
+    }
+  }, [exitTo, navigate]);
 
   if (QueryResult.isFailure(reactiveStatus)) {
     throw reactiveStatus.error;
   }
 
-  if (
-    QueryResult.isSuccess(reactiveStatus) &&
-    reactiveStatus.value.isAuthenticated === false &&
-    !isFinishing
-  ) {
-    throw redirect({
-      href: localizeInternalHref(getPostAuthSignInHref(intent), locale),
-      statusCode: 307,
-    });
+  if (exitTo !== null) {
+    return null;
   }
-  if (
-    QueryResult.isSuccess(reactiveStatus) &&
-    reactiveStatus.value.isAuthenticated === true &&
-    reactiveStatus.value.isRequired === false &&
-    !isFinishing
-  ) {
-    const destination = getPostAuthDestination(intent, locale);
-    throw redirect({
-      href: localizeInternalHref(destination.href, destination.locale),
-      statusCode: 307,
-    });
+
+  /** Chooses an answer for its question, in place of the one chosen there before. */
+  function choose(answer: OnboardingAnswer) {
+    setDraftAnswers((current) => [
+      ...Arr.filter(current, (draft) => draft.kind !== answer.kind),
+      answer,
+    ]);
   }
 
   function persistDraft(item: OnboardingItemName) {
@@ -141,7 +181,6 @@ export function OnboardingQuestionnaire({
       return;
     }
     persistDraft(activeItem);
-    setDraftAnswer(null);
     setActiveItem(nextItem);
   }
 
@@ -237,7 +276,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  setDraftAnswer({ kind: "role", value: option.value });
+                  choose({ kind: "role", value: option.value });
                 }
               }}
               value={option.value}
@@ -256,14 +295,14 @@ export function OnboardingQuestionnaire({
         <QuestionnaireDescription>
           {t("onboarding.region-description")}
         </QuestionnaireDescription>
-        <QuestionnaireChoices>
+        <QuestionnaireChoices className="sm:grid-cols-2">
           {Arr.map(regionOptions, (option) => (
             <QuestionnaireChoice
               checked={answers.region === option.value}
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  setDraftAnswer({ kind: "region", value: option.value });
+                  choose({ kind: "region", value: option.value });
                 }
               }}
               value={option.value}
@@ -286,7 +325,7 @@ export function OnboardingQuestionnaire({
               key={option.value}
               onChange={(event) => {
                 if (event.target.checked) {
-                  setDraftAnswer({ kind: "focus", value: option.value });
+                  choose({ kind: "focus", value: option.value });
                 }
               }}
               value={option.value}

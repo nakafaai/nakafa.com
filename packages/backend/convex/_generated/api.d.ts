@@ -168,7 +168,32 @@ export declare const api: {
   };
   billing: {
     queries: {
-      hasActiveSubscription: FunctionReference<"query", "public", {}, boolean>;
+      overview: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          credits: { allowance: number; balance: number; resetAt: number };
+          plan: "free" | "pro";
+          subscription: {
+            cancelAtPeriodEnd: boolean;
+            currentPeriodEnd: number | null;
+            currentPeriodStart: number;
+            offer:
+              | "pro.monthly"
+              | "pro.yearly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup"
+              | "school.seat.month"
+              | "school.seat.semester"
+              | "school.seat.year";
+            rail: "polar" | "xendit";
+            status: "pending" | "active" | "pastDue" | "canceled" | "ended";
+          } | null;
+        }
+      >;
     };
     sessions: {
       generateCheckoutLink: FunctionReference<
@@ -4686,6 +4711,7 @@ export declare const api: {
           response: Array<string>;
           sittingId: Id<"examSittings">;
           slug: string;
+          version: number;
         },
         null
       >;
@@ -4827,6 +4853,18 @@ export declare const api: {
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         null
       >;
+      flag: FunctionReference<
+        "mutation",
+        "public",
+        {
+          deviceId: string;
+          flagged: boolean;
+          questionId: Id<"examQuestions">;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
       images: FunctionReference<
         "query",
         "public",
@@ -4892,6 +4930,7 @@ export declare const api: {
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         {
           questions: Array<{
+            flagged: boolean;
             id: Id<"examQuestions">;
             interactions: Array<
               | {
@@ -5072,6 +5111,7 @@ export declare const api: {
             >;
             number: number;
             response: Array<string> | null;
+            version: number | null;
           }>;
         }
       >;
@@ -8401,6 +8441,12 @@ export declare const api: {
         >;
       };
       responses: {
+        flag: FunctionReference<
+          "mutation",
+          "public",
+          { flagged: boolean; placementId: Id<"tryoutAttemptPlacements"> },
+          null
+        >;
         save: FunctionReference<
           "mutation",
           "public",
@@ -8598,6 +8644,7 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
+                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -8910,6 +8957,7 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
+                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -9234,6 +9282,7 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
+                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -9542,6 +9591,7 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
+                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -10246,6 +10296,7 @@ export declare const api: {
               expiresAt: number;
               questions: Array<{
                 contentHash: string;
+                flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {
@@ -10441,6 +10492,7 @@ export declare const api: {
               expiresAt: number;
               questions: Array<{
                 contentHash: string;
+                flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {

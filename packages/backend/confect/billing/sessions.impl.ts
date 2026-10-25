@@ -20,7 +20,7 @@ import {
   proAlreadyHeldCode,
 } from "@repo/backend/confect/billing/spec";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { Clock, Effect, flow, Layer } from "effect";
+import { Array as Arr, Clock, Effect, flow, Layer } from "effect";
 
 const generateCheckoutLink = FunctionImpl.make(
   databaseSchema,
@@ -55,7 +55,7 @@ const generateCheckoutLink = FunctionImpl.make(
         customerId,
         customerIpAddress: requestMetadata.ip,
         locale: request.polarLocale,
-        productIds: [request.productId],
+        productIds: request.productIds,
         successUrl: request.successUrl,
       }),
       admitCheckout: Clock.currentTimeMillis.pipe(
@@ -67,8 +67,8 @@ const generateCheckoutLink = FunctionImpl.make(
                 checkout_locale: request.polarLocale,
                 customer_ip_available: requestMetadata.ip !== null,
                 locale: request.locale,
-                product_count: 1,
-                product_id: request.productId,
+                product_count: request.productIds.length,
+                product_id: Arr.join(request.productIds, ","),
               },
             },
             timestamp,

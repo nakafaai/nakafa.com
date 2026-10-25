@@ -39,6 +39,7 @@ const answerAs = (
     questionId: QuestionId;
     response: readonly string[];
     sittingId: GenericId.GenericId<"examSittings">;
+    version: number;
   }
 ) => fixture.as("student").mutation(answer, { ...args, slug: nf });
 
@@ -116,12 +117,14 @@ describe("exams/sittings answer", () => {
           questionId: question,
           response: ["option-2"],
           sittingId,
+          version: 1,
         });
         yield* answerAs(fixture, {
           deviceId: deviceOf(1),
           questionId: question,
           response: ["option-3"],
           sittingId,
+          version: 2,
         });
         const { questions } = yield* fixture
           .as("student")
@@ -141,6 +144,7 @@ describe("exams/sittings answer", () => {
           question,
           response: ["option-3"],
           tenantId: fixture.tenants.nf,
+          version: 2,
         });
       })
   );
@@ -155,6 +159,7 @@ describe("exams/sittings answer", () => {
         questionId: question,
         response: ["option-1"],
         sittingId,
+        version: 1,
       });
       expect(yield* journalCount(fixture)).toBe(before);
     })
@@ -171,6 +176,7 @@ describe("exams/sittings answer", () => {
           questionId: question,
           response: ["option-9"],
           sittingId,
+          version: 1,
         }).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "ResponseDoesNotFit" });
       })
@@ -187,6 +193,7 @@ describe("exams/sittings answer", () => {
           questionId: question,
           response: [],
           sittingId,
+          version: 1,
         }).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "ResponseDoesNotFit" });
       })
@@ -201,6 +208,7 @@ describe("exams/sittings answer", () => {
         questionId: question,
         response: ["option-1", "option-2"],
         sittingId,
+        version: 1,
       }).pipe(Effect.flip);
       expect(failure).toMatchObject({ _tag: "ResponseDoesNotFit" });
     })
@@ -221,6 +229,7 @@ describe("exams/sittings answer", () => {
           questionId: question,
           response: ["option-1", "option-1"],
           sittingId,
+          version: 1,
         }).pipe(Effect.flip);
         expect(repeated).toMatchObject({ _tag: "ResponseDoesNotFit" });
         yield* answerAs(fixture, {
@@ -228,6 +237,7 @@ describe("exams/sittings answer", () => {
           questionId: question,
           response: ["option-1", "option-2"],
           sittingId,
+          version: 1,
         });
       })
   );
@@ -248,6 +258,7 @@ describe("exams/sittings answer", () => {
           questionId: question,
           response: ["option-1"],
           sittingId,
+          version: 1,
         }).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "ResponseDoesNotFit" });
       })
@@ -263,6 +274,7 @@ describe("exams/sittings answer", () => {
         questionId: other.questions[0].id,
         response: ["option-1"],
         sittingId,
+        version: 1,
       }).pipe(Effect.flip);
       expect(failure).toMatchObject({ _tag: "QuestionNotInExam" });
     })
@@ -279,6 +291,7 @@ describe("exams/sittings answer", () => {
           questionId: question,
           response: ["option-1"],
           sittingId,
+          version: 1,
         }).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "SecondDevice" });
       })
@@ -294,8 +307,82 @@ describe("exams/sittings answer", () => {
         questionId: question,
         response: ["option-1"],
         sittingId,
+        version: 1,
       }).pipe(Effect.flip);
       expect(failure).toMatchObject({ _tag: "AttemptClosed" });
+    })
+  );
+
+  it.effect(
+    "refuses a version that is not newer than the saved answer, and keeps the saved one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { question, sittingId } = yield* enteredSitting(fixture);
+        yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: ["option-2"],
+          sittingId,
+          version: 3,
+        });
+        for (const version of [2, 3]) {
+          const stale = yield* answerAs(fixture, {
+            deviceId: deviceOf(1),
+            questionId: question,
+            response: ["option-4"],
+            sittingId,
+            version,
+          }).pipe(Effect.flip);
+          expect(stale).toMatchObject({ _tag: "StaleAnswer" });
+        }
+        const { questions } = yield* fixture
+          .as("student")
+          .query(paper, { deviceId: deviceOf(1), sittingId, slug: nf });
+        expect(questions[0]).toMatchObject({
+          response: ["option-2"],
+          version: 3,
+        });
+      })
+  );
+
+  it.effect(
+    "refuses an answer from a student who holds no attempt in the sitting",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const failure = yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: (yield* teacherExam(fixture, "Lain")).questions[0].id,
+          response: ["option-1"],
+          sittingId: made.id,
+          version: 1,
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "NotInSitting" });
+      })
+  );
+
+  it.effect("refuses an answer to a sitting of another school", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { question, sittingId } = yield* enteredSitting(fixture);
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer
+            .table("examSittings")
+            .patch(sittingId, { tenantId: fixture.tenants.other })
+            .pipe(Effect.orDie)
+        )
+      );
+      const failure = yield* answerAs(fixture, {
+        deviceId: deviceOf(1),
+        questionId: question,
+        response: ["option-1"],
+        sittingId,
+        version: 1,
+      }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "NotInSitting" });
     })
   );
 
@@ -309,6 +396,7 @@ describe("exams/sittings answer", () => {
         questionId: question,
         response: ["option-1"],
         sittingId,
+        version: 1,
       }).pipe(Effect.flip);
       expect(failure).toMatchObject({ _tag: "SittingLocked" });
     })

@@ -1,26 +1,19 @@
 import type { ExamAttemptsDoc } from "@repo/backend/confect/_generated/docs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { rules } from "@repo/backend/confect/assessment/gate/rules";
 import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { ownAttempt } from "@repo/backend/confect/exams/sittings/attempt";
-import { deviceBinding } from "@repo/backend/confect/exams/sittings/device";
-import { sittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
-import {
-  AttemptClosed,
-  DeviceRetired,
-  SecondDevice,
-  SittingLocked,
-} from "@repo/backend/confect/exams/sittings/errors";
+  sectionOf,
+  sittingGate,
+} from "@repo/backend/confect/exams/sittings/gate";
+import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
 import type { SignalKind } from "@repo/backend/confect/exams/sittings/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { Array as Arr, Clock, Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /**
  * Records one integrity signal of the caller's attempt as an event (ADR 0013). A signal
- * never locks an attempt, so the proctor decides. The sitting must not be locked, the
- * device must own the attempt, and the signal is recorded only while the attempt is in
- * progress or locked.
+ * never locks an attempt, so the proctor decides. The gate admits the signal to an open
+ * attempt, whether it is in progress or locked, on the device that owns it.
  */
 export const signal = Effect.fn("exams.sittings.signal")(function* (args: {
   attemptId: ExamAttemptsDoc["_id"];
@@ -28,36 +21,29 @@ export const signal = Effect.fn("exams.sittings.signal")(function* (args: {
   kind: typeof SignalKind.Type;
 }) {
   const member = yield* Member;
-  const attempt = yield* ownAttempt(
-    args.attemptId,
-    member.tenant._id,
-    member.person._id
-  );
-  const sitting = yield* (yield* DatabaseReader)
-    .table("examSittings")
-    .get(attempt.sitting)
-    .pipe(Effect.orDie);
-  if (yield* sittingLocked(sitting)) {
-    return yield* new SittingLocked();
-  }
-  if (!Arr.contains(["inProgress", "locked"], attempt.state)) {
-    return yield* new AttemptClosed();
-  }
-  const binding = deviceBinding(attempt, args.deviceId);
-  if (binding === "retired") {
-    return yield* new DeviceRetired();
-  }
-  if (binding !== "bound") {
-    return yield* new SecondDevice();
-  }
-  const now = yield* Clock.currentTimeMillis;
+  const { live, now } = yield* sittingGate
+    .admit(
+      rules.signal,
+      member.person._id,
+      Option.some(args.deviceId),
+      sectionOf({
+        attemptId: args.attemptId,
+        person: member.person,
+        tenantId: member.tenant._id,
+      })
+    )
+    .pipe(
+      Effect.catchTag("AttemptRefused", (refusal) =>
+        Effect.fail(toSittingError(refusal))
+      )
+    );
   yield* (yield* DatabaseWriter)
     .table("examSignals")
     .insert({
       at: now,
-      attempt: attempt._id,
+      attempt: live.attempt._id,
       kind: args.kind,
-      tenantId: attempt.tenantId,
+      tenantId: live.attempt.tenantId,
     })
     .pipe(Effect.orDie);
   return null;

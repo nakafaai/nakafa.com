@@ -1,5 +1,6 @@
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
@@ -105,6 +106,8 @@ export const examAnswerValidator = Schema.Struct({
   question: Id("examQuestions"),
   response: Schema.Array(LocalIdSchema),
   tenantId: Id("tenants"),
+  /** The version the learner's client numbered this answer with; a stale write never replaces it (ADR 0013). */
+  version: Version,
 });
 
 /**
