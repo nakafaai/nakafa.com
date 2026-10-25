@@ -238,7 +238,7 @@ LaTeX once, as the contract of ADR 0031 says, and MathML is rendered from it.
   the math of the content under that override before a school formula depends
   on it.
 - MathLive 0.111.1 (MIT) is not installed. The editor build installs it. It
-  loads on intent, with `next/dynamic` or `import()`, so it never enters the
+  loads on intent, with `React.lazy` and `import()`, so it never enters the
   first JavaScript of a route (AGENTS.md).
 
 ### Who owns a question

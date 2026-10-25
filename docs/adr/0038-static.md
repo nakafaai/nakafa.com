@@ -88,7 +88,7 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   removed, migrated and moved addresses. A bare page address, whose first segment
   is neither a locale, nor shaped like one, nor a Worker route, and whose last
   segment names no file, then moves to the negotiated locale with a 307, English
-  when the visitor names no served language, as the Next.js locale middleware did.
+  when the visitor names no served language, as the locale middleware before the move did.
   Every other path that no Worker route renders answers the static `404.html` from
   assets before the router runs (`apps/www/src/lib/routing/rendered.ts`). The
   templates are the generated route tree minus the prerendered ones, so an unknown
