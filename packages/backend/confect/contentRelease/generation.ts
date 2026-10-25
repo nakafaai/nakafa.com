@@ -1,8 +1,9 @@
 import { CompiledContentPayloadSchema } from "@nakafa/aksara-contracts/content";
 import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
+import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 
 /**
  * Content generations and the publication records signed under a retired one.
@@ -63,12 +64,19 @@ const RetiredReleaseSchema = Schema.fromJsonString(
   })
 );
 
+/** Whether one stored artifact is signed in the retired compiled-body format. */
+export function isRetiredFormatArtifact(source: string) {
+  return Option.isSome(
+    Schema.decodeOption(RetiredFormatArtifactSchema)(source)
+  );
+}
+
 /** Fails one rollback artifact signed under a retired content contract. */
 export const requireCurrentArtifact = Effect.fn(
   "contentRelease.requireCurrentArtifact"
 )(function* (source: string, identity: string, artifactHash: string) {
   const retired =
-    Option.isSome(Schema.decodeOption(RetiredFormatArtifactSchema)(source)) ||
+    isRetiredFormatArtifact(source) ||
     Option.isSome(
       Schema.decodeOption(VersionedComponentArtifactSchema)(source)
     );
@@ -96,11 +104,24 @@ export const requireCurrentRelease = Effect.fn(
 });
 
 /**
+ * Whether every snapshot family is replaced or holds no snapshot. A family that
+ * keeps its base snapshot would keep the retired try-out rows and placements
+ * active, so a bootstrap may not inherit or restore one.
+ */
+function replacesEverySnapshot(snapshots: ContentSnapshotSet) {
+  return Arr.every(
+    Rec.values(snapshots),
+    (state) => state.mode === "replace" || state.resultSnapshotId === null
+  );
+}
+
+/**
  * Whether a verified candidate may replace the retired generation as a
  * bootstrap. The backend decides from its own stored state and the signed
  * counts, never from what the publisher declares: the candidate must extend the
- * active release, that release must still be in the retired generation, and
- * the result must hold only upserted heads, so no retired head survives.
+ * active release, that release must still be in the retired generation, the
+ * result must hold only upserted heads, every snapshot family must be replaced
+ * or empty, and no recovery may be staged.
  */
 export function isBootstrapCandidate(
   manifest: ContentReleaseManifest,
@@ -114,19 +135,38 @@ export function isBootstrapCandidate(
     manifest.baseReleaseId === state.activeReleaseId &&
     state.activeContentGeneration === RETIRED_CONTENT_GENERATION &&
     manifest.resultCount === manifest.upsertCount &&
+    replacesEverySnapshot(manifest.snapshots) &&
     state.recoveryReleaseId === undefined
   );
 }
 
-/** Refuses a candidate that extends the retired generation without being a bootstrap, because its untouched heads would stay unreadable. */
+/**
+ * Refuses a release that builds on an active release whose content generation
+ * is not the current one. The active release is the base of a candidate and
+ * the catalog that a recovery restores. A generation that was never recorded is
+ * refused as well, until the migration records it. The current generation and
+ * the genesis case, with no active release at all, are the only passing states.
+ */
 export const requireCurrentBase = Effect.fn(
   "contentRelease.requireCurrentBase"
 )(function* (
   releaseId: string,
-  state: Pick<Docs["contentState"], "activeContentGeneration">
+  state: Pick<
+    Docs["contentState"],
+    "activeContentGeneration" | "activeReleaseId"
+  >
 ) {
-  if (state.activeContentGeneration !== RETIRED_CONTENT_GENERATION) {
+  if (
+    state.activeReleaseId === undefined ||
+    state.activeContentGeneration === CURRENT_CONTENT_GENERATION
+  ) {
     return;
+  }
+  if (state.activeContentGeneration === undefined) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Content release ${releaseId} builds on an active release whose content generation is not recorded. Run the generation migration before publishing over it.`
+    );
   }
   return yield* releaseFail(
     "CONTENT_RELEASE_STATE",

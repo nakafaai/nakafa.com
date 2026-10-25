@@ -179,6 +179,7 @@ export const validateRecovery = Effect.fn(
       `Recovery ${releaseId} is not the exact retained inverse.`
     );
   }
+  yield* requireCurrentBase(releaseId, state);
   yield* validateRecoveryRelation(active, release);
   return {
     release,

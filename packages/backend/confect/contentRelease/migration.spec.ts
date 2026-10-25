@@ -1,9 +1,19 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Schema } from "effect";
 
-/** What the generation marking did: recorded the retired generation, found one already recorded, or found no active release. */
+/**
+ * What the generation marking did: recorded the retired generation, found one
+ * already recorded, found no active release, found no stored artifact to witness
+ * the active release, or found a witness that is not in the retired format.
+ */
 export const markRetiredGenerationResult = Schema.Struct({
-  outcome: Schema.Literals(["marked", "alreadyRecorded", "noActiveRelease"]),
+  outcome: Schema.Literals([
+    "marked",
+    "alreadyRecorded",
+    "noActiveRelease",
+    "unverifiable",
+    "notRetired",
+  ]),
 });
 
 /**

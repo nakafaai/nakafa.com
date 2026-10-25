@@ -12,7 +12,10 @@ import {
   inheritContentSnapshots,
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { contentGenerationValidator } from "@repo/backend/confect/contentRelease/generation";
+import {
+  CURRENT_CONTENT_GENERATION,
+  contentGenerationValidator,
+} from "@repo/backend/confect/contentRelease/generation";
 import {
   INITIAL_MODEL_SLOT,
   modelSlotValidator,
@@ -64,7 +67,8 @@ type TestReleaseOptions = typeof TestReleaseOptionsSchema.Type;
 
 const TestStateOptionsSchema = Schema.Struct({
   active: Schema.optional(TestIdentitySchema),
-  generation: Schema.optional(contentGenerationValidator),
+  /** Omitted means current when an active release is set; null leaves the generation unrecorded. */
+  generation: Schema.optional(Schema.NullOr(contentGenerationValidator)),
   article: Schema.optional(TestIdentitySchema),
   articleSlot: Schema.optional(modelSlotValidator),
   candidate: Schema.optional(TestIdentitySchema),
@@ -178,10 +182,12 @@ export async function insertTestState(
   options: TestStateOptions
 ) {
   const now = Date.UTC(2026, 6, 23, 12);
+  const generation =
+    options.generation === undefined
+      ? options.active && CURRENT_CONTENT_GENERATION
+      : options.generation;
   await ctx.db.insert("contentState", {
-    ...(options.generation
-      ? { activeContentGeneration: options.generation }
-      : {}),
+    ...(generation ? { activeContentGeneration: generation } : {}),
     ...(options.active
       ? {
           activeManifestHash: options.active.manifestHash,
@@ -356,6 +362,7 @@ export async function insertActiveRelease(
     verifiedAt: now,
   });
   await ctx.db.insert("contentState", {
+    activeContentGeneration: CURRENT_CONTENT_GENERATION,
     activeManifestHash: active.manifestHash,
     activeReleaseId,
     activeSequence: 1,

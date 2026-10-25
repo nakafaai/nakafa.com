@@ -2,7 +2,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import {
+  type ContentSnapshotSet,
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
+import {
   CURRENT_CONTENT_GENERATION,
+  type contentGenerationValidator,
   RETIRED_CONTENT_GENERATION,
   requireCurrentArtifact,
   requireCurrentRelease,
@@ -11,6 +17,11 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
+  BOOTSTRAP_RECOVERY,
+  seedRetiredCandidate,
+} from "@repo/backend/test/activation/fixture";
+import {
+  TEST_DIGEST,
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
@@ -18,7 +29,9 @@ import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
+  zeroReleaseJson,
 } from "@repo/backend/test/content/state";
+import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
 
@@ -133,6 +146,7 @@ describe("contentRelease/generation", () => {
 });
 
 const stageRelease = internal.contentRelease.manifest.stageRelease;
+const stageRecovery = internal.contentRelease.manifest.stageRecovery;
 const RETIRED_BASE = {
   manifestHash: `sha256:${"b".repeat(64)}`,
   releaseId: "release-retired-base",
@@ -149,6 +163,7 @@ function bootstrapJson(
   options: {
     readonly baseReleaseId?: string;
     readonly resultCount?: number;
+    readonly snapshots?: ContentSnapshotSet;
   } = {}
 ) {
   return testReleaseJson({
@@ -160,17 +175,32 @@ function bootstrapJson(
     manifestHash: BOOTSTRAP.manifestHash,
     releaseId: BOOTSTRAP.releaseId,
     resultCount: options.resultCount ?? 2,
+    snapshots: options.snapshots,
     upsertCount: 2,
   });
 }
 
-/** Seeds the completed retired base as the active release under the given generation. */
+/** Replaces every snapshot family with one new snapshot, as a full rebuild does. */
+function replacedSnapshots(): ContentSnapshotSet {
+  const replaced = replaceContentSnapshot({
+    baseSnapshotId: null,
+    resultSnapshotId: TEST_DIGEST,
+    rowCount: 1,
+    rowDigest: TEST_DIGEST,
+  });
+  return { program: replaced, quran: replaced, tryout: replaced };
+}
+
+/**
+ * Seeds the completed retired base as the active release. A null generation
+ * leaves the active release's generation unrecorded.
+ */
 async function seedRetiredBase(
   t: TestConvex<typeof schema>,
   generation:
     | typeof RETIRED_CONTENT_GENERATION
     | typeof CURRENT_CONTENT_GENERATION
-    | undefined
+    | null
 ) {
   await t.mutation(async (ctx) => {
     await insertZeroRelease(ctx, {
@@ -197,7 +227,19 @@ function readRelease(t: TestConvex<typeof schema>, releaseId: string) {
   );
 }
 
-describe("contentRelease/generation bootstrap at staging", () => {
+/** The zero-item inverse of a candidate over the retired base, which restores the empty catalog it replaced. */
+function recoveryJson() {
+  return zeroReleaseJson({
+    ...BOOTSTRAP_RECOVERY,
+    base: BOOTSTRAP,
+    originKind: "rollback",
+    originReleaseId: BOOTSTRAP.releaseId,
+    role: "recovery",
+    status: "verified",
+  });
+}
+
+describe("contentRelease/generation staging", () => {
   it("marks a full replacement of the retired generation as a bootstrap", async () => {
     const t = convexTest(schema, convexModules);
     await seedRetiredBase(t, RETIRED_CONTENT_GENERATION);
@@ -218,41 +260,69 @@ describe("contentRelease/generation bootstrap at staging", () => {
     });
   });
 
-  it.each([
-    {
-      $description: "a current generation",
-      generation: CURRENT_CONTENT_GENERATION,
-    },
-    { $description: "an unrecorded generation", generation: undefined },
-  ])(
-    "does not mark a full replacement over $description as a bootstrap",
-    async ({ generation }) => {
-      const t = convexTest(schema, convexModules);
-      await seedRetiredBase(t, generation);
-
-      await t.mutation(stageRelease, {
-        releaseJson: bootstrapJson(),
-        rendererJson: testRendererJson(),
-      });
-
-      const release = await readRelease(t, BOOTSTRAP.releaseId);
-      expect(release).toMatchObject({ role: "candidate", status: "staging" });
-      expect(release).not.toHaveProperty("bootstrap");
-    }
-  );
-
-  it("does not mark a partial replacement of the retired generation as a bootstrap", async () => {
+  it("marks a full replacement of every snapshot family as a bootstrap", async () => {
     const t = convexTest(schema, convexModules);
     await seedRetiredBase(t, RETIRED_CONTENT_GENERATION);
 
     await t.mutation(stageRelease, {
-      releaseJson: bootstrapJson({ resultCount: 3 }),
+      releaseJson: bootstrapJson({ snapshots: replacedSnapshots() }),
+      rendererJson: testRendererJson(),
+    });
+
+    await expect(readRelease(t, BOOTSTRAP.releaseId)).resolves.toMatchObject({
+      bootstrap: true,
+      status: "staging",
+    });
+  });
+
+  it("stages a full replacement over a current generation as an ordinary candidate", async () => {
+    const t = convexTest(schema, convexModules);
+    await seedRetiredBase(t, CURRENT_CONTENT_GENERATION);
+
+    await t.mutation(stageRelease, {
+      releaseJson: bootstrapJson(),
       rendererJson: testRendererJson(),
     });
 
     const release = await readRelease(t, BOOTSTRAP.releaseId);
     expect(release).toMatchObject({ role: "candidate", status: "staging" });
     expect(release).not.toHaveProperty("bootstrap");
+  });
+
+  it("refuses a full replacement over an unrecorded generation", async () => {
+    const t = convexTest(schema, convexModules);
+    await seedRetiredBase(t, null);
+
+    await expect(
+      t.mutation(stageRelease, {
+        releaseJson: bootstrapJson(),
+        rendererJson: testRendererJson(),
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining("is not recorded"),
+      },
+    });
+    await expect(readRelease(t, BOOTSTRAP.releaseId)).resolves.toBeNull();
+  });
+
+  it("refuses a partial replacement of the retired generation", async () => {
+    const t = convexTest(schema, convexModules);
+    await seedRetiredBase(t, RETIRED_CONTENT_GENERATION);
+
+    await expect(
+      t.mutation(stageRelease, {
+        releaseJson: bootstrapJson({ resultCount: 3 }),
+        rendererJson: testRendererJson(),
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining("retired content generation"),
+      },
+    });
+    await expect(readRelease(t, BOOTSTRAP.releaseId)).resolves.toBeNull();
   });
 
   it("requires a bootstrap to extend the exact active retired release", async () => {
@@ -266,5 +336,109 @@ describe("contentRelease/generation bootstrap at staging", () => {
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STALE_BASE" } });
     await expect(readRelease(t, BOOTSTRAP.releaseId)).resolves.toBeNull();
+  });
+
+  it.live(
+    "refuses a full replacement that keeps the retired base program snapshot",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        yield* Effect.promise(async () => {
+          const t = convexTest(schema, convexModules);
+          await t.mutation(async (ctx) => {
+            await insertZeroRelease(ctx, {
+              ...RETIRED_BASE,
+              ownership: { base: [], result: ContentFamilySchema.literals },
+              role: "candidate",
+              snapshots: data.snapshots,
+              status: "completed",
+            });
+            await ctx.db.insert("contentSnapshots", {
+              createdAt: 1,
+              family: "program",
+              retainUntil: 2,
+              snapshotId: data.snapshotId,
+              snapshotJson: data.manifestJson,
+              verifiedAt: 1,
+            });
+            await insertTestState(ctx, {
+              active: RETIRED_BASE,
+              generation: RETIRED_CONTENT_GENERATION,
+              nextSequence: 2,
+            });
+          });
+
+          await expect(
+            t.mutation(stageRelease, {
+              releaseJson: zeroReleaseJson({
+                ...BOOTSTRAP,
+                base: RETIRED_BASE,
+                role: "candidate",
+                snapshots: inheritContentSnapshots(data.snapshots),
+                status: "verified",
+              }),
+              rendererJson: testRendererJson(),
+            })
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_STATE" },
+          });
+          await expect(readRelease(t, BOOTSTRAP.releaseId)).resolves.toBeNull();
+        });
+      })
+  );
+
+  /** Refuses one recovery staged over a candidate whose active release has the given generation. */
+  async function expectRecoveryRefused(
+    generation: typeof contentGenerationValidator.Type | null,
+    message: string
+  ) {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      seedRetiredCandidate(ctx, { bootstrap: false, generation })
+    );
+
+    await expect(
+      t.mutation(stageRecovery, {
+        releaseJson: recoveryJson(),
+        rendererJson: testRendererJson(),
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining(message),
+      },
+    });
+    await expect(
+      readRelease(t, BOOTSTRAP_RECOVERY.releaseId)
+    ).resolves.toBeNull();
+  }
+
+  it("refuses a recovery over a retired generation", () =>
+    expectRecoveryRefused(
+      RETIRED_CONTENT_GENERATION,
+      "retired content generation"
+    ));
+
+  it("refuses a recovery over an unrecorded generation", () =>
+    expectRecoveryRefused(null, "is not recorded"));
+
+  it("stages the recovery of a candidate over the current generation", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      seedRetiredCandidate(ctx, {
+        bootstrap: false,
+        generation: CURRENT_CONTENT_GENERATION,
+      })
+    );
+
+    await expect(
+      t.mutation(stageRecovery, {
+        releaseJson: recoveryJson(),
+        rendererJson: testRendererJson(),
+      })
+    ).resolves.toMatchObject({
+      phase: "staging",
+      releaseId: BOOTSTRAP_RECOVERY.releaseId,
+    });
   });
 });

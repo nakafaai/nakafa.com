@@ -5,6 +5,7 @@ import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/re
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   inheritContentSnapshots,
+  invertContentSnapshots,
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
@@ -63,15 +64,21 @@ export const BOOTSTRAP_RECOVERY = {
   sequence: 3,
 } satisfies TestIdentity;
 
-/** Seeds one verified candidate over the retired base, with its declaration, generation and optional inverse chosen by the test. */
+/**
+ * Seeds one verified candidate over the retired base, with its declaration,
+ * generation, snapshots and optional inverse chosen by the test. A null
+ * generation leaves the active release's generation unrecorded.
+ */
 export async function seedRetiredCandidate(
   ctx: Parameters<typeof insertTestState>[0],
   options: {
     readonly bootstrap: boolean;
     readonly generation?:
       | typeof CURRENT_CONTENT_GENERATION
-      | typeof RETIRED_CONTENT_GENERATION;
+      | typeof RETIRED_CONTENT_GENERATION
+      | null;
     readonly recovery?: boolean;
+    readonly snapshots?: ContentSnapshotSet;
   }
 ) {
   await insertZeroRelease(ctx, {
@@ -89,6 +96,7 @@ export async function seedRetiredCandidate(
       result: ContentFamilySchema.literals,
     },
     role: "candidate",
+    snapshots: options.snapshots,
     status: "verified",
   });
   if (options.recovery) {
@@ -98,13 +106,17 @@ export async function seedRetiredCandidate(
       originReleaseId: BOOTSTRAP.releaseId,
       ownership: { base: ContentFamilySchema.literals, result: [] },
       role: "recovery",
+      snapshots: options.snapshots && invertContentSnapshots(options.snapshots),
       status: "verified",
     });
   }
   await insertTestState(ctx, {
     active: RETIRED_BASE,
     candidate: BOOTSTRAP,
-    generation: options.generation ?? RETIRED_CONTENT_GENERATION,
+    generation:
+      options.generation === undefined
+        ? RETIRED_CONTENT_GENERATION
+        : options.generation,
     nextSequence: 4,
     recovery: options.recovery ? BOOTSTRAP_RECOVERY : undefined,
   });

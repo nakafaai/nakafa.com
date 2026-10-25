@@ -45,10 +45,12 @@ signed and are in no publication, and the last point below says how they render.
   and the signed counts, never from what the publisher declares. It must extend
   the active release, that release must be recorded under the retired
   generation, its result must hold only upserted heads (`resultCount` equals
-  `upsertCount`), and no recovery may be staged. A bootstrap activates with no
-  retained inverse and records the content tree generation. Accept and recover
-  refuse it, and every other candidate over the retired generation is refused,
-  so no retired head survives the switch.
+  `upsertCount`), every snapshot family must be replaced or empty, and no
+  recovery may be staged. A bootstrap activates with no retained inverse and
+  records the content tree generation. Accept and recover refuse it. Every
+  other candidate or recovery over the retired generation is refused at staging
+  and again at activation, so no retired head survives the switch. Nothing may
+  stage or activate over an active release whose generation is not recorded.
 
 ## Consequences
 
@@ -62,9 +64,11 @@ signed and are in no publication, and the last point below says how they render.
   after every active artifact's requirements exclude it.
 - The publication state records the generation of its active release. The
   one-off `contentRelease.migration.markRetiredGeneration` records the retired
-  generation on a deployment whose active release has no recorded generation.
-  Run it once on dev and prod before the bootstrap is staged, then remove it and
-  its tests after both deployments are verified.
+  generation on a deployment whose active release has no recorded generation,
+  and only when a stored artifact of that release carries the retired format.
+  Any other result leaves the state unchanged. Run it once on dev and prod
+  before the bootstrap is staged, then remove it and its tests after both
+  deployments are verified.
 - The undo of the bootstrap is a forward release of the last 0.51-era source,
   not a restore. The publication state cannot return to the retired generation.
 
