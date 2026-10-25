@@ -11150,6 +11150,12 @@ export declare const internal: {
         { userId: Id<"users"> },
         boolean
       >;
+      mayAdoptCustomer: FunctionReference<
+        "query",
+        "internal",
+        { externalId: string | null; userId: Id<"users"> },
+        boolean
+      >;
       openAccount: FunctionReference<
         "mutation",
         "internal",

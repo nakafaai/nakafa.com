@@ -48,7 +48,7 @@ export const readIndonesiaRail = Config.schema(
 const isXenditConfigured = Effect.fn("billing.route.isXenditConfigured")(
   function* () {
     const key = yield* Config.option(
-      Config.schema(Schema.Redacted(Schema.NonEmptyString), "XENDIT_SECRET_KEY")
+      Config.schema(Schema.Redacted(Schema.NonEmptyString), "XENDIT_API_KEY")
     );
     return Option.isSome(key);
   }
