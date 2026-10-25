@@ -34,6 +34,7 @@ import {
 } from "@repo/backend/test/content/release";
 import {
   activateRollbackFixture,
+  expectedRollbackPage,
   insertRollbackItem,
   insertRoute,
   rollbackArtifactHash,
@@ -424,6 +425,37 @@ describe("contentRelease/rollback", () => {
     expect(page.done).toBe(false);
     expect(page.records.length).toBeGreaterThan(0);
     expect(page.records.length).toBeLessThan(8);
+  });
+
+  it("writes each page exactly as the per-row canonical walk did", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 8);
+      await insertRollbackItem(ctx, 0, false);
+      await insertRollbackItem(ctx, 1, true);
+      for (let index = 2; index < 8; index += 1) {
+        await insertRollbackItem(ctx, index, true, "x".repeat(700_000));
+      }
+    });
+    // The first page reaches the byte ceiling; the others cover a short page, a
+    // middle cursor, a short tail and the terminal page.
+    const pages = [
+      { afterIndex: -1, limit: 8 },
+      { afterIndex: -1, limit: 3 },
+      { afterIndex: 1, limit: 8 },
+      { afterIndex: 4, limit: 2 },
+      { afterIndex: 6, limit: 8 },
+    ];
+    for (const { afterIndex, limit } of pages) {
+      const actual = await t.query(prepareRollback, {
+        afterIndex,
+        limit,
+        rollbackOf: TEST_RELEASE_ID,
+        rollbackOfManifestHash: TEST_MANIFEST_HASH,
+      });
+      expect(actual).toBe(await expectedRollbackPage(t, afterIndex, limit, 8));
+    }
+    expect((await readPage(t, -1, 8)).done).toBe(false);
   });
 
   it("rejects a first record that cannot advance the bounded page", async () => {

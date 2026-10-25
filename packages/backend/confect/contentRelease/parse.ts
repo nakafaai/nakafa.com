@@ -111,11 +111,11 @@ export const decodeRouteJson = Effect.fn("contentRelease.decodeRouteJson")(
     )
 );
 /**
- * The fields of a signed artifact that staging and item verification check against the staged
- * item and copy into its content head. The Node ingress action has already decoded,
- * authenticated and canonicalized the whole artifact, and the Node proof authenticates every
- * stored body again before items are verified, so these mutations read only these fields and
- * never decode the content tree inside their one second limit.
+ * The fields of a signed artifact that the release mutations check against their staged item or
+ * immutable head. The Node ingress action has already decoded, authenticated and canonicalized the
+ * whole artifact, and the Node proof authenticates every stored body again before its release is
+ * verified, so a mutation reads only these fields and never decodes the content tree inside its one
+ * second limit.
  */
 const SignedArtifactHeaderSchema = Schema.Struct({
   artifactHash: SignedContentArtifactSchema.fields.artifactHash,
@@ -130,10 +130,10 @@ const SignedArtifactHeaderSchema = Schema.Struct({
   ),
 });
 
-/** The staged identity of one signed artifact and the source hashes that its content head keeps. */
+/** The header fields of one signed artifact that the release mutations read. */
 export type SignedArtifactHeader = typeof SignedArtifactHeaderSchema.Type;
 
-/** Decodes the staged identity of one signed artifact from its canonical JSON, ignoring the payload body. */
+/** Decodes the header fields of one signed artifact from its canonical JSON, ignoring the payload body. */
 export const decodeArtifactHeaderJson = Effect.fn(
   "contentRelease.decodeArtifactHeaderJson"
 )((source: string) =>

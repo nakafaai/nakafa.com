@@ -1,11 +1,11 @@
+import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import {
-  type ContentProjection,
-  canonicalizeContentProjection,
-} from "@nakafa/aksara-contracts/projection/spec";
-import { ContentUpsertSchema } from "@nakafa/aksara-contracts/release";
+  type ContentDeleteSchema,
+  ContentUpsertSchema,
+} from "@nakafa/aksara-contracts/release";
+import { canonicalizeContentChange } from "@nakafa/aksara-contracts/release/canonical";
 import {
   type RollbackRecord,
-  type RollbackState,
   type RollbackUpsertState,
   RollbackUpsertStateSchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
@@ -19,15 +19,37 @@ import {
 import { requireCurrentArtifact } from "@repo/backend/confect/contentRelease/generation";
 import { loadExactVersion } from "@repo/backend/confect/contentRelease/model";
 import {
-  decodeArtifactJson,
   decodeItemJson,
-  decodeProjectionJson,
   decodeRollbackJson,
+  parseStoredJson,
 } from "@repo/backend/confect/contentRelease/parse";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 type UpsertChange = typeof ContentUpsertSchema.Type;
-/** Loads one immutable signed artifact required by a rollback state. */
+type DeleteChange = typeof ContentDeleteSchema.Type;
+/** Writes one change in the form the contract canonicalizes inside a rollback state. */
+function changeText(change: UpsertChange | DeleteChange) {
+  return encodeJsonText(canonicalizeContentChange(change));
+}
+/**
+ * Pairs one decoded delete state with the text its page entry carries, which is its change alone.
+ */
+function deleteWritten(change: DeleteChange) {
+  return { state: { change }, text: `{"change":${changeText(change)}}` };
+}
+/**
+ * Pairs one decoded body-bearing state with the text its page entry carries. Ingress stores each
+ * artifact in the canonical form the contract writes, so the page reuses those bytes instead of
+ * encoding the signed tree again.
+ */
+function upsertWritten(state: RollbackUpsertState, artifactJson: string) {
+  return {
+    state,
+    text: `{"artifact":${artifactJson},"change":${changeText(state.change)},"projection":${canonicalizeContentProjection(state.projection)}}`,
+  };
+}
+/** Loads one immutable signed artifact required by a rollback state, parsed once. */
 const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
   function* (artifactHash: string, identity: string) {
     const database = yield* DatabaseReader;
@@ -44,24 +66,35 @@ const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
         `Rollback state ${identity} lost artifact ${artifactHash}.`
       );
     }
-    yield* requireCurrentArtifact(stored.artifactJson, identity, artifactHash);
-    return yield* decodeArtifactJson(stored.artifactJson);
+    const artifact = yield* parseStoredJson(
+      stored.artifactJson,
+      "Signed artifact"
+    );
+    yield* requireCurrentArtifact(artifact, identity, artifactHash);
+    return { artifact, artifactJson: stored.artifactJson };
   }
 );
-/** Builds and validates one complete body-bearing rollback state. */
+/**
+ * Decodes one complete body-bearing rollback state from its stored JSON in one strict pass, and
+ * writes its page text from the stored artifact bytes.
+ */
 const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
   change: UpsertChange,
-  projection: ContentProjection,
+  projectionJson: string,
   identity: string
 ) {
-  const state = {
-    artifact: yield* loadArtifact(change.artifactHash, identity),
-    change,
-    projection,
-  };
-  return yield* Schema.decodeEffect(RollbackUpsertStateSchema)(state, {
-    onExcessProperty: "error",
-  }).pipe(
+  const { artifact, artifactJson } = yield* loadArtifact(
+    change.artifactHash,
+    identity
+  );
+  const projection = yield* parseStoredJson(
+    projectionJson,
+    "Content projection"
+  );
+  const state = yield* Schema.decodeUnknownEffect(RollbackUpsertStateSchema)(
+    { artifact, change, projection },
+    { onExcessProperty: "error" }
+  ).pipe(
     Effect.mapError(
       () =>
         new ReleaseError({
@@ -70,6 +103,7 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
         })
     )
   );
+  return upsertWritten(state, artifactJson);
 });
 /** Proves a stored upsert state matches its immutable content version. */
 const validateVersion = Effect.fn("contentRelease.validateRollbackVersion")(
@@ -105,9 +139,7 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
   function* (row: Docs["contentItems"]) {
     const item = yield* decodeItemJson(row.itemJson);
     if (item.change.operation === "delete") {
-      return {
-        change: item.change,
-      } satisfies RollbackState;
+      return deleteWritten(item.change);
     }
     if (!row.projectionJson) {
       return yield* releaseFail(
@@ -126,17 +158,14 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
         `Rollback source ${row.releaseId}/${row.index} lost its version.`
       );
     }
-    const state = yield* upsertState(
+    const identity = `${row.releaseId}/${row.index}/current`;
+    const written = yield* upsertState(
       item.change,
-      yield* decodeProjectionJson(row.projectionJson),
-      `${row.releaseId}/${row.index}/current`
+      row.projectionJson,
+      identity
     );
-    yield* validateVersion(
-      head,
-      state,
-      `${row.releaseId}/${row.index}/current`
-    );
-    return state;
+    yield* validateVersion(head, written.state, identity);
+    return written;
   }
 );
 /** Reconstructs the exact immutable state replaced by one release item. */
@@ -162,14 +191,12 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
     );
   }
   if (snapshot.snapshot.state === "absent") {
-    return {
-      change: {
-        contentKey: snapshot.snapshot.contentKey,
-        family: snapshot.snapshot.family,
-        artifactLocale: snapshot.snapshot.artifactLocale,
-        operation: "delete",
-      },
-    } satisfies RollbackState;
+    return deleteWritten({
+      contentKey: snapshot.snapshot.contentKey,
+      family: snapshot.snapshot.family,
+      artifactLocale: snapshot.snapshot.artifactLocale,
+      operation: "delete",
+    });
   }
   if (row.priorSequence === undefined) {
     return yield* releaseFail(
@@ -199,12 +226,9 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
     rendererDomain: prior.rendererDomain,
     sourcePath: prior.sourcePath,
   });
-  const state = yield* upsertState(
-    change,
-    yield* decodeProjectionJson(head.projectionJson),
-    `${row.releaseId}/${row.index}/prior`
-  );
-  yield* validateVersion(head, state, `${row.releaseId}/${row.index}/prior`);
+  const identity = `${row.releaseId}/${row.index}/prior`;
+  const written = yield* upsertState(change, head.projectionJson, identity);
+  yield* validateVersion(head, written.state, identity);
   if (
     prior.compilerConfigHash !== head.compilerConfigHash ||
     prior.projectionHash !== head.projectionHash ||
@@ -215,17 +239,25 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
       `Rollback source ${row.releaseId}/${row.index} disagrees with its snapshot.`
     );
   }
-  return state;
+  return written;
 });
-/** Builds one exact current-to-prior transition from immutable stored state. */
+/**
+ * Builds one exact current-to-prior transition from immutable stored state, with the canonical
+ * text of its page entry. The text equals canonicalizeRollbackRecord of the returned record.
+ */
 export const rollbackRecord = Effect.fn("contentRelease.rollbackRecord")(
   function* (row: Docs["contentItems"]) {
     // Both states are already schema-decoded and index shares the stored item
     // schema, so the transition needs no second decode.
+    const current = yield* currentState(row);
+    const prior = yield* priorState(row);
     return {
-      current: yield* currentState(row),
-      index: row.index,
-      prior: yield* priorState(row),
-    } satisfies RollbackRecord;
+      record: {
+        current: current.state,
+        index: row.index,
+        prior: prior.state,
+      } satisfies RollbackRecord,
+      text: `{"current":${current.text},"index":${row.index},"prior":${prior.text}}`,
+    };
   }
 );

@@ -23,6 +23,7 @@ import type {
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
+import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -328,6 +329,12 @@ describe("content release staging ingress", () => {
               unchanged: 0,
             },
           });
+          const stored = yield* Effect.promise(() =>
+            t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+          );
+          expect(stored?.artifactJson).toBe(
+            encodeArtifactJson(ingressArtifact)
+          );
         }
       })
   );

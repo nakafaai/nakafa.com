@@ -53,8 +53,8 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
       `Artifact for ${row.releaseId}/${row.index} is missing.`
     );
   }
-  // The proof workflow authenticated this body in Node before items are verified, so the
-  // mutation reads its header and never decodes the content tree inside the one second limit.
+  // The Node proof authenticated and decoded this body before verification
+  // began, so the version reads only the header fields it compares.
   const artifact = yield* decodeArtifactHeaderJson(artifactRow.artifactJson);
   const projection = yield* decodeProjectionJson(row.projectionJson);
   const projectionHash = yield* hashText(

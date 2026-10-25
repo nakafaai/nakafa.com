@@ -12,19 +12,19 @@ const RELEASE_ID = "release-retired";
 describe("contentRelease/generation", () => {
   it.live("accepts stored artifacts the current contract can read", () =>
     Effect.gen(function* () {
-      for (const source of [
-        "{",
-        "[]",
-        "{}",
-        '{"payload":3}',
-        '{"payload":{}}',
-        '{"payload":{"requiredComponents":"InlineMath"}}',
-        '{"payload":{"requiredComponents":[]}}',
-        '{"payload":{"requiredComponents":["InlineMath"]}}',
-        '{"payload":{"requiredComponents":[null]}}',
-        '{"payload":{"requiredComponents":[{"name":"InlineMath"}]}}',
+      for (const artifact of [
+        null,
+        [],
+        {},
+        { payload: 3 },
+        { payload: {} },
+        { payload: { requiredComponents: "InlineMath" } },
+        { payload: { requiredComponents: [] } },
+        { payload: { requiredComponents: ["InlineMath"] } },
+        { payload: { requiredComponents: [null] } },
+        { payload: { requiredComponents: [{ name: "InlineMath" }] } },
       ]) {
-        yield* requireCurrentArtifact(source, IDENTITY, ARTIFACT_HASH);
+        yield* requireCurrentArtifact(artifact, IDENTITY, ARTIFACT_HASH);
       }
     })
   );
@@ -32,7 +32,9 @@ describe("contentRelease/generation", () => {
   it.live("rejects an artifact whose components carry versions", () =>
     Effect.gen(function* () {
       const retired = yield* requireCurrentArtifact(
-        '{"payload":{"requiredComponents":[{"name":"InlineMath","version":1}]}}',
+        {
+          payload: { requiredComponents: [{ name: "InlineMath", version: 1 }] },
+        },
         IDENTITY,
         ARTIFACT_HASH
       ).pipe(Effect.flip);
