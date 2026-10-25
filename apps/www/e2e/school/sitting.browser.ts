@@ -8,6 +8,7 @@ import {
   signInOwner,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
@@ -46,6 +47,9 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
 
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await waitUntilTakenOver(
+    student.getByRole("button", { name: "Enter sitting" })
+  );
   await student
     .getByPlaceholder("Enter the token from your proctor")
     .fill(sitting.token);
@@ -153,6 +157,7 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
 
   const proctor = await proctorContext.newPage();
   await proctor.goto(address(`/exams/${sitting.examId}/edit`));
+  await waitUntilTakenOver(proctor.getByRole("button", { name: "Schedule" }));
   await proctor.getByRole("button", { name: "Schedule" }).click();
   const scheduling = proctor.getByRole("dialog");
   await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 3");
@@ -225,6 +230,9 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
 
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await waitUntilTakenOver(
+    student.getByRole("button", { name: "Enter sitting" })
+  );
   await student
     .getByPlaceholder("Enter the token from your proctor")
     .fill(sitting.token);
