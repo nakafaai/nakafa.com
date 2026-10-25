@@ -1,5 +1,8 @@
 import { Effect, Option, Schema } from "effect";
 import katex from "katex";
+// The mhchem extension registers the chemistry commands `\ce` and `\pu` on KaTeX. It loads with this
+// module, so the server and the browser draw chemistry in the first HTML, with no wait for a chunk.
+import "katex/contrib/mhchem";
 
 /** The colour of a formula that cannot be drawn: the destructive token of the theme. */
 const ERROR_COLOR = "var(--destructive)";

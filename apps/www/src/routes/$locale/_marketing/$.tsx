@@ -4,6 +4,7 @@ import { cn } from "cn";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { readLegalPageFn } from "@/lib/content/page/read.functions";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
+import { readStaticData } from "@/lib/static/data";
 
 /**
  * A legal page, which Aksara publishes under its own path in each locale. The
@@ -14,8 +15,9 @@ import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
  */
 export const Route = createFileRoute("/$locale/_marketing/$")({
   loader: async ({ params }) => {
-    const facts = await readLegalPageFn({
-      data: { locale: params.locale, publicPath: params._splat ?? "" },
+    const facts = await readStaticData(readLegalPageFn, {
+      locale: params.locale,
+      publicPath: params._splat ?? "",
     });
     if (facts._tag === "Missing") {
       throw notFound();

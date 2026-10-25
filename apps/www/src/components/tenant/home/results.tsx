@@ -1,4 +1,4 @@
-import { Certificate01Icon } from "@hugeicons/core-free-icons";
+import { Certificate01Icon, HourglassIcon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
@@ -47,7 +47,11 @@ export function ResultsCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-results")}>
+      <Dashboard.CellHeader
+        icon={HourglassIcon}
+        title={t("tile-results")}
+        tone="warning"
+      >
         {bound ? (
           <TargetLink
             className="shrink-0 text-muted-foreground text-sm underline underline-offset-4 hover:text-foreground"
@@ -110,6 +114,7 @@ function ResultRow({
         />
       }
       title={result.examTitle}
+      tone="warning"
       trailing={
         action === undefined
           ? t(released ? "tile-result-released" : "tile-result-pending")

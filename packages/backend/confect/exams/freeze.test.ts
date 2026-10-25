@@ -24,7 +24,7 @@ import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
-const { add, answer, copy, move, remove } = refs.public.exams.questions;
+const { add, answer, copy, move, points, remove } = refs.public.exams.questions;
 const { submit } = refs.public.editor.steps;
 
 describe("exams/freeze", () => {
@@ -124,9 +124,52 @@ describe("exams/freeze", () => {
             })
             .pipe(Effect.flip)
         ).toMatchObject({ _tag: "ExamFrozen" });
+        expect(
+          yield* teacher
+            .mutation(points, {
+              examId,
+              points: 2,
+              questionId: first.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "ExamFrozen" });
         expect(yield* teacher.query(open, { examId, slug: nf })).toEqual(
           before
         );
+      })
+  );
+
+  it.effect(
+    "refuses an edit of the rubric and the explanation of a question once a sitting of its exam is scheduled",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Ujian");
+        const teacher = fixture.as("teacher");
+        const [first] = (yield* teacher.query(open, { examId, slug: nf }))
+          .questions;
+        yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        const refused = yield* Effect.forEach(
+          [first.rubric, first.explanation],
+          (documentId) =>
+            batchText(0, "rina", 1).pipe(
+              Effect.flatMap((batch) =>
+                teacher.mutation(submit, { batch, documentId, slug: nf })
+              ),
+              Effect.flip
+            )
+        );
+        expect(refused).toMatchObject([
+          { _tag: "ExamFrozen" },
+          { _tag: "ExamFrozen" },
+        ]);
       })
   );
 

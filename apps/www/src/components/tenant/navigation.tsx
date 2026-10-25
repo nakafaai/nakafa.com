@@ -1,4 +1,10 @@
 import {
+  Home01Icon,
+  Settings01Icon,
+  TaskEdit01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
@@ -48,8 +54,10 @@ export function TenantNavigation() {
                 to="/school/$slug"
               />
             }
+            tooltip={t("home")}
           >
-            {t("home")}
+            <HugeIcons icon={Home01Icon} />
+            <span className="truncate">{t("home")}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         {canOpenExams ? (
@@ -63,8 +71,10 @@ export function TenantNavigation() {
                 }) !== false
               }
               render={<Link params={{ slug }} to="/school/$slug/exams" />}
+              tooltip={tExams("title")}
             >
-              {tExams("title")}
+              <HugeIcons icon={TaskEdit01Icon} />
+              <span className="truncate">{tExams("title")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}
@@ -76,8 +86,10 @@ export function TenantNavigation() {
               render={
                 <Link params={{ slug }} to="/school/$slug/settings/profile" />
               }
+              tooltip={tSettings("manage-settings")}
             >
-              {tSettings("manage-settings")}
+              <HugeIcons icon={Settings01Icon} />
+              <span className="truncate">{tSettings("manage-settings")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </TenantSidebarGroup>

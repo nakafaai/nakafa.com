@@ -1,7 +1,5 @@
 import {
-  Await,
   createFileRoute,
-  defer,
   notFound,
   stripSearchParams,
 } from "@tanstack/react-router";
@@ -16,19 +14,15 @@ import {
   catalogLoaderDeps,
 } from "@/components/tryout/catalog/table/query";
 import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
-import {
-  readTryoutTrackFn,
-  readTryoutTrackListFn,
-  type TryoutTrackListResult,
-} from "@/components/tryout/route/catalog.functions";
+import { readTryoutTrackFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import { HOME_TARGET } from "@/lib/routing/target";
 
 /**
- * One track of the try-out catalog: its heading and exam selector come first,
- * and the learner's own set list streams in below them.
+ * One track of the try-out catalog: its heading, its exam selector and the
+ * learner's own set list, read in one server request, so the page shows whole.
  */
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/"
@@ -42,28 +36,14 @@ export const Route = createFileRoute(
         country: params.country,
         exam: params.exam,
         locale: params.locale,
+        search: deps,
         track: params.track,
       },
     });
     if (route.kind === "notFound") {
       throw notFound();
     }
-    return {
-      ...route,
-      list: defer(
-        readTryoutTrackListFn({
-          data: {
-            locale: params.locale,
-            search: deps,
-            track: {
-              countryKey: route.page.country.countryKey,
-              examKey: route.page.exam.examKey,
-              trackKey: route.page.track.trackKey,
-            },
-          },
-        })
-      ),
-    };
+    return route;
   },
   head: ({ loaderData, params }) =>
     loaderData === undefined
@@ -118,15 +98,11 @@ function TryoutTrackPage() {
             title: route.page.track.title,
           }}
         />
-        <Await<TryoutTrackListResult> fallback={null} promise={route.list}>
-          {(list) => (
-            <TryoutSetTable
-              bootstrap={list}
-              key={`${locale}:${route.page.track.publicPath}`}
-              title={route.page.track.title}
-            />
-          )}
-        </Await>
+        <TryoutSetTable
+          bootstrap={route.list}
+          key={`${locale}:${route.page.track.publicPath}`}
+          title={route.page.track.title}
+        />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

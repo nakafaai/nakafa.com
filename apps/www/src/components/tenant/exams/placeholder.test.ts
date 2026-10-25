@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
   isPlaceholderId,
+  placeholderDocumentId,
   placeholderExamId,
-  placeholderPromptId,
   placeholderQuestionId,
 } from "@/components/tenant/exams/placeholder";
 
@@ -18,11 +18,11 @@ describe("placeholder ids", () => {
   );
 
   it.effect(
-    "give a question and its prompt identifiers of their own tables",
+    "give a question and a document it owns identifiers of their own tables",
     () =>
       Effect.gen(function* () {
         const question = yield* placeholderQuestionId;
-        const prompt = yield* placeholderPromptId;
+        const prompt = yield* placeholderDocumentId;
 
         expect(question).toEqual(expect.any(String));
         expect(prompt).toEqual(expect.any(String));
@@ -32,7 +32,7 @@ describe("placeholder ids", () => {
 
   it.effect("tell a placeholder apart from an ID the server issues", () =>
     Effect.gen(function* () {
-      const prompt = yield* placeholderPromptId;
+      const prompt = yield* placeholderDocumentId;
 
       expect(isPlaceholderId(prompt)).toBe(true);
       expect(isPlaceholderId("k57b3h0e8s7a0z1x2c3v4b5n6m7q8w9e")).toBe(false);

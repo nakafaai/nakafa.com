@@ -19,8 +19,8 @@ import { Array as Arr, Effect } from "effect";
 type ExamCopy = Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">;
 
 /**
- * The version of a prompt, the number of steps it has accepted. It is read from the
- * prompt's small document row, so the copy knows how many steps follow its snapshot.
+ * The version of a document, the number of steps it has accepted. It is read from the
+ * document's small row, so the copy knows how many steps follow its snapshot.
  */
 const headOf = Effect.fn("exams.question.head")(function* (
   documentId: GenericId.GenericId<"editorDocuments">
@@ -54,9 +54,9 @@ const historyAfter = Effect.fn("exams.question.history")(function* (
 });
 
 /**
- * Writes the steps of a copied prompt in version order, from version 1, and sets its
+ * Writes the steps of a copied document in version order, from version 1, and sets its
  * head to the number of steps. The author and the client of each step are kept, so a
- * copy shows who wrote each part of the text. A prompt without steps is left as it is.
+ * copy shows who wrote each part of the text. A document without steps is left as it is.
  */
 const copySteps = Effect.fn("exams.question.copySteps")(function* (
   documentId: GenericId.GenericId<"editorDocuments">,
@@ -88,28 +88,45 @@ const copySteps = Effect.fn("exams.question.copySteps")(function* (
 });
 
 /**
- * Copies a question right after the original. Its prompt is a new document whose
- * snapshot is the original's snapshot, and whose steps are the original's steps after
- * that snapshot, renumbered from version 1. So the copy's text is the original's
- * current text, and the copy's log holds the same steps as the original's. The answers
- * and the key are copied as they are stored.
+ * Copies one document a question owns. The copy is a new document whose snapshot is the
+ * original's snapshot, and whose steps are the original's steps after that snapshot,
+ * renumbered from version 1. So the copy's text is the original's current text, and the
+ * copy's log holds the same steps as the original's.
+ */
+const copyDocument = Effect.fn("exams.question.copyDocument")(function* (
+  exam: ExamCopy,
+  documentId: GenericId.GenericId<"editorDocuments">
+) {
+  const snapshot = yield* snapshotOf(documentId);
+  const head = yield* headOf(documentId);
+  const steps = yield* historyAfter(documentId, snapshot.version, head);
+  const copied = yield* createDocument({
+    scope: exam.scope,
+    tenantId: exam.tenantId,
+    text: snapshot.content,
+  });
+  yield* copySteps(copied, steps);
+  return copied;
+});
+
+/**
+ * Copies a question right after the original. Its prompt, rubric, and explanation are new
+ * documents, each copied with its history (see `copyDocument`). The answers, the key, and the
+ * points are copied as they are stored.
  */
 export const copyQuestion = Effect.fn("exams.question.copy")(function* (
   exam: ExamCopy,
   original: ExamQuestionsDoc
 ) {
-  const snapshot = yield* snapshotOf(original.prompt);
-  const head = yield* headOf(original.prompt);
-  const steps = yield* historyAfter(original.prompt, snapshot.version, head);
-  const prompt = yield* createDocument({
-    scope: exam.scope,
-    tenantId: exam.tenantId,
-    text: snapshot.content,
-  });
-  yield* copySteps(prompt, steps);
+  const prompt = yield* copyDocument(exam, original.prompt);
+  const rubric = yield* copyDocument(exam, original.rubric);
+  const explanation = yield* copyDocument(exam, original.explanation);
   return yield* placeQuestion(exam, original._id, {
     answers: original.answers,
+    explanation,
     key: original.key,
+    points: original.points,
     prompt,
+    rubric,
   });
 });

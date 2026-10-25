@@ -100,16 +100,14 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
         publicPath: setPath,
       });
     }
-    const page = yield* readTryoutSetPage(locale, setPath);
-    if (!page) {
-      return { kind: "notFound" as const };
-    }
-    const head = yield* readTryoutRouteHead({
-      kind: "set",
-      locale,
-      publicPath: setPath,
-    });
-    if (Option.isNone(head)) {
+    const [page, head] = yield* Effect.all(
+      [
+        readTryoutSetPage(locale, setPath),
+        readTryoutRouteHead({ kind: "set", locale, publicPath: setPath }),
+      ],
+      { concurrency: "unbounded" }
+    );
+    if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     const attempt = Option.isNone(token)

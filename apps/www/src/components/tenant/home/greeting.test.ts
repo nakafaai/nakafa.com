@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Option } from "effect";
 import {
-  DAY_PART_ACT,
   dayPartAt,
   dayPartOf,
   firstNameOf,
@@ -44,16 +43,6 @@ describe("dayPartAt", () => {
     expect(dayPartAt(at("2026-10-18T13:00:00Z"), Option.none())).toBe(
       "afternoon"
     );
-  });
-});
-
-describe("DAY_PART_ACT", () => {
-  it("gives Nina one act for each part of the day", () => {
-    expect(DAY_PART_ACT).toEqual({
-      afternoon: "typing",
-      evening: "reading",
-      morning: "waving",
-    });
   });
 });
 

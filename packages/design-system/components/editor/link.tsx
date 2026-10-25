@@ -1,4 +1,5 @@
 import { Link01Icon } from "@hugeicons/core-free-icons";
+import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -54,21 +55,22 @@ export function RichEditorLink({
 
   return (
     <Popover onOpenChange={change} open={open}>
-      <PopoverTrigger
-        render={
-          <Button
-            aria-label={label}
-            aria-pressed={active}
-            className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-            size="icon-sm"
-            title={label}
-            type="button"
-            variant="ghost"
-          />
-        }
-      >
-        <HugeIcons icon={Link01Icon} />
-      </PopoverTrigger>
+      <ToolHint label={label}>
+        <PopoverTrigger
+          render={
+            <Button
+              aria-label={label}
+              aria-pressed={active}
+              className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons icon={Link01Icon} />
+        </PopoverTrigger>
+      </ToolHint>
       <PopoverContent align="start" className="w-72 p-2">
         <form
           onSubmit={(event) => {

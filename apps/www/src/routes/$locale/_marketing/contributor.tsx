@@ -9,12 +9,14 @@ import { contributors } from "@/lib/data/contributor";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { readStaticData } from "@/lib/static/data";
 
 /** The contributors page, which names the people who make the content. */
 export const Route = createFileRoute("/$locale/_marketing/contributor")({
   loader: async ({ params }) => {
-    const messages = await readRouteMessages({
-      data: { locale: params.locale, namespaces: ["Contributor", "Metadata"] },
+    const messages = await readStaticData(readRouteMessages, {
+      locale: params.locale,
+      namespaces: ["Contributor", "Metadata"],
     });
     const t = createTranslator({
       locale: params.locale,
