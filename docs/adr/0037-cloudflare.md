@@ -39,8 +39,12 @@ never invoke a Worker.
      dev deployment, which also serves local development at its `SITE_URL`, so
      the dev deployment sets `STAGING_SITE_URL`. Better Auth then answers each
      of the two sites on its own host, with its own callback URL and cookie
-     domain, and a checkout may return to either site. Staging has no School
-     hosts: a host under `staging.nakafa.com` would need a paid certificate.
+     domain, and a checkout may return to either site. Production names its
+     session cookie for `nakafa.com`, so the browser sends it to staging and to
+     local development as well; both name their cookies `nakafa-dev` instead of
+     `better-auth` (`readAuthCookiePrefix`), so production's cookie never reads
+     as their session. Staging has no School hosts: a host under
+     `staging.nakafa.com` would need a paid certificate.
    - any other stage: only the workers.dev URL, with no custom domain.
 3. **Exact routes beat the wildcard.** Cloudflare sends a request to the most
    specific route. The School wildcard never shadows another Worker's host,

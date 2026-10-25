@@ -8,9 +8,9 @@ import {
   getRequest,
   setResponseHeader,
 } from "@tanstack/react-start/server";
-import { getSessionCookie } from "better-auth/cookies";
 import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
+import { readSessionCookie } from "@/lib/auth/cookie.server";
 import { SESSION_PATH } from "@/lib/auth/session";
 import { readSessionToken } from "@/lib/auth/token";
 import { ClientSession } from "@/lib/auth/visitor";
@@ -193,7 +193,7 @@ const readConvexToken = Effect.fn("www.auth.session.token")(function* (
 export const readRequestSession = Effect.fn("www.auth.session.read")(function* (
   request: Request
 ) {
-  if (getSessionCookie(request.headers) === null) {
+  if (readSessionCookie(request.headers) === null) {
     return signedOut([]);
   }
   const siteUrl = yield* CONVEX_SITE_URL;
