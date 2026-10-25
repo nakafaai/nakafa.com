@@ -42,10 +42,10 @@ import {
 } from "@repo/backend/test/content/state";
 import { Effect, Option } from "effect";
 
-/** A candidate that keeps the program snapshot of its retired base, so it cannot replace every snapshot. */
-const KEPT_PROGRAM_SNAPSHOTS = {
+/** A candidate that keeps the try-out snapshot of its retired base, whose placements bind retired artifacts. */
+const KEPT_TRYOUT_SNAPSHOTS = {
   ...inheritContentSnapshots(null),
-  program: inheritContentSnapshot(TEST_DIGEST),
+  tryout: inheritContentSnapshot(TEST_DIGEST),
 };
 
 /** A snapshot-only candidate that rebuilds the program snapshot and upserts no heads. */
@@ -257,8 +257,8 @@ describe("activation bootstrap validation", () => {
     },
     {
       message: "no longer meets the bootstrap contract",
-      name: "a stored bootstrap that keeps a base snapshot",
-      options: { bootstrap: true, snapshots: KEPT_PROGRAM_SNAPSHOTS },
+      name: "a stored bootstrap that keeps the base try-out snapshot",
+      options: { bootstrap: true, snapshots: KEPT_TRYOUT_SNAPSHOTS },
     },
   ])("refuses $name", ({ message, options }) =>
     Effect.gen(function* () {

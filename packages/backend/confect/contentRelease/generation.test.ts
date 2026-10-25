@@ -3,16 +3,19 @@ import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import {
   type ContentSnapshotSet,
+  inheritContentSnapshot,
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   CURRENT_CONTENT_GENERATION,
   type contentGenerationValidator,
+  isBootstrapCandidate,
   RETIRED_CONTENT_GENERATION,
   requireCurrentArtifact,
   requireCurrentRelease,
 } from "@repo/backend/confect/contentRelease/generation";
+import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -344,7 +347,7 @@ describe("contentRelease/generation staging", () => {
   });
 
   it.live(
-    "refuses a full replacement that keeps the retired base program snapshot",
+    "stages a bootstrap that inherits the unchanged program snapshot",
     () =>
       Effect.gen(function* () {
         const data = yield* makeProgramSnapshotData();
@@ -384,12 +387,39 @@ describe("contentRelease/generation staging", () => {
               }),
               rendererJson: testRendererJson(),
             })
-          ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_STATE" },
-          });
-          await expect(readRelease(t, BOOTSTRAP.releaseId)).resolves.toBeNull();
+          ).resolves.toBeDefined();
+          await expect(
+            readRelease(t, BOOTSTRAP.releaseId)
+          ).resolves.toMatchObject({ bootstrap: true });
         });
       })
+  );
+
+  it.live("requires the try-out snapshot, not the others, to be replaced", () =>
+    Effect.gen(function* () {
+      const state = {
+        activeContentGeneration: RETIRED_CONTENT_GENERATION,
+        activeReleaseId: RETIRED_BASE.releaseId,
+      } as const;
+      const replaced = replacedSnapshots();
+      const kept = inheritContentSnapshot(TEST_DIGEST);
+      const manifestOf = (snapshots: ContentSnapshotSet) =>
+        decodeReleaseJson(bootstrapJson({ snapshots })).pipe(
+          Effect.map((signed) => signed.manifest)
+        );
+      expect(
+        isBootstrapCandidate(
+          yield* manifestOf({ ...replaced, program: kept, quran: kept }),
+          state
+        )
+      ).toBe(true);
+      expect(
+        isBootstrapCandidate(
+          yield* manifestOf({ ...replaced, tryout: kept }),
+          state
+        )
+      ).toBe(false);
+    })
   );
 
   /** Refuses one recovery staged over a candidate whose active release has the given generation. */

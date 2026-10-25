@@ -3,7 +3,7 @@ import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 /**
  * Content generations and the publication records signed under a retired one.
@@ -107,14 +107,17 @@ export const requireCurrentRelease = Effect.fn(
 });
 
 /**
- * Whether every snapshot family is replaced or holds no snapshot. A family that
- * keeps its base snapshot would keep the retired try-out rows and placements
- * active, so a bootstrap may not inherit or restore one.
+ * Whether the try-out snapshot is replaced or holds no snapshot. Its placements
+ * bind question artifacts, so keeping the base snapshot would keep the retired
+ * generation's try-out bodies active. Program and Quran snapshots hold structured
+ * rows that bind no artifact and whose contract the generation change left
+ * unchanged, so a bootstrap may inherit them, as the publisher does when their
+ * data did not change.
  */
-function replacesEverySnapshot(snapshots: ContentSnapshotSet) {
-  return Arr.every(
-    Rec.values(snapshots),
-    (state) => state.mode === "replace" || state.resultSnapshotId === null
+function replacesTryoutSnapshot(snapshots: ContentSnapshotSet) {
+  return (
+    snapshots.tryout.mode === "replace" ||
+    snapshots.tryout.resultSnapshotId === null
   );
 }
 
@@ -123,7 +126,7 @@ function replacesEverySnapshot(snapshots: ContentSnapshotSet) {
  * bootstrap. The backend decides from its own stored state and the signed
  * counts, never from what the publisher declares: the candidate must extend the
  * active release, that release must still be in the retired generation, the
- * result must hold only upserted heads, every snapshot family must be replaced
+ * result must hold only upserted heads, the try-out snapshot must be replaced
  * or empty, and no recovery may be staged.
  */
 export function isBootstrapCandidate(
@@ -138,7 +141,7 @@ export function isBootstrapCandidate(
     manifest.baseReleaseId === state.activeReleaseId &&
     state.activeContentGeneration === RETIRED_CONTENT_GENERATION &&
     manifest.resultCount === manifest.upsertCount &&
-    replacesEverySnapshot(manifest.snapshots) &&
+    replacesTryoutSnapshot(manifest.snapshots) &&
     state.recoveryReleaseId === undefined
   );
 }
