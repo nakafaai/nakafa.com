@@ -277,6 +277,15 @@ function latestOf(
   );
 }
 
+/** Whether a learner holds Pro at `now`, through a personal grant or a school they are a member of. */
+export const hasActiveProGrant = Effect.fn("billing.grants.hasActivePro")(
+  function* (userId: Docs["users"]["_id"], now: number) {
+    const personal = yield* latestPersonalGrant(userId, now);
+    const membership = yield* latestMembershipGrant(userId, now);
+    return Option.isSome(latestOf([personal, membership]));
+  }
+);
+
 /**
  * Recomputes one user's plan from the Pro grants that run at `now`, personal or
  * through a school they are a member of. It writes the plan through the existing

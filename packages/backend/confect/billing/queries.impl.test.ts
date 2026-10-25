@@ -7,6 +7,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import {
   insertPolarAccount,
   insertProSubscription,
+  insertTopUpPack,
   PRO_PERIOD_END,
 } from "@repo/backend/test/billing";
 
@@ -39,7 +40,12 @@ describe("billing/queries overview", () => {
     try {
       const { authed } = await signIn("free");
       expect(await authed.query(api.billing.queries.overview, {})).toEqual({
-        credits: { allowance: 10, balance: 10, resetAt: NEXT_DAY },
+        credits: {
+          allowance: 10,
+          balance: 10,
+          lots: { balance: 0, expiresAt: null },
+          resetAt: NEXT_DAY,
+        },
         plan: "free",
         subscription: null,
       });
@@ -64,7 +70,12 @@ describe("billing/queries overview", () => {
         });
       });
       expect(await authed.query(api.billing.queries.overview, {})).toEqual({
-        credits: { allowance: 1000, balance: 1000, resetAt: NEXT_MONTH },
+        credits: {
+          allowance: 1000,
+          balance: 1000,
+          lots: { balance: 0, expiresAt: null },
+          resetAt: NEXT_MONTH,
+        },
         plan: "pro",
         subscription: {
           cancelAtPeriodEnd: false,
@@ -156,5 +167,32 @@ describe("billing/queries overview", () => {
   it("refuses the overview to an unauthenticated viewer", async () => {
     const t = createConvexTestWithBetterAuth();
     await expect(t.query(api.billing.queries.overview, {})).rejects.toThrow();
+  });
+
+  it("shows the top-up packs a Pro viewer holds: their credits, and the day the first of them ends", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    try {
+      const { authed, t, user } = await signIn("pro");
+      await t.mutation(async (ctx) => {
+        await insertTopUpPack(ctx, user.userId, {
+          expiresAt: NEXT_MONTH,
+          providerPaymentId: "order_overview_soon",
+          remaining: 600,
+        });
+        await insertTopUpPack(ctx, user.userId, {
+          expiresAt: NEXT_MONTH + 30 * 24 * 60 * 60 * 1000,
+          providerPaymentId: "order_overview_late",
+          remaining: 1000,
+        });
+      });
+      const overview = await authed.query(api.billing.queries.overview, {});
+      expect(overview.credits.lots).toEqual({
+        balance: 1600,
+        expiresAt: NEXT_MONTH,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

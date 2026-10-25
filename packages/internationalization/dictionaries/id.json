@@ -305,7 +305,9 @@
     "seats-empty-title": "Belum ada kursi terisi",
     "seats-filter-title": "Tidak ada kursi yang cocok",
     "signals-empty-title": "Belum ada peristiwa",
-    "student-start": "Mulai ujian"
+    "student-start": "Mulai ujian",
+    "presence-editor": "{name} sedang mengedit",
+    "presence-more": "{names} sedang mengedit"
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -1353,7 +1355,7 @@
     "credits": "Kredit Nina",
     "credits-description": "Nina memakai kredit saat menjawab pertanyaanmu.",
     "credits-free-footer": "Pro memberi lebih banyak kredit.",
-    "credits-pro-footer": "Kredit sisa hangus di akhir periode.",
+    "credits-pro-footer": "{credits, number} kredit seharga {price}.",
     "credits-today": "Hari ini",
     "credits-month": "Bulan ini",
     "credits-used": "{percent, number}% terpakai",
@@ -1414,7 +1416,11 @@
     "developers": "Developer",
     "create": "Buat",
     "never": "Tidak pernah",
-    "delete": "Hapus"
+    "delete": "Hapus",
+    "top-up-balance": "Kredit tambahan",
+    "top-up-expires": "Berakhir {date}",
+    "top-up-left": "Sisa {count, number}",
+    "buy-credits": "Beli kredit"
   },
   "Editor": {
     "undo": "Urungkan",
@@ -1778,7 +1784,7 @@
       "description": "Pilih opsinya lagi."
     },
     "sitting-stale-answer": {
-      "title": "Jawaban yang lebih baru sudah tersimpan.",
+      "title": "Jawaban terbaru sudah tersimpan.",
       "description": "Lembar soal sekarang menampilkan jawaban yang lebih baru."
     },
     "sitting-question-missing": {

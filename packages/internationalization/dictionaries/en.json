@@ -305,7 +305,9 @@
     "seats-empty-title": "No seat yet",
     "seats-filter-title": "No seat matches",
     "signals-empty-title": "No signal yet",
-    "student-start": "Start exam"
+    "student-start": "Start exam",
+    "presence-editor": "{name} is editing",
+    "presence-more": "{names} are editing"
   },
   "SchoolSettings": {
     "school": "School",
@@ -1353,7 +1355,7 @@
     "credits": "Nina credits",
     "credits-description": "Nina uses credits when she answers your questions.",
     "credits-free-footer": "Pro gives more credits.",
-    "credits-pro-footer": "Unused credits end with the period.",
+    "credits-pro-footer": "{credits, number} credits for {price}.",
     "credits-today": "Today",
     "credits-month": "This month",
     "credits-used": "{percent, number}% used",
@@ -1414,7 +1416,11 @@
     "developers": "Developers",
     "create": "Create",
     "never": "Never",
-    "delete": "Delete"
+    "delete": "Delete",
+    "top-up-balance": "Top-up credits",
+    "top-up-expires": "Expires {date}",
+    "top-up-left": "{count, number} left",
+    "buy-credits": "Buy credits"
   },
   "Editor": {
     "undo": "Undo",

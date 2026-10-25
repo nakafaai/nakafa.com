@@ -96,6 +96,11 @@ export const billingOverviewValidator = Schema.Struct({
     balance: Schema.Finite,
     /** The moment the balance refills next, in epoch milliseconds. */
     resetAt: Schema.Finite,
+    /** The top-up packs the viewer holds: their unused credits, and when the earliest of them ends. */
+    lots: Schema.Struct({
+      balance: Schema.Finite,
+      expiresAt: Schema.NullOr(Schema.Finite),
+    }),
   }),
 });
 
@@ -128,6 +133,11 @@ export const billingPaymentValidator = Schema.Union([
     ...billingPaymentFields,
     kind: Schema.Literal("invoice"),
     invoiceId: Id("billingInvoices"),
+  }),
+  /** A top-up pack. The credit pack names this payment, so the payment names no other row. */
+  Schema.Struct({
+    ...billingPaymentFields,
+    kind: Schema.Literal("credits"),
   }),
 ]).pipe(Schema.toTaggedUnion("kind"));
 

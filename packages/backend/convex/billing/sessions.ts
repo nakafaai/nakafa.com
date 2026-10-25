@@ -2,3 +2,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/bi
 
 export const generateCheckoutLink = registeredFunctions.generateCheckoutLink;
 export const generateCustomerPortalUrl = registeredFunctions.generateCustomerPortalUrl;
+export const generateTopupCheckoutLink = registeredFunctions.generateTopupCheckoutLink;

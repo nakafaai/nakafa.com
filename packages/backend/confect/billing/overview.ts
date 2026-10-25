@@ -7,12 +7,13 @@ import type {
   billingSubscriptionSummaryValidator,
 } from "@repo/backend/confect/billing/schema";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
+import { readSpendableLots } from "@repo/backend/confect/credits/lots";
 import {
   getCurrentCreditResetTimestamp,
   getEffectiveCreditStateForResetTimestamp,
   getNextCreditResetTimestamp,
 } from "@repo/backend/confect/credits/state";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type BillingSubscription = Docs["billingSubscriptions"];
 type BillingSubscriptionSummary =
@@ -85,8 +86,9 @@ function summaryOf(
 
 /**
  * The billing overview of one viewer at `now`: the plan the grants project, the
- * subscription that bills it, and the Nina credits of the current reset period,
- * with the moment the balance refills next. Every read is an index read.
+ * subscription that bills it, the Nina credits of the current reset period with
+ * the moment the balance refills next, and the top-up packs still running with
+ * the moment the first of them ends. Every read is an index read.
  */
 export const readBillingOverview = Effect.fn("billing.overview.read")(
   function* (user: UsersDoc, now: number) {
@@ -95,6 +97,7 @@ export const readBillingOverview = Effect.fn("billing.overview.read")(
       user,
       getCurrentCreditResetTimestamp(user.plan, now)
     );
+    const lots = yield* readSpendableLots(user._id, now);
     return {
       plan: user.plan,
       subscription: Option.match(personal, {
@@ -105,6 +108,12 @@ export const readBillingOverview = Effect.fn("billing.overview.read")(
         allowance: getPlanCreditConfig(user.plan).amount,
         balance: credits.credits,
         resetAt: getNextCreditResetTimestamp(user.plan, now),
+        lots: {
+          balance: Arr.reduce(lots, 0, (total, lot) => total + lot.remaining),
+          expiresAt: Option.getOrNull(
+            Option.map(Arr.head(lots), (lot) => lot.expiresAt)
+          ),
+        },
       },
     } satisfies typeof billingOverviewValidator.Type;
   }

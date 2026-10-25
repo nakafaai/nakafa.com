@@ -45,6 +45,7 @@ import contentSectionState from "./tables/contentSectionState";
 import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
+import creditLots from "./tables/creditLots";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
@@ -170,6 +171,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly contentSections: typeof contentSections;
   readonly contentSnapshots: typeof contentSnapshots;
   readonly contentState: typeof contentState;
+  readonly creditLots: typeof creditLots;
   readonly creditResetPeriods: typeof creditResetPeriods;
   readonly creditTransactions: typeof creditTransactions;
   readonly curriculumRoutes: typeof curriculumRoutes;
@@ -294,6 +296,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   contentSections,
   contentSnapshots,
   contentState,
+  creditLots,
   creditResetPeriods,
   creditTransactions,
   curriculumRoutes,

@@ -104,7 +104,7 @@ export function CardSectionFooter({
     /** The section's actions, on the right of the sentence. */
     children?: ReactNode;
     /** The one concise sentence: what the section's actions do, or what stops them. */
-    hint: string;
+    hint: ReactNode;
   }) {
   // The layout class comes after the spread, so no prop can replace it.
   return (
