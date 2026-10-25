@@ -1,10 +1,8 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
-import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { proProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
+import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
-import { polarPublicKeys } from "@repo/backend/public";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -22,7 +20,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 
 interface UserSettingsSubscriptionsProps {
   initialSubscription: Ref.Returns<
-    typeof subscriptions.queries.hasActiveSubscription
+    typeof billingRefs.queries.hasActiveSubscription
   >;
 }
 
@@ -41,10 +39,8 @@ export function UserSettingsSubscriptions({
 
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const subscription = useQuery(
-    subscriptions.queries.hasActiveSubscription,
-    isAuthenticated
-      ? { productId: proProductIdFor(polarPublicKeys().VITE_POLAR_SERVER) }
-      : "skip"
+    billingRefs.queries.hasActiveSubscription,
+    isAuthenticated ? {} : "skip"
   );
   if (QueryResult.isFailure(subscription)) {
     throw subscription.error;

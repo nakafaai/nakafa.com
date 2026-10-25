@@ -4,6 +4,7 @@
 // version before that. Source:
 // https://handbook.polar.sh/engineering/backend-development/api-versioning
 import { createPolarCore, type PolarCore } from "@polar-sh/sdk/2026-10";
+import { PolarServer } from "@repo/backend/confect/billing/polar/catalog";
 import { Config, Effect, Redacted, Schema } from "effect";
 
 /** Seconds one Polar request may run; the SDK default of 5 is too short for checkout creation. */
@@ -14,6 +15,18 @@ class PolarConfigError extends Schema.TaggedError<PolarConfigError>()(
   "PolarConfigError",
   { message: Schema.String }
 ) {}
+
+/** The Polar server this deployment bills through, read from POLAR_SERVER, which every deployment must set. */
+export const readPolarServer = Effect.fn("polar.readServer")(function* () {
+  return yield* Config.schema(PolarServer, "POLAR_SERVER").pipe(
+    Effect.mapError(
+      () =>
+        new PolarConfigError({
+          message: "Unable to read the Polar deployment environment.",
+        })
+    )
+  );
+});
 
 /** Creates the SDK client only when a billing operation needs it. */
 export const readPolarClient = Effect.fn("polar.readClient")(function* () {
@@ -28,18 +41,7 @@ export const readPolarClient = Effect.fn("polar.readClient")(function* () {
         })
     )
   );
-  const server = yield* Config.schema(
-    Schema.Literals(["production", "sandbox"]),
-    "VITE_POLAR_SERVER"
-  ).pipe(
-    Config.withDefault("sandbox"),
-    Effect.mapError(
-      () =>
-        new PolarConfigError({
-          message: "Unable to read the Polar deployment environment.",
-        })
-    )
-  );
+  const server = yield* readPolarServer();
   return yield* Effect.sync(
     (): PolarCore =>
       createPolarCore({

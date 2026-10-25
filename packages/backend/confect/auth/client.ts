@@ -55,7 +55,6 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
 ) {
   const ctx = yield* MutationCtxService;
   const writer = yield* DatabaseWriter;
-  const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
   const hasMailbox = !isLoginAddress(authUser.email);
   const username =
@@ -88,15 +87,6 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
       userId,
     })
   );
-  if (hasMailbox) {
-    yield* scheduler.runAfter(
-      Duration.zero,
-      refs.internal.customers.actions.internal.syncCustomer,
-      {
-        userId,
-      }
-    );
-  }
   if (authUser.emailVerified) {
     yield* claimAfterVerification(userId, authUser.email);
   }
@@ -105,8 +95,7 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
 /**
  * Project changed profile fields while preventing deleted-account
  * resurrection, and, when Better Auth has just verified the address, ask for
- * the claim of any invite that waits for it. A placeholder address gets no
- * payment customer, the same as on creation.
+ * the claim of any invite that waits for it.
  */
 const updateUser = Effect.fn("auth.lifecycle.updateUser")(function* (
   newDoc: AuthUser,
@@ -135,16 +124,6 @@ const updateUser = Effect.fn("auth.lifecycle.updateUser")(function* (
         image: newDoc.image ?? undefined,
       })
       .pipe(Effect.orDie);
-    if (!isLoginAddress(newDoc.email)) {
-      const scheduler = yield* Scheduler;
-      yield* scheduler.runAfter(
-        Duration.zero,
-        refs.internal.customers.actions.internal.syncCustomer,
-        {
-          userId: appUser._id,
-        }
-      );
-    }
   }
   if (justVerified) {
     yield* claimAfterVerification(appUser._id, newDoc.email);
@@ -157,14 +136,14 @@ const scheduleDeletion = Effect.fn("auth.lifecycle.scheduleDeletion")(
     const scheduler = yield* Scheduler;
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+      refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
       {
         authId: authUser._id,
       }
     );
     yield* scheduler.runAfter(
       Duration.millis(ACCOUNT_DELETION_RECOVERY_DELAY_MS),
-      refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+      refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
       {
         authId: authUser._id,
       }

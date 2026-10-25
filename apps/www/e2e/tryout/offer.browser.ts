@@ -24,7 +24,7 @@ const ENGLISH_PREFIX = /^\/en\//;
 const LOCKED_REVIEW = '[data-slot="tryout-review-locked"]';
 
 /** The checkout action that the Pro offer's button starts. */
-const CHECKOUT_ACTION = "customers/actions/sessions:generateCheckoutLink";
+const CHECKOUT_ACTION = "billing/sessions:generateCheckoutLink";
 
 /**
  * Holds the checkout action open, so the offer's button stays pending, and

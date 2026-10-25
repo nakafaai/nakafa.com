@@ -1,302 +1,195 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { models } from "@polar-sh/sdk/2026-10";
 import {
   decodePolarCheckout,
   decodePolarCustomer,
-  decodePolarCustomerId,
-  decodePolarCustomerPage,
   decodePolarCustomerSession,
+  decodePolarEnvelope,
   decodePolarSubscription,
-  PolarPayloadError,
 } from "@repo/backend/confect/billing/polar/payload";
-import { DateTime, Effect, Struct } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, Exit, Option } from "effect";
 
-const individual = {
-  avatar_url: null,
-  billing_address: null,
-  billing_name: null,
-  created_at: "2026-09-01T00:00:00Z",
-  deleted_at: null,
-  email: "learner@example.com",
-  email_verified: true,
-  external_id: "user-1",
-  first_user_event_at: null,
-  id: "customer-1",
-  metadata: { userId: "user-1" },
-  modified_at: null,
-  name: "Learner",
-  organization_id: "organization-1",
-  tax_id: null,
-  type: "individual",
-} satisfies models.CustomerIndividual;
-
-const decoded = {
-  email: "learner@example.com",
-  externalId: "user-1",
-  id: "customer-1",
-  metadata: { userId: "user-1" },
-  name: "Learner",
-};
-
+/** One Polar subscription as the webhook sends it. */
 const subscriptionWire = {
-  amount: 1000,
   cancel_at_period_end: false,
-  checkout_id: null,
-  created_at: "2026-09-01T00:00:00Z",
-  currency: "usd",
-  current_period_end: "2026-10-01T00:00:00.123456Z",
-  current_period_start: "2026-09-01T00:00:00Z",
-  customer_cancellation_comment: null,
-  customer_cancellation_reason: null,
-  customer_id: "customer-1",
+  created_at: "2026-10-01T00:00:00.000Z",
+  current_period_end: "2026-11-01T00:00:00.000Z",
+  current_period_start: "2026-10-01T00:00:00.000Z",
+  customer_id: "cust_polar_1",
   ended_at: null,
-  id: "subscription-1",
-  metadata: { campaign: "launch" },
+  id: "sub_polar_1",
   modified_at: null,
-  product_id: "product-1",
+  price_id: "price_polar_1",
+  product_id: "product_polar_1",
   recurring_interval: "month",
-  started_at: "2026-09-01T00:00:00Z",
   status: "active",
 };
 
-describe("Polar payload contracts", () => {
-  it.effect("decodes a customer into the fields the handlers read", () =>
-    Effect.gen(function* () {
-      expect(yield* decodePolarCustomer(individual)).toEqual(decoded);
-    })
-  );
-
+describe("billing/polar/payload", () => {
   it.effect(
-    "keeps a team customer without an email for the normalizer to reject",
-    () =>
-      Effect.gen(function* () {
-        const customer = yield* decodePolarCustomer({
-          ...individual,
-          email: null,
-          type: "team",
-        });
-        expect(customer).toEqual({ ...decoded, email: null });
-      })
-  );
-
-  it.effect("rejects an individual customer whose email is absent", () =>
-    Effect.gen(function* () {
-      const failure = yield* decodePolarCustomer(
-        Struct.omit(individual, ["email"])
-      ).pipe(Effect.flip);
-      expect(failure).toBeInstanceOf(PolarPayloadError);
-    })
-  );
-
-  it.effect("rejects an individual customer whose email is null", () =>
-    Effect.gen(function* () {
-      const failure = yield* decodePolarCustomer({
-        ...individual,
-        email: null,
-      }).pipe(Effect.flip);
-      expect(failure).toBeInstanceOf(PolarPayloadError);
-    })
-  );
-
-  it.effect("ignores a customer field the handlers do not read", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* decodePolarCustomer({ ...individual, billing_name: 42 })
-      ).toEqual(decoded);
-    })
-  );
-
-  it.effect("rejects a customer whose required field is missing", () =>
-    Effect.gen(function* () {
-      const failure = yield* decodePolarCustomer({
-        external_id: "user-1",
-        id: "customer-1",
-        name: "Learner",
-      }).pipe(Effect.flip);
-      expect(failure).toBeInstanceOf(PolarPayloadError);
-      expect(failure.message).toBe(
-        "Polar customer payload does not match its contract."
-      );
-    })
-  );
-
-  it.effect(
-    "keeps the string, number, and boolean metadata of a customer and drops every other value",
-    () =>
-      Effect.gen(function* () {
-        const customer = yield* decodePolarCustomer({
-          ...individual,
-          metadata: {
-            active: true,
-            nested: { value: true },
-            nothing: null,
-            seats: 3,
-            userId: "user-1",
-          },
-        });
-        expect(customer.metadata).toEqual({
-          active: true,
-          seats: 3,
-          userId: "user-1",
-        });
-      })
-  );
-
-  it.effect("reads missing or null customer metadata as empty", () =>
-    Effect.gen(function* () {
-      const missing = yield* decodePolarCustomer(
-        Struct.omit(individual, ["metadata"])
-      );
-      const empty = yield* decodePolarCustomer({
-        ...individual,
-        metadata: null,
-      });
-      expect(missing.metadata).toEqual({});
-      expect(empty.metadata).toEqual({});
-    })
-  );
-
-  it.effect("decodes only the customer id from a deletion", () =>
-    Effect.gen(function* () {
-      expect(yield* decodePolarCustomerId(individual)).toEqual({
-        id: "customer-1",
-      });
-    })
-  );
-
-  it.effect(
-    "ignores the fields of a deletion that it does not read, however malformed",
-    () =>
-      Effect.gen(function* () {
-        for (const malformed of [
-          { billing_address: { country: 42 } },
-          { billing_name: 42 },
-          { created_at: 12_345 },
-          { created_at: "2026-09-01" },
-          { deleted_at: "2026-02-31T00:00:00Z" },
-          { email_verified: "yes" },
-          { metadata: { nested: { value: true } } },
-          { organization_id: null },
-          { tax_id: "not-a-list" },
-        ]) {
-          expect(
-            yield* decodePolarCustomerId({ ...individual, ...malformed })
-          ).toEqual({ id: "customer-1" });
-        }
-      })
-  );
-
-  it.effect("rejects a deletion without a customer id", () =>
-    Effect.gen(function* () {
-      const failure = yield* decodePolarCustomerId(
-        Struct.omit(individual, ["id"])
-      ).pipe(Effect.flip);
-      expect(failure).toBeInstanceOf(PolarPayloadError);
-    })
-  );
-
-  it.effect("decodes a customer list and rejects a list without items", () =>
-    Effect.gen(function* () {
-      const page = yield* decodePolarCustomerPage({
-        items: [individual],
-        pagination: { max_page: 1, total_count: 1 },
-      });
-      expect(page).toEqual({ items: [decoded] });
-      const failure = yield* decodePolarCustomerPage({
-        pagination: { max_page: 0, total_count: 0 },
-      }).pipe(Effect.flip);
-      expect(failure.message).toBe(
-        "Polar customer list payload does not match its contract."
-      );
-    })
-  );
-
-  it.effect("decodes a checkout URL and rejects a checkout without one", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* decodePolarCheckout({ url: "https://checkout.polar.sh/s" })
-      ).toEqual({ url: "https://checkout.polar.sh/s" });
-      const failure = yield* decodePolarCheckout({}).pipe(Effect.flip);
-      expect(failure.message).toBe(
-        "Polar checkout payload does not match its contract."
-      );
-    })
-  );
-
-  it.effect(
-    "decodes a customer portal URL from its snake_case field and rejects a session without one",
+    "decodes an individual customer with its billing country, and reads a missing email, external ID, name, or country as null",
     () =>
       Effect.gen(function* () {
         expect(
-          yield* decodePolarCustomerSession({
-            customer_portal_url: "https://polar.sh/portal",
+          yield* decodePolarCustomer({
+            billing_address: { country: "ID" },
+            email: "learner@example.com",
+            external_id: "user-1",
+            id: "cust_1",
+            name: "Learner",
+            type: "individual",
           })
-        ).toEqual({ url: "https://polar.sh/portal" });
-        const failure = yield* decodePolarCustomerSession({}).pipe(Effect.flip);
-        expect(failure.message).toBe(
-          "Polar customer session payload does not match its contract."
-        );
+        ).toEqual({
+          billingCountry: "ID",
+          email: "learner@example.com",
+          externalId: "user-1",
+          id: "cust_1",
+          name: "Learner",
+        });
+        expect(
+          yield* decodePolarCustomer({
+            billing_address: null,
+            id: "cust_2",
+            type: "team",
+          })
+        ).toEqual({
+          billingCountry: null,
+          email: null,
+          externalId: null,
+          id: "cust_2",
+          name: null,
+        });
       })
   );
 
-  it.effect("decodes a subscription with its date-times as Date values", () =>
+  it.effect("refuses a billing country that is not a two-letter code", () =>
     Effect.gen(function* () {
-      const subscription = yield* decodePolarSubscription(subscriptionWire);
-      expect(subscription).toMatchObject({
-        amount: 1000,
-        customerId: "customer-1",
-        endedAt: null,
-        id: "subscription-1",
-        metadata: { campaign: "launch" },
-        modifiedAt: null,
-        productId: "product-1",
-        recurringInterval: "month",
-        status: "active",
-      });
-      expect(subscription.createdAt).toEqual(
-        DateTime.toDateUtc(DateTime.makeUnsafe("2026-09-01T00:00:00Z"))
+      const exit = yield* Effect.exit(
+        decodePolarCustomer({
+          billing_address: { country: "Indonesia" },
+          id: "cust_3",
+          type: "individual",
+        })
       );
-      expect(subscription.currentPeriodEnd).toEqual(
-        DateTime.toDateUtc(DateTime.makeUnsafe("2026-10-01T00:00:00.123Z"))
-      );
-      expect(subscription.startedAt).toEqual(
-        DateTime.toDateUtc(DateTime.makeUnsafe("2026-09-01T00:00:00Z"))
-      );
+      expect(Exit.isFailure(exit)).toBe(true);
     })
   );
 
   it.effect(
-    "keeps an unrecognized recurring interval for the converter to map",
+    "reads the time a subscription became past due, and none when Polar sends none",
     () =>
       Effect.gen(function* () {
-        const subscription = yield* decodePolarSubscription({
-          ...subscriptionWire,
-          recurring_interval: "fortnight",
+        const subscription = {
+          cancel_at_period_end: false,
+          created_at: "2026-10-01T00:00:00.000Z",
+          current_period_end: "2026-11-01T00:00:00.000Z",
+          current_period_start: "2026-10-01T00:00:00.000Z",
+          customer_id: "cust_1",
+          ended_at: null,
+          id: "sub_1",
+          modified_at: "2026-10-02T00:00:00.000Z",
+          product_id: "product_1",
+          recurring_interval: "month",
+          status: "past_due",
+        };
+        const pastDue = yield* decodePolarSubscription({
+          ...subscription,
+          past_due_at: "2026-11-01T00:00:00.000Z",
         });
-        expect(subscription.recurringInterval).toBe("fortnight");
+        expect(pastDue.pastDueAt?.toISOString()).toBe(
+          "2026-11-01T00:00:00.000Z"
+        );
+        const sent = yield* decodePolarSubscription({
+          ...subscription,
+          past_due_at: null,
+        });
+        expect(sent.pastDueAt).toBeNull();
+        const unsent = yield* decodePolarSubscription(subscription);
+        expect(unsent.pastDueAt).toBeUndefined();
       })
   );
 
-  it.effect("rejects a subscription whose date-time cannot be read", () =>
+  it.effect("refuses a customer without a type", () =>
     Effect.gen(function* () {
-      const failure = yield* decodePolarSubscription({
-        ...subscriptionWire,
-        current_period_end: "not-a-date",
-      }).pipe(Effect.flip);
-      expect(failure).toBeInstanceOf(PolarPayloadError);
-      expect(failure.message).toBe(
-        "Polar subscription payload does not match its contract."
-      );
+      const exit = yield* Effect.exit(decodePolarCustomer({ id: "cust_3" }));
+      expect(Exit.isFailure(exit)).toBe(true);
     })
   );
 
-  it.effect("rejects a subscription amount that is not an integer", () =>
+  it.effect("decodes a checkout URL and a customer portal URL", () =>
     Effect.gen(function* () {
-      const failure = yield* decodePolarSubscription({
-        ...subscriptionWire,
-        amount: 10.5,
-      }).pipe(Effect.flip);
-      expect(failure).toBeInstanceOf(PolarPayloadError);
+      expect(
+        yield* decodePolarCheckout({ url: "https://checkout.polar.sh/c" })
+      ).toEqual({ url: "https://checkout.polar.sh/c" });
+      expect(
+        yield* decodePolarCustomerSession({
+          customer_portal_url: "https://polar.sh/portal",
+        })
+      ).toEqual({ url: "https://polar.sh/portal" });
     })
   );
+
+  it.effect("refuses a checkout or portal response without its URL", () =>
+    Effect.gen(function* () {
+      expect(Exit.isFailure(yield* Effect.exit(decodePolarCheckout({})))).toBe(
+        true
+      );
+      expect(
+        Exit.isFailure(yield* Effect.exit(decodePolarCustomerSession({})))
+      ).toBe(true);
+    })
+  );
+
+  it.effect(
+    "decodes a subscription with its dates as Date values and its optional price",
+    () =>
+      Effect.gen(function* () {
+        const subscription = yield* decodePolarSubscription(subscriptionWire);
+        expect(subscription).toMatchObject({
+          cancelAtPeriodEnd: false,
+          customerId: "cust_polar_1",
+          id: "sub_polar_1",
+          priceId: "price_polar_1",
+          productId: "product_polar_1",
+          recurringInterval: "month",
+          status: "active",
+        });
+        expect(subscription.currentPeriodEnd?.toISOString()).toBe(
+          "2026-11-01T00:00:00.000Z"
+        );
+        const { price_id: _priceId, ...withoutPriceWire } = subscriptionWire;
+        const withoutPrice = yield* decodePolarSubscription(withoutPriceWire);
+        expect(withoutPrice.priceId).toBeUndefined();
+      })
+  );
+
+  it.effect("refuses a subscription whose period start is not a date", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        decodePolarSubscription({
+          ...subscriptionWire,
+          current_period_start: "not-a-date",
+        })
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
+
+  it("reads the event type and its data from a stored body, and none from a body that names no event", () => {
+    expect(
+      Option.map(
+        decodePolarEnvelope(
+          encodeJsonText({
+            data: { id: "sub_1" },
+            type: "subscription.created",
+          })
+        ),
+        (envelope) => envelope.type
+      )
+    ).toEqual(Option.some("subscription.created"));
+    expect(Option.isNone(decodePolarEnvelope("not json"))).toBe(true);
+    expect(
+      Option.isNone(decodePolarEnvelope(encodeJsonText({ data: {} })))
+    ).toBe(true);
+  });
 });

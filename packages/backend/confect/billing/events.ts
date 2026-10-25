@@ -4,15 +4,28 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  MutationRunner,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { resolvePolarCustomer } from "@repo/backend/confect/billing/polar/resolve";
+import { processPolarEvent } from "@repo/backend/confect/billing/polar/webhook";
 import type { BillingEventDelivery } from "@repo/backend/confect/billing/schema";
 import { BillingRowMissing } from "@repo/backend/confect/billing/spec";
 import { processXenditEvent } from "@repo/backend/confect/billing/xendit/process";
-import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  Option,
+  Predicate,
+  Schema,
+} from "effect";
+
+const MINUTE_MS = 60 * 1000;
+const DAY_MS = 24 * 60 * MINUTE_MS;
 
 /** A webhook row is kept this long, beyond every provider retry window. */
-export const BILLING_EVENT_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
+export const BILLING_EVENT_RETENTION_MS = 90 * DAY_MS;
 /** Rows one cleanup run reads or deletes, so a run never reads an unbounded set. */
 const BILLING_EVENT_CLEANUP_BATCH = 100;
 
@@ -69,13 +82,36 @@ export const recordEvent = Effect.fn("billing.events.record")(function* (
   return recorded;
 });
 
+/** Marks one delivery processed, and logs what it did. Invalid bodies and deliveries on the wrong rail are errors. */
+const recordOutcome = Effect.fn("billing.events.recordOutcome")(function* (
+  eventId: BillingEventId,
+  detail: {
+    readonly rail: string;
+    readonly type: string;
+    readonly outcome: string;
+  },
+  now: number
+) {
+  const writer = yield* DatabaseWriter;
+  yield* writer
+    .table("billingEvents")
+    .patch(eventId, { processedAt: now })
+    .pipe(Effect.orDie);
+  if (detail.outcome === "invalid" || detail.outcome === "railMismatch") {
+    yield* Effect.logError("Billing webhook was not applied", detail);
+  } else {
+    yield* Effect.logInfo("Billing webhook processed", detail);
+  }
+});
+
 /**
- * Applies one stored delivery and marks it processed. A row already processed
- * changes nothing. The provider's own event decides what it changes, and an event
- * Nakafa cannot read or does not act on is logged and marked processed too, so it
- * never blocks the rows behind it. Only a row that vanished fails.
+ * Applies one stored delivery. A row already processed changes nothing. A Polar
+ * delivery naming a customer Nakafa holds no account for is returned as unknown,
+ * and stays unprocessed for the caller to resolve. Every other outcome marks the
+ * row processed, so an event Nakafa cannot read or does not act on never blocks
+ * the rows behind it. A failure leaves the row unprocessed.
  */
-export const processEvent = Effect.fn("billing.events.process")(function* (
+export const applyEvent = Effect.fn("billing.events.apply")(function* (
   eventId: BillingEventId,
   now: number
 ) {
@@ -94,23 +130,63 @@ export const processEvent = Effect.fn("billing.events.process")(function* (
     });
   }
   if (event.processedAt !== null) {
-    return;
+    return { kind: "processed" as const };
   }
-  const outcome =
-    event.rail === "xendit"
-      ? yield* processXenditEvent(event.payload)
-      : "ignored";
-  const writer = yield* DatabaseWriter;
-  yield* writer
-    .table("billingEvents")
-    .patch(eventId, { processedAt: now })
-    .pipe(Effect.orDie);
-  const detail = { rail: event.rail, type: event.type, outcome };
-  if (outcome === "invalid" || outcome === "railMismatch") {
-    yield* Effect.logError("Billing webhook was not applied", detail);
-  } else {
-    yield* Effect.logInfo("Billing webhook processed", detail);
+  if (event.rail === "polar") {
+    const outcome = yield* processPolarEvent(event.payload);
+    if (!Predicate.isString(outcome)) {
+      return {
+        kind: "unknownCustomer" as const,
+        customerId: outcome.customerId,
+      };
+    }
+    yield* recordOutcome(
+      eventId,
+      { rail: event.rail, type: event.type, outcome },
+      now
+    );
+    return { kind: "processed" as const };
   }
+  const outcome = yield* processXenditEvent(event.payload);
+  yield* recordOutcome(
+    eventId,
+    { rail: event.rail, type: event.type, outcome },
+    now
+  );
+  return { kind: "processed" as const };
+});
+
+/**
+ * Applies one stored delivery from the scheduler. A Polar customer Nakafa holds no
+ * account for is resolved against Polar once, and the delivery is applied again when
+ * that links the customer. A delivery whose customer still matches no billable user
+ * stays unprocessed, and the sweep reapplies it until it is given up.
+ */
+export const processEvent = Effect.fn("billing.events.process")(function* (
+  eventId: BillingEventId
+) {
+  const { runMutation } = yield* MutationRunner;
+  const applied = yield* runMutation(refs.internal.billing.events.apply, {
+    eventId,
+  }).pipe(Effect.orDie);
+  if (applied.kind === "processed") {
+    return null;
+  }
+  // A Polar read that fails leaves the delivery unprocessed, and the sweep and the reconciliation retry it.
+  const resolution = yield* resolvePolarCustomer(applied.customerId).pipe(
+    Effect.catchTag("PolarCustomerError", (error) =>
+      Effect.logError("Polar customer of a billing webhook could not be read", {
+        customerId: applied.customerId,
+        message: error.message,
+      }).pipe(Effect.as("unresolved" as const))
+    )
+  );
+  if (resolution === "linked") {
+    yield* runMutation(refs.internal.billing.events.apply, { eventId }).pipe(
+      Effect.orDie
+    );
+  }
+  return null;
 });
 
 /**

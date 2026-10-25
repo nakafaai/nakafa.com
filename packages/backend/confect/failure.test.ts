@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { AccountUnavailable } from "@repo/backend/confect/auth/spec";
-import { CheckoutUnavailable } from "@repo/backend/confect/customers/checkout/spec";
+import { CheckoutUnavailable } from "@repo/backend/confect/billing/spec";
 import {
   getUnknownErrorMessage,
   publicFailure,

@@ -38,9 +38,3 @@ export const convexSiteServerKeys = () =>
     { VITE_CONVEX_SITE_URL: urlSchema },
     { VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL }
   );
-/** Reads the Polar server selection that Convex functions read. A missing or unknown value means sandbox. */
-export const polarKeys = () =>
-  readEnvironment(
-    { VITE_POLAR_SERVER: optionalStringSchema },
-    { VITE_POLAR_SERVER: process.env.VITE_POLAR_SERVER }
-  );

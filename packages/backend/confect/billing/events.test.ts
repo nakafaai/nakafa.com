@@ -1,16 +1,27 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  applyEvent,
   BILLING_EVENT_RETENTION_MS,
   cleanupEvents,
-  processEvent,
   recordEvent,
 } from "@repo/backend/confect/billing/events";
 import {
+  PolarCustomerError,
+  polarCustomerErrorCode,
+} from "@repo/backend/confect/billing/polar/spec";
+import { internal } from "@repo/backend/convex/_generated/api";
+import {
   createBillingTestConvex,
   exitInMutation,
+  insertPolarAccount,
+  polarProSubscriptionBody,
   runInMutation,
 } from "@repo/backend/test/billing";
-import { Array as Arr, Exit } from "effect";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
+import { Array as Arr, Effect, Exit } from "effect";
+
+const polarGateway = vi.hoisted(() => ({ getCustomer: vi.fn() }));
+vi.mock("@repo/backend/confect/billing/polar/live", () => ({ polarGateway }));
 
 const NOW = Date.UTC(2026, 9, 24);
 const delivery = {
@@ -55,8 +66,8 @@ describe("billing/events", () => {
     const t = createBillingTestConvex();
     const processedAt = await t.run(async (ctx) => {
       const { eventId } = await runInMutation(ctx, recordEvent(delivery, NOW));
-      await runInMutation(ctx, processEvent(eventId, NOW + 1));
-      await runInMutation(ctx, processEvent(eventId, NOW + 2));
+      await runInMutation(ctx, applyEvent(eventId, NOW + 1));
+      await runInMutation(ctx, applyEvent(eventId, NOW + 2));
       return (await ctx.db.get(eventId))?.processedAt;
     });
     expect(processedAt).toBe(NOW + 1);
@@ -67,7 +78,7 @@ describe("billing/events", () => {
     const failed = await t.run(async (ctx) => {
       const { eventId } = await runInMutation(ctx, recordEvent(delivery, NOW));
       await ctx.db.delete(eventId);
-      const exit = await exitInMutation(ctx, processEvent(eventId, NOW + 1));
+      const exit = await exitInMutation(ctx, applyEvent(eventId, NOW + 1));
       return Exit.isFailure(exit);
     });
     expect(failed).toBe(true);
@@ -83,13 +94,13 @@ describe("billing/events", () => {
           NOW
         )
       );
-      await runInMutation(ctx, processEvent(eventId, NOW + 1));
+      await runInMutation(ctx, applyEvent(eventId, NOW + 1));
       return (await ctx.db.get(eventId))?.processedAt;
     });
     expect(processedAt).toBe(NOW + 1);
   });
 
-  it("marks a Polar row processed without reading its body", async () => {
+  it("marks a Polar row processed even when its body names no event", async () => {
     const t = createBillingTestConvex();
     const processedAt = await t.run(async (ctx) => {
       const { eventId } = await runInMutation(
@@ -99,7 +110,7 @@ describe("billing/events", () => {
           NOW
         )
       );
-      await runInMutation(ctx, processEvent(eventId, NOW + 1));
+      await runInMutation(ctx, applyEvent(eventId, NOW + 1));
       return (await ctx.db.get(eventId))?.processedAt;
     });
     expect(processedAt).toBe(NOW + 1);
@@ -113,7 +124,7 @@ describe("billing/events", () => {
         ctx,
         recordEvent({ ...delivery, key: "old-done" }, old)
       );
-      await runInMutation(ctx, processEvent(done.eventId, old));
+      await runInMutation(ctx, applyEvent(done.eventId, old));
       await runInMutation(
         ctx,
         recordEvent({ ...delivery, key: "old-open" }, old)
@@ -131,4 +142,198 @@ describe("billing/events", () => {
     expect(result.keys).toContain("old-open");
     expect(result.keys).toContain("fresh");
   });
+
+  it("leaves a Polar delivery that names a customer with no account unprocessed, and returns that customer", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const { eventId } = await runInMutation(
+        ctx,
+        recordEvent(
+          {
+            ...delivery,
+            key: "unknown-customer",
+            payload: polarProSubscriptionBody("cust_event_unknown"),
+            rail: "polar",
+            type: "subscription.created",
+          },
+          NOW
+        )
+      );
+      const outcome = await runInMutation(ctx, applyEvent(eventId, NOW + 1));
+      return { outcome, processedAt: (await ctx.db.get(eventId))?.processedAt };
+    });
+    expect(result).toEqual({
+      outcome: { customerId: "cust_event_unknown", kind: "unknownCustomer" },
+      processedAt: null,
+    });
+  });
+
+  it("applies a Polar delivery whose customer is linked, without asking Polar", async () => {
+    polarGateway.getCustomer.mockReset();
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "auth-event-linked",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "event-linked@example.com",
+        mascot: MASCOT_CODE,
+        name: "Event Linked",
+        plan: "free",
+      });
+      await insertPolarAccount(ctx, userId, "cust_event_linked");
+      const { eventId } = await runInMutation(
+        ctx,
+        recordEvent(
+          {
+            ...delivery,
+            key: "linked-customer",
+            payload: polarProSubscriptionBody("cust_event_linked"),
+            rail: "polar",
+            type: "subscription.created",
+          },
+          NOW
+        )
+      );
+      const outcome = await runInMutation(ctx, applyEvent(eventId, NOW + 1));
+      return { outcome, processedAt: (await ctx.db.get(eventId))?.processedAt };
+    });
+    expect(result).toEqual({
+      outcome: { kind: "processed" },
+      processedAt: NOW + 1,
+    });
+    expect(polarGateway.getCustomer).not.toHaveBeenCalled();
+  });
+
+  it("links an unknown Polar customer to the user its external ID names, then applies the delivery", async () => {
+    polarGateway.getCustomer.mockReset();
+    polarGateway.getCustomer.mockReturnValue(
+      Effect.succeed(
+        polarCustomerFixture("cust_event_link", "auth-event-link", "ID")
+      )
+    );
+    const t = createBillingTestConvex();
+    const eventId = await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        authId: "auth-event-link",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "event-link@example.com",
+        mascot: MASCOT_CODE,
+        name: "Event Link",
+        plan: "free",
+      });
+      const recorded = await runInMutation(
+        ctx,
+        recordEvent(
+          {
+            ...delivery,
+            key: "resolve-customer",
+            payload: polarProSubscriptionBody("cust_event_link"),
+            rail: "polar",
+            type: "subscription.created",
+          },
+          NOW
+        )
+      );
+      return recorded.eventId;
+    });
+    await t.action(internal.billing.events.process, { eventId });
+    const stored = await t.run(async (ctx) => ({
+      accounts: await ctx.db.query("billingAccounts").collect(),
+      processedAt: (await ctx.db.get(eventId))?.processedAt,
+      subscriptions: await ctx.db.query("billingSubscriptions").collect(),
+    }));
+    expect(stored.accounts).toMatchObject([
+      { country: "ID", currency: "IDR", providerCustomerId: "cust_event_link" },
+    ]);
+    expect(stored.subscriptions).toHaveLength(1);
+    expect(stored.processedAt).not.toBeNull();
+  });
+
+  it.each([
+    [
+      "the customer matches no user",
+      polarCustomerFixture("cust_nobody_event", "auth-nobody-event", null),
+    ],
+    [
+      "the customer has no external ID",
+      polarCustomerFixture("cust_no_ext_event", null, null),
+    ],
+  ])("leaves a delivery unprocessed when %s", async (_label, customer) => {
+    polarGateway.getCustomer.mockReset();
+    polarGateway.getCustomer.mockReturnValue(Effect.succeed(customer));
+    const t = createBillingTestConvex();
+    const eventId = await t.run(async (ctx) => {
+      const recorded = await runInMutation(
+        ctx,
+        recordEvent(
+          {
+            ...delivery,
+            key: `unresolved-${customer.id}`,
+            payload: polarProSubscriptionBody(customer.id),
+            rail: "polar",
+            type: "subscription.created",
+          },
+          NOW
+        )
+      );
+      return recorded.eventId;
+    });
+    await t.action(internal.billing.events.process, { eventId });
+    expect(
+      await t.run(async (ctx) => (await ctx.db.get(eventId))?.processedAt)
+    ).toBeNull();
+    expect(
+      await t.run((ctx) => ctx.db.query("billingAccounts").collect())
+    ).toEqual([]);
+  });
+
+  it("leaves a delivery unprocessed when Polar cannot read its customer", async () => {
+    polarGateway.getCustomer.mockReset();
+    polarGateway.getCustomer.mockReturnValue(
+      Effect.fail(
+        new PolarCustomerError({
+          code: polarCustomerErrorCode,
+          message: "Failed to load Polar customer.",
+        })
+      )
+    );
+    const t = createBillingTestConvex();
+    const eventId = await t.run(async (ctx) => {
+      const recorded = await runInMutation(
+        ctx,
+        recordEvent(
+          {
+            ...delivery,
+            key: "unreadable-customer",
+            payload: polarProSubscriptionBody("cust_unreadable"),
+            rail: "polar",
+            type: "subscription.created",
+          },
+          NOW
+        )
+      );
+      return recorded.eventId;
+    });
+    await t.action(internal.billing.events.process, { eventId });
+    expect(
+      await t.run(async (ctx) => (await ctx.db.get(eventId))?.processedAt)
+    ).toBeNull();
+  });
 });
+
+/** A Polar customer as the resolver reads it: its ID, the Nakafa auth ID it names, and its billing country. */
+function polarCustomerFixture(
+  id: string,
+  externalId: string | null,
+  billingCountry: string | null
+) {
+  return {
+    billingCountry,
+    email: null,
+    externalId,
+    id,
+    name: null,
+  };
+}

@@ -1,9 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import {
-  convexKeys,
-  convexSiteKeys,
-  polarPublicKeys,
-} from "@repo/backend/public";
+import { convexKeys, convexSiteKeys } from "@repo/backend/public";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -42,17 +38,5 @@ describe("Convex values at their boundaries", () => {
 
     vi.stubEnv("VITE_CONVEX_SITE_URL", "");
     expect(convexSiteKeys).toThrow();
-  });
-});
-
-describe("Polar public keys", () => {
-  it("reads the Polar server of the browser build and keeps a missing value missing", () => {
-    vi.stubEnv("VITE_POLAR_SERVER", "production");
-    expect(polarPublicKeys()).toMatchObject({
-      VITE_POLAR_SERVER: "production",
-    });
-
-    vi.stubEnv("VITE_POLAR_SERVER", undefined);
-    expect(polarPublicKeys().VITE_POLAR_SERVER).toBeUndefined();
   });
 });

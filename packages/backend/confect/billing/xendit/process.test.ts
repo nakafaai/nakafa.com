@@ -1,92 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { processXenditEvent } from "@repo/backend/confect/billing/xendit/process";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createBillingTestConvex,
   exitInMutation,
   runInMutation,
+  seedXenditSubscription,
+  xenditCycle,
+  xenditDelivery,
 } from "@repo/backend/test/billing";
-import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Exit } from "effect";
-
-/** The provider time the seeded subscription already holds. */
-const STORED = Date.UTC(2026, 0, 1);
-
-/** One Xendit delivery body, as the route stores it. */
-function body(event: string, data: unknown): string {
-  return encodeJsonText({
-    business_id: "biz_1",
-    created: "2026-10-24T00:00:00Z",
-    data,
-    event,
-  });
-}
-
-/** One recurring cycle, paid in its first attempt unless a test overrides a field. */
-function cycle(overrides: Record<string, unknown> = {}) {
-  return {
-    amount: 79_000,
-    attempt_details: [
-      {
-        created: "2026-10-01T00:01:00Z",
-        payment_id: "py_cycle_1",
-        status: "SUCCEEDED",
-      },
-    ],
-    currency: "IDR",
-    id: "recy_1",
-    plan_id: "repl_1",
-    scheduled_timestamp: "2026-10-01T00:00:00Z",
-    status: "SUCCEEDED",
-    updated: "2026-10-01T00:05:00Z",
-    ...overrides,
-  };
-}
-
-/** Stores a pending Xendit subscription of Pro, on a personal account of the given rail. */
-async function seed(
-  ctx: MutationCtx,
-  options: {
-    planId?: string;
-    providerUpdatedAt?: number;
-    rail?: "polar" | "xendit";
-  } = {}
-) {
-  const userId = await ctx.db.insert("users", {
-    authId: `auth-xendit-${options.planId ?? "plan"}-${options.rail ?? "xendit"}`,
-    credits: 0,
-    creditsResetAt: 0,
-    email: "xendit-process@example.com",
-    mascot: MASCOT_CODE,
-    name: "Xendit Process",
-    plan: "free",
-  });
-  const accountId = await ctx.db.insert("billingAccounts", {
-    owner: { kind: "personal", userId },
-    rail: options.rail ?? "xendit",
-    country: "ID",
-    currency: "IDR",
-    providerCustomerId: null,
-  });
-  const subscriptionId = await ctx.db.insert("billingSubscriptions", {
-    accountId,
-    offer: "pro.monthly",
-    quantity: 1,
-    status: "pending",
-    currentPeriodStart: 0,
-    currentPeriodEnd: null,
-    cancelAtPeriodEnd: false,
-    provider: {
-      kind: "xendit",
-      planId: options.planId ?? "repl_1",
-      tokenId: null,
-      channel: "DANA",
-    },
-    providerUpdatedAt: options.providerUpdatedAt ?? STORED,
-  });
-  return { accountId, subscriptionId, userId };
-}
 
 describe("billing/xendit/process", () => {
   it("reads a body that is not an envelope as invalid", async () => {
@@ -100,11 +22,11 @@ describe("billing/xendit/process", () => {
   it("applies an activated plan to the stored subscription", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const { subscriptionId } = await seed(ctx);
+      const { subscriptionId } = await seedXenditSubscription(ctx);
       const outcome = await runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.plan.activated", {
+          xenditDelivery("recurring.plan.activated", {
             id: "repl_1",
             status: "ACTIVE",
             updated: "2026-10-24T00:00:00Z",
@@ -128,11 +50,11 @@ describe("billing/xendit/process", () => {
   it("cancels the subscription at the end of its period when its plan is inactivated", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const { subscriptionId } = await seed(ctx);
+      const { subscriptionId } = await seedXenditSubscription(ctx);
       const outcome = await runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.plan.inactivated", {
+          xenditDelivery("recurring.plan.inactivated", {
             id: "repl_1",
             status: "INACTIVE",
             updated: "2026-10-24T00:00:00Z",
@@ -156,11 +78,11 @@ describe("billing/xendit/process", () => {
   it("refuses a plan update older than the stored one", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const { subscriptionId } = await seed(ctx);
+      const { subscriptionId } = await seedXenditSubscription(ctx);
       const outcome = await runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.plan.activated", {
+          xenditDelivery("recurring.plan.activated", {
             id: "repl_1",
             status: "ACTIVE",
             updated: "2025-12-31T00:00:00Z",
@@ -175,11 +97,11 @@ describe("billing/xendit/process", () => {
   it("reports a plan Nakafa holds no row for", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.plan.activated", {
+          xenditDelivery("recurring.plan.activated", {
             id: "repl_other",
             status: "ACTIVE",
             updated: "2026-10-24T00:00:00Z",
@@ -193,10 +115,12 @@ describe("billing/xendit/process", () => {
   it("refuses a plan event whose data does not decode", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
-        processXenditEvent(body("recurring.plan.activated", { id: "repl_1" }))
+        processXenditEvent(
+          xenditDelivery("recurring.plan.activated", { id: "repl_1" })
+        )
       );
     });
     expect(outcome).toBe("invalid");
@@ -205,11 +129,11 @@ describe("billing/xendit/process", () => {
   it("does not change a subscription whose account is on another rail", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx, { rail: "polar" });
+      await seedXenditSubscription(ctx, { rail: "polar" });
       return runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.plan.activated", {
+          xenditDelivery("recurring.plan.activated", {
             id: "repl_1",
             status: "ACTIVE",
             updated: "2026-10-24T00:00:00Z",
@@ -223,12 +147,12 @@ describe("billing/xendit/process", () => {
   it("fails when the account of a stored subscription is gone", async () => {
     const t = createBillingTestConvex();
     const failed = await t.run(async (ctx) => {
-      const { accountId } = await seed(ctx);
+      const { accountId } = await seedXenditSubscription(ctx);
       await ctx.db.delete(accountId);
       const exit = await exitInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.plan.activated", {
+          xenditDelivery("recurring.plan.activated", {
             id: "repl_1",
             status: "ACTIVE",
             updated: "2026-10-24T00:00:00Z",
@@ -243,10 +167,12 @@ describe("billing/xendit/process", () => {
   it("records a successful cycle and grants its paid period", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const { subscriptionId } = await seed(ctx);
+      const { subscriptionId } = await seedXenditSubscription(ctx);
       const outcome = await runInMutation(
         ctx,
-        processXenditEvent(body("recurring.cycle.succeeded", cycle()))
+        processXenditEvent(
+          xenditDelivery("recurring.cycle.succeeded", xenditCycle())
+        )
       );
       const stored = await ctx.db.get(subscriptionId);
       const payments = await ctx.db.query("billingPayments").collect();
@@ -269,7 +195,7 @@ describe("billing/xendit/process", () => {
       };
     });
     expect(result).toEqual({
-      grants: [{ product: "pro", validTo: Date.UTC(2026, 10, 1) }],
+      grants: [{ product: "pro", validTo: Date.UTC(2026, 10, 2) }],
       outcome: "applied",
       payments: [
         {
@@ -288,13 +214,13 @@ describe("billing/xendit/process", () => {
   it("names the cycle as the payment when its succeeded attempt names none", async () => {
     const t = createBillingTestConvex();
     const providerPaymentId = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       await runInMutation(
         ctx,
         processXenditEvent(
-          body(
+          xenditDelivery(
             "recurring.cycle.succeeded",
-            cycle({
+            xenditCycle({
               attempt_details: [
                 {
                   created: "2026-10-01T00:01:00Z",
@@ -315,12 +241,14 @@ describe("billing/xendit/process", () => {
   it("keeps a stale cycle's payment and leaves the subscription's state as it is", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const { subscriptionId } = await seed(ctx, {
+      const { subscriptionId } = await seedXenditSubscription(ctx, {
         providerUpdatedAt: Date.UTC(2026, 9, 30),
       });
       const outcome = await runInMutation(
         ctx,
-        processXenditEvent(body("recurring.cycle.succeeded", cycle()))
+        processXenditEvent(
+          xenditDelivery("recurring.cycle.succeeded", xenditCycle())
+        )
       );
       const stored = await ctx.db.get(subscriptionId);
       const grants = await ctx.db.query("billingGrants").collect();
@@ -343,13 +271,13 @@ describe("billing/xendit/process", () => {
   it("refuses a successful cycle that names no successful attempt", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
         processXenditEvent(
-          body(
+          xenditDelivery(
             "recurring.cycle.succeeded",
-            cycle({
+            xenditCycle({
               attempt_details: [
                 {
                   created: "2026-10-01T00:01:00Z",
@@ -368,11 +296,14 @@ describe("billing/xendit/process", () => {
   it("refuses a successful cycle in a currency the catalog does not sell", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.cycle.succeeded", cycle({ currency: "SGD" }))
+          xenditDelivery(
+            "recurring.cycle.succeeded",
+            xenditCycle({ currency: "SGD" })
+          )
         )
       );
     });
@@ -382,10 +313,12 @@ describe("billing/xendit/process", () => {
   it("refuses a successful cycle whose data does not decode", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
-        processXenditEvent(body("recurring.cycle.succeeded", { id: "recy_1" }))
+        processXenditEvent(
+          xenditDelivery("recurring.cycle.succeeded", { id: "recy_1" })
+        )
       );
     });
     expect(outcome).toBe("invalid");
@@ -394,11 +327,14 @@ describe("billing/xendit/process", () => {
   it("reports a successful cycle for a plan Nakafa holds no row for", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.cycle.succeeded", cycle({ plan_id: "repl_other" }))
+          xenditDelivery(
+            "recurring.cycle.succeeded",
+            xenditCycle({ plan_id: "repl_other" })
+          )
         )
       );
     });
@@ -408,10 +344,12 @@ describe("billing/xendit/process", () => {
   it("does not record a successful cycle on another rail", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      await seed(ctx, { rail: "polar" });
+      await seedXenditSubscription(ctx, { rail: "polar" });
       const outcome = await runInMutation(
         ctx,
-        processXenditEvent(body("recurring.cycle.succeeded", cycle()))
+        processXenditEvent(
+          xenditDelivery("recurring.cycle.succeeded", xenditCycle())
+        )
       );
       const payments = await ctx.db.query("billingPayments").collect();
       return { outcome, payments: payments.length };
@@ -422,13 +360,13 @@ describe("billing/xendit/process", () => {
   it("marks a failed cycle past due and keeps its paid period", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
-      const { subscriptionId } = await seed(ctx);
+      const { subscriptionId } = await seedXenditSubscription(ctx);
       const outcome = await runInMutation(
         ctx,
         processXenditEvent(
-          body(
+          xenditDelivery(
             "recurring.cycle.failed",
-            cycle({ status: "FAILED", updated: "2026-10-02T00:00:00Z" })
+            xenditCycle({ status: "FAILED", updated: "2026-10-02T00:00:00Z" })
           )
         )
       );
@@ -441,10 +379,12 @@ describe("billing/xendit/process", () => {
   it("refuses a failed cycle whose data does not decode", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
-        processXenditEvent(body("recurring.cycle.failed", { id: "recy_1" }))
+        processXenditEvent(
+          xenditDelivery("recurring.cycle.failed", { id: "recy_1" })
+        )
       );
     });
     expect(outcome).toBe("invalid");
@@ -453,13 +393,13 @@ describe("billing/xendit/process", () => {
   it("reports a failed cycle for a plan Nakafa holds no row for", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
         processXenditEvent(
-          body(
+          xenditDelivery(
             "recurring.cycle.failed",
-            cycle({ plan_id: "repl_other", status: "FAILED" })
+            xenditCycle({ plan_id: "repl_other", status: "FAILED" })
           )
         )
       );
@@ -470,11 +410,14 @@ describe("billing/xendit/process", () => {
   it("does not change a subscription for a failed cycle on another rail", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx, { rail: "polar" });
+      await seedXenditSubscription(ctx, { rail: "polar" });
       return runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.cycle.failed", cycle({ status: "FAILED" }))
+          xenditDelivery(
+            "recurring.cycle.failed",
+            xenditCycle({ status: "FAILED" })
+          )
         )
       );
     });
@@ -484,11 +427,14 @@ describe("billing/xendit/process", () => {
   it("ignores a cycle that is only created", async () => {
     const t = createBillingTestConvex();
     const outcome = await t.run(async (ctx) => {
-      await seed(ctx);
+      await seedXenditSubscription(ctx);
       return runInMutation(
         ctx,
         processXenditEvent(
-          body("recurring.cycle.created", cycle({ status: "SCHEDULED" }))
+          xenditDelivery(
+            "recurring.cycle.created",
+            xenditCycle({ status: "SCHEDULED" })
+          )
         )
       );
     });

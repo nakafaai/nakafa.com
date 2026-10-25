@@ -1,218 +1,95 @@
-import type { webhooks } from "@polar-sh/sdk/2026-10";
-import refs from "@repo/backend/confect/_generated/refs";
+import { findAccountByProviderCustomer } from "@repo/backend/confect/billing/accounts";
+import { endSubscriptionGrant } from "@repo/backend/confect/billing/grantEnd";
+import { syncSubscriptionGrant } from "@repo/backend/confect/billing/grants";
 import {
-  MutationRunner,
-  QueryRunner,
-} from "@repo/backend/confect/_generated/services";
-import { normalizeStoredCustomer } from "@repo/backend/confect/billing/polar/impl";
-import { polarGateway } from "@repo/backend/confect/billing/polar/live";
-import {
-  decodePolarCustomer,
-  decodePolarCustomerId,
+  decodePolarEnvelope,
   decodePolarSubscription,
-  type PolarCustomerSource,
-  PolarPayloadError,
 } from "@repo/backend/confect/billing/polar/payload";
-import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/records";
-import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
-import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
-import { convertToDatabaseSubscription } from "@repo/backend/confect/subscriptions/row";
-import { Effect, flow, Match, Schema } from "effect";
-
-type PolarWebhookEvent = webhooks.WebhookPayload;
-const subscriptionWebhookOperationSchema = Schema.Literals([
-  "create",
-  "update",
-]);
-type SubscriptionWebhookOperation =
-  typeof subscriptionWebhookOperationSchema.Type;
-class PolarWebhookIoError extends Schema.TaggedError<PolarWebhookIoError>()(
-  "PolarWebhookIoError",
-  {
-    code: Schema.Literal("POLAR_WEBHOOK_IO_FAILED"),
-    message: Schema.String,
-  }
-) {}
-/** Maps Convex action IO into the Polar webhook error channel. */
-function toPolarWebhookIoError(error: unknown) {
-  return new PolarWebhookIoError({
-    code: "POLAR_WEBHOOK_IO_FAILED",
-    message: getUnknownErrorMessage(error),
-  });
-}
+import {
+  polarGrantAction,
+  polarSubscriptionState,
+} from "@repo/backend/confect/billing/polar/subscription";
+import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
+import { Clock, Effect, Match, Option } from "effect";
 
 /**
- * Upserts one Polar customer only while its app user remains active.
- *
- * A durable tombstone or deleted user is an accepted discard. A missing user
- * or cancelable deletion preparation remains retryable.
+ * Applies one Polar subscription to the billing model, for a webhook and for the
+ * reconciliation of listed subscriptions alike. The customer names the account,
+ * the subscription names its row, and a state older than the stored one is refused.
+ * The grant follows the status (see `polarGrantAction`). A subscription whose
+ * product Nakafa does not sell is logged as an error and changes nothing.
  */
-export const upsertPolarCustomerWebhook = Effect.fn(
-  "customers.polar.upsertWebhookCustomer"
-)(function* (customer: PolarCustomerSource) {
-  const { runQuery } = yield* QueryRunner;
-  const { runMutation } = yield* MutationRunner;
-  const normalizedCustomer = yield* normalizeStoredCustomer(customer);
-  const target = yield* runQuery(
-    refs.internal.customers.queries.internal.customer.resolveWebhookTarget,
-    {
-      ...(normalizedCustomer.externalId === null
-        ? {}
-        : {
-            externalId: normalizedCustomer.externalId,
-          }),
-      ...(typeof normalizedCustomer.metadata.userId === "string"
-        ? {
-            metadataUserId: normalizedCustomer.metadata.userId,
-          }
-        : {}),
-      polarCustomerId: normalizedCustomer.id,
-    }
-  ).pipe(
-    Effect.mapError(toPolarWebhookIoError),
-    Effect.catchDefect(flow(toPolarWebhookIoError, Effect.fail))
-  );
-  if (target.kind !== "active") {
-    return target.kind === "deleted" ? "discarded" : "missing";
+export const applyPolarSubscription = Effect.fn(
+  "billing.polar.applySubscription"
+)(function* (data: unknown) {
+  const decoded = yield* decodePolarSubscription(data).pipe(Effect.option);
+  if (Option.isNone(decoded)) {
+    return "invalid" as const;
   }
-  const result = yield* runMutation(
-    refs.internal.customers.mutations.internal.upsertCustomer,
-    {
-      customer: convertToDatabaseCustomer({
-        ...normalizedCustomer,
-        userId: target.userId,
-      }),
-    }
-  ).pipe(
-    Effect.mapError(toPolarWebhookIoError),
-    Effect.catchDefect(flow(toPolarWebhookIoError, Effect.fail))
+  const subscription = decoded.value;
+  const account = yield* findAccountByProviderCustomer(
+    "polar",
+    subscription.customerId
   );
-  if (result.kind === "stored") {
-    return "stored";
+  if (Option.isNone(account)) {
+    return {
+      kind: "unknownCustomer" as const,
+      customerId: subscription.customerId,
+    };
   }
-  return result.kind === "prepared" ? "missing" : "discarded";
+  const state = polarSubscriptionState(account.value._id, subscription);
+  if (Option.isNone(state)) {
+    yield* Effect.logError(
+      "Polar subscription is not a Pro offer Nakafa sells",
+      {
+        productId: subscription.productId,
+        recurringInterval: subscription.recurringInterval,
+        status: subscription.status,
+        subscriptionId: subscription.id,
+      }
+    );
+    return "unsupported" as const;
+  }
+  const applied = yield* applySubscriptionState(state.value);
+  if (applied.kind === "stale") {
+    return "stale" as const;
+  }
+  const action = polarGrantAction(subscription, yield* Clock.currentTimeMillis);
+  if (action.kind === "endAt") {
+    yield* endSubscriptionGrant(applied.subscriptionId, action.endsAt);
+  } else if (state.value.currentPeriodEnd !== null) {
+    yield* syncSubscriptionGrant(applied.subscriptionId);
+  }
+  return "applied" as const;
 });
+
+/** Routes one Polar event to the subscription it changes. Events that change no subscription are ignored. */
+const dispatch = (type: string, data: unknown) =>
+  Match.value(type).pipe(
+    Match.whenOr(
+      "subscription.created",
+      "subscription.updated",
+      "subscription.active",
+      "subscription.canceled",
+      "subscription.past_due",
+      "subscription.uncanceled",
+      "subscription.revoked",
+      () => applyPolarSubscription(data)
+    ),
+    Match.orElse(() => Effect.succeed("ignored" as const))
+  );
+
 /**
- * Resolves the authoritative Polar customer before accepting a subscription.
- *
- * This closes late and out-of-order webhook races after account deletion:
- * subscriptions are written only after the current Polar customer maps to an
- * active app user and its local customer row is accepted.
+ * Applies one stored Polar delivery to the billing model and says what it did.
+ * A body that does not decode is reported and changes nothing. A customer Nakafa
+ * holds no account for is returned as unknown, so the caller can resolve it.
  */
-export const upsertPolarSubscriptionWebhook = Effect.fn(
-  "customers.polar.upsertWebhookSubscription"
-)(function* (
-  subscription: SubscriptionRecord,
-  operation: SubscriptionWebhookOperation
+export const processPolarEvent = Effect.fn("billing.polar.process")(function* (
+  payload: string
 ) {
-  const { runMutation } = yield* MutationRunner;
-  const customer = yield* polarGateway.getCustomerById(subscription.customerId);
-  if (!customer) {
-    return "discarded";
+  const envelope = decodePolarEnvelope(payload);
+  if (Option.isNone(envelope)) {
+    return "invalid" as const;
   }
-  const disposition = yield* upsertPolarCustomerWebhook(customer);
-  if (disposition !== "stored") {
-    return disposition;
-  }
-  if (operation === "create") {
-    yield* runMutation(
-      refs.internal.subscriptions.mutations.createSubscription,
-      {
-        subscription,
-      }
-    ).pipe(
-      Effect.mapError(toPolarWebhookIoError),
-      Effect.catchDefect(flow(toPolarWebhookIoError, Effect.fail))
-    );
-    return "stored";
-  }
-  yield* runMutation(refs.internal.subscriptions.mutations.updateSubscription, {
-    subscription,
-  }).pipe(
-    Effect.mapError(toPolarWebhookIoError),
-    Effect.catchDefect(flow(toPolarWebhookIoError, Effect.fail))
-  );
-  return "stored";
-});
-/** Drains local state for one terminal Polar customer deletion. */
-const deletePolarCustomerWebhook = Effect.fn(
-  "customers.polar.deleteWebhookCustomer"
-)(function* (polarCustomerId: string) {
-  const { runMutation } = yield* MutationRunner;
-  let hasMore = true;
-  while (hasMore) {
-    hasMore = yield* runMutation(
-      refs.internal.customers.mutations.internal.deleteCustomerById,
-      {
-        id: polarCustomerId,
-      }
-    ).pipe(
-      Effect.mapError(toPolarWebhookIoError),
-      Effect.catchDefect(flow(toPolarWebhookIoError, Effect.fail))
-    );
-  }
-});
-/** Dispatches one already-verified Polar webhook through durable guards. */
-export const processPolarWebhookEvent = Effect.fn(
-  "customers.polar.processWebhookEvent"
-)(function* (event: PolarWebhookEvent) {
-  return yield* Match.value(event).pipe(
-    Match.whenOr(
-      { type: "customer.created" },
-      { type: "customer.updated" },
-      (customerEvent) =>
-        Effect.gen(function* () {
-          const customer = yield* decodePolarCustomer(customerEvent.data);
-          // A customer the normalizer cannot store is a payload this handler cannot read.
-          const disposition = yield* upsertPolarCustomerWebhook(customer).pipe(
-            Effect.catchTag("PolarCustomerError", (error) =>
-              Effect.fail(
-                new PolarPayloadError({ cause: error, message: error.message })
-              )
-            )
-          );
-          return disposition !== "missing";
-        })
-    ),
-    Match.when({ type: "customer.deleted" }, (deletedEvent) =>
-      Effect.gen(function* () {
-        const customer = yield* decodePolarCustomerId(deletedEvent.data);
-        yield* deletePolarCustomerWebhook(customer.id);
-        return true;
-      })
-    ),
-    Match.when({ type: "subscription.created" }, (createdEvent) =>
-      Effect.gen(function* () {
-        const subscription = yield* decodePolarSubscription(createdEvent.data);
-        const disposition = yield* upsertPolarSubscriptionWebhook(
-          convertToDatabaseSubscription(subscription),
-          "create"
-        );
-        return disposition !== "missing";
-      })
-    ),
-    Match.whenOr(
-      { type: "subscription.updated" },
-      { type: "subscription.active" },
-      { type: "subscription.canceled" },
-      { type: "subscription.past_due" },
-      { type: "subscription.uncanceled" },
-      { type: "subscription.revoked" },
-      (updatedEvent) =>
-        Effect.gen(function* () {
-          const subscription = yield* decodePolarSubscription(
-            updatedEvent.data
-          );
-          const disposition = yield* upsertPolarSubscriptionWebhook(
-            convertToDatabaseSubscription(subscription),
-            "update"
-          );
-          return disposition !== "missing";
-        })
-    ),
-    Match.orElse(() =>
-      // No handler reads this type, so its data is never decoded and Polar stops retrying it.
-      Effect.succeed(true)
-    )
-  );
+  return yield* dispatch(envelope.value.type, envelope.value.data);
 });

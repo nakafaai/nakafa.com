@@ -24,6 +24,9 @@ import { Array as Arr, Effect, Exit } from "effect";
 const START = Date.UTC(2026, 9, 1);
 const PERIOD_END = Date.UTC(2026, 10, 1);
 const DECEMBER_END = Date.UTC(2026, 11, 1);
+/** Each paid period end with its day of renewal grace, the last instant a renewed grant runs. */
+const PERIOD_END_WITH_GRACE = Date.UTC(2026, 10, 2);
+const DECEMBER_END_WITH_GRACE = Date.UTC(2026, 11, 2);
 
 /** Inserts a person with a free plan and a Polar account for them. */
 async function insertPerson(ctx: MutationCtx) {
@@ -120,7 +123,7 @@ describe("billing/grants", () => {
     expect(result).toEqual({
       count: 1,
       sameGrant: true,
-      validTo: Date.UTC(2026, 11, 1),
+      validTo: DECEMBER_END_WITH_GRACE,
     });
   });
 
@@ -136,7 +139,7 @@ describe("billing/grants", () => {
       await runInMutation(ctx, projectUserPlan(userId, START + 1));
       const afterEnd = await runInMutation(
         ctx,
-        projectUserPlan(userId, PERIOD_END + 1)
+        projectUserPlan(userId, PERIOD_END_WITH_GRACE + 1)
       );
       const user = await ctx.db.get(userId);
       return { plan: afterEnd, userPlan: user?.plan };
@@ -172,7 +175,7 @@ describe("billing/grants", () => {
       );
       const afterBoth = await runInMutation(
         ctx,
-        projectUserPlan(userId, Date.UTC(2026, 11, 1) + 1)
+        projectUserPlan(userId, DECEMBER_END_WITH_GRACE + 1)
       );
       return { midway, afterBoth };
     });
@@ -396,7 +399,7 @@ describe("billing/grants", () => {
       await insertSchoolGrant(ctx, tenantId, START, DECEMBER_END);
       return runInMutation(
         ctx,
-        projectUserPlan(student.userId, PERIOD_END + 1)
+        projectUserPlan(student.userId, PERIOD_END_WITH_GRACE + 1)
       );
     });
     expect(result).toBe("pro");
@@ -437,7 +440,7 @@ describe("billing/grants", () => {
       );
       const after = await runInMutation(
         ctx,
-        projectUserPlan(student.userId, PERIOD_END + 1)
+        projectUserPlan(student.userId, PERIOD_END_WITH_GRACE + 1)
       );
       return { after, during };
     });

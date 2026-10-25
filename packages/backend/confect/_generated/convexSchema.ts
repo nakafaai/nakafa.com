@@ -47,8 +47,6 @@ import contentState from "./tables/contentState";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
-import customerDeletionTombstones from "./tables/customerDeletionTombstones";
-import customers from "./tables/customers";
 import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
@@ -96,7 +94,6 @@ import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
-import subscriptions from "./tables/subscriptions";
 import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
@@ -173,8 +170,6 @@ export default $defineSchema({
   creditResetPeriods: $Table.tableDefinition(creditResetPeriods),
   creditTransactions: $Table.tableDefinition(creditTransactions),
   curriculumRoutes: $Table.tableDefinition(curriculumRoutes),
-  customerDeletionTombstones: $Table.tableDefinition(customerDeletionTombstones),
-  customers: $Table.tableDefinition(customers),
   editorClients: $Table.tableDefinition(editorClients),
   editorDocuments: $Table.tableDefinition(editorDocuments),
   editorSnapshots: $Table.tableDefinition(editorSnapshots),
@@ -222,7 +217,6 @@ export default $defineSchema({
   quranSearch: $Table.tableDefinition(quranSearch),
   schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
-  subscriptions: $Table.tableDefinition(subscriptions),
   tenantAssignments: $Table.tableDefinition(tenantAssignments),
   tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
   tenantCohorts: $Table.tableDefinition(tenantCohorts),
