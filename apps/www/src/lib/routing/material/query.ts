@@ -40,8 +40,10 @@ export function readMaterialContextQuery(search: string) {
  *
  * Callers use this after source-identity projection succeeds; `undefined`
  * returns an empty suffix so locale switching drops invalid target contexts.
- * The tilde stays literal, as the curriculum links write it. URLSearchParams would
- * encode it, so the value is encoded as one query component instead.
+ * The value is one query component, encoded by `encodeURIComponent`, the standard
+ * for a query value. It keeps the tilde literal, as the curriculum links write it,
+ * where URLSearchParams would encode it. The colon and the slash of a key are
+ * percent-encoded, and a URL reader decodes both spellings to the same key.
  */
 export function toMaterialContextQueryString(
   context: MaterialContextIdentity | undefined

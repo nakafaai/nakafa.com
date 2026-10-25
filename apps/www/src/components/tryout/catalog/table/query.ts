@@ -33,3 +33,17 @@ export type CatalogQuery = typeof CatalogQuery.Type;
 
 /** The values that the URL leaves out: every set, in authored order, ascending. */
 export const CATALOG_QUERY_DEFAULTS = Schema.decodeSync(CatalogQuery)({});
+
+/**
+ * The loader's dependency of a track page. The router keys each match by the JSON of
+ * its dependency, and a validated search keeps the key order of the address, so the
+ * dependency lists the three keys in one fixed order. An address that spells the
+ * defaults out then keys the same match as the canonical address, which loads once.
+ */
+export function catalogLoaderDeps(search: CatalogQuery): CatalogQuery {
+  return {
+    direction: search.direction,
+    sort: search.sort,
+    status: search.status,
+  };
+}

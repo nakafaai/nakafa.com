@@ -1,9 +1,10 @@
-import { getRouteApi } from "@tanstack/react-router";
-import { Effect } from "effect";
+import { getRouteApi, useLocation } from "@tanstack/react-router";
+import { Effect, Schema } from "effect";
 import { useState } from "react";
 import { ConvexIsland } from "@/components/providers/island";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
 import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
+import { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import type {
   TryoutSetListArgs,
   TryoutSetPage,
@@ -45,7 +46,14 @@ const catalogRoute = getRouteApi(
  * that adds a history entry and keeps the scroll position.
  */
 export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
-  const selection = catalogRoute.useSearch();
+  /**
+   * The selection reads the address, which a navigation updates at once. The route
+   * match commits only when the track loader resolves, so its search would hold the
+   * controls and the request on the old selection until the server call returned.
+   */
+  const selection = useLocation({
+    select: (location) => Schema.decodeSync(CatalogQuery)(location.search),
+  });
   const navigate = catalogRoute.useNavigate();
   const request: TryoutSetRequest = {
     countryKey: bootstrap.args.countryKey,

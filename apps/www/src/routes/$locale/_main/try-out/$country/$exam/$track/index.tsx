@@ -13,6 +13,7 @@ import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
 import {
   CATALOG_QUERY_DEFAULTS,
   CatalogQuery,
+  catalogLoaderDeps,
 } from "@/components/tryout/catalog/table/query";
 import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
 import {
@@ -34,7 +35,7 @@ export const Route = createFileRoute(
 )({
   validateSearch: Schema.toStandardSchemaV1(CatalogQuery),
   search: { middlewares: [stripSearchParams(CATALOG_QUERY_DEFAULTS)] },
-  loaderDeps: ({ search }) => search,
+  loaderDeps: ({ search }) => catalogLoaderDeps(search),
   loader: async ({ params, deps }) => {
     const route = await readTryoutTrackFn({
       data: {

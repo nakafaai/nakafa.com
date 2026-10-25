@@ -35,9 +35,9 @@ export function AuthGoogle({ returnPath, variant }: Props) {
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tToast = useTranslations("Toast");
-  const searchStr = useLocation({ select: (location) => location.searchStr });
+  const search = useLocation({ select: (location) => location.search });
   const { error: errorQuery, redirect: redirectQuery } =
-    readAuthReturnQuery(searchStr);
+    readAuthReturnQuery(search);
   const [hasClientError, setHasClientError] = useState(false);
   const [isPending, startTransition] = useTransition();
   const authNavigation = useCurrentAuthNavigation();
