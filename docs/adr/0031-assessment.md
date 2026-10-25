@@ -253,73 +253,22 @@ has exactly one owner.
 ### 10. Migration without compatibility code
 
 - One major Aksara contract release replaces the 0.x schema. The corpus is
-  rewritten or migrated in the same release.
-- School item rows are not in the corpus. A major contract release migrates them
-  before any reader switches, in the order of the rule for public functions
-  (expand, switch, observe, contract, `packages/backend/AGENTS.md`). In each cell
-  the migration rewrites that cell's rows, counted by the contract-version index
-  and run dry first, the way ADR 0011 counts the rows of the old School. The
-  reader that decodes only the new shape ships last, after the observation:
-  production function logs show no write of the old shape for at least 12 hours
-  (the skew window, ADR 0011) and across one later production deploy, because a
-  tab left open on an older build calls Convex directly, and the count of rows of
-  the old shape then reads zero in every cell. The count follows the observation
-  and never replaces it, because a hold alone does not stop a tab on an older
-  build from writing the old shape.
-- Nakafa's engine replaces `confect/tryouts` and `confect/response` in one release
-  path. No adapter, dual read, or compatibility code sits between the steps.
-- The engine cutover converts every finished try-out attempt once, in a counted
-  and idempotent batch, into result rows that the `grading` module owns
-  (`assessmentResults`). The batch counts the attempts it reads, the rows it
-  writes, and the rows that already exist, and it writes a row only when none
-  exists for the attempt, so a rerun changes nothing. A running attempt is closed
-  and scored first, so it is converted as a finished one.
-- A finished attempt keeps its review (ADR 0003). The conversion writes into the
-  result what that review reads today: the learner's responses with their
-  outcomes, the placements the attempt ran, the scores of the attempt and of each
-  section as `tryoutScores` holds them (the raw and the published score, the
-  score's status, theta, and its standard error,
-  `packages/backend/confect/tryouts/score/result.ts`), and the identity of the
-  signed content it ran on. The old tables are dropped only after every result
-  holds its scores. The signed snapshot and its artifacts stay for as long as a
-  result names them: snapshot retention counts a result as a reference to its
-  snapshot, and the artifact check counts the artifacts of its placements, as
-  they count an attempt and a placement today
-  (`packages/backend/confect/contentRelease/snapshot/retention.ts`).
-- The old try-out functions and the nine `tryout*` tables (`tryoutAttempts`,
-  `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`,
-  `tryoutScores`, `tryoutPlacements`, `tryoutCatalog`, `tryoutRuntimeBundles`,
-  and `tryoutSetProgress`) go in the contract step of the rule for public
-  functions (expand, switch, observe, contract, `packages/backend/AGENTS.md`).
-  The tables are dropped only after the counts of the conversion match,
-  acceptance shows the review of a converted attempt reading from its result and
-  the retained signed content alone, and production function logs show no call to
-  an old try-out function across a window that spans at least one production
-  deploy, the check ADR 0011 records for the old School. The 12-hour skew window
-  is only a minimum, and a dev dry run comes first. A reviewed batched deletion
-  then empties the tables, run dry and then for real until every count is zero,
-  and a last release drops the tables, the conversion, and the deletion.
-- The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
-  ADR 0003 and the rule must not lapse with it. A content reset deletes only
-  rebuildable Nakafa read models. It preserves signed snapshot state, attempts,
-  results, progress, placements, responses, scores, access state, entitlements,
-  calibration runs, and IRT scales, and each attempt, result, and scale keeps the
-  exact signed snapshot that its historical review and scoring need. No table is
-  reset while it holds data. A retired table goes only when no schema or code refers to
-  it and the replacement runtime has passed acceptance, and its rows are none, or
-  verified in the replacement store by the counts above, or approved for disposal
-  by the owner. No export is taken from production, by the working rule of
-  `docs/convex/cost.md`: the conversion is the recoverable copy, because the old
-  tables keep their rows until every count matches.
+  rewritten in the same release, and no reader keeps the old shape alive.
+- Production may break briefly during a maintenance. Rows that the new shape
+  refuses are deleted, not backfilled: the owner's rule is that bad data goes,
+  and no conversion, counted batch, or copy of old rows is written for it.
+- Nakafa's engine replaces `confect/tryouts` and `confect/response` in one
+  release. No adapter, dual read, skew window, or compatibility code sits between
+  the steps.
+- Every sitting answer and every try-out answer takes its `version` as a required
+  argument. A stored answer without a version is bad data and is deleted.
 - One flag table, `assessmentFlags`, holds every assessment flag. No
-  `tryoutFlags` table ships.
+  `tryoutFlags` table ships. A sitting writes its flags through the gate
+  (ADR 0013).
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
   That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer
   and grading are installed. This is a release gate in wave B.
-- The contract step for the version of a try-out answer landed in #1102. The
-  save takes its version as a required argument, and the gate's unversioned
-  branch and its `assessment.gate.unversioned` log line are gone.
 
 ## Consequences
 
