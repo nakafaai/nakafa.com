@@ -1,8 +1,5 @@
 import { Coins01Icon } from "@hugeicons/core-free-icons";
-import {
-  TOP_UP_PACK_CREDITS,
-  TOP_UP_VALIDITY_MONTHS,
-} from "@repo/backend/confect/credits/constants";
+import { TOP_UP_PACK_CREDITS } from "@repo/backend/confect/credits/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -10,8 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { CurrencyText } from "@/components/marketing/about/pricing/currency";
 import {
@@ -24,16 +23,19 @@ import {
   type BillingOverview,
   formatBillingDate,
   formatCount,
+  usedPercent,
 } from "@/lib/billing/plan";
 import { topUpPriceText } from "@/lib/billing/topup";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { PricingCurrencySchema } from "@/lib/pricing/monthly";
 
 /**
- * The Nina credits card, for every viewer: the balance, the allowance of the
- * plan, the day the balance refills, and the top-up packs with the day the first
- * of them ends. A Pro viewer buys a pack here, so the purchase never starts on
- * the pricing page.
+ * The Nina credits card, for every viewer: the share of the period's credits
+ * already used as a bar, the day they reset, and the share written beside it, so
+ * the card shows how much is left instead of listing it. A screen reader hears
+ * the exact count left. Top-up packs show their count left and the day the first
+ * of them expires, and a Pro viewer buys a pack here, so the purchase never
+ * starts on the pricing page.
  */
 export function UserSettingsCredits({
   overview,
@@ -45,6 +47,7 @@ export function UserSettingsCredits({
   const t = useTranslations("Auth");
   const { credits, plan } = overview;
   const isPro = plan === "pro";
+  const percent = usedPercent(credits);
   const { expiresAt } = credits.lots;
 
   const handleBuy = () => {
@@ -64,27 +67,31 @@ export function UserSettingsCredits({
         <CardTitle>{t("credits")}</CardTitle>
         <CardDescription>{t("credits-description")}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-6 gap-y-3 text-sm">
-          <dt className="text-muted-foreground">{t("balance")}</dt>
-          <dd>{formatCount(credits.balance, locale)}</dd>
-          <dt className="text-muted-foreground">{t("allowance")}</dt>
-          <dd>
-            {t(isPro ? "allowance-monthly" : "allowance-daily", {
-              amount: credits.allowance,
+      <CardContent className="grid gap-6">
+        <CreditUsage
+          period={t(isPro ? "credits-month" : "credits-today")}
+          resets={t("credits-resets", {
+            date: formatBillingDate(credits.resetAt, locale),
+          })}
+          used={t("credits-used", { percent })}
+        >
+          <Dashboard.Meter
+            label={t("credits-left", {
+              left: formatCount(credits.balance, locale),
+              total: formatCount(credits.allowance, locale),
             })}
-          </dd>
-          <dt className="text-muted-foreground">{t("next-reset")}</dt>
-          <dd>{formatBillingDate(credits.resetAt, locale)}</dd>
-          {credits.lots.balance > 0 && expiresAt !== null ? (
-            <>
-              <dt className="text-muted-foreground">{t("top-up-balance")}</dt>
-              <dd>{formatCount(credits.lots.balance, locale)}</dd>
-              <dt className="text-muted-foreground">{t("top-up-ends")}</dt>
-              <dd>{formatBillingDate(expiresAt, locale)}</dd>
-            </>
-          ) : null}
-        </dl>
+            percent={percent}
+          />
+        </CreditUsage>
+        {credits.lots.balance > 0 && expiresAt !== null ? (
+          <CreditUsage
+            period={t("top-up-balance")}
+            resets={t("top-up-expires", {
+              date: formatBillingDate(expiresAt, locale),
+            })}
+            used={t("top-up-left", { count: credits.lots.balance })}
+          />
+        ) : null}
       </CardContent>
       {isPro ? (
         <CardSectionFooter hint={<PackPriceSentence />}>
@@ -105,6 +112,41 @@ export function UserSettingsCredits({
   );
 }
 
+/**
+ * One pool of credits: its name and the day it resets or expires, then what is
+ * left of it. A period of the plan shows the share used as a bar; a pack has no
+ * allowance to measure against, so it shows its count alone. A phone stacks the
+ * bar under the names, and a wider card sets it between them and the figure.
+ */
+function CreditUsage({
+  children,
+  period,
+  resets,
+  used,
+}: {
+  children?: ReactNode;
+  period: string;
+  resets: string;
+  used: string;
+}) {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto]">
+      <div className="col-start-1 row-start-1 grid gap-0.5">
+        <p className="font-medium text-sm">{period}</p>
+        <p className="text-muted-foreground text-sm">{resets}</p>
+      </div>
+      {children === undefined ? null : (
+        <div className="col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+          {children}
+        </div>
+      )}
+      <p className="col-start-2 row-start-1 text-end text-muted-foreground text-sm tabular-nums sm:col-start-3">
+        {used}
+      </p>
+    </div>
+  );
+}
+
 /** The Pro footer sentence, with one pack's price in each currency: the visitor's currency shows. */
 function PackPriceSentence() {
   const t = useTranslations("Auth");
@@ -115,7 +157,6 @@ function PackPriceSentence() {
         <CurrencyText currency={currency} key={currency}>
           {t("credits-pro-footer", {
             credits: TOP_UP_PACK_CREDITS,
-            months: TOP_UP_VALIDITY_MONTHS,
             price: topUpPriceText(currency),
           })}
         </CurrencyText>
