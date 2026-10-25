@@ -59,54 +59,6 @@ describe("tryouts/queries/runtime", () => {
     });
   });
 
-  it("reports each question's flag from the shared flags table, and only the attempt's own", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "runtime-flags",
-      });
-      const placement = await ctx.db
-        .query("tryoutAttemptPlacements")
-        .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
-          query.eq("tryoutAttemptId", fixture.attemptId)
-        )
-        .first();
-      assert(placement);
-      await ctx.db.insert("assessmentFlags", {
-        attempt: fixture.attemptId,
-        kind: "tryout",
-        question: placement._id,
-      });
-      await ctx.db.insert("assessmentFlags", {
-        attempt: "some-other-attempt",
-        kind: "tryout",
-        question: placement._id,
-      });
-      return {
-        attemptId: fixture.attemptId,
-        identity: fixture.identity,
-        placementId: placement._id,
-      };
-    });
-    const owner = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    const state = await owner.query(
-      api.tryouts.queries.runtime.getSectionAttemptState,
-      {
-        attemptId: seeded.attemptId,
-        locale: "id",
-        sectionKey: TRYOUT_SECTION_KEY,
-      }
-    );
-    expect(state?.runtime?.questions).toMatchObject([
-      { flagged: true, placementId: seeded.placementId },
-    ]);
-  });
-
   it.each(["missing", "hash", "snapshot", "decode"] as const)(
     "does not expose question selectors when the permanent bundle is %s",
     async (corruption) => {

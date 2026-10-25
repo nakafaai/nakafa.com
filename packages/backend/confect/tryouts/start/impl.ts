@@ -2,9 +2,9 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { getIncludedAttemptAccess } from "@repo/backend/confect/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/confect/tryouts/access/source";
-import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
+import { expireAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { readAttemptStart } from "@repo/backend/confect/tryouts/runtime/lookup";
 import {
   requireInternalEntrySection,
@@ -125,9 +125,9 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
       return null;
     }
     if (input.now >= attempt.expiresAt) {
-      yield* tryoutGate.expireAttempt({
-        attemptId: attempt._id,
-        expiresAt: attempt.expiresAt,
+      yield* expireAttempt({
+        attempt,
+        now: input.now,
       });
       return null;
     }

@@ -24,7 +24,7 @@ export const signal = Effect.fn("exams.sittings.signal")(function* (args: {
   const { live, now } = yield* sittingGate
     .admit(
       rules.signal,
-      Option.some(member.person._id),
+      member.person._id,
       Option.some(args.deviceId),
       sectionOf({
         attemptId: args.attemptId,

@@ -6,7 +6,6 @@ import {
   Expired,
   Locked,
   Missing,
-  NotDue,
   OtherDevice,
   SectionClosed,
   Stale,
@@ -61,12 +60,11 @@ const admitDevice = Effect.fn("assessment.gate.device")(function* (
 });
 
 /**
- * Builds the gate over the store of one kind of attempt. Every write to an open attempt is
- * a policy over `admit`: it loads its target through the store, passes the rules in one
- * order, and only then writes through the store. There is one guard sequence for those
- * writes, learner and scheduled alike. A learner's write names its owner; a scheduled write
- * has none, and the rules alone decide it. Entering an attempt that does not exist yet is
- * an entry (`enter.ts`), not a write to an open attempt.
+ * Builds the gate over the store of one kind of attempt. Every learner write to an attempt
+ * is a policy over `admit`: it loads its target through the store, passes the rules in one
+ * order, and only then writes through the store. There is one guard sequence, and every
+ * write of every kind of attempt runs through it. Entering an attempt that does not exist
+ * yet is an entry (`enter.ts`), not a write to an open attempt.
  */
 export function make<
   Placement,
@@ -80,24 +78,23 @@ export function make<
   /**
    * The engine: loads the target, then checks every rule in order and returns the
    * checked live context with the server time it was checked at. The order is owner,
-   * attempt open, lock, device, the attempt deadline for an `attempt` rule or the elapsed
-   * deadline for an `elapsed` rule, then the section stage (open, the store's checks of
-   * the rows that identify it), the live deadline for a `live` rule, and last the rest of
-   * the rows the write needs, which the store loads and checks only now. The first failing
-   * rule is the refusal, and nothing is written after one. The live deadline is the earlier
-   * of the attempt's and the section's, so a section that added minutes never cuts a
-   * student off.
+   * attempt open, lock, device, the attempt deadline for an `attempt` rule, then the
+   * section stage (open, the store's checks of the rows that identify it), the live
+   * deadline for a `live` rule, and last the rest of the rows the write needs, which the
+   * store loads and checks only now. The first failing rule is the refusal, and nothing is
+   * written after one. The live deadline is the earlier of the attempt's and the section's,
+   * so a section that added minutes never cuts a student off.
    */
   const admit = Effect.fn("assessment.gate.admit")(function* <L, LE, LR>(
     rule: Rule,
-    owner: Option.Option<string>,
+    owner: string,
     device: Option.Option<DeviceId>,
     load: Effect.Effect<Option.Option<Candidate<L, LE, LR>>, LE, LR>
   ) {
     const now = yield* Clock.currentTimeMillis;
     const target = Option.filter(
       yield* load,
-      (candidate) => Option.isNone(owner) || candidate.owner === owner.value
+      (candidate) => candidate.owner === owner
     );
     if (Option.isNone(target)) {
       return yield* refuse(new Missing());
@@ -118,9 +115,6 @@ export function make<
     yield* admitDevice(attempt.binding, device);
     if (rule.deadline === "attempt" && now >= attempt.deadline) {
       return yield* refuse(new Expired({ deadline: attempt.deadline }));
-    }
-    if (rule.deadline === "elapsed" && now < attempt.deadline) {
-      return yield* refuse(new NotDue({ deadline: attempt.deadline }));
     }
     const open = yield* section;
     if (Option.isNone(open)) {
@@ -144,12 +138,12 @@ export function make<
     LE,
     LR,
   >(
-    owner: Option.Option<string>,
+    owner: string,
     load: Effect.Effect<Option.Option<Candidate<L, LE, LR>>, LE, LR>
   ) {
     const target = Option.filter(
       yield* load,
-      (candidate) => Option.isNone(owner) || candidate.owner === owner.value
+      (candidate) => candidate.owner === owner
     );
     return Option.exists(
       target,
@@ -171,7 +165,7 @@ export function make<
   }) {
     const { live, now } = yield* admit(
       rules.answer,
-      Option.some(input.owner),
+      input.owner,
       input.device,
       store.placement(input.placement)
     );
@@ -189,7 +183,7 @@ export function make<
    * and ended as `time-expired` once its own deadline passed, and otherwise as `submitted`.
    */
   const finish = Effect.fn("assessment.gate.finish")(function* (input: {
-    readonly owner: Option.Option<string>;
+    readonly owner: string;
     readonly device: Option.Option<DeviceId>;
     readonly section: Section;
     readonly settled: "answer" | "refuse";

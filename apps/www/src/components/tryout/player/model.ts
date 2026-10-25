@@ -18,7 +18,8 @@ export function projectTryoutQuestions(input: {
 }): readonly PlayerQuestionModel[] {
   return Arr.map(input.questions, (question) => ({
     answered: question.response?.isComplete ?? false,
-    flagged: question.flagged,
+    // Try-outs have no flag path until the engine cutover (ADR 0031 section 10).
+    flagged: false,
     key: question.placementId,
     pick: (index) =>
       Option.match(pickOption(question.responseSpec, index), {

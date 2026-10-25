@@ -456,40 +456,4 @@ describe("tryouts/mutations/expiry", () => {
       expect(stored.scores).toHaveLength(status === "completed" ? 0 : 1);
     }
   );
-  it("leaves an attempt that is not yet due open, and ends nothing", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(async (ctx) => {
-      const seeded = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "expiry-not-due",
-      });
-      await ctx.db.patch(seeded.attemptId, { expiresAt: ACTIVE_EXPIRES_AT });
-      return seeded;
-    });
-    await t.mutation(internal.tryouts.mutations.expiry.attempt, {
-      attemptId: fixture.attemptId,
-      expiresAt: ACTIVE_EXPIRES_AT,
-    });
-    const attempt = await t.query(async (ctx) => ctx.db.get(fixture.attemptId));
-    expect(attempt?.status).toBe("in-progress");
-  });
-  it("ignores an attempt expiry whose job no longer matches the attempt's deadline", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(async (ctx) => {
-      const seeded = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "expiry-stale-job",
-      });
-      await ctx.db.patch(seeded.attemptId, { expiresAt: EXPIRED_AT });
-      return seeded;
-    });
-    await t.mutation(internal.tryouts.mutations.expiry.attempt, {
-      attemptId: fixture.attemptId,
-      expiresAt: STALE_EXPIRES_AT,
-    });
-    const attempt = await t.query(async (ctx) => ctx.db.get(fixture.attemptId));
-    expect(attempt?.status).toBe("in-progress");
-  });
 });

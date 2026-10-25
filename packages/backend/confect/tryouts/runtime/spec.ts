@@ -46,8 +46,6 @@ const runtimeResponseValidator = Schema.Struct({
 });
 const runtimeQuestionValidator = Schema.Struct({
   contentHash: Schema.String,
-  /** Whether the learner flagged the question for review (the shared flags table, ADR 0031). */
-  flagged: Schema.Boolean,
   placementId: IdSchema("tryoutAttemptPlacements"),
   questionOrder: Schema.Finite,
   response: Schema.Union([runtimeResponseValidator, Schema.Null]),

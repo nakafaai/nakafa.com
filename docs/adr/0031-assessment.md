@@ -282,9 +282,9 @@ has exactly one owner.
   refers to it, and its rows are none or the owner has approved their disposal.
   No export is taken from production, by the working rule of
   `docs/convex/cost.md`.
-- One flag table, `assessmentFlags`, holds every assessment flag. No
+- One flag table, `assessmentFlags`, holds the assessment flags. No
   `tryoutFlags` table ships. A sitting writes its flags through the gate
-  (ADR 0013).
+  (ADR 0013), and try-out flags join the table at the engine cutover.
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
   That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer

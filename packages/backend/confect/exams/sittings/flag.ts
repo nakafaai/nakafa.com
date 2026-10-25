@@ -28,7 +28,7 @@ export const flag = Effect.fn("exams.sittings.flag")(function* (args: {
   const { live } = yield* sittingGate
     .admit(
       rules.flag,
-      Option.some(member.person._id),
+      member.person._id,
       Option.some(args.deviceId),
       placementOf({
         person: member.person,

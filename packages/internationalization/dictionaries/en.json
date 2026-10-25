@@ -1583,10 +1583,6 @@
       "title": "We couldn't save your answer.",
       "description": "Please try again."
     },
-    "tryout-flag-error": {
-      "title": "We couldn't flag this question.",
-      "description": "Please try again."
-    },
     "memory-limit": {
       "title": "Wait a moment before saving again."
     },

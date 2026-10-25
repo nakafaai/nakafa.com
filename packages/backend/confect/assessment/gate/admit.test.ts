@@ -271,7 +271,7 @@ describe("assessment/gate/admit", () => {
               })
             : gate.finish({
                 device: Option.none(),
-                owner: Option.some("learner"),
+                owner: "learner",
                 section: target,
                 settled: "refuse",
               })
@@ -291,7 +291,7 @@ describe("assessment/gate/admit", () => {
         const failure = yield* gate
           .finish({
             device: Option.none(),
-            owner: Option.some("other"),
+            owner: "other",
             section: "s",
             settled: "refuse",
           })
@@ -307,7 +307,7 @@ describe("assessment/gate/admit", () => {
       const admitRule = Rule.make({ deadline: "live", lock: "admit" });
       const admitted = yield* gate.admit(
         admitRule,
-        Option.some("learner"),
+        "learner",
         Option.none(),
         Effect.succeedSome({
           attempt: { ...live.attempt, state: "locked" },
@@ -336,7 +336,7 @@ describe("assessment/gate/admit", () => {
         const refused = yield* gate
           .finish({
             device: caller,
-            owner: Option.some("learner"),
+            owner: "learner",
             section: "s",
             settled: "refuse",
           })
@@ -345,7 +345,7 @@ describe("assessment/gate/admit", () => {
       }
       yield* gate.finish({
         device: Option.some("device-a"),
-        owner: Option.some("learner"),
+        owner: "learner",
         section: "s",
         settled: "refuse",
       });
@@ -363,7 +363,7 @@ describe("assessment/gate/admit", () => {
       const refused = yield* gate
         .finish({
           device: Option.some("old-device"),
-          owner: Option.some("learner"),
+          owner: "learner",
           section: "s",
           settled: "refuse",
         })
@@ -372,7 +372,7 @@ describe("assessment/gate/admit", () => {
       const unbound = yield* gate
         .finish({
           device: Option.some("new-device"),
-          owner: Option.some("learner"),
+          owner: "learner",
           section: "s",
           settled: "refuse",
         })
@@ -391,7 +391,7 @@ describe("assessment/gate/admit", () => {
         );
         yield* gate.finish({
           device: Option.some("device-a"),
-          owner: Option.some("learner"),
+          owner: "learner",
           section: "s",
           settled: "answer",
         });
@@ -409,7 +409,7 @@ describe("assessment/gate/admit", () => {
         const refused = yield* gate
           .finish({
             device: Option.some("device-a"),
-            owner: Option.some("learner"),
+            owner: "learner",
             section: "s",
             settled: "refuse",
           })
@@ -473,7 +473,7 @@ describe("assessment/gate/admit", () => {
         );
         yield* gate.finish({
           device: Option.none(),
-          owner: Option.some("learner"),
+          owner: "learner",
           section: "s",
           settled: "refuse",
         });

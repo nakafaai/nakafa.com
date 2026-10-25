@@ -22,7 +22,6 @@ const errors = {
   Expired: () => new AttemptClosed(),
   Locked: () => new AttemptLocked(),
   Missing: () => new NotInSitting(),
-  NotDue: () => new AttemptClosed(),
   NotOpen: () => new SittingNotOpen(),
   OtherDevice: () => new SecondDevice(),
   PlaceLocked: () => new SittingLocked(),
