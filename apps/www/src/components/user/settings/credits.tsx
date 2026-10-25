@@ -5,6 +5,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
+import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   CardSection,
@@ -42,17 +43,20 @@ export function UserSettingsCredits({
       </CardHeader>
       <CardContent>
         <CreditUsage
-          meter={t("credits-left", {
-            left: formatCount(credits.balance, locale),
-            total: formatCount(credits.allowance, locale),
-          })}
-          percent={percent}
           period={t(isPro ? "credits-month" : "credits-today")}
           resets={t("credits-resets", {
             date: formatBillingDate(credits.resetAt, locale),
           })}
           used={t("credits-used", { percent })}
-        />
+        >
+          <Dashboard.Meter
+            label={t("credits-left", {
+              left: formatCount(credits.balance, locale),
+              total: formatCount(credits.allowance, locale),
+            })}
+            percent={percent}
+          />
+        </CreditUsage>
       </CardContent>
       <CardSectionFooter
         hint={t(isPro ? "credits-pro-footer" : "credits-free-footer")}
@@ -67,14 +71,12 @@ export function UserSettingsCredits({
  * card sets the bar between them and the share.
  */
 function CreditUsage({
-  meter,
-  percent,
+  children,
   period,
   resets,
   used,
 }: {
-  meter: string;
-  percent: number;
+  children: ReactNode;
   period: string;
   resets: string;
   used: string;
@@ -86,7 +88,7 @@ function CreditUsage({
         <p className="text-muted-foreground text-sm">{resets}</p>
       </div>
       <div className="col-span-2 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
-        <Dashboard.Meter label={meter} percent={percent} />
+        {children}
       </div>
       <p className="col-start-2 row-start-1 text-end text-muted-foreground text-sm tabular-nums sm:col-start-3">
         {used}
