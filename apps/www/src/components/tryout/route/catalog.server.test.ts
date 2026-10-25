@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
+import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import {
   readTryoutCountryRoute,
   readTryoutExamRoute,
@@ -18,7 +19,6 @@ const catalog = vi.hoisted(() => ({
   getAksaraTreeUrl: vi.fn(),
   getAppSocialArtwork: vi.fn(),
   getOgUrl: vi.fn(),
-  readCatalogQuery: vi.fn(),
   readRequestToken: vi.fn(),
   readServerTranslator: vi.fn(),
   readTryoutCountryPage: vi.fn(),
@@ -46,9 +46,6 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutMetadata: catalog.readTryoutMetadata,
   readTryoutSetList: catalog.readTryoutSetList,
   readTryoutTrackPage: catalog.readTryoutTrackPage,
-}));
-vi.mock("@/components/tryout/catalog/table/query", () => ({
-  readCatalogQuery: catalog.readCatalogQuery,
 }));
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: catalog.readRequestToken,
@@ -429,7 +426,11 @@ describe("readTryoutTrackRoute", () => {
 });
 
 describe("readTryoutTrackSetList", () => {
-  const search = { direction: "asc", sort: "title", status: "all" };
+  const search = {
+    direction: "asc",
+    sort: "title",
+    status: "all",
+  } satisfies CatalogQuery;
   const track = { countryKey: "id", examKey: "snbt", trackKey: "2027" };
 
   it.effect(
@@ -437,11 +438,6 @@ describe("readTryoutTrackSetList", () => {
     () =>
       Effect.gen(function* () {
         catalog.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
-        catalog.readCatalogQuery.mockReturnValue({
-          direction: "asc",
-          sort: "title",
-          status: "all",
-        });
         catalog.readTryoutSetList.mockReturnValue(
           Effect.succeed({ page: [], isDone: true })
         );
@@ -455,9 +451,6 @@ describe("readTryoutTrackSetList", () => {
         expect(catalog.setResponseHeader).toHaveBeenCalledExactlyOnceWith(
           "cache-control",
           "private, no-store"
-        );
-        expect(catalog.readCatalogQuery).toHaveBeenCalledExactlyOnceWith(
-          search
         );
         expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
           Option.some("token-1"),
@@ -478,14 +471,13 @@ describe("readTryoutTrackSetList", () => {
     () =>
       Effect.gen(function* () {
         catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
-        catalog.readCatalogQuery.mockReturnValue({
-          direction: undefined,
-          sort: undefined,
-          status: undefined,
-        });
         catalog.readTryoutSetList.mockReturnValue(Effect.succeed({ page: [] }));
 
-        yield* readTryoutTrackSetList({ locale: "en", search: {}, track });
+        yield* readTryoutTrackSetList({
+          locale: "en",
+          search: { direction: "asc", sort: "order", status: "all" },
+          track,
+        });
 
         expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
           Option.none(),

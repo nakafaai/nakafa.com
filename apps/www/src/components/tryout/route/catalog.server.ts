@@ -16,7 +16,6 @@ import {
   readTryoutSetList,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/source.server";
-import { readCatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
@@ -314,17 +313,16 @@ export const readTryoutTrackSetList = Effect.fn(
 )(function* (input: typeof TrackListRequestSchema.Type) {
   yield* keepPersonalResponse;
   const token = yield* readRequestToken();
-  const selection = readCatalogQuery(input.search);
   const args = {
     countryKey: input.track.countryKey,
     examKey: input.track.examKey,
-    filter: selection.status,
+    filter: input.search.status,
     locale: input.locale,
     paginationOpts: {
       cursor: null,
       numItems: input.numItems ?? TRYOUT_SET_PAGE_SIZE,
     },
-    sort: { direction: selection.direction, field: selection.sort },
+    sort: { direction: input.search.direction, field: input.search.sort },
     trackKey: input.track.trackKey,
   };
   const result = yield* readTryoutSetList(token, args);

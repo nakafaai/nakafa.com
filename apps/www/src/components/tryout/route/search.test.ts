@@ -1,36 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Schema } from "effect";
-import {
-  TryoutAttemptSearch,
-  TryoutTrackSearch,
-} from "@/components/tryout/route/search";
-
-describe("TryoutTrackSearch", () => {
-  it("keeps the catalog query keys that decode", () => {
-    expect(
-      Schema.decodeSync(TryoutTrackSearch)({
-        direction: "desc",
-        sort: "title",
-        status: "completed",
-      })
-    ).toEqual({ direction: "desc", sort: "title", status: "completed" });
-  });
-
-  it("reads a value that does not decode as none, and keeps the other keys", () => {
-    expect(
-      Schema.decodeUnknownSync(TryoutTrackSearch)({
-        sort: "title",
-        status: ["a", "b"],
-      })
-    ).toEqual({ sort: "title" });
-  });
-
-  it("reads a parsed scalar back to the text the learner wrote", () => {
-    expect(
-      Schema.decodeSync(TryoutTrackSearch)({ direction: 1, sort: null })
-    ).toEqual({ direction: "1", sort: "null" });
-  });
-});
+import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 
 describe("TryoutAttemptSearch", () => {
   it("keeps a single or repeated attempt value as text for the attempt readers", () => {

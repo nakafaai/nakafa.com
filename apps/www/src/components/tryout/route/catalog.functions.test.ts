@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
+import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import {
   readTryoutCountryHandler,
   readTryoutExamHandler,
@@ -13,7 +14,6 @@ const catalog = vi.hoisted(() => ({
   getAksaraTreeUrl: vi.fn(),
   getAppSocialArtwork: vi.fn(),
   getOgUrl: vi.fn(),
-  readCatalogQuery: vi.fn(),
   readRequestToken: vi.fn(),
   readServerTranslator: vi.fn(),
   readTryoutCountryPage: vi.fn(),
@@ -37,9 +37,6 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSetList: catalog.readTryoutSetList,
   readTryoutTrackPage: catalog.readTryoutTrackPage,
 }));
-vi.mock("@/components/tryout/catalog/table/query", () => ({
-  readCatalogQuery: catalog.readCatalogQuery,
-}));
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: catalog.readRequestToken,
 }));
@@ -60,7 +57,11 @@ const TRACK = "try-out/id/snbt/2027";
 
 const countryPage = { country: { countryKey: "id" }, exams: [] };
 const hub = { countries: [], sourceRevision: undefined };
-const search = { direction: "asc", sort: "title", status: "all" };
+const search = {
+  direction: "asc",
+  sort: "title",
+  status: "all",
+} satisfies CatalogQuery;
 const track = { countryKey: "id", examKey: "snbt", trackKey: "2027" };
 
 beforeEach(() => {
@@ -118,7 +119,6 @@ describe("try-out catalog server functions", () => {
   });
 
   it("answers the learner's set list of one track with its query", async () => {
-    catalog.readCatalogQuery.mockReturnValue(search);
     catalog.readTryoutSetList.mockReturnValue(
       Effect.succeed({ page: [], isDone: true })
     );

@@ -1,44 +1,9 @@
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
-import { Effect, Schema, SchemaTransformation } from "effect";
+import { Effect, Schema } from "effect";
+import { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
-
-/**
- * TanStack reads a query value that starts like JSON as its JSON value, so
- * `view=1` arrives as the number 1 and `view=false` as false. The readers classify
- * the text a learner wrote, so a parsed scalar goes back to that text.
- */
-const QueryScalarText = Schema.Union([
-  Schema.String,
-  Schema.Finite,
-  Schema.Boolean,
-  Schema.Null,
-]).pipe(
-  Schema.decodeTo(
-    Schema.String,
-    SchemaTransformation.transform({
-      decode: (value) => (typeof value === "string" ? value : String(value)),
-      encode: (text) => text,
-    })
-  )
-);
-
-/** One optional catalog query value of a track. A value that does not read as text reads as none. */
-const TrackQueryValue = Schema.optionalKey(
-  QueryScalarText.pipe(Schema.catchDecoding(() => Effect.succeedNone))
-);
-
-/**
- * The catalog query of a track page: its status filter, sort and direction. Each
- * value decodes on its own, so one malformed value keeps the other two.
- */
-export const TryoutTrackSearch = Schema.Struct({
-  direction: TrackQueryValue,
-  sort: TrackQueryValue,
-  status: TrackQueryValue,
-});
-
-export type TryoutTrackSearch = typeof TryoutTrackSearch.Type;
+import { QueryText } from "@/lib/routing/search";
 
 /** The keys of one track that its learner's set list is read for. */
 const TrackKeysSchema = Schema.Struct({
@@ -62,7 +27,7 @@ export const TrackListRequestSchema = Schema.Struct({
       })
     )
   ),
-  search: TryoutTrackSearch,
+  search: CatalogQuery,
   track: TrackKeysSchema,
 });
 
@@ -72,8 +37,8 @@ export const TrackListRequestSchema = Schema.Struct({
  * invalid, so the page answers not found.
  */
 const TryoutQueryValue = Schema.Union([
-  QueryScalarText,
-  Schema.Array(QueryScalarText),
+  QueryText,
+  Schema.Array(QueryText),
 ]).pipe(Schema.catchDecoding(() => Effect.succeedSome("")));
 
 /**
