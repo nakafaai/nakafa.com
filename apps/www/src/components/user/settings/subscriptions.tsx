@@ -3,7 +3,6 @@ import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { useConvexAuth } from "@/components/auth/convex";
 import { UserSettingsCredits } from "@/components/user/settings/credits";
 import { UserSettingsPlan } from "@/components/user/settings/plan";
-import { useBillingNavigation } from "@/lib/billing/checkout";
 import type { BillingOverview } from "@/lib/billing/plan";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
@@ -17,7 +16,6 @@ export function UserSettingsSubscriptions({
 }: {
   initialOverview: BillingOverview;
 }) {
-  const billing = useBillingNavigation();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const live = usePreloadedQueryResult(
     billingRefs.queries.overview,
@@ -31,7 +29,7 @@ export function UserSettingsSubscriptions({
 
   return (
     <>
-      <UserSettingsPlan billing={billing} overview={overview} />
+      <UserSettingsPlan overview={overview} />
       <UserSettingsCredits overview={overview} />
     </>
   );

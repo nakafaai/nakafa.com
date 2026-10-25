@@ -1,9 +1,8 @@
-import {
-  type BillingRail,
-  type billingOverviewValidator,
+import type {
+  BillingRail,
+  billingOverviewValidator,
   billingSubscriptionSummaryValidator,
 } from "@repo/backend/confect/billing/schema";
-import { Schema } from "effect";
 
 /** What the billing settings show for a viewer. */
 export type BillingOverview = typeof billingOverviewValidator.Type;
@@ -13,26 +12,15 @@ export type BillingSubscription =
   typeof billingSubscriptionSummaryValidator.Type;
 
 /**
- * The plan card's state. A subscription on the account decides the card, so a
- * past-due subscription keeps its billing portal in reach. Without one, the plan
- * the grants project decides: Free shows the upgrade, and Pro that no subscription
- * on this account bills is granted from elsewhere. `ending` means the subscription
- * stops with its paid period, because it cancels there or is already canceled.
+ * The state of the plan card for one overview. A subscription on the account
+ * decides the card, so a past-due subscription keeps its billing portal in reach.
+ * Without one, the plan the grants project decides: Free shows the upgrade, and
+ * Pro that no subscription on this account bills is granted from elsewhere.
+ * `ending` means the subscription stops with its paid period, because it cancels
+ * there or is already canceled. Nothing decodes this state, so its type is the
+ * union that this function returns.
  */
-const PlanStateSchema = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("free") }),
-  Schema.Struct({ kind: Schema.Literal("granted") }),
-  Schema.Struct({
-    kind: Schema.Literal("subscribed"),
-    subscription: billingSubscriptionSummaryValidator,
-    ending: Schema.Boolean,
-    pastDue: Schema.Boolean,
-  }),
-]).pipe(Schema.toTaggedUnion("kind"));
-export type PlanState = typeof PlanStateSchema.Type;
-
-/** The state of the plan card for one overview. */
-export function planStateOf(overview: BillingOverview): PlanState {
+export function planStateOf(overview: BillingOverview) {
   const { subscription } = overview;
   if (subscription !== null) {
     return {
@@ -41,13 +29,16 @@ export function planStateOf(overview: BillingOverview): PlanState {
       ending:
         subscription.cancelAtPeriodEnd || subscription.status === "canceled",
       pastDue: subscription.status === "pastDue",
-    };
+    } as const;
   }
   if (overview.plan === "pro") {
-    return { kind: "granted" };
+    return { kind: "granted" } as const;
   }
-  return { kind: "free" };
+  return { kind: "free" } as const;
 }
+
+/** The plan card's state, as `planStateOf` returns it. */
+export type PlanState = ReturnType<typeof planStateOf>;
 
 /** The message that says what a subscribed plan does now: its last payment failed, it ends with its period, or it renews. */
 export function subscribedDescriptionKey({
@@ -77,14 +68,15 @@ export function providerNameOf(rail: BillingRail) {
 }
 
 /**
- * A calendar day in the words of one locale. Billing and credit dates are UTC
- * moments, so the day is read in UTC: the server and the browser then write the
- * same day in any zone.
+ * A calendar day in the words of one locale, read in Asia/Jakarta, the zone of
+ * Nakafa's Indonesian billing. The server and the browser then write the same
+ * day, whatever zone the viewer is in. The credit reset falls on 00:00 UTC, which
+ * is 07:00 on the same day in Jakarta.
  */
 export function formatBillingDate(moment: number, locale: string) {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "long",
-    timeZone: "UTC",
+    timeZone: "Asia/Jakarta",
   }).format(moment);
 }
 

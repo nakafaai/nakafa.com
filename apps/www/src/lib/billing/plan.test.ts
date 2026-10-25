@@ -92,12 +92,12 @@ describe("billing/plan", () => {
     expect(providerNameOf("xendit")).toBe("Xendit");
   });
 
-  it("writes a UTC day in the words of the locale, so every zone reads the same day", () => {
+  it("writes the Jakarta day in the words of the locale, so a late UTC moment reads the next day", () => {
     expect(formatBillingDate(Date.UTC(2026, 10, 1, 23, 30), "en")).toBe(
-      "November 1, 2026"
+      "November 2, 2026"
     );
-    expect(formatBillingDate(Date.UTC(2026, 10, 1), "de")).toBe(
-      "1. November 2026"
+    expect(formatBillingDate(Date.UTC(2026, 9, 31, 16, 59), "de")).toBe(
+      "31. Oktober 2026"
     );
   });
 

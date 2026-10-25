@@ -14,8 +14,8 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { UpgradePlanCard } from "@/components/user/settings/plan-upgrade";
-import type { useBillingNavigation } from "@/lib/billing/checkout";
+import { UpgradePlanCard } from "@/components/user/settings/upgrade";
+import { useBillingNavigation } from "@/lib/billing/checkout";
 import {
   type BillingOverview,
   type BillingSubscription,
@@ -27,7 +27,6 @@ import {
 } from "@/lib/billing/plan";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-type BillingNavigation = ReturnType<typeof useBillingNavigation>;
 type SubscribedState = Extract<PlanState, { kind: "subscribed" }>;
 
 /**
@@ -35,20 +34,12 @@ type SubscribedState = Extract<PlanState, { kind: "subscribed" }>;
  * subscription, a free viewer sees the upgrade, and Pro that no subscription
  * bills here is only named.
  */
-export function UserSettingsPlan({
-  billing,
-  overview,
-}: {
-  billing: BillingNavigation;
-  overview: BillingOverview;
-}) {
+export function UserSettingsPlan({ overview }: { overview: BillingOverview }) {
   return Match.value(planStateOf(overview)).pipe(
     Match.discriminatorsExhaustive("kind")({
-      free: () => <UpgradePlanCard billing={billing} />,
+      free: () => <UpgradePlanCard />,
       granted: () => <GrantedPlanCard />,
-      subscribed: (state) => (
-        <SubscribedPlanCard billing={billing} state={state} />
-      ),
+      subscribed: (state) => <SubscribedPlanCard state={state} />,
     })
   );
 }
@@ -70,13 +61,8 @@ function GrantedPlanCard() {
 }
 
 /** A subscription's dates and provider, with the billing portal that changes it. */
-function SubscribedPlanCard({
-  billing,
-  state,
-}: {
-  billing: BillingNavigation;
-  state: SubscribedState;
-}) {
+function SubscribedPlanCard({ state }: { state: SubscribedState }) {
+  const billing = useBillingNavigation();
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tPricing = useTranslations("Pricing");

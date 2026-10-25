@@ -24,12 +24,10 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import type { useBillingNavigation } from "@/lib/billing/checkout";
+import { useBillingNavigation } from "@/lib/billing/checkout";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { proPlanFeatures } from "@/lib/marketing/plan";
 import { PricingCurrencySchema } from "@/lib/pricing/monthly";
-
-type BillingNavigation = ReturnType<typeof useBillingNavigation>;
 
 /** The icon of each benefit a Pro plan lists, so every line reads at a glance. */
 const BENEFIT_ICONS = {
@@ -55,9 +53,10 @@ function Benefit({ icon, text }: { icon: typeof Tick01Icon; text: string }) {
 /**
  * The Plan card of a free viewer: the Pro offer in the viewer's currency, its
  * benefits, and the Upgrade action that starts checkout here, not on the pricing
- * page.
+ * page. The offer is monthly, the one Polar product that is sold today.
  */
-export function UpgradePlanCard({ billing }: { billing: BillingNavigation }) {
+export function UpgradePlanCard() {
+  const billing = useBillingNavigation();
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tPricing = useTranslations("Pricing");
@@ -91,7 +90,7 @@ export function UpgradePlanCard({ billing }: { billing: BillingNavigation }) {
           </p>
           <p className="text-muted-foreground">{tPricing("pro-description")}</p>
         </div>
-        <p className="flex flex-wrap items-baseline gap-x-2">
+        <div className="flex flex-wrap items-baseline gap-x-2">
           {Arr.map(PricingCurrencySchema.literals, (currency) => (
             <CurrencyBranch currency={currency} key={currency}>
               <span className="font-semibold text-3xl tracking-tight">
@@ -102,7 +101,7 @@ export function UpgradePlanCard({ billing }: { billing: BillingNavigation }) {
           <span className="text-muted-foreground">
             {tPricing("pro-period")}
           </span>
-        </p>
+        </div>
         <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
           {Arr.map(proPlanFeatures, (key) => (
             <Benefit
