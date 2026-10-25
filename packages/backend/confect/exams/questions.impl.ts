@@ -7,6 +7,7 @@ import { answerQuestion } from "@repo/backend/confect/exams/questions/answer";
 import { copyQuestion } from "@repo/backend/confect/exams/questions/copy";
 import { moveQuestion } from "@repo/backend/confect/exams/questions/move";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
+import { setPoints } from "@repo/backend/confect/exams/questions/points";
 import {
   questionOf,
   readQuestion,
@@ -70,6 +71,20 @@ const move = FunctionImpl.make(
   })
 );
 
+/** Sets the points of a question of the exam, and returns the question. */
+const points = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "points",
+  Effect.fn("exams.questions.points")(function* ({ points, questionId }) {
+    const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
+    const question = yield* questionOf(exam, questionId);
+    yield* setPoints(question, points);
+    return yield* readQuestion(questionId);
+  })
+);
+
 /** Saves the answers and the key of a question at the revision the editor saw, and returns the question. */
 const answer = FunctionImpl.make(
   databaseSchema,
@@ -89,13 +104,14 @@ const answer = FunctionImpl.make(
   })
 );
 
-/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, and answer. */
+/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, answer, and points. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(add),
   Layer.provide(copy),
   Layer.provide(remove),
   Layer.provide(move),
   Layer.provide(answer),
+  Layer.provide(points),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(examAccess),

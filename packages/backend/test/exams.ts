@@ -83,9 +83,12 @@ export const fillExam = Effect.fn("test.exams.fill")(function* (
         .insert({
           answers: row.answers,
           examId,
+          explanation: row.explanation,
           key: row.key,
+          points: row.points,
           prompt: row.prompt,
           revision: 0,
+          rubric: row.rubric,
           template: row.template,
           tenantId: row.tenantId,
           updatedAt: row.updatedAt,
