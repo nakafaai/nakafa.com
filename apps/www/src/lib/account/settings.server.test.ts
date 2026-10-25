@@ -171,7 +171,12 @@ describe("subscriptionsScreenHandler", () => {
   it("answers the billing overview of the visitor and the head", async () => {
     sessionWith(Option.some("token"));
     const overview = {
-      credits: { allowance: 10, balance: 10, resetAt: 1_792_000_000_000 },
+      credits: {
+        allowance: 10,
+        balance: 10,
+        lots: { balance: 0, expiresAt: null },
+        resetAt: 1_792_000_000_000,
+      },
       plan: "free",
       subscription: null,
     };

@@ -78,9 +78,14 @@ export const checkoutRequestInputValidator = Schema.Struct({
 });
 export type CheckoutRequestInput = typeof checkoutRequestInputValidator.Type;
 
-/** The arguments of the admission that revalidates a checkout once Polar has answered. */
+/**
+ * The arguments of the admission that revalidates a checkout once Polar has
+ * answered. `requiresPro` admits only a learner whose Pro grant still runs, which
+ * is what a top-up pack needs.
+ */
 export const checkoutAdmissionArgsValidator = Schema.Struct({
   event: productAnalyticsEventValidator,
+  requiresPro: Schema.Boolean,
   timestamp: Schema.optionalKey(Schema.Finite),
   userId: IdSchema("users"),
 });
@@ -101,6 +106,19 @@ export class CheckoutUnavailable extends Schema.TaggedError<CheckoutUnavailable>
   }
 ) {
   declare readonly code: typeof accountUnavailableCode;
+  declare readonly message: string;
+}
+
+export const topupRequiresProCode = "TOPUP_REQUIRES_PRO";
+/** A top-up pack is sold to a learner on Pro only, and this learner is not on Pro. */
+export class TopupRequiresPro extends Schema.TaggedError<TopupRequiresPro>()(
+  "TopupRequiresPro",
+  {
+    code: Schema.Literal(topupRequiresProCode),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof topupRequiresProCode;
   declare readonly message: string;
 }
 

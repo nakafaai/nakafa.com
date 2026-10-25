@@ -173,7 +173,12 @@ export declare const api: {
         "public",
         {},
         {
-          credits: { allowance: number; balance: number; resetAt: number };
+          credits: {
+            allowance: number;
+            balance: number;
+            lots: { balance: number; expiresAt: number | null };
+            resetAt: number;
+          };
           plan: "free" | "pro";
           subscription: {
             cancelAtPeriodEnd: boolean;
@@ -206,6 +211,12 @@ export declare const api: {
         "action",
         "public",
         {},
+        { url: string }
+      >;
+      generateTopupCheckoutLink: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; successUrl: string },
         { url: string }
       >;
     };
@@ -3260,6 +3271,26 @@ export declare const api: {
           slug: string;
         },
         { id: Id<"examSittings">; token: string }
+      >;
+    };
+    presence: {
+      join: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; session: string; slug: string },
+        { token: string }
+      >;
+      leave: FunctionReference<"mutation", "public", { token: string }, null>;
+      list: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        Array<{
+          id: Id<"tenantPeople">;
+          image?: string;
+          mascot: string;
+          name: string;
+        }>
       >;
     };
     questions: {
@@ -8441,12 +8472,6 @@ export declare const api: {
         >;
       };
       responses: {
-        flag: FunctionReference<
-          "mutation",
-          "public",
-          { flagged: boolean; placementId: Id<"tryoutAttemptPlacements"> },
-          null
-        >;
         save: FunctionReference<
           "mutation",
           "public",
@@ -8644,7 +8669,6 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
-                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -8957,7 +8981,6 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
-                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -9282,7 +9305,6 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
-                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -9591,7 +9613,6 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
-                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -10296,7 +10317,6 @@ export declare const api: {
               expiresAt: number;
               questions: Array<{
                 contentHash: string;
-                flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {
@@ -10492,7 +10512,6 @@ export declare const api: {
               expiresAt: number;
               questions: Array<{
                 contentHash: string;
-                flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {
@@ -11191,6 +11210,7 @@ export declare const internal: {
                   previous_plan: "free" | "pro";
                 };
               };
+          requiresPro: boolean;
           timestamp?: number;
           userId: Id<"users">;
         },
@@ -13246,6 +13266,14 @@ export declare const internal: {
     };
   };
   credits: {
+    lots: {
+      expire: FunctionReference<
+        "mutation",
+        "internal",
+        { lotId: Id<"creditLots"> },
+        null
+      >;
+    };
     mutations: {
       syncAllCreditResetPeriods: FunctionReference<
         "mutation",
@@ -13765,6 +13793,7 @@ export declare const internal: {
             creditsResetAt: number;
             fingerprint: string;
             history?: { tokens: number; turns: number; unread?: number };
+            lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -13984,6 +14013,7 @@ export declare const internal: {
             creditsResetAt: number;
             fingerprint: string;
             history?: { tokens: number; turns: number; unread?: number };
+            lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -14923,6 +14953,7 @@ export declare const internal: {
 export declare const components: {
   betterAuth: import("@repo/backend/components/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
   nina: import("@convex-dev/agent/_generated/component.js").ComponentApi<"nina">;
+  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
   agentRateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"agentRateLimiter">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
