@@ -10,10 +10,8 @@ const AlternateLanguagePathSchema = Schema.Record(
   Schema.Literals([...APP_LOCALE_CODES, "x-default"]),
   Schema.optionalKey(Schema.String)
 );
-const AlternateTypePathSchema = Schema.Record(Schema.String, Schema.String);
 const LocalizedAlternatesOptionsSchema = Schema.Struct({
   languages: Schema.optionalKey(AlternateLanguagePathSchema),
-  types: Schema.optionalKey(AlternateTypePathSchema),
 });
 type LocalizedAlternatesOptions = typeof LocalizedAlternatesOptionsSchema.Type;
 
@@ -40,7 +38,7 @@ function getPathWithoutLocale(canonical: string) {
   return canonical;
 }
 
-/** Builds canonical, hreflang, x-default, and optional typed alternates. */
+/** Builds the canonical link and the hreflang alternates of a path. */
 export function createLocalizedAlternates(
   path: string,
   options: LocalizedAlternatesOptions = {}
@@ -55,7 +53,6 @@ export function createLocalizedAlternates(
         `/${locale}${pathWithoutLocale}`,
       ])
     );
-  const typeAlternates = options.types ? { types: options.types } : {};
   const xDefault =
     languages["x-default"] ??
     languages[DEFAULT_LOCALE] ??
@@ -67,7 +64,6 @@ export function createLocalizedAlternates(
       ...languages,
       "x-default": xDefault,
     },
-    ...typeAlternates,
   };
 }
 

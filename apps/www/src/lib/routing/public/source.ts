@@ -18,15 +18,13 @@ import {
 } from "@/lib/ownership/route";
 
 const REJECTED_PUBLIC_ROOTS = HashSet.make("/learn");
-const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const QURAN_SURAH_COUNT = 114;
 
 /**
- * Reads route rejections that must run before markdown negotiation.
- *
- * Wrong public namespaces and finite public HTML routes should return a
- * real 404, but markdown requests still need a chance to route through the
- * agent-readable source handler before projected route membership is checked.
+ * Reads the route rejections that return a real 404 before the app renders: a
+ * wrong public namespace, and a finite public HTML route that the source does not
+ * own. A Markdown twin is a static asset, so a Markdown path that reaches here
+ * names no page and takes the same rejection.
  */
 export const readSourceBackedHtmlRouteRejection = Effect.fn(
   "www.routing.publicHtml.sourceRejection"
@@ -98,10 +96,6 @@ function readMissingHtmlRouteLocale({
   const [locale, root, ...segments] = Arr.filter(pathname.split("/"), Boolean);
 
   if (!(root && Schema.is(LocaleSchema)(locale))) {
-    return Effect.succeed(null);
-  }
-
-  if (MARKDOWN_EXTENSION_PATTERN.test(pathname)) {
     return Effect.succeed(null);
   }
 

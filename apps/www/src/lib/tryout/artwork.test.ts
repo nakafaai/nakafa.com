@@ -67,7 +67,7 @@ describe("try-out artwork", () => {
     })
   );
 
-  it.effect("keeps unknown exams on generated social artwork", () =>
+  it.effect("answers the home social image for an exam without artwork", () =>
     Effect.gen(function* () {
       expect(
         yield* resolveTryoutExamArtwork({
@@ -77,7 +77,7 @@ describe("try-out artwork", () => {
           publicPath: "try-out/indonesia/future-exam",
         })
       ).toEqual({
-        socialImageSrc: "/en/og/try-out/indonesia/future-exam/image.png",
+        socialImageSrc: "/en/og/image.png",
       });
       expect(
         yield* resolveTryoutExamArtwork({
@@ -87,7 +87,7 @@ describe("try-out artwork", () => {
           publicPath: "try-out/germany/snbt",
         })
       ).toEqual({
-        socialImageSrc: "/en/og/try-out/germany/snbt/image.png",
+        socialImageSrc: "/en/og/image.png",
       });
     })
   );

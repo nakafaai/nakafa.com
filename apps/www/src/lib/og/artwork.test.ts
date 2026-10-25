@@ -22,7 +22,7 @@ describe("public artwork", () => {
     );
   });
 
-  it("keeps the generated gradient when an identity has no artwork", () => {
+  it("answers the home image when an identity has no artwork", () => {
     expect(resolveStaticArtwork(undefined, "de")).toBeUndefined();
     expect(
       resolveSocialArtwork({
@@ -30,7 +30,7 @@ describe("public artwork", () => {
         locale: "de",
         publicPath: "unbekannt",
       })
-    ).toBe("/de/og/unbekannt/image.png");
+    ).toBe("/de/og/image.png");
   });
 
   it("resolves app surfaces through stable keys", () => {

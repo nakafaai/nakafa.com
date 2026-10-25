@@ -96,6 +96,17 @@ const readMaterialCopy = Effect.fn("www.og.copy.material")(function* (
   );
 });
 
+/** Reads the copy of the curricula section, which its index page names in every locale. */
+const readCurriculumCopy = Effect.fn("www.og.copy.curriculum")(function* (
+  locale: Locale
+) {
+  const tPrograms = yield* readCopy({ locale, namespace: "LearningPrograms" });
+  return Option.some({
+    description: tPrograms("curriculum-index-metadata-description"),
+    title: tPrograms("curriculum-index-metadata-title"),
+  });
+});
+
 /** Reads the site's default copy for one route. */
 const readDefaultCopy = Effect.fn("www.og.copy.default")(function* (
   locale: Locale,
@@ -148,6 +159,9 @@ export const readOgCopy = Effect.fn("www.og.copy.read")(function* (
 ) {
   if (slug[0] === "articles") {
     return yield* readArticleCopy(locale, slug);
+  }
+  if (slug[0] === "curriculum") {
+    return yield* readCurriculumCopy(locale);
   }
   if (
     slug[0] === readNamespaceSegment("subject", locale) &&
