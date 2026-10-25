@@ -19,6 +19,20 @@ const reporting = vi.hoisted(() => ({ report: vi.fn() }));
 const retired = vi.hoisted(() => ({ read: vi.fn() }));
 const source = vi.hoisted(() => ({ read: vi.fn() }));
 
+vi.mock("@/lib/routing/rendered", async () => {
+  const { isRenderedPath } = await import("@/lib/routing/template");
+  return {
+    /** Names the Worker's route templates of a stand-in tree, without loading the router. */
+    isRenderedRoutePath: (pathname: string) =>
+      isRenderedPath(pathname, [
+        "/$locale/chat",
+        "/$locale/chat/$id",
+        "/$locale/search",
+        "/$locale/try-out/$country/$exam/$track",
+      ]),
+  };
+});
+
 vi.mock("@/lib/llms/index/generate", () => ({
   getLlmsSectionIndexText: (key: string) =>
     Effect.succeed(key === "llms/en" ? "# Locale index" : null),
@@ -119,6 +133,7 @@ function routedRequest(handle: ReturnType<typeof router>) {
 }
 
 beforeEach(() => {
+  assets.fetch.mockReset();
   migration.read.mockReset().mockReturnValue(Effect.succeed(null));
   projected.read.mockReset().mockReturnValue(Effect.succeed(null));
   refusal.read.mockReset().mockReturnValue(Effect.succeedNone);
@@ -197,32 +212,91 @@ describe("decisions before the router", () => {
     })
   );
 
-  it.effect("answers an unowned route with not found", () =>
+  it.effect("answers an unowned route with the static not-found page", () =>
     Effect.gen(function* () {
       source.read.mockReturnValue(Effect.succeed("en"));
-
+      assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
       const { handle, response } = yield* served("/en/nonexistent-page");
 
-      expect(response.headers.get("content-language")).toBe("en");
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
-      expect(routedRequest(handle).headers.get("x-nakafa-locale")).toBe("en");
+      expect(response.status).toBe(404);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(assets.fetch).toHaveBeenCalledTimes(1);
+      expect(handle).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("answers an unowned HTML route with not found", () =>
-    Effect.gen(function* () {
-      projected.read.mockReturnValue(Effect.succeed("en"));
+  it.effect(
+    "answers an unowned HTML route with the static not-found page",
+    () =>
+      Effect.gen(function* () {
+        projected.read.mockReturnValue(Effect.succeed("en"));
+        assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
 
-      const { handle, response } = yield* served("/en/subjects/missing", {
+        const { handle, response } = yield* served("/en/subjects/missing", {
+          accept: "text/html",
+        });
+
+        expect(response.status).toBe(404);
+        expect(handle).not.toHaveBeenCalled();
+        expect(projected.read).toHaveBeenCalledWith({
+          hasAttemptCapability: false,
+          pathname: "/en/subjects/missing",
+        });
+      })
+  );
+
+  it.effect(
+    "answers a locale path that no route renders with the static page",
+    () =>
+      Effect.gen(function* () {
+        assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
+
+        for (const address of [
+          "/en/wp-login.php",
+          "/en/articles/gone-xyz.md",
+        ]) {
+          const { handle, response } = yield* served(address);
+
+          expect(response.status).toBe(404);
+          expect(handle).not.toHaveBeenCalled();
+        }
+        expect(assets.fetch).toHaveBeenCalledTimes(2);
+      })
+  );
+
+  it.effect(
+    "answers a rejection of a rendered route with its own not-found page",
+    () =>
+      Effect.gen(function* () {
+        source.read.mockReturnValue(Effect.succeed("en"));
+
+        const { handle, response } = yield* served("/en/search");
+
+        expect(response.headers.get("content-language")).toBe("en");
+        expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
+      })
+  );
+
+  it.effect("renders a locale path that a Worker route template names", () =>
+    Effect.gen(function* () {
+      const { handle, response } = yield* served("/en/chat", {
         accept: "text/html",
       });
 
-      expect(response.headers.get("content-language")).toBe("en");
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
-      expect(projected.read).toHaveBeenCalledWith({
-        hasAttemptCapability: false,
-        pathname: "/en/subjects/missing",
+      expect(response.status).toBe(200);
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/chat`);
+    })
+  );
+
+  it.effect("moves a bare profile address to the negotiated locale", () =>
+    Effect.gen(function* () {
+      const { handle, response } = yield* served("/@nabil", {
+        headers: { "accept-language": "id" },
       });
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("/id/@nabil");
+      expect(handle).not.toHaveBeenCalled();
     })
   );
 
@@ -316,7 +390,7 @@ describe("failures", () => {
       );
 
       const response = yield* answer(
-        "/en/articles/belajar",
+        "/en/search",
         { accept: "text/html" },
         handle
       );

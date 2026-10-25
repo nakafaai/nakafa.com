@@ -2,16 +2,18 @@
 
 ## Status
 
-Accepted on 25 October 2026. Phase A is implemented on `nabil/static`. Phase B
-(the `/api` relay, the School host shell, and the app shells) and Phase C (shards
-and the stable loader) are next, and each merges only after its gate in Gates
-passes.
+Accepted on 25 October 2026. Phase A is implemented on `nabil/static`, and it is
+not ready to merge while the blockers under "Not in Phase A" stay open: the
+School and www hosts, the trailing-slash status, and the root locale rule are zone
+rules that no probe can run. Phase B (the `/api` relay, the School host shell, and
+the app shells) and Phase C (shards and the stable loader) are next, and each merges
+only after its gate in Gates passes.
 
 Supersedes the request-time content path of ADR 0037. Its Markdown twin and CDN statements are corrected under Corrections.
 
 ## Context
 
-Measured on origin/main 2359c75ad0. The research was pinned at 1d8184be9a; #1207 changed the Bun toolchain and the deploy.yml node version only.
+Measured on origin/main 2359c75ad0, before origin/main e4776b377e. The research was pinned at 1d8184be9a; #1207 changed the Bun toolchain and the deploy.yml node version only.
 
 - Nine pages are prerendered (apps/www/vite.config.ts:25-33). Every article, lesson, Quran, curriculum, try-out, legal and School page is a Worker render.
 - Article pages read Convex on every request (apps/www/src/lib/content/article/publication.ts:82-100). Lessons read an in-isolate store capped at 16 MiB (apps/www/src/lib/content/store/memory.ts:10).
@@ -37,9 +39,9 @@ D5. Social images are one per collection or family, not one per page.
 
 D6. Content pages navigate by document load and are prefetched on intent with Speculation Rules. The rules are one JSON file served through the Speculation-Rules response header, not an inline script, so the Content-Security-Policy keeps its current form. No client loader calls a server function for public content.
 
-D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy.
+D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy. Phase A does not declare them (see Not in Phase A).
 
-D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation starts deploy.yml with a workflow dispatch for stage prod and ref main, in place of the cache POST. In the same change the replaced request-time paths are deleted: the content store, Accept negotiation, request-time content readers, server functions with no caller, the nine-page prerender list, and Set-Cookie on content.
+D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation starts deploy.yml with a workflow dispatch for stage prod and ref main, in place of the cache POST. In the same change the replaced request-time paths are deleted: Accept negotiation, the nine-page prerender list, the per-page social images and their alias, and Set-Cookie on static pages. The content store, the request-time content readers and the server functions with callers stay for the learner routes that the Worker still renders (search, try-out tracks, sets and sections, and signed-in screens). Phase C deletes them, once Phase B moves those routes to the browser.
 
 D9. Workers Free only. No backward compatibility, no legacy path and no temporary function. Effect v4 and Confect v10 as AGENTS.md states. 100% per-file coverage. Browser suites run on a production build.
 
@@ -47,23 +49,27 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the
   active release from the sitemap readers: every sitemap URL except the search
-  screen and the try-out sets and sections, plus the articles index and the try-out
-  hub of each locale. `scripts/static/run.mjs pages` writes the list before the
-  client build, and `vite.config.ts` gives it to TanStack's prerender with
-  `autoStaticPathsDiscovery` and `crawlLinks` off and a fixed concurrency.
+  screen and the try-out tracks, sets and sections, plus the articles index and the
+  try-out hub of each locale. The sitemap files drop the same paths
+  (`apps/www/src/lib/sitemap/files.ts`), so every sitemap URL is a static page.
+  `scripts/static/run.mjs pages` writes the list before the client build, and
+  `vite.config.ts` gives it to TanStack's prerender with `autoStaticPathsDiscovery`
+  and `crawlLinks` off and a fixed concurrency.
 - **Strict verifier.** The build fails unless the emitted `index.html` files are
   exactly the listed pages, no page carries a server failure marker, and no page
   renders the standalone not-found page.
 - **Markdown twins.** `scripts/static/build.ts` writes `<path>.md` for every
   prerendered page whose Markdown source exists, links the twin from the page head
   with `rel="alternate" type="text/markdown"`, and lists the twins in `llms.txt`.
-  Accept negotiation is deleted, so a request that asks for Markdown receives HTML.
-  The `llms.mdx` route stays, because it answers the section indexes that no twin
-  covers.
+  It is the only writer of that link: the route head carries no Markdown alternate,
+  and the alternate `types` option of the SEO head is deleted. Accept negotiation is
+  deleted, so a request that asks for Markdown receives HTML. The `llms.mdx` route
+  stays, because it answers the section indexes that no twin covers.
 - **Social images.** One image per locale for the home page, the articles section
-  and the curricula section, which have published copy in every locale. `getOgUrl`
-  points every page of those sections at the section image, and every other page
-  at the home image. The per-page images and the per-page alias are deleted.
+  and the curricula section. The curricula image carries the `LearningPrograms`
+  index copy of its locale. `getOgUrl` points every page of those sections at the
+  section image, and every other page at the home image. The per-page images and
+  the per-page alias are deleted.
 - **Navigation.** A link to a prerendered route template loads as a document, so
   no client loader or server function reads the public content on the way.
   `public/speculation-rules.json` names the content families to prerender on
@@ -71,18 +77,41 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   content type are set in `_headers`, so the Content-Security-Policy keeps its form.
 - **Cheap not-found.** A request whose first segment is neither a locale nor a
   Worker route answers the static `404.html` from assets before any redirect or
-  render. Assets answer 404 with `notFoundHandling: "404-page"`.
+  render. A locale path that no Worker route template renders answers the same
+  page before the router runs (`apps/www/src/lib/routing/rendered.ts`). The
+  templates are the generated route tree minus the prerendered ones, so an unknown
+  address and a prerendered page without its asset cost no render. Assets answer 404
+  with `notFoundHandling: "404-page"`.
 - **Release dispatch.** After the commit of a production release that changes
   content, Aksara starts `deploy.yml` on `nakafaai/nakafa.com` with a workflow
   dispatch (`inputs.stage` `prod`, `ref` `main`). It authenticates with a GitHub App
   token that its release steps create, and that token carries only actions write
-  on that repository. A target with `AKSARA_CACHE_SURFACE=none` starts nothing. The
-  cache POST and its receipt are deleted. The Nakafa deploy workflow has no
-  repository dispatch trigger.
+  on that repository. A target whose `NAKAFA_DEPLOY_SURFACE` is `none` (development)
+  starts nothing. The cache POST and its receipt are deleted. The Nakafa deploy
+  workflow has no repository dispatch trigger.
 
 Not in Phase A: the `/api` relay and the School shell (Phase B), shards and the
 stable loader (Phase C), and per-request cookies for the pricing currency, which
-a static page cannot set (see Consequences).
+a static page cannot set (see Consequences). Each item below is open, and none is
+verified on the probe, which has no School or www host and no zone rule:
+
+- **Zone rules (D7).** The Single Redirect rules for the root locale on
+  Accept-Language, for the www host (307 to the apex), and for a 308 on a trailing
+  slash are not declared. The platform answers `drop-trailing-slash` with 307, and
+  the base answered 308. The root answers from the Worker (3 invocations, 6 to 7 ms
+  each on the probe). Gate S1 and S5 run on a scratch zone before any of them ships.
+- **School and www hosts.** `*.nakafa.com/*` routes to the web Worker, and its
+  static assets answer every host. A refused or unknown School host, and www, serve
+  the public pages, and School hosts lose the `noindex` of the tenant gate, until
+  Phase B's shell and the zone rule land. The base answered 404, 307 and noindex.
+- **Trailing-slash status** (above) and the **bare profile** (`/@name`) answer the
+  Worker's 307, which Phase A keeps.
+- **Root loader.** `apps/www/src/routes/__root.tsx` still runs `readPreviewRefreshFn`
+  for every Worker render (critic item 10).
+- **404 page.** `apps/www/public/404.html` is a bespoke English page with no stylesheet.
+  It is not built from the app's not-found page yet.
+- **Pricing checks.** The euro and Rupiah currency browser checks left the suite:
+  a static page cannot answer the visitor's country. Phase B restores them with the relay.
 
 ## Alternatives rejected
 
@@ -101,12 +130,12 @@ Negative: the pricing currency of a static page is the default currency until th
 
 ## Gates
 
-S1: route precedence, 404 behavior and zero Worker invocations on a scratch zone that is not nakafa.com. S2: Node render cost and HTML parity against the current Worker on 100 URLs. S3: relay CPU under 10 ms at p99. S5: the Single Redirect field for Accept-Language and its Free quota. S7: upload and deploy time for an 18,000-file shard. S8: the shell build. S9: bulk read cost against the Convex plan and the spending limit. S6: a stable loader prototype before 20,000 URLs.
+S1: route precedence, 404 behavior and zero Worker invocations for content URLs on a scratch zone that is not nakafa.com, and on the probe: zero Worker invocations for content URLs and a scanner CPU p90 under 10 ms (`ops/cpuroutes.mjs`). The Worker answers a scanner's locale path with the static page, so a scanner costs no render. S2: Node render cost and HTML parity against the current Worker on 100 URLs. S3: relay CPU under 10 ms at p99. S5: the Single Redirect field for Accept-Language and its Free quota. S7: upload and deploy time for an 18,000-file shard. S8: the shell build. S9: bulk read cost against the Convex plan and the spending limit. S6: a stable loader prototype before 20,000 URLs.
 
 ## Corrections to earlier documents
 
 - ADR 0037 (lines 26-28) says Markdown twins are built into static assets. The build wrote no Markdown. This ADR creates them.
 - ADR 0037 (lines 20-22) says static requests never invoke a Worker. That holds only without run_worker_first.
-- AGENTS.md names packages/site/crawlers.ts and apps/www/src/lib/content/published/tree.ts. Neither exists. The crawler registry is apps/www/src/lib/seo/crawlers.ts.
+- AGENTS.md named packages/site/crawlers.ts, which does not exist. The crawler registry is apps/www/src/lib/seo/crawlers.ts, and AGENTS.md now names it.
 - AGENTS.md documents pnpm commands. origin/main runs on Bun (root package.json workspaces and catalog).
 - apps/www/src/lib/content/delivery.ts promises a CDN-kept hour for HTML. Cloudflare does not cache HTML by default, and the repository has no Cache Rule.

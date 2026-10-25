@@ -47,4 +47,26 @@ describe("sitemap files", () => {
         expect(base?.text).toContain(`<loc>${SITE_ORIGIN}/base</loc>`);
       })
   );
+
+  it.effect("lists no page that the static build leaves to the Worker", () =>
+    Effect.gen(function* () {
+      descriptorsMock.mockReturnValue(Effect.succeed([{ id: "quran_en" }]));
+      entriesMock.mockReturnValue(
+        Effect.succeed([
+          { url: `${SITE_ORIGIN}/en/quran/1` },
+          { url: `${SITE_ORIGIN}/en/search` },
+          { url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027` },
+          {
+            url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/set-1`,
+          },
+        ])
+      );
+
+      const [page] = yield* readSitemapFiles().pipe(Effect.map(Arr.drop(1)));
+
+      expect(page?.text).toContain(`<loc>${SITE_ORIGIN}/en/quran/1</loc>`);
+      expect(page?.text).not.toContain("/en/search");
+      expect(page?.text).not.toContain("/try-out/");
+    })
+  );
 });

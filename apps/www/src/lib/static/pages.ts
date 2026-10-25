@@ -8,34 +8,38 @@ import { getSitemapEntries } from "@/lib/sitemap/entries";
 const SEARCH_SEGMENT = "search";
 
 /**
- * The try-out family segment, which every locale spells the same way. Its sets and
- * sections read the learner's attempts, so they stay on the Worker.
+ * The try-out family segment, which every locale spells the same way. A track, a
+ * set and a section read the learner's attempts, so they stay on the Worker.
  */
 const TRYOUT_SEGMENT = "try-out";
 
-/** The segments after the try-out family that name a set (`set-1`) or a section. */
-const TRYOUT_ATTEMPT_SEGMENTS = 4;
+/**
+ * The segments after the try-out family that name a track (`<exam>/<year>`), which
+ * a set (`set-1`) and a section extend.
+ */
+const TRYOUT_TRACK_SEGMENTS = 3;
 
 /** The articles index, which no sitemap page lists as one URL. */
 const ARTICLES_SEGMENT = "articles";
 
 /**
- * Whether a sitemap path is left out of the build: the search screen, and a try-out
- * set or section. A path is `/<locale>/<family>/...`.
+ * Whether a path is left out of the static build: the search screen, and a try-out
+ * track, set or section. A path is `/<locale>/<family>/...`. The sitemap lists the
+ * same paths, so it names only the pages that the build writes.
  */
-function isExcludedPath(path: string): boolean {
+export function isExcludedPath(path: string): boolean {
   const [, , family, ...rest] = path.split("/");
   if (family === SEARCH_SEGMENT) {
     return true;
   }
-  return family === TRYOUT_SEGMENT && rest.length >= TRYOUT_ATTEMPT_SEGMENTS;
+  return family === TRYOUT_SEGMENT && rest.length >= TRYOUT_TRACK_SEGMENTS;
 }
 
 /**
  * Selects the public paths that the build prerenders: the sitemap's URLs without
- * the search screen and the try-out sets and sections, plus the articles index and
- * the try-out hub of every locale, which no sitemap page lists. The result is
- * unique and sorted, so the build and its verifier compare the same list.
+ * the search screen and the try-out tracks, sets and sections, plus the articles
+ * index and the try-out hub of every locale, which no sitemap page lists. The
+ * result is unique and sorted, so the build and its verifier compare the same list.
  */
 export function selectStaticPagePaths({
   locales,

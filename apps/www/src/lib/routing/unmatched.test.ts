@@ -11,6 +11,11 @@ describe("unmatched paths", () => {
     expect(isUnmatchedPath("/skill.md")).toBe(false);
   });
 
+  it("leaves a bare profile address to its redirect", () => {
+    expect(isUnmatchedPath("/@nabil")).toBe(false);
+    expect(isUnmatchedPath("/@")).toBe(true);
+  });
+
   it("names the probes of paths that the app never had", () => {
     expect(isUnmatchedPath("/.env")).toBe(true);
     expect(isUnmatchedPath("/wp-login.php")).toBe(true);

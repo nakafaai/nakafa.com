@@ -32,7 +32,6 @@ describe("static page paths", () => {
         "/en/subjects/mathematics/algebra/linear",
         "/en/try-out/indonesia",
         "/en/try-out/indonesia/snbt",
-        "/en/try-out/indonesia/snbt/2027",
         "/id/kurikulum/merdeka",
       ],
     });
@@ -50,18 +49,18 @@ describe("static page paths", () => {
       "/en/try-out",
       "/en/try-out/indonesia",
       "/en/try-out/indonesia/snbt",
-      "/en/try-out/indonesia/snbt/2027",
       "/id/articles",
       "/id/kurikulum/merdeka",
       "/id/try-out",
     ]);
   });
 
-  it("leaves out the search screen and every try-out set and section", () => {
+  it("leaves out the search screen and every try-out track, set and section", () => {
     const paths = selectStaticPagePaths({
       locales: ["en"],
       sitemapPaths: [
         "/en/search",
+        "/en/try-out/indonesia/snbt/2027",
         "/en/try-out/indonesia/snbt/2027/set-1",
         "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
       ],

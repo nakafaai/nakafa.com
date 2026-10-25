@@ -12,6 +12,9 @@ describe("prerendered route targets", () => {
 
   it("keeps the signed-in and attempt routes on the client router", () => {
     expect(
+      isPrerenderedRouteTarget("/$locale/try-out/$country/$exam/$track")
+    ).toBe(false);
+    expect(
       isPrerenderedRouteTarget("/$locale/try-out/$country/$exam/$track/$set")
     ).toBe(false);
     expect(isPrerenderedRouteTarget("/$locale/chat")).toBe(false);

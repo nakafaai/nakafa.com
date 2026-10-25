@@ -11,10 +11,6 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
 
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
-const EURO_TITLE_PATTERN = /So viel sind 8,99\s€/;
-const EURO_PER_DAY_PATTERN = /0,30\s€ am Tag/;
-const RUPIAH_TITLE_PATTERN = /Rp\s69\.000 itu segini/;
-const RUPIAH_PER_DAY_PATTERN = /Rp\s2\.300 sehari/;
 
 const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   page: Page
@@ -168,21 +164,6 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
   }
 );
 
-/**
- * Opens a pricing page the way the edge reports a visitor from one country. The
- * first response sets the currency cookie, and the page shows that currency on
- * the next load, so the page is loaded again once the cookie is set.
- */
-const loadPricingPageFrom = Effect.fn("NakafaE2E.loadPricingPageFrom")(
-  function* (page: Page, href: string, country: string) {
-    yield* Effect.promise(() =>
-      page.setExtraHTTPHeaders({ "CF-IPCountry": country })
-    );
-    yield* loadMarketingPage(page, href);
-    yield* Effect.promise(() => page.reload({ waitUntil: "domcontentloaded" }));
-  }
-);
-
 /** The German comparisons of the dollar price, which a visitor without a country sees. */
 const verifyGermanPricingComparisons = Effect.fn(
   "NakafaE2E.verifyGermanPricingComparisons"
@@ -201,49 +182,6 @@ const verifyGermanPricingComparisons = Effect.fn(
   );
   yield* Effect.promise(() =>
     expect(page.locator("#comparison")).toContainText("200 Antworten von Nina")
-  );
-});
-
-/** The German comparisons of the euro price, for a visitor from a euro country. */
-const verifyEuroPricingComparisons = Effect.fn(
-  "NakafaE2E.verifyEuroPricingComparisons"
-)(function* (page: Page) {
-  yield* loadPricingPageFrom(page, "/de/pricing", "DE");
-  yield* Effect.promise(() =>
-    expect(
-      page.getByRole("heading", { level: 2, name: EURO_TITLE_PATTERN })
-    ).toBeVisible()
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(
-      "Etwa 3 Kaffee zum Mitnehmen"
-    )
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(EURO_PER_DAY_PATTERN)
-  );
-});
-
-/** The Indonesian comparisons of the Rupiah price, for a visitor from Indonesia. */
-const verifyRupiahPricingComparisons = Effect.fn(
-  "NakafaE2E.verifyRupiahPricingComparisons"
-)(function* (page: Page) {
-  yield* loadPricingPageFrom(page, "/id/pricing", "ID");
-  yield* Effect.promise(() =>
-    expect(
-      page.getByRole("heading", { level: 2, name: RUPIAH_TITLE_PATTERN })
-    ).toBeVisible()
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(
-      "Kira-kira 3 es kopi susu"
-    )
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(RUPIAH_PER_DAY_PATTERN)
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("200 jawaban Nina")
   );
 });
 
@@ -315,18 +253,6 @@ test.describe("dedicated pricing page", () => {
   test("compares the dollar price in German", async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyGermanPricingComparisons(page))
-    );
-  });
-
-  test("compares the euro price in German", async ({ page }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyEuroPricingComparisons(page))
-    );
-  });
-
-  test("compares the Rupiah price in Indonesian", async ({ page }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyRupiahPricingComparisons(page))
     );
   });
 });

@@ -19,6 +19,7 @@ import {
   readSlashRedirectResponse,
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
+import { isRenderedRoutePath } from "@/lib/routing/rendered";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import { isUnmatchedPath } from "@/lib/routing/unmatched";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
@@ -75,9 +76,26 @@ const answerNotFound = Effect.fn("www.routing.answer.notFound")(function* (
 });
 
 /**
+ * Answers a rejection that names no page the Worker renders with the static
+ * not-found page, and any other rejection with the app's own not-found page.
+ */
+const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
+  request: Request,
+  locale: Locale,
+  route: RouterHandler
+) {
+  if (!isRenderedRoutePath(new URL(request.url).pathname)) {
+    return yield* answerUnmatchedRequest(request);
+  }
+  return yield* answerNotFound(request, locale, route);
+});
+
+/**
  * Answers a request that no address decision answered:
  * the not-found page of a document that the projection does not own, then the
- * locale redirect when the request has one, or else the router's page.
+ * locale redirect when the request has one, or else the router's page. A path
+ * that no Worker route renders answers the static not-found page before the
+ * router runs.
  */
 const answerRouter = Effect.fn("www.routing.answer.router")(function* (
   request: Request,
@@ -89,12 +107,15 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
     pathname: url.pathname,
   }).pipe(Effect.mapError(toUncaughtRequestError));
   if (rejected !== null) {
-    return yield* answerNotFound(request, rejected, route);
+    return yield* answerRejection(request, rejected, route);
   }
 
   const redirect = readRedirectResponse(request);
   if (Option.isSome(redirect)) {
     return redirect.value;
+  }
+  if (!isRenderedRoutePath(url.pathname)) {
+    return yield* answerUnmatchedRequest(request);
   }
   return yield* answerRouted(request, route);
 });
@@ -108,9 +129,11 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * refused school page and a removed address answer not found, and a migrated or
  * moved address moves to its successor. A raw user address answers not found, and a
  * document that the source does not own answers not found (ADR 0026). The router
- * answers the rest after the locale redirects. Each not-found answer is the app's
- * own page, in the locale of the address. Markdown is never negotiated: an agent
- * reads a page's `.md` twin, which the build writes beside its HTML.
+ * answers the rest after the locale redirects, and only for a path that a Worker
+ * route renders: every other locale path answers the static not-found page. A
+ * not-found answer of a Worker route is the app's own page, in the locale of the
+ * address. Markdown is never negotiated: an agent reads a page's `.md` twin, which
+ * the build writes beside its HTML.
  */
 export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   request: Request,
@@ -174,7 +197,7 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
     pathname: new URL(request.url).pathname,
   }).pipe(Effect.mapError(toUncaughtRequestError));
   if (sourceRejection !== null) {
-    return yield* answerNotFound(request, sourceRejection, route);
+    return yield* answerRejection(request, sourceRejection, route);
   }
 
   return yield* answerRouter(request, route).pipe(

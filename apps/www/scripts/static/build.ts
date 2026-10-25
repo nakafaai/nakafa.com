@@ -44,7 +44,11 @@ const TextArtifact = Schema.Struct({
 });
 type TextArtifact = typeof TextArtifact.Type;
 
-/** A prerendered page has no `</head>` to carry its Markdown link, so its HTML is not the one the build expects. */
+/**
+ * A prerendered page has no `</head>` to carry its Markdown link, or it already
+ * carries one, so its HTML is not the one the build expects. The build is the only
+ * writer of that link.
+ */
 class MarkdownTwinLinkError extends Schema.TaggedError<MarkdownTwinLinkError>()(
   "MarkdownTwinLinkError",
   { page: Schema.String }
@@ -71,6 +75,9 @@ function splitPagePath(page: string) {
   const [, locale = "", ...segments] = page.split("/");
   return { cleanSlug: Arr.join(segments, "/"), locale };
 }
+
+/** The media type that a page's Markdown twin is linked with, which only the build writes. */
+const MARKDOWN_TYPE = 'type="text/markdown"';
 
 /** The head link that names a page's Markdown twin, so that a crawler or an agent finds it from the page. */
 function markdownTwinLink(page: string) {
@@ -102,7 +109,7 @@ const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
   const htmlFile = path.join(outDir, page.slice(1), "index.html");
   const html = yield* fs.readFileString(htmlFile);
   const parts = html.split("</head>");
-  if (parts.length !== 2) {
+  if (parts.length !== 2 || html.includes(MARKDOWN_TYPE)) {
     return yield* new MarkdownTwinLinkError({ page });
   }
   yield* fs.writeFileString(

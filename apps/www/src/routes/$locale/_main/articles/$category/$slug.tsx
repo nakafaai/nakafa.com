@@ -114,13 +114,7 @@ const readArticle = createServerFn({ method: "GET" })
         return outcome("Found", {
           page: {
             alternates: toHeadAlternates(
-              createResolvedRouteAlternates(
-                model.projection,
-                model.alternates,
-                {
-                  types: { "text/markdown": `/${locale}${filePath}.md` },
-                }
-              )
+              createResolvedRouteAlternates(model.projection, model.alternates)
             ),
             categoryLabel,
             content: published.sourceRevision ? undefined : published.rawMdx,

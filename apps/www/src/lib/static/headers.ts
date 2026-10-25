@@ -25,7 +25,6 @@ const RSS_HEADERS: readonly WwwHeader[] = [
 const LLMS_HEADERS: readonly WwwHeader[] = [
   { key: "Cache-Control", value: LLMS_CACHE_CONTROL },
   { key: "Content-Type", value: "text/markdown; charset=utf-8" },
-  { key: "Vary", value: "Accept" },
 ];
 
 const MANIFEST_HEADERS: readonly WwwHeader[] = [
@@ -44,11 +43,6 @@ const SPECULATION_RULES_HEADERS: readonly WwwHeader[] = [
 ];
 
 /**
- * The headers of the files that the build writes, one rule per address pattern.
- * The Worker answers none of these addresses, so the static assets carry the
- * content type and the cache policy that each answer had.
- */
-/**
  * The social images of each locale. The rule names each locale's path, because a
  * splat before the locale segment matched no image of the emitted `_headers` file.
  */
@@ -60,6 +54,11 @@ const SOCIAL_IMAGE_RULES: readonly HeaderRule[] = Arr.map(
   })
 );
 
+/**
+ * The headers of the files that the build writes, one rule per address pattern.
+ * The Worker answers none of these addresses, so the static assets carry the
+ * content type and the cache policy that each answer had.
+ */
 export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/sitemap.xml", headers: SITEMAP_HEADERS },
   { path: "/sitemap/*", headers: SITEMAP_HEADERS },
