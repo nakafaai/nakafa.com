@@ -1,7 +1,7 @@
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { loadHistoryFloor } from "@repo/backend/confect/contentRelease/compact/protected";
 import {
-  loadHistoryFloor,
   loadRelease,
   loadState,
 } from "@repo/backend/confect/contentRelease/model";

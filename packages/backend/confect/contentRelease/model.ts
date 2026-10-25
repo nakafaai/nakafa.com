@@ -17,7 +17,7 @@ import {
   COMPACTION_PAGE_BYTES,
   RELEASE_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect, Option } from "effect";
+import { Clock, Effect } from "effect";
 
 type AppLocale = typeof appLocaleValidator.Type;
 type ArtifactLocale = typeof artifactLocaleValidator.Type;
@@ -84,28 +84,6 @@ export const loadRelease = Effect.fn("contentRelease.loadRelease")(function* (
       })
     );
 });
-
-/**
- * Reads the sequence of the latest completed bootstrap, the floor of history. A
- * bootstrap replaces the retired generation with no retained inverse, so no
- * protection rule keeps anything below it. Zero means no bootstrap has completed,
- * which leaves every floor comparison a no-op.
- */
-export const loadHistoryFloor = Effect.fn("contentRelease.loadHistoryFloor")(
-  function* () {
-    const database = yield* DatabaseReader;
-    const bootstrap = yield* database
-      .table("contentReleases")
-      .index(
-        "by_bootstrap_and_status_and_sequence",
-        (query) => query.eq("bootstrap", true).eq("status", "completed"),
-        "desc"
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie);
-    return bootstrap?.sequence ?? 0;
-  }
-);
 
 /** Requires one release to own its exact candidate or recovery slot. */
 export const loadStaged = Effect.fn("contentRelease.loadStaged")(function* (

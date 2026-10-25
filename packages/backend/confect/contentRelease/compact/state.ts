@@ -9,12 +9,12 @@ import {
   isSequence,
   readCycle,
 } from "@repo/backend/confect/contentRelease/compact/cycle";
-import { protectedFloor } from "@repo/backend/confect/contentRelease/compact/protected";
-import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
-  ensureState,
   loadHistoryFloor,
-} from "@repo/backend/confect/contentRelease/model";
+  protectedFloor,
+} from "@repo/backend/confect/contentRelease/compact/protected";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { ensureState } from "@repo/backend/confect/contentRelease/model";
 import {
   COMPACTION_PAGE_BYTES,
   ROLLBACK_RETENTION_MS,
