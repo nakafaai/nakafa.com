@@ -4,7 +4,6 @@ import {
   type NetworkRequestError,
   type NetworkRetryCodeSchema,
 } from "@repo/backend/client/network";
-import { getSessionCookie } from "better-auth/cookies";
 import {
   Array as Arr,
   Duration,
@@ -15,6 +14,7 @@ import {
   Schema,
 } from "effect";
 import { bufferResponse } from "@/lib/auth/body";
+import { readSessionCookie } from "@/lib/auth/cookie.server";
 import { SESSION_PATH } from "@/lib/auth/session";
 import { readRequestHost } from "@/lib/routing/school/host";
 import { runServerEffect } from "@/lib/server/fn";
@@ -174,7 +174,7 @@ export const answerAuthDeadline = (
 function isSignedOutSessionRead(request: Request) {
   return (
     new URL(request.url).pathname === SESSION_PATH &&
-    getSessionCookie(request) === null &&
+    readSessionCookie(request) === null &&
     !request.headers.has("authorization")
   );
 }
