@@ -246,6 +246,11 @@ describe("auth/runtime", () => {
               response.headers.get("location")
             ).pipe(Effect.orDie);
             return {
+              cookieNames: pipe(
+                response.headers.getSetCookie(),
+                Arr.map((cookie) => cookie.split("=", 1)[0]),
+                Arr.dedupe
+              ),
               cookieDomains: pipe(
                 response.headers.getSetCookie(),
                 Arr.flatMap((cookie) =>
@@ -261,12 +266,14 @@ describe("auth/runtime", () => {
         expect(
           yield* signInFrom("staging.nakafa.com", "https://staging.nakafa.com")
         ).toEqual({
+          cookieNames: ["__Secure-nakafa-dev.state"],
           cookieDomains: ["Domain=staging.nakafa.com"],
           redirectUri: "https://staging.nakafa.com/api/auth/callback/google",
         });
         expect(
           yield* signInFrom("local.nakafa.com", "https://local.nakafa.com")
         ).toEqual({
+          cookieNames: ["__Secure-nakafa-dev.state"],
           cookieDomains: ["Domain=local.nakafa.com"],
           redirectUri: "https://local.nakafa.com/api/auth/callback/google",
         });
@@ -276,6 +283,7 @@ describe("auth/runtime", () => {
             "https://local.nakafa.com"
           )
         ).toEqual({
+          cookieNames: ["__Secure-nakafa-dev.state"],
           cookieDomains: ["Domain=local.nakafa.com"],
           redirectUri: "https://local.nakafa.com/api/auth/callback/google",
         });
@@ -285,7 +293,7 @@ describe("auth/runtime", () => {
     "expires the host-only session cookie when the shared one is cleared on the site's host",
     () =>
       Effect.gen(function* () {
-        vi.stubEnv("SITE_URL", "https://local.nakafa.com");
+        vi.stubEnv("SITE_URL", "https://nakafa.com");
         vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", "test-google-client");
         vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", "test-google-secret");
         const test = createConvexTestWithBetterAuth();
@@ -294,8 +302,8 @@ describe("auth/runtime", () => {
         const response = yield* Effect.promise(() =>
           test.fetch("/api/auth/sign-out", {
             headers: {
-              origin: "https://local.nakafa.com",
-              "x-better-auth-forwarded-host": "local.nakafa.com",
+              origin: "https://nakafa.com",
+              "x-better-auth-forwarded-host": "nakafa.com",
               "x-better-auth-forwarded-proto": "https",
             },
             method: "POST",
