@@ -16,7 +16,7 @@ const WORD = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const MATH = "http://schemas.openxmlformats.org/officeDocument/2006/math";
 
 /** The longest part of a Word file one read carries, so a read stays near five pages of text. */
-export const WORD_READ_LENGTH = 12_000;
+const WORD_READ_LENGTH = 12_000;
 
 /** The WordprocessingML elements whose words a student never reads: formatting, field codes and deleted text. */
 const SKIPPED = [
@@ -33,7 +33,7 @@ const SKIPPED = [
 const MATH_STYLE = ["rPr", "ctrlPr"];
 
 /** One Word document as the import reads it: its lines of text, and how many MathType equations it holds. */
-export const WordText = Schema.Struct({
+const WordText = Schema.Struct({
   lines: Schema.Array(Schema.String),
   mathType: Schema.Int,
 });
@@ -47,22 +47,28 @@ const isWord = (node: Node, name: string): node is Element =>
   node.namespaceURI === WORD &&
   node.localName === name;
 
+/** The child elements of an element that are WordprocessingML elements of this name. */
+const childrenNamed = (element: Element, name: string) =>
+  Arr.filter(Arr.fromIterable(element.children), (child) =>
+    isWord(child, name)
+  );
+
 /** The elements below an element, in document order. */
 const descendants = (element: Element) =>
   Arr.fromIterable(element.getElementsByTagName("*"));
 
-/** An equation as Office Math XML without its styling, which Nina turns into LaTeX. */
+/**
+ * An equation as Office Math XML without its styling, which Nina turns into LaTeX. The parsed
+ * document is the read's own, so its styling is removed in place.
+ */
 const equationOf = (math: Element) => {
-  const copy = math.cloneNode(true);
-  if (copy instanceof Element) {
-    Arr.forEach(
-      Arr.filter(descendants(copy), (child) =>
-        Arr.contains(MATH_STYLE, child.localName)
-      ),
-      (style) => style.remove()
-    );
-  }
-  return new XMLSerializer().serializeToString(copy);
+  Arr.forEach(
+    Arr.filter(descendants(math), (child) =>
+      Arr.contains(MATH_STYLE, child.localName)
+    ),
+    (style) => style.remove()
+  );
+  return new XMLSerializer().serializeToString(math);
 };
 
 /** Whether an embedded object is a MathType equation, which the read cannot turn into text. */
@@ -87,7 +93,16 @@ const textOf = (node: Node): string => {
     return "";
   }
   if (isWord(node, "t")) {
-    return node.textContent ?? "";
+    return Arr.join(
+      Arr.map(
+        Arr.filter(
+          Arr.fromIterable(node.childNodes),
+          (child): child is Text => child instanceof Text
+        ),
+        (text) => text.data
+      ),
+      ""
+    );
   }
   if (isWord(node, "tab")) {
     return "\t";
@@ -107,15 +122,16 @@ const textOf = (node: Node): string => {
 /** The list level of a paragraph that Word numbers, or none for a paragraph outside a list. */
 const listLevelOf = (paragraph: Element) =>
   Arr.findFirst(
-    Arr.fromIterable(paragraph.getElementsByTagNameNS(WORD, "ilvl")),
-    (element) => element.parentElement?.localName === "numPr"
+    Arr.fromIterable(paragraph.getElementsByTagNameNS(WORD, "numPr")),
+    () => true
   ).pipe(
-    Option.flatMap((element) =>
-      Option.flatMap(
-        Option.fromNullOr(element.getAttributeNS(WORD, "val")),
-        Schema.decodeOption(ListLevel)
-      )
-    )
+    Option.flatMap((numbering) =>
+      Arr.findFirst(childrenNamed(numbering, "ilvl"), () => true)
+    ),
+    Option.flatMap((level) =>
+      Option.fromNullOr(level.getAttributeNS(WORD, "val"))
+    ),
+    Option.flatMap(Schema.decodeOption(ListLevel))
   );
 
 /**
@@ -130,12 +146,6 @@ const lineOf = (paragraph: Element) => {
     onSome: (level) => `${"  ".repeat(level)}- ${text}`,
   });
 };
-
-/** The child elements of an element that are WordprocessingML elements of this name. */
-const childrenNamed = (element: Element, name: string) =>
-  Arr.filter(Arr.fromIterable(element.children), (child) =>
-    isWord(child, name)
-  );
 
 /** One table as lines: a row to a line, its cells apart with a bar. */
 const tableLines = (table: Element) =>

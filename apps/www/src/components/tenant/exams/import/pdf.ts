@@ -1,5 +1,4 @@
-import { Array as Arr, Effect } from "effect";
-import type { PDFDocumentProxy } from "pdfjs-dist";
+import { Array as Arr, Effect, Schema } from "effect";
 import {
   IMPORT_PAGE_LIMIT,
   ImportFileRefused,
@@ -59,15 +58,40 @@ export const pageGroups = (count: number) =>
     PAGES_PER_READ
   );
 
+/** The size of a drawn page, which pdf.js calls its viewport. */
+const Viewport = Schema.Struct({ height: Schema.Finite, width: Schema.Finite });
+
+/**
+ * The parts of a pdf.js page that the import uses: its viewport, its drawing and its text layer.
+ * A pdf.js page is one, and so is a test's page, without pdf.js.
+ */
+type DrawnPage<Size extends typeof Viewport.Type> = {
+  readonly cleanup: () => unknown;
+  readonly getTextContent: () => Promise<{
+    readonly items: readonly (
+      | { readonly hasEOL: boolean; readonly str: string }
+      | { readonly type: string }
+    )[];
+  }>;
+  readonly getViewport: (options: { scale: number }) => Size;
+  readonly render: (options: { canvas: HTMLCanvasElement; viewport: Size }) => {
+    readonly promise: Promise<unknown>;
+  };
+};
+
+/** The part of a pdf.js document that the import uses: its pages, by number from one. */
+type PageSource<Size extends typeof Viewport.Type> = {
+  readonly getPage: (number: number) => Promise<DrawnPage<Size>>;
+};
+
 /**
  * Draws one page as a JPEG image with its long edge at `PAGE_EDGE` pixels, and reads its text
  * layer, a line where the PDF ends one. Nina reads both: the image for layout and formulas, the
  * text for the exact words.
  */
-export const renderPage = Effect.fn("exams.import.page")(function* (
-  pdf: PDFDocumentProxy,
-  number: number
-) {
+export const renderPage = Effect.fn("exams.import.page")(function* <
+  Size extends typeof Viewport.Type,
+>(pdf: PageSource<Size>, number: number) {
   const page = yield* Effect.tryPromise({
     catch: unreadable,
     try: () => pdf.getPage(number),
