@@ -1,8 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/assessment/gate/admit";
 import { Rule } from "@repo/backend/confect/assessment/gate/rules";
-import { Attempt, DeviceId } from "@repo/backend/confect/assessment/gate/store";
-import type { ResponseSpec } from "@repo/backend/confect/response/model";
+import { Attempt } from "@repo/backend/confect/assessment/gate/store";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { TestClock } from "effect/testing";
 
@@ -12,21 +11,11 @@ const HOUR = 3_600_000;
 /** A failure of the in-memory store's own integrity checks. */
 class Corrupt extends Schema.TaggedError<Corrupt>()("Corrupt", {}) {}
 
-/** A frozen single-choice question whose key is `a`. */
-const response: ResponseSpec = {
-  kind: "single-choice",
-  options: [
-    { isCorrect: true, label: "A", optionKey: "a", order: 1 },
-    { isCorrect: false, label: "B", optionKey: "b", order: 2 },
-  ],
-};
-
 /**
- * The in-memory store's one attempt: its attempt stage, its running
- * section's deadline (none once it ended or before it started), whether the
- * section's rows fail the store's checks before the deadline and whether the
- * question's stored rows fail them after it, and the version of the question's
- * latest write.
+ * The in-memory store's one attempt: its attempt stage, its running section's deadline
+ * (none once it ended or before it started), whether the section's rows fail the store's
+ * checks before the deadline and whether the question's stored rows fail them after it,
+ * and the version of the question's latest write.
  */
 const Memory = Schema.Struct({
   attempt: Attempt,
@@ -37,13 +26,12 @@ const Memory = Schema.Struct({
 });
 type Memory = typeof Memory.Type;
 
-/** A learner's open, unlocked, unbound attempt with a running section, both closing in an hour. */
+/** A learner's free attempt in progress, with a running section, both closing in an hour. */
 const live = Memory.make({
   attempt: {
+    binding: { kind: "free" },
     deadline: NOW + HOUR,
-    device: Option.none(),
-    locked: false,
-    open: true,
+    state: "inProgress",
   },
   corrupt: false,
   corruptRows: false,
@@ -59,10 +47,15 @@ const attempt = (fields: Partial<Attempt>) =>
 const changed = (fields: Partial<Memory>) =>
   Memory.make({ ...live, ...fields });
 
+/** The attempt bound to one device session. */
+const bound = (device: string) => ({
+  binding: { device, kind: "bound" as const, retired: [] },
+});
+
 /**
- * Builds the gate over one in-memory attempt that the learner owns: the
- * question `q` and the section `s` exist. Every section read, every read of
- * the question's stored rows, and every write is appended to the returned log.
+ * Builds the gate over one in-memory attempt that the learner owns: the question `q`
+ * and the section `s` exist. Every section read, every read of the question's stored
+ * rows, and every write is appended to the returned log.
  */
 const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
   const log = yield* Ref.make<readonly string[]>([]);
@@ -74,7 +67,7 @@ const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
     Effect.andThen(
       state.corruptRows
         ? Effect.fail(new Corrupt())
-        : Effect.succeed({ response, version: state.version })
+        : Effect.succeed({ version: state.version })
     )
   );
   const target = (exists: boolean, loads: typeof rows) =>
@@ -96,35 +89,28 @@ const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
         : Option.none()
     );
   const gate = make({
-    answer: (_live, answer, _now, version) =>
-      record(
-        `answer ${Option.match(answer, {
-          onNone: () => "clear",
-          onSome: ({ outcome }) => outcome.status,
-        })} v${version}`
-      ),
+    answer: (_live, value: string, _now, version) =>
+      record(`answer ${value} v${version}`),
     finish: (_live, reason) => record(`finish ${reason}`),
     placement: (id: string) => target(id === "q", rows),
     section: (id: string) =>
-      target(id === "s", Effect.succeed({ response, version: state.version })),
+      target(id === "s", Effect.succeed({ version: state.version })),
   });
   return { gate, log: Ref.get(log) };
 });
 
-/** Answers the question `q` with `optionKey` as the learner on no device, numbered `version`. */
+/** Answers the question `q` with `value` as the learner on `device`, numbered `version`. */
 const answer = (
   gate: Effect.Success<ReturnType<typeof memory>>["gate"],
-  optionKey: Option.Option<string>,
-  version: number
+  value: string,
+  version: number,
+  device: Option.Option<string> = Option.none()
 ) =>
   gate.answer({
-    device: Option.none(),
+    device,
     owner: "learner",
     placement: "q",
-    selection: Option.map(optionKey, (key) => ({
-      kind: "single-choice",
-      optionKey: key,
-    })),
+    value: () => Effect.succeed(value),
     version,
   });
 
@@ -150,7 +136,7 @@ const refusals: readonly (typeof Refused.Type)[] = [
     reads: [],
     rule: "answer",
     state: Memory.make({
-      ...attempt({ locked: true, open: false }),
+      ...attempt({ state: "closing" }),
       corrupt: true,
       section: Option.none(),
     }),
@@ -160,20 +146,14 @@ const refusals: readonly (typeof Refused.Type)[] = [
     expected: "Locked",
     reads: [],
     rule: "answer",
-    state: attempt({
-      device: Option.some(DeviceId.make("device")),
-      locked: true,
-    }),
+    state: attempt({ ...bound("device"), state: "locked" }),
     target: "q",
   },
   {
     expected: "OtherDevice",
     reads: [],
     rule: "finish",
-    state: attempt({
-      deadline: NOW,
-      device: Option.some(DeviceId.make("device")),
-    }),
+    state: attempt({ ...bound("device"), deadline: NOW }),
     target: "s",
   },
   {
@@ -230,7 +210,7 @@ const superseded: readonly (typeof Superseded.Type)[] = [
   {
     expected: "AttemptClosed",
     state: Memory.make({
-      ...attempt({ open: false }),
+      ...attempt({ state: "submitted" }),
       version: Option.some(2),
     }),
   },
@@ -258,41 +238,21 @@ const endings: readonly (typeof Ending.Type)[] = [
 const setNow = TestClock.setTime(NOW);
 
 describe("assessment/gate/admit", () => {
-  it.effect("admits an answer, evaluates it, and writes it once", () =>
+  it.effect("writes each admitted answer with its value and version", () =>
     Effect.gen(function* () {
       yield* setNow;
       const { gate, log } = yield* memory(live);
-      yield* answer(gate, Option.some("a"), 1);
-      yield* answer(gate, Option.some("b"), 2);
-      yield* answer(gate, Option.none(), 3);
+      yield* answer(gate, "a", 1);
+      yield* answer(gate, "b", 2);
       expect(yield* log).toEqual([
         "section",
         "rows",
-        "answer correct v1",
+        "answer a v1",
         "section",
         "rows",
-        "answer incorrect v2",
-        "section",
-        "rows",
-        "answer clear v3",
+        "answer b v2",
       ]);
     })
-  );
-  it.effect(
-    "rejects a selection the question does not have without writing",
-    () =>
-      Effect.gen(function* () {
-        yield* setNow;
-        const { gate, log } = yield* memory(live);
-        const rejected = yield* answer(gate, Option.some("z"), 1).pipe(
-          Effect.flip
-        );
-        expect(rejected).toMatchObject({
-          _tag: "ResponseRejected",
-          reason: "selection",
-        });
-        expect(yield* log).toEqual(["section", "rows"]);
-      })
   );
   it.effect.each(refusals)(
     "refuses with $expected before any later rule, reading $reads",
@@ -306,13 +266,14 @@ describe("assessment/gate/admit", () => {
                 device: Option.none(),
                 owner: "learner",
                 placement: target,
-                selection: Option.none(),
+                value: () => Effect.succeed("a"),
                 version: 1,
               })
             : gate.finish({
                 device: Option.none(),
                 owner: "learner",
                 section: target,
+                settled: "refuse",
               })
         ).pipe(Effect.flip);
         expect(
@@ -328,7 +289,12 @@ describe("assessment/gate/admit", () => {
         yield* setNow;
         const { gate, log } = yield* memory(changed({ corrupt: true }));
         const failure = yield* gate
-          .finish({ device: Option.none(), owner: "other", section: "s" })
+          .finish({
+            device: Option.none(),
+            owner: "other",
+            section: "s",
+            settled: "refuse",
+          })
           .pipe(Effect.flip);
         expect(failure).toMatchObject({ reason: { _tag: "Missing" } });
         expect(yield* log).toEqual([]);
@@ -337,14 +303,14 @@ describe("assessment/gate/admit", () => {
   it.effect("lets a lock refuse only a rule that refuses locked attempts", () =>
     Effect.gen(function* () {
       yield* setNow;
-      const { gate } = yield* memory(attempt({ locked: true }));
-      const signal = Rule.make({ deadline: "live", lock: "admit" });
+      const { gate } = yield* memory(attempt({ state: "locked" }));
+      const admitRule = Rule.make({ deadline: "live", lock: "admit" });
       const admitted = yield* gate.admit(
-        signal,
+        admitRule,
         "learner",
         Option.none(),
         Effect.succeedSome({
-          attempt: { ...live.attempt, locked: true },
+          attempt: { ...live.attempt, state: "locked" },
           owner: "learner",
           section: Effect.succeedSome({
             deadline: NOW + 1,
@@ -358,35 +324,99 @@ describe("assessment/gate/admit", () => {
         live: "row",
         now: NOW,
       });
-      const refused = yield* answer(gate, Option.some("a"), 1).pipe(
-        Effect.flip
-      );
+      const refused = yield* answer(gate, "a", 1).pipe(Effect.flip);
       expect(refused).toMatchObject({ reason: { _tag: "Locked" } });
     })
   );
   it.effect("admits a bound attempt only from its own device", () =>
     Effect.gen(function* () {
       yield* setNow;
-      const device = DeviceId.make("device-a");
-      const { gate, log } = yield* memory(
-        attempt({ device: Option.some(device) })
-      );
-      for (const caller of [
-        Option.none(),
-        Option.some(DeviceId.make("device-b")),
-      ]) {
+      const { gate, log } = yield* memory(attempt(bound("device-a")));
+      for (const caller of [Option.none(), Option.some("device-b")]) {
         const refused = yield* gate
-          .finish({ device: caller, owner: "learner", section: "s" })
+          .finish({
+            device: caller,
+            owner: "learner",
+            section: "s",
+            settled: "refuse",
+          })
           .pipe(Effect.flip);
         expect(refused).toMatchObject({ reason: { _tag: "OtherDevice" } });
       }
       yield* gate.finish({
-        device: Option.some(device),
+        device: Option.some("device-a"),
         owner: "learner",
         section: "s",
+        settled: "refuse",
       });
       expect(yield* log).toEqual(["section", "finish submitted"]);
     })
+  );
+  it.effect("refuses a retired device before any other device rule", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const { gate, log } = yield* memory(
+        attempt({
+          binding: { kind: "unbound", retired: ["old-device"] },
+        })
+      );
+      const refused = yield* gate
+        .finish({
+          device: Option.some("old-device"),
+          owner: "learner",
+          section: "s",
+          settled: "refuse",
+        })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject({ reason: { _tag: "DeviceRetired" } });
+      const unbound = yield* gate
+        .finish({
+          device: Option.some("new-device"),
+          owner: "learner",
+          section: "s",
+          settled: "refuse",
+        })
+        .pipe(Effect.flip);
+      expect(unbound).toMatchObject({ reason: { _tag: "OtherDevice" } });
+      expect(yield* log).toEqual([]);
+    })
+  );
+  it.effect(
+    "writes nothing when a finish finds its section already submitted",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const { gate, log } = yield* memory(
+          attempt({ ...bound("device-a"), state: "submitted" })
+        );
+        yield* gate.finish({
+          device: Option.some("device-a"),
+          owner: "learner",
+          section: "s",
+          settled: "answer",
+        });
+        expect(yield* log).toEqual([]);
+      })
+  );
+  it.effect(
+    "refuses a repeated finish as closed when the caller refuses settled finishes",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const { gate, log } = yield* memory(
+          attempt({ ...bound("device-a"), state: "submitted" })
+        );
+        const refused = yield* gate
+          .finish({
+            device: Option.some("device-a"),
+            owner: "learner",
+            section: "s",
+            settled: "refuse",
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ reason: { _tag: "AttemptClosed" } });
+        expect(yield* log).toEqual([]);
+      })
   );
   it.effect(
     "refuses an answer whose version is not newer than the latest write without writing it",
@@ -397,12 +427,10 @@ describe("assessment/gate/admit", () => {
           changed({ version: Option.some(2) })
         );
         for (const version of [1, 2]) {
-          const refused = yield* answer(gate, Option.some("a"), version).pipe(
-            Effect.flip
-          );
+          const refused = yield* answer(gate, "a", version).pipe(Effect.flip);
           expect(refused).toMatchObject({ _tag: "Stale" });
         }
-        yield* answer(gate, Option.some("b"), 3);
+        yield* answer(gate, "b", 3);
         expect(yield* log).toEqual([
           "section",
           "rows",
@@ -410,7 +438,7 @@ describe("assessment/gate/admit", () => {
           "rows",
           "section",
           "rows",
-          "answer incorrect v3",
+          "answer b v3",
         ]);
       })
   );
@@ -420,21 +448,17 @@ describe("assessment/gate/admit", () => {
       Effect.gen(function* () {
         yield* setNow;
         const { gate } = yield* memory(state);
-        const refused = yield* answer(gate, Option.some("a"), 1).pipe(
-          Effect.flip
-        );
+        const refused = yield* answer(gate, "a", 1).pipe(Effect.flip);
         expect(
           refused._tag === "AttemptRefused" ? refused.reason._tag : refused._tag
         ).toBe(expected);
       })
   );
-  it.effect("refuses a stale answer before it evaluates the selection", () =>
+  it.effect("refuses a stale answer before it writes the value", () =>
     Effect.gen(function* () {
       yield* setNow;
       const { gate, log } = yield* memory(changed({ version: Option.some(2) }));
-      const refused = yield* answer(gate, Option.some("z"), 1).pipe(
-        Effect.flip
-      );
+      const refused = yield* answer(gate, "z", 1).pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "Stale" });
       expect(yield* log).toEqual(["section", "rows"]);
     })
@@ -451,6 +475,7 @@ describe("assessment/gate/admit", () => {
           device: Option.none(),
           owner: "learner",
           section: "s",
+          settled: "refuse",
         });
         expect(yield* log).toEqual(["section", `finish ${reason}`]);
       })

@@ -331,6 +331,7 @@ describe("exams/sittings mine", () => {
           response: ["option-1"],
           sittingId: made.id,
           slug: nf,
+          version: 1,
         });
         yield* fixture.as("student").mutation(finish, {
           deviceId: deviceOf(1),

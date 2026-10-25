@@ -96,6 +96,7 @@ describe("exams/sittings paper", () => {
           response: ["option-2"],
           sittingId: made.id,
           slug: nf,
+          version: 1,
         });
         const after = yield* paperOf(fixture, made.id, deviceOf(1));
         expect(
