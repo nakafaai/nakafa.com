@@ -210,6 +210,8 @@ export function useQuestionReorder({
       }
       const grip = gripOf(event.target);
       if (Option.isSome(grip)) {
+        // A press on a grip drags the page, so the press selects no text of the paper under the pointer.
+        event.preventDefault();
         activeDrag.current = beginDrag(
           root,
           grip.value,
