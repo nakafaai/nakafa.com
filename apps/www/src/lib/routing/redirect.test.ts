@@ -1,6 +1,12 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+} from "@effect/vitest";
 import { Effect, Option } from "effect";
 import {
   readMainSiteRedirect,
@@ -378,5 +384,33 @@ describe("readMainSiteRedirect", () => {
         String(host)
       ).toBe(true);
     }
+  });
+
+  it("sends the reserved staging label to the main site when production serves it", () => {
+    const found = Option.getOrThrow(
+      readMainSiteRedirect(
+        new Request("https://staging.nakafa.com/en", {
+          headers: { host: "staging.nakafa.com" },
+        })
+      )
+    );
+
+    expect(found.headers.get("location")).toBe("https://nakafa.com/en");
+  });
+
+  it("leaves the deployment's own host to the router, and still moves every other refused host", () => {
+    vi.stubEnv("SITE_URL", "https://staging.nakafa.com");
+    onTestFinished(() => {
+      vi.stubEnv("SITE_URL", "https://nakafa.com");
+    });
+    const answer = (host: string) =>
+      readMainSiteRedirect(
+        new Request(`https://${host}/en`, { headers: { host } })
+      );
+
+    expect(Option.isNone(answer("staging.nakafa.com"))).toBe(true);
+    expect(
+      Option.getOrThrow(answer("www.nakafa.com")).headers.get("location")
+    ).toBe("https://nakafa.com/en");
   });
 });
