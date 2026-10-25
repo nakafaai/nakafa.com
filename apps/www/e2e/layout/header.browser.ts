@@ -89,7 +89,9 @@ const classPaths = ["/classes/fisika-x-1", "/classes/fisika-x-1/forum"];
  * Reads every header row that is drawn, the page's own or the app's bar: its
  * height, and the elements inside it whose box reaches past its right or bottom
  * edge. Elements hidden at this width and the screen reader's one-pixel boxes are
- * left out.
+ * left out, and so are the shapes inside a drawing: an SVG draws them only within
+ * its own box, which is measured instead, as the half of Nina that rises from the
+ * school home's header shows.
  */
 function readHeaders() {
   return Array.from(
@@ -100,8 +102,11 @@ function readHeaders() {
     .filter((header) => header.getBoundingClientRect().height > 0)
     .map((header) => {
       const edge = header.getBoundingClientRect();
-      const outside = Array.from(header.querySelectorAll<HTMLElement>("*"))
+      const outside = Array.from(header.querySelectorAll("*"))
         .filter((element) => {
+          if (element instanceof SVGElement && element.ownerSVGElement) {
+            return false;
+          }
           const box = element.getBoundingClientRect();
           return (
             box.width > 1 &&
@@ -111,7 +116,7 @@ function readHeaders() {
         })
         .map(
           (element) =>
-            `${element.tagName.toLowerCase()}.${String(element.className).slice(0, 60)}`
+            `${element.tagName.toLowerCase()}.${(element.getAttribute("class") ?? "").slice(0, 60)}`
         );
       return { height: edge.height, outside };
     });
@@ -129,12 +134,16 @@ const twoFrames = (page: Page) =>
 /**
  * Narrows the window through every width and checks that each header stays one row. React draws
  * a streamed page's boundaries on a timer after their markup arrives, and a boundary that has not
- * drawn yet hides its header, so the first heading must be visible before the window narrows.
+ * drawn yet hides its header, so the page's header row, or its first heading where the page has no
+ * row of its own, must be visible before the window narrows. The exam editor names its exam in a
+ * field the teacher renames in place, so its header row is what shows it has drawn.
  */
 const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
   function* (page: Page, label: string) {
     yield* Effect.promise(() =>
-      expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 })
+      expect(page.locator('[data-slot="page-header"], h1').first()).toBeVisible(
+        { timeout: 30_000 }
+      )
     );
     yield* Effect.forEach(
       widths,
@@ -303,12 +312,17 @@ test("an exam's pages keep their headers to one row at every width, for its Owne
   );
   const cookies = await studentContext.cookies();
   await studentContext.close();
+  // The seed records its exam as made by the school's Owner, who must have signed in first.
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const ownerCookies = await ownerContext.cookies();
+  await ownerContext.close();
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
   await Effect.runPromise(
     checkSchoolPages(
       browser,
       String(baseURL),
-      (context) => signInOwner(context, school.slug, address("/")),
+      (context) => Effect.promise(() => context.addCookies(ownerCookies)),
       address,
       examPaths(sitting)
     )

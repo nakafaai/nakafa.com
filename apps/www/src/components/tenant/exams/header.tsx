@@ -58,7 +58,10 @@ export function ExamHeader() {
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
+    <header
+      className="flex h-14 shrink-0 items-center gap-2 border-b px-2"
+      data-slot="page-header"
+    >
       <Tooltip>
         <TooltipTrigger
           render={
