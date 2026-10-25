@@ -18,8 +18,12 @@ const sectionNotActive = () =>
 /** The rows both writes map alike: try-out attempts never lock or bind a device, so those rows only keep each mapping total. */
 const unavailable = {
   AttemptClosed: attemptNotActive,
+  Closed: attemptNotActive,
+  DeviceRetired: attemptNotActive,
   Locked: attemptNotActive,
+  NotOpen: attemptNotActive,
   OtherDevice: attemptNotActive,
+  PlaceLocked: attemptNotActive,
   SectionClosed: sectionNotActive,
 };
 
@@ -59,7 +63,7 @@ export const toTryoutFailure = {
         }),
     }),
 } satisfies Record<
-  keyof typeof rules,
+  keyof Pick<typeof rules, "answer" | "finish">,
   (refused: AttemptRefused) => TryoutAttemptStateError | TryoutResponseError
 >;
 

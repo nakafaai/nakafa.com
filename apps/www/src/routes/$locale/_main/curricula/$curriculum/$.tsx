@@ -50,6 +50,7 @@ import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { serverHandler } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 const CurriculumInput = Schema.Struct({
   curriculum: Schema.String,
@@ -162,15 +163,13 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
 /** One curriculum node: a track chooser, a nested node or a material list. */
 export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
   loader: async ({ params }) => {
-    const page = await readCurriculumRoute({
-      data: {
-        curriculum: params.curriculum,
-        locale: params.locale,
-        path: Arr.filter(
-          (params._splat ?? "").split("/"),
-          (segment) => segment !== ""
-        ),
-      },
+    const page = await readStaticData(readCurriculumRoute, {
+      curriculum: params.curriculum,
+      locale: params.locale,
+      path: Arr.filter(
+        (params._splat ?? "").split("/"),
+        (segment) => segment !== ""
+      ),
     });
     if (page.kind === "notFound") {
       throw notFound();

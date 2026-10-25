@@ -31,15 +31,17 @@ const MANIFEST_HEADERS: readonly WwwHeader[] = [
   { key: "Content-Type", value: "application/manifest+json" },
 ];
 
-const SOCIAL_IMAGE_HEADERS: readonly WwwHeader[] = [
-  { key: "Cache-Control", value: SOCIAL_IMAGE_CACHE_CONTROL },
+/**
+ * A static answer is binary, but the CDN compresses only text types, and an answer
+ * is mostly text: one tenth of its bytes after compression. The browser reads it
+ * as bytes, so the declared type changes nothing it decodes.
+ */
+const STATIC_ANSWER_HEADERS: readonly WwwHeader[] = [
+  { key: "Content-Type", value: "text/plain; charset=utf-8" },
 ];
 
-/** The file that names the prerender rules of the content pages, served as the speculation rules media type. */
-const SPECULATION_RULES_PATH = "/speculation-rules.json";
-
-const SPECULATION_RULES_HEADERS: readonly WwwHeader[] = [
-  { key: "Content-Type", value: "application/speculationrules+json" },
+const SOCIAL_IMAGE_HEADERS: readonly WwwHeader[] = [
+  { key: "Cache-Control", value: SOCIAL_IMAGE_CACHE_CONTROL },
 ];
 
 /**
@@ -65,14 +67,6 @@ export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/rss.xml", headers: RSS_HEADERS },
   { path: "/llms.txt", headers: LLMS_HEADERS },
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
+  { path: "/_data/*", headers: STATIC_ANSWER_HEADERS },
   ...SOCIAL_IMAGE_RULES,
-  { path: SPECULATION_RULES_PATH, headers: SPECULATION_RULES_HEADERS },
-  // Every document names the rules, which the browser reads from the header
-  // instead of an inline script, so the Content-Security-Policy keeps its form.
-  {
-    path: "/*",
-    headers: [
-      { key: "Speculation-Rules", value: `"${SPECULATION_RULES_PATH}"` },
-    ],
-  },
 ];

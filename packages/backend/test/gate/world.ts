@@ -38,6 +38,7 @@ export const Change = Schema.Literals([
   "close-attempt",
   "close-section",
   "expire-attempt",
+  "expire-attempt-status",
   "expire-section",
   "duplicate-section",
 ]);

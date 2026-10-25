@@ -2,7 +2,7 @@ import type { GenericId } from "@confect/core";
 import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr } from "effect";
+import { Array as Arr, Number as Num } from "effect";
 import { createContext, use, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -91,7 +91,9 @@ function SittingResultsContent({
     ? overview.value.sitting.timeZone
     : "";
   const total = QueryResult.isSuccess(overview)
-    ? overview.value.questions.length
+    ? Num.sumAll(
+        Arr.map(overview.value.questions, (question) => question.points)
+      )
     : 0;
   const paper = useMemo(() => ({ timeZone, total }), [timeZone, total]);
 

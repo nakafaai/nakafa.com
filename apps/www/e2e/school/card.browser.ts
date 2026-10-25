@@ -3,6 +3,10 @@ import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { createSchool, hostAddress, seedCard } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
+
+/** The entry address that holds the school username form alone. */
+const USERNAME_ADDRESS = /masuk=username/;
 
 test("a wrong card code is refused with one message that does not say whether the username exists", async ({
   page,
@@ -12,6 +16,8 @@ test("a wrong card code is refused with one message that does not say whether th
   await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
 
   await page.getByRole("button", { name: "Sign in with a username" }).click();
+  await page.waitForURL(USERNAME_ADDRESS);
+  await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
   await page.getByLabel("School username").fill("guru.tidak");
   await page.getByLabel("Card code").fill("ABCDE-FGHJK");
   await page.getByLabel("Password").fill("correct horse battery");
@@ -31,6 +37,8 @@ test("a student whose card an Admin printed signs in with the school username, t
   await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
 
   await page.getByRole("button", { name: "Sign in with a username" }).click();
+  await page.waitForURL(USERNAME_ADDRESS);
+  await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
   await page.getByLabel("School username").fill(card.loginName);
   await page.getByLabel("Card code").fill(card.code);
   await page.getByLabel("Password").fill("correct horse battery");

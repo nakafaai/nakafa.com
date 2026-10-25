@@ -1,7 +1,25 @@
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
+
+/**
+ * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
+ * with its content from the top. The chosen page is outlined, as a design tool outlines the page in hand.
+ */
+const questionPaper = cva(
+  "grid aspect-4/3 w-full min-w-0 content-start gap-6 rounded-xl bg-background p-6 shadow-sm md:p-10",
+  {
+    defaultVariants: { selected: false },
+    variants: {
+      selected: {
+        false: "ring-1 ring-foreground/10",
+        true: "ring-2 ring-primary",
+      },
+    },
+  }
+);
 
 /**
  * The paper of one question, as the student reads it in the player: its prompt, then its
@@ -9,12 +27,19 @@ import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
  * component draws both. The page's number sits outside the paper, so nothing inside it is
  * the teacher's own label.
  */
-export function QuestionPaper({ children }: { children: ReactNode }) {
-  return (
-    <div className="grid w-full min-w-0 gap-6 rounded-xl bg-background p-6 shadow-sm ring-1 ring-foreground/10 md:p-10">
-      {children}
-    </div>
-  );
+export function QuestionPaper({
+  children,
+  selected,
+}: {
+  children: ReactNode;
+  selected?: boolean;
+}) {
+  return <div className={questionPaper({ selected })}>{children}</div>;
+}
+
+/** The room of the action that adds an option, which a page keeps while its editors are not mounted. */
+export function OptionAddRoom() {
+  return <span aria-hidden className="h-8" />;
 }
 
 /** The options of the paper, one column on a narrow paper and two on a wide one, as the player lays them out. */

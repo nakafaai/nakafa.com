@@ -3,6 +3,10 @@ import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
+  TryoutProgressError,
+  TryoutProgressSizeError,
+} from "@repo/backend/confect/tryouts/progress/spec";
+import {
   saveTryoutResponseArgsValidator,
   saveTryoutResponseResultValidator,
   TryoutResponseErrorWire,
@@ -24,6 +28,8 @@ export default GroupSpec.make().addFunction(
         TryoutRuntimeErrorWire,
         TryoutResponseIntegrityError,
         TryoutResponseSelectionError,
+        TryoutProgressError,
+        TryoutProgressSizeError,
       ]),
   }).middleware(Session)
 );

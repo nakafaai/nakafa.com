@@ -3,15 +3,17 @@ import type {
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { rules } from "@repo/backend/confect/assessment/gate/rules";
 import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { decodedSteps, foldedText } from "@repo/backend/confect/editor/result";
 import { snapshotOf, stepsThrough } from "@repo/backend/confect/editor/store";
 import {
-  boundAttempt,
-  requireOpen,
-} from "@repo/backend/confect/exams/sittings/attempt";
-import { QuestionNotInExam } from "@repo/backend/confect/exams/sittings/errors";
-import { Array as Arr, Clock, Effect } from "effect";
+  placementOf,
+  sittingGate,
+} from "@repo/backend/confect/exams/sittings/gate";
+import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
+import { Effect, Option } from "effect";
 
 /**
  * The prompt of one question of the caller's paper, as the document stands now: the editor's
@@ -27,19 +29,26 @@ export const prompt = Effect.fn("exams.sittings.prompt")(function* (args: {
   questionId: ExamQuestionsDoc["_id"];
   sittingId: ExamSittingsDoc["_id"];
 }) {
-  const { attempt, sitting } = yield* boundAttempt(
-    args.sittingId,
-    args.deviceId
-  );
-  yield* requireOpen(attempt, yield* Clock.currentTimeMillis);
-  if (!Arr.contains(sitting.exam.questions, args.questionId)) {
-    return yield* new QuestionNotInExam();
-  }
+  const member = yield* Member;
+  const { live } = yield* sittingGate
+    .admit(
+      rules.paper,
+      member.person._id,
+      Option.some(args.deviceId),
+      placementOf({
+        person: member.person,
+        questionId: args.questionId,
+        sittingId: args.sittingId,
+        tenantId: member.tenant._id,
+      })
+    )
+    .pipe(
+      Effect.catchTag("AttemptRefused", (refusal) =>
+        Effect.fail(toSittingError(refusal))
+      )
+    );
+  const question = live.question;
   const reader = yield* DatabaseReader;
-  const question = yield* reader
-    .table("examQuestions")
-    .get(args.questionId)
-    .pipe(Effect.orDie);
   const promptDocument = yield* reader
     .table("editorDocuments")
     .get(question.prompt)

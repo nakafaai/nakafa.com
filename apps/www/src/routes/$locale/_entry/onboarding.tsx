@@ -108,7 +108,7 @@ function OnboardingPage() {
         </div>
       </EntryShellHeader>
       <EntryShellBody>
-        <Nina act="writing" label="" size={120} whole />
+        <Nina act="writing" label="" size={88} whole />
         <OnboardingQuestionnaire initialProfile={profile} intent={intent} />
         <AuthLegal links={legal} />
       </EntryShellBody>

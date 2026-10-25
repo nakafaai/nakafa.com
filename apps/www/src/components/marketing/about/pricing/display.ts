@@ -56,5 +56,11 @@ export function getProPricingDisplay(currency: PricingCurrency) {
       text: formatter.format(price.amount),
       value: price.amount,
     },
+    proYearly: {
+      format,
+      locales: price.locale,
+      text: formatter.format(price.yearlyAmount),
+      value: price.yearlyAmount,
+    },
   };
 }

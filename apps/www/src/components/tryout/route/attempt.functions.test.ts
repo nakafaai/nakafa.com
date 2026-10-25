@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   renderTryoutPreview: vi.fn(),
   renderTryoutReview: vi.fn(),
   readTryoutQuestionPreview: vi.fn(),
+  readTryoutMetadata: vi.fn(),
   readTryoutSectionPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
   setResponseHeader: vi.fn(),
@@ -20,6 +21,7 @@ vi.mock("@tanstack/react-start/server", () => ({
   setResponseHeader: mocks.setResponseHeader,
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
+  readTryoutMetadata: mocks.readTryoutMetadata,
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
@@ -51,6 +53,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   mocks.readTryoutQuestionPreview.mockReturnValue(Effect.succeedNone);
+  // The set's page and its head are read together, so a missing page still reads the head.
+  mocks.readTryoutMetadata.mockReturnValue(Effect.succeed({ route: null }));
 });
 
 describe("try-out attempt server functions", () => {
