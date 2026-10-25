@@ -168,12 +168,17 @@ describe("memoryScreenHandler", () => {
 });
 
 describe("subscriptionsScreenHandler", () => {
-  it("answers whether the visitor holds the Pro subscription and the head", async () => {
+  it("answers the billing overview of the visitor and the head", async () => {
     sessionWith(Option.some("token"));
-    answerQueries([[billing.queries.hasActiveSubscription, true]]);
+    const overview = {
+      credits: { allowance: 10, balance: 10, resetAt: 1_792_000_000_000 },
+      plan: "free",
+      subscription: null,
+    };
+    answerQueries([[billing.queries.overview, overview]]);
     const screen = await subscriptionsScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
-      subscription: true,
+      overview,
       seo: { canonicalPath: "/en", indexable: false },
     });
   });

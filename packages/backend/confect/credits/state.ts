@@ -23,6 +23,16 @@ export function getCurrentCreditResetTimestamp(plan: UserPlan, now: number) {
   );
 }
 
+/** Returns the UTC reset boundary after the current one, when the balance refills next. */
+export function getNextCreditResetTimestamp(plan: UserPlan, now: number) {
+  return DateTime.toEpochMillis(
+    DateTime.add(
+      DateTime.makeUnsafe(getCurrentCreditResetTimestamp(plan, now)),
+      plan === "free" ? { days: 1 } : { months: 1 }
+    )
+  );
+}
+
 /** Applies one materialized reset boundary to a stored user credit state. */
 export function getEffectiveCreditStateForResetTimestamp(
   user: CreditStateUser,

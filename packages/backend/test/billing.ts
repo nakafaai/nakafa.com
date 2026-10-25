@@ -110,6 +110,7 @@ export function insertProSubscription(
   ctx: MutationCtx,
   accountId: Id<"billingAccounts">,
   overrides: {
+    cancelAtPeriodEnd?: boolean;
     currentPeriodEnd?: number | null;
     status?: "active" | "canceled" | "ended" | "pastDue" | "pending";
     subscriptionId?: string;
@@ -125,7 +126,7 @@ export function insertProSubscription(
       overrides.currentPeriodEnd === undefined
         ? PRO_PERIOD_END
         : overrides.currentPeriodEnd,
-    cancelAtPeriodEnd: false,
+    cancelAtPeriodEnd: overrides.cancelAtPeriodEnd ?? false,
     provider: {
       kind: "polar",
       subscriptionId: overrides.subscriptionId ?? "sub_polar_test",
