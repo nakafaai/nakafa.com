@@ -42,7 +42,6 @@ export const SentenceKeySchema = Schema.Literals([
   "Auth.picture-description",
   "Auth.picture-footer-animal",
   "Auth.picture-footer-photo",
-  "Auth.plan-free-description",
   "Auth.plan-free-footer",
   "Auth.plan-granted-description",
   "Auth.plan-granted-footer",

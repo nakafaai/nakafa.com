@@ -3,6 +3,7 @@ import type {
   billingOverviewValidator,
   billingSubscriptionSummaryValidator,
 } from "@repo/backend/confect/billing/schema";
+import { Number as Num } from "effect";
 
 /** What the billing settings show for a viewer. */
 export type BillingOverview = typeof billingOverviewValidator.Type;
@@ -83,4 +84,22 @@ export function formatBillingDate(moment: number, locale: string) {
 /** A count of credits in the digits of one locale. */
 export function formatCount(count: number, locale: string) {
   return new Intl.NumberFormat(locale).format(count);
+}
+
+/**
+ * How much of the period's allowance the viewer has used, in whole percent from 0 to 100. A balance
+ * above the allowance, such as one a grant raised, counts as nothing used, and a period that grants
+ * nothing counts as all used.
+ */
+export function usedPercent({
+  allowance,
+  balance,
+}: Pick<BillingOverview["credits"], "allowance" | "balance">) {
+  if (allowance <= 0) {
+    return 100;
+  }
+  return Num.clamp(Math.round(((allowance - balance) / allowance) * 100), {
+    maximum: 100,
+    minimum: 0,
+  });
 }

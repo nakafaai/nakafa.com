@@ -7,6 +7,7 @@ import {
   planStateOf,
   providerNameOf,
   subscribedDescriptionKey,
+  usedPercent,
 } from "@/lib/billing/plan";
 
 const SUBSCRIPTION: BillingSubscription = {
@@ -104,5 +105,17 @@ describe("billing/plan", () => {
   it("writes a count in the digits of the locale", () => {
     expect(formatCount(1000, "en")).toBe("1,000");
     expect(formatCount(1000, "id")).toBe("1.000");
+  });
+
+  it("measures the share of the allowance used, in whole percent", () => {
+    expect(usedPercent({ allowance: 10, balance: 10 })).toBe(0);
+    expect(usedPercent({ allowance: 10, balance: 3 })).toBe(70);
+    expect(usedPercent({ allowance: 3, balance: 2 })).toBe(33);
+    expect(usedPercent({ allowance: 10, balance: 0 })).toBe(100);
+  });
+
+  it("counts a balance above the allowance as nothing used, and a period without an allowance as all used", () => {
+    expect(usedPercent({ allowance: 10, balance: 25 })).toBe(0);
+    expect(usedPercent({ allowance: 0, balance: 0 })).toBe(100);
   });
 });

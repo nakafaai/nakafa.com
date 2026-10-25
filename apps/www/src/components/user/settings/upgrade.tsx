@@ -52,9 +52,11 @@ function Benefit({ icon, text }: { icon: typeof Tick01Icon; text: string }) {
 }
 
 /**
- * The Plan card of a free viewer: the Pro offer in the viewer's currency, its
- * benefits, and the Upgrade action that starts checkout here, not on the pricing
- * page. The checkout offers monthly and yearly, and the learner picks there.
+ * The plan card of a free viewer, one card with one header: the Pro offer names
+ * the card, its price in the viewer's currency and its benefits fill the body, and
+ * the footer says the viewer is on Free beside the Upgrade action, which starts
+ * checkout here, not on the pricing page. The checkout offers monthly and yearly,
+ * and the learner picks there.
  */
 export function UpgradePlanCard() {
   const billing = useBillingNavigation();
@@ -77,20 +79,10 @@ export function UpgradePlanCard() {
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{t("plan")}</CardTitle>
-        <CardDescription>
-          {t("plan-free-description", {
-            credits: getPlanCreditConfig("free").amount,
-          })}
-        </CardDescription>
+        <CardTitle>{tPricing("pro-title")}</CardTitle>
+        <CardDescription>{tPricing("pro-description")}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
-        <div className="grid gap-1">
-          <p className="font-medium text-xl tracking-tight">
-            {tPricing("pro-title")}
-          </p>
-          <p className="text-muted-foreground">{tPricing("pro-description")}</p>
-        </div>
         <div className="grid gap-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
             {Arr.map(PricingCurrencySchema.literals, (currency) => (
