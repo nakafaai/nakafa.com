@@ -67,7 +67,7 @@ export const publishAcceptanceSource = Effect.fn("acceptance.publishSource")(
     yield* fs.writeFileString(renderer, "", { mode: 0o600 });
     yield* runAcceptanceCommand({
       command: "bun",
-      args: ["--silent", "--filter", "www", "renderer:manifest"],
+      args: ["--silent", "run", "--cwd", "apps/www", "renderer:manifest"],
       cwd: root,
       operation: "Acceptance renderer export",
       reportStderr: true,

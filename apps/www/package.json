@@ -11,16 +11,16 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "portless run --name nakafa vite dev",
     "doctor": "bunx --minimum-release-age 86400 react-doctor@0.9.18",
-    "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts",
-    "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts",
-    "renderer:manifest": "tsx --conditions=import --conditions=react-server scripts/content/renderer.ts",
+    "google-index": "bun scripts/google-index.ts",
+    "index-now": "bun scripts/index-now.ts",
+    "renderer:manifest": "bun --conditions=import --conditions=react-server scripts/content/renderer.ts",
     "start": "portless run --name nakafa vite preview",
     "test": "vitest run",
     "test:browser": "playwright test",
     "test:ui": "vitest --ui",
     "test:watch": "vitest watch",
     "typecheck": "tsr generate && tsc --checkers 2 --noEmit --emitDeclarationOnly false",
-    "verify:featured-renderer": "node --env-file-if-exists=.env.local --import tsx --conditions=import --conditions=react-server scripts/content/featured.mts"
+    "verify:featured-renderer": "bun --conditions=import --conditions=react-server scripts/content/featured.mts"
   },
   "dependencies": {
     "@confect/core": "catalog:",
@@ -95,7 +95,6 @@
     "afdocs": "0.22.2",
     "alchemy": "catalog:",
     "jsdom": "^30.1.3",
-    "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
