@@ -6,6 +6,7 @@ import {
   planSyncIoFailedCode,
 } from "@repo/backend/confect/billing/spec";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
+import { forfeitLots } from "@repo/backend/confect/credits/lots";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
@@ -72,6 +73,10 @@ export const applyPlanChange = Effect.fn("billing.plan.apply")(
         planCreditGrantId,
       })
       .pipe(Effect.orDie);
+    // Top-up packs run only while Pro does, so leaving Pro ends them at once.
+    if (newPlan === "free") {
+      yield* forfeitLots(user._id);
+    }
     yield* Effect.logInfo("User plan changed with credits").pipe(
       Effect.annotateLogs({
         userId: user._id,

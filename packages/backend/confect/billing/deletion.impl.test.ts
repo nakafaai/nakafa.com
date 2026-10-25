@@ -407,4 +407,68 @@ describe("billing/deletion", () => {
       await t.run((ctx) => ctx.db.query("billingAccounts").collect())
     ).toHaveLength(1);
   });
+
+  it("deletes a learner's top-up packs with the learner, and keeps the packs of others", async () => {
+    const t = createBillingTestConvex();
+    const userId = await t.mutation(async (ctx) => {
+      const seeded = await seedDeletingUser(ctx, null);
+      const paymentId = await ctx.db.insert("billingPayments", {
+        accountId: seeded.accountId,
+        amount: 59_000,
+        currency: "IDR",
+        kind: "credits",
+        method: "order",
+        paidAt: NOW,
+        providerPaymentId: "order_deleted_pack",
+        providerUpdatedAt: NOW,
+        rail: "polar",
+        status: "succeeded",
+      });
+      await ctx.db.insert("creditLots", {
+        expiresAt: NOW + 1000,
+        granted: 1000,
+        paymentId,
+        remaining: 900,
+        state: "active",
+        userId: seeded.userId,
+      });
+      const otherUserId = await ctx.db.insert("users", {
+        authId: "auth-billing-deletion-other",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "kept@example.com",
+        mascot: MASCOT_CODE,
+        name: "Kept",
+        plan: "pro",
+      });
+      const otherPaymentId = await ctx.db.insert("billingPayments", {
+        accountId: await insertPolarAccount(ctx, otherUserId, "cust_kept"),
+        amount: 59_000,
+        currency: "IDR",
+        kind: "credits",
+        method: "order",
+        paidAt: NOW,
+        providerPaymentId: "order_kept_pack",
+        providerUpdatedAt: NOW,
+        rail: "polar",
+        status: "succeeded",
+      });
+      await ctx.db.insert("creditLots", {
+        expiresAt: NOW + 1000,
+        granted: 1000,
+        paymentId: otherPaymentId,
+        remaining: 1000,
+        state: "active",
+        userId: otherUserId,
+      });
+      return seeded.userId;
+    });
+    await t.action(internal.billing.deletion.cleanupDeletedUserBilling, {
+      authId: "auth-billing-deletion",
+      userId,
+    });
+    expect(
+      await t.run((ctx) => ctx.db.query("creditLots").collect())
+    ).toMatchObject([{ remaining: 1000, state: "active" }]);
+  });
 });
