@@ -649,7 +649,7 @@ a release of anything under `packages/backend/confect/nina` or
 change. It is not part of CI.
 
 ```sh
-pnpm --filter @repo/backend nina:gate
+bun --filter @repo/backend nina:gate
 ```
 
 The command reads the deployment from the caller's own configuration:

@@ -22,7 +22,7 @@ export const createAcceptanceCard = Effect.fn("contentAcceptance.card")(
     const runtime = yield* readLocalRuntime(root);
     if (runtime === undefined) {
       return yield* acceptanceRuntimeError(
-        "Run pnpm acceptance:prepare and start acceptance before seeding a card."
+        "Run bun run acceptance:prepare and start acceptance before seeding a card."
       );
     }
     const args = yield* encodeArguments({ slug });

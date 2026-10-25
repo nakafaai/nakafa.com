@@ -293,7 +293,7 @@ describe("lease of the owned acceptance runtime", () => {
   );
 
   it.live(
-    "finishes scoped cleanup after Ctrl-C closes the pnpm terminal",
+    "finishes scoped cleanup after Ctrl-C closes the bun terminal",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -321,7 +321,7 @@ describe("lease of the owned acceptance runtime", () => {
           encodeJsonText({
             private: true,
             packageManager: manifest.packageManager,
-            scripts: { start: "pnpm --dir backend acceptance start" },
+            scripts: { start: "bun run --cwd backend acceptance start" },
           })
         );
         yield* fs.writeFileString(
@@ -365,7 +365,7 @@ output = bytearray()
 pid, terminal = pty.fork()
 if pid == 0:
     os.chdir(root)
-    os.execvp("pnpm", ["pnpm", "start"])
+    os.execvp("bun", ["bun", "run", "start"])
 def alive(pid):
     try:
         os.kill(pid, 0)
@@ -387,7 +387,7 @@ try:
     owned = json.loads(record.read_text())
     os.write(terminal, b"\\x03")
     while os.waitpid(pid, os.WNOHANG)[0] == 0:
-        assert time.monotonic() < deadline, "pnpm did not stop"
+        assert time.monotonic() < deadline, "bun did not stop"
         drain()
     os.close(terminal)
     terminal = None

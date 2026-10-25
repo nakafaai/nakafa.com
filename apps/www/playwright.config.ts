@@ -5,7 +5,7 @@ import { Array as Arr, Record as Rec } from "effect";
 // ACCEPTANCE_ORIGIN in packages/backend/scripts/content/acceptance/local.ts. The
 // browser tests use that host too: a local session cookie is set for localhost,
 // and the browser never sends it to 127.0.0.1. A developer server under Portless
-// takes its URL from PLAYWRIGHT_BASE_URL, for example `pnpm exec portless get nakafa`.
+// takes its URL from PLAYWRIGHT_BASE_URL, for example `bunx portless get nakafa`.
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
 // Projects select files by folder path, so a file that repeats a basename

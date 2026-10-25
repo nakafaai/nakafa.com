@@ -112,7 +112,7 @@ the same.
 
 ## Consequences
 
-- `scripts/check/react.ts`, run by `pnpm check:tests`, rejects
+- `scripts/check/react.ts`, run by `bun run check:tests`, rejects
   `use-context-selector`, React's `useContext`, and Zustand's module-level
   `create`. Biome's `noRestrictedImports` rejects the context-backed auth APIs
   of `convex/react` and `@convex-dev/better-auth`. Neither looks at

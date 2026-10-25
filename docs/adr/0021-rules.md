@@ -49,6 +49,16 @@ source check stays off, and its row names that check as the owner.
 | `preferBarrelImport` | off | Not a duplicate. `base.json` lists no `barrelImportPackages`, so the rule has nothing to check. Authored modules import `effect` by name from its barrel (3,286 files have a one-line named import from `"effect"`), and 146 files import a module path such as `effect/process` |
 | `preferNamespaceImport` | off | Not a duplicate. `base.json` lists no `namespaceImportPackages`, so the rule has nothing to check. No authored module imports `effect` as a namespace |
 
+### Compiler rules that `@effect/tsgo` 0.54 to 0.56 add
+
+`@effect/tsgo` 0.56.0 adds two rules to the 0.53.3 set. `packages/typescript-config/base.json`
+decides each one, in the same way in both repositories.
+
+| Rule | Decision | Owner, or the reason it stays off |
+| --- | --- | --- |
+| `preferEffectString` | off | Stays off. The plugin suggests Effect String APIs for native string calls and notes that their semantics have caveats. No source rule asks for those calls |
+| `schemaClassObjectLiteral` | error | Enforced from the start. The plugin warns when an object literal is checked as a Schema class instance without its prototype. The workspace has no such literal, measured by the all-workspace typecheck on 25 October 2026 |
+
 ### Schema error brands
 
 A missing brand lets a structurally equal value pass for a Schema class instance.
@@ -511,7 +521,7 @@ A change starts in the owner. Change the owner's rule, file, or pin first. Then
 copy the file or move the pin in the other repository, and run its check.
 
 Each repository keeps its own choices: the versions of other tools (Biome,
-Turborepo, esbuild, pnpm), its action pins and their review lists, its advisory
+Turborepo, esbuild, Bun), its action pins and their review lists, its advisory
 exceptions in `osv.toml`, its entry points, its tests, and the service class in
 `scripts/provenance/service.ts`. The Effect deterministic-key rule puts the
 package name in that class's key, so no two repositories can share its text.

@@ -14,7 +14,7 @@ type SubjectItemProps = Readonly<{
 export function SubjectItem({
   icon,
   label,
-  labelElement: Label = "h2",
+  labelElement: Heading = "h2",
   target,
 }: SubjectItemProps) {
   return (
@@ -22,9 +22,9 @@ export function SubjectItem({
       <div className="relative overflow-hidden p-6 transition-colors ease-out group-hover:bg-accent group-hover:text-accent-foreground">
         <div className="flex items-center gap-2">
           <HugeIcons className="size-4 shrink-0" icon={icon} />
-          <Label className="flex-1 truncate" title={label}>
+          <Heading className="flex-1 truncate" title={label}>
             {label}
-          </Label>
+          </Heading>
           <HugeIcons
             className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
             icon={ArrowRight02Icon}

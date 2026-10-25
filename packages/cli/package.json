@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.ts",
-    "prepack": "pnpm build",
+    "prepack": "bun run build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",

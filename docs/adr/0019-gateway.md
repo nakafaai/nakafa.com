@@ -114,7 +114,7 @@ and not as a description of the learner from the outside, was not measured
 then. Fifteen messages say little about how a threshold behaves on many
 languages and on texts that sit near it, so the thresholds in
 `nina/judgment/catalog.ts` are not set from this table.
-`pnpm --filter @repo/backend judgment:measure` runs a labelled set of 124
+`bun --filter @repo/backend judgment:measure` runs a labelled set of 124
 messages and 85 notes in 17 languages and 8 scripts through the deployment,
 each judgment on the form of text that production asks it, one text to a
 request (ADR 0022), and prints the probabilities by label, the counts at the

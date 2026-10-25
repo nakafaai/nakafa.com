@@ -150,7 +150,7 @@ describe("Effect source identity", () => {
       change: installNextRelease,
       error: "EffectSourceMismatch",
       message: () =>
-        "Installed Effect is 2.0.0, but repos/effect is 1.0.0. Commit dependency changes, then run pnpm effect:source:update.",
+        "Installed Effect is 2.0.0, but repos/effect is 1.0.0. Commit dependency changes, then run bun run effect:source:update.",
       name: "an installed release ahead of the vendored source",
     },
     {

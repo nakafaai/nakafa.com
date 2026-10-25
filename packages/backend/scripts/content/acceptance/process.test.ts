@@ -430,11 +430,15 @@ writeFileSync("ready", "ready");`
           const child = yield* spawner({
             exit: Effect.succeed(ChildProcessSpawner.ExitCode(code)),
           });
-          const result = yield* runBuildCommand("/tmp", ["pnpm", "build"], {
-            VITE_CONVEX_URL: "https://production.convex.cloud",
-            AKSARA_ACCEPTANCE_PRIVATE_KEY: "private",
-            AKSARA_SIGNING_PRIVATE_KEY: "private",
-          }).pipe(
+          const result = yield* runBuildCommand(
+            "/tmp",
+            ["bun", "run", "build"],
+            {
+              VITE_CONVEX_URL: "https://production.convex.cloud",
+              AKSARA_ACCEPTANCE_PRIVATE_KEY: "private",
+              AKSARA_SIGNING_PRIVATE_KEY: "private",
+            }
+          ).pipe(
             Effect.provideService(
               ChildProcessSpawner.ChildProcessSpawner,
               child.service
@@ -456,7 +460,7 @@ writeFileSync("ready", "ready");`
             }),
           ]);
           if (code === 0) {
-            yield* runBuildCommand("/tmp", ["pnpm", "build"]).pipe(
+            yield* runBuildCommand("/tmp", ["bun", "run", "build"]).pipe(
               Effect.provideService(
                 ChildProcessSpawner.ChildProcessSpawner,
                 child.service

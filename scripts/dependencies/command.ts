@@ -7,7 +7,7 @@ const RunOptionsSchema = Schema.Struct({
 });
 type RunOptions = typeof RunOptionsSchema.Type;
 
-/** Expected failure while running pnpm for dependency maintenance. */
+/** Expected failure while running bun for dependency maintenance. */
 export class DependencyCommandError extends Schema.TaggedError<DependencyCommandError>()(
   "DependencyCommandError",
   {
@@ -16,8 +16,8 @@ export class DependencyCommandError extends Schema.TaggedError<DependencyCommand
   }
 ) {}
 
-/** Runs pnpm without a shell and optionally captures its exact output. */
-export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
+/** Runs bun without a shell and optionally captures its exact output. */
+export const runBun = Effect.fn("RepositoryPolicy.runBun")(function* (
   root: string,
   args: readonly string[],
   options: RunOptions = {}
@@ -25,7 +25,7 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
   return yield* Effect.scoped(
     Effect.gen(function* () {
       const capture = options.capture === true;
-      const command = yield* ChildProcess.make("pnpm", args, {
+      const command = yield* ChildProcess.make("bun", args, {
         cwd: root,
         stderr: capture ? "pipe" : "inherit",
         stdout: capture ? "pipe" : "inherit",
@@ -34,7 +34,7 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
           (cause) =>
             new DependencyCommandError({
               cause,
-              message: `Unable to run pnpm ${Arr.join(args, " ")}.`,
+              message: `Unable to run bun ${Arr.join(args, " ")}.`,
             })
         )
       );
@@ -45,7 +45,7 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
             (cause) =>
               new DependencyCommandError({
                 cause,
-                message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
+                message: `Unable to finish bun ${Arr.join(args, " ")}.`,
               })
           )
         );
@@ -64,7 +64,7 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
           (cause) =>
             new DependencyCommandError({
               cause,
-              message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
+              message: `Unable to finish bun ${Arr.join(args, " ")}.`,
             })
         )
       );

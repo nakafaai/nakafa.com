@@ -13,7 +13,7 @@
     "@repo/seo": "workspace:*",
     "@repo/site": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "@tanstack/react-router": "1.170.45",
+    "@tanstack/react-router": "1.170.46",
     "effect": "catalog:",
     "react": "19.3.1",
     "use-intl": "catalog:"

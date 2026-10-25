@@ -146,14 +146,13 @@ layer(services)("signed acceptance lifecycle", (it) => {
   );
 
   for (const [operation, command] of [
-    ["build", ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"]],
+    ["build", ["nice", "-n", "10", "bunx", "turbo", "run", "build"]],
     [
       "start",
       [
-        "pnpm",
-        "--dir",
+        "bunx",
+        "--cwd",
         "apps/www",
-        "exec",
         "vite",
         "preview",
         "--strictPort",
@@ -248,27 +247,16 @@ layer(services)("signed acceptance lifecycle", (it) => {
         expect(mocks.command).toHaveBeenNthCalledWith(
           1,
           "/test",
-          [
-            "nice",
-            "-n",
-            "10",
-            "pnpm",
-            "exec",
-            "turbo",
-            "run",
-            "build",
-            "--filter=www",
-          ],
+          ["nice", "-n", "10", "bunx", "turbo", "run", "build", "--filter=www"],
           expect.anything()
         );
         expect(mocks.command).toHaveBeenNthCalledWith(
           2,
           "/test",
           [
-            "pnpm",
-            "--dir",
+            "bunx",
+            "--cwd",
             "apps/www",
-            "exec",
             "vite",
             "preview",
             "--strictPort",

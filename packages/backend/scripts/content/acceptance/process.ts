@@ -22,7 +22,7 @@ export const withTerminal = Effect.fn("contentAcceptance.withTerminal")(
   function* <A, E, R>(program: Effect.Effect<A, E, R>) {
     yield* Effect.acquireRelease(
       Effect.sync(() => {
-        // pnpm may exit before this process, causing its terminal to hang up.
+        // bun may exit before this process, causing its terminal to hang up.
         const interrupt = () => process.emit("SIGINT");
         process.on("SIGHUP", interrupt);
         return interrupt;

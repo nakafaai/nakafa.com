@@ -593,7 +593,7 @@ the learner's own voice, sentences that describe the learner from the outside
 quote), and sentences that hold private data of a dozen forms, among them a
 phone number written with spaces, a street address, an illness, a religion and
 a salary. Each carries its expected labels.
-`pnpm --filter @repo/backend judgment:measure` runs the set through the dev
+`bun --filter @repo/backend judgment:measure` runs the set through the dev
 deployment that `CONVEX_DEPLOYMENT` names, read from the environment and then
 from `packages/backend/.env.local`, and refuses any other, because it spends
 model calls: a message for `lasting`, and a note for `ownNote` and `private`,

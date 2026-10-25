@@ -215,6 +215,7 @@ function Content() {
             }}
             value={angleValue}
           >
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: React Aria connects this Label to the NumberField input through context. */}
             <Label className="sr-only">{t("angle")}</Label>
             <Group className={stepperVariants()}>
               <Button
