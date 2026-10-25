@@ -126,6 +126,69 @@ describe("forwardAgentEdge", () => {
   );
 
   it.effect(
+    "forwards the caller's media type with the JSON-RPC body to the MCP origin",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValue(new Response("{}"));
+        const body = '{"jsonrpc":"2.0","id":1,"method":"server/discover"}';
+        const request = new Request("https://mcp.nakafa.com/mcp", {
+          body,
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        });
+
+        yield* forwardAgentEdge(
+          NAKAFA_MCP_EDGE_CONTRACT,
+          NAKAFA_MCP_EDGE_PATHS,
+          request,
+          {
+            CONVEX_SITE_URL: "https://origin.convex.site",
+            NAKAFA_MCP_EDGE_SECRET: "mcp-secret",
+            NAKAFA_RELEASE_SHA: "abc123",
+          }
+        ).pipe(
+          Effect.provide(FetchClient),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+
+        const [, init] = fetcher.mock.calls[0] ?? [];
+        expect(new Headers(init?.headers).get("content-type")).toBe(
+          "application/json"
+        );
+        expect(
+          yield* Effect.promise(() => new Response(init?.body).text())
+        ).toBe(body);
+      })
+  );
+
+  it.effect("forwards a body without a media type and invents none", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValue(new Response("{}"));
+      const request = new Request("https://mcp.nakafa.com/mcp", {
+        body: new TextEncoder().encode("{}"),
+        method: "POST",
+      });
+
+      yield* forwardAgentEdge(
+        NAKAFA_MCP_EDGE_CONTRACT,
+        NAKAFA_MCP_EDGE_PATHS,
+        request,
+        {
+          CONVEX_SITE_URL: "https://origin.convex.site",
+          NAKAFA_MCP_EDGE_SECRET: "mcp-secret",
+          NAKAFA_RELEASE_SHA: "abc123",
+        }
+      ).pipe(
+        Effect.provide(FetchClient),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      );
+
+      const [, init] = fetcher.mock.calls[0] ?? [];
+      expect(new Headers(init?.headers).get("content-type")).toBeNull();
+    })
+  );
+
+  it.effect(
     "answers 404 for an undeclared path without calling the origin",
     () =>
       Effect.gen(function* () {
