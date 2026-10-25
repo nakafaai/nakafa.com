@@ -8,6 +8,7 @@ import {
   signInOwner,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
@@ -43,6 +44,9 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
 
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await waitUntilTakenOver(
+    student.getByRole("button", { name: "Enter sitting" })
+  );
   await student
     .getByPlaceholder("Enter the token from your proctor")
     .fill(sitting.token);

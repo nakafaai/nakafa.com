@@ -25,19 +25,36 @@ const QuestionTemplate = Schema.Literals(["choice"]);
  */
 const NEW_QUESTION_OPTIONS = 4;
 
+/** The most points a question is worth, which a teacher may not exceed. */
+export const QUESTION_POINTS_MAX = 100;
+
+/** The points a new question is worth: one, the usual weight of a question. */
+export const NEW_QUESTION_POINTS = 1;
+
+/** The points of a question: a whole number from one to `QUESTION_POINTS_MAX`. */
+export const QuestionPoints = Schema.Int.check(
+  Schema.isBetween({ maximum: QUESTION_POINTS_MAX, minimum: 1 })
+);
+
 /**
  * One question as its row stores it. `answers` is the JSON text of the question's
  * interactions, and `key` is the JSON text of its answer key, or null while no
  * option is marked correct, because the contract refuses a key with no correct
  * option. `revision` counts the answer and key edits, so a stale edit is refused.
- * `prompt` is the question's text, which is a document of its own.
+ * `points` is the weight of the question. `prompt`, `rubric`, and `explanation` are
+ * documents of their own: the question's text, the teacher's scoring guide, and the
+ * explanation a learner reads after the result. Each of them is written by the
+ * collaborative editor, and each one is frozen with its exam.
  */
 export const questionValidator = Schema.Struct({
   answers: Schema.String,
   examId: Id("exams"),
+  explanation: Id("editorDocuments"),
   key: Schema.NullOr(Schema.String),
+  points: QuestionPoints,
   prompt: Id("editorDocuments"),
   revision: Schema.Natural,
+  rubric: Id("editorDocuments"),
   template: QuestionTemplate,
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,
@@ -89,15 +106,20 @@ const KeyText = Schema.fromJsonString(
 );
 
 /**
- * One question as the wire shows it: its ID, its template, its prompt document,
- * its interactions, its key (null until one option is marked), and its revision.
+ * One question as the wire shows it: its ID, its template, its points, its prompt, rubric
+ * and explanation documents, its interactions, its key (null until one option is marked),
+ * and its revision. Only the teacher's editor reads this view; a learner's paper reads the
+ * interactions alone, so the key, the rubric, and the explanation never reach it.
  */
 export const QuestionView = Schema.Struct({
   answers: Schema.NonEmptyArray(InteractionSchema),
+  explanation: Id("editorDocuments"),
   id: Id("examQuestions"),
   key: Schema.NullOr(Schema.NonEmptyArray(InteractionKeySchema)),
+  points: QuestionPoints,
   prompt: Id("editorDocuments"),
   revision: Schema.Natural,
+  rubric: Id("editorDocuments"),
   template: QuestionTemplate,
 });
 export type QuestionView = typeof QuestionView.Type;
@@ -136,15 +158,21 @@ export const questionView = Effect.fn("exams.question.view")(function* (
   const answers = yield* questionAnswers(row.answers);
   return {
     answers,
+    explanation: row.explanation,
     id: row._id,
     key: yield* decodeKey(row.key),
+    points: row.points,
     prompt: row.prompt,
     revision: row.revision,
+    rubric: row.rubric,
     template: row.template,
   } satisfies QuestionView;
 });
 
-/** The prompt of a new question: one empty paragraph, which the contract accepts. */
+/**
+ * The text of a new, empty document that a question owns as its prompt, rubric, or explanation: one
+ * empty paragraph, which the contract accepts.
+ */
 export const EMPTY_PROMPT_TEXT =
   '{"content":[{"type":"paragraph"}],"type":"doc"}';
 

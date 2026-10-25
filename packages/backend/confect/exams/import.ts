@@ -24,6 +24,9 @@ type ImportedBlock = ContentDocument["content"][number];
 /** The longest text Nina may write for one prompt. A longer prompt is cut by the schema's refusal. */
 const MAX_PROMPT_LENGTH = 6000;
 
+/** The longest worked solution Nina may copy for one question. */
+const MAX_EXPLANATION_LENGTH = 6000;
+
 /** The longest text Nina may write for one option. */
 const MAX_OPTION_LENGTH = 1500;
 
@@ -47,7 +50,7 @@ const Thousandths = Schema.Int.check(
  * alternative text that says what it shows. The prompt or an option holds `{{figure:N}}` on a
  * line of its own where figure N goes, counted from one.
  */
-export const ImportedFigure = Schema.Struct({
+const ImportedFigure = Schema.Struct({
   alt: Schema.String.check(Schema.isMaxLength(MAX_ALT_LENGTH)),
   box: Schema.NullOr(
     Schema.Struct({
@@ -65,10 +68,12 @@ export const ImportedFigure = Schema.Struct({
  * One question as Nina reads it from a page: the number the file gives it, or null; the prompt
  * and each option as plain text with formulas written in LaTeX between `\(` and `\)`, or between
  * `\[` and `\]` on a line of their own; the zero-based index of the option the file marks
- * correct, or null when this part marks none; and its figures. A paragraph ends at a line break.
+ * correct, or null when this part marks none; the worked solution the file prints for it, or an
+ * empty string; and its figures. A paragraph ends at a line break.
  */
 export const ImportedQuestion = Schema.Struct({
   answer: Schema.NullOr(Schema.Int),
+  explanation: Schema.String.check(Schema.isMaxLength(MAX_EXPLANATION_LENGTH)),
   figures: Schema.Array(ImportedFigure).check(Schema.isMaxLength(MAX_FIGURES)),
   number: Schema.NullOr(Schema.Int),
   options: Schema.Array(
@@ -98,6 +103,7 @@ export const ImportedRead = Schema.Struct({
  */
 export const PlacedQuestion = Schema.Struct({
   answer: Schema.NullOr(Schema.Int),
+  explanation: Schema.String.check(Schema.isMaxLength(MAX_EXPLANATION_LENGTH)),
   figures: Schema.Array(
     Schema.Struct({
       alt: Schema.String.check(Schema.isMaxLength(MAX_ALT_LENGTH)),
@@ -113,7 +119,7 @@ export const PlacedQuestion = Schema.Struct({
 export type PlacedQuestion = typeof PlacedQuestion.Type;
 
 /** A figure as a document draws it: an image of the exam with its size and alternative text. */
-export const FigureImage = Schema.Struct({
+const FigureImage = Schema.Struct({
   alt: Schema.String,
   asset: Schema.String,
   height: Schema.Int,
@@ -238,14 +244,17 @@ export const documentOf = (
 };
 
 /**
- * The stored parts of one placed question: its prompt document, its single-answer choice with
- * one option for each option Nina read, and its key when the file marks an option that exists,
- * each with the question's figures where its marks place them. A question with fewer than two or
+ * The stored parts of one placed question: its prompt and explanation documents, its
+ * single-answer choice with one option for each option Nina read, and its key when the file marks
+ * an option that exists, each with the question's figures where its marks place them. A question with fewer than two or
  * more than five options is not one this kind holds, so it is none, and the import counts it as
  * left out.
  */
 export const importedParts = (
-  question: Pick<PlacedQuestion, "answer" | "options" | "prompt">,
+  question: Pick<
+    PlacedQuestion,
+    "answer" | "explanation" | "options" | "prompt"
+  >,
   figures: readonly (typeof FigureImage.Type)[]
 ) => {
   const { options } = question;
@@ -262,6 +271,7 @@ export const importedParts = (
   const [choice] = answers;
   return Option.some({
     answers,
+    explanation: documentOf(question.explanation, figures),
     key: keyOf(choice, question.answer),
     prompt: documentOf(question.prompt, figures),
   });
@@ -329,6 +339,7 @@ For each question:
 - prompt: the question as the student reads it, with the passage, table text, statements or data that belong to it, without its number. Put each paragraph on its own line. When several questions share one passage, repeat the passage in each of them.
 - options: the text of each option in order, without its letter or number (A, B, a., 1), أ and the like).
 - answer: the zero-based index of the option that this part marks as correct, through a mark on the option (bold, underline, a tick or a circle) or a key printed right after the question; null when this part marks none. Never guess an answer.
+- explanation: the worked solution or discussion that the file prints for the question (for example "Pembahasan", "Solution", "Lösung"), copied exactly with its formulas and figures, without its heading; an empty string when the file prints none. Never write one yourself.
 - figures: every picture, graph, diagram, chart or geometric figure that belongs to the question or to one of its options, in the order they appear. For a PDF page give page (its N) and box, the smallest rectangle around the figure in thousandths of the page width and height from the top left corner, with image null. For a Word picture give image (its N) with page and box null. Give alt, one short sentence in the question's language that says what the figure shows. Put the line {{figure:K}} where figure K of this question goes, on its own line in the prompt or in the option it belongs to, counting from 1.
 
 If this part holds an answer key table (for example "Kunci Jawaban", "Answer key", "Lösungen"), put its entries in keys as { number, answer } with answer the zero-based index of the lettered option; do not turn the table into questions.

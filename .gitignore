@@ -293,3 +293,8 @@ packages/database/generated
 
 # Operator values for the GitHub environments, written by apps/www/stacks/github.ts. Never commit them.
 /apps/www/.operator/
+
+# Confect codegen temp folders, which live only while a compile or a local runtime runs
+.confect-artifacts-*/
+.confect-bundle-*/
+.confect-compiler-*/

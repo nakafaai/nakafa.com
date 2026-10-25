@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
+import { png } from "@repo/backend/test/exams";
 import { storeFile } from "@repo/backend/test/logo";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
@@ -13,13 +14,6 @@ import { Array as Arr, Effect, Exit } from "effect";
 const { create } = refs.public.exams.exams;
 const { canAdd, register, uploadUrl, urls } = refs.public.exams.assets;
 const { discard, stored } = refs.internal.exams.assets;
-
-/** The leading bytes of a PNG file, which the server reads as an image. */
-const PNG_HEAD = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-
-/** A PNG file of a few bytes, which the server accepts as an image. */
-const png = () =>
-  new Blob([Uint8Array.from([...PNG_HEAD, 0, 0, 0, 0])], { type: "image/png" });
 
 /** Every row of the images, so a test reads what the server stored. */
 const assetRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -254,7 +248,7 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const storageId = yield* storeFile(fixture.convex, png());
         expect(yield* fixture.internal.query(stored, { storageId })).toEqual({
-          size: PNG_HEAD.length + 4,
+          size: png().size,
         });
         yield* Effect.promise(() =>
           fixture.convex.run((ctx) => ctx.storage.delete(storageId))

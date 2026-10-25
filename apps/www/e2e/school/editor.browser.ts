@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
@@ -68,6 +69,7 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   ).toHaveCount(1);
 
   // The dialog preselects the school's unit, so the exam needs no other choice.
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
   await dialog
@@ -153,10 +155,11 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(firstReopened).toContainText("Berapa hasil 2 + 3?", {
     timeout: readinessTimeoutMilliseconds,
   });
+  // The key of the first page, which a new visit starts on, stands in the teacher's panel.
   await expect(
-    firstReopened.getByRole("button", {
-      name: KEY_OF_FIRST_QUESTION,
-    })
+    reopened
+      .getByRole("complementary", { name: "For teachers" })
+      .getByRole("button", { name: KEY_OF_FIRST_QUESTION })
   ).toHaveCount(OPTIONS.length);
 
   // A question without a key keeps the exam from being scheduled: the dialog names the keys,
@@ -185,6 +188,7 @@ test("a teacher schedules a sitting of an exam whose question has its key, and t
   const page = await context.newPage();
   await page.goto(hostAddress(baseURL, host, "/exams"));
 
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Biologi");
@@ -239,6 +243,7 @@ test("a teacher schedules an exam, and its editor opens read-only, saying why", 
   const page = await context.newPage();
   await page.goto(hostAddress(baseURL, host, "/exams"));
 
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Fisika");
@@ -311,6 +316,7 @@ test("a question typed long enough for a fold keeps its thumbnail once the teach
   const page = await context.newPage();
   const changes = await Effect.runPromise(trackChanges(page, []));
   await page.goto(hostAddress(baseURL, host, "/exams"));
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Fisika");

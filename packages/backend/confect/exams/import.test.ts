@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { documentOf, importedParts } from "@repo/backend/confect/exams/import";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 
 describe("exams/import documentOf", () => {
   it("writes each line as a paragraph and each formula between \\( and \\) as inline math", () => {
@@ -97,15 +97,15 @@ describe("exams/import documentOf", () => {
   });
 });
 
-describe("exams/import figures", () => {
-  /** The figure a question carries: an image of the exam with its size and its words. */
-  const triangle = {
-    alt: "  Segitiga siku-siku ABC  ",
-    asset: "asset-1",
-    height: 300,
-    width: 400,
-  };
+/** The figure a question carries: an image of the exam with its size and its words. */
+const triangle = {
+  alt: "  Segitiga siku-siku ABC  ",
+  asset: "asset-1",
+  height: 300,
+  width: 400,
+};
 
+describe("exams/import figures", () => {
   it("draws a figure where its mark stands, in the prompt and in an option, and drops a mark that names no figure", () => {
     expect(
       documentOf(
@@ -136,7 +136,12 @@ describe("exams/import figures", () => {
     });
     const parts = Option.getOrThrow(
       importedParts(
-        { answer: null, options: ["{{figure:1}}", "Bukan"], prompt: "Pilih" },
+        {
+          explanation: "",
+          answer: null,
+          options: ["{{figure:1}}", "Bukan"],
+          prompt: "Pilih",
+        },
         [triangle]
       )
     );
@@ -163,6 +168,7 @@ describe("exams/import importedParts", () => {
   it("makes a single-answer choice with one option for each option read, and the key of the marked option", () => {
     const parts = importedParts(
       {
+        explanation: "",
         answer: 1,
         options: ["4", "\\(5\\)", "6"],
         prompt: "Berapa 2 + 3?",
@@ -185,14 +191,37 @@ describe("exams/import importedParts", () => {
           shuffle: false,
         },
       ],
+      explanation: documentOf(""),
       key: [{ correct: ["option-2"], interaction: "choice", kind: "choice" }],
       prompt: documentOf("Berapa 2 + 3?"),
     });
   });
 
+  it("copies the worked solution the file prints into the explanation, with its formulas and figures", () => {
+    const parts = Option.getOrThrow(
+      importedParts(
+        {
+          answer: 1,
+          explanation: "Luas \\(= \\frac{1}{2} a t\\)\n{{figure:1}}",
+          options: ["4", "6"],
+          prompt: "Hitung luasnya.",
+        },
+        [triangle]
+      )
+    );
+    expect(parts.explanation).toEqual(
+      documentOf("Luas \\(= \\frac{1}{2} a t\\)\n{{figure:1}}", [triangle])
+    );
+    expect(Arr.map(parts.explanation.content, (block) => block.type)).toEqual([
+      "paragraph",
+      "image",
+    ]);
+  });
+
   it("leaves the key out when the file marks no option, or marks one that does not exist", () => {
     const unmarked = importedParts(
       {
+        explanation: "",
         answer: null,
         options: ["A", "B"],
         prompt: "Soal",
@@ -201,6 +230,7 @@ describe("exams/import importedParts", () => {
     );
     const missing = importedParts(
       {
+        explanation: "",
         answer: 2,
         options: ["A", "B"],
         prompt: "Soal",
@@ -217,11 +247,15 @@ describe("exams/import importedParts", () => {
 
   it("leaves out a question that is not a choice of two to five options", () => {
     expect(
-      importedParts({ answer: 0, options: ["Saja"], prompt: "Satu" }, [])
+      importedParts(
+        { explanation: "", answer: 0, options: ["Saja"], prompt: "Satu" },
+        []
+      )
     ).toEqual(Option.none());
     expect(
       importedParts(
         {
+          explanation: "",
           answer: 0,
           options: ["A", "B", "C", "D", "E", "F"],
           prompt: "Enam",
@@ -230,7 +264,10 @@ describe("exams/import importedParts", () => {
       )
     ).toEqual(Option.none());
     expect(
-      importedParts({ answer: null, options: [], prompt: "Uraian" }, [])
+      importedParts(
+        { explanation: "", answer: null, options: [], prompt: "Uraian" },
+        []
+      )
     ).toEqual(Option.none());
   });
 });

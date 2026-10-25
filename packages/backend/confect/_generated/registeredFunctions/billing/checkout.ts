@@ -10,5 +10,6 @@ export default {
 ["openAccount"]: RegisteredConvexFunction.register({ ...definitions["openAccount"], handler: forward(definitions["openAccount"].handler) }),
 ["recordCustomer"]: RegisteredConvexFunction.register({ ...definitions["recordCustomer"], handler: forward(definitions["recordCustomer"].handler) }),
 ["admitCheckout"]: RegisteredConvexFunction.register({ ...definitions["admitCheckout"], handler: forward(definitions["admitCheckout"].handler) }),
+["mayAdoptCustomer"]: RegisteredConvexFunction.register({ ...definitions["mayAdoptCustomer"], handler: forward(definitions["mayAdoptCustomer"].handler) }),
 ["holdsPro"]: RegisteredConvexFunction.register({ ...definitions["holdsPro"], handler: forward(definitions["holdsPro"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../billing/checkout.spec")["default"]>;

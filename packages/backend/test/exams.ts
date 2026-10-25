@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
+import { storeFile } from "@repo/backend/test/logo";
 import type { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -22,6 +23,29 @@ export const questionRows = Effect.flatMap(DatabaseReader, (reader) =>
 type ExamFixture = Effect.Success<typeof tenancyFixture>;
 
 const { create, open } = refs.public.exams.exams;
+const { register } = refs.public.exams.assets;
+
+/** A PNG file of twelve bytes: the eight a PNG starts with, which the server reads as an image, and four more. */
+export const png = () =>
+  new Blob(
+    [
+      Uint8Array.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0,
+      ]),
+    ],
+    { type: "image/png" }
+  );
+
+/** An image of an exam, 40 by 30 pixels, uploaded and registered by the teacher. */
+export const examImage = Effect.fn("test.exams.image")(function* (
+  fixture: ExamFixture,
+  examId: GenericId.GenericId<"exams">
+) {
+  const storageId = yield* storeFile(fixture.convex, png());
+  return yield* fixture
+    .as("teacher")
+    .action(register, { examId, height: 30, slug: nf, storageId, width: 40 });
+});
 
 /** The accounts that write an exam in the tests: the teacher, or the school's Admin. */
 export type ExamAuthor = "admin" | "teacher";
@@ -83,9 +107,12 @@ export const fillExam = Effect.fn("test.exams.fill")(function* (
         .insert({
           answers: row.answers,
           examId,
+          explanation: row.explanation,
           key: row.key,
+          points: row.points,
           prompt: row.prompt,
           revision: 0,
+          rubric: row.rubric,
           template: row.template,
           tenantId: row.tenantId,
           updatedAt: row.updatedAt,

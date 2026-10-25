@@ -6,6 +6,7 @@ import {
   signInClassTeacher,
   signInOwner,
 } from "@/e2e/support/school";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 test("a school without a logo shows its animal beside its name, and its account menu lists its items", async ({
   browser,
@@ -23,6 +24,9 @@ test("a school without a logo shows its animal beside its name, and its account 
   await expect(header.locator('[data-slot="avatar-fallback"]')).toBeVisible();
   await expect(header.locator("img")).toHaveCount(0);
 
+  await waitUntilTakenOver(
+    page.getByRole("button", { name: "Acceptance Owner" })
+  );
   await page.getByRole("button", { name: "Acceptance Owner" }).click();
 
   for (const item of [

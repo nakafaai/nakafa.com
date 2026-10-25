@@ -57,6 +57,16 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.internalQuery({
+      name: "mayAdoptCustomer",
+      args: () => ({
+        externalId: Schema.NullOr(Schema.String),
+        userId: IdSchema("users"),
+      }),
+      returns: () => Schema.Boolean,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
       name: "holdsPro",
       args: () => ({
         userId: IdSchema("users"),

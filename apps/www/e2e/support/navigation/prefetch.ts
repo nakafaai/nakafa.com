@@ -76,7 +76,9 @@ export const pressPreloaded = Effect.fn("NakafaE2E.pressPreloaded")(function* <
   link: Locator,
   hasTouch: boolean,
   press: Effect.Effect<void, PressError, PressRequirements>,
-  arrive: Effect.Effect<void, ArriveError, ArriveRequirements>
+  arrive: Effect.Effect<void, ArriveError, ArriveRequirements>,
+  // How many `<main>` elements the move shows: one within a shell, two across shells.
+  shells = 1
 ) {
   yield* settleRouter(
     page,
@@ -98,7 +100,7 @@ export const pressPreloaded = Effect.fn("NakafaE2E.pressPreloaded")(function* <
   yield* Effect.sync(() => expect(dataCalls.length).toBe(0));
   yield* recordClickToContent(shownAt - pressedAt);
   const observation = yield* readShellObservation(page, since);
-  yield* Effect.sync(() => expectStillShell(observation, [false]));
+  yield* Effect.sync(() => expectStillShell(observation, [false], shells));
 });
 
 /**

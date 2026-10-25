@@ -10,16 +10,15 @@ import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import { HOME_TARGET } from "@/lib/routing/target";
+import { readStaticData } from "@/lib/static/data";
 
 /** One exam of the try-out catalog: its tracks, each a year or a series. */
 export const Route = createFileRoute("/$locale/_main/try-out/$country/$exam/")({
   loader: async ({ params }) => {
-    const route = await readTryoutExamFn({
-      data: {
-        country: params.country,
-        exam: params.exam,
-        locale: params.locale,
-      },
+    const route = await readStaticData(readTryoutExamFn, {
+      country: params.country,
+      exam: params.exam,
+      locale: params.locale,
     });
     if (route.kind === "notFound") {
       throw notFound();

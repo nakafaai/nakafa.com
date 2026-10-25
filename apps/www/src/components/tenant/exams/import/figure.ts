@@ -83,7 +83,7 @@ const FIGURE_MARK = /\{\{figure:(\d+)\}\}/gu;
  * mark still names its own figure.
  */
 export const alignFigures = <Figure>(
-  question: Pick<ImportedQuestion, "options" | "prompt">,
+  question: Pick<ImportedQuestion, "explanation" | "options" | "prompt">,
   made: readonly Option.Option<Figure>[]
 ) => {
   const kept = Arr.filterMap(made, (figure, index) =>
@@ -103,6 +103,7 @@ export const alignFigures = <Figure>(
       )
     );
   return {
+    explanation: renumber(question.explanation),
     figures: Arr.getSomes(made),
     options: Arr.map(question.options, renumber),
     prompt: renumber(question.prompt),

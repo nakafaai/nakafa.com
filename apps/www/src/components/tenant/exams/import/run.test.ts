@@ -1,5 +1,11 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import {
+  type ImportedQuestion,
+  type ImportedRead,
+  ImportUnread,
+} from "@repo/backend/confect/exams/import";
+import type { ImportSource } from "@repo/backend/confect/exams/reads.spec";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, MutableList, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -50,8 +56,13 @@ const fetcher = vi.fn<typeof fetch>(() =>
 );
 
 /** The calls of an import against a fake backend, with Nina's reads given in order. */
-const backend = (reads: readonly unknown[]) => {
-  const read = vi.fn();
+const backend = (reads: readonly (typeof ImportedRead.Type)[]) => {
+  const read =
+    vi.fn<
+      (
+        source: typeof ImportSource.Type
+      ) => Promise<Result.Result<typeof ImportedRead.Type, ImportUnread>>
+    >();
   for (const answer of reads) {
     read.mockResolvedValueOnce(Result.succeed(answer));
   }
@@ -79,18 +90,10 @@ const backend = (reads: readonly unknown[]) => {
 /** A question as Nina reads it, with the given figures. */
 const question = (
   prompt: string,
-  figures: readonly {
-    readonly box: {
-      bottom: number;
-      left: number;
-      right: number;
-      top: number;
-    } | null;
-    readonly image: number | null;
-    readonly page: number | null;
-  }[]
+  figures: readonly Omit<ImportedQuestion["figures"][number], "alt">[]
 ) => ({
   answer: null,
+  explanation: "",
   figures: Arr.map(figures, (figure) => ({ ...figure, alt: "Gambar" })),
   number: 1,
   options: ["A", "B"],
@@ -190,6 +193,7 @@ describe("runImport", () => {
         expect(calls.place).toHaveBeenCalledWith([
           {
             answer: null,
+            explanation: "",
             figures: [{ alt: "Gambar", asset: ASSET }],
             number: 1,
             options: ["A", "B"],
@@ -275,7 +279,7 @@ describe("runImport", () => {
   it.effect("stops at a read that fails", () =>
     Effect.gen(function* () {
       const calls = backend([]);
-      calls.read.mockResolvedValueOnce(Result.fail({ _tag: "ImportUnread" }));
+      calls.read.mockResolvedValueOnce(Result.fail(new ImportUnread()));
       const failure = yield* runImport({
         ...calls,
         file: wordFile(),
@@ -284,7 +288,7 @@ describe("runImport", () => {
         Effect.provideService(FetchHttpClient.Fetch, fetcher),
         Effect.flip
       );
-      expect(failure).toEqual({ _tag: "ImportUnread" });
+      expect(failure).toBeInstanceOf(ImportUnread);
       expect(calls.place).not.toHaveBeenCalled();
     })
   );

@@ -1,4 +1,4 @@
-import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
@@ -46,12 +46,8 @@ interface OptionRowProps {
   readonly letter: string;
   /** Whether the option is locked, so its text and its controls take no change. */
   readonly locked: boolean;
-  /** Whether the option is the key of the question. */
-  readonly marked: boolean;
   /** The number of the question, which names the option for assistive technology. */
   readonly number: number;
-  /** Marks the option as the key of the question, which saves at once. */
-  readonly onMark: () => void;
   /** Removes the option, or none while the question holds the fewest options it may take. */
   readonly onRemove: (() => void) | null;
   /**
@@ -62,20 +58,18 @@ interface OptionRowProps {
 
 /**
  * One option of a question: its letter and its rich text framed as the player frames it, then the
- * teacher's controls to its right. The key toggle is solid and pressed for the key. Removing is
- * shown when the option may go, on hover or focus, and always on a touch screen. The text saves
- * after its quiet period once the teacher types in it, and a key change saves at once. A change
- * that edits no text, such as the editor taking its lock, saves nothing. Removing the option drops
- * the pending save of its text. A label the server does not store, because its save was refused or dropped,
- * goes back into the editor, unless the teacher has typed on since. An option the server has not saved yet is locked.
+ * teacher's remove control to its right. The key of the question is marked in the teacher's layer,
+ * not here. Removing is shown when the option may go, on hover or focus, and always on a touch
+ * screen. The text saves after its quiet period once the teacher types in it. A change that edits no
+ * text, such as the editor taking its lock, saves nothing. Removing the option drops the pending save
+ * of its text. A label the server does not store, because its save was refused or dropped, goes back
+ * into the editor, unless the teacher has typed on since. An option the server has not saved yet is locked.
  */
 export function OptionRow({
   letter,
   label,
   locked,
-  marked,
   number,
-  onMark,
   onRemove,
   onSave,
 }: OptionRowProps) {
@@ -181,17 +175,6 @@ export function OptionRow({
         />
       </PaperOption>
       <div className="flex items-center gap-1">
-        <Button
-          aria-label={t("key-option", { letter, number })}
-          aria-pressed={marked}
-          disabled={locked}
-          onClick={onMark}
-          size="icon"
-          type="button"
-          variant={marked ? "default" : "outline"}
-        >
-          <HugeIcons aria-hidden="true" icon={Tick02Icon} />
-        </Button>
         {onRemove === null ? (
           <ControlRoom />
         ) : (

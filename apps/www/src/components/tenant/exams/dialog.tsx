@@ -31,9 +31,10 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { useId, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
+import { useConvexAuth } from "@/components/auth/convex";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceKey,
@@ -70,9 +71,14 @@ export function CreateExam({
   const navigate = useNavigate();
   const create = useMutation(exams.exams.create);
   const importFile = useImportFile(slug);
+  // A create sent before Convex holds the session's token is refused as signed out, so the
+  // dialog's submit waits for Convex to answer for the session.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  // The file is read from its input when the dialog submits, so a dialog that closed without
+  // creating leaves no file behind for the next exam.
+  const fileInput = useRef<HTMLInputElement>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const id = useId();
   const [isPending, startTransition] = useTransition();
@@ -96,10 +102,11 @@ export function CreateExam({
    * press during the close cannot save a second exam.
    */
   const submit = () => {
-    if (!ready || Option.isNone(choice)) {
+    if (!(ready && isSettled) || Option.isNone(choice)) {
       return;
     }
     const { scope } = choice.value;
+    const file = fileInput.current?.files?.item(0) ?? null;
     setOpen(false);
     startTransition(() =>
       runExamAction(
@@ -147,7 +154,7 @@ export function CreateExam({
               {common("cancel")}
             </Button>
             <Button
-              disabled={!ready || isPending}
+              disabled={!(ready && isSettled) || isPending}
               inert={isPending}
               onClick={submit}
             >
@@ -185,13 +192,13 @@ export function CreateExam({
               id={`${id}-file`}
               onChange={(event) => {
                 const chosen = event.target.files?.item(0) ?? null;
-                setFile(chosen);
                 if (chosen !== null && name === "") {
                   setTitle(
                     Option.getOrElse(titleOfFile(chosen.name), () => "")
                   );
                 }
               }}
+              ref={fileInput}
               type="file"
             />
             <FieldDescription>{t("import-description")}</FieldDescription>

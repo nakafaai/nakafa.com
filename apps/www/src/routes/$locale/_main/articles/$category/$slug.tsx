@@ -49,6 +49,7 @@ import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 const ArticleInput = Schema.Struct({
   category: Schema.String,
@@ -158,7 +159,11 @@ const readArticle = createServerFn({ method: "GET" })
 export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
   {
     loader: async ({ params }) => {
-      const read = await readArticle({ data: params });
+      const read = await readStaticData(readArticle, {
+        category: params.category,
+        locale: params.locale,
+        slug: params.slug,
+      });
       return Match.value(read).pipe(
         Match.tagsExhaustive({
           Found: ({ page }) => page,

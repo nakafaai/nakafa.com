@@ -111,16 +111,18 @@ describe("cropFigure", () => {
 });
 
 describe("alignFigures", () => {
-  it("drops a figure that was not made with its mark, and counts the later marks down", () => {
+  it("drops a figure that was not made with its mark, and counts the later marks down, in the explanation too", () => {
     expect(
       alignFigures(
         {
+          explanation: "Lihat lagi\n{{figure:3}}",
           options: ["{{figure:3}}", "Bukan"],
           prompt: "Lihat\n{{figure:1}}\n{{figure:2}}",
         },
         [Option.some("a"), Option.none(), Option.some("c")]
       )
     ).toEqual({
+      explanation: "Lihat lagi\n{{figure:2}}",
       figures: ["a", "c"],
       options: ["{{figure:2}}", "Bukan"],
       prompt: "Lihat\n{{figure:1}}\n",

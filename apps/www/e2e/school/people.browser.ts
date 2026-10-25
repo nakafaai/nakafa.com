@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The two widths every school screen is checked at: a phone and a desktop. */
 const WIDTHS = [
@@ -30,10 +31,11 @@ test("an owner adds a teacher by email and sees the invite in the members list, 
     await page.setViewportSize(viewport);
 
     await page.goto(address("/settings/invites"));
-    await page
+    const inviteAction = page
       .locator("header")
-      .getByRole("button", { exact: true, name: "Invite" })
-      .click();
+      .getByRole("button", { exact: true, name: "Invite" });
+    await waitUntilTakenOver(inviteAction);
+    await inviteAction.click();
     const invite = page.getByRole("dialog");
     await invite.getByLabel("Name", { exact: true }).fill(teacher);
     await invite
@@ -54,10 +56,11 @@ test("an owner adds a teacher by email and sees the invite in the members list, 
     ).toBeVisible();
 
     await page.goto(address("/settings/students"));
-    await page
+    const enrolAction = page
       .locator("header")
-      .getByRole("button", { exact: true, name: "Add student" })
-      .click();
+      .getByRole("button", { exact: true, name: "Add student" });
+    await waitUntilTakenOver(enrolAction);
+    await enrolAction.click();
     const enrol = page.getByRole("dialog");
     await enrol.getByLabel("Name", { exact: true }).fill(`Murid ${run}`);
     await enrol.getByLabel("Login name", { exact: true }).fill(login);

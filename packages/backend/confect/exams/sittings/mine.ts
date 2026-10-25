@@ -148,8 +148,8 @@ const byNewestOpening = Order.flip(
 );
 
 /**
- * The student's points in a sitting, with the questions of its exam, once the teacher releases the results. A
- * sitting whose results wait for the teacher has no score, so the read reads nothing for it.
+ * The student's points in a sitting once the teacher releases the results, out of the points of every
+ * question of its exam. A sitting whose results wait for the teacher has no score, so the read reads nothing for it.
  */
 const scoreOf = Effect.fn("exams.sittings.mine.score")(function* (
   sitting: ExamSittingsDoc,
@@ -163,10 +163,16 @@ const scoreOf = Effect.fn("exams.sittings.mine.score")(function* (
     .table("exams")
     .get(sitting.examId)
     .pipe(Effect.orDie);
+  const questions = yield* Effect.forEach(
+    exam.questions,
+    (questionId) =>
+      reader.table("examQuestions").get(questionId).pipe(Effect.orDie),
+    { concurrency: "unbounded" }
+  );
   const results = yield* attemptResults(sitting._id, personId);
   return {
     points: Num.sumAll(Arr.map(results, (result) => result.points)),
-    total: exam.questions.length,
+    total: Num.sumAll(Arr.map(questions, (question) => question.points)),
   };
 });
 

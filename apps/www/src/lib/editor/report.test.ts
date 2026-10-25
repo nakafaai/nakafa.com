@@ -19,12 +19,12 @@ describe("reportDropped", () => {
 
         yield* reportDropped(
           Option.some(dropped),
-          "components/tenant/exams/prompt"
+          "components/tenant/exams/text"
         );
 
         expect(reportClientException).toHaveBeenCalledTimes(1);
         expect(reportClientException).toHaveBeenCalledWith(dropped, {
-          source: "components/tenant/exams/prompt",
+          source: "components/tenant/exams/text",
         });
       })
   );
@@ -33,7 +33,7 @@ describe("reportDropped", () => {
     Effect.gen(function* () {
       vi.mocked(reportClientException).mockClear();
 
-      yield* reportDropped(Option.none(), "components/tenant/exams/prompt");
+      yield* reportDropped(Option.none(), "components/tenant/exams/text");
 
       expect(reportClientException).not.toHaveBeenCalled();
     })

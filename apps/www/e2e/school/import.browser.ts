@@ -108,7 +108,9 @@ test("the editor imports a Word file into the open exam from its header, as Goog
   const header = page.locator("header").filter({
     has: page.getByRole("button", { name: "Import" }),
   });
-  await expect(header.getByRole("link", { name: "Try as student" })).toBeVisible();
+  await expect(
+    header.getByRole("link", { name: "Try as student" })
+  ).toBeVisible();
   await page.getByRole("button", { name: "Import" }).click();
   const importDialog = page.getByRole("dialog");
   await expect(

@@ -13,7 +13,7 @@ import { importIntoExam } from "@/components/tenant/exams/import/start";
 export function useImportFile(slug: TenantSlug) {
   const requestUrl = useMutation(exams.assets.uploadUrl);
   const register = useAction(exams.assets.register);
-  const read = useAction(exams.imports.read);
+  const read = useAction(exams.reads.read);
   const place = useMutation(exams.imports.place);
   const keys = useMutation(exams.imports.keys);
 

@@ -65,7 +65,7 @@ const Viewport = Schema.Struct({ height: Schema.Finite, width: Schema.Finite });
  * The parts of a pdf.js page that the import uses: its viewport, its drawing and its text layer.
  * A pdf.js page is one, and so is a test's page, without pdf.js.
  */
-type DrawnPage<Size extends typeof Viewport.Type> = {
+interface DrawnPage<Size extends typeof Viewport.Type> {
   readonly cleanup: () => unknown;
   readonly getTextContent: () => Promise<{
     readonly items: readonly (
@@ -77,12 +77,12 @@ type DrawnPage<Size extends typeof Viewport.Type> = {
   readonly render: (options: { canvas: HTMLCanvasElement; viewport: Size }) => {
     readonly promise: Promise<unknown>;
   };
-};
+}
 
 /** The part of a pdf.js document that the import uses: its pages, by number from one. */
-type PageSource<Size extends typeof Viewport.Type> = {
+interface PageSource<Size extends typeof Viewport.Type> {
   readonly getPage: (number: number) => Promise<DrawnPage<Size>>;
-};
+}
 
 /**
  * Draws one page as a JPEG image with its long edge at `PAGE_EDGE` pixels, and reads its text

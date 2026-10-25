@@ -9,14 +9,18 @@ import {
 } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { SchoolMark } from "@/components/tenant/mark";
-import { TenantEntryActions } from "@/components/tenant/username";
+import {
+  TenantEntryActions,
+  TenantEntryBack,
+} from "@/components/tenant/username";
 import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
 
 /**
  * The entry surface of a school for a visitor who is signed out. It reuses the
  * sign-in body of the main site under the school's own mark. Its actions sign in with
  * Google, which returns the visitor to the school root they came from, or with a school
- * username and card (`TenantEntryActions`).
+ * username and card (`TenantEntryActions`), one way at a time; the header leads back from
+ * the username form to Google (`TenantEntryBack`).
  */
 export function TenantEntry({
   legal,
@@ -34,8 +38,8 @@ export function TenantEntry({
   return (
     <EntryShell>
       <EntryShellPanel>
-        {" "}
         <EntryShellHeader>
+          <TenantEntryBack slug={slug} />
           <div className="ms-auto">
             <ThemePicker variant="ghost" />
           </div>

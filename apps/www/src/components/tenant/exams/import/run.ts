@@ -4,10 +4,8 @@ import type {
   ImportedRead,
   PlacedQuestion,
 } from "@repo/backend/confect/exams/import";
-import type {
-  ImportPlaced,
-  ImportSource,
-} from "@repo/backend/confect/exams/imports.spec";
+import type { ImportPlaced } from "@repo/backend/confect/exams/imports.spec";
+import type { ImportSource } from "@repo/backend/confect/exams/reads.spec";
 import {
   Array as Arr,
   type Cause,
@@ -63,7 +61,13 @@ const awaited = <A, E>(call: () => Promise<Result.Result<A, E>>) =>
   Effect.tryPromise(call).pipe(Effect.flatMap(Effect.fromResult));
 
 /** The calls an import makes: Nina's read, the placement, the keys, and the upload of an exam image. */
-type ImportCalls<ReadError, PlaceError, KeysError, UrlError, RegisterError> = {
+interface ImportCalls<
+  ReadError,
+  PlaceError,
+  KeysError,
+  UrlError,
+  RegisterError,
+> {
   keys: (
     entries: readonly { answer: number; questionId: Id<"examQuestions"> }[]
   ) => Promise<Result.Result<{ keyed: number }, KeysError>>;
@@ -81,15 +85,15 @@ type ImportCalls<ReadError, PlaceError, KeysError, UrlError, RegisterError> = {
     Result.Result<{ readonly id: Id<"examAssets"> }, RegisterError>
   >;
   requestUrl: () => Promise<Result.Result<URL, UrlError>>;
-};
+}
 
 /** One part of a file once it is ready: what Nina reads, and how one of her figures becomes an image of the exam. */
-type PartValue = {
+interface PartValue {
   readonly figure: (
     figure: ImportedQuestion["figures"][number]
   ) => Effect.Effect<Option.Option<Id<"examAssets">>>;
   readonly source: typeof ImportSource.Type;
-};
+}
 
 /** Why a part of a PDF could not be made ready: a page that does not draw, or a page image that does not upload. */
 type PartError<UrlError> =

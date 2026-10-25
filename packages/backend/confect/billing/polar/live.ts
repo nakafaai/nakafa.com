@@ -29,7 +29,7 @@ import {
   polarSubscriptionListErrorCode,
   polarUpdateErrorCode,
 } from "@repo/backend/confect/billing/polar/spec";
-import { Array as Arr, Data, Effect } from "effect";
+import { Array as Arr, Data, Effect, Option } from "effect";
 
 /**
  * The subscription statuses reconciliation lists: the ones that hold access or owe
@@ -193,6 +193,28 @@ export const polarGateway = {
                 message: "Failed to delete customer from Polar.",
               })
             )
+      )
+    );
+  }),
+  /** The customer Polar holds under one email address, or none. Polar gives each address to one customer only. */
+  findCustomerByEmail: Effect.fn("polar.findCustomerByEmail")(function* (
+    email: string
+  ) {
+    return yield* request(
+      (client) => createCustomersService(client).list({ email, limit: 1 }),
+      (page) =>
+        Option.match(Arr.head(page.items), {
+          onNone: () => Effect.succeed(null),
+          onSome: decodePolarCustomer,
+        })
+    ).pipe(
+      Effect.mapError(
+        ({ cause }) =>
+          new PolarCustomerError({
+            code: polarCustomerErrorCode,
+            cause,
+            message: "Failed to find Polar customer by email.",
+          })
       )
     );
   }),

@@ -36,12 +36,13 @@ export const mine = Effect.fn("exams.results.mine")(function* (args: {
   const questions = yield* Effect.forEach(
     exam.questions,
     (questionId, index) =>
-      Effect.map(questionSummary(questionId, index + 1), ({ optionIds }) =>
+      Effect.map(questionSummary(questionId, index + 1), (summary) =>
         Arr.map(
           Arr.filter(rows, (row) => row.question === questionId),
           (row) => ({
             number: index + 1,
-            optionIds,
+            optionIds: summary.optionIds,
+            points: summary.points,
             response: row.response,
             verdict: row.verdict,
           })

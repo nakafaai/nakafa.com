@@ -1,6 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import type { PlacedQuestion } from "@repo/backend/confect/exams/import";
 import { Effect, Option } from "effect";
 
 /**
@@ -10,10 +11,7 @@ import { Effect, Option } from "effect";
  */
 export const figureImages = Effect.fn("exams.figures.images")(function* (
   examId: GenericId.GenericId<"exams">,
-  figures: readonly {
-    readonly alt: string;
-    readonly asset: GenericId.GenericId<"examAssets">;
-  }[]
+  figures: PlacedQuestion["figures"]
 ) {
   const reader = yield* DatabaseReader;
   return yield* Effect.forEach(figures, (figure) =>

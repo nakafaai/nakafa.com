@@ -1,14 +1,15 @@
 import { useMutation } from "@confect/react";
+import { Login03Icon } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Effect } from "effect";
 import { type FormEvent, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -25,7 +26,7 @@ import { readAuthClient } from "@/lib/auth/client";
 
 /**
  * The school login form: the school username and a password, with an optional card code for
- * a first sign-in or a reissued card. A typed card code redeems the card and sets the password
+ * a first sign-in or a reissued card, which its placeholder names. A typed card code redeems the card and sets the password
  * first, and both paths then sign the student in on this host (ADR 0009). The answer names the
  * problem without telling whether the username exists. The signed-out school tree mounts no
  * Convex provider, so the form mounts one for its redemption.
@@ -88,8 +89,11 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
   }
 
   return (
-    <form className="flex w-full flex-col gap-6" onSubmit={handleSubmit}>
-      <FieldGroup>
+    <form
+      className="flex w-full max-w-sm flex-col gap-6"
+      onSubmit={handleSubmit}
+    >
+      <FieldGroup className="gap-4">
         <Field>
           <FieldLabel htmlFor={`${id}-username`}>
             {t("username-label")}
@@ -107,9 +111,9 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
             autoComplete="off"
             id={`${id}-code`}
             onChange={(event) => setCode(event.target.value)}
+            placeholder={t("card-code-placeholder")}
             value={code}
           />
-          <FieldDescription>{t("card-code-description")}</FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-password`}>
@@ -124,7 +128,6 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
             type="password"
             value={password}
           />
-          <FieldDescription>{t("password-description")}</FieldDescription>
         </Field>
       </FieldGroup>
       {message === undefined ? null : (
@@ -132,16 +135,15 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
           {message}
         </p>
       )}
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-muted-foreground text-sm">{t("username-footer")}</p>
-        <Button
-          aria-busy={isPending || undefined}
-          disabled={isPending}
-          type="submit"
-        >
-          {isPending ? t("submitting") : t("submit")}
-        </Button>
-      </div>
+      <Button
+        aria-busy={isPending || undefined}
+        className="w-full"
+        disabled={isPending}
+        type="submit"
+      >
+        <Spinner icon={Login03Icon} isLoading={isPending} />
+        {t("submit")}
+      </Button>
     </form>
   );
 }

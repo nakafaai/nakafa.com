@@ -1,17 +1,10 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import refs from "@repo/backend/confect/_generated/refs";
+import type { ExamsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  MutationRunner,
-  QueryRunner,
-  StorageActionWriter,
-  StorageWriter,
-} from "@repo/backend/confect/_generated/services";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { requireAuth } from "@repo/backend/confect/auth/session";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { createDocument } from "@repo/backend/confect/editor/create";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import { Exam } from "@repo/backend/confect/exams/access";
@@ -20,175 +13,30 @@ import { ExamFull } from "@repo/backend/confect/exams/errors";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import { figureImages } from "@repo/backend/confect/exams/figures";
 import { requireUnfrozen } from "@repo/backend/confect/exams/freeze";
-import { imageTypeOf } from "@repo/backend/confect/exams/image";
-import {
-  IMPORT_INSTRUCTIONS,
-  ImportedRead,
-  ImportPageRefused,
-  ImportUnread,
-  importedParts,
-  keyOf,
-} from "@repo/backend/confect/exams/import";
-import spec, {
-  type ImportSource,
-} from "@repo/backend/confect/exams/imports.spec";
+import { importedParts, keyOf } from "@repo/backend/confect/exams/import";
+import spec from "@repo/backend/confect/exams/imports.spec";
 import {
   encodeAnswers,
   encodeKey,
+  NEW_QUESTION_POINTS,
   questionAnswers,
 } from "@repo/backend/confect/exams/question";
 import { answerQuestion } from "@repo/backend/confect/exams/questions/answer";
-import { placeQuestion } from "@repo/backend/confect/exams/questions/place";
+import {
+  createEmptyDocument,
+  placeQuestion,
+} from "@repo/backend/confect/exams/questions/place";
 import { questionOf } from "@repo/backend/confect/exams/questions/read";
 import { removeQuestion } from "@repo/backend/confect/exams/questions/remove";
-import { Gateway } from "@repo/backend/confect/gateway/handle";
-import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
-import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
 import { encodeJsonText } from "@repo/utilities/json";
-import { generateText, Output, type UserContent } from "ai";
 import { Array as Arr, Effect, Layer, Option } from "effect";
-
-/** The bytes at the start of an image that `imageTypeOf` reads. */
-const HEAD_BYTES = 16;
-
-/** Answers nothing: the middleware of the function is the check that a teacher may edit the exam. */
-const canRead = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "canRead",
-  Effect.fn("exams.imports.canRead")(() => Effect.succeed({}))
-);
-
-/**
- * The bytes and the type of one stored image. An image over the size limit, or one whose
- * leading bytes name no image, is refused before Nina sees it.
- */
-const storedImage = (storageId: GenericId.GenericId<"_storage">) =>
-  Effect.gen(function* () {
-    const { runQuery } = yield* QueryRunner;
-    const { size } = yield* runQuery(refs.internal.exams.assets.stored, {
-      storageId,
-    }).pipe(Effect.orDie);
-    if (size > IMAGE_BYTE_LIMIT) {
-      return yield* new ImportPageRefused();
-    }
-    const blob = yield* (yield* StorageActionWriter)
-      .get(storageId)
-      .pipe(Effect.orDie);
-    const data = new Uint8Array(
-      yield* Effect.promise(() => blob.arrayBuffer())
-    );
-    const mediaType = yield* Effect.fromOption(
-      imageTypeOf(data.slice(0, HEAD_BYTES))
-    ).pipe(Effect.mapError(() => new ImportPageRefused()));
-    return { data, mediaType, type: "file" as const };
-  });
-
-/**
- * What one read hands Nina. A PDF part is each page's text layer before its image; its page
- * images are deleted once they are read or refused, so no page of a teacher's file stays in
- * storage. A Word part is its text, then each of its pictures, which are images of this exam.
- */
-const sourceContent = (
-  examId: GenericId.GenericId<"exams">,
-  source: typeof ImportSource.Type
-) =>
-  Effect.gen(function* () {
-    if (source.kind === "text") {
-      const { runQuery } = yield* QueryRunner;
-      const pictures = yield* runQuery(refs.internal.exams.imports.pictures, {
-        assets: Arr.fromIterable(source.images),
-        examId,
-      });
-      const images = yield* Effect.forEach(pictures, (picture, index) =>
-        Effect.map(storedImage(picture.storageId), (image) => [
-          { text: `Image ${index + 1}:`, type: "text" as const },
-          image,
-        ])
-      );
-      return [
-        { text: source.text, type: "text" as const },
-        ...Arr.flatten(images),
-      ] satisfies UserContent;
-    }
-    const pages = yield* Effect.forEach(source.pages, (page, index) =>
-      Effect.map(storedImage(page.image), (image) => [
-        { text: `Page ${index + 1}:\n${page.text}`, type: "text" as const },
-        image,
-      ])
-    ).pipe(
-      Effect.ensuring(
-        Effect.flatMap(MutationRunner, ({ runMutation }) =>
-          runMutation(refs.internal.exams.imports.discard, {
-            images: Arr.map(source.pages, (page) => page.image),
-          })
-        ).pipe(Effect.orDie)
-      )
-    );
-    return Arr.flatten(pages) satisfies UserContent;
-  });
-
-/**
- * Nina's read of one part: its questions, their figures, and any answer key table. Any failure
- * of the model or of that shape is `ImportUnread`, so nothing is placed and the part can be sent
- * again.
- */
-const readPart = (content: UserContent) =>
-  Effect.gen(function* () {
-    const reader = (yield* Gateway).language("import");
-    const { output } = yield* Effect.tryPromise({
-      try: (signal) =>
-        generateText({
-          abortSignal: signal,
-          messages: [{ content, role: "user" }],
-          model: reader.model,
-          output: Output.object({ schema: createEffectSchema(ImportedRead) }),
-          system: IMPORT_INSTRUCTIONS,
-          timeout: reader.timeout,
-        }),
-      catch: () => new ImportUnread(),
-    });
-    return output;
-  }).pipe(
-    Effect.provide(GatewayLive),
-    Effect.catchTag("GatewayConfigurationError", () =>
-      Effect.fail(new ImportUnread())
-    )
-  );
-
-/**
- * Reads one part of a teacher's file with Nina. The teacher's right to edit the exam is checked
- * before any image is read or any model is called. Nothing is placed: the browser cuts the
- * figures from the pages it holds and places the questions next.
- */
-const read = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "read",
-  Effect.fn("exams.imports.read")(
-    function* ({ examId, slug, source }) {
-      yield* requireAuth();
-      const { runQuery } = yield* QueryRunner;
-      yield* runQuery(refs.public.exams.imports.canRead, {
-        examId,
-        slug,
-      }).pipe(
-        Effect.catchTag("NotMember", () =>
-          Effect.fail(new AccessDenied({ action: "exam.edit", reason: "role" }))
-        )
-      );
-      return yield* readPart(yield* sourceContent(examId, source));
-    },
-    Effect.catchTag("SchemaError", Effect.die)
-  )
-);
 
 /**
  * The exam's one question when it is the question the exam was created with and nobody has
- * touched it: its answers and key never saved and its prompt never edited.
+ * touched it: its answers, key, and points never saved, and its prompt, rubric, and explanation
+ * never edited.
  */
 const untouchedOnly = (
   order: readonly GenericId.GenericId<"examQuestions">[]
@@ -203,14 +51,32 @@ const untouchedOnly = (
       .table("examQuestions")
       .get(only)
       .pipe(Effect.orDie);
-    const prompt = yield* reader
-      .table("editorDocuments")
-      .get(question.prompt)
-      .pipe(Effect.orDie);
-    return question.revision === 0 && question.key === null && prompt.head === 0
-      ? Option.some(question)
-      : Option.none();
+    const documents = yield* Effect.forEach(
+      [question.prompt, question.rubric, question.explanation],
+      (id) => reader.table("editorDocuments").get(id).pipe(Effect.orDie)
+    );
+    const untouched =
+      question.revision === 0 &&
+      question.key === null &&
+      question.points === NEW_QUESTION_POINTS &&
+      Arr.every(documents, (document) => document.head === 0);
+    return untouched ? Option.some(question) : Option.none();
   });
+
+/** One document of an imported question, stored as a new document of the exam. */
+const importedDocument = Effect.fn("exams.imports.document")(function* (
+  exam: Pick<ExamsDoc, "scope" | "tenantId">,
+  document: typeof ContentDocumentSchema.Type
+) {
+  const text = yield* storedDocument(encodeJsonText(document)).pipe(
+    Effect.catchTag("DocumentInvalid", Effect.die)
+  );
+  return yield* createDocument({
+    scope: exam.scope,
+    tenantId: exam.tenantId,
+    text,
+  });
+});
 
 /**
  * Places the questions of one read at the end of the exam, in order, each with its figures as
@@ -245,19 +111,14 @@ const place = FunctionImpl.make(
     }
     const placed = yield* Effect.forEach(parts, ({ number, part }) =>
       Effect.gen(function* () {
-        const text = yield* storedDocument(encodeJsonText(part.prompt)).pipe(
-          Effect.catchTag("DocumentInvalid", Effect.die)
-        );
-        const prompt = yield* createDocument({
-          scope: exam.scope,
-          tenantId: exam.tenantId,
-          text,
-        });
         return {
           fields: {
             answers: yield* encodeAnswers(part.answers),
+            explanation: yield* importedDocument(exam, part.explanation),
             key: part.key === null ? null : yield* encodeKey(part.key),
-            prompt,
+            points: NEW_QUESTION_POINTS,
+            prompt: yield* importedDocument(exam, part.prompt),
+            rubric: yield* createEmptyDocument(exam),
           },
           keyed: part.key !== null,
           number,
@@ -350,55 +211,9 @@ const keys = FunctionImpl.make(
   })
 );
 
-/**
- * The stored files of the pictures a Word part names, in its order. A picture of another exam is
- * refused as a missing object, so Nina never sees another school's file.
- */
-const pictures = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "pictures",
-  Effect.fn("exams.imports.pictures")(function* ({ assets, examId }) {
-    const reader = yield* DatabaseReader;
-    return yield* Effect.forEach(assets, (assetId) =>
-      Effect.gen(function* () {
-        const asset = yield* reader
-          .table("examAssets")
-          .get(assetId)
-          .pipe(Effect.option);
-        if (Option.isNone(asset) || asset.value.examId !== examId) {
-          return yield* new AccessDenied({
-            action: "exam.edit",
-            reason: "resource",
-          });
-        }
-        return { storageId: asset.value.storageId };
-      })
-    );
-  })
-);
-
-/** Deletes the page images of a read, whether Nina read them or the read was refused. */
-const discard = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "discard",
-  Effect.fn("exams.imports.discard")(function* ({ images }) {
-    const storage = yield* StorageWriter;
-    yield* Effect.forEach(images, (storageId) =>
-      storage.delete(storageId).pipe(Effect.orDie)
-    );
-    return {};
-  })
-);
-
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(canRead),
-  Layer.provide(read),
   Layer.provide(place),
   Layer.provide(keys),
-  Layer.provide(pictures),
-  Layer.provide(discard),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(examAccess),
