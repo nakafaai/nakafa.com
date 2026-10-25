@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, MutableList, Result } from "effect";
+import { Array as Arr, Effect, MutableList, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { strToU8, zipSync } from "fflate";
 import type { ImportProgress } from "@/components/tenant/exams/import/run";
@@ -19,24 +20,97 @@ vi.mock("@/components/tenant/exams/import/pdf", async () => {
   };
 });
 
-/** The answer of one read: two questions placed, one of them without its key. */
-const placedRead = () =>
-  Promise.resolve(Result.succeed({ keyless: 1, left: 0, placed: 2 }));
+vi.mock("@/components/tenant/exams/import/figure", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/components/tenant/exams/import/figure")
+  >("@/components/tenant/exams/import/figure");
+  const { Effect: Fx } = await import("effect");
+  return {
+    ...actual,
+    cropFigure: (_page: Blob, box: { readonly top: number }) =>
+      box.top === 0
+        ? Fx.fail(new actual.FigureUncut())
+        : Fx.succeed(new File(["png"], "figure.png", { type: "image/png" })),
+  };
+});
 
-/** The address that `exams.assets.uploadUrl` answers with. */
-const requestUrl = () =>
-  Promise.resolve(Result.succeed(new URL("https://upload.test/file")));
+/** The IDs the fake backend gives: one image of the exam and the placed questions. */
+const ASSET = Schema.decodeUnknownSync(Id("examAssets"))("asset-1");
+const FIRST = Schema.decodeUnknownSync(Id("examQuestions"))("question-1");
+const SECOND = Schema.decodeUnknownSync(Id("examQuestions"))("question-2");
 
-/** A Word file with one numbered question and its two options. */
+/** One file-level fetch double for every upload, as AGENTS.md asks: each upload answers its storage ID. */
+const fetcher = vi.fn<typeof fetch>(() =>
+  Promise.resolve(
+    new Response(encodeJsonText({ storageId: "stored-1" }), {
+      headers: { "content-type": "application/json" },
+      status: 200,
+    })
+  )
+);
+
+/** The calls of an import against a fake backend, with Nina's reads given in order. */
+const backend = (reads: readonly unknown[]) => {
+  const read = vi.fn();
+  for (const answer of reads) {
+    read.mockResolvedValueOnce(Result.succeed(answer));
+  }
+  return {
+    keys: vi.fn(() => Promise.resolve(Result.succeed({ keyed: 1 }))),
+    place: vi.fn((questions: readonly unknown[]) =>
+      Promise.resolve(
+        Result.succeed({
+          keyless: questions.length,
+          left: 0,
+          placed: Arr.map(questions, (_, index) => ({
+            id: index === 0 ? FIRST : SECOND,
+            number: index + 1,
+          })),
+        })
+      )
+    ),
+    read,
+    register: vi.fn(() => Promise.resolve(Result.succeed({ id: ASSET }))),
+    requestUrl: () =>
+      Promise.resolve(Result.succeed(new URL("https://upload.test/file"))),
+  };
+};
+
+/** A question as Nina reads it, with the given figures. */
+const question = (
+  prompt: string,
+  figures: readonly {
+    readonly box: {
+      bottom: number;
+      left: number;
+      right: number;
+      top: number;
+    } | null;
+    readonly image: number | null;
+    readonly page: number | null;
+  }[]
+) => ({
+  answer: null,
+  figures: Arr.map(figures, (figure) => ({ ...figure, alt: "Gambar" })),
+  number: 1,
+  options: ["A", "B"],
+  prompt,
+});
+
+/** A Word file with one picture and one question that shows it. */
 const wordFile = () =>
   new Blob([
     zipSync({
       "[Content_Types].xml": strToU8(
         '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>'
       ),
-      "word/document.xml": strToU8(
-        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Berapa 2 + 3?</w:t></w:r></w:p></w:body></w:document>'
+      "word/_rels/document.xml.rels": strToU8(
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Target="media/image1.png"/></Relationships>'
       ),
+      "word/document.xml": strToU8(
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body><w:p><w:r><w:t>Berapa sudutnya?</w:t></w:r><w:r><w:drawing><a:blip r:embed="rId1"/></w:drawing></w:r></w:p></w:body></w:document>'
+      ),
+      "word/media/image1.png": strToU8("png"),
     }),
   ]);
 
@@ -51,11 +125,23 @@ const progressLog = () => {
 };
 
 describe("runImport", () => {
+  beforeEach(() => {
+    fetcher.mockClear();
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(() => Promise.resolve({ close: vi.fn(), height: 30, width: 40 }))
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it.effect(
     "refuses a file over 20 MB and one that is no PDF or Word file before it sends anything",
     () =>
       Effect.gen(function* () {
-        const read = vi.fn(placedRead);
+        const calls = backend([]);
         const log = progressLog();
         const refusals = yield* Effect.forEach(
           [
@@ -63,44 +149,60 @@ describe("runImport", () => {
             new Blob(["GIF89a"]),
           ],
           (file) =>
-            runImport({
-              file,
-              read,
-              requestUrl,
-              onProgress: log.onProgress,
-            }).pipe(Effect.flip)
+            runImport({ ...calls, file, onProgress: log.onProgress }).pipe(
+              Effect.flip
+            )
         );
         expect(Arr.map(refusals, (refusal) => refusal._tag)).toEqual([
           "ImportFileRefused",
           "ImportFileRefused",
         ]);
-        expect(read).not.toHaveBeenCalled();
+        expect(calls.read).not.toHaveBeenCalled();
         expect(log.seen()).toEqual([]);
       })
   );
 
   it.effect(
-    "sends a Word file's text in reads and counts what each read placed",
+    "stores a Word file's pictures as images of the exam, shows them to Nina, and places her questions with them",
     () =>
       Effect.gen(function* () {
-        const read = vi.fn(placedRead);
+        const calls = backend([
+          {
+            keys: [],
+            questions: [
+              question("Berapa sudutnya?\n{{figure:1}}", [
+                { box: null, image: 1, page: null },
+              ]),
+            ],
+          },
+        ]);
         const log = progressLog();
         const last = yield* runImport({
+          ...calls,
           file: wordFile(),
           onProgress: log.onProgress,
-          read,
-          requestUrl,
-        });
-        expect(read).toHaveBeenCalledWith({
+        }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
+        expect(calls.read).toHaveBeenCalledWith({
+          images: [ASSET],
           kind: "text",
-          text: "Berapa 2 + 3?",
+          text: "Berapa sudutnya?[image 1]",
         });
+        expect(calls.place).toHaveBeenCalledWith([
+          {
+            answer: null,
+            figures: [{ alt: "Gambar", asset: ASSET }],
+            number: 1,
+            options: ["A", "B"],
+            prompt: "Berapa sudutnya?\n{{figure:1}}",
+          },
+        ]);
+        expect(calls.keys).not.toHaveBeenCalled();
         expect(last).toEqual({
           done: 1,
           keyless: 1,
           left: 0,
           mathType: 0,
-          placed: 2,
+          placed: 1,
           total: 1,
         });
         expect(Arr.map(log.seen(), (progress) => progress.done)).toEqual([
@@ -110,55 +212,80 @@ describe("runImport", () => {
   );
 
   it.effect(
-    "draws a PDF five pages at a time, uploads each page image, and sends its reads in order",
+    "draws a PDF five pages at a time, cuts Nina's figures from the pages, and keys a question from a later key table",
     () =>
       Effect.gen(function* () {
-        const fetcher = vi.fn<typeof fetch>(() =>
-          Promise.resolve(
-            new Response(encodeJsonText({ storageId: "page-image" }), {
-              headers: { "content-type": "application/json" },
-              status: 200,
-            })
-          )
-        );
-        const read = vi.fn(placedRead);
+        const calls = backend([
+          {
+            keys: [],
+            questions: [
+              question("Lihat\n{{figure:1}}\n{{figure:2}}\n{{figure:3}}", [
+                {
+                  box: { bottom: 500, left: 100, right: 500, top: 100 },
+                  image: null,
+                  page: 1,
+                },
+                {
+                  box: { bottom: 500, left: 100, right: 500, top: 0 },
+                  image: null,
+                  page: 2,
+                },
+                { box: null, image: 1, page: null },
+              ]),
+            ],
+          },
+          {
+            keys: [
+              { answer: 2, number: 1 },
+              { answer: 0, number: 9 },
+            ],
+            questions: [],
+          },
+        ]);
         const last = yield* runImport({
+          ...calls,
           file: new Blob(["%PDF-1.7\n"]),
           onProgress: () => undefined,
-          read,
-          requestUrl,
         }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
-        expect(fetcher).toHaveBeenCalledTimes(7);
-        expect(read).toHaveBeenNthCalledWith(1, {
+        expect(calls.read).toHaveBeenNthCalledWith(1, {
           kind: "pages",
           pages: Arr.map([1, 2, 3, 4, 5], (number) => ({
-            image: "page-image",
+            image: "stored-1",
             text: `Halaman ${number}`,
           })),
         });
-        expect(read).toHaveBeenNthCalledWith(2, {
-          kind: "pages",
-          pages: [
-            { image: "page-image", text: "Halaman 6" },
-            { image: "page-image", text: "Halaman 7" },
-          ],
+        expect(calls.place).toHaveBeenNthCalledWith(1, [
+          expect.objectContaining({
+            figures: [{ alt: "Gambar", asset: ASSET }],
+            prompt: "Lihat\n{{figure:1}}\n\n",
+          }),
+        ]);
+        expect(calls.keys).toHaveBeenCalledWith([
+          { answer: 2, questionId: FIRST },
+        ]);
+        expect(last).toMatchObject({
+          done: 2,
+          keyless: 0,
+          placed: 1,
+          total: 2,
         });
-        expect(last).toMatchObject({ done: 2, placed: 4, total: 2 });
       })
   );
 
-  it.effect("stops at a read that fails, with the reads before it placed", () =>
+  it.effect("stops at a read that fails", () =>
     Effect.gen(function* () {
-      const read = vi.fn(() =>
-        Promise.resolve(Result.fail({ _tag: "ImportUnread" as const }))
-      );
+      const calls = backend([]);
+      calls.read.mockResolvedValueOnce(Result.fail({ _tag: "ImportUnread" }));
       const failure = yield* runImport({
+        ...calls,
         file: wordFile(),
         onProgress: () => undefined,
-        read,
-        requestUrl,
-      }).pipe(Effect.flip);
+      }).pipe(
+        Effect.provideService(FetchHttpClient.Fetch, fetcher),
+        Effect.flip
+      );
       expect(failure).toEqual({ _tag: "ImportUnread" });
+      expect(calls.place).not.toHaveBeenCalled();
     })
   );
 });

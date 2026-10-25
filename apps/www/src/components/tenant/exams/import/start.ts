@@ -7,12 +7,6 @@ import {
 } from "@/components/tenant/exams/import/run";
 import { reportClientException } from "@/lib/analytics/client";
 
-/** What `runImport` needs besides its progress listener: the file, and the two calls it makes. */
-type ImportCalls<UrlError, ReadError> = Omit<
-  Parameters<typeof runImport<UrlError, ReadError>>[0],
-  "onProgress"
->;
-
 /** A toast that stays until the import replaces it with its result. */
 const UNTIL_REPLACED = Number.POSITIVE_INFINITY;
 
@@ -98,10 +92,21 @@ const showFailed = (
  * import ends. The editor shows each read's questions as they are placed, so the teacher checks
  * and corrects them in place, with no step that accepts them.
  */
-export function importIntoExam<UrlError, ReadError>({
+export function importIntoExam<
+  ReadError,
+  PlaceError,
+  KeysError,
+  UrlError,
+  RegisterError,
+>({
   examId,
   ...calls
-}: ImportCalls<UrlError, ReadError> & { examId: string }) {
+}: Omit<
+  Parameters<
+    typeof runImport<ReadError, PlaceError, KeysError, UrlError, RegisterError>
+  >[0],
+  "onProgress"
+> & { examId: string }) {
   const id = `exam-import-${examId}`;
   const last = MutableRef.make(Option.none<ImportProgress>());
   return runImport({

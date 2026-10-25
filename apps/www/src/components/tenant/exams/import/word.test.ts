@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Record as Rec } from "effect";
 import { strToU8, zipSync } from "fflate";
-import { readWord, wordReads } from "@/components/tenant/exams/import/word";
+import { readWord } from "@/components/tenant/exams/import/word";
 
 /** The namespaces a Word main part declares. */
 const NAMESPACES =
-  'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml"';
+  'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
 
 /** The content types of a Word package, with the type of its main part. */
 const typesOf = (mainType: string) =>
@@ -98,28 +98,45 @@ describe("readWord", () => {
   );
 });
 
-describe("wordReads", () => {
-  it("keeps a short document in one read", () => {
-    expect(wordReads(["- Soal satu", "  - A"], 100)).toEqual([
-      "- Soal satu\n  - A",
-    ]);
-    expect(wordReads([], 100)).toEqual([]);
-    expect(wordReads(["- Soal satu"])).toEqual(["- Soal satu"]);
-  });
+describe("readWord pictures", () => {
+  it.effect(
+    "numbers the pictures a browser draws in the order the text first shows them, and keeps their files",
+    () =>
+      Effect.gen(function* () {
+        const read = yield* readWord(
+          docx({
+            "[Content_Types].xml": typesOf(DOCUMENT_TYPE),
+            "word/_rels/document.xml.rels":
+              '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId5" Target="media/image1.png"/><Relationship Id="rId6" Target="media/image2.emf"/><Relationship Id="rId7" Target="media/image3.jpeg"/><Relationship Id="rId8" Target="media/missing.png"/><Relationship Target="media/image1.png"/><Relationship Id="rId9"/></Relationships>',
+            "word/document.xml": `<?xml version="1.0"?><w:document ${NAMESPACES}><w:body><w:p><w:r><w:t>Gambar</w:t></w:r><w:r><w:drawing><a:blip r:embed="rId7"/></w:drawing></w:r></w:p><w:p><w:r><w:drawing><a:blip r:embed="rId5"/></w:drawing></w:r><w:r><w:pict><v:imagedata r:id="rId7"/></w:pict></w:r><w:r><w:drawing><a:blip r:embed="rId6"/></w:drawing></w:r><w:r><w:drawing><a:blip r:embed="rId8"/></w:drawing></w:r><w:r><w:drawing><a:blip/></w:drawing></w:r></w:p></w:body></w:document>`,
+            "word/media/image1.png": "png",
+            "word/media/image2.emf": "emf",
+            "word/media/image3.jpeg": "jpeg",
+          })
+        );
+        expect(read.lines).toEqual([
+          "Gambar[image 1]",
+          "[image 2][image 1][image][image][image]",
+        ]);
+        expect(
+          Arr.map(read.pictures, (picture) => [picture.name, picture.type])
+        ).toEqual([
+          ["word/media/image3.jpeg", "image/jpeg"],
+          ["word/media/image1.png", "image/png"],
+        ]);
+      })
+  );
 
-  it("ends a read before a numbered question in its second half, so the question stays whole", () => {
-    const lines = ["- Soal 1", "  - A", "  - B", "- Soal 2", "  - C", "  - D"];
-    expect(wordReads(lines, 33)).toEqual([
-      "- Soal 1\n  - A\n  - B",
-      "- Soal 2\n  - C\n  - D",
-    ]);
-  });
-
-  it("ends a read where its length runs out when no question starts in its second half, and gives a long line a read of its own", () => {
-    expect(wordReads(["aaaa", "bbbb", "cccc"], 10)).toEqual([
-      "aaaa\nbbbb",
-      "cccc",
-    ]);
-    expect(wordReads(["x".repeat(20), "y"], 10)).toEqual(["x".repeat(20), "y"]);
-  });
+  it.effect(
+    "reads a document without relationships as one without pictures",
+    () =>
+      Effect.gen(function* () {
+        const read = yield* readWord(
+          documentWith(
+            '<w:p><w:r><w:drawing><a:blip r:embed="rId1"/></w:drawing></w:r></w:p>'
+          )
+        );
+        expect(read).toMatchObject({ lines: ["[image]"], pictures: [] });
+      })
+  );
 });

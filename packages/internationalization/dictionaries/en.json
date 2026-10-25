@@ -299,7 +299,12 @@
     "signals-empty-title": "No signal yet",
     "student-start": "Start exam",
     "import-label": "Questions from a file",
-    "import-description": "Optional: Nina puts the questions of a Word or PDF file in the exam."
+    "import-description": "Optional: Nina puts the questions of a Word or PDF file in the exam.",
+    "import-action": "Import",
+    "import-title": "Import questions",
+    "import-dialog-description": "Nina puts the questions of a Word or PDF file at the end of this exam.",
+    "import-submit": "Import",
+    "import-hint": "Word or PDF, up to 20 MB."
   },
   "SchoolSettings": {
     "school": "School",

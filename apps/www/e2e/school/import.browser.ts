@@ -94,3 +94,38 @@ test("a file that is no Word or PDF document is refused in the browser, and the 
   ).toBeVisible();
   await context.close();
 });
+
+test("the editor imports a Word file into the open exam from its header, as Google Slides imports slides", async ({
+  baseURL,
+  browser,
+}) => {
+  const { context, dialog, page } = await openCreateDialog(browser, baseURL);
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Fisika");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+
+  // The header holds the import beside Try as student, in its one row.
+  const header = page.locator("header").filter({
+    has: page.getByRole("button", { name: "Import" }),
+  });
+  await expect(header.getByRole("link", { name: "Try as student" })).toBeVisible();
+  await page.getByRole("button", { name: "Import" }).click();
+  const importDialog = page.getByRole("dialog");
+  await expect(
+    importDialog.getByRole("button", { name: "Import" })
+  ).toBeDisabled();
+  await importDialog.getByLabel("Questions from a file").setInputFiles({
+    buffer: wordFile(),
+    mimeType:
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    name: "Bab 2.docx",
+  });
+  await importDialog.getByRole("button", { name: "Import" }).click();
+
+  // The dialog closes at once, and the local backend's missing gateway ends the read in its toast.
+  await expect(importDialog).toBeHidden();
+  await expect(page.getByText("Nina could not read this file.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await context.close();
+});

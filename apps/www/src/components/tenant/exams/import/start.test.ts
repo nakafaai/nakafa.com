@@ -52,7 +52,10 @@ const importFile = () =>
   importIntoExam({
     examId: "exam-1",
     file: new Blob(["%PDF-1.7"]),
+    keys: vi.fn(),
+    place: vi.fn(),
     read: vi.fn(),
+    register: vi.fn(),
     requestUrl: vi.fn(),
   });
 

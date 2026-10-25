@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 import { ScheduleExam } from "@/components/tenant/exams/schedule";
@@ -76,6 +77,7 @@ export function ExamHeader() {
         readOnly={exam.archived}
         value={draft ?? exam.title}
       />
+      {isLocked(exam) ? null : <ImportQuestions />}
       <Link
         aria-label={t("try-action")}
         className={buttonVariants({ variant: "outline" })}

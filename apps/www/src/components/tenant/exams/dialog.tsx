@@ -1,4 +1,4 @@
-import { useAction, useMutation } from "@confect/react";
+import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   EXAM_TITLE_MAX_LENGTH,
@@ -41,11 +41,11 @@ import {
   type ScopeChoice,
 } from "@/components/tenant/exams/create";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
+import { useImportFile } from "@/components/tenant/exams/import/calls";
 import {
   IMPORT_ACCEPT,
   titleOfFile,
 } from "@/components/tenant/exams/import/file";
-import { importIntoExam } from "@/components/tenant/exams/import/start";
 import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
 
@@ -69,8 +69,7 @@ export function CreateExam({
   const common = useTranslations("Common");
   const navigate = useNavigate();
   const create = useMutation(exams.exams.create);
-  const requestUrl = useMutation(exams.assets.uploadUrl);
-  const read = useAction(exams.imports.read);
+  const importFile = useImportFile(slug);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -129,16 +128,7 @@ export function CreateExam({
           ),
           // The import outlives this dialog and the page it opened from, so it runs detached.
           Effect.tap((saved) =>
-            file === null
-              ? Effect.void
-              : Effect.forkDetach(
-                  importIntoExam({
-                    examId: saved.id,
-                    file,
-                    read: (source) => read({ examId: saved.id, slug, source }),
-                    requestUrl: () => requestUrl({ examId: saved.id, slug }),
-                  })
-                )
+            file === null ? Effect.void : importFile(saved.id, file)
           )
         ),
         { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }

@@ -299,7 +299,12 @@
     "signals-empty-title": "Noch kein Ereignis",
     "student-start": "Prüfung starten",
     "import-label": "Fragen aus einer Datei",
-    "import-description": "Optional: Nina setzt die Fragen einer Word- oder PDF-Datei in die Prüfung."
+    "import-description": "Optional: Nina setzt die Fragen einer Word- oder PDF-Datei in die Prüfung.",
+    "import-action": "Importieren",
+    "import-title": "Fragen importieren",
+    "import-dialog-description": "Nina setzt die Fragen einer Word- oder PDF-Datei ans Ende dieser Prüfung.",
+    "import-submit": "Importieren",
+    "import-hint": "Word oder PDF, höchstens 20 MB."
   },
   "SchoolSettings": {
     "school": "Schule",
