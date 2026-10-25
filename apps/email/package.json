@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "css-tree": "3.2.1",
     "react": "19.3.1",
     "react-email": "catalog:"
   },
