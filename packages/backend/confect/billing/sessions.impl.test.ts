@@ -12,7 +12,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 import { TestClock } from "effect/testing";
 
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
@@ -362,25 +362,25 @@ describe("billing/sessions customer linking", () => {
           yield* Effect.promise(() =>
             authed.action(route.generateCustomerPortalUrl, {})
           );
-          return {
-            authId: user.authUserId,
-            portal:
-              polarGateway.createCustomerPortalSession.mock.lastCall?.at(0),
-          };
+          return user.authUserId;
         });
-        expect((yield* portalOf(true, () => null)).portal).toBe(
-          "polar-adopted"
-        );
+        yield* portalOf(true, () => null);
+        expect(
+          polarGateway.createCustomerPortalSession
+        ).toHaveBeenLastCalledWith("polar-adopted");
         expect(polarGateway.updateCustomer).toHaveBeenCalledWith({
           customerId: "polar-unlinked",
           identity: expect.objectContaining({ email: "billing@example.com" }),
         });
         polarGateway.updateCustomer.mockClear();
-        expect((yield* portalOf(true, () => "auth-removed")).portal).toBe(
-          "polar-auth-removed"
-        );
-        const own = yield* portalOf(false, (authId) => authId);
-        expect(own.portal).toBe(`polar-${own.authId}`);
+        yield* portalOf(true, () => "auth-removed");
+        expect(
+          polarGateway.createCustomerPortalSession
+        ).toHaveBeenLastCalledWith("polar-auth-removed");
+        const ownAuthId = yield* portalOf(false, (authId) => authId);
+        expect(
+          polarGateway.createCustomerPortalSession
+        ).toHaveBeenLastCalledWith(`polar-${ownAuthId}`);
         expect(polarGateway.updateCustomer).not.toHaveBeenCalled();
       })
   );
@@ -391,7 +391,7 @@ describe("billing/sessions customer linking", () => {
       Effect.gen(function* () {
         const refusal = Effect.fn("billing.sessions.test.refusal")(function* (
           emailVerified: boolean,
-          held: { readonly externalId: string | null } | null
+          heldExternalId: Option.Option<string | null>
         ) {
           const { authed, t } = yield* setup(emailVerified);
           yield* Effect.promise(() =>
@@ -421,14 +421,15 @@ describe("billing/sessions customer linking", () => {
           );
           polarGateway.findCustomerByEmail.mockReturnValue(
             Effect.succeed(
-              held === null
-                ? null
-                : {
-                    email: "billing@example.com",
-                    externalId: held.externalId,
-                    id: "polar-held",
-                    name: "User billing",
-                  }
+              Option.match(heldExternalId, {
+                onNone: () => null,
+                onSome: (externalId) => ({
+                  email: "billing@example.com",
+                  externalId,
+                  id: "polar-held",
+                  name: "User billing",
+                }),
+              })
             )
           );
           yield* Effect.promise(() =>
@@ -440,9 +441,9 @@ describe("billing/sessions customer linking", () => {
             )
           );
         });
-        yield* refusal(true, null);
-        yield* refusal(false, { externalId: null });
-        yield* refusal(true, { externalId: "auth-other" });
+        yield* refusal(true, Option.none());
+        yield* refusal(false, Option.some(null));
+        yield* refusal(true, Option.some("auth-other"));
         expect(polarGateway.updateCustomer).not.toHaveBeenCalled();
         expect(polarGateway.createCustomerPortalSession).not.toHaveBeenCalled();
       })
