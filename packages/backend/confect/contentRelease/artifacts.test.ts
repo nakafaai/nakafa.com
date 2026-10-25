@@ -88,8 +88,8 @@ function batchSize(artifactJson: string[]) {
   });
 }
 
-/** Builds the largest artifact batch the Aksara transport contract accepts. */
-function largestBatch() {
+/** Builds the largest artifact batch the Aksara transport contract accepts, with extra code bytes per artifact. */
+function largestBatch(extraCodeBytes = 0) {
   const batch = (codeLength: number) =>
     Array.from({ length: MAX_ARTIFACT_BATCH_COUNT }, (_, index) =>
       testArtifactJson({
@@ -101,7 +101,9 @@ function largestBatch() {
   // With five-digit code lengths, every extra code byte adds one wire byte.
   const base = 10_000;
   const spare = MAX_ARTIFACT_BATCH_BYTES - batchSize(batch(base));
-  return batch(base + Math.floor(spare / MAX_ARTIFACT_BATCH_COUNT));
+  return batch(
+    base + Math.floor(spare / MAX_ARTIFACT_BATCH_COUNT) + extraCodeBytes
+  );
 }
 
 /** Pads one projection to the read-model ceiling that verified heads keep. */
@@ -294,6 +296,14 @@ describe("contentRelease/artifacts", () => {
     await expect(stage(t, ['{"payload":{}}'])).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
+    await expect(
+      stage(t, [
+        testArtifactJson().replace(
+          '"artifactLocale":"en"',
+          '"artifactLocale":"fr"'
+        ),
+      ])
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
     await expect(stage(t, [testArtifactJson()], -1)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
@@ -359,6 +369,11 @@ describe("contentRelease/artifacts", () => {
     await expect(
       stage(mismatch, [testArtifactJson({ rendererDomain: "chemistry" })])
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    await expect(
+      stage(mismatch, [
+        testArtifactJson({ artifactHash: batchArtifactHash(1) }),
+      ])
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
   });
 
   it("rejects immutable hash reuse, lost facts, and changed retry identity", async () => {
@@ -403,5 +418,64 @@ describe("contentRelease/artifacts", () => {
     await expect(stage(t, [testArtifactJson()])).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_STATE" },
     });
+  });
+
+  it("rejects artifact batches for a release that is aborting", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertTestRelease(ctx));
+    await stageItem(t);
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected staged release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, { abortingAt: 1 });
+    });
+    await expect(stage(t, [testArtifactJson()])).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
+  });
+
+  it("rejects batches over the count and byte transport limits", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertTestRelease(ctx));
+    await stageItem(t);
+    const overCount = Array.from(
+      { length: MAX_ARTIFACT_BATCH_COUNT + 1 },
+      (_, index) =>
+        testArtifactJson({
+          artifactHash: batchArtifactHash(index),
+          contentKey: `test:head-${index}`,
+        })
+    );
+    await expect(stage(t, overCount)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+    // One more code byte per artifact pushes the largest batch past its byte ceiling.
+    expect(batchSize(largestBatch(1))).toBeGreaterThan(
+      MAX_ARTIFACT_BATCH_BYTES
+    );
+    await expect(stage(t, largestBatch(1))).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+  });
+
+  it("stores a body whose header is valid without decoding its content tree", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertTestRelease(ctx));
+    await stageItem(t);
+    const source = testArtifactJson().replace(
+      '"contentTree":{"$node":"element","name":"fragment","props":{},"children":[]}',
+      '"contentTree":"not-a-tree"'
+    );
+    expect(source).toContain('"contentTree":"not-a-tree"');
+
+    await expect(stage(t, [source])).resolves.toMatchObject({
+      created: 1,
+      unchanged: 0,
+    });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+    ).resolves.toMatchObject({ artifactJson: source });
   });
 });
