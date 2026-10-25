@@ -12,10 +12,7 @@ import {
   WORKER_PLACEMENT,
   webExposure,
 } from "#www/deploy/stage";
-import {
-  deployedWorkerBindings,
-  workerSettings,
-} from "#www/worker";
+import { deployedWorkerBindings, workerSettings } from "#www/worker";
 
 /**
  * The Nakafa stack. The stage decides who reaches the web Worker: production

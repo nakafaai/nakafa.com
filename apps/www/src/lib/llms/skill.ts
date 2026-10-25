@@ -3,6 +3,7 @@ import { languages } from "@repo/internationalization/data/lang";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { sha256Hex } from "@repo/utilities/digest";
 import { Array as Arr, Effect } from "effect";
+import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@/lib/seo/license";
 
 const NAKAFA_SKILL_NAME = "nakafa";
 const NAKAFA_SKILL_DESCRIPTION =
@@ -21,7 +22,7 @@ export function getNakafaSkillText() {
       "---",
       `name: ${NAKAFA_SKILL_NAME}`,
       `description: ${NAKAFA_SKILL_DESCRIPTION}`,
-      "license: MIT",
+      `license: ${CONTENT_LICENSE_NAME} (${CONTENT_LICENSE_URL})`,
       "clients: Public HTTPS documentation, markdown URLs, llms.txt, and Streamable HTTP MCP clients.",
       "metadata:",
       "  author: Nakafa",

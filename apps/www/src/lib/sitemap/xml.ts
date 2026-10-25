@@ -1,7 +1,14 @@
 import { Array as Arr, Schema } from "effect";
 
-/** One sitemap URL, with the modification date that the XML writes when it is known. */
+/** One `hreflang` alternate link of a sitemap URL. */
+const SitemapAlternate = Schema.Struct({
+  hreflang: Schema.String,
+  href: Schema.String,
+});
+
+/** One sitemap URL, with its alternates and the modification date that the XML writes when it is known. */
 const SitemapEntry = Schema.Struct({
+  alternates: Schema.optionalKey(Schema.Array(SitemapAlternate)),
   lastModified: Schema.optionalKey(Schema.Union([Schema.Date, Schema.String])),
   url: Schema.String,
 });
@@ -36,7 +43,7 @@ export function buildSitemapUrlSetXml(entries: readonly SitemapEntry[]) {
   return Arr.join(
     [
       xmlHeader,
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
       ...urlLines,
       "</urlset>",
       "",
@@ -45,7 +52,7 @@ export function buildSitemapUrlSetXml(entries: readonly SitemapEntry[]) {
   );
 }
 
-/** Formats one sitemap entry with an optional truthful modification date. */
+/** Formats one sitemap entry with its alternate links and an optional truthful modification date. */
 function formatSitemapEntry(entry: SitemapEntry) {
   const lastModified = formatLastModified(entry.lastModified);
 
@@ -53,6 +60,7 @@ function formatSitemapEntry(entry: SitemapEntry) {
     [
       "  <url>",
       `    <loc>${escapeXml(entry.url)}</loc>`,
+      ...Arr.map(entry.alternates ?? [], formatAlternate),
       ...(lastModified
         ? [`    <lastmod>${escapeXml(lastModified)}</lastmod>`]
         : []),
@@ -60,6 +68,11 @@ function formatSitemapEntry(entry: SitemapEntry) {
     ],
     "\n"
   );
+}
+
+/** Formats one `hreflang` alternate link in the XHTML namespace the URL set declares. */
+function formatAlternate(alternate: typeof SitemapAlternate.Type) {
+  return `    <xhtml:link rel="alternate" hreflang="${escapeXml(alternate.hreflang)}" href="${escapeXml(alternate.href)}" />`;
 }
 
 /** Converts sitemap date values into XML timestamp text. */
