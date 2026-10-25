@@ -88,6 +88,24 @@ describe("billing/checkout internal steps", () => {
     ).toEqual({ kind: "unavailable" });
   });
 
+  it("lets no customer be adopted for a user who is deleting or does not exist", async () => {
+    const t = createBillingTestConvex();
+    const deletingUserId = await t.mutation((ctx) => insertUser(ctx, true));
+    const missing = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx);
+      await ctx.db.delete("users", userId);
+      return userId;
+    });
+    for (const userId of [deletingUserId, missing]) {
+      expect(
+        await t.query(internal.billing.checkout.mayAdoptCustomer, {
+          externalId: null,
+          userId,
+        })
+      ).toBe(false);
+    }
+  });
+
   it("records the Polar customer on the account it was linked to", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(async (ctx) => {
