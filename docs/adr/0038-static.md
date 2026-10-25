@@ -37,7 +37,7 @@ D4. A page with an Aksara source has a static .md twin beside its HTML. The HTML
 
 D5. Social images are one per collection or family, not one per page.
 
-D6. Content pages navigate by document load and are prefetched on intent with Speculation Rules. The rules are one JSON file served through the Speculation-Rules response header, not an inline script, so the Content-Security-Policy keeps its current form. No client loader calls a server function for public content.
+D6. Content pages navigate in the browser, with no document load and no Worker request. While the build prerenders a page, the Worker records every server function call that the page's loaders make, and the build writes the answer of each call, byte for byte, as a static file. In the browser a loader reads that file and hands it to the function's own decoder through Start's per-call `fetch` option, so a navigation between prerendered pages costs one static asset read, made on intent before the press. A call that the build did not prerender, such as a later page of a list, asks the Worker. (Amended 25 Oct 2026: the document loads and Speculation Rules of Phase A made every press reload the page in every browser, and Safari and Firefox do not prerender.)
 
 D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy. Phase A does not declare them (see Not in Phase A).
 
@@ -70,11 +70,18 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   index copy of its locale. `getOgUrl` points every page of those sections at the
   section image, and every other page at the home image. The per-page images and
   the per-page alias are deleted.
-- **Navigation.** A link to a prerendered route template loads as a document, so
-  no client loader or server function reads the public content on the way.
-  `public/speculation-rules.json` names the content families to prerender on
-  intent. Its `Speculation-Rules` header and `application/speculationrules+json`
-  content type are set in `_headers`, so the Content-Security-Policy keeps its form.
+- **Navigation (D6 as amended).** A prerendered page's loaders call their server
+  functions through `readStaticData` (`apps/www/src/lib/static/data.ts`). While the
+  build prerenders a page, it sends `x-nakafa-prerender`, and the Worker records
+  each call (`record.server.ts`) and closes the page with a comment that lists the
+  calls. After the prerender, `writeStaticAnswers` (`apps/www/prerender.config.ts`)
+  removes the comment, requests each call once from a preview server of the same
+  build as the browser would, and writes its answer to `/_data/<key>.bin`: the
+  content type on the first line, then the body. The key is the SHA-256 digest of
+  the function's address and its input. In the browser the loader reads that file
+  (`answer.ts`), and a missing file asks the Worker. Static assets revalidate by
+  ETag, so an answer never outlives the release whose chunks it names. The
+  Speculation Rules file and its headers are deleted.
 - **Cheap not-found.** The Worker reads a path after the router's input rewrite,
   so a School host's page is its School tree path. The address decisions run
   first: the www host, the slash and spelling redirects, the School gates, the
@@ -125,6 +132,8 @@ verified on the probe, which has no School or www host and no zone rule:
 - TanStack prerender as the only renderer. A failed page does not fail the build, and a shard cannot reuse prior output. The Node renderer reads the release once and awaits every page. Spike S2 compares both on 100 pages, and TanStack prerender with filter remains the fallback if S2 finds the Node output differs.
 - Workers Paid now. The $5 monthly minimum buys nothing under the measured limits. Paid is the first step only after a measured limit binds.
 - Per-page OG images. They double the file count and add about 114.5 KB per page (research measurement).
+- TanStack's static server functions (`@tanstack/start-static-server-functions`). The package is experimental, stores a JSON result only, so a Server Component body cannot pass through it, and has no fallback when a file is missing.
+- Document loads with Speculation Rules, as Phase A shipped. Every press reloaded the page, Safari and Firefox do not prerender, and the owner measured slow page changes on staging (25 Oct 2026).
 - A Speculation Rules inline script. It needs an inline-speculation-rules source or a hash in the CSP, which the current policy does not grant. The header form needs no CSP change.
 
 ## Consequences
