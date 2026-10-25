@@ -305,7 +305,9 @@
     "seats-empty-title": "No seat yet",
     "seats-filter-title": "No seat matches",
     "signals-empty-title": "No signal yet",
-    "student-start": "Start exam"
+    "student-start": "Start exam",
+    "presence-editor": "{name} is editing",
+    "presence-more": "{names} are editing"
   },
   "SchoolSettings": {
     "school": "School",

@@ -327,7 +327,7 @@ has exactly one owner.
 | The nine `tryout*` tables in `packages/backend/confect/tables` | Live. The tables are removed in wave B, and finished attempts are not converted (section 10) |
 | The three `irt*` tables in `packages/backend/confect/tables` | Live, extended in wave C |
 | `@cortex-js/compute-engine` and `mathlive` | Not installed |
-| `@convex-dev/presence` | Not installed. Planned for wave B. |
+| `@convex-dev/presence` | Installed at 0.4.0 for the exam editor (ADR 0028). Its use by sittings is planned for wave B. |
 | The other `confect/assessment` modules | Planned |
 | Assessment document and its compiler | Planned, program wave A |
 | `apps/www/src/components/player` (list or one item, navigator, keys), bound to try-outs | Live. A School binding is planned for wave B. |
