@@ -350,12 +350,15 @@ describe("section build", () => {
     await t.mutation(seedKnowledge);
     for (const input of [
       { releaseId: "release-earlier" },
-      { position: { phase: "quran", surah: 1 }, releaseId: "release-earlier" },
       {
-        position: { cursor: null, phase: "prune" },
+        position: { missing: 0, phase: "quran", surah: 1 },
         releaseId: "release-earlier",
       },
-      { position: { cursor: null, phase: "prune" } },
+      {
+        position: { cursor: null, missing: 0, phase: "prune" },
+        releaseId: "release-earlier",
+      },
+      { position: { cursor: null, missing: 0, phase: "prune" } },
     ] satisfies Input[]) {
       expect(await run(input)).toMatchObject({ next: null, stale: true });
     }
@@ -428,7 +431,8 @@ describe("section build", () => {
     });
     const steps = await build();
     // The three sections of the lesson are left out, and the eight other
-    // documents are stored with their versions, so the build ends with a count.
+    // documents are stored with their versions. The lesson keeps a record with
+    // the count, so the build ends with it.
     expect(Option.getOrUndefined(Arr.last(steps))?.position.phase).toBe(
       "prune"
     );
@@ -440,7 +444,7 @@ describe("section build", () => {
           appLocale === "id" && contentKey.endsWith("section-1")
       )
     ).toBe(false);
-    expect(await sources()).toHaveLength(8);
+    expect(await sources()).toHaveLength(9);
     expect(
       await t.query((ctx) => ctx.db.query("contentSectionState").collect())
     ).toMatchObject([{ missing: 3, releaseId: KNOWLEDGE_RELEASE.releaseId }]);
@@ -465,11 +469,11 @@ describe("section build", () => {
         );
       }
     });
-    const position = { cursor: null, phase: "prune" } as const;
+    const position = { cursor: null, missing: 0, phase: "prune" } as const;
     const releaseId = KNOWLEDGE_RELEASE.releaseId;
     const first = await run({ position, releaseId });
     expect(first).toMatchObject({ removed: rowsOfEach, stale: false });
-    expect(first.next).toEqual({ missing: 0, position, releaseId });
+    expect(first.next).toEqual({ position, releaseId });
     expect(await rows()).toHaveLength(rowsOfEach);
     expect(await sources()).toHaveLength(1);
     expect(

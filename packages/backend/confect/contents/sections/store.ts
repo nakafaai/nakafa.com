@@ -10,6 +10,7 @@ import {
 import {
   type knownInputValidator,
   type pageInputValidator,
+  type SourceRecord,
   sectionHeadValidator,
   sectionScope,
   type storeInputValidator,
@@ -58,12 +59,14 @@ export const knownSections = Effect.fn("contents.sections.known")(function* (
 
 /**
  * Makes the index hold exactly the given sections of one document, and records
- * the version they were made from when it holds every one of them, in one
- * transaction. A section that the model left out leaves the document without a
- * version, so that the next build reads it again and embeds what it still
- * lacks. A section keeps the vector of a stored section of the document that has
- * the same text and was made by the same model, whichever place that section
- * had, and is written again only when something else about it changed, such as
+ * the version they were made from with the count of the sections the model left
+ * out, in one transaction. The next build reads a document with a section left
+ * out again and embeds what it still lacks, and the record keeps the count, so
+ * that a clean-up which finds the release no longer publishes the document still
+ * deletes the sections the index holds. A section keeps the vector of a stored
+ * section of the document that has the same text and was made by the same model,
+ * whichever place that section had, and is written again only when something
+ * else about it changed, such as
  * its place or its heading: a section that another section pushed one place on
  * is neither embedded again nor lost. A changed or new section needs its vector
  * with it.
@@ -140,15 +143,17 @@ export const storeDocument = Effect.fn("contents.sections.store")(function* (
   const missing = count("missing");
   const known = yield* findSource(input.source);
   const sources = writer.table("contentSectionSources");
-  if (missing > 0) {
-    if (known !== null) {
-      yield* sources.delete(known._id);
-    }
-  } else if (known?.version !== input.source.version) {
+  const record: SourceRecord =
+    missing > 0 ? { ...input.source, missing } : input.source;
+  if (
+    known === null ||
+    known.version !== record.version ||
+    known.missing !== record.missing
+  ) {
     yield* (
       known === null
-        ? Effect.asVoid(sources.insert(input.source))
-        : sources.replace(known._id, input.source)
+        ? Effect.asVoid(sources.insert(record))
+        : sources.replace(known._id, record)
     ).pipe(Effect.orDie);
   }
   return {

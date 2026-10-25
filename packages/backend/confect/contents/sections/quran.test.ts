@@ -294,7 +294,7 @@ describe("section build of the Quran", () => {
       ])
     );
     const result = await run({
-      position: { phase: "quran", surah: 2 },
+      position: { missing: 0, phase: "quran", surah: 2 },
       releaseId: TEST_RELEASE_ID,
     });
     const passages = (verses / chunk) * 3;
@@ -316,15 +316,15 @@ describe("section build of the Quran", () => {
     embedWithKnowledge();
     const { run, t } = building();
     await t.mutation(activateQuranSource);
-    expect(await run({ position: { phase: "quran", surah: 1 } })).toMatchObject(
-      {
-        next: {
-          position: { cursor: null, phase: "prune" },
-          releaseId: TEST_RELEASE_ID,
-        },
-        stale: false,
-      }
-    );
+    expect(
+      await run({ position: { missing: 0, phase: "quran", surah: 1 } })
+    ).toMatchObject({
+      next: {
+        position: { cursor: null, phase: "prune" },
+        releaseId: TEST_RELEASE_ID,
+      },
+      stale: false,
+    });
   });
 
   it("follows the last surah with the clean up", async () => {
@@ -343,7 +343,7 @@ describe("section build of the Quran", () => {
     );
     expect(
       await run({
-        position: { phase: "quran", surah: 114 },
+        position: { missing: 0, phase: "quran", surah: 114 },
         releaseId: TEST_RELEASE_ID,
       })
     ).toMatchObject({
@@ -370,7 +370,7 @@ describe("section build of the Quran", () => {
     embedWhileAnotherReleaseActivates(t);
     expect(
       await run({
-        position: { phase: "quran", surah: 1 },
+        position: { missing: 0, phase: "quran", surah: 1 },
         releaseId: TEST_RELEASE_ID,
       })
     ).toMatchObject({ next: null, stale: true, written: 0 });

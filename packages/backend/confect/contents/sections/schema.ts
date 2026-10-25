@@ -74,13 +74,26 @@ export const sectionRowValidator = Schema.Struct({
  * the format of a section, so a build skips a document whose version it holds
  * and splits and embeds again one whose version differs.
  */
-export const sourceValidator = Schema.Struct({
+const sourceValidator = Schema.Struct({
   appLocale: localeValidator,
   contentKey: Schema.String,
   section: nakafaSectionValidator,
   version: Schema.String,
 });
 export type Source = typeof sourceValidator.Type;
+
+/**
+ * The record of a document in the index: its source and, when the model left
+ * some of its sections out, how many. A record without a count holds every
+ * section of its version. A record with one makes the next build read the
+ * document again, and it stays until the clean-up finds that no release
+ * publishes the document, so that the sections the index still holds go too.
+ */
+export const sourceRecordValidator = Schema.Struct({
+  ...sourceValidator.fields,
+  missing: Schema.optionalKey(Schema.Finite),
+});
+export type SourceRecord = typeof sourceRecordValidator.Type;
 
 /** A document ready to be indexed: its source and the sections it holds. */
 const documentValidator = Schema.Struct({

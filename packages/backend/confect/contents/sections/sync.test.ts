@@ -268,8 +268,8 @@ describe("section sync", () => {
       expect.not.arrayContaining(["bagian-2"])
     );
     expect(await rows()).toHaveLength(2);
-    // A document that lacks a section has no version, so the next build reads it again.
-    expect(await sources()).toEqual([]);
+    // A document that lacks a section keeps its record with the count, so the next build reads it again.
+    expect(await sources()).toMatchObject([{ missing: 1, version: "first" }]);
   });
 
   it("fails with the document whose sections the model refuses, and the refusal, and stores nothing", async () => {

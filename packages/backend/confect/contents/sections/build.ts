@@ -16,7 +16,7 @@ import { embeddingModelId } from "@repo/backend/confect/gateway/model";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Duration, Effect, Match } from "effect";
 
-const START = { cursor: null, phase: "lessons" } satisfies Position;
+const START = { cursor: null, missing: 0, phase: "lessons" } satisfies Position;
 const NOTHING = {
   embedded: 0,
   kept: 0,
@@ -32,7 +32,8 @@ const STALE = { ...NOTHING, next: null, stale: true };
 /** Reads the next page of lessons that the index lacks or holds at another version, and indexes its sections. */
 const lessonsStep = Effect.fn("contents.sections.lessonsStep")(function* (
   cursor: string | null,
-  releaseId: string | undefined
+  releaseId: string | undefined,
+  missing: number
 ) {
   const { runQuery } = yield* QueryRunner;
   const page = yield* runQuery(refs.internal.contents.sections.rows.lessons, {
@@ -46,17 +47,14 @@ const lessonsStep = Effect.fn("contents.sections.lessonsStep")(function* (
     page.releaseId,
     yield* Effect.forEach(page.lessons, lessonDocument)
   );
+  const left = missing + counts.missing;
+  const position: Position =
+    page.next === null
+      ? { missing: left, phase: "quran", surah: 1 }
+      : { cursor: page.next, missing: left, phase: "lessons" };
   return {
     ...counts,
-    next: counts.stale
-      ? null
-      : {
-          position:
-            page.next === null
-              ? ({ phase: "quran", surah: 1 } satisfies Position)
-              : ({ cursor: page.next, phase: "lessons" } satisfies Position),
-          releaseId: page.releaseId,
-        },
+    next: counts.stale ? null : { position, releaseId: page.releaseId },
     skipped: page.unchanged,
   };
 });
@@ -64,7 +62,8 @@ const lessonsStep = Effect.fn("contents.sections.lessonsStep")(function* (
 /** Reads the next surah that the index lacks or holds at another version, and indexes its passages. */
 const quranStep = Effect.fn("contents.sections.quranStep")(function* (
   surah: number,
-  releaseId: string | undefined
+  releaseId: string | undefined,
+  missing: number
 ) {
   const { runQuery } = yield* QueryRunner;
   const page = yield* runQuery(refs.internal.contents.sections.rows.surah, {
@@ -78,7 +77,7 @@ const quranStep = Effect.fn("contents.sections.quranStep")(function* (
     return {
       ...NOTHING,
       next: {
-        position: { cursor: null, phase: "prune" } satisfies Position,
+        position: { cursor: null, missing, phase: "prune" } satisfies Position,
         releaseId: page.releaseId,
       },
       skipped: page.unchanged,
@@ -86,17 +85,14 @@ const quranStep = Effect.fn("contents.sections.quranStep")(function* (
     };
   }
   const counts = yield* syncDocuments(page.releaseId, page.documents);
+  const left = missing + counts.missing;
+  const position: Position =
+    page.surah < QURAN_SURAH_COUNT
+      ? { missing: left, phase: "quran", surah: page.surah + 1 }
+      : { cursor: null, missing: left, phase: "prune" };
   return {
     ...counts,
-    next: counts.stale
-      ? null
-      : {
-          position:
-            page.surah < QURAN_SURAH_COUNT
-              ? ({ phase: "quran", surah: page.surah + 1 } satisfies Position)
-              : ({ cursor: null, phase: "prune" } satisfies Position),
-          releaseId: page.releaseId,
-        },
+    next: counts.stale ? null : { position, releaseId: page.releaseId },
     skipped: page.unchanged,
   };
 });
@@ -128,7 +124,11 @@ const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
     return {
       ...NOTHING,
       next: {
-        position: { cursor: pruned.cursor, phase: "prune" } satisfies Position,
+        position: {
+          cursor: pruned.cursor,
+          missing,
+          phase: "prune",
+        } satisfies Position,
         releaseId,
       },
       removed: pruned.deleted,
@@ -165,31 +165,24 @@ const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
 export const runStep = Effect.fn("contents.sections.run")(
   function* (input: typeof stepInputValidator.Type) {
     const position = input.position ?? START;
-    const missing = input.missing ?? 0;
     const scheduler = yield* Scheduler;
     const outcome = yield* Match.value(position).pipe(
-      Match.when({ phase: "lessons" }, ({ cursor }) =>
-        lessonsStep(cursor, input.releaseId)
+      Match.when({ phase: "lessons" }, ({ cursor, missing }) =>
+        lessonsStep(cursor, input.releaseId, missing)
       ),
-      Match.when({ phase: "quran" }, ({ surah }) =>
-        quranStep(surah, input.releaseId)
+      Match.when({ phase: "quran" }, ({ missing, surah }) =>
+        quranStep(surah, input.releaseId, missing)
       ),
-      Match.when({ phase: "prune" }, ({ cursor }) =>
+      Match.when({ phase: "prune" }, ({ cursor, missing }) =>
         pruneStep(cursor, input.releaseId, missing)
       ),
       Match.exhaustive
     );
-    // The count runs on from step to step, so that the record of the finished
-    // build says how many sections the whole build left out.
-    const next =
-      outcome.next === null
-        ? null
-        : { ...outcome.next, missing: missing + outcome.missing };
-    if (next !== null) {
+    if (outcome.next !== null) {
       yield* scheduler.runAfter(
         Duration.millis(0),
         refs.internal.contents.sections.build.run,
-        next
+        outcome.next
       );
     }
     yield* Effect.logInfo("Section build step done.").pipe(
@@ -203,7 +196,7 @@ export const runStep = Effect.fn("contents.sections.run")(
         written: outcome.written,
       })
     );
-    return { ...outcome, next, position };
+    return { ...outcome, position };
   },
   (step, input) =>
     Effect.tapError(step, (error) =>

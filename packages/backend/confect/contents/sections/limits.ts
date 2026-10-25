@@ -55,8 +55,7 @@ export const SECTIONS_PER_DOCUMENT = 128;
 /**
  * Rows one clean-up mutation deletes. It is the most rows a document may hold,
  * so that a document always fits an empty batch and goes whole: its rows and
- * its record are deleted in one transaction, and the record never names a
- * version that its sections lack.
+ * its record are deleted in one transaction.
  */
 export const PRUNE_BATCH_SIZE = SECTIONS_PER_DOCUMENT;
 

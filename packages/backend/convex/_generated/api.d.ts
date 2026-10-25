@@ -12340,11 +12340,10 @@ export declare const internal: {
           "action",
           "internal",
           {
-            missing?: number;
             position?:
-              | { cursor: string | null; phase: "lessons" }
-              | { phase: "quran"; surah: number }
-              | { cursor: string | null; phase: "prune" };
+              | { cursor: string | null; missing: number; phase: "lessons" }
+              | { missing: number; phase: "quran"; surah: number }
+              | { cursor: string | null; missing: number; phase: "prune" };
             releaseId?: string;
           },
           {
@@ -12352,17 +12351,16 @@ export declare const internal: {
             kept: number;
             missing: number;
             next: {
-              missing: number;
               position:
-                | { cursor: string | null; phase: "lessons" }
-                | { phase: "quran"; surah: number }
-                | { cursor: string | null; phase: "prune" };
+                | { cursor: string | null; missing: number; phase: "lessons" }
+                | { missing: number; phase: "quran"; surah: number }
+                | { cursor: string | null; missing: number; phase: "prune" };
               releaseId: string;
             } | null;
             position:
-              | { cursor: string | null; phase: "lessons" }
-              | { phase: "quran"; surah: number }
-              | { cursor: string | null; phase: "prune" };
+              | { cursor: string | null; missing: number; phase: "lessons" }
+              | { missing: number; phase: "quran"; surah: number }
+              | { cursor: string | null; missing: number; phase: "prune" };
             removed: number;
             skipped: number;
             stale: boolean;

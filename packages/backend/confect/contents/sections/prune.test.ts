@@ -6,7 +6,15 @@ import {
   PRUNE_SOURCES_PER_PAGE,
 } from "@repo/backend/confect/contents/sections/limits";
 import { pruneSections } from "@repo/backend/confect/contents/sections/prune";
-import type { Source } from "@repo/backend/confect/contents/sections/schema";
+import type {
+  SectionDraft,
+  Source,
+} from "@repo/backend/confect/contents/sections/schema";
+import { storeDocument } from "@repo/backend/confect/contents/sections/store";
+import {
+  embeddingDimensions,
+  embeddingModelId,
+} from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
@@ -49,6 +57,35 @@ const fatiha: Source = {
   section: "quran",
   version: "left",
 };
+
+/**
+ * Stores a document the way a build stores one whose model leaves a section
+ * out: the first section has its vector, and the second has none.
+ */
+function storingLeavingOut(source: Source) {
+  const section = (ordinal: number): SectionDraft => ({
+    anchor: `bagian-${ordinal}`,
+    appLocale: source.appLocale,
+    contentKey: source.contentKey,
+    count: 2,
+    excerpt: "Bagian.",
+    hash: `sha256:${ordinal}`,
+    headingPath: [],
+    ordinal,
+    publicPath: "materi/lama",
+    section: source.section,
+    text: "Bagian",
+  });
+  return storeDocument({
+    model: embeddingModelId,
+    releaseId: ACTIVE,
+    sections: [
+      { ...section(0), embedding: Arr.makeBy(embeddingDimensions, () => 0) },
+      section(1),
+    ],
+    source,
+  });
+}
 
 /** What a test does to the clean-up of one deployment. */
 function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
@@ -145,6 +182,24 @@ describe("section prune", () => {
     expect(await rows()).toEqual([]);
   });
 
+  it("deletes a document with a section left out, which no release publishes, with the section it holds", async () => {
+    const { prune, rows, sources, t } = await setup();
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        storingLeavingOut(removed).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
+    expect(await sources()).toMatchObject([{ ...removed, missing: 1 }]);
+    expect(await rows()).toHaveLength(1);
+    expect(await prune(ACTIVE)).toMatchObject({ deleted: 1, done: true });
+    expect(await rows()).toEqual([]);
+    expect(await sources()).toEqual([]);
+  });
+
   it("deletes a document that fills the whole batch in one call, with its record", async () => {
     const { prune, rows, sources, t } = await setup();
     await t.mutation((ctx) =>
@@ -170,9 +225,8 @@ describe("section prune", () => {
       done: false,
       stale: false,
     });
-    // The second document has all its rows, so its record does not name a
-    // version that some of its sections lack, and a build would not trust it
-    // wrongly if the release published it again.
+    // The second document has all its rows, so it goes whole with its record
+    // in the next call.
     expect(Arr.map(await rows(), ({ contentKey }) => contentKey)).toEqual(
       Arr.makeBy(OVER_HALF, () => removedToo.contentKey)
     );
