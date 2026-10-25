@@ -200,10 +200,12 @@ describe("application process ownership", () => {
                 ...localConvexEnvironment,
                 AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
                 AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
+                CONVEX_LOCAL_BACKEND_STARTUP_TIMEOUT_SECS: "120",
                 DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
                 FUNRUN_ISOLATE_ACTIVE_THREADS: String(
                   navigator.hardwareConcurrency
                 ),
+                ISOLATE_ANALYZE_USER_TIMEOUT_SECONDS: "30",
                 TMPDIR: expect.stringContaining(
                   `${path.dirname(runtime.directory)}/convex-`
                 ),
@@ -380,7 +382,10 @@ describe("application process ownership", () => {
         Effect.forkChild
       );
       expect(yield* Deferred.await(readinessLog)).toBe("");
-      yield* TestClock.adjust("4 minutes");
+      // A push that outlasts four minutes on a busy machine still gets its start.
+      yield* TestClock.adjust("9 minutes");
+      expect(fiber.pollUnsafe()).toBeUndefined();
+      yield* TestClock.adjust("1 minute");
       expect(yield* Fiber.join(fiber)).toMatchObject({
         _tag: "AcceptanceRuntimeError",
         message: expect.stringContaining("did not become ready"),
