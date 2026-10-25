@@ -8,6 +8,7 @@ import {
   Option,
   Schema,
 } from "effect";
+import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import {
@@ -40,6 +41,27 @@ const answer = (body: unknown, cookies: readonly string[] = [], status = 200) =>
       ...Arr.map(cookies, (cookie): [string, string] => ["set-cookie", cookie]),
     ],
     status,
+  });
+
+/** A Convex token as Better Auth's Convex plugin signs it, expiring at `exp` seconds of the test clock. */
+const tokenOf = (exp: number) =>
+  Arr.join(
+    [
+      Base64Url.encode(encodeJson({ alg: "RS256", typ: "JWT" })),
+      Base64Url.encode(
+        encodeJson({ exp, name: "Ada", sessionId: "session-1", sub: "user-1" })
+      ),
+      "signature",
+    ],
+    "."
+  );
+
+/** A signed-in request that also sends its Convex token cookie. */
+const requestWithToken = (token: string) =>
+  new Request("https://nakafa.com/id/user/settings", {
+    headers: {
+      cookie: `better-auth.session_token=abc; __Secure-better-auth.convex_jwt=${token}`,
+    },
   });
 
 const ada = {
@@ -77,12 +99,47 @@ describe("request session", () => {
   );
 
   it.effect(
+    "reads the session from the request's own Convex token while it holds, with no network call",
+    () =>
+      Effect.gen(function* () {
+        const token = tokenOf(600);
+        const session = yield* read(requestWithToken(token));
+        expect(session.client).toStrictEqual({
+          _tag: "SignedIn",
+          name: "Ada",
+          sessionId: "session-1",
+          userId: "user-1",
+        });
+        expect(session.convexToken).toStrictEqual(Option.some(token));
+        expect(session.setCookies).toStrictEqual([]);
+        expect(fetcher).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect.each([
+    ["expires within the margin", tokenOf(30)],
+    ["is not a token", "not-a-token"],
+    ["names no session", Arr.join(["e30", Base64Url.encode("{}"), "s"], ".")],
+  ])(
+    "reads the session from the Convex site when the request's token %s",
+    ([, token]) =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(
+          answer(ada, ["__Secure-better-auth.convex_jwt=token-ada; Path=/"])
+        );
+        const session = yield* read(requestWithToken(token));
+        expect(session.convexToken).toStrictEqual(Option.some("token-ada"));
+        expect(fetcher).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
     "reads the signed-in user and the Convex token from the session answer",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(
           answer(ada, [
-            "convex_jwt=token-ada; Path=/; HttpOnly",
+            "__Secure-better-auth.convex_jwt=token-ada; Path=/; HttpOnly",
             "better-auth.session_token=next; Path=/",
           ])
         );
@@ -95,7 +152,7 @@ describe("request session", () => {
         });
         expect(session.convexToken).toStrictEqual(Option.some("token-ada"));
         expect(session.setCookies).toStrictEqual([
-          "convex_jwt=token-ada; Path=/; HttpOnly",
+          "__Secure-better-auth.convex_jwt=token-ada; Path=/; HttpOnly",
           "better-auth.session_token=next; Path=/",
         ]);
       })
@@ -108,14 +165,14 @@ describe("request session", () => {
         fetcher.mockResolvedValueOnce(
           answer(ada, [
             "better-auth.session_token=; Max-Age=0; Path=/",
-            "convex_jwt=token-ada; Path=/; HttpOnly",
+            "__Secure-better-auth.convex_jwt=token-ada; Path=/; HttpOnly",
             "better-auth.session_token=fresh; Path=/",
           ])
         );
         const session = yield* read(signedInRequest());
         expect(session.setCookies).toStrictEqual([
           "better-auth.session_token=; Max-Age=0; Path=/",
-          "convex_jwt=token-ada; Path=/; HttpOnly",
+          "__Secure-better-auth.convex_jwt=token-ada; Path=/; HttpOnly",
           "better-auth.session_token=fresh; Path=/",
         ]);
       })
@@ -126,7 +183,7 @@ describe("request session", () => {
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(
-          answer(ada, ["convex_jwt=token-ada; Path=/"])
+          answer(ada, ["__Secure-better-auth.convex_jwt=token-ada; Path=/"])
         );
         yield* read(signedInRequest("harapan.nakafa.com"));
         const headers = new Headers(fetcher.mock.calls[0]?.[1]?.headers);
@@ -140,7 +197,9 @@ describe("request session", () => {
   it.effect("reads the token route when the Convex cookie is cleared", () =>
     Effect.gen(function* () {
       fetcher
-        .mockResolvedValueOnce(answer(ada, ["convex_jwt=; Max-Age=0; Path=/"]))
+        .mockResolvedValueOnce(
+          answer(ada, ["__Secure-better-auth.convex_jwt=; Max-Age=0; Path=/"])
+        )
         .mockResolvedValueOnce(answer({ token: "token-route" }));
       const session = yield* read(signedInRequest());
       expect(session.convexToken).toStrictEqual(Option.some("token-route"));
@@ -210,7 +269,9 @@ describe("request session", () => {
     Effect.gen(function* () {
       fetcher
         .mockResolvedValueOnce(answer({}, [], 503))
-        .mockResolvedValueOnce(answer(ada, ["convex_jwt=token-ada; Path=/"]));
+        .mockResolvedValueOnce(
+          answer(ada, ["__Secure-better-auth.convex_jwt=token-ada; Path=/"])
+        );
       // The retry waits 500 milliseconds.
       const session = yield* readWithin("500 millis");
       expect(session.client._tag).toBe("SignedIn");
