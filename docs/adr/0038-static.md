@@ -75,10 +75,15 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   `public/speculation-rules.json` names the content families to prerender on
   intent. Its `Speculation-Rules` header and `application/speculationrules+json`
   content type are set in `_headers`, so the Content-Security-Policy keeps its form.
-- **Cheap not-found.** A request whose first segment is neither a locale nor a
-  Worker route answers the static `404.html` from assets before any redirect or
-  render. A locale path that no Worker route template renders answers the same
-  page before the router runs (`apps/www/src/lib/routing/rendered.ts`). The
+- **Cheap not-found.** The Worker reads a path after the router's input rewrite,
+  so a School host's page is its School tree path. The address decisions run
+  first: the www host, the slash and spelling redirects, the School gates, the
+  removed, migrated and moved addresses. A bare page address, whose first segment
+  is neither a locale, nor shaped like one, nor a Worker route, and whose last
+  segment names no file, then moves to the negotiated locale with a 307, English
+  when the visitor names no served language, as the Next.js locale middleware did.
+  Every other path that no Worker route renders answers the static `404.html` from
+  assets before the router runs (`apps/www/src/lib/routing/rendered.ts`). The
   templates are the generated route tree minus the prerendered ones, so an unknown
   address and a prerendered page without its asset cost no render. Assets answer 404
   with `notFoundHandling: "404-page"`.
@@ -104,8 +109,8 @@ verified on the probe, which has no School or www host and no zone rule:
   static assets answer every host. A refused or unknown School host, and www, serve
   the public pages, and School hosts lose the `noindex` of the tenant gate, until
   Phase B's shell and the zone rule land. The base answered 404, 307 and noindex.
-- **Trailing-slash status** (above) and the **bare profile** (`/@name`) answer the
-  Worker's 307, which Phase A keeps.
+- **Trailing-slash status** (above) and every bare page address, the bare profile
+  (`/@name`) included, answer the Worker's 307, which Phase A keeps.
 - **Root loader.** `apps/www/src/routes/__root.tsx` still runs `readPreviewRefreshFn`
   for every Worker render (critic item 10).
 - **404 page.** `apps/www/public/404.html` is a bespoke English page with no stylesheet.
