@@ -18,6 +18,8 @@ from _cloudflare.allow_entropy import (  # pyright: ignore[reportMissingModuleSo
 )
 from workers import DurableObject, Response, WorkerEntrypoint
 
+from cas.backends import refuse_absent_backends
+
 # SymPy seeds three unseeded random generators when it is imported: two in
 # sympy.core.random and one in sympy.core.symbol. tests/entropy_test.py counts them.
 # Each generator reads 2,496 bytes, which Pyodide 0.28.3 requests from getentropy in
@@ -28,6 +30,10 @@ from workers import DurableObject, Response, WorkerEntrypoint
 SYMPY_IMPORT_ENTROPY_CALLS = 30
 
 JSON_HEADERS = {"content-type": "application/json; charset=utf-8"}
+
+# SymPy's lazy probes for optional packages must fail as ImportError inside a restored
+# snapshot, so the finder that refuses them goes first, before SymPy is imported.
+refuse_absent_backends()
 
 with allow_bad_entropy_calls(SYMPY_IMPORT_ENTROPY_CALLS):
     from cas.compute import calculate

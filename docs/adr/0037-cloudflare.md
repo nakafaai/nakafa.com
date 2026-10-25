@@ -330,30 +330,27 @@ CPython answers 200 with status `inconclusive` in 0.05 s. On Workers the engine
 raised one exception (outcome `exception`, one invocation) at 22:14:28.713 UTC, and
 the front answered 503 "Math calculation could not complete." in 0.66 s. The front
 did not retry, because the failure was not marked retryable, so the round 2 retry
-had hidden this failure. The exception text was not recorded, and its cause is still
-open. On 25 October 2026 the call was replayed on the owner's Mac under Node.js with
-Pyodide 0.28.3 and the Worker's packages: SymPy 1.14.0 from PyPI, pydantic 2.10.6 with
-pydantic-core 2.27.2 from the Pyodide lock, and the uv.lock versions of the other two.
-The replay does not run inside workerd, so memory limits, request streams, and the
-object lifecycle are not covered. Body 92 answered 200 `inconclusive` in every call,
-and the aligned runs matched CPython's primary expression and reason text. No call
-raised: 16,802 Pyodide calls, which are fifteen five-round corpus replays, each in one
-interpreter, and two single calls; and 13,440 CPython calls, which are twelve
-five-round replays routed at random to sixteen emulated objects that share one start
-state. Varying the hash seed (40 values), the assumption RNG seed (3,300 fresh and 300
-warm trials, the only generator the call draws from), and the recursion limit (60 for
-one call, 90 across the seed search) changed nothing. So the failure does not follow
-from this body under any history that these replays reached. Two more checks on
-CPython found no sign of a Workers constraint: after the SymPy import, the call drew
-no entropy, so a draw during a request cannot explain the failure (entry.py records
-the entropy limit only for start-up), and one call peaked at 0.43 MB of Python heap,
-far below the Worker's 128 MB memory limit. The cause is either a Workers runtime
-event or a state the replays do not reach. A later probe
-should record the exception type and message at the engine boundary before it names a
-cause. Probe 3
-recorded one engine exception in corpus round one (567 ms of CPU) and
-absorbed it with its retry. That is consistent with the same failure, but probe 3
-did not record which body raised it.
+had hidden this failure.
+
+The cause, read on 25 October 2026 from Workers Logs (request
+`1eddfde7b9fc87c524c35462c37bc1a5`): the solve asks SymPy whether `x^x` is nonzero,
+SymPy's `satisfiable()` probes the optional package `pycosat` through
+`import_module`, and the probe reaches the zip importer of the standard library
+archive `/lib/python313.zip`. In a Durable Object restored from the deploy-time
+memory snapshot that archive can no longer be read, so the probe fails with
+`OSError: [Errno 8] Bad file descriptor` instead of `ImportError`, and SymPy cannot
+fall back to its own algorithm. Every local replay missed it for that reason: 16,802
+Pyodide calls under Node.js and 13,440 CPython calls answered `inconclusive`, because
+there the probe fails with `ImportError` as SymPy expects. The same logs show
+`Exception ignored in ZipFile.__del__` with the same `OSError` on many requests; Python
+ignores that one, so it fails no request.
+
+The fix refuses every optional package that the vendored SymPy probes and the engine
+does not vendor, with `ModuleNotFoundError`, from a finder at the front of
+`sys.meta_path` that `entry.py` installs before SymPy is imported, so the finder is in
+the snapshot (`apps/cas/cas/backends.py`). `tests/backends_test.py` derives the list
+from the SymPy source, so an upgrade that adds a probe fails there, and solves this
+body with the finder installed.
 
 ## Sources
 
