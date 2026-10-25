@@ -221,7 +221,15 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
 
 function ArticlePage() {
   const article = Route.useLoaderData();
-  const { filePath, locale, metadata, headings, labels } = article;
+  const {
+    description,
+    filePath,
+    locale,
+    metadata,
+    headings,
+    labels,
+    publicPath,
+  } = article;
   return (
     <LayoutMaterial>
       <ContentViewTracker
@@ -295,8 +303,8 @@ function ArticlePage() {
             }
             header={
               <SidebarRightHeader
-                description={metadata.description}
-                href={filePath}
+                description={description}
+                publicPath={publicPath}
                 title={metadata.title}
               />
             }

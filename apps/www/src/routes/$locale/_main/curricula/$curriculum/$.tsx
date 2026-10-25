@@ -154,7 +154,7 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
               })
             : null,
           title: seo.title,
-          toc: readRuntimeCurriculumToc(model),
+          toc: readRuntimeCurriculumToc(model, seo.description),
         };
       })
     )

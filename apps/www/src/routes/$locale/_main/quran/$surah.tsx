@@ -163,7 +163,7 @@ function QuranSurahPage() {
             <SidebarRightHeader
               description={page.meaning.text}
               descriptionLanguage={page.meaning.appLocale}
-              href={`/quran/${page.surah}`}
+              publicPath={`quran/${page.surah}`}
               title={page.title}
             />
           }
