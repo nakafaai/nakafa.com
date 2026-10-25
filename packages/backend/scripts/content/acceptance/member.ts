@@ -1,4 +1,4 @@
-import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
+import { openLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
@@ -21,10 +21,12 @@ export const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
 /**
  * Signs in the account that holds an address which a school's invite waits for.
- * The new account takes the address, so the invite is claimed for its app user,
- * and the account is then a member of the school. A claim is a scheduled
- * function, so this command runs the claim itself, and then writes the session
- * cookie to `output`. A browser test must not start before the claim is done.
+ * The first sign-in creates the account with the address, so the invite is
+ * claimed for its app user, and the account is then a member of the school. A
+ * later sign-in opens a new session of the same account, so a test may sign the
+ * same Owner into several browser contexts. A claim is a scheduled function, so
+ * this command runs the claim itself, and then writes the session cookie to
+ * `output`. A browser test must not start before the claim is done.
  */
 export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
   function* (runtime: LocalRuntime, address: string, output: string) {
@@ -33,7 +35,7 @@ export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
       args: readonly string[],
       sensitiveValues?: readonly string[]
     ) => runLocalConvex(runtime, operation, args, sensitiveValues);
-    const account = yield* createLearnerAccount(run, SESSION_LIFETIME, address);
+    const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
     const users = yield* run("app users", [
       "data",
       "users",
