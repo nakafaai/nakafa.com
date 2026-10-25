@@ -58,8 +58,8 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
   {
     action: "actions/upload-artifact",
-    approvedSha: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
-    expectedTag: "v7.0.1",
+    approvedSha: "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+    expectedTag: "v7.0.2",
     expectedUsages: 2,
     reason: "Separated CLI artifacts use the reviewed release.",
   },
