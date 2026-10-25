@@ -1,8 +1,10 @@
-/**
- * The build-time flag of the static release, which `vite.config.ts` defines. It is
- * true only in the build that deploys the Worker with its prerendered assets.
- */
-declare const __NAKAFA_STATIC_RELEASE__: boolean;
+import { env } from "cloudflare:workers";
 
-/** Whether this Worker serves the static release, so a locale path that no route renders names no page. */
-export const HAS_STATIC_RELEASE: boolean = __NAKAFA_STATIC_RELEASE__;
+/**
+ * Reports whether this Worker serves the static release. The deployed Worker binds
+ * the release's assets, and every prerendered page is one of them. A prerender and
+ * a development server bind no assets, so they render every route.
+ */
+export function hasStaticRelease(): boolean {
+  return env.ASSETS !== undefined;
+}

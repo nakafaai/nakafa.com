@@ -20,6 +20,7 @@ const routes = vi.hoisted(() => ({
   "/$locale/chat/$id": { fullPath: "/$locale/chat/$id" },
   "/$locale/quran/$surah": { fullPath: "/$locale/quran/$surah" },
   "/$locale/search": { fullPath: "/$locale/search" },
+  "/$locale/user/$username": { fullPath: "/$locale/user/$username" },
   "/$locale/try-out/$country/$exam": {
     fullPath: "/$locale/try-out/$country/$exam",
   },
@@ -33,10 +34,12 @@ const routes = vi.hoisted(() => ({
 
 const release = vi.hoisted(() => ({ hasStaticRelease: true }));
 
-vi.mock("@/lib/routing/release", () => ({
-  /** Reads the flag of the test, so one test can run without the static release. */
-  get HAS_STATIC_RELEASE() {
-    return release.hasStaticRelease;
+vi.mock("cloudflare:workers", () => ({
+  /** The assets binding is bound in the test, and absent when the test runs without a static release. */
+  env: {
+    get ASSETS() {
+      return release.hasStaticRelease ? {} : undefined;
+    },
   },
 }));
 
@@ -73,15 +76,33 @@ describe("rendered route templates", () => {
   it("renders every route when the build has no static release", () => {
     release.hasStaticRelease = false;
 
-    expect(isRenderedRoutePath("/en/quran/2")).toBe(true);
-    expect(isRenderedRoutePath("/en/wp-login.php")).toBe(true);
+    expect(isRenderedRoutePath(new URL("https://nakafa.com/en/quran/2"))).toBe(
+      true
+    );
+    expect(
+      isRenderedRoutePath(new URL("https://nakafa.com/en/wp-login.php"))
+    ).toBe(true);
     release.hasStaticRelease = true;
   });
 
+  it("classifies a profile address by the user route that the router rewrites it to", () => {
+    expect(isRenderedRoutePath(new URL("https://nakafa.com/en/@nabil"))).toBe(
+      true
+    );
+  });
+
   it("classifies a locale address by its rendered route", () => {
-    expect(isRenderedRoutePath("/en/search")).toBe(true);
-    expect(isRenderedRoutePath("/en/quran/2")).toBe(false);
-    expect(isRenderedRoutePath("/en/wp-login.php")).toBe(false);
-    expect(isRenderedRoutePath("/school/harapan")).toBe(true);
+    expect(isRenderedRoutePath(new URL("https://nakafa.com/en/search"))).toBe(
+      true
+    );
+    expect(isRenderedRoutePath(new URL("https://nakafa.com/en/quran/2"))).toBe(
+      false
+    );
+    expect(
+      isRenderedRoutePath(new URL("https://nakafa.com/en/wp-login.php"))
+    ).toBe(false);
+    expect(
+      isRenderedRoutePath(new URL("https://nakafa.com/school/harapan"))
+    ).toBe(true);
   });
 });

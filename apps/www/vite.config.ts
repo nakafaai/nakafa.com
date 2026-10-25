@@ -277,18 +277,6 @@ const NODE_ONLY_CONTRACT_ALIASES = NODE_ONLY_CONTRACT_PATHS.map((path) => ({
  */
 const STATIC_RUNNER = process.env.NAKAFA_STATIC_RUNNER === "1";
 
-/**
- * Whether this build deploys the static release, which the Alchemy build writes:
- * every prerendered page is an asset, so a request that reaches the Worker for one
- * names no page. The prerender preview (TSS_PRERENDERING) and the static runner
- * have no release, and a development or preview server has none either, so their
- * Worker renders every route. `src/lib/routing/release.ts` reads the flag.
- */
-const STATIC_RELEASE =
-  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1" &&
-  process.env.TSS_PRERENDERING !== "true" &&
-  !STATIC_RUNNER;
-
 const STATIC_RUNNER_ALIASES = STATIC_RUNNER
   ? [
       {
@@ -384,9 +372,6 @@ function listPrerenderedPages(
 export default defineConfig(async ({ command, isPreview }) => {
   const prerenderedPages = await listPrerenderedPages(command);
   return {
-    define: {
-      __NAKAFA_STATIC_RELEASE__: JSON.stringify(STATIC_RELEASE),
-    },
     build: {
       // The font-src policy allows only this origin, so a font file stays a file
       // even when it is smaller than the inline limit. Other assets keep the limit.

@@ -21,19 +21,12 @@ const source = vi.hoisted(() => ({ read: vi.fn() }));
 
 const release = vi.hoisted(() => ({ hasStaticRelease: true }));
 
-vi.mock("@/lib/routing/release", () => ({
-  /** Reads the flag of the test, so one test can run without the static release. */
-  get HAS_STATIC_RELEASE() {
-    return release.hasStaticRelease;
-  },
-}));
-
 vi.mock("@/lib/routing/rendered", async () => {
   const { isRenderedPath } = await import("@/lib/routing/template");
   return {
     /** Names the Worker's route templates of a stand-in tree, without loading the router. */
-    isRenderedRoutePath: (pathname: string) =>
-      isRenderedPath(pathname, [
+    isRenderedRoutePath: (url: URL) =>
+      isRenderedPath(url.pathname, [
         "/$locale/chat",
         "/$locale/chat/$id",
         "/$locale/search",
@@ -76,8 +69,12 @@ const assets = vi.hoisted(() => ({
 }));
 
 vi.mock("cloudflare:workers", () => ({
-  /** The platform's assets binding, which answers the static not-found page. */
-  env: { ASSETS: assets },
+  /** The platform's assets binding, which the deployed Worker binds and a prerender does not. */
+  env: {
+    get ASSETS() {
+      return release.hasStaticRelease ? assets : undefined;
+    },
+  },
 }));
 
 vi.mock("@tanstack/react-start/server", () => ({

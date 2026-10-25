@@ -19,7 +19,7 @@ import {
   readSlashRedirectResponse,
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
-import { HAS_STATIC_RELEASE } from "@/lib/routing/release";
+import { hasStaticRelease } from "@/lib/routing/release";
 import { isRenderedRoutePath } from "@/lib/routing/rendered";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import { isUnmatchedPath } from "@/lib/routing/unmatched";
@@ -85,7 +85,7 @@ const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
   locale: Locale,
   route: RouterHandler
 ) {
-  if (!isRenderedRoutePath(new URL(request.url).pathname)) {
+  if (!isRenderedRoutePath(new URL(request.url))) {
     return yield* answerUnmatchedRequest(request);
   }
   return yield* answerNotFound(request, locale, route);
@@ -115,7 +115,7 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
   if (Option.isSome(redirect)) {
     return redirect.value;
   }
-  if (!isRenderedRoutePath(url.pathname)) {
+  if (!isRenderedRoutePath(url)) {
     return yield* answerUnmatchedRequest(request);
   }
   return yield* answerRouted(request, route);
@@ -140,7 +140,7 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   request: Request,
   route: RouterHandler
 ) {
-  if (HAS_STATIC_RELEASE && isUnmatchedPath(new URL(request.url).pathname)) {
+  if (hasStaticRelease() && isUnmatchedPath(new URL(request.url).pathname)) {
     return yield* answerUnmatchedRequest(request);
   }
 

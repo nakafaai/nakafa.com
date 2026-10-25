@@ -1,6 +1,7 @@
 import { Array as Arr, Record as Rec } from "effect";
 import { PRERENDERED_ROUTE_TEMPLATES } from "@/lib/routing/prerendered";
-import { HAS_STATIC_RELEASE } from "@/lib/routing/release";
+import { hasStaticRelease } from "@/lib/routing/release";
+import { routeRewrite } from "@/lib/routing/rewrite";
 import { isRenderedPath, readPathSegments } from "@/lib/routing/template";
 import { getRouter } from "@/router";
 
@@ -35,12 +36,15 @@ export const RENDERED_ROUTE_TEMPLATES = Arr.filter(
 );
 
 /**
- * Reports whether the Worker's router renders a request path. Without the static
- * release (a development server, the prerender, a preview) every route renders,
- * because no prerendered page is an asset.
+ * Reports whether the Worker's router renders a request address. The router matches
+ * the path that its input rewrite gives, so a profile address (`/{locale}/@name`)
+ * matches the user route. Without the static release (a development server, the
+ * prerender) every route renders, because no prerendered page is an asset.
  */
-export function isRenderedRoutePath(pathname: string): boolean {
-  return (
-    !HAS_STATIC_RELEASE || isRenderedPath(pathname, RENDERED_ROUTE_TEMPLATES)
-  );
+export function isRenderedRoutePath(url: URL): boolean {
+  if (!hasStaticRelease()) {
+    return true;
+  }
+  const { pathname } = routeRewrite.input({ url });
+  return isRenderedPath(pathname, RENDERED_ROUTE_TEMPLATES);
 }
