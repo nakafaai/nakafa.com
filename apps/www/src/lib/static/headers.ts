@@ -1,3 +1,5 @@
+import { LOCALES } from "@repo/internationalization/src/locale";
+import { Array as Arr } from "effect";
 // The Vite config imports this module, and only package imports resolve there.
 import { LLMS_CACHE_CONTROL } from "#www/src/lib/llms/cache";
 import type { HeaderRule, WwwHeader } from "#www/src/lib/security/headers";
@@ -46,13 +48,25 @@ const SPECULATION_RULES_HEADERS: readonly WwwHeader[] = [
  * The Worker answers none of these addresses, so the static assets carry the
  * content type and the cache policy that each answer had.
  */
+/**
+ * The social images of each locale. The rule names each locale's path, because a
+ * splat before the locale segment matched no image of the emitted `_headers` file.
+ */
+const SOCIAL_IMAGE_RULES: readonly HeaderRule[] = Arr.map(
+  LOCALES,
+  (locale) => ({
+    headers: SOCIAL_IMAGE_HEADERS,
+    path: `/${locale}/og/*`,
+  })
+);
+
 export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/sitemap.xml", headers: SITEMAP_HEADERS },
   { path: "/sitemap/*", headers: SITEMAP_HEADERS },
   { path: "/rss.xml", headers: RSS_HEADERS },
   { path: "/llms.txt", headers: LLMS_HEADERS },
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
-  { path: "/*/og/*", headers: SOCIAL_IMAGE_HEADERS },
+  ...SOCIAL_IMAGE_RULES,
   { path: SPECULATION_RULES_PATH, headers: SPECULATION_RULES_HEADERS },
   // Every document names the rules, which the browser reads from the header
   // instead of an inline script, so the Content-Security-Policy keeps its form.

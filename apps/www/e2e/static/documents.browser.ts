@@ -32,16 +32,14 @@ test("moving between two articles loads documents and sends no server function r
     .first();
   await secondArticle.waitFor();
   const secondHref = await secondArticle.getAttribute("href");
-  const navigations = await page.evaluate(
-    () => performance.getEntriesByType("navigation").length
-  );
 
+  // A document load starts a new document, which drops this mark. A client
+  // navigation keeps the document, and so keeps the mark.
+  await page.evaluate(() => Reflect.set(document, "nakafaDocumentMark", true));
   await secondArticle.click();
   await expect(page).toHaveURL(new RegExp(`${secondHref ?? ""}$`));
-  const navigationsAfter = await page.evaluate(
-    () => performance.getEntriesByType("navigation").length
-  );
-
-  expect(navigationsAfter).toBeGreaterThan(navigations);
+  expect(
+    await page.evaluate(() => Reflect.get(document, "nakafaDocumentMark"))
+  ).toBeUndefined();
   expect(MutableList.toArray(serverFunctionRequests)).toEqual([]);
 });
