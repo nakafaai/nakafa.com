@@ -1,7 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Option, Schema } from "effect";
 import { type RefObject, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import type {
   Question,
   QuestionId,
@@ -138,9 +137,11 @@ const beginDrag = (
   };
   const onRelease = () => {
     detach();
+    // The pages return to their places in the same task that starts the move, so React commits the new
+    // order before the browser paints, and no page shows its old place in between.
     clearDrag(pages);
     if (target !== from) {
-      flushSync(() => moveQuestion(questionId, target));
+      moveQuestion(questionId, target);
     }
   };
   const onKey = (key: KeyboardEvent) => {
