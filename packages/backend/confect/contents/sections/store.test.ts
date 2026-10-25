@@ -249,6 +249,48 @@ describe("section store", () => {
     ]);
   });
 
+  it("records the count of the sections a document lacks in place of the version it held", async () => {
+    const { rows, sources, store } = await setup();
+    await store(ACTIVE, [
+      toStore(draft(0), vector),
+      toStore(draft(1, "sha256:second"), otherVector),
+    ]);
+    expect(await sources()).toMatchObject([matrix]);
+    // The next version has a new text for the second section, which the model
+    // left out: the first section is kept, the stale row of the second goes,
+    // and the record names the new version with the one section it lacks.
+    const next = { ...matrix, version: "second" };
+    expect(
+      await store(
+        ACTIVE,
+        [toStore(draft(0), vector), draft(1, "sha256:third")],
+        { source: next }
+      )
+    ).toEqual({ kept: 1, missing: 1, removed: 1, stale: false, written: 0 });
+    expect(await sources()).toMatchObject([{ ...next, missing: 1 }]);
+    expect(await rows()).toHaveLength(1);
+  });
+
+  it("drops the count once the document holds every section again", async () => {
+    const { sources, store } = await setup();
+    await store(ACTIVE, [toStore(draft(0), vector), draft(1, "sha256:second")]);
+    expect(await sources()).toMatchObject([{ ...matrix, missing: 1 }]);
+    const next = { ...matrix, version: "second" };
+    expect(
+      await store(
+        ACTIVE,
+        [
+          toStore(draft(0), vector),
+          toStore(draft(1, "sha256:second"), otherVector),
+        ],
+        { source: next }
+      )
+    ).toEqual({ kept: 1, missing: 0, removed: 0, stale: false, written: 1 });
+    const [record] = await sources();
+    expect(record).toMatchObject(next);
+    expect(record).not.toHaveProperty("missing");
+  });
+
   it("stores nothing for a release that is not the active one", async () => {
     const { activate, rows, sources, store } = await setup();
     await activate("release-2");

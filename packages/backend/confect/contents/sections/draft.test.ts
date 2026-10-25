@@ -147,10 +147,10 @@ describe("section drafts", () => {
 describe("section versions", () => {
   it("names the format, the model, and the facts of the source", () => {
     expect(sourceVersion("sha256:a", "sha256:b")).toBe(
-      "1:google/gemini-embedding-2:sha256:a:sha256:b"
+      "2:google/gemini-embedding-2:sha256:a:sha256:b"
     );
     expect(sourceVersion("sha256:a")).toBe(
-      "1:google/gemini-embedding-2:sha256:a"
+      "2:google/gemini-embedding-2:sha256:a"
     );
   });
 
