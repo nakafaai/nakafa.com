@@ -2,13 +2,12 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   desktopViewport,
   touchViewport,
   viewportSize,
 } from "@/e2e/support/viewport";
-import { isTakenOver } from "@/e2e/support/window";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
@@ -46,11 +45,7 @@ for (const viewport of [touchViewport, desktopViewport]) {
     expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
 
     // The step opens the create dialog, and the new exam opens in its editor.
-    await expect
-      .poll(() => isTakenOver(create), {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(true);
+    await waitUntilTakenOver(create);
     await create.click();
     const dialog = page.getByRole("dialog");
     await dialog
