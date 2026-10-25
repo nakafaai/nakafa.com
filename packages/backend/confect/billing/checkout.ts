@@ -29,7 +29,7 @@ import {
   InvalidCheckoutSuccessUrl,
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/confect/billing/spec";
-import { readSiteUrl } from "@repo/backend/confect/site/config";
+import { readSiteUrls } from "@repo/backend/confect/site/config";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
@@ -55,11 +55,11 @@ const validCheckoutRequestValidator = Schema.Struct({
  */
 const PRO_CHECKOUT_OFFERS = ["pro.monthly", "pro.yearly"] as const;
 
-/** Validates the redirect a caller controls before Polar is contacted. The success URL stays on the primary site. */
+/** Validates the redirect a caller controls before Polar is contacted. The success URL stays on a site of this deployment. */
 export const validateCheckoutRequest = Effect.fn(
   "billing.checkout.validateRequest"
 )(function* (input: CheckoutRequestInput) {
-  const siteUrl = yield* readSiteUrl();
+  const sites = yield* readSiteUrls();
   const server = yield* readPolarServer().pipe(
     Effect.mapError(
       () =>
@@ -74,9 +74,9 @@ export const validateCheckoutRequest = Effect.fn(
     catch: () =>
       invalidSuccessUrl("Checkout success URL must be a valid absolute URL."),
   });
-  if (successUrl.origin !== siteUrl.origin) {
+  if (!Arr.some(sites, (site) => site.origin === successUrl.origin)) {
     return yield* invalidSuccessUrl(
-      "Checkout success URL must stay on the primary site origin."
+      "Checkout success URL must stay on a site of this deployment."
     );
   }
   return {

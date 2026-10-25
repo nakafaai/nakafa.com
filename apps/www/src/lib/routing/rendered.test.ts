@@ -3,6 +3,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
+  isBareRoutePath,
   isRenderedRoutePath,
   RENDERED_ROUTE_TEMPLATES,
   ROUTE_TEMPLATES,
@@ -30,6 +31,8 @@ const routes = vi.hoisted(() => ({
   "/$locale/try-out/$country/$exam/$track/$set/": {
     fullPath: "/$locale/try-out/$country/$exam/$track/$set/",
   },
+  "/school/$slug": { fullPath: "/school/$slug" },
+  "/school/$slug/exams": { fullPath: "/school/$slug/exams" },
 }));
 
 const release = vi.hoisted(() => ({ hasStaticRelease: true }));
@@ -104,5 +107,17 @@ describe("rendered route templates", () => {
     expect(
       isRenderedRoutePath(new URL("https://nakafa.com/school/harapan"))
     ).toBe(true);
+  });
+
+  it("names a bare address by the path that the router reads", () => {
+    expect(isBareRoutePath(new URL("https://nakafa.com/subjects/x"))).toBe(
+      true
+    );
+    expect(isBareRoutePath(new URL("https://nakafa.com/en/subjects/x"))).toBe(
+      false
+    );
+    expect(isBareRoutePath(new URL("https://harapan.nakafa.com/exams"))).toBe(
+      false
+    );
   });
 });
