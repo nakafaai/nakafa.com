@@ -11,9 +11,10 @@ import {
   type TokenRefused,
   type TooManyTries,
 } from "@repo/backend/confect/assessment/gate/refusal";
-import type {
-  Attempt,
-  DeviceId,
+import {
+  type Attempt,
+  acceptsWrites,
+  type DeviceId,
 } from "@repo/backend/confect/assessment/gate/store";
 import { Clock, Effect, Option, Schema } from "effect";
 
@@ -41,10 +42,6 @@ function refuse(reason: AttemptRefused["reason"]) {
   return Effect.fail(new AttemptRefused({ reason }));
 }
 
-/** Whether an attempt in this state accepts writes before its deadline. */
-const isOpen = (state: Attempt["state"]) =>
-  state === "inProgress" || state === "locked";
-
 /** Refuses a window that has not opened, or has closed for new attempts. */
 const checkWindow = Effect.fn("assessment.gate.enter.window")(function* (
   window: Window,
@@ -67,7 +64,7 @@ const standingOfHeld = Effect.fn("assessment.gate.enter.held")(function* (
   device: DeviceId,
   now: number
 ) {
-  if (!isOpen(held.state) || now >= held.deadline) {
+  if (!acceptsWrites(held.state) || now >= held.deadline) {
     return yield* refuse(new AttemptClosed());
   }
   const standing = standingOf(held.binding, device);
@@ -80,9 +77,11 @@ const standingOfHeld = Effect.fn("assessment.gate.enter.held")(function* (
 /**
  * Builds the entry gate over the store of one kind of target. An entry admits its
  * owner to an attempt, once: the device that owns the attempt enters without a token,
- * a retired device is refused before the token is checked, and any other entry needs
- * an open window and a token that the store verifies. The order is the target, the
- * lock, the held attempt or the window, the device standing, then the token.
+ * and any entry without a held attempt needs an open window and a token that the store
+ * verifies. The order is the target, the lock, the held attempt or the window, a retired
+ * device (refused before any token is checked), then the token. A device other than the
+ * bound one is refused only after its token verifies, so a stranger learns nothing of the
+ * attempt's binding before the token is known.
  */
 export function makeEntry<
   Target,

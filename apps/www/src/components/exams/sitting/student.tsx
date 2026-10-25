@@ -36,7 +36,6 @@ import type { EntryMessage } from "@/components/exams/sitting/entry";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
 import { SittingRetry } from "@/components/exams/sitting/retry";
-import type { PlayerMode } from "@/components/player/mode";
 import {
   CardSection,
   CardSectionActions,
@@ -62,13 +61,10 @@ type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
  * to the school home.
  */
 export function StudentSitting({
-  mode,
   preload,
   sittingId,
   slug,
 }: {
-  /** The view the server resolved from the address and the saved view. */
-  readonly mode: PlayerMode;
   readonly preload: Ref.Returns<typeof exams.sittings.student> | undefined;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
@@ -132,7 +128,6 @@ export function StudentSitting({
         attempt={attempt}
         clockOffset={admitted.clockOffset}
         deviceId={admitted.deviceId}
-        mode={mode}
         sitting={sitting}
         slug={slug}
       />
@@ -171,7 +166,6 @@ export function StudentSitting({
                 <Input
                   autoComplete="off"
                   id={tokenId}
-                  name="token"
                   onChange={(event) => setTokenText(event.currentTarget.value)}
                   placeholder={t("student-token-placeholder")}
                   value={tokenText}
@@ -183,7 +177,7 @@ export function StudentSitting({
               tone={message === null ? null : "destructive"}
             >
               <CardSectionActions>
-                <Button disabled={entering} type="submit">
+                <Button disabled={!isSettled || entering} type="submit">
                   {t("student-enter")}
                 </Button>
               </CardSectionActions>

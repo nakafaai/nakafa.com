@@ -23,6 +23,7 @@ import { sittingFailureMessage } from "@/components/exams/sitting/entry";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
+import { useSittingMode } from "@/components/exams/sitting/mode";
 import { SittingNavigator } from "@/components/exams/sitting/navigator";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
@@ -46,26 +47,24 @@ import { PlayerTimer } from "@/components/player/timer";
 /**
  * The student's running attempt in the shared player: the school's header with the exam's name, the time
  * left, and the one primary action, then the paper with its navigator, its keys, and its view. A locked
- * attempt shows the same header, with the lock's sentence in place of the paper. The signals run while the
- * attempt is active.
+ * attempt keeps the same header and navigator, and its paper reads only, with the lock's sentence above it.
+ * The signals run while the attempt is active.
  */
 export function StudentPlayer({
   attempt,
   clockOffset,
   deviceId,
-  mode,
   sitting,
   slug,
 }: {
   readonly attempt: AttemptValue;
   readonly clockOffset: number;
   readonly deviceId: string;
-  /** The view the server resolved from the address and the saved view. */
-  readonly mode: PlayerMode;
   readonly sitting: typeof SittingView.Type;
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  const mode = useSittingMode();
   const sittingId = sitting.id;
 
   useSittingSignals({
@@ -77,13 +76,13 @@ export function StudentPlayer({
 
   const paper = useQuery(
     exams.sittings.paper,
-    takesAnswers(attempt.state) ? { deviceId, sittingId, slug } : "skip"
+    isActive(attempt.state) ? { deviceId, sittingId, slug } : "skip"
   );
   const timer = isActive(attempt.state) ? (
     <SittingTimer clockOffset={clockOffset} deadline={attempt.deadline} />
   ) : null;
 
-  if (QueryResult.isSuccess(paper) && takesAnswers(attempt.state)) {
+  if (QueryResult.isSuccess(paper) && isActive(attempt.state)) {
     return (
       <RunningPaper
         attemptId={attempt.id}
@@ -94,13 +93,14 @@ export function StudentPlayer({
             <StudentFinish
               attempt={attempt}
               deviceId={deviceId}
-              locked={false}
+              locked={!takesAnswers(attempt.state)}
               sittingId={sittingId}
               slug={slug}
             />
             <PlayerOpener />
           </SittingBar>
         }
+        locked={!takesAnswers(attempt.state)}
         mode={mode}
         paper={paper.value}
         sittingId={sittingId}
@@ -124,7 +124,6 @@ export function StudentPlayer({
         ) : null}
       </SittingBar>
       <PlayerMain navigator={null}>
-        {attempt.state === "locked" ? <p>{t("student-locked")}</p> : null}
         {QueryResult.isFailure(paper)
           ? Option.match(sittingFailureMessage(paper.error), {
               onNone: () => <SittingRetry error={paper.error} />,
@@ -194,14 +193,15 @@ function SittingTimer({
 }
 
 /**
- * The paper of an open attempt. The keys, the flags, and the navigator follow the paper, the answers the
+ * The paper of an active attempt. The keys, the flags, and the navigator follow the paper, the answers the
  * student sends are kept until the server confirms them, and the kept answers of an earlier visit are sent
- * again once the paper is on the screen.
+ * again once the paper is on the screen. A locked paper reads only: its options and flags are closed.
  */
 function RunningPaper({
   attemptId,
   deviceId,
   header,
+  locked,
   mode,
   paper,
   sittingId,
@@ -210,14 +210,16 @@ function RunningPaper({
   readonly attemptId: GenericId.GenericId<"examAttempts">;
   readonly deviceId: string;
   readonly header: ReactNode;
+  readonly locked: boolean;
   readonly mode: PlayerMode;
   readonly paper: PaperValue;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
+  const t = useTranslations("Exams");
   const choose = useChooseAnswer();
   const mark = useMarkFlag();
-  useResendKeptAnswers({ attemptId, deviceId, paper, sittingId, slug });
+  useResendKeptAnswers({ attemptId, deviceId, locked, paper, sittingId, slug });
 
   /** Marks or unmarks the question with `key` for review, and tells the student when the server refuses it. */
   function onMark(key: string) {
@@ -245,7 +247,7 @@ function RunningPaper({
       mode={mode}
     >
       <PlayerKeys
-        locked={false}
+        locked={locked}
         onMark={onMark}
         questions={projectSittingQuestions({
           choose: (question, response) =>
@@ -270,12 +272,14 @@ function RunningPaper({
           </PlayerSidebar>
         }
       >
+        {locked ? <p>{t("student-locked")}</p> : null}
         <PlayerQuestions>
           {Arr.map(paper.questions, (question) => (
             <SittingQuestion
               attemptId={attemptId}
               deviceId={deviceId}
               key={question.id}
+              locked={locked}
               question={question}
               sittingId={sittingId}
               slug={slug}

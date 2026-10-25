@@ -18,6 +18,7 @@ export function projectTryoutQuestions(input: {
 }): readonly PlayerQuestionModel[] {
   return Arr.map(input.questions, (question) => ({
     answered: question.response?.isComplete ?? false,
+    flagged: question.flagged,
     key: question.placementId,
     pick: (index) =>
       Option.match(pickOption(question.responseSpec, index), {

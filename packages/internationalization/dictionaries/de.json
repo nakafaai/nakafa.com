@@ -1583,6 +1583,10 @@
       "title": "Antwort nicht gespeichert.",
       "description": "Versuche es erneut."
     },
+    "tryout-flag-error": {
+      "title": "Wir konnten diese Frage nicht markieren.",
+      "description": "Bitte versuche es erneut."
+    },
     "memory-limit": {
       "title": "Warte kurz, dann speichere erneut."
     },

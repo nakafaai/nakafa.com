@@ -12,7 +12,10 @@ import { useTranslations } from "use-intl";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { useChooseAnswer } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import { SittingDocument } from "@/components/exams/sitting/document";
+import {
+  PromptReserve,
+  SittingDocument,
+} from "@/components/exams/sitting/document";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
@@ -31,12 +34,15 @@ import { PlayerQuestion } from "@/components/player/question";
 export function SittingQuestion({
   attemptId,
   deviceId,
+  locked,
   question,
   sittingId,
   slug,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
   readonly deviceId: string;
+  /** Whether the paper is read-only, because the attempt is locked. */
+  readonly locked: boolean;
   readonly question: PaperQuestion;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
@@ -106,6 +112,9 @@ export function SittingQuestion({
           {t("question", { number: question.number })}
         </h2>
         <SittingPictures value={addresses}>
+          {promptDocument === null && !QueryResult.isSuccess(prompt) ? (
+            <PromptReserve />
+          ) : null}
           {promptDocument === null ? null : (
             // The reader takes its document once, so a changed prompt remounts it.
             <SittingDocument
@@ -117,6 +126,7 @@ export function SittingQuestion({
           {Option.isSome(choice) ? (
             <SittingChoice
               choice={choice.value}
+              disabled={locked}
               labelledBy={titleId}
               onChoose={onChoose}
               response={question.response ?? []}
@@ -126,6 +136,7 @@ export function SittingQuestion({
         <div>
           <Button
             aria-pressed={question.flagged}
+            disabled={locked}
             onClick={() =>
               Effect.runPromise(
                 mark({
@@ -142,7 +153,7 @@ export function SittingQuestion({
               )
             }
             type="button"
-            variant="outline"
+            variant={question.flagged ? "default-outline" : "outline"}
           >
             <HugeIcons icon={Flag01Icon} />
             {t("flag-question")}

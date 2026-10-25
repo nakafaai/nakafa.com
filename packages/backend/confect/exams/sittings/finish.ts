@@ -22,7 +22,7 @@ export const finish = Effect.fn("exams.sittings.finish")(function* (args: {
   yield* sittingGate
     .finish({
       device: Option.some(args.deviceId),
-      owner: member.person._id,
+      owner: Option.some(member.person._id),
       section,
       settled: "answer",
     })

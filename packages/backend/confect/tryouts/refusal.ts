@@ -21,6 +21,7 @@ const unavailable = {
   Closed: attemptNotActive,
   DeviceRetired: attemptNotActive,
   Locked: attemptNotActive,
+  NotDue: attemptNotActive,
   NotOpen: attemptNotActive,
   OtherDevice: attemptNotActive,
   PlaceLocked: attemptNotActive,

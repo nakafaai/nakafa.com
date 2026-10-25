@@ -15,8 +15,8 @@ import { Effect, Option } from "effect";
 /**
  * Flags or unflags one question of the caller's paper for review. The gate admits the change
  * to the device that owns an open attempt, under the flag rule, and the shared flags table
- * records it, so a reload shows the same flags. Try-outs share the table; their write is not
- * part of this change.
+ * records it, so a reload shows the same flags. Try-outs write the same table through their
+ * own gate (`tryouts/gate.ts`).
  */
 export const flag = Effect.fn("exams.sittings.flag")(function* (args: {
   deviceId: string;
@@ -28,7 +28,7 @@ export const flag = Effect.fn("exams.sittings.flag")(function* (args: {
   const { live } = yield* sittingGate
     .admit(
       rules.flag,
-      member.person._id,
+      Option.some(member.person._id),
       Option.some(args.deviceId),
       placementOf({
         person: member.person,

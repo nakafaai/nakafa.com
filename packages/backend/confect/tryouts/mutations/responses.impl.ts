@@ -18,8 +18,21 @@ const save = FunctionImpl.make(
   })
 );
 
+/** Flags or unflags one question of the caller's running section, through the live-attempt gate. */
+const flag = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "flag",
+  Effect.fn("tryouts.mutations.responses.flag")(function* (args) {
+    const { appUser } = yield* requireAuth();
+    yield* tryoutGate.flag(appUser._id, args);
+    return null;
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(save),
+  Layer.provide(flag),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

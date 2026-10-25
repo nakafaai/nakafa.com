@@ -77,11 +77,9 @@ that the model must change:
 - A teacher's question is school data in the school's own cell. The Aksara
   question schema reads it read-only. It is not signed, it is not in the Aksara
   catalogue, and each row records the contract version it was written with (K1).
-  That version is migration bookkeeping only: an index lets a contract release
-  find the rows it has not rewritten yet. No reader dispatches on it and no
-  renderer keeps an older shape (ADR 0018): readers decode only the current
-  shape, and a major contract release migrates the school item rows of every cell
-  in the order of section 10.
+  That version is bookkeeping only. No reader dispatches on it and no renderer
+  keeps an older shape (ADR 0018): readers decode only the current shape, and a
+  row of an older shape is deleted, never backfilled (section 10).
 
 ### 2. The item body is a structured document, not code
 
@@ -262,6 +260,16 @@ has exactly one owner.
   the steps.
 - Every sitting answer and every try-out answer takes its `version` as a required
   argument. A stored answer without a version is bad data and is deleted.
+- The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
+  ADR 0003 and the rule must not lapse with it. A content reset deletes only
+  rebuildable Nakafa read models. It preserves signed snapshot state, attempts,
+  results, progress, placements, responses, scores, access state, entitlements,
+  calibration runs, and IRT scales, and each attempt, result, and scale keeps the
+  exact signed snapshot that its historical review and scoring need. No table is
+  reset while it holds data. A retired table goes only when no schema or code
+  refers to it, and its rows are deleted first, with the counts the pull request
+  records, because bad data is deleted and never backfilled. No export is taken
+  from production, by the working rule of `docs/convex/cost.md`.
 - One flag table, `assessmentFlags`, holds every assessment flag. No
   `tryoutFlags` table ships. A sitting writes its flags through the gate
   (ADR 0013).

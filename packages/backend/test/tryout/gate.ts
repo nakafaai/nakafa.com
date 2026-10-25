@@ -62,6 +62,7 @@ export const tryoutRefusals = {
       _tag: "TryoutResponseError",
       code: "TRYOUT_PLACEMENT_NOT_FOUND",
     }),
+    NotDue: attemptNotActive,
     NotOpen: attemptNotActive,
     OtherDevice: attemptNotActive,
     PlaceLocked: attemptNotActive,
@@ -77,6 +78,7 @@ export const tryoutRefusals = {
       _tag: "TryoutAttemptStateError",
       code: "TRYOUT_ATTEMPT_NOT_FOUND",
     }),
+    NotDue: attemptNotActive,
     NotOpen: attemptNotActive,
     OtherDevice: attemptNotActive,
     PlaceLocked: attemptNotActive,
@@ -315,6 +317,14 @@ export const seedTryoutGate = Effect.gen(function* () {
         );
       }),
     arrange: (change: Change) => patch(t, changes[change]),
+    flag: (caller: Caller, target: Target, flagged: boolean) =>
+      call(clients[caller], refs.public.tryouts.mutations.responses.flag, {
+        flagged,
+        placementId: placements[target],
+      }),
+    flags: Effect.promise(() =>
+      t.query((ctx) => ctx.db.query("assessmentFlags").collect())
+    ),
     finish: (caller: Caller, target: Target) =>
       call(
         clients[caller],

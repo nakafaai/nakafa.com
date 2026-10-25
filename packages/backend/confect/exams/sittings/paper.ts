@@ -69,7 +69,7 @@ export const paper = Effect.fn("exams.sittings.paper")(function* (args: {
   const { live } = yield* sittingGate
     .admit(
       rules.paper,
-      member.person._id,
+      Option.some(member.person._id),
       Option.some(args.deviceId),
       sectionOf(section)
     )

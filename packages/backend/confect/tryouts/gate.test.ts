@@ -167,6 +167,46 @@ describeGate("tryouts", {
 
 describe("tryouts/gate", () => {
   it.effect(
+    "flags and unflags a running question through the shared flags table, with no version",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        expect(yield* world.flag("learner", "running", true)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.flag("learner", "running", true)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.flags).toMatchObject([
+          { kind: "tryout", question: expect.any(String) },
+        ]);
+        expect(yield* world.flag("learner", "running", false)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.flags).toEqual([]);
+      })
+  );
+  it.effect(
+    "refuses a flag of a question whose deadline passed, as an answer that expired",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        yield* world.arrange("expire-section");
+        expect(yield* world.flag("learner", "running", true)).toEqual(
+          Option.some(tryoutRefusals.answer.Expired)
+        );
+        expect(yield* world.flags).toEqual([]);
+      })
+  );
+  it.effect("refuses a flag from another learner as a missing question", () =>
+    Effect.gen(function* () {
+      const world = yield* seedTryoutGate;
+      expect(yield* world.flag("other", "running", true)).toEqual(
+        Option.some(tryoutRefusals.answer.Missing)
+      );
+    })
+  );
+  it.effect(
     "keeps the first answer time and counts seconds spent in the section",
     () =>
       Effect.gen(function* () {

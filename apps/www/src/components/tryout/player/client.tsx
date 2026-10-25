@@ -1,7 +1,7 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { Suspense } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
@@ -23,6 +23,7 @@ import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
 import { TryoutPageLink } from "@/components/tryout/route/link";
+import { useTryoutFlag } from "@/components/tryout/runtime/response/flag";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
@@ -52,18 +53,30 @@ export function TryoutPlayer({
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const answer = useTryoutResponseSubmit();
+  const flag = useTryoutFlag();
   const questions = projectTryoutQuestions({
     answer,
     questions: runtime.questions,
   });
   const unanswered = Arr.filter(questions, (question) => !question.answered);
 
+  /** Flags or unflags the question with `key` for review, through the key or the navigator. */
+  function onMark(key: string) {
+    const question = Arr.findFirst(
+      runtime.questions,
+      (item) => item.placementId === key
+    );
+    if (Option.isSome(question)) {
+      flag(question.value, !question.value.flagged);
+    }
+  }
+
   return (
     <PlayerProvider
       keys={Arr.map(questions, (question) => question.key)}
       mode={mode}
     >
-      <PlayerKeys locked={locked} questions={questions} />
+      <PlayerKeys locked={locked} onMark={onMark} questions={questions} />
       <PlayerHeader>
         <TryoutPageLink
           aria-label={tCommon("back")}

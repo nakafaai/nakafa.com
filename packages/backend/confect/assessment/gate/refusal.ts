@@ -35,6 +35,11 @@ export class Expired extends Schema.TaggedError<Expired>()("Expired", {
   deadline: Schema.Finite,
 }) {}
 
+/** The attempt's deadline has not passed yet, so a scheduled expiry has nothing to expire. */
+export class NotDue extends Schema.TaggedError<NotDue>()("NotDue", {
+  deadline: Schema.Finite,
+}) {}
+
 /** The place that holds the target is locked: its school is suspended or its unit archived. */
 export class PlaceLocked extends Schema.TaggedError<PlaceLocked>()(
   "PlaceLocked",
@@ -59,6 +64,7 @@ export class AttemptRefused extends Schema.TaggedError<AttemptRefused>()(
       DeviceRetired,
       SectionClosed,
       Expired,
+      NotDue,
       PlaceLocked,
       NotOpen,
       Closed,

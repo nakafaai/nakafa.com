@@ -143,7 +143,7 @@ describe("exams/sittings paper", () => {
   );
 
   it.effect(
-    "refuses the paper of a locked attempt with the lock, not a closed attempt",
+    "reads the paper of a locked attempt, so its navigator stays on screen, while the answers stay closed",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -159,10 +159,10 @@ describe("exams/sittings paper", () => {
           sittingId: made.id,
           slug: nf,
         });
-        const failure = yield* paperOf(fixture, made.id, deviceOf(1)).pipe(
-          Effect.flip
+        const paper = yield* paperOf(fixture, made.id, deviceOf(1));
+        expect(Arr.map(paper.questions, (question) => question.number)).toEqual(
+          [1]
         );
-        expect(failure).toMatchObject({ _tag: "AttemptLocked" });
       })
   );
 

@@ -40,6 +40,10 @@ export const AttemptState = Schema.Literals([
 ]);
 export type AttemptState = typeof AttemptState.Type;
 
+/** Whether an attempt in this state accepts writes before its deadline: `inProgress` and `locked` do. */
+export const acceptsWrites = (state: AttemptState) =>
+  state === "inProgress" || state === "locked";
+
 /** The attempt a write targets, as its store loaded it before any section row. */
 export const Attempt = Schema.Struct({
   binding: Binding,

@@ -11,14 +11,24 @@ const LazySittingDocument = lazy(() =>
   }))
 );
 
+/**
+ * A page-sized document keeps its height while the reader loads, so the question below it never moves. A
+ * line-sized option has no reserved height, because its label is part of the option row.
+ */
 export function SittingDocument(
   props: ComponentProps<typeof LazySittingDocument>
 ) {
+  const fallback = props.size === "line" ? null : <PromptReserve />;
   return (
-    <Suspense fallback={null}>
-      <ClientOnly fallback={null}>
+    <Suspense fallback={fallback}>
+      <ClientOnly fallback={fallback}>
         <LazySittingDocument {...props} />
       </ClientOnly>
     </Suspense>
   );
+}
+
+/** The space a prompt keeps before its reader is ready: empty and hidden from assistive technology. */
+export function PromptReserve() {
+  return <div aria-hidden className="min-h-32" />;
 }

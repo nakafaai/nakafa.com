@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
+import { SittingModeProvider } from "@/components/exams/sitting/mode";
 import { StudentSitting } from "@/components/exams/sitting/student";
 import { readPlayerModeParam } from "@/components/player/mode";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
@@ -46,11 +47,12 @@ function StudentSittingPage(): ReactElement | null {
   const { sittingId, slug } = Route.useRouteContext();
   const loaded = Route.useLoaderData();
   return (
-    <StudentSitting
-      mode={loaded?.mode ?? "list"}
-      preload={loaded?.preload}
-      sittingId={sittingId}
-      slug={slug}
-    />
+    <SittingModeProvider mode={loaded?.mode ?? "list"}>
+      <StudentSitting
+        preload={loaded?.preload}
+        sittingId={sittingId}
+        slug={slug}
+      />
+    </SittingModeProvider>
   );
 }

@@ -5,43 +5,26 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
+import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import {
-  expireAttempt,
-  finalizeSectionAttempt,
-} from "@repo/backend/confect/tryouts/runtime/finish";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Clock, Duration, Effect, flow, HashSet } from "effect";
 
 const EXPIRY_SWEEP_LIMIT = 50;
 const EXPIRY_SWEEP_ATTEMPT_BYTES = 6 * 1024 * 1024;
 const EXPIRY_SWEEP_SECTION_BYTES = 2 * 1024 * 1024;
-type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
-/** Expires one still-matching attempt through the typed runtime program. */
+/** Expires one scheduled attempt at its deadline, through the live-attempt gate. */
 export const expireScheduledAttempt = Effect.fn("tryouts.expiry.attempt")(
   function* (args: { attemptId: Id<"tryoutAttempts">; expiresAt: number }) {
-    const database = yield* DatabaseReader;
-    const attemptRow = yield* database
-      .table("tryoutAttempts")
-      .get(args.attemptId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.mapError(toTryoutRuntimeError)
-      );
-    const now = yield* Clock.currentTimeMillis;
-    if (!shouldExpire(attemptRow, args.expiresAt, now)) {
-      return null;
-    }
-    yield* expireAttempt({
-      attempt: attemptRow,
-      now,
-    });
-    return null;
+    return yield* tryoutGate.expireAttempt(args);
   }
 );
 
-/** Expires one still-matching section through the typed runtime program. */
+/**
+ * Ends one scheduled section at its own deadline. A section whose attempt has passed its
+ * deadline ends the whole attempt instead, and both writes pass the live-attempt gate.
+ */
 export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
   function* (args: {
     expiresAt: number;
@@ -72,23 +55,16 @@ export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
         message: "Try-out attempt not found.",
       });
     }
-    if (attemptRow.status !== "in-progress") {
-      return null;
-    }
     if (now >= attemptRow.expiresAt) {
-      yield* expireAttempt({
-        attempt: attemptRow,
-        now,
+      return yield* tryoutGate.expireAttempt({
+        attemptId: attemptRow._id,
+        expiresAt: attemptRow.expiresAt,
       });
-      return null;
     }
-    yield* finalizeSectionAttempt({
-      attempt: attemptRow,
-      endReason: "time-expired",
-      now,
-      section: sectionRow,
+    return yield* tryoutGate.expireSection({
+      attemptId: attemptRow._id,
+      sectionKey: sectionRow.sectionKey,
     });
-    return null;
   }
 );
 
@@ -214,12 +190,12 @@ export const reconcileMissedSectionExpiries = Effect.fn(
   Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
 );
 
-/** Returns true when a scheduled expiry job still matches an active row. */
-function shouldExpire<Row extends TryoutAttempt | TryoutSectionAttempt>(
-  row: Row | null,
+/** Returns true when a scheduled section expiry still matches an open section that is due. */
+function shouldExpire(
+  row: TryoutSectionAttempt | null,
   scheduledExpiresAt: number,
   now: number
-): row is Row {
+): row is TryoutSectionAttempt {
   return Boolean(
     row &&
       row.status === "in-progress" &&

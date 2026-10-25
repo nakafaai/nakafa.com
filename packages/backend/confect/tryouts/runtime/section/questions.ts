@@ -1,5 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   project,
   projectSelection,
@@ -61,6 +62,20 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   };
 });
 
+/** The placements that the learner flagged in the attempt, read by the attempt's index prefix. */
+const loadFlaggedPlacements = Effect.fn("tryouts.runtime.flaggedPlacements")(
+  function* (attempt: Docs["tryoutAttempts"]) {
+    const flags = yield* (yield* DatabaseReader)
+      .table("assessmentFlags")
+      .index("by_attempt_and_question", (query) =>
+        query.eq("attempt", attempt._id)
+      )
+      .take(attempt.totalQuestions)
+      .pipe(Effect.orDie);
+    return Arr.map(flags, (flag) => flag.question);
+  }
+);
+
 /** Loads the compact runtime plus immutable content selectors once. */
 export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
   function* (
@@ -91,6 +106,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
         questions: projectRuntimeQuestions(
           loaded.placements,
           loaded.responses,
+          yield* loadFlaggedPlacements(attempt),
           loaded.access
         ),
         section: loaded.currentSection,
@@ -103,6 +119,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
 function projectRuntimeQuestions(
   placements: readonly TryoutPlacement[],
   responses: TryoutResponseIndex["responses"],
+  flagged: readonly string[],
   access: {
     readonly answers: boolean;
     readonly questions: boolean;
@@ -115,6 +132,7 @@ function projectRuntimeQuestions(
     projectRuntimeQuestion(
       placement,
       Option.getOrNull(MutableHashMap.get(responsesByPlacement, placement._id)),
+      Arr.contains(flagged, placement._id),
       access
     )
   );
@@ -124,6 +142,7 @@ function projectRuntimeQuestions(
 function projectRuntimeQuestion(
   placement: TryoutPlacement,
   response: TryoutResponse | null,
+  flagged: boolean,
   access: {
     readonly answers: boolean;
     readonly questions: boolean;
@@ -141,6 +160,7 @@ function projectRuntimeQuestion(
   const version = readVersion(placement, Option.fromNullOr(response));
   return {
     contentHash: placement.contentHash,
+    flagged,
     placementId: placement._id,
     questionOrder: placement.questionOrder,
     response: runtimeResponse,

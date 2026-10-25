@@ -1,11 +1,16 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import tryoutAttemptPlacements from "@repo/backend/confect/_generated/tables/tryoutAttemptPlacements";
 import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
 import tryoutResponses from "@repo/backend/confect/_generated/tables/tryoutResponses";
 import tryoutSectionAttempts from "@repo/backend/confect/_generated/tables/tryoutSectionAttempts";
+import { setAssessmentFlag } from "@repo/backend/confect/assessment/flags";
 import { make } from "@repo/backend/confect/assessment/gate/admit";
 import type { EndReason } from "@repo/backend/confect/assessment/gate/end";
-import type { Version } from "@repo/backend/confect/assessment/gate/rules";
+import {
+  rules,
+  type Version,
+} from "@repo/backend/confect/assessment/gate/rules";
 import { Answerable } from "@repo/backend/confect/assessment/gate/store";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import {
@@ -25,12 +30,16 @@ import {
 } from "@repo/backend/confect/tryouts/response/integrity";
 import {
   type SaveTryoutResponseArgs,
+  type TryoutFlagArgs,
   toTryoutResponseError,
   toTryoutSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import { readVersion } from "@repo/backend/confect/tryouts/response/version";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
+import {
+  expireAttempt,
+  finalizeSectionAttempt,
+} from "@repo/backend/confect/tryouts/runtime/finish";
 import { loadSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, flow, Option, Schema } from "effect";
@@ -227,6 +236,45 @@ const finishSection = Effect.fn("tryouts.gate.finishSection")(function* (
   });
 });
 
+/** The attempt that a scheduled expiry names, with the deadline its job was scheduled for. */
+const ScheduledAttempt = Schema.Struct({
+  attemptId: IdSchema("tryoutAttempts"),
+  expiresAt: Schema.Finite,
+});
+type ScheduledAttempt = typeof ScheduledAttempt.Type;
+
+/**
+ * Ends a scheduled write that the gate refuses with no failure. The refusal means its target is gone,
+ * closed, not yet due, or no longer running, so the write has nothing left to do, and the attempt's own
+ * expiry job or the missed-expiry sweep closes whatever the refusal leaves open.
+ */
+const nothingLeft = () => Effect.succeedNone;
+
+/**
+ * The attempt a scheduled expiry names, provided its job still matches the attempt's deadline.
+ * Its one stage is the attempt itself, because an expiry closes the whole attempt.
+ */
+const loadScheduledAttempt = Effect.fn("tryouts.gate.loadScheduledAttempt")(
+  function* (scheduled: ScheduledAttempt) {
+    const attempt = yield* loadAttempt(scheduled.attemptId);
+    return Option.map(
+      Option.filter(
+        attempt,
+        (loaded) => loaded.expiresAt === scheduled.expiresAt
+      ),
+      (loaded) => ({
+        attempt: attemptOf(loaded),
+        owner: loaded.userId,
+        section: Effect.succeedSome({
+          deadline: loaded.expiresAt,
+          live: Effect.succeed(loaded),
+          verify: Effect.void,
+        }),
+      })
+    );
+  }
+);
+
 const gate = make({
   answer: (
     live: Answering,
@@ -259,6 +307,46 @@ const gate = make({
  * file with the rest of `confect/tryouts`.
  */
 export const tryoutGate = {
+  /**
+   * Expires one try-out attempt at its deadline. No learner owns a scheduled expiry, so the
+   * rules alone admit it, and an attempt that is closed, gone, or not yet due has nothing to do.
+   */
+  expireAttempt: Effect.fn("tryouts.gate.expireAttempt")(
+    function* (scheduled: ScheduledAttempt) {
+      const admitted = yield* gate
+        .admit(
+          rules.expire,
+          Option.none(),
+          Option.none(),
+          loadScheduledAttempt(scheduled)
+        )
+        .pipe(Effect.asSome, Effect.catchTag("AttemptRefused", nothingLeft));
+      if (Option.isNone(admitted)) {
+        return null;
+      }
+      yield* expireAttempt({
+        attempt: admitted.value.live,
+        now: admitted.value.now,
+      });
+      return null;
+    },
+    Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+  ),
+  /** Ends one scheduled section at its own deadline, while its attempt stays open. */
+  expireSection: Effect.fn("tryouts.gate.expireSection")(
+    function* (section: SectionTarget) {
+      yield* gate
+        .finish({
+          device: Option.none(),
+          owner: Option.none(),
+          section,
+          settled: "refuse",
+        })
+        .pipe(Effect.catchTag("AttemptRefused", nothingLeft));
+      return null;
+    },
+    Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
+  ),
   /** Saves, replaces, or clears (`null`) one answer of the caller's running section. */
   answer: Effect.fn("tryouts.gate.answer")(
     function* (owner: Id<"users">, args: SaveTryoutResponseArgs) {
@@ -282,12 +370,34 @@ export const tryoutGate = {
     }),
     Effect.catchDefect(flow(toTryoutResponseError, Effect.fail))
   ),
+  /** Flags or unflags one question of the caller's running section for review, through the gate and the shared flags table. */
+  flag: Effect.fn("tryouts.gate.flag")(
+    function* (owner: Id<"users">, args: TryoutFlagArgs) {
+      const { live } = yield* gate.admit(
+        rules.flag,
+        Option.some(owner),
+        Option.none(),
+        loadPlacement(args.placementId)
+      );
+      yield* setAssessmentFlag({
+        attempt: live.attempt._id,
+        flagged: args.flagged,
+        kind: "tryout",
+        question: live.placement._id,
+      });
+    },
+    Effect.catchTag(
+      "AttemptRefused",
+      flow(toTryoutFailure.answer, Effect.fail)
+    ),
+    Effect.catchDefect(flow(toTryoutResponseError, Effect.fail))
+  ),
   /** Ends and scores the caller's running section. */
   finish: Effect.fn("tryouts.gate.finish")(
     function* (owner: Id<"users">, section: SectionTarget) {
       yield* gate.finish({
         device: Option.none(),
-        owner,
+        owner: Option.some(owner),
         section,
         settled: "refuse",
       });

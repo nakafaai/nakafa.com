@@ -6,7 +6,7 @@ import { Schema } from "effect";
  */
 export const PlayerCellModel = Schema.Struct({
   answered: Schema.Boolean,
-  flagged: Schema.optionalKey(Schema.Boolean),
+  flagged: Schema.Boolean,
   /** The key that the store and the DOM name this question by. */
   key: Schema.String,
 });
