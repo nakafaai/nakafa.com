@@ -7,6 +7,7 @@ import {
 } from "@repo/internationalization/src/redirect";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { siteUrlKeys } from "@repo/site/keys";
 import { Array as Arr, Effect, Option } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
@@ -60,13 +61,19 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
  * school, such as `www`: the same path and query open on the main site, with a
  * 307 (ADR 0026). Only the path and query move, so a path that starts with two
  * slashes stays on the main site. A shared path, such as the robots file, answers
- * on every host, so the refused host serves it itself.
+ * on every host, so the refused host serves it itself. The deployment's own host
+ * is its main site and never moves: staging serves `staging.nakafa.com`, whose
+ * label no school may take.
  */
 export function readMainSiteRedirect(
   request: Request
 ): Option.Option<Response> {
   const hostname = readRequestHostname(request.headers);
-  if (Option.isNone(hostname) || !isRefusedSchoolHost(hostname.value)) {
+  if (
+    Option.isNone(hostname) ||
+    !isRefusedSchoolHost(hostname.value) ||
+    hostname.value === new URL(siteUrlKeys().SITE_URL).hostname
+  ) {
     return Option.none();
   }
   const url = new URL(request.url);
