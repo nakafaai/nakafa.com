@@ -6,7 +6,7 @@ import {
 import { usePictures } from "@repo/design-system/components/editor/picture";
 import { NEW_FORMULA } from "@repo/design-system/components/editor/slash";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
-import { ImageType } from "@repo/editor/image";
+import { ImageType } from "@repo/editor/upload";
 import { useCurrentEditor } from "@tiptap/react";
 import { Array as Arr } from "effect";
 import { useRef } from "react";

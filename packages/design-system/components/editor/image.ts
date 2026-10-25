@@ -1,4 +1,4 @@
-import { IMAGE_BYTE_LIMIT, ImageType } from "@repo/editor/image";
+import { IMAGE_BYTE_LIMIT, ImageType } from "@repo/editor/upload";
 import { Option, Schema, String as Str } from "effect";
 
 /** The reason the editor refuses a file before it uploads it. */

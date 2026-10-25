@@ -11,7 +11,7 @@ import {
 } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ImageType } from "@repo/editor/image";
+import { ImageType } from "@repo/editor/upload";
 import type { Editor } from "@tiptap/core";
 import { FileHandler } from "@tiptap/extension-file-handler";
 import {
