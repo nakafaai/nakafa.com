@@ -10,20 +10,25 @@ import type { runStep } from "@repo/backend/confect/contents/sections/build";
 import { PRUNE_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { provider } from "@repo/backend/test/gateway";
 import {
+  determinantOf,
   editKnowledgeLesson,
+  embeddedBy,
   embedWhileAnotherReleaseActivates,
   embedWithKnowledge,
+  embedWithKnowledgeRefusing,
   embedWithRefusal,
+  finishedEarlierRelease,
   KNOWLEDGE_RELEASE,
   knowledgeBuild,
   knowledgeSource,
   leaveDocument,
   measuredBuild,
   seedKnowledge,
+  skippedBy,
 } from "@repo/backend/test/knowledge";
+import { failedStepLogs } from "@repo/backend/test/refusal";
 import {
   Array as Arr,
   Number as Num,
@@ -37,15 +42,6 @@ afterEach(() => provider.embeddingModel.mockReset());
 
 type Input = Parameters<typeof runStep>[0];
 
-/** Makes the record of the finished build name an earlier release, as it does after an activation. */
-async function finishedEarlierRelease(ctx: MutationCtx) {
-  for (const record of await ctx.db.query("contentSectionState").collect()) {
-    await ctx.db.patch("contentSectionState", record._id, {
-      releaseId: "release-earlier",
-    });
-  }
-}
-
 function setup() {
   const t = createConvexTestWithBetterAuth();
   const rows = () =>
@@ -54,31 +50,6 @@ function setup() {
     t.query((ctx) => ctx.db.query("contentSectionSources").collect());
   return { ...knowledgeBuild(t), rows, sources, t };
 }
-
-/** The vector and the place of the Indonesian determinant section of the first lesson, as the index stores them. */
-const determinantOf = (
-  stored: Awaited<ReturnType<ReturnType<typeof setup>["rows"]>>
-) =>
-  Option.map(
-    Arr.findFirst(
-      stored,
-      (row) =>
-        row.appLocale === "id" &&
-        row.anchor === "determinan" &&
-        row.contentKey.endsWith("section-1")
-    ),
-    ({ embedding, ordinal }) => ({ embedding, ordinal })
-  );
-
-/** The texts that the steps sent to the embedder. */
-const embeddedBy = (
-  steps: Awaited<ReturnType<ReturnType<typeof setup>["build"]>>
-) => Num.sumAll(Arr.map(steps, ({ embedded }) => embedded));
-
-/** The documents that the steps passed over because the index held them. */
-const skippedBy = (
-  steps: Awaited<ReturnType<ReturnType<typeof setup>["build"]>>
-) => Num.sumAll(Arr.map(steps, ({ skipped }) => skipped));
 
 describe("section build", () => {
   it("indexes the active release: its lessons, then its Quran, then a clean up", async () => {
@@ -415,13 +386,64 @@ describe("section build", () => {
     ).toEqual([]);
   });
 
-  it("fails with the failure of the embedder and stores nothing of the page", async () => {
-    const { failure, rows, sources, t } = setup();
-    await t.mutation(seedKnowledge);
+  it("fails with the document whose sections the embedder refuses, names it in the log, and stores nothing", async () => {
     embedWithRefusal();
-    expect(await failure()).toMatchObject({ _tag: "GatewayFailure" });
+    const { rows, sources, t } = setup();
+    await t.mutation(seedKnowledge);
+    const { failure, logs } = await failedStepLogs(t);
+    expect(failure).toMatchObject({ _tag: "DocumentEmbedFailure" });
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(
+          logs,
+          ({ message }) => message === "Section build step failed."
+        )
+      )
+    ).toMatchObject({
+      annotations: {
+        appLocale: expect.any(String),
+        contentKey: expect.any(String),
+        failure: "DocumentEmbedFailure",
+        reason: "invalid",
+        retryable: false,
+        status: 400,
+      },
+      level: "ERROR",
+    });
     expect(await rows()).toEqual([]);
     expect(await sources()).toEqual([]);
+  });
+
+  it("moves on past a lesson whose sections the model refuses, and records how many sections it left out", async () => {
+    embedWithKnowledgeRefusing("Terlarang");
+    const { build, rows, sources, t } = setup();
+    await t.mutation(async (ctx) => {
+      await seedKnowledge(ctx);
+      await editKnowledgeLesson(
+        ctx,
+        1,
+        "id",
+        "Terlarang menyusun bilangan.\n\n## Bentuk Matriks\n\nTerlarang.\n\n## Determinan\n\nTerlarang juga."
+      );
+    });
+    const steps = await build();
+    // The three sections of the lesson are left out, and the eight other
+    // documents are stored with their versions, so the build ends with a count.
+    expect(Option.getOrUndefined(Arr.last(steps))?.position.phase).toBe(
+      "prune"
+    );
+    expect(Num.sumAll(Arr.map(steps, ({ missing }) => missing))).toBe(3);
+    expect(
+      Arr.some(
+        await rows(),
+        ({ appLocale, contentKey }) =>
+          appLocale === "id" && contentKey.endsWith("section-1")
+      )
+    ).toBe(false);
+    expect(await sources()).toHaveLength(8);
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toMatchObject([{ missing: 3, releaseId: KNOWLEDGE_RELEASE.releaseId }]);
   });
 
   it("deletes the documents that no release publishes any more in bounded batches, and records the build after the last", async () => {
@@ -447,7 +469,7 @@ describe("section build", () => {
     const releaseId = KNOWLEDGE_RELEASE.releaseId;
     const first = await run({ position, releaseId });
     expect(first).toMatchObject({ removed: rowsOfEach, stale: false });
-    expect(first.next).toEqual({ position, releaseId });
+    expect(first.next).toEqual({ missing: 0, position, releaseId });
     expect(await rows()).toHaveLength(rowsOfEach);
     expect(await sources()).toHaveLength(1);
     expect(

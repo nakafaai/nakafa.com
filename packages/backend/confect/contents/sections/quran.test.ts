@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { EMBED_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
 import { readSurah } from "@repo/backend/confect/contents/sections/quran";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
@@ -276,7 +275,7 @@ describe("section build of the Quran", () => {
     return { ...knowledgeBuild(t), rows, sources, t };
   }
 
-  it("indexes a surah at a time, in bounded batches", async () => {
+  it("indexes a surah at a time, with one request for each passage", async () => {
     const model = embedWithKnowledge();
     const { rows, run, sources, t } = building();
     const verses = 300;
@@ -308,9 +307,7 @@ describe("section build of the Quran", () => {
       skipped: 0,
       written: passages,
     });
-    expect(model.doEmbedCalls).toHaveLength(
-      Math.ceil(passages / EMBED_BATCH_SIZE)
-    );
+    expect(model.doEmbedCalls).toHaveLength(passages);
     expect(await rows()).toHaveLength(passages);
     expect(await sources()).toHaveLength(3);
   });

@@ -16,10 +16,10 @@ const ACTIVE = KNOWLEDGE_RELEASE.releaseId;
 /** What a test does to the state of the index of one deployment. */
 function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
   /** Finishes the build and gives, with the answer, how many documents the transaction wrote. */
-  const finishMeasured = (releaseId: string, model = MODEL) =>
+  const finishMeasured = (releaseId: string, model = MODEL, missing = 0) =>
     t.mutation(async (ctx) => {
       const result = await Effect.runPromise(
-        finishBuild({ model, releaseId }).pipe(
+        finishBuild({ missing, model, releaseId }).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
           )
@@ -28,8 +28,8 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
       const metrics = await ctx.meta.getTransactionMetrics();
       return { documentsWritten: metrics.documentsWritten.used, result };
     });
-  const finish = async (releaseId: string, model = MODEL) =>
-    (await finishMeasured(releaseId, model)).result;
+  const finish = async (releaseId: string, model = MODEL, missing = 0) =>
+    (await finishMeasured(releaseId, model, missing)).result;
   /** Asks whether the index may answer and gives, with the answer, how many documents the transaction read. */
   const readyMeasured = (model = MODEL) =>
     t.mutation(async (ctx) => {
@@ -130,6 +130,18 @@ describe("section index state", () => {
       result: { recorded: true },
     });
     expect(await records()).toEqual([first]);
+  });
+
+  it("records how many sections the build left out, and writes the record again when that count changes", async () => {
+    const { finish, finishMeasured, records } = await setup();
+    await finish(ACTIVE);
+    expect(await finishMeasured(ACTIVE, MODEL, 2)).toEqual({
+      documentsWritten: 1,
+      result: { recorded: true },
+    });
+    expect(await records()).toMatchObject([
+      { key: "primary", missing: 2, model: MODEL, releaseId: ACTIVE },
+    ]);
   });
 
   it("replaces the record when the model that embedded the index changed", async () => {

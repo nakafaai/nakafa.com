@@ -103,10 +103,15 @@ describe("section rows", () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(seedKnowledge);
     expect(
-      await t.mutation(finish, { model, releaseId: "release-earlier" })
+      await t.mutation(finish, {
+        missing: 0,
+        model,
+        releaseId: "release-earlier",
+      })
     ).toEqual({ recorded: false });
     expect(
       await t.mutation(finish, {
+        missing: 0,
         model,
         releaseId: KNOWLEDGE_RELEASE.releaseId,
       })

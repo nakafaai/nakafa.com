@@ -12340,6 +12340,7 @@ export declare const internal: {
           "action",
           "internal",
           {
+            missing?: number;
             position?:
               | { cursor: string | null; phase: "lessons" }
               | { phase: "quran"; surah: number }
@@ -12351,6 +12352,7 @@ export declare const internal: {
             kept: number;
             missing: number;
             next: {
+              missing: number;
               position:
                 | { cursor: string | null; phase: "lessons" }
                 | { phase: "quran"; surah: number }
@@ -12467,7 +12469,7 @@ export declare const internal: {
         finish: FunctionReference<
           "mutation",
           "internal",
-          { model: string; releaseId: string },
+          { missing: number; model: string; releaseId: string },
           { recorded: boolean }
         >;
         lessons: FunctionReference<

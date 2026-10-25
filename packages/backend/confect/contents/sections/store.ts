@@ -58,12 +58,15 @@ export const knownSections = Effect.fn("contents.sections.known")(function* (
 
 /**
  * Makes the index hold exactly the given sections of one document, and records
- * the version they were made from, in one transaction. A section keeps the
- * vector of a stored section of the document that has the same text and was
- * made by the same model, whichever place that section had, and is written
- * again only when something else about it changed, such as its place or its
- * heading: a section that another section pushed one place on is neither
- * embedded again nor lost. A changed or new section needs its vector with it.
+ * the version they were made from when it holds every one of them, in one
+ * transaction. A section that the model left out leaves the document without a
+ * version, so that the next build reads it again and embeds what it still
+ * lacks. A section keeps the vector of a stored section of the document that has
+ * the same text and was made by the same model, whichever place that section
+ * had, and is written again only when something else about it changed, such as
+ * its place or its heading: a section that another section pushed one place on
+ * is neither embedded again nor lost. A changed or new section needs its vector
+ * with it.
  * A stored row that no given section takes the place of is deleted, and so is
  * the row of a section that came without a vector and matches nothing, because
  * the text that row holds is outdated. Storing the same document again changes
@@ -132,20 +135,25 @@ export const storeDocument = Effect.fn("contents.sections.store")(function* (
   yield* Effect.forEach(extras, ({ _id }) => table.delete(_id), {
     discard: true,
   });
+  const count = (outcome: (typeof outcomes)[number]["outcome"]) =>
+    Arr.length(Arr.filter(outcomes, (found) => found.outcome === outcome));
+  const missing = count("missing");
   const known = yield* findSource(input.source);
-  if (known?.version !== input.source.version) {
-    const sources = writer.table("contentSectionSources");
+  const sources = writer.table("contentSectionSources");
+  if (missing > 0) {
+    if (known !== null) {
+      yield* sources.delete(known._id);
+    }
+  } else if (known?.version !== input.source.version) {
     yield* (
       known === null
         ? Effect.asVoid(sources.insert(input.source))
         : sources.replace(known._id, input.source)
     ).pipe(Effect.orDie);
   }
-  const count = (outcome: (typeof outcomes)[number]["outcome"]) =>
-    Arr.length(Arr.filter(outcomes, (found) => found.outcome === outcome));
   return {
     kept: count("kept"),
-    missing: count("missing"),
+    missing,
     removed: Arr.length(extras),
     stale: false,
     written: count("written"),

@@ -159,7 +159,7 @@ describe("section sync", () => {
     ]);
   });
 
-  it("embeds the sections of several documents together and stores each document with its own version", async () => {
+  it("embeds the sections of each document, and stores each document with its own version", async () => {
     const model = embedWithKnowledge();
     const { rows, sources, sync } = await setup();
     expect(
@@ -171,7 +171,10 @@ describe("section sync", () => {
         }),
       ])
     ).toMatchObject({ embedded: 5, written: 5 });
-    expect(model.doEmbedCalls).toHaveLength(1);
+    // One request for each text: three for the first document, two for the second.
+    expect(Arr.map(model.doEmbedCalls, ({ values }) => values.length)).toEqual([
+      1, 1, 1, 1, 1,
+    ]);
     expect(await rows()).toHaveLength(5);
     expect(
       Arr.map(await sources(), ({ contentKey, version }) => [
@@ -248,7 +251,7 @@ describe("section sync", () => {
         maxEmbeddingsPerCall: 512,
       })
     );
-    const { rows, sync } = await setup();
+    const { rows, sources, sync } = await setup();
     expect(
       await sync([
         lesson(3, (number) => (number === 2 ? "Terlarang." : "Aman.")),
@@ -265,13 +268,17 @@ describe("section sync", () => {
       expect.not.arrayContaining(["bagian-2"])
     );
     expect(await rows()).toHaveLength(2);
+    // A document that lacks a section has no version, so the next build reads it again.
+    expect(await sources()).toEqual([]);
   });
 
-  it("fails with the failure of the embedder when the model refuses every section, and stores nothing", async () => {
+  it("fails with the document whose sections the model refuses, and the refusal, and stores nothing", async () => {
     embedWithRefusal();
     const { rows, sources, sync } = await setup();
     await expect(sync([lesson(3)])).rejects.toMatchObject({
-      reason: "invalid",
+      _tag: "DocumentEmbedFailure",
+      contentKey: source.contentKey,
+      failure: { reason: "invalid" },
     });
     expect(await rows()).toEqual([]);
     expect(await sources()).toEqual([]);

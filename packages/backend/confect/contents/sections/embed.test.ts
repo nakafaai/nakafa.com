@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  embedBatch,
-  embedDrafts,
-} from "@repo/backend/confect/contents/sections/embed";
+import { embedBatch } from "@repo/backend/confect/contents/sections/embed";
 import {
   EMBED_BATCH_SIZE,
   EMBED_RETRIES,
@@ -71,28 +68,31 @@ function embedder(
 }
 
 const embed = (drafts: readonly SectionDraft[]) =>
-  embedDrafts(drafts).pipe(Effect.provide(GatewayTest));
+  embedBatch(drafts).pipe(Effect.provide(GatewayTest));
 
 /** Lets the given time pass for the timers of the test, after the fibers have run up to them. */
 const pass = (milliseconds: number) =>
   Effect.promise(() => vi.advanceTimersByTimeAsync(milliseconds));
 
 describe("section embedding", () => {
-  it.live("gives the vector of each draft in order, a batch at a time", () =>
-    Effect.gen(function* () {
-      const model = embedder(() => undefined);
-      const drafts = Arr.makeBy(EMBED_BATCH_SIZE + 1, (index) =>
-        draft("t".repeat(index + 1), index)
-      );
-      expect(yield* embed(drafts)).toEqual(
-        Arr.makeBy(EMBED_BATCH_SIZE + 1, (index) =>
-          Option.some(vectorOf(index + 1))
-        )
-      );
-      expect(
-        Arr.map(model.doEmbedCalls, ({ values }) => values.length)
-      ).toEqual([EMBED_BATCH_SIZE, 1]);
-    })
+  it.live(
+    "gives the vector of each draft in order, one request for each text",
+    () =>
+      Effect.gen(function* () {
+        const model = embedder(() => undefined);
+        const drafts = Arr.makeBy(EMBED_BATCH_SIZE + 1, (index) =>
+          draft("t".repeat(index + 1), index)
+        );
+        expect(yield* embed(drafts)).toEqual(
+          Arr.makeBy(EMBED_BATCH_SIZE + 1, (index) =>
+            Option.some(vectorOf(index + 1))
+          )
+        );
+        expect(model.doEmbedCalls).toHaveLength(EMBED_BATCH_SIZE + 1);
+        expect(
+          Arr.every(model.doEmbedCalls, ({ values }) => values.length === 1)
+        ).toBe(true);
+      })
   );
 
   it.live(
@@ -164,6 +164,20 @@ describe("section embedding", () => {
     })
   );
 
+  it.live(
+    "fails with a failure that is not a refusal, such as a configuration failure",
+    () =>
+      Effect.gen(function* () {
+        // A status of 404 is not a refusal of the text, so the text is not left
+        // out: the call fails, and the build names the document it was for.
+        const model = embedder(() => failures.configuration);
+        expect(yield* Effect.flip(embed([draft("abc")]))).toBe(
+          failures.configuration
+        );
+        expect(model.doEmbedCalls).toHaveLength(1);
+      })
+  );
+
   describe("a text that the model refuses", () => {
     const poison = "BAD";
     const refusing = (refusal: GatewayFailure) =>
@@ -182,7 +196,7 @@ describe("section embedding", () => {
           const refusal = failures[reason];
           const model = refusing(refusal);
           const logged = MutableRef.make<readonly unknown[]>([]);
-          const found = yield* embedDrafts([
+          const found = yield* embedBatch([
             draft("a", 0),
             draft(poison, 1),
             draft("abc", 2),
@@ -208,16 +222,22 @@ describe("section embedding", () => {
             Option.none(),
             Option.some(vectorOf(3)),
           ]);
-          // The batch, then each text of it alone.
-          expect(model.doEmbedCalls).toHaveLength(4);
+          // Each text goes in a request of its own, and the model takes two
+          // of them, so no probe is sent.
+          expect(model.doEmbedCalls).toHaveLength(3);
           expect(MutableRef.get(logged)).toEqual([
             {
               annotations: {
                 appLocale: "id",
+                bytes: 3,
+                characters: 3,
                 contentKey: "material/lesson/matematika/matriks",
                 model: "google/gemini-embedding-2",
                 ordinal: 1,
                 reason: refusal.reason,
+                retryable: refusal.retryable,
+                status: refusal.status,
+                type: refusal.type,
               },
               level: "WARN",
               message: "A section could not be embedded and is left out.",
@@ -226,11 +246,28 @@ describe("section embedding", () => {
         })
     );
 
-    it.live("leaves out a draft that comes alone", () =>
-      Effect.gen(function* () {
-        refusing(failures.invalid);
-        expect(yield* embed([draft(poison)])).toEqual([Option.none()]);
-      })
+    it.live(
+      "leaves out a draft that comes alone, when the model takes the probe text",
+      () =>
+        Effect.gen(function* () {
+          const model = refusing(failures.invalid);
+          expect(yield* embed([draft(poison)])).toEqual([Option.none()]);
+          // The text, and then the probe text, which the model takes.
+          expect(model.doEmbedCalls).toHaveLength(2);
+        })
+    );
+
+    it.live(
+      "leaves out each text of a batch that the model refuses, when it takes the probe text",
+      () =>
+        Effect.gen(function* () {
+          const model = refusing(failures.invalid);
+          expect(
+            yield* embed([draft(poison, 0), draft(`${poison} again`, 1)])
+          ).toEqual([Option.none(), Option.none()]);
+          // The two texts, and the probe text.
+          expect(model.doEmbedCalls).toHaveLength(3);
+        })
     );
 
     it.live(
@@ -241,6 +278,7 @@ describe("section embedding", () => {
           expect(
             yield* Effect.flip(embed([draft("a", 0), draft("b", 1)]))
           ).toBe(failures.invalid);
+          // The two texts, and the probe text that the model refuses too.
           expect(model.doEmbedCalls).toHaveLength(3);
         })
     );

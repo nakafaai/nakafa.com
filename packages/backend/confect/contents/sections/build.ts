@@ -11,6 +11,7 @@ import type {
 } from "@repo/backend/confect/contents/sections/build.spec";
 import { lessonDocument } from "@repo/backend/confect/contents/sections/document";
 import { syncDocuments } from "@repo/backend/confect/contents/sections/sync";
+import { routingFacts } from "@repo/backend/confect/gateway/failure";
 import { embeddingModelId } from "@repo/backend/confect/gateway/model";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Duration, Effect, Match } from "effect";
@@ -103,13 +104,14 @@ const quranStep = Effect.fn("contents.sections.quranStep")(function* (
 /**
  * Deletes the documents that the active release does not publish any more,
  * with their sections, each document whole and a bounded number of rows at a
- * time. When none are left to check, the index holds exactly the sections of
- * the release, and the step records that, which is when search starts to trust
- * it.
+ * time. When none are left to check, the step records the build as finished
+ * with the number of sections it left out, which is when search starts to trust
+ * the index.
  */
 const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
   cursor: string | null,
-  releaseId: string | undefined
+  releaseId: string | undefined,
+  missing: number
 ) {
   if (releaseId === undefined) {
     return STALE;
@@ -135,7 +137,7 @@ const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
   }
   const finished = yield* runMutation(
     refs.internal.contents.sections.rows.finish,
-    { model: embeddingModelId, releaseId }
+    { missing, model: embeddingModelId, releaseId }
   ).pipe(Effect.catchTag("SchemaError", Effect.die));
   return {
     ...NOTHING,
@@ -151,16 +153,19 @@ const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
  * release, passes over the documents whose sections the index holds at the
  * right version, embeds the sections the rest lacks, and stores them; the
  * steps walk the lessons, then the Quran, then delete the documents that the
- * release does not publish any more and record that the index is complete. The
- * position of a step is all a later run needs to resume, and storing the same
- * documents again changes nothing, so a build may be started again at any
- * time, and one that finds nothing changed reads little and writes only its
- * record. Without a position the build starts at the first lesson, and without
- * a release it builds the active one.
+ * release does not publish any more and record the build as finished, with the
+ * sections it left out. A section that the model refuses is left out and
+ * counted, and the build goes on to the next document. The position of a step
+ * is all a later run needs to resume, and storing the same documents again
+ * changes nothing, so a build may be started again at any time, and one that
+ * finds nothing changed reads little and writes only its record. Without a
+ * position the build starts at the first lesson, and without a release it builds
+ * the active one.
  */
 export const runStep = Effect.fn("contents.sections.run")(
   function* (input: typeof stepInputValidator.Type) {
     const position = input.position ?? START;
+    const missing = input.missing ?? 0;
     const scheduler = yield* Scheduler;
     const outcome = yield* Match.value(position).pipe(
       Match.when({ phase: "lessons" }, ({ cursor }) =>
@@ -170,15 +175,21 @@ export const runStep = Effect.fn("contents.sections.run")(
         quranStep(surah, input.releaseId)
       ),
       Match.when({ phase: "prune" }, ({ cursor }) =>
-        pruneStep(cursor, input.releaseId)
+        pruneStep(cursor, input.releaseId, missing)
       ),
       Match.exhaustive
     );
-    if (outcome.next !== null) {
+    // The count runs on from step to step, so that the record of the finished
+    // build says how many sections the whole build left out.
+    const next =
+      outcome.next === null
+        ? null
+        : { ...outcome.next, missing: missing + outcome.missing };
+    if (next !== null) {
       yield* scheduler.runAfter(
         Duration.millis(0),
         refs.internal.contents.sections.build.run,
-        outcome.next
+        next
       );
     }
     yield* Effect.logInfo("Section build step done.").pipe(
@@ -192,7 +203,7 @@ export const runStep = Effect.fn("contents.sections.run")(
         written: outcome.written,
       })
     );
-    return { ...outcome, position };
+    return { ...outcome, next, position };
   },
   (step, input) =>
     Effect.tapError(step, (error) =>
@@ -200,6 +211,13 @@ export const runStep = Effect.fn("contents.sections.run")(
         Effect.annotateLogs({
           failure: error._tag,
           position: encodeJsonText(input.position ?? START),
+          ...(error._tag === "DocumentEmbedFailure"
+            ? {
+                appLocale: error.appLocale,
+                contentKey: error.contentKey,
+                ...routingFacts(error.failure),
+              }
+            : {}),
         })
       )
     )

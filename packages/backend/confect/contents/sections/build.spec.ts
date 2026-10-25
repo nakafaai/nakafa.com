@@ -19,14 +19,20 @@ const positionValidator = Schema.Union([
 ]);
 export type Position = typeof positionValidator.Type;
 
-/** One build step: the release it is for, if known, and where it works. */
+/**
+ * One build step: the release it is for, if known, where it works, and how many
+ * sections the build has left out before it, which a build that starts counts
+ * from none.
+ */
 export const stepInputValidator = Schema.Struct({
+  missing: Schema.optionalKey(Schema.Finite),
   position: Schema.optionalKey(positionValidator),
   releaseId: Schema.optionalKey(Schema.String),
 });
 
-/** The step that follows another: the release is known by then. */
+/** The step that follows another: the release and the count are known by then. */
 const nextStepValidator = Schema.Struct({
+  missing: Schema.Finite,
   position: positionValidator,
   releaseId: Schema.String,
 });
