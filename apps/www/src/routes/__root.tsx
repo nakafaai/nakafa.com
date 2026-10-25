@@ -75,7 +75,7 @@ export const Route = createRootRoute({
  * locale of the standalone not-found page, and the default locale answers a path
  * without one. The pre-paint scripts set the theme, the pricing currency and the
  * signed-in hint before the first frame, so nothing changes after paint. The
- * theme and the URL-state adapter are mounted here once, for every route below.
+ * theme is mounted here once, for every route below.
  */
 function RootDocument({ children }: { children: ReactNode }) {
   const params: Readonly<Record<string, string | undefined>> = useParams({

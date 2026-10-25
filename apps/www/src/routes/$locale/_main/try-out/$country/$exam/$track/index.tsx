@@ -3,12 +3,18 @@ import {
   createFileRoute,
   defer,
   notFound,
+  stripSearchParams,
 } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
+import {
+  CATALOG_QUERY_DEFAULTS,
+  CatalogQuery,
+  catalogLoaderDeps,
+} from "@/components/tryout/catalog/table/query";
 import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
 import {
   readTryoutTrackFn,
@@ -18,7 +24,6 @@ import {
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
-import { TryoutTrackSearch } from "@/components/tryout/route/search";
 import { HOME_TARGET } from "@/lib/routing/target";
 
 /**
@@ -28,8 +33,9 @@ import { HOME_TARGET } from "@/lib/routing/target";
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/"
 )({
-  validateSearch: Schema.toStandardSchemaV1(TryoutTrackSearch),
-  loaderDeps: ({ search }) => search,
+  validateSearch: Schema.toStandardSchemaV1(CatalogQuery),
+  search: { middlewares: [stripSearchParams(CATALOG_QUERY_DEFAULTS)] },
+  loaderDeps: ({ search }) => catalogLoaderDeps(search),
   loader: async ({ params, deps }) => {
     const route = await readTryoutTrackFn({
       data: {

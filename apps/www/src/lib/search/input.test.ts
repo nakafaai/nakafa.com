@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
-import { SearchInput } from "@/lib/nuqs/search";
+import { readSearchQuery, SearchInput } from "@/lib/search/input";
 
 describe("SearchInput", () => {
   it.effect("reads the query of the URL", () =>
@@ -27,4 +27,16 @@ describe("SearchInput", () => {
       expect(search).toEqual({ q: "" });
     })
   );
+});
+
+describe("readSearchQuery", () => {
+  it("reads a number that TanStack parsed as the text the URL carries", () => {
+    expect(readSearchQuery({ q: 2024 })).toBe("2024");
+    expect(readSearchQuery({ q: true })).toBe("true");
+  });
+
+  it("reads an absent or unsupported query as no search", () => {
+    expect(readSearchQuery({})).toBe("");
+    expect(readSearchQuery({ q: { text: "algebra" } })).toBe("");
+  });
 });

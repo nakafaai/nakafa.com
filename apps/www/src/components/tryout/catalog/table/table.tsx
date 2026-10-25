@@ -1,11 +1,10 @@
-import { Effect } from "effect";
-import { useQueryStates } from "nuqs";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
+import { getRouteApi, useLocation } from "@tanstack/react-router";
+import { Effect, Schema } from "effect";
 import { useState } from "react";
 import { ConvexIsland } from "@/components/providers/island";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
 import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
-import { catalogQuery } from "@/components/tryout/catalog/table/query";
+import { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import type {
   TryoutSetListArgs,
   TryoutSetPage,
@@ -34,35 +33,28 @@ export interface TryoutSetTableProps {
   title: string;
 }
 
+/** The track route, whose validated search is the catalog's filter, sort and direction. */
+const catalogRoute = getRouteApi(
+  "/$locale/_main/try-out/$country/$exam/$track/"
+);
+
 /**
  * Displays one complete discovery result with independent URL controls. A learner's
  * table reads the page's live query once its client exists. A visitor's table reads
  * the loader's first page, and each further window through the server function, so
- * no visitor opens a socket. The catalog table reads its filters from the URL, so
- * it mounts the adapter it reads through.
+ * no visitor opens a socket. A change of filter, sort or direction is a navigation
+ * that adds a history entry and keeps the scroll position.
  */
-export function TryoutSetTable(props: TryoutSetTableProps) {
-  return (
-    <NuqsAdapter>
-      <TryoutSetCatalog {...props} />
-    </NuqsAdapter>
-  );
-}
-
-/** The props of both variants: the server payload, the request on screen, the selection setter and the title. */
-interface VariantProps {
-  bootstrap: TryoutSetTableProps["bootstrap"];
-  request: TryoutSetRequest;
-  select: (change: TryoutSetSelectionChange) => void;
-  title: string;
-}
-
-function TryoutSetCatalog({ bootstrap, title }: TryoutSetTableProps) {
-  const [selection, setSelection] = useQueryStates(catalogQuery, {
-    history: "push",
-    shallow: true,
-    scroll: false,
+export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
+  /**
+   * The selection reads the address, which a navigation updates at once. The route
+   * match commits only when the track loader resolves, so its search would hold the
+   * controls and the request on the old selection until the server call returned.
+   */
+  const selection = useLocation({
+    select: (location) => Schema.decodeSync(CatalogQuery)(location.search),
   });
+  const navigate = catalogRoute.useNavigate();
   const request: TryoutSetRequest = {
     countryKey: bootstrap.args.countryKey,
     examKey: bootstrap.args.examKey,
@@ -71,7 +63,14 @@ function TryoutSetCatalog({ bootstrap, title }: TryoutSetTableProps) {
     sort: { direction: selection.direction, field: selection.sort },
     trackKey: bootstrap.args.trackKey,
   };
-  const select = (change: TryoutSetSelectionChange) => setSelection(change);
+  const select = (change: TryoutSetSelectionChange) =>
+    navigate({
+      hash: true,
+      replace: false,
+      resetScroll: false,
+      search: (previous) => ({ ...previous, ...change }),
+      state: true,
+    });
   return (
     <ConvexIsland
       fallback={
@@ -91,6 +90,14 @@ function TryoutSetCatalog({ bootstrap, title }: TryoutSetTableProps) {
       />
     </ConvexIsland>
   );
+}
+
+/** The props of both variants: the server payload, the request on screen, the selection setter and the title. */
+interface VariantProps {
+  bootstrap: TryoutSetTableProps["bootstrap"];
+  request: TryoutSetRequest;
+  select: (change: TryoutSetSelectionChange) => void;
+  title: string;
 }
 
 /** A learner's table: the page's live query, which starts from the loader's first page. */

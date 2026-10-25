@@ -4,64 +4,35 @@ import {
   readMaterialContextHint,
 } from "@repo/contents/route/material/context";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
-import {
-  createLoader,
-  createParser,
-  createSerializer,
-  type LoaderInput,
-} from "nuqs/server";
+import { Effect, Option, Schema } from "effect";
 
 /**
- * Parses the public `ctx` query value through the route-owned context grammar.
- *
- * nuqs treats `null` as absence, which matches the product rule that malformed
- * or mismatched material context must be ignored rather than block the page.
+ * The query string of a material URL, decoded from its raw text. The `ctx` key
+ * holds one text, and a value of another shape, such as a repeated key, is absent.
  */
-function parseMaterialContextQuery(value: string) {
-  return readMaterialContextHint(value) ?? null;
-}
-
-/**
- * Serializes a validated material context identity with the route-owned codec.
- *
- * Callers only receive this identity after the material/context index proves it
- * belongs to the current source asset and target locale.
- */
-function serializeMaterialContextQuery(context: MaterialContextIdentity) {
-  return encodeMaterialContextHint(context);
-}
-
-const materialContextParser = createParser({
-  parse: parseMaterialContextQuery,
-  serialize: serializeMaterialContextQuery,
-});
-
-const materialContextSearchParams = {
-  context: materialContextParser,
-};
-
-const materialContextUrlKeys = {
-  context: MATERIAL_CONTEXT_QUERY_PARAM,
-};
-
-const loadMaterialContextSearchParams = createLoader(
-  materialContextSearchParams,
-  { urlKeys: materialContextUrlKeys }
-);
-
-const serializeMaterialContextSearchParams = createSerializer(
-  materialContextSearchParams,
-  { urlKeys: materialContextUrlKeys }
+const MaterialContextQuery = Schema.fromURLSearchParams(
+  Schema.Struct({
+    [MATERIAL_CONTEXT_QUERY_PARAM]: Schema.optionalKey(
+      Schema.String.pipe(Schema.catchDecoding(() => Effect.succeedNone))
+    ),
+  })
 );
 
 /**
- * Reads the optional material return context from supported nuqs server inputs.
+ * Reads the optional material return context from the query string of a URL.
  *
  * Invalid, repeated, or stale values remain absence so direct SEO material
  * visits keep the canonical content page without an invented curriculum parent.
  */
-export function readMaterialContextQuery(input: LoaderInput) {
-  return loadMaterialContextSearchParams(input).context ?? undefined;
+export function readMaterialContextQuery(search: string) {
+  const query = Schema.decodeOption(MaterialContextQuery)(
+    new URLSearchParams(search)
+  );
+  return Option.getOrUndefined(
+    Option.flatMapNullishOr(query, (params) =>
+      readMaterialContextHint(params[MATERIAL_CONTEXT_QUERY_PARAM])
+    )
+  );
 }
 
 /**
@@ -69,6 +40,10 @@ export function readMaterialContextQuery(input: LoaderInput) {
  *
  * Callers use this after source-identity projection succeeds; `undefined`
  * returns an empty suffix so locale switching drops invalid target contexts.
+ * The value is one query component, encoded by `encodeURIComponent`, the standard
+ * for a query value. It keeps the tilde literal, as the curriculum links write it,
+ * where URLSearchParams would encode it. The colon and the slash of a key are
+ * percent-encoded, and a URL reader decodes both spellings to the same key.
  */
 export function toMaterialContextQueryString(
   context: MaterialContextIdentity | undefined
@@ -77,5 +52,7 @@ export function toMaterialContextQueryString(
     return "";
   }
 
-  return serializeMaterialContextSearchParams({ context });
+  return `?${MATERIAL_CONTEXT_QUERY_PARAM}=${encodeURIComponent(
+    encodeMaterialContextHint(context)
+  )}`;
 }

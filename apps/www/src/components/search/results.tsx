@@ -1,15 +1,16 @@
 import { useDebouncedValue } from "@mantine/hooks";
-import { useQueryStates } from "nuqs";
+import { getRouteApi } from "@tanstack/react-router";
 import { SearchResults } from "@/components/search/list";
 import { getErrorMessage } from "@/lib/failure";
-import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/search/query";
 
 const DEBOUNCE_TIME = 500;
 
+const searchRoute = getRouteApi("/$locale/_main/_app/search");
+
 /** Connects the search page query string to Convex search results. */
 export function SearchListItems() {
-  const [{ q }] = useQueryStates(searchParsers);
+  const { q } = searchRoute.useSearch();
 
   const [debouncedQuery] = useDebouncedValue(q, DEBOUNCE_TIME);
 

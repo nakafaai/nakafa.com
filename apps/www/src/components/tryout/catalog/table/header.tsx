@@ -22,9 +22,8 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
-import { catalogQuery } from "@/components/tryout/catalog/table/query";
 import type {
   TryoutSetSort,
   TryoutSetStatusFilter,
@@ -189,9 +188,8 @@ function TryoutStatusHeading({
           <DropdownMenuGroup>
             <DropdownMenuRadioGroup
               onValueChange={(value) => {
-                const parsed = catalogQuery.status.parse(value);
-                if (parsed !== null) {
-                  onFilter(parsed);
+                if (Schema.is(setFilterValidator)(value)) {
+                  onFilter(value);
                 }
               }}
               value={filter}

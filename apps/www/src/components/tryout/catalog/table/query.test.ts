@@ -1,42 +1,74 @@
 import { describe, expect, it } from "@effect/vitest";
-import { createSerializer } from "nuqs/server";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Schema } from "effect";
 import {
-  catalogQuery,
-  readCatalogQuery,
+  CATALOG_QUERY_DEFAULTS,
+  CatalogQuery,
+  catalogLoaderDeps,
 } from "@/components/tryout/catalog/table/query";
+
+const decodeQuery = Schema.decodeUnknownSync(CatalogQuery);
 
 describe("catalog URL selection", () => {
   it("restores combined filtering and sorting from a shared URL", () => {
-    const selection = readCatalogQuery({
-      status: "expired",
-      sort: "durationSeconds",
+    expect(
+      decodeQuery({
+        direction: "desc",
+        sort: "durationSeconds",
+        status: "expired",
+      })
+    ).toEqual({
       direction: "desc",
-    });
-    expect(selection).toEqual({
-      status: "expired",
       sort: "durationSeconds",
-      direction: "desc",
+      status: "expired",
     });
-    const url = createSerializer(catalogQuery)(selection);
-    expect(readCatalogQuery(new URLSearchParams(url))).toEqual(selection);
   });
 
-  it("uses authored order for absent or unsupported URL choices", () => {
-    const defaults = { status: "all", sort: "order", direction: "asc" };
-    expect(readCatalogQuery({})).toEqual(defaults);
+  it("uses the authored order, every set and ascending for an absent URL", () => {
+    const defaults = { direction: "asc", sort: "order", status: "all" };
+    expect(decodeQuery({})).toEqual(defaults);
+    expect(CATALOG_QUERY_DEFAULTS).toEqual(defaults);
+  });
+
+  it("decodes a malformed or repeated value to its default, and keeps the other values", () => {
     expect(
-      readCatalogQuery({
-        status: "unknown",
-        sort: "unknown",
+      decodeQuery({
         direction: "unknown",
+        sort: ["title", "order"],
+        status: "unknown",
       })
-    ).toEqual(defaults);
+    ).toEqual({ direction: "asc", sort: "order", status: "all" });
     expect(
-      readCatalogQuery({ status: "not-started", sort: "publishedScore" })
+      decodeQuery({ sort: "publishedScore", status: "not-started" })
     ).toEqual({
-      status: "not-started",
+      direction: "asc",
       sort: "publishedScore",
+      status: "not-started",
+    });
+  });
+
+  it("reads a value that TanStack parsed from JSON as its default", () => {
+    expect(decodeQuery({ direction: 1, sort: null, status: false })).toEqual({
+      direction: "asc",
+      sort: "order",
+      status: "all",
+    });
+  });
+});
+
+describe("catalog loader dependency", () => {
+  it("keys the loader by one JSON whatever order the address lists its keys", () => {
+    const canonical = catalogLoaderDeps({
+      direction: "asc",
+      sort: "order",
+      status: "all",
+    });
+    const spelledOut = catalogLoaderDeps({
+      status: "all",
+      sort: "order",
       direction: "asc",
     });
+    expect(encodeJsonText(spelledOut)).toBe(encodeJsonText(canonical));
+    expect(canonical).toEqual(CATALOG_QUERY_DEFAULTS);
   });
 });

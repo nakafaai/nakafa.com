@@ -7,20 +7,35 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
+import { getRouteApi, useLocation } from "@tanstack/react-router";
 import { cn } from "cn";
-import { useQueryStates } from "nuqs";
 import { useTranslations } from "use-intl";
-import { searchParsers } from "@/lib/nuqs/search";
 import { useSearch } from "@/lib/search/context";
+import { readSearchQuery } from "@/lib/search/input";
+
+const searchRoute = getRouteApi("/$locale/_main/_app/search");
 
 export function InputSearch() {
   const t = useTranslations("Utils");
   const setQuery = useSearch((state) => state.setQuery);
+  const navigate = searchRoute.useNavigate();
 
-  const [{ q }, setSearch] = useQueryStates(searchParsers);
+  /**
+   * The controlled value reads the location, which a navigation updates at once. A
+   * route match commits later, and a value that waits for it would drop keystrokes.
+   */
+  const q = useLocation({
+    select: (location) => readSearchQuery(location.search),
+  });
 
   const setValue = (value: string) => {
-    setSearch({ q: value });
+    navigate({
+      hash: true,
+      replace: true,
+      resetScroll: false,
+      search: (previous) => ({ ...previous, q: value }),
+      state: true,
+    });
     setQuery(value);
   };
 
