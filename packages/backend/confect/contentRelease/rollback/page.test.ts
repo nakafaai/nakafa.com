@@ -1,5 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  canonicalizeSignedContentArtifact,
+  SignedContentArtifactSchema,
+} from "@nakafa/aksara-contracts/content";
+import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
@@ -14,12 +18,30 @@ import {
   rollbackPageBytes,
   serializeRollbackPage,
 } from "@repo/backend/confect/contentRelease/rollback/page";
+import { convexModules } from "@repo/backend/confect/test.setup";
+import { internal } from "@repo/backend/convex/_generated/api";
+import schema from "@repo/backend/convex/schema";
+import {
+  TEST_MANIFEST_HASH,
+  TEST_RELEASE_ID,
+} from "@repo/backend/test/content/release";
+import {
+  activateRollbackFixture,
+  expectedRollbackPage,
+  insertRollbackItem,
+  propsDenseArtifactJson,
+} from "@repo/backend/test/content/rollback";
+import { convexTest } from "convex-test";
 import { Array as Arr, Option, Schema } from "effect";
 
 const ROLLBACK_OF = ReleaseIdSchema.make("release-base");
 const ROLLBACK_OF_HASH = Sha256HashSchema.make(`sha256:${"4".repeat(64)}`);
 const encoder = new TextEncoder();
 const decodeRecord = Schema.decodeUnknownSync(RollbackRecordSchema);
+const SignedArtifactJsonSchema = Schema.fromJsonString(
+  SignedContentArtifactSchema
+);
+const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 
 /** Builds one exact delete transition, the smallest record the contract accepts. */
 function deleteRecord(index: number) {
@@ -76,4 +98,47 @@ describe("contentRelease/rollback/page", () => {
       }
     }
   );
+
+  it("emits each stored artifact's bytes instead of encoding its signed tree again", async () => {
+    const t = convexTest(schema, convexModules);
+    const stored = propsDenseArtifactJson(0);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 1);
+      await insertRollbackItem(ctx, 0, false, "Technical fixture", {
+        currentArtifactJson: stored,
+      });
+    });
+
+    const source = await t.query(prepareRollback, {
+      afterIndex: -1,
+      limit: 1,
+      rollbackOf: TEST_RELEASE_ID,
+      rollbackOfManifestHash: TEST_MANIFEST_HASH,
+    });
+    expect(source).toContain(stored);
+  });
+
+  it("writes props-dense records at the tree ceiling exactly as the canonical walk", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 2);
+      for (const index of [0, 1]) {
+        await insertRollbackItem(ctx, index, true, "Technical fixture", {
+          currentArtifactJson: canonicalizeSignedContentArtifact(
+            Schema.decodeSync(SignedArtifactJsonSchema)(
+              propsDenseArtifactJson(index)
+            )
+          ),
+        });
+      }
+    });
+
+    const actual = await t.query(prepareRollback, {
+      afterIndex: -1,
+      limit: 2,
+      rollbackOf: TEST_RELEASE_ID,
+      rollbackOfManifestHash: TEST_MANIFEST_HASH,
+    });
+    expect(actual).toBe(await expectedRollbackPage(t, -1, 2, 2));
+  });
 });

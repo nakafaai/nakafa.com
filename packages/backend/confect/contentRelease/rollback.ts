@@ -1,6 +1,5 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
-  canonicalizeRollbackRecord,
   MAX_ROLLBACK_PAGE_BYTES,
   MAX_ROLLBACK_PAGE_RECORDS,
   type RollbackPage,
@@ -110,8 +109,9 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
     let recordTexts: string[] = [];
     let recordBytes = 0;
     // The walk stops at the first row that would pass the byte ceiling, so no
-    // later row is read. Each accepted transition is serialized once, here, and
-    // the page is written from that text.
+    // later row is read. Each transition is written from its stored artifact
+    // bytes, so no signed tree is encoded again, and the page is written from
+    // those texts.
     yield* Effect.findFirst(rowPage.page, (row, offset) =>
       Effect.gen(function* () {
         if (row.index !== request.afterIndex + offset + 1) {
@@ -120,8 +120,7 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
             `Rollback source ${request.rollbackOf} is not contiguous.`
           );
         }
-        const record = yield* rollbackRecord(row);
-        const text = canonicalizeRollbackRecord(record);
+        const { record, text } = yield* rollbackRecord(row);
         const textBytes = new TextEncoder().encode(text).byteLength;
         const candidate = makeRollbackPage(request, total, [
           ...records,

@@ -7,6 +7,7 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { MAX_CONTENT_TREE_BYTES } from "@nakafa/aksara-contracts/limits";
 import {
   ACTIVE_APP_LOCALE_CODES,
   ArtifactLocaleSchema,
@@ -21,6 +22,10 @@ import {
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import {
+  type ContentTreeElement,
+  canonicalizeContentTree,
+} from "@nakafa/aksara-contracts/tree";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { rollbackRecord } from "@repo/backend/confect/contentRelease/rollback/state";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -207,6 +212,7 @@ export async function insertRollbackItem(
   options?: {
     readonly authenticatedArtifact?: boolean;
     readonly contentKey?: typeof ContentKeySchema.Type;
+    readonly currentArtifactJson?: string;
     readonly currentProjectionJson?: string;
     readonly currentSourcePath?: typeof CorpusSourcePathSchema.Type;
     readonly delivery?: ContentDeliveryClass;
@@ -314,7 +320,9 @@ export async function insertRollbackItem(
       sourcePath: currentSourcePath,
     },
     bodyText,
-    signedArtifact ? encodeJsonText(signedArtifact) : undefined
+    signedArtifact
+      ? encodeJsonText(signedArtifact)
+      : options?.currentArtifactJson
   );
   if (previousExists) {
     await insertVersion(
@@ -389,9 +397,53 @@ export function expectedRollbackPage(
       .take(limit);
     const records = await Effect.runPromise(
       Effect.forEach(rows, (row) => rollbackRecord(row)).pipe(
+        Effect.map((transitions) =>
+          Arr.map(transitions, ({ record }) => record)
+        ),
         Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
       )
     );
     return perRowCanonicalPage(afterIndex, total, records);
+  });
+}
+
+/** Props per element in the props-dense fixture tree. */
+const PROPS_PER_ELEMENT = 62;
+
+/** Builds a fragment of em elements with 62 props each, filling the tree to just under its ceiling. */
+function propsDenseTree(): ContentTreeElement {
+  const props: Record<string, string> = {};
+  for (let index = 0; index < PROPS_PER_ELEMENT; index += 1) {
+    props[`p${index}`] = "x";
+  }
+  const element: ContentTreeElement = {
+    $node: "element",
+    name: "em",
+    props,
+    children: [],
+  };
+  const elementBytes = new TextEncoder().encode(
+    canonicalizeContentTree(element)
+  ).byteLength;
+  const count = Math.floor(
+    (MAX_CONTENT_TREE_BYTES - 4 * 1024) / (elementBytes + 1)
+  );
+  return {
+    $node: "element",
+    name: "fragment",
+    props: {},
+    children: Arr.makeBy(count, () => element),
+  };
+}
+
+/**
+ * The props-dense signed artifact of one rollback row, in the text its fixture writes. Its props keep
+ * insertion order, so the text is not the canonical form that ingress stores.
+ */
+export function propsDenseArtifactJson(index: number) {
+  return testArtifactJson({
+    artifactHash: rollbackArtifactHash(index, "current"),
+    contentKey: `test:head-${index}`,
+    contentTree: propsDenseTree(),
   });
 }

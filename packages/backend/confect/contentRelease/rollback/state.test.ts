@@ -1,6 +1,9 @@
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
+import {
+  canonicalizeRollbackRecord,
+  RollbackSnapshotEntrySchema,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { rollbackRecord } from "@repo/backend/confect/contentRelease/rollback/state";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -9,12 +12,13 @@ import schema from "@repo/backend/convex/schema";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_DIGEST,
+  TEST_RELEASE_ID,
   testDeleteJson,
 } from "@repo/backend/test/content/release";
 import { insertRollbackItem } from "@repo/backend/test/content/rollback";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
-import { Effect, Match, Schema } from "effect";
+import { Array as Arr, Effect, Match, Schema } from "effect";
 
 /** Selects the exact transition that each corruption test deliberately damages. */
 async function item(ctx: QueryCtx) {
@@ -131,6 +135,51 @@ describe("immutable rollback transition reconstruction", () => {
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
+  it("writes each transition exactly as the contract canonicalizes its record", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRollbackItem(ctx, 0, true);
+      await insertRollbackItem(ctx, 1, true);
+      const deleted = await ctx.db
+        .query("contentItems")
+        .withIndex("by_releaseId_and_index", (query) =>
+          query.eq("releaseId", TEST_RELEASE_ID).eq("index", 1)
+        )
+        .unique();
+      if (!deleted) {
+        throw new Error("Expected the second rollback item.");
+      }
+      await ctx.db.patch("contentItems", deleted._id, {
+        itemJson: testDeleteJson({ contentKey: deleted.contentKey }),
+      });
+    });
+
+    const transitions = await t.query(async (ctx) => {
+      const rows = await ctx.db.query("contentItems").collect();
+      const written = await Effect.runPromise(
+        Effect.forEach(rows, (row) => rollbackRecord(row)).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
+      );
+      return Arr.map(written, ({ record, text }) => ({
+        expected: canonicalizeRollbackRecord(record),
+        operations: [
+          record.current.change.operation,
+          record.prior.change.operation,
+        ],
+        text,
+      }));
+    });
+
+    expect(Arr.map(transitions, ({ operations }) => operations)).toEqual([
+      ["upsert", "upsert"],
+      ["delete", "upsert"],
+    ]);
+    for (const { expected, text } of transitions) {
+      expect(text).toBe(expected);
+    }
+  });
+
   it("reconstructs a deleted body from its exact immutable predecessor", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -146,13 +195,15 @@ describe("immutable rollback transition reconstruction", () => {
       t
         .query(async (ctx) =>
           encodeJsonText(
-            await Effect.runPromise(
-              rollbackRecord(await item(ctx)).pipe(
-                Effect.provide(
-                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+            (
+              await Effect.runPromise(
+                rollbackRecord(await item(ctx)).pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
                 )
               )
-            )
+            ).record
           )
         )
         .then((text) =>
