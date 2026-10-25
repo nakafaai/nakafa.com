@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { strToU8, zipSync } from "fflate";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { isTakenOver } from "@/e2e/support/window";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
@@ -35,9 +35,7 @@ async function openCreateDialog(browser: Browser, baseURL: string | undefined) {
   const page = await context.newPage();
   await page.goto(hostAddress(baseURL, host, "/exams"));
   const create = page.getByRole("button", { name: "Create exam" });
-  await expect
-    .poll(() => isTakenOver(create), { timeout: readinessTimeoutMilliseconds })
-    .toBe(true);
+  await waitUntilTakenOver(create);
   await create.click();
   return { context, dialog: page.getByRole("dialog"), page };
 }
@@ -95,7 +93,7 @@ test("a file that is no Word or PDF document is refused in the browser, and the 
   await context.close();
 });
 
-test("the editor imports a Word file into the open exam from its header, as Google Slides imports slides", async ({
+test("the editor imports a Word file into the open exam from its header, as Google Slides imports slides, and a cancelled import keeps no file", async ({
   baseURL,
   browser,
 }) => {
@@ -111,17 +109,26 @@ test("the editor imports a Word file into the open exam from its header, as Goog
   await expect(
     header.getByRole("link", { name: "Try as student" })
   ).toBeVisible();
-  await page.getByRole("button", { name: "Import" }).click();
   const importDialog = page.getByRole("dialog");
+  const chooseFile = () =>
+    importDialog.getByLabel("Questions from a file").setInputFiles({
+      buffer: wordFile(),
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      name: "Bab 2.docx",
+    });
+
+  // A file chosen and then cancelled is gone when the dialog opens again.
+  await page.getByRole("button", { name: "Import" }).click();
+  await chooseFile();
+  await importDialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(importDialog).toBeHidden();
+  await page.getByRole("button", { name: "Import" }).click();
   await expect(
     importDialog.getByRole("button", { name: "Import" })
   ).toBeDisabled();
-  await importDialog.getByLabel("Questions from a file").setInputFiles({
-    buffer: wordFile(),
-    mimeType:
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    name: "Bab 2.docx",
-  });
+
+  await chooseFile();
   await importDialog.getByRole("button", { name: "Import" }).click();
 
   // The dialog closes at once, and the local backend's missing gateway ends the read in its toast.
