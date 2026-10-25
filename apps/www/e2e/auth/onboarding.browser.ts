@@ -31,7 +31,7 @@ async function answer(page: Page, choice: string) {
   await expect
     .poll(() => isTakenOver(next), { timeout: readinessTimeoutMilliseconds })
     .toBe(true);
-  await page.getByText(choice, { exact: true }).click();
+  await page.getByRole("radio", { name: choice }).check();
   await next.click();
 }
 
