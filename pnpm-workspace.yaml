@@ -103,7 +103,7 @@ catalog:
   zustand: ^5.0.15
 
 overrides:
-  # The Next framework is retired. Better Auth and nuqs list it as an optional peer, and this removes it from the graph.
+  # The Next framework is retired. Better Auth lists it as an optional peer, and this removes it from the graph.
   "next": "-"
   "react": "19.3.1"
   "react-dom": "19.3.1"
