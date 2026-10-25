@@ -11,6 +11,7 @@ import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
+import { ExamPresence } from "@/components/tenant/exams/presence";
 import { useExam } from "@/components/tenant/exams/provider";
 import { ScheduleExam } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
@@ -21,10 +22,11 @@ import { Link } from "@/lib/routing/link";
  * which an archived unit's exam does not take. The field shows the saved title until the teacher
  * types, so it follows a co-editor's rename. The title is saved when the field loses focus or the
  * teacher presses Enter, and only a trimmed, changed, valid title is sent. The optimistic change
- * restores the saved title when the server refuses the rename. The row ends with the action that
- * tries the exam as a student and the button that schedules it, and the title takes the room
- * left between them, truncated while the field is not focused. On a phone the actions keep their
- * icons and their names for screen readers, so the title keeps room to read at 375 pixels.
+ * restores the saved title when the server refuses the rename. The row ends with the other teachers
+ * in the exam (ExamPresence), the action that tries the exam as a student, and the button that
+ * schedules it, and the title takes the room left between them, truncated while the field is not
+ * focused. On a phone the actions keep their icons and their names for screen readers, so the
+ * title keeps room to read at 375 pixels.
  * A frozen exam says why its questions are fixed in a line under the header (ExamLockedNote).
  */
 export function ExamHeader() {
@@ -76,6 +78,7 @@ export function ExamHeader() {
         readOnly={exam.archived}
         value={draft ?? exam.title}
       />
+      <ExamPresence />
       <Link
         aria-label={t("try-action")}
         className={buttonVariants({ variant: "outline" })}

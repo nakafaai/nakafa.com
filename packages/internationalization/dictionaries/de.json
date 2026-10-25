@@ -297,7 +297,9 @@
     "seats-empty-title": "Noch kein Platz belegt",
     "seats-filter-title": "Kein Platz passt zum Filter",
     "signals-empty-title": "Noch kein Ereignis",
-    "student-start": "Prüfung starten"
+    "student-start": "Prüfung starten",
+    "presence-editor": "{name} bearbeitet gerade",
+    "presence-more": "{names} bearbeiten gerade"
   },
   "SchoolSettings": {
     "school": "Schule",

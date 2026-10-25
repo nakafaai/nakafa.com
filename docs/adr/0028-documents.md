@@ -17,8 +17,8 @@ sync slice is removed (see The server folds the log). None of them is live yet:
 the question editor of the School host is the first caller, in a later lane. The
 import into live code and the Files module, `confect/files`, are planned for
 program wave B (ADR 0013 describes the waves). The repository installs
-`prosemirror-collab` 1.3.1, and it installs none of `mathlive` and
-`@convex-dev/presence`.
+`prosemirror-collab` 1.3.1 and `@convex-dev/presence` 0.4.0, which shows the teachers
+in an exam's editor (see Presence), and it does not install `mathlive`.
 
 The amendment of 17 October 2026 changes the submit, which checks the document that a batch makes before it writes, and the fold, which writes once for a backlog of at most one read and one batch. It also changes the limits of a batch and of a fold (Bounds), and the editor's schema, which the server derives from `packages/editor` instead of a second copy. The amendment is in The server folds the log, Bounds, and Implementation Status.
 
@@ -106,6 +106,52 @@ Presence is one mechanism for the editor and for proctored sittings: the
 `@convex-dev/presence` component at 0.4.0 (ADR 0013). No presence table is
 written by hand.
 
+### Presence
+
+The exam editor's room is the exam, and its users are the school's Persons
+(`confect/exams/presence.*`). `join` is the component's heartbeat behind
+`exam.edit`, so a member who may not edit the exam neither joins nor reads its
+room, and each heartbeat checks that again. `list` names the other teachers who
+are online in the room, with their animal and their photo, and leaves out the
+caller and any Person the school no longer counts as an active member with an
+account. `leave` takes the session's token alone, because the token proves the
+session. The editor joins once Convex holds its session, beats every
+`PRESENCE_INTERVAL` while its tab shows, leaves at the first beat that finds its
+tab hidden, joins again when the tab shows, and leaves when the page goes away
+or the editor closes (`apps/www/src/components/tenant/exams/heartbeat.ts`). A
+tab left in the background therefore costs nothing, and a look at another tab
+that is shorter than one beat changes nothing. A heartbeat writes only its
+session, so the list runs again only when a teacher joins or leaves.
+
+The interval is 30 seconds, so a session whose connection is lost shows for at
+most 75 seconds (2.5 intervals). The costs below were measured in convex-test
+0.0.62 on 25 October 2026, whose tracker counts the component's reads and
+writes with the calling function's. Each figure is for the whole call: the
+session and member middleware, the exam check, and the component.
+
+| Call | Read | Written |
+| --- | --- | --- |
+| A heartbeat of an open session, with 2 or with 10 teachers in the room | 2,606 bytes, 13 documents | 184 bytes, 1 document |
+| The first join of a session | 2,223 bytes, 10 documents | 491 bytes, 3 documents |
+| One run of the list with 10 teachers in the room | 7,613 bytes, 34 documents | Nothing |
+| A leave | 1,110 bytes, 7 documents | 179 bytes, 3 documents |
+
+| Interval | Heartbeats an hour for 10 teachers | Database I/O an hour (computed) | Longest a lost connection shows |
+| --- | --- | --- | --- |
+| 10 seconds | 3,600 | 10.0 MB | 25 seconds |
+| 30 seconds | 1,200 | 3.35 MB | 75 seconds |
+| 60 seconds | 600 | 1.67 MB | 150 seconds |
+
+Convex's plans include 1 GB of database I/O and 1 million function calls a
+month on Free and Starter, and 50 GB and 25 million on Professional (the
+pricing page, read on 25 October 2026). A heartbeat is one function call from
+the browser and one call of the component, and the pricing page does not say
+whether a component call is counted. Ten teachers who edit one exam together
+for 44 hours a month at 30 seconds read and write about 147 MB and make 52,800
+heartbeats (computed). Joining and leaving cost more than a heartbeat, because
+each one runs the list of every teacher in the room again, and the editor's
+rule for hidden tabs keeps them rare.
+
 Each editor session has one record in `editorClients`: the account that owns
 it, the last batch the server accepted from it, and the version that batch
 produced. A batch carries an id that the client makes for it, and a repeat of an
@@ -186,7 +232,7 @@ as the last column says.
 | Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. `STEP_READ_BYTES` in `confect/editor/size.ts` is the budget, and Convex's `maximumBytesRead` enforces it. A read stops at the row that reaches the budget, so one read may pass it by that row, which is at most one batch of 128 KiB. A `since` reply reads at most `STEP_PAGE_STEPS`, 200 steps, and the client reads on from its last version. A submit reads at most `FOLD_STEP_LIMIT`, 24 steps, with one `.paginate()`, because Convex allows one paginated query per function. A fold reads its backlog with one `take` of at most 56 steps, which is `FOLD_STEP_LIMIT` plus one batch. `steps.impl.test.ts` pins a read that stops and the reads that continue it, and `result.test.ts` pins the refusal of a backlog that one read does not hold. |
 | Snapshots | The fold writes the snapshot in one transaction when the steps that the snapshot lacks reach `FOLD_STEP_LIMIT`, 24 steps, or `FOLD_BYTE_LIMIT`, 256 KiB of text (`confect/editor/fold.ts`). A fold applies its backlog, at most 24 steps and one batch of 32 (`MAX_BATCH_STEPS`), so at most 56 steps. Measured in convex-test in Node, with temporary tests that were not committed, on a near-bound document of each shape: 49,700 hard breaks in one paragraph (about 1 MB of text), one long text node of about 1 MB, and the 49,700 hard breaks in one paragraph nested 13 blockquotes deep, which makes a document 16 levels deep (the deep shape). Each run created a new document of the shape, submitted its backlog in batches of at most 32, and timed the fold alone. There were five runs for each backlog of 8, 16, 24, 32, 40, 48, 56, and 64 steps and for each shape, at a one-minute load of about 17 to 19. A fold does not read `FOLD_STEP_LIMIT`, so these times hold for any limit. A fold of 8 steps took a median of 118 ms (hard breaks) and 145 ms (deep). A fold of 24 steps took a median of 142 ms (hard breaks) and 156 ms (deep), and at most 189 ms (hard breaks), 166 ms (deep), and 14 ms (long text). A fold of 32 steps took at most 391 ms (deep), so the limit is 24: it is the largest measured limit whose slowest fold is under a quarter of the 1 s user-code limit (250 ms). The worst backlog, 56 steps, took a median of 197 ms (hard breaks) and 203 ms (deep), and at most 245 ms (hard breaks) and 255 ms (deep), so one run of five is 5 ms over a quarter second, and the owner decides whether that is acceptable. The slowest runs are single spikes: a fold of 48 steps took 462.5 ms once (hard breaks) and 343.4 ms once (deep), and this measurement did not isolate their cause. A submit at this bound, 24 pending steps and a batch of 32, took a median of 310.5 ms (hard breaks, at most 380.2 ms), a median of 215.6 ms (deep, at most 218.4 ms), and at most 30.0 ms (long text). A submit reads one snapshot row and at most 24 step rows, and a fold reads one snapshot row and at most 56 step rows, both under the 16 MiB a transaction may read (computed from the row and step bounds, not counted). The 1 second limit of user code per mutation excludes database operations (limits page, read on 17 October 2026), and these figures include them. Each fold writes one snapshot of up to 1 MiB, so at the limit a near-bound document costs about 43 KiB of snapshot write per step (computed: 1 MiB divided by 24), where the earlier limit of 32 cost about 32 KiB. An earlier run, with the limit at 32 and the hard-break document only, measured a fold of 64 steps at 190, 188, 201, 306, and 244 ms (median 201; an earlier version of this row wrote the first value as 188, and the raw record says 190), a fold of 32 steps at 148 to 265 ms (median 169), and a submit with 32 pending steps and a batch of 32 at 190 to 593 ms (median 220). | Target, and measured on the bounds of this table. |
 | An image file | At most 2 MB, with alternative text required | Target |
-| Presence | A heartbeat every 10 seconds and a limit of 25 seconds | Target. Three editors write about 1,080 times an hour (computed). |
+| Presence | A heartbeat every 30 seconds and a limit of 75 seconds, at most 25 other editors in one read of a room (`EDITOR_LIMIT`) | Measured, see Presence. Ten editors with their tabs shown write 1,200 times an hour (computed). |
 | Cursors | None in the first version | Three editors at one update a second would write about 10,800 times an hour for each document (computed). |
 
 The size is checked where a whole document is written. A fold and the save to
@@ -391,7 +437,8 @@ Drive copies come through the Drive connector (ADR 0015).
 | The Memory page editor in `packages/design-system/components/editor` (Markdown, one author) | Live |
 | Tiptap 3.32.0 and KaTeX 0.19.0 | Live |
 | `prosemirror-collab` 1.3.1 | Installed in `packages/design-system` (the `Collab` extension) and `apps/www` (the sync loop), and pinned in the dependency policy. |
-| `mathlive` and `@convex-dev/presence` | Not installed. Planned for program wave B. |
+| `@convex-dev/presence` 0.4.0 | Live in the exam editor's header: `confect/exams/presence.*` and `apps/www/src/components/tenant/exams/presence.tsx`, tested in convex-test and in `e2e/school/presence.browser.ts`. |
+| `mathlive` | Not installed. Planned for program wave B. |
 | `confect/editor` pure core: the document, step, batch, attribute, and stored-step schemas (the stored step is in `confect/editor/log.ts`), the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds, and the read bound of 512 KiB is `STEP_READ_BYTES`. |
 | The tables `editorDocuments`, `editorSnapshots`, `editorSteps`, and `editorClients` (`confect/tables/editor*.ts`) | In code, not live. The head version and the snapshot version are on the document row, and the snapshot rows, the step rows, and the session records hold the rest. |
 | The functions `editor/documents` (`create`, `open`) and `editor/steps` (`since`, `submit`), the fold `internal.editor.fold.fold`, and the sweep `internal.editor.prune.sweep` | In code and tested in convex-test, not live: no page calls them yet. |

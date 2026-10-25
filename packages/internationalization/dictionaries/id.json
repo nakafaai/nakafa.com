@@ -297,7 +297,9 @@
     "seats-empty-title": "Belum ada kursi terisi",
     "seats-filter-title": "Tidak ada kursi yang cocok",
     "signals-empty-title": "Belum ada peristiwa",
-    "student-start": "Mulai ujian"
+    "student-start": "Mulai ujian",
+    "presence-editor": "{name} sedang mengedit",
+    "presence-more": "{names} sedang mengedit"
   },
   "SchoolSettings": {
     "school": "Sekolah",
