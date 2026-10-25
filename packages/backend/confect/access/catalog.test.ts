@@ -197,6 +197,7 @@ describe("access/catalog", () => {
           "class.archived",
           "class.teacherAssigned",
           "class.teacherRemoved",
+          "message.hidden",
           "grade.released",
           "scheme.stored",
           "visit.requested",

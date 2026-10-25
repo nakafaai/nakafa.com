@@ -12,3 +12,9 @@ export class ChannelNameTaken extends Schema.TaggedError<ChannelNameTaken>()(
   "ChannelNameTaken",
   refusal("CHANNEL_NAME_TAKEN", "Another channel of this class has this name.")
 ) {}
+
+/** An edit of a message that a teacher hid: the message has no text left to change. */
+export class MessageHidden extends Schema.TaggedError<MessageHidden>()(
+  "MessageHidden",
+  refusal("MESSAGE_HIDDEN", "A teacher hid this message.")
+) {}
