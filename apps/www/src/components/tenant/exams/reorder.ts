@@ -51,12 +51,6 @@ export const siblingShift = (
   return 0;
 };
 
-/** A question of the order, with its index in the order and its ID. */
-export interface Place<QuestionId> {
-  readonly index: number;
-  readonly questionId: QuestionId;
-}
-
 /**
  * The place of the question a grip names: its index in the order and its ID, or none when the grip
  * names no question of the order. A grip names its question with the ID in its `data-grip` attribute,
@@ -65,7 +59,7 @@ export interface Place<QuestionId> {
 export const placeOf = <QuestionId extends string>(
   questionIds: readonly QuestionId[],
   gripId: string | undefined
-): Option.Option<Place<QuestionId>> =>
+) =>
   Option.flatMap(Option.fromNullishOr(gripId), (id) =>
     Arr.findFirst(
       Arr.map(questionIds, (questionId, index) => ({ index, questionId })),

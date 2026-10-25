@@ -12,7 +12,7 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import type { Node } from "@tiptap/pm/model";
-import { Array as Arr, Function as Fn, Option } from "effect";
+import { Array as Arr, Function as Fn, Option, Schema } from "effect";
 import { lazy, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
@@ -105,12 +105,13 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
 }
 
 /** One option of a question as the key names it: its ID, and the letter the paper shows it by. */
-interface KeyOption {
+const KeyOption = Schema.Struct({
   /** The ID of the option, which the key marks. */
-  readonly id: string;
+  id: Schema.String,
   /** The letter that names the option by its place. */
-  readonly letter: string;
-}
+  letter: Schema.String,
+});
+type KeyOption = typeof KeyOption.Type;
 
 /** The props of the answer key of one question. */
 interface AnswerKeyProps {
