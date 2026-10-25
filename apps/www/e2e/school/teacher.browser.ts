@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { holdWebFont } from "@/e2e/support/state";
 import {
   desktopViewport,
   touchViewport,
@@ -27,6 +28,9 @@ for (const viewport of [touchViewport, desktopViewport]) {
       signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
     );
     const page = await context.newPage();
+    // The web font swaps in after the first paint and moves the centred title sideways, which
+    // is the site's font strategy, not this page: without it, whatever moves is the page's own.
+    await Effect.runPromise(holdWebFont(page));
 
     await page.goto(hostAddress(baseURL, host, "/exams"));
 
