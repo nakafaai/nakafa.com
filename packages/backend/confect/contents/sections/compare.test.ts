@@ -180,10 +180,11 @@ describe("model comparison", () => {
     expect(provider.embeddingModel).toHaveBeenCalledWith(CANDIDATE, {
       zdr: true,
     });
-    expect(Arr.map(model.doEmbedCalls, ({ values }) => values.length)).toEqual([
-      9, 1, 1,
-    ]);
-    expect(model.doEmbedCalls[1]?.values).toEqual(["Determinan"]);
+    // One request for each stored section, then one for each question.
+    expect(Arr.map(model.doEmbedCalls, ({ values }) => values.length)).toEqual(
+      Arr.makeBy(11, () => 1)
+    );
+    expect(model.doEmbedCalls[9]?.values).toEqual(["Determinan"]);
   });
 
   it("measures the time each question takes to embed", async () => {

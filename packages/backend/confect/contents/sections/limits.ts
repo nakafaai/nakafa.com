@@ -12,8 +12,17 @@ export const LESSONS_PER_STEP = 6;
 /** Bytes of search rows one build step may scan while it lists its lessons. */
 export const LESSON_PAGE_BYTES = 1024 * 1024;
 
-/** Texts sent to the embedder in one request. */
+/** Sections that the model test embeds in one batch, which it runs a few batches at a time. */
 export const EMBED_BATCH_SIZE = 64;
+
+/**
+ * Embedding requests that a batch keeps open at once. The gateway refuses a
+ * request of several texts for `gemini-embedding-2` with status 404: on 25
+ * October 2026 every request of 2 to 16 texts was refused, and every request of
+ * one text was answered. So each text goes in a request of its own, and a few of
+ * those requests run at once.
+ */
+export const EMBED_CONCURRENCY = 4;
 
 /**
  * Times a build step asks for vectors again after a failure that may pass. A
@@ -46,8 +55,7 @@ export const SECTIONS_PER_DOCUMENT = 128;
 /**
  * Rows one clean-up mutation deletes. It is the most rows a document may hold,
  * so that a document always fits an empty batch and goes whole: its rows and
- * its record are deleted in one transaction, and the record never names a
- * version that its sections lack.
+ * its record are deleted in one transaction.
  */
 export const PRUNE_BATCH_SIZE = SECTIONS_PER_DOCUMENT;
 
@@ -73,8 +81,8 @@ export const SECTION_TEXT_CHARS = 12_000;
 /**
  * Characters of a section sent to the embedder: the lesson title, the heading
  * path, and the start of the body. The limit of a model is in tokens, which
- * this cut does not count, so a section that a model still refuses is left out
- * of the index with a warning and counted as missing.
+ * this cut does not count, so a section that a model still refuses, or cannot
+ * embed, is left out of the index with a warning and counted as missing.
  */
 export const EMBED_TEXT_CHARS = 4000;
 
