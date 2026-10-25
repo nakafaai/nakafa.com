@@ -45,11 +45,12 @@ rolled back.
   were made from. The version joins the format of a section, the embedding
   model, and the signed facts of the source: the projection hash and the artifact
   hash of a lesson, the snapshot of the Quran for a surah. It is written in the
-  same transaction as the sections, so it never names a version that they lack.
+  same transaction as the sections, and it carries the count of the sections that
+  the model left out.
 - `contentSectionState`: one record of the last build that finished, with the
-  release and the model. Search trusts the index only while it names the active
-  release and the model that embeds the questions. Otherwise Nina searches by
-  words, as before, and logs one line.
+  release, the model, and how many sections the build left out. Search trusts the
+  index only while it names the active release and the model that embeds the
+  questions. Otherwise Nina searches by words, as before, and logs one line.
 
 **The build.** `startSectionBuild` schedules it in the transaction that makes a
 release active, from the handlers of `activate.activate` and
@@ -58,9 +59,10 @@ queued and a repeated activation queues nothing; `activateCandidate` and
 `activateRecovery` themselves are as they were. `contents/sections/build:run`
 starts it by hand, which is also how the release that is active when this ships
 gets its first build. A step reads a bounded page of the active release, asks
-for each document which of its texts the index holds, embeds the others in
-batches of 64 across the documents of the step, stores each document in one
-transaction, which also deletes the rows of sections the document lost, and
+for each document which of its texts the index holds, embeds the others one text
+to a request, four requests at a time across the documents of the step, stores
+each document in one transaction, which also deletes the rows of sections the
+document lost, and
 schedules the next step: the lessons six at a time, the Quran from the first
 surah that the index lacks, and then the clean up. A document whose version the
 index holds is passed over without reading its artifact or its sections. A
@@ -72,10 +74,9 @@ left out of the index with a warning. So is a section that fails for another
 reason after its new tries while the model takes the probe text, and it is
 counted as missing. A document that the active release does
 not publish any more is deleted whole, its rows and its record in one
-transaction, up to 128 rows in a call, so that a record never names a version
-that some of its sections lack; a call stops before a document that does not fit
-what is left of its rows, and the build then writes its record. Every step is
-idempotent, so the way to resume is to start again. A step that fails stops the
+transaction, up to 128 rows in a call; a call stops before a document that does
+not fit what is left of its rows, and the build then writes its record. Every step
+is idempotent, so the way to resume is to start again. A step that fails stops the
 chain with the failed position in the log, and Nina searches by words until the
 next build finishes.
 
@@ -153,10 +154,9 @@ The documents that a build and a search read and write are measured with Convex
 test metrics and pinned by the tests that are named in `docs/convex/cost.md`,
 which also gives the bytes of the same runs and the cost of the whole corpus,
 each figure said to be measured, counted, or computed. A build of a release that
-changed nothing embeds nothing
-and writes only the record of the build, and one that changed a section embeds
-its new text and writes that section, the record of its document, and the record
-of the build.
+changed nothing embeds only the sections it left out and writes only the record
+of the build, and one that changed a section embeds its new text and writes that
+section, the record of its document, and the record of the build.
 
 ## Consequences
 

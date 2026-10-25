@@ -70,6 +70,16 @@ function embedder(
 const embed = (drafts: readonly SectionDraft[]) =>
   embedBatch(drafts).pipe(Effect.provide(GatewayTest));
 
+/** A layer that keeps each log line that is written, with its level, message, and annotations. */
+const keepingLogs = (logged: MutableRef.MutableRef<readonly unknown[]>) =>
+  Logger.layer([
+    Logger.formatStructured.pipe(
+      Logger.map(({ annotations, level, message }) =>
+        MutableRef.update(logged, Arr.append({ annotations, level, message }))
+      )
+    ),
+  ]);
+
 /**
  * Embeds a batch as `embed` does, and gives its answer with the log lines that
  * the embedding wrote, each with its level, message, and annotations.
@@ -78,23 +88,25 @@ const embedLogged = (drafts: readonly SectionDraft[]) => {
   const logged = MutableRef.make<readonly unknown[]>([]);
   return Effect.map(
     embedBatch(drafts).pipe(
-      Effect.provide(
-        Layer.mergeAll(
-          GatewayTest,
-          Logger.layer([
-            Logger.formatStructured.pipe(
-              Logger.map(({ annotations, level, message }) =>
-                MutableRef.update(
-                  logged,
-                  Arr.append({ annotations, level, message })
-                )
-              )
-            ),
-          ])
-        )
-      )
+      Effect.provide(Layer.mergeAll(GatewayTest, keepingLogs(logged)))
     ),
     (found) => ({ found, logged: MutableRef.get(logged) })
+  );
+};
+
+/**
+ * Embeds a batch that must fail, as `embed` does, and gives its failure with the
+ * log lines that the embedding wrote.
+ */
+const failedLogged = (drafts: readonly SectionDraft[]) => {
+  const logged = MutableRef.make<readonly unknown[]>([]);
+  return Effect.map(
+    Effect.flip(
+      embedBatch(drafts).pipe(
+        Effect.provide(Layer.mergeAll(GatewayTest, keepingLogs(logged)))
+      )
+    ),
+    (failure) => ({ failure, logged: MutableRef.get(logged) })
   );
 };
 
@@ -299,6 +311,21 @@ describe("section embedding", () => {
           ).toBe(failures.invalid);
           // The two texts, and the probe text that the model refuses too.
           expect(model.doEmbedCalls).toHaveLength(3);
+        })
+    );
+
+    it.live(
+      "fails with the refusal, and warns of no section left out, when the model takes none of a batch and the probe text fails too",
+      () =>
+        Effect.gen(function* () {
+          embedder(() => failures.invalid);
+          const { failure, logged } = yield* failedLogged([
+            draft("a", 0),
+            draft("b", 1),
+          ]);
+          expect(failure).toBe(failures.invalid);
+          // The call fails, so no section is left out, and no line says that one is.
+          expect(logged).toEqual([]);
         })
     );
   });

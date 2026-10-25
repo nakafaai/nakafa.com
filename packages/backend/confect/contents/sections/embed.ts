@@ -93,11 +93,12 @@ const leaveOut = (facts: Facts, failure: GatewayFailure) =>
   );
 
 /**
- * The answer for one section. A text that the model refuses is a failure, which
- * its batch judges. Any other failure that outlasts its new tries is probed on
- * its own: when the model takes the probe text, the section is a success with no
- * vector, which leaves it out, and when the probe fails too, the call fails with
- * the failure of the section, so a gateway outage still stops the build.
+ * The answer for one section. A text that the model refuses is a failure with the
+ * facts that name the section, which its batch judges. Any other failure that
+ * outlasts its new tries is probed on its own: when the model takes the probe
+ * text, the section is a success with no vector, which leaves it out, and when
+ * the probe fails too, the call fails with the failure of the section, so a
+ * gateway outage still stops the build.
  */
 const answerOf = Effect.fn("contents.sections.answerOf")(function* (
   section: Embeddable,
@@ -111,8 +112,7 @@ const answerOf = Effect.fn("contents.sections.answerOf")(function* (
   }
   const failure = answer.failure;
   if (refused(failure)) {
-    yield* leaveOut(facts, failure);
-    return Result.fail(failure);
+    return Result.fail({ facts, failure });
   }
   const probe = yield* Effect.result(vectorOfText(PROBE_TEXT, model));
   if (Result.isFailure(probe)) {
@@ -147,8 +147,13 @@ export const embedBatch = Effect.fn("contents.sections.embedBatch")(function* (
   if (batch.length > 0 && Arr.every(answers, Result.isFailure)) {
     yield* vectorOfText(PROBE_TEXT, model);
   }
-  return Arr.map(
-    answers,
-    (answer): Vector => Result.getOrElse(answer, () => Option.none())
-  );
+  // The refused texts are logged as left out only now, when the batch has decided
+  // that they are: a call that fails with the probe text leaves out nothing.
+  return yield* Effect.forEach(answers, (answer): Effect.Effect<Vector> => {
+    if (Result.isFailure(answer)) {
+      const { facts, failure } = answer.failure;
+      return leaveOut(facts, failure).pipe(Effect.as(Option.none()));
+    }
+    return Effect.succeed(answer.success);
+  });
 });

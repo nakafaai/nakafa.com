@@ -7,7 +7,6 @@ import {
   it,
 } from "@effect/vitest";
 import type { runStep } from "@repo/backend/confect/contents/sections/build";
-import { PRUNE_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { provider } from "@repo/backend/test/gateway";
@@ -417,7 +416,7 @@ describe("section build", () => {
     expect(await sources()).toEqual([]);
   });
 
-  it("moves on past a lesson whose sections the model refuses, and records how many sections it left out", async () => {
+  it("moves on past a lesson whose sections the model refuses, records how many sections it left out, and embeds them once the model takes them", async () => {
     embedWithKnowledgeRefusing("Terlarang");
     const { build, rows, sources, t } = setup();
     await t.mutation(async (ctx) => {
@@ -448,46 +447,51 @@ describe("section build", () => {
     expect(
       await t.query((ctx) => ctx.db.query("contentSectionState").collect())
     ).toMatchObject([{ missing: 3, releaseId: KNOWLEDGE_RELEASE.releaseId }]);
+    expect(
+      Arr.filter(await sources(), ({ missing }) => missing === 3)
+    ).toHaveLength(1);
+    // The model takes the text from now on, so the next build embeds the three
+    // sections that the index lacks, and the record of their document drops the count.
+    embedWithKnowledge();
+    const again = await build();
+    expect(embeddedBy(again)).toBe(3);
+    // The edited lesson has three sections, one fewer than the seeded lesson had.
+    expect(await rows()).toHaveLength(26);
+    expect(
+      Arr.filter(await sources(), ({ missing }) => missing !== undefined)
+    ).toEqual([]);
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toMatchObject([{ missing: 0 }]);
   });
 
-  it("deletes the documents that no release publishes any more in bounded batches, and records the build after the last", async () => {
-    embedWithKnowledge();
-    const { run, rows, sources, t } = setup();
-    // Two documents of a little more than half a batch each: the second does
-    // not fit what the first leaves, so it goes with the next step.
-    const rowsOfEach = PRUNE_BATCH_SIZE / 2 + 1;
+  it("carries the sections that a lessons page left out into the next page, and records the sum", async () => {
+    embedWithKnowledgeRefusing("Terlarang");
+    const { build, t } = setup();
     await t.mutation(async (ctx) => {
       await seedKnowledge(ctx);
-      for (const contentKey of [
-        "material/lesson/removed",
-        "material/lesson/removed-too",
-      ]) {
-        await leaveDocument(
-          ctx,
-          { ...knowledgeSource(1, "id"), contentKey },
-          Arr.range(1, rowsOfEach)
-        );
-      }
+      // The German lesson comes on the first page, before the Indonesian ones.
+      await editKnowledgeLesson(
+        ctx,
+        1,
+        "de",
+        "Terlarang ordnen Zahlen an.\n\n## Matrixform\n\nTerlarang.\n\n## Determinante\n\nTerlarang auch."
+      );
     });
-    const position = { cursor: null, missing: 0, phase: "prune" } as const;
-    const releaseId = KNOWLEDGE_RELEASE.releaseId;
-    const first = await run({ position, releaseId });
-    expect(first).toMatchObject({ removed: rowsOfEach, stale: false });
-    expect(first.next).toEqual({ position, releaseId });
-    expect(await rows()).toHaveLength(rowsOfEach);
-    expect(await sources()).toHaveLength(1);
+    const steps = await build();
+    // The second page starts with the three sections that the first page left out.
+    expect(Option.getOrUndefined(Arr.get(steps, 1))?.position).toEqual({
+      cursor: expect.any(String),
+      missing: 3,
+      phase: "lessons",
+    });
+    expect(Option.getOrUndefined(Arr.last(steps))?.position).toEqual({
+      cursor: null,
+      missing: 3,
+      phase: "prune",
+    });
     expect(
       await t.query((ctx) => ctx.db.query("contentSectionState").collect())
-    ).toEqual([]);
-    expect(await run({ position, releaseId })).toMatchObject({
-      next: null,
-      removed: rowsOfEach,
-      stale: false,
-    });
-    expect(await rows()).toHaveLength(0);
-    expect(await sources()).toHaveLength(0);
-    expect(
-      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
-    ).toHaveLength(1);
+    ).toMatchObject([{ missing: 3, releaseId: KNOWLEDGE_RELEASE.releaseId }]);
   });
 });

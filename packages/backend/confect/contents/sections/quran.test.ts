@@ -1,5 +1,12 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
@@ -10,6 +17,7 @@ import { provider } from "@repo/backend/test/gateway";
 import {
   embedWhileAnotherReleaseActivates,
   embedWithKnowledge,
+  embedWithKnowledgeRefusing,
   knowledgeBuild,
 } from "@repo/backend/test/knowledge";
 import { makeQuranChunk, makeQuranSurah } from "@repo/backend/test/quran/rows";
@@ -376,5 +384,29 @@ describe("section build of the Quran", () => {
     ).toMatchObject({ next: null, stale: true, written: 0 });
     expect(await rows()).toEqual([]);
     expect(await sources()).toEqual([]);
+  });
+
+  it("carries the sections that a surah left out into the position of the next surah", async () => {
+    embedWithKnowledgeRefusing("Technical Surah");
+    const { run, t } = building();
+    await t.mutation((ctx) => activateQuranSnapshot(ctx, surahs));
+    const first = await run({
+      position: { missing: 0, phase: "quran", surah: 1 },
+      releaseId: TEST_RELEASE_ID,
+    });
+    // Surah 1 has six sections, and the model refuses every one of them.
+    assert.ok(first.next, "Expected the next surah.");
+    expect(first.next.position).toEqual({
+      missing: 6,
+      phase: "quran",
+      surah: 2,
+    });
+    const second = await run(first.next);
+    // Surah 2 has three sections, which the model refuses too, so the count goes on.
+    expect(second.next?.position).toEqual({
+      missing: 9,
+      phase: "quran",
+      surah: 3,
+    });
   });
 });

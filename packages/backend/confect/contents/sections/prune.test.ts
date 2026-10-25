@@ -1,5 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   PRUNE_BATCH_SIZE,
@@ -18,7 +18,9 @@ import {
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
+  embedWithKnowledge,
   KNOWLEDGE_RELEASE,
+  knowledgeBuild,
   knowledgeSource,
   leaveDocument,
   retireKnowledgeLesson,
@@ -30,6 +32,8 @@ import {
   activateQuranSource,
 } from "@repo/backend/test/quran/snapshot";
 import { Array as Arr, Effect } from "effect";
+
+beforeEach(() => vi.useFakeTimers());
 
 const ACTIVE = KNOWLEDGE_RELEASE.releaseId;
 
@@ -313,5 +317,38 @@ describe("section prune", () => {
   it("does nothing while no release is active", async () => {
     const { prune } = against(createConvexTestWithBetterAuth());
     expect(await prune("release-0")).toMatchObject({ stale: true });
+  });
+
+  it("deletes the documents that no release publishes any more in bounded batches, and records the build after the last", async () => {
+    embedWithKnowledge();
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(seedKnowledge);
+    const { run } = knowledgeBuild(t);
+    const { rows, sources } = against(t);
+    // Two documents of a little more than half a batch each: the second does
+    // not fit what the first leaves, so it goes with the next step.
+    await t.mutation(async (ctx) => {
+      await leaveDocument(ctx, removed, Arr.range(1, OVER_HALF));
+      await leaveDocument(ctx, removedToo, Arr.range(1, OVER_HALF));
+    });
+    const position = { cursor: null, missing: 0, phase: "prune" } as const;
+    const first = await run({ position, releaseId: ACTIVE });
+    expect(first).toMatchObject({ removed: OVER_HALF, stale: false });
+    expect(first.next).toEqual({ position, releaseId: ACTIVE });
+    expect(await rows()).toHaveLength(OVER_HALF);
+    expect(await sources()).toHaveLength(1);
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toEqual([]);
+    expect(await run({ position, releaseId: ACTIVE })).toMatchObject({
+      next: null,
+      removed: OVER_HALF,
+      stale: false,
+    });
+    expect(await rows()).toHaveLength(0);
+    expect(await sources()).toHaveLength(0);
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toHaveLength(1);
   });
 });

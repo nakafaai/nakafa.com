@@ -275,22 +275,21 @@ describe("section sync", () => {
 
   it("leaves out a section that the model cannot embed while it takes the probe text, and counts it as missing", async () => {
     const real = embedWithKnowledge();
-    provider.embeddingModel.mockReturnValue(
-      new MockEmbeddingModelV4({
-        doEmbed: (options) =>
-          Arr.some(options.values, (text) => text.includes("Terlarang"))
-            ? Promise.reject(
-                new APICallError({
-                  message: "private provider response",
-                  requestBodyValues: {},
-                  statusCode: 404,
-                  url: "https://provider.example.invalid",
-                })
-              )
-            : real.doEmbed(options),
-        maxEmbeddingsPerCall: 512,
-      })
-    );
+    const failing = new MockEmbeddingModelV4({
+      doEmbed: (options) =>
+        Arr.some(options.values, (text) => text.includes("Terlarang"))
+          ? Promise.reject(
+              new APICallError({
+                message: "private provider response",
+                requestBodyValues: {},
+                statusCode: 404,
+                url: "https://provider.example.invalid",
+              })
+            )
+          : real.doEmbed(options),
+      maxEmbeddingsPerCall: 512,
+    });
+    provider.embeddingModel.mockReturnValue(failing);
     const { rows, sources, sync } = await setup();
     expect(
       await sync([
@@ -304,6 +303,10 @@ describe("section sync", () => {
       stale: false,
       written: 2,
     });
+    // The text the model could not embed, and then the probe text, which the model takes.
+    expect(
+      Arr.map(failing.doEmbedCalls, ({ values }) => values)
+    ).toContainEqual(["Nakafa"]);
     expect(await rows()).toHaveLength(2);
     expect(await sources()).toMatchObject([{ missing: 1, version: "first" }]);
   });

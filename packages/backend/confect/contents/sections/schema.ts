@@ -86,8 +86,9 @@ export type Source = typeof sourceValidator.Type;
  * The record of a document in the index: its source and, when the model left
  * some of its sections out, how many. A record without a count holds every
  * section of its version. A record with one makes the next build read the
- * document again, and it stays until the clean-up finds that no release
- * publishes the document, so that the sections the index still holds go too.
+ * document again, and it stays until the document is stored complete again or
+ * the clean-up finds that no release publishes it, so that the sections the
+ * index still holds go too.
  */
 export const sourceRecordValidator = Schema.Struct({
   ...sourceValidator.fields,
