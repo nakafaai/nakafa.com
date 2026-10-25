@@ -1,4 +1,4 @@
-import { useMutation } from "@confect/react";
+import { useAction, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   EXAM_TITLE_MAX_LENGTH,
@@ -41,14 +41,20 @@ import {
   type ScopeChoice,
 } from "@/components/tenant/exams/create";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
+import {
+  IMPORT_ACCEPT,
+  titleOfFile,
+} from "@/components/tenant/exams/import/file";
+import { importIntoExam } from "@/components/tenant/exams/import/start";
 import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
 
 /**
- * The button and the dialog that create an exam. The dialog asks for the title and the place.
- * The new exam shows in the list at once, as a placeholder that is inert until the server
- * answers, and then the page goes to its editor. A refused create leaves the list as it was,
- * and shows the action-error toast.
+ * The button and the dialog that create an exam. The dialog asks for the title and the place,
+ * and takes a Word or PDF file when the teacher has the questions already. The new exam shows in
+ * the list at once, as a placeholder that is inert until the server answers, and then the page
+ * goes to its editor, where the file's questions appear as Nina reads them (K27). A refused
+ * create leaves the list as it was, and shows the action-error toast.
  */
 export function CreateExam({
   choices,
@@ -63,8 +69,11 @@ export function CreateExam({
   const common = useTranslations("Common");
   const navigate = useNavigate();
   const create = useMutation(exams.exams.create);
+  const requestUrl = useMutation(exams.assets.uploadUrl);
+  const read = useAction(exams.imports.read);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const id = useId();
   const [isPending, startTransition] = useTransition();
@@ -117,6 +126,19 @@ export function CreateExam({
                 to: "/school/$slug/exams/$exam/edit",
               });
             })
+          ),
+          // The import outlives this dialog and the page it opened from, so it runs detached.
+          Effect.tap((saved) =>
+            file === null
+              ? Effect.void
+              : Effect.forkDetach(
+                  importIntoExam({
+                    examId: saved.id,
+                    file,
+                    read: (source) => read({ examId: saved.id, slug, source }),
+                    requestUrl: () => requestUrl({ examId: saved.id, slug }),
+                  })
+                )
           )
         ),
         { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
@@ -165,6 +187,24 @@ export function CreateExam({
                 {t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })}
               </FieldDescription>
             ) : null}
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-file`}>{t("import-label")}</FieldLabel>
+            <Input
+              accept={IMPORT_ACCEPT}
+              id={`${id}-file`}
+              onChange={(event) => {
+                const chosen = event.target.files?.item(0) ?? null;
+                setFile(chosen);
+                if (chosen !== null && name === "") {
+                  setTitle(
+                    Option.getOrElse(titleOfFile(chosen.name), () => "")
+                  );
+                }
+              }}
+              type="file"
+            />
+            <FieldDescription>{t("import-description")}</FieldDescription>
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
