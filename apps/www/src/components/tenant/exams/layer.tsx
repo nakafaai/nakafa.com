@@ -7,15 +7,26 @@ import {
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Function as Fn } from "effect";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
+import type { Node } from "@tiptap/pm/model";
+import { Array as Arr, Function as Fn, Option } from "effect";
 import { lazy, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import {
+  choiceOf,
+  markedOption,
+  optionLetter,
+} from "@/components/tenant/exams/answer";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
+import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam } from "@/components/tenant/exams/provider";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
@@ -24,14 +35,6 @@ const ExamText = lazy(() =>
     default: module.ExamText,
   }))
 );
-
-/**
- * The room a rich text takes while its editor is not mounted, so the page keeps its height. A
- * note of the layer takes a line at least, as the editor's own frame does.
- */
-function TextRoom() {
-  return <div aria-hidden className="min-h-16 rounded-lg bg-background" />;
-}
 
 /** The props of the points field of one question. */
 interface PointsFieldProps {
@@ -101,27 +104,115 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
   );
 }
 
+/** One option of a question as the key names it: its ID, and the letter the paper shows it by. */
+interface KeyOption {
+  /** The ID of the option, which the key marks. */
+  readonly id: string;
+  /** The letter that names the option by its place. */
+  readonly letter: string;
+}
+
+/** The props of the answer key of one question. */
+interface AnswerKeyProps {
+  /** Whether the teacher may mark the key now. */
+  readonly editable: boolean;
+  /** The option the key marks correct, or none while the key marks none. */
+  readonly marked: string | null;
+  /** The number of the question, which names each option for assistive technology. */
+  readonly number: number;
+  /** Marks an option as the key of the question, which saves at once. */
+  readonly onMark: (optionId: string) => void;
+  /** The options of the question, in the order the paper shows them. */
+  readonly options: readonly KeyOption[];
+}
+
+/**
+ * The answer key of a question: one toggle per option, named by its letter, and the one the key marks
+ * is pressed. The key holds one correct option, so the group chooses one, and choosing the marked
+ * option again saves nothing.
+ */
+function AnswerKey({
+  editable,
+  marked,
+  number,
+  onMark,
+  options,
+}: AnswerKeyProps) {
+  const t = useTranslations("Exams");
+
+  return (
+    <Field orientation="horizontal">
+      <FieldTitle>{t("answer-key")}</FieldTitle>
+      <ToggleGroup
+        disabled={!editable}
+        onValueChange={(value) => {
+          if (value !== "") {
+            onMark(value);
+          }
+        }}
+        type="single"
+        value={marked ?? ""}
+      >
+        {Arr.map(options, (option) => (
+          <ToggleGroupItem
+            aria-label={t("key-option", { letter: option.letter, number })}
+            key={option.id}
+            value={option.id}
+          >
+            {option.letter}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </Field>
+  );
+}
+
 /** The props of the teacher's layer of one question. */
 interface TeacherLayerProps {
   /** Whether the question's editors are mounted, so its fields take changes. */
   readonly live: boolean;
+  /** The explanation and the rubric as they are drawn while their editors are not mounted. */
+  readonly notes: {
+    readonly explanation: Option.Option<Node>;
+    readonly rubric: Option.Option<Node>;
+  };
   /** The place of the question in the exam, which names its rich texts for assistive technology. */
   readonly number: number;
-  /** The question the layer belongs to. */
+  /** Marks an option as the key of the question, which saves at once. */
+  readonly onMark: (optionId: string) => void;
+  /** The question the layer belongs to, as the server holds it. */
   readonly question: Question;
+  /** The answers and the key the page shows, so the key shows a change at once. */
+  readonly shown: Pick<Question, "answers" | "key">;
 }
 
 /**
- * The teacher's layer of a question, under its paper: the points, then the rubric and the
- * explanation. The paper is what the student reads, so the layer is solid and apart from it, on a
- * muted ground with no dashed line. A layer that is not live shows its room only, and a frozen exam
- * shows its values without changes.
+ * The teacher's layer of a question, under its paper: the points, the answer key, then the rubric and
+ * the explanation. The paper is what the student reads, so the layer is solid and apart from it, on a
+ * muted ground with no dashed line. Each rich text keeps its height in both states: while its editor
+ * is not mounted it is drawn from its document, as the editor draws it. A frozen exam shows its values
+ * without changes.
  */
-export function TeacherLayer({ live, number, question }: TeacherLayerProps) {
+export function TeacherLayer({
+  live,
+  notes,
+  number,
+  onMark,
+  question,
+  shown,
+}: TeacherLayerProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
   const frozen = isLocked(exam);
   const editable = live && !frozen;
+  const options = Option.match(choiceOf(shown.answers), {
+    onNone: (): readonly KeyOption[] => [],
+    onSome: (choice) =>
+      Arr.map(choice.options, (option, index) => ({
+        id: option.id,
+        letter: optionLetter(index),
+      })),
+  });
 
   return (
     <section
@@ -134,10 +225,19 @@ export function TeacherLayer({ live, number, question }: TeacherLayerProps) {
         points={question.points}
         questionId={question.id}
       />
+      <AnswerKey
+        editable={editable}
+        marked={markedOption(shown.key)}
+        number={number}
+        onMark={onMark}
+        options={options}
+      />
       <div className="grid gap-2">
         <FieldTitle>{t("rubric")}</FieldTitle>
         {live ? (
-          <Suspense fallback={<TextRoom />}>
+          <Suspense
+            fallback={<PreviewProse article doc={notes.rubric} size="line" />}
+          >
             <ExamText
               documentId={question.rubric}
               key={`${question.rubric}-${frozen}`}
@@ -147,13 +247,17 @@ export function TeacherLayer({ live, number, question }: TeacherLayerProps) {
             />
           </Suspense>
         ) : (
-          <TextRoom />
+          <PreviewProse article doc={notes.rubric} size="line" />
         )}
       </div>
       <div className="grid gap-2">
         <FieldTitle>{t("explanation")}</FieldTitle>
         {live ? (
-          <Suspense fallback={<TextRoom />}>
+          <Suspense
+            fallback={
+              <PreviewProse article doc={notes.explanation} size="line" />
+            }
+          >
             <ExamText
               documentId={question.explanation}
               key={`${question.explanation}-${frozen}`}
@@ -163,7 +267,7 @@ export function TeacherLayer({ live, number, question }: TeacherLayerProps) {
             />
           </Suspense>
         ) : (
-          <TextRoom />
+          <PreviewProse article doc={notes.explanation} size="line" />
         )}
       </div>
     </section>

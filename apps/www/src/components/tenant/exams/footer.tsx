@@ -7,6 +7,7 @@ import { useReducedMotion } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Slider } from "@repo/design-system/components/ui/slider";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
@@ -47,6 +48,12 @@ const noFullscreen = () => false;
 /** Where the footer reports a fullscreen request that the browser refused. */
 const SOURCE = "components/tenant/exams/footer";
 
+/**
+ * The server cannot ask the browser, so it draws the fullscreen control as a desktop browser allows it.
+ * A browser that refuses fullscreen disables the control once the page loads, and the control keeps its place.
+ */
+const fullscreenOnServer = () => true;
+
 /** The browser refused a request to enter or leave fullscreen, such as one without a gesture. */
 class FullscreenRefused extends Data.TaggedError("FullscreenRefused")<{
   readonly cause: unknown;
@@ -77,7 +84,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const canFullscreen = useSyncExternalStore(
     subscribeFullscreen,
     canGoFullscreen,
-    noFullscreen
+    fullscreenOnServer
   );
   const fullscreen = useSyncExternalStore(
     subscribeFullscreen,
@@ -179,16 +186,13 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
         </span>
         <div className="ms-auto flex items-center gap-2">
           <div className="hidden items-center gap-2 text-sm md:flex">
-            <input
+            <Slider
               aria-label={t("zoom")}
-              className="w-40 accent-primary"
+              className="w-40"
               max={ZOOM_STEPS}
               min={0}
-              onChange={(event) =>
-                onZoom(zoomAt(Number(event.currentTarget.value)))
-              }
+              onValueChange={(position) => onZoom(zoomAt(position))}
               step={1}
-              type="range"
               value={sliderPosition(zoom)}
             />
             <output className="w-12 text-end tabular-nums">{zoom}%</output>
@@ -202,18 +206,17 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
           >
             <HugeIcons aria-hidden="true" icon={GridViewIcon} />
           </Button>
-          {canFullscreen ? (
-            <Button
-              aria-label={fullscreen ? t("fullscreen-exit") : t("fullscreen")}
-              aria-pressed={fullscreen}
-              onClick={toggleFullscreen}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
-            </Button>
-          ) : null}
+          <Button
+            aria-label={t("fullscreen")}
+            aria-pressed={fullscreen}
+            disabled={!canFullscreen}
+            onClick={toggleFullscreen}
+            size="icon-sm"
+            type="button"
+            variant="ghost"
+          >
+            <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
+          </Button>
         </div>
       </div>
       <ResponsiveDialog open={gridOpen} setOpen={setGridOpen} title={t("grid")}>

@@ -284,6 +284,7 @@
     "reorder-of": "Frage {number} neu anordnen",
     "option-placeholder": "Optionstext",
     "key-option": "Option {letter} von Frage {number} als richtig markieren",
+    "answer-key": "Lösungsschlüssel",
     "option-remove-of": "Option {letter} von Frage {number} entfernen",
     "grid": "Rasteransicht",
     "fullscreen": "Vollbild",

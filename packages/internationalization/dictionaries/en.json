@@ -284,6 +284,7 @@
     "reorder-of": "Reorder question {number}",
     "option-placeholder": "Option text",
     "key-option": "Mark option {letter} of question {number} as correct",
+    "answer-key": "Answer key",
     "option-remove-of": "Remove option {letter} of question {number}",
     "grid": "Grid view",
     "fullscreen": "Full screen",

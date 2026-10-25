@@ -50,3 +50,38 @@ export const siblingShift = (
   }
   return 0;
 };
+
+/** A question of the order, with its index in the order and its ID. */
+export interface Place<QuestionId> {
+  readonly index: number;
+  readonly questionId: QuestionId;
+}
+
+/**
+ * The place of the question a grip names: its index in the order and its ID, or none when the grip
+ * names no question of the order. A grip names its question with the ID in its `data-grip` attribute,
+ * which is absent from a grip that the canvas does not own.
+ */
+export const placeOf = <QuestionId extends string>(
+  questionIds: readonly QuestionId[],
+  gripId: string | undefined
+): Option.Option<Place<QuestionId>> =>
+  Option.flatMap(Option.fromNullishOr(gripId), (id) =>
+    Arr.findFirst(
+      Arr.map(questionIds, (questionId, index) => ({ index, questionId })),
+      (place) => place.questionId === id
+    )
+  );
+
+/**
+ * The index a question takes when a focused grip steps it by `step` places, or none when the step
+ * leaves the order: the first question does not move up, and the last one does not move down.
+ */
+export const steppedIndex = (
+  index: number,
+  step: number,
+  count: number
+): Option.Option<number> => {
+  const to = index + step;
+  return to >= 0 && to < count ? Option.some(to) : Option.none();
+};

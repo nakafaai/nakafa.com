@@ -11,6 +11,19 @@ export class FormulaInvalid extends Schema.TaggedError<FormulaInvalid>()(
 ) {}
 
 /**
+ * The chemistry commands of KaTeX's mhchem extension, `\ce` and `\pu`, which a whole command name
+ * does not extend: `\cell` is no chemistry.
+ */
+const CHEMISTRY = /\\(?:ce|pu)(?![a-zA-Z])/u;
+
+/**
+ * Whether a formula draws chemistry, which KaTeX draws only once its mhchem extension has loaded. The
+ * extension is a separate module, so the view loads it on demand and no page loads it for a formula
+ * that holds no chemistry.
+ */
+export const needsChemistry = (latex: string): boolean => CHEMISTRY.test(latex);
+
+/**
  * The markup of a formula, drawn by KaTeX. A formula that does not parse is drawn as KaTeX's
  * error, in the destructive colour, so a broken formula never breaks the page around it.
  */

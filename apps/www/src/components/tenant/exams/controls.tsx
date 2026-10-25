@@ -24,6 +24,7 @@ import type {
   Question,
   QuestionId,
 } from "@/components/tenant/exams/optimistic";
+import { useExamSelection } from "@/components/tenant/exams/provider";
 
 /**
  * The actions of a page: move up, move down, copy, add a question below, and remove. A page shows
@@ -43,11 +44,19 @@ export function PageActions({
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const actions = useQuestionActions();
+  const requestFocus = useExamSelection((state) => state.requestFocus);
   const [asking, setAsking] = useState(false);
   const number = index + 1;
 
-  const moveUp = () => actions.moveQuestion(question.id, index - 1);
-  const moveDown = () => actions.moveQuestion(question.id, index + 1);
+  // A move keeps the focus on the moved page, so the keyboard user who pressed the button keeps their place.
+  const moveUp = () => {
+    requestFocus(question.id);
+    actions.moveQuestion(question.id, index - 1);
+  };
+  const moveDown = () => {
+    requestFocus(question.id);
+    actions.moveQuestion(question.id, index + 1);
+  };
   const copy = () => actions.copyQuestion(question);
   const addBelow = () => actions.addQuestion(question.id);
   const removeQuestion = () => {
@@ -123,13 +132,19 @@ export function PageActions({
           />
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem disabled={index === 0} onClick={moveUp}>
+              <HugeIcons aria-hidden="true" icon={ArrowUp01Icon} />
               {t("move-up")}
             </DropdownMenuItem>
             <DropdownMenuItem disabled={index === count - 1} onClick={moveDown}>
+              <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
               {t("move-down")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={copy}>{t("copy")}</DropdownMenuItem>
+            <DropdownMenuItem onClick={copy}>
+              <HugeIcons aria-hidden="true" icon={Copy01Icon} />
+              {t("copy")}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={addBelow}>
+              <HugeIcons aria-hidden="true" icon={Add01Icon} />
               {t("add-below")}
             </DropdownMenuItem>
             {count > 1 ? (
@@ -139,6 +154,7 @@ export function PageActions({
                   onClick={() => setAsking(true)}
                   variant="destructive"
                 >
+                  <HugeIcons aria-hidden="true" icon={Delete02Icon} />
                   {t("remove")}
                 </DropdownMenuItem>
               </>

@@ -1,5 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
 import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import {
@@ -36,40 +37,41 @@ import { foldedDocument } from "@/lib/editor/fold";
 const PREVIEW_CLIENT = "preview";
 
 /**
- * The prompt of one question as a document to draw: the one its editor holds when the question is
+ * A rich text of a question as a document to draw: the one its editor holds when the question is
  * open, and otherwise the one the server holds, or the one the editor held last until the server
  * answers. The server's document is read only when `read` is set, so an off-screen page reads
- * nothing; a question the server has not saved yet reads nothing either.
+ * nothing; a text whose question the server has not saved yet reads nothing either.
  */
-export function usePromptDocument({
+export function usePageDocument({
+  documentId,
   open,
-  question,
   read,
   saved,
 }: {
+  /** The document of the text: the prompt, the rubric, or the explanation of a question. */
+  documentId: Id<"editorDocuments">;
   /** Whether the question is the one the teacher works on, which draws its editor's document first. */
   open: boolean;
-  question: Question;
   /** Whether the server's document may be read now. */
   read: boolean;
   /** Whether the server has saved the question. */
   saved: boolean;
 }): Option.Option<Node> {
   const { slug } = useExam();
-  // Each question follows its own prompt alone: the selector keeps the document's reference, so
-  // typing in one question redraws that question alone.
+  // Each text follows its own document alone: the selector keeps the document's reference, so
+  // typing in one text redraws that text alone.
   const live = Option.fromNullishOr(
     useExamLive((state) =>
-      Option.getOrUndefined(HashMap.get(state.docs, question.prompt))
+      Option.getOrUndefined(HashMap.get(state.docs, documentId))
     )
   );
   const reply = useQuery(
     editors.documents.open,
     !(saved && read) ||
-      isPlaceholderId(question.prompt) ||
+      isPlaceholderId(documentId) ||
       (open && Option.isSome(live))
       ? "skip"
-      : { clientId: PREVIEW_CLIENT, documentId: question.prompt, slug }
+      : { clientId: PREVIEW_CLIENT, documentId, slug }
   );
   // A document this build cannot read leaves its drawing without a prompt; the editor reports the
   // failure when the question opens. The stored steps are folded once per answer of the server.
@@ -90,18 +92,32 @@ export function usePromptDocument({
     : Option.orElse(served, () => live);
 }
 
+/** The document a text draws while its document is not known: one empty paragraph, as an editor holds one. */
+const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
+  content: [{ type: "paragraph" }],
+  type: "doc",
+});
+
 /**
  * A rich text drawn without an editor: the schema's own rendering of each node, which is what the
  * editor draws, in the wrapper and the document classes the editor gives its text, so the text takes
  * the same box and spacing as it does once the editor mounts, and each block takes the direction of
  * its own words, as the editor gives it. A text that changes while the teacher types is drawn when
- * the browser has time.
+ * the browser has time. `article` gives each paragraph the classes the article's paragraphs take, which
+ * the prompt and the notes of a question take in their editors, and an option does not. An empty
+ * paragraph gets the line break an editor gives it, so an empty text keeps the height of its editor.
  */
-function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
-  const shown = useDeferredValue(doc);
-  // The text is drawn again only when it changes, not on every redraw of the page. An option's text
-  // takes the paragraph classes of no paragraph, as its editor does, so its first line keeps the line
-  // box of the letter.
+export function PreviewProse({
+  article,
+  doc,
+  size,
+}: {
+  article: boolean;
+  doc: Option.Option<Node>;
+  size: "line" | "page";
+}) {
+  const shown = useDeferredValue(Option.getOrElse(doc, () => EMPTY_TEXT));
+  // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
     (element: HTMLDivElement | null) => {
       if (element === null) {
@@ -113,14 +129,16 @@ function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
         )
       );
       markBlockDirections(element);
-      if (size === "line") {
-        return;
-      }
       Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
-        p.className = paragraphVariants();
+        if (article) {
+          p.className = paragraphVariants();
+        }
+        if (p.childNodes.length === 0) {
+          p.append(document.createElement("br"));
+        }
       });
     },
-    [shown, size]
+    [article, shown]
   );
 
   return (
@@ -135,14 +153,17 @@ function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
 
 /** The label of one option drawn without an editor, at the size an option's editor takes. */
 function OptionSketch({ label }: { label: OptionLabel }) {
-  const doc = useMemo(() => Node.fromJSON(assessmentSchema, label), [label]);
+  const doc = useMemo(
+    () => Option.some(Node.fromJSON(assessmentSchema, label)),
+    [label]
+  );
 
-  return <PreviewProse doc={doc} size="line" />;
+  return <PreviewProse article={false} doc={doc} size="line" />;
 }
 
 /**
  * One option of a paper drawn without editors: its letter and its text. A page with controls keeps
- * the room of its option controls beside the text, as the editor's page does.
+ * the room of the one control an option has beside its text, the remove control, as the editor's page does.
  */
 function PaperChoice({
   label,
@@ -168,7 +189,6 @@ function PaperChoice({
       {option}
       <div aria-hidden className="flex items-center gap-1">
         <ControlRoom />
-        <ControlRoom />
       </div>
     </div>
   );
@@ -177,8 +197,9 @@ function PaperChoice({
 /**
  * The paper of one question drawn without editors: its prompt and its options as the student reads
  * them. The page draws it when its editors are not mounted, and the thumbnails draw it small, so a
- * page and its thumbnail look alike. A page passes `withControls`, which keeps the room of its option
- * controls, so an option is as wide on the paper as it is when the editor mounts.
+ * page and its thumbnail look alike. The prompt keeps its room even before its document is known, so
+ * the paper takes the height it takes once its editor mounts. A page passes `withControls`, which keeps
+ * the room of its option controls, so an option is as wide on the paper as it is when the editor mounts.
  */
 export function PaperSketch({
   doc,
@@ -193,7 +214,7 @@ export function PaperSketch({
 
   return (
     <QuestionPaper>
-      {Option.isSome(doc) ? <PreviewProse doc={doc.value} size="page" /> : null}
+      <PreviewProse article doc={doc} size="page" />
       {Option.isSome(choice) ? (
         <PaperOptions>
           {Arr.map(choice.value.options, (option, index) => (
@@ -226,7 +247,12 @@ export function QuestionPreview({
   saved: boolean;
 }) {
   const { inViewport, ref } = useInViewport();
-  const doc = usePromptDocument({ open, question, read: inViewport, saved });
+  const doc = usePageDocument({
+    documentId: question.prompt,
+    open,
+    read: inViewport,
+    saved,
+  });
 
   return (
     <div className="absolute inset-0 overflow-hidden" ref={ref}>

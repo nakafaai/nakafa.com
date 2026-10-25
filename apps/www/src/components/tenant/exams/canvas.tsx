@@ -58,6 +58,7 @@ export function ExamCanvas({
     canvas,
     moveQuestion,
     questions: exam.questions,
+    requestFocus: selection.getState().requestFocus,
     zoom: drawnZoom / 100,
   });
 

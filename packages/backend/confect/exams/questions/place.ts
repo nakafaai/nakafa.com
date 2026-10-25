@@ -1,6 +1,5 @@
 import type { GenericId } from "@confect/core";
 import type { ExamsDoc } from "@repo/backend/confect/_generated/docs";
-import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { createDocument } from "@repo/backend/confect/editor/create";
@@ -9,27 +8,22 @@ import { ExamFull } from "@repo/backend/confect/exams/errors";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
 import {
-  EMPTY_DOCUMENT_TEXT,
+  EMPTY_PROMPT_TEXT,
   encodeAnswers,
   NEW_QUESTION_POINTS,
   newChoiceAnswers,
-  QuestionPoints,
+  type questionValidator,
 } from "@repo/backend/confect/exams/question";
-import { Clock, Effect, Option, Schema } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 /** The parts of an exam that placing a question reads and writes. */
 type ExamPlace = Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">;
 
 /** The fields of a question row that placing it writes, with the documents the question owns. */
-const QuestionFields = Schema.Struct({
-  answers: Schema.String,
-  explanation: Id("editorDocuments"),
-  key: Schema.NullOr(Schema.String),
-  points: QuestionPoints,
-  prompt: Id("editorDocuments"),
-  rubric: Id("editorDocuments"),
-});
-type QuestionFields = typeof QuestionFields.Type;
+type QuestionFields = Pick<
+  typeof questionValidator.Type,
+  "answers" | "explanation" | "key" | "points" | "prompt" | "rubric"
+>;
 
 /**
  * Places one question row in an exam, after `after` or last, with the given answers, key, points,
@@ -79,7 +73,7 @@ export const placeQuestion = Effect.fn("exams.question.place")(function* (
 /** Creates one empty document of an exam, which a question of the exam owns. */
 export const createEmptyDocument = Effect.fn("exams.question.emptyDocument")(
   function* (exam: ExamPlace) {
-    const text = yield* storedDocument(EMPTY_DOCUMENT_TEXT).pipe(Effect.orDie);
+    const text = yield* storedDocument(EMPTY_PROMPT_TEXT).pipe(Effect.orDie);
     return yield* createDocument({
       scope: exam.scope,
       tenantId: exam.tenantId,

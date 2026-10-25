@@ -72,6 +72,12 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
   await points.fill("5");
   await points.press("Enter");
   await expect(points).toHaveValue("5");
+  // The answer key is marked in the layer, so the paper of the student carries no mark.
+  const keyOfB = first.getByRole("button", {
+    name: "Mark option B of question 1 as correct",
+  });
+  await keyOfB.click();
+  await expect(keyOfB).toHaveAttribute("aria-pressed", "true");
   await first.getByRole("textbox", { name: "Rubric of question 1" }).click();
   await page.keyboard.type("Nilai penuh untuk opsi benar.");
   await first
@@ -81,6 +87,14 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
 
   // The arrow keys move the focused grip's page one place, and the focus stays on that grip.
   await page.getByRole("button", { name: GRIP_OF_SECOND }).focus();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("button", { name: GRIP_OF_FIRST })).toBeFocused();
+  await expect(
+    page.getByRole("region", { name: FIRST_QUESTION })
+  ).toContainText("Soal kedua");
+
+  // The first question has no place above it, so its arrow key leaves the order as it is.
+  await page.getByRole("button", { name: GRIP_OF_FIRST }).focus();
   await page.keyboard.press("ArrowUp");
   await expect(page.getByRole("button", { name: GRIP_OF_FIRST })).toBeFocused();
   await expect(
@@ -105,6 +119,17 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
     page.getByRole("region", { name: FIRST_QUESTION })
   ).toContainText("Soal pertama");
 
+  // A move by the page's own button keeps the focus on the moved page's grip, down and back up.
+  await page.getByRole("button", { name: "Move question 1 down" }).click();
+  await expect(
+    page.getByRole("button", { name: GRIP_OF_SECOND })
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Move question 2 up" }).click();
+  await expect(page.getByRole("button", { name: GRIP_OF_FIRST })).toBeFocused();
+  await expect(
+    page.getByRole("region", { name: FIRST_QUESTION })
+  ).toContainText("Soal pertama");
+
   // Everything reaches the server, so the editor opened again shows the order and the layer.
   const reopened = await context.newPage();
   await reopened.goto(page.url());
@@ -118,6 +143,11 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
   await expect(
     reopenedFirst.getByRole("spinbutton", { name: "Points" })
   ).toHaveValue("5");
+  await expect(
+    reopenedFirst.getByRole("button", {
+      name: "Mark option B of question 1 as correct",
+    })
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(
     reopenedFirst.getByRole("textbox", { name: "Rubric of question 1" })
   ).toContainText("Nilai penuh untuk opsi benar.", {

@@ -1,5 +1,4 @@
-import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect, useRef } from "react";
 import type {
   Question,
@@ -8,7 +7,9 @@ import type {
 import {
   dropIndex,
   type PageBox,
+  placeOf,
   siblingShift,
+  steppedIndex,
 } from "@/components/tenant/exams/reorder";
 
 /** The glide of the pages that make room while a page is dragged. */
@@ -20,30 +21,17 @@ const STEP_BY_KEY: Readonly<Record<string, number>> = {
   ArrowUp: -1,
 };
 
-/** The place of a question in the order: its index, and its ID. */
-const Place = Schema.Struct({
-  index: Schema.Int,
-  questionId: Id("examQuestions"),
-});
-type Place = typeof Place.Type;
-
 /** The grip an event came from, when the event came from one. */
 const gripOf = (target: EventTarget | null): Option.Option<HTMLElement> =>
   target instanceof Element
     ? Option.fromNullishOr(target.closest<HTMLElement>("[data-grip]"))
     : Option.none();
 
-/** The place of the question a grip stands for, when the grip names a question of the order. */
-const placeOf = (
-  questions: readonly Question[],
-  grip: HTMLElement
-): Option.Option<Place> =>
-  Arr.findFirst(
-    Arr.map(questions, (question, index) => ({
-      index,
-      questionId: question.id,
-    })),
-    (place) => place.questionId === grip.dataset.grip
+/** The place of the question a grip stands for, in the order the questions hold. */
+const placeOfGrip = (questions: readonly Question[], grip: HTMLElement) =>
+  placeOf(
+    Arr.map(questions, (question) => question.id),
+    grip.dataset.grip
   );
 
 /** The gap between two pages, which the canvas sets as the row gap of its stack. */
@@ -106,7 +94,7 @@ const beginDrag = (
   moveQuestion: (questionId: QuestionId, index: number) => void,
   settled: () => void
 ): (() => void) | null => {
-  const place = placeOf(questions, grip);
+  const place = placeOfGrip(questions, grip);
   if (Option.isNone(place)) {
     return null;
   }
@@ -165,6 +153,8 @@ interface ReorderOptions {
   readonly moveQuestion: (questionId: QuestionId, index: number) => void;
   /** The questions in their order, which decides where a grip's page stands. */
   readonly questions: readonly Question[];
+  /** Asks for the keyboard focus on the grip of a question, once the page shows its new place. */
+  readonly requestFocus: (questionId: QuestionId) => void;
   /** The zoom the canvas draws at, as a factor, where 1 is the default size. */
   readonly zoom: number;
 }
@@ -173,17 +163,16 @@ interface ReorderOptions {
  * Reorders the questions of the canvas two ways, from one listener on the canvas each. A grip
  * dragged with the pointer moves its page under the pointer while the other pages glide aside, and
  * the move is saved on release; Escape or a cancelled pointer keeps the order. A focused grip moves
- * its page one place with the up and down arrow keys, and keeps the focus once the new order shows.
- * Pages move by their transforms, so no page changes the layout of another.
+ * its page one place with the up and down arrow keys, and the moved page takes the focus back once the
+ * new order shows. Pages move by their transforms, so no page changes the layout of another.
  */
 export function useQuestionReorder({
   canvas,
   moveQuestion,
   questions,
+  requestFocus,
   zoom,
 }: ReorderOptions) {
-  // The question the arrow keys moved, whose grip takes the focus again once the new order shows.
-  const focusNext = useRef<QuestionId | null>(null);
   // The drag in progress, which a second press waits for, and which the unmounted canvas cancels.
   const activeDrag = useRef<(() => void) | null>(null);
 
@@ -198,12 +187,6 @@ export function useQuestionReorder({
     const root = canvas.current;
     if (root === null) {
       return;
-    }
-    // The new order is on the screen, so the grip that the arrow keys moved takes the focus again.
-    const moved = focusNext.current;
-    if (moved !== null) {
-      focusNext.current = null;
-      root.querySelector<HTMLElement>(`[data-grip="${moved}"]`)?.focus();
     }
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0 || activeDrag.current !== null) {
@@ -233,18 +216,20 @@ export function useQuestionReorder({
       if (step === undefined || Option.isNone(grip)) {
         return;
       }
-      Option.match(placeOf(questions, grip.value), {
-        onNone: () => undefined,
-        onSome: ({ index, questionId }) => {
-          const to = index + step;
-          if (to < 0 || to >= questions.length) {
-            return;
-          }
-          event.preventDefault();
-          focusNext.current = questionId;
-          moveQuestion(questionId, to);
-        },
-      });
+      const moved = Option.flatMap(
+        placeOfGrip(questions, grip.value),
+        (place) =>
+          Option.map(
+            steppedIndex(place.index, step, questions.length),
+            (to) => ({ index: to, questionId: place.questionId })
+          )
+      );
+      if (Option.isNone(moved)) {
+        return;
+      }
+      event.preventDefault();
+      requestFocus(moved.value.questionId);
+      moveQuestion(moved.value.questionId, moved.value.index);
     };
 
     root.addEventListener("pointerdown", onPointerDown);
@@ -253,5 +238,5 @@ export function useQuestionReorder({
       root.removeEventListener("pointerdown", onPointerDown);
       root.removeEventListener("keydown", onKeyDown);
     };
-  }, [canvas, moveQuestion, questions, zoom]);
+  }, [canvas, moveQuestion, questions, requestFocus, zoom]);
 }

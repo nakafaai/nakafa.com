@@ -41,7 +41,7 @@ import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   PaperSketch,
-  usePromptDocument,
+  usePageDocument,
 } from "@/components/tenant/exams/preview";
 import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
 import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
@@ -75,97 +75,13 @@ interface ExamPageProps {
 }
 
 /**
- * One question as a page of the canvas: a row above the paper names the question and holds its
- * actions, and the paper below it is what the student reads. A page mounts its editors while it is
- * within a viewport of the canvas and unmounts them past three viewports. Until then, and while it
- * is far away, the paper shows the same document as drawn text, so the page keeps its shape. The
- * drawn paper stays until the prompt's editor loads. A page the server has not saved yet shows its
- * options only, and they take no change until it answers.
+ * The answers and the key of one question as its page shows them, with the saves that change them.
+ * The page owns the writer, so the paper's option labels and the layer's key save in the same order,
+ * and each save starts from the newest draft the writer knows. A change shows at once, and the page
+ * shows the server's answer once every save of the question has settled.
  */
-export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
-  const t = useTranslations("Exams");
-  const { exam } = useExam();
-  const frozen = isLocked(exam);
-  // Each page reads a boolean for its own choice, so a change of the choice renders only the two pages it moves between.
-  const awaiting = useExamSelection((state) =>
-    Arr.contains(state.pending, question.id)
-  );
-  const chosen = useExamSelection((state) => state.selected === question.id);
-  const saved = !(awaiting || isPlaceholderId(question.prompt));
-  const number = index + 1;
-  const page = useRef<HTMLElement>(null);
-  const { mounted, reached } = usePageWindow(page, canvas);
-  // A question the teacher just added or copied, which the server has not saved yet, comes into view.
-  useEffect(() => {
-    if (chosen && !saved) {
-      page.current?.scrollIntoView({ block: "nearest" });
-    }
-  }, [chosen, saved]);
-
-  const live = mounted && saved;
-  const doc = usePromptDocument({
-    open: chosen,
-    question,
-    read: reached && !live,
-    saved,
-  });
-  const paper = <PaperSketch doc={doc} question={question} withControls />;
-
-  return (
-    <section
-      aria-label={t("question", { number })}
-      className="flex min-w-0 flex-col gap-2"
-      data-page=""
-      data-question={question.id}
-      id={`question-${question.id}`}
-      ref={page}
-    >
-      <div className="flex min-h-9 items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          {saved && !frozen ? (
-            <QuestionGrip number={number} questionId={question.id} />
-          ) : (
-            <span aria-hidden className="size-8 shrink-0" />
-          )}
-          <h2 className="font-medium text-sm">{t("question", { number })}</h2>
-          {question.key === null ? (
-            <span className="flex items-center gap-1 text-muted-foreground text-xs">
-              <HugeIcons
-                aria-hidden="true"
-                className="size-3.5 text-primary"
-                icon={Alert02Icon}
-              />
-              {t("page-no-key")}
-            </span>
-          ) : null}
-        </div>
-        {saved && !frozen ? (
-          <PageActions count={count} index={index} question={question} />
-        ) : null}
-      </div>
-      {live ? (
-        <Suspense fallback={paper}>
-          <LivePaper number={number} question={question} />
-        </Suspense>
-      ) : (
-        paper
-      )}
-      <TeacherLayer live={live} number={number} question={question} />
-    </section>
-  );
-}
-
-/** The paper of a page with its editors: the prompt as an editor, then each option with its controls. */
-function LivePaper({
-  number,
-  question,
-}: {
-  number: number;
-  question: Question;
-}) {
-  const t = useTranslations("Exams");
+function useQuestionEditing(question: Question) {
   const { exam, slug } = useExam();
-  const frozen = isLocked(exam);
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
   );
@@ -197,15 +113,14 @@ function LivePaper({
       revision: question.revision,
     })
   );
-  // The writer lives with this mounted paper. A paper that unmounts with a save in flight leaves that save to
-  // finish, and a paper that mounts again starts a new writer.
+  // The writer lives with this page. A page that unmounts with a save in flight leaves that save to finish.
   const [writer] = useState(() =>
     Effect.runSync(makeQuestionWriter(send, Effect.sync(rendered)))
   );
 
   // A save shows its change at once, even while an earlier save of this question is still in flight. Each click
   // applies its edit to the draft the last click left on screen, and the render shows again once every save of
-  // this paper has settled.
+  // this question has settled.
   const [shown, setShown] = useState<QuestionDraft | null>(null);
   const shownRef = useRef<QuestionDraft | null>(null);
   const unsettled = useRef(0);
@@ -241,7 +156,151 @@ function LivePaper({
     });
   };
 
-  const displayed = shown ?? question;
+  /** Marks one option as the key of the question, which saves at once. Marking the key's option again saves nothing. */
+  const markOption = (optionId: string) => {
+    if (markedOption(current().key) !== optionId) {
+      saveAnswers((draft) => ({
+        answers: draft.answers,
+        key: markedKey(draft.answers, optionId),
+      }));
+    }
+  };
+
+  return {
+    displayed: shown ?? question,
+    markOption,
+    saveAnswers,
+  };
+}
+
+/** The answers and the key of one question, as its page edits them. */
+type QuestionEditing = ReturnType<typeof useQuestionEditing>;
+
+/**
+ * One question as a page of the canvas: a row above the paper names the question and holds its
+ * actions, and the paper below it is what the student reads. A page mounts its editors while it is
+ * within a viewport of the canvas and unmounts them past three viewports. Until then, and while it
+ * is far away, the paper shows the same document as drawn text, so the page keeps its shape. The
+ * drawn paper stays until the prompt's editor loads. A page the server has not saved yet shows its
+ * options only, and they take no change until it answers.
+ */
+export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
+  const t = useTranslations("Exams");
+  const { exam } = useExam();
+  const frozen = isLocked(exam);
+  // Each page reads a boolean for its own choice, so a change of the choice renders only the two pages it moves between.
+  const awaiting = useExamSelection((state) =>
+    Arr.contains(state.pending, question.id)
+  );
+  const chosen = useExamSelection((state) => state.selected === question.id);
+  const focused = useExamSelection((state) => state.focus === question.id);
+  const settleFocus = useExamSelection((state) => state.settleFocus);
+  const saved = !(awaiting || isPlaceholderId(question.prompt));
+  const number = index + 1;
+  const page = useRef<HTMLElement>(null);
+  const { mounted, reached } = usePageWindow(page, canvas);
+  const editing = useQuestionEditing(question);
+  // A question the teacher just added or copied, which the server has not saved yet, comes into view.
+  useEffect(() => {
+    if (chosen && !saved) {
+      page.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [chosen, saved]);
+  // A move by the keyboard or by the page's own button hands the focus to the grip of the moved page.
+  useEffect(() => {
+    if (focused) {
+      page.current?.querySelector<HTMLElement>("[data-grip]")?.focus();
+      settleFocus();
+    }
+  }, [focused, settleFocus]);
+
+  const live = mounted && saved;
+  const read = reached && !live;
+  const prompt = usePageDocument({
+    documentId: question.prompt,
+    open: chosen,
+    read,
+    saved,
+  });
+  const rubric = usePageDocument({
+    documentId: question.rubric,
+    open: chosen,
+    read,
+    saved,
+  });
+  const explanation = usePageDocument({
+    documentId: question.explanation,
+    open: chosen,
+    read,
+    saved,
+  });
+  const paper = <PaperSketch doc={prompt} question={question} withControls />;
+
+  return (
+    <section
+      aria-label={t("question", { number })}
+      className="flex min-w-0 flex-col gap-2"
+      data-page=""
+      data-question={question.id}
+      id={`question-${question.id}`}
+      ref={page}
+    >
+      <div className="flex min-h-9 items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          {saved && !frozen ? (
+            <QuestionGrip number={number} questionId={question.id} />
+          ) : (
+            <span aria-hidden className="size-8 shrink-0" />
+          )}
+          <h2 className="font-medium text-sm">{t("question", { number })}</h2>
+          {question.key === null ? (
+            <span className="flex items-center gap-1 text-muted-foreground text-xs">
+              <HugeIcons
+                aria-hidden="true"
+                className="size-3.5 text-primary"
+                icon={Alert02Icon}
+              />
+              {t("page-no-key")}
+            </span>
+          ) : null}
+        </div>
+        {saved && !frozen ? (
+          <PageActions count={count} index={index} question={question} />
+        ) : null}
+      </div>
+      {live ? (
+        <Suspense fallback={paper}>
+          <LivePaper editing={editing} number={number} question={question} />
+        </Suspense>
+      ) : (
+        paper
+      )}
+      <TeacherLayer
+        live={live}
+        notes={{ explanation, rubric }}
+        number={number}
+        onMark={editing.markOption}
+        question={question}
+        shown={editing.displayed}
+      />
+    </section>
+  );
+}
+
+/** The paper of a page with its editors: the prompt as an editor, then each option with its controls. */
+function LivePaper({
+  editing,
+  number,
+  question,
+}: {
+  editing: QuestionEditing;
+  number: number;
+  question: Question;
+}) {
+  const t = useTranslations("Exams");
+  const { exam } = useExam();
+  const frozen = isLocked(exam);
+  const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
   // The label the server holds for an option. Its editor starts from that label, and a label the server does not
   // store goes back to it, so the editor never keeps text that is not saved. An option the server does not hold
@@ -279,16 +338,7 @@ function LivePaper({
                 label={savedLabel(option)}
                 letter={optionLetter(index)}
                 locked={frozen}
-                marked={markedOption(displayed.key) === option.id}
                 number={number}
-                onMark={() => {
-                  if (markedOption(current().key) !== option.id) {
-                    saveAnswers((draft) => ({
-                      answers: draft.answers,
-                      key: markedKey(draft.answers, option.id),
-                    }));
-                  }
-                }}
                 onRemove={
                   choice.options.length > CHOICE_OPTIONS_MIN
                     ? () =>

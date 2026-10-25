@@ -169,8 +169,11 @@ export const questionView = Effect.fn("exams.question.view")(function* (
   } satisfies QuestionView;
 });
 
-/** The prompt of a new question: one empty paragraph, which the contract accepts. */
-export const EMPTY_DOCUMENT_TEXT =
+/**
+ * The text of a new, empty document that a question owns as its prompt, rubric, or explanation: one
+ * empty paragraph, which the contract accepts.
+ */
+export const EMPTY_PROMPT_TEXT =
   '{"content":[{"type":"paragraph"}],"type":"doc"}';
 
 /** The label of an empty option: one empty paragraph of the content the contract allows in an option. */

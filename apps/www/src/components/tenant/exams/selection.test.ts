@@ -144,3 +144,16 @@ describe("createExamSelection", () => {
     expect(selection.getState().selected).toBe(first.id);
   });
 });
+
+describe("focus request", () => {
+  it("holds the request for one question until the page settles it", () => {
+    const selection = createExamSelection();
+    const first = questionId("first");
+
+    expect(selection.getState().focus).toBeNull();
+    selection.getState().requestFocus(first);
+    expect(selection.getState().focus).toBe(first);
+    selection.getState().settleFocus();
+    expect(selection.getState().focus).toBeNull();
+  });
+});

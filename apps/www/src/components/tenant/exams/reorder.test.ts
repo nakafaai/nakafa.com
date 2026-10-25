@@ -1,8 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Option } from "effect";
 import {
   dropIndex,
   type PageBox,
+  placeOf,
   siblingShift,
+  steppedIndex,
 } from "@/components/tenant/exams/reorder";
 
 /** Three pages of 100 pixels with a gap of 20 between them, the first at the top. */
@@ -51,5 +54,32 @@ describe("siblingShift", () => {
   it("moves no page when the page takes its own place", () => {
     expect(siblingShift(0, 1, 1, 120)).toBe(0);
     expect(siblingShift(1, 1, 1, 120)).toBe(0);
+  });
+});
+
+describe("placeOf", () => {
+  const order = ["question-a", "question-b", "question-c"];
+
+  it("names the index and the ID of the question a grip names", () => {
+    expect(placeOf(order, "question-b")).toEqual(
+      Option.some({ index: 1, questionId: "question-b" })
+    );
+  });
+
+  it("names no question for a grip that names none of the order, or no question at all", () => {
+    expect(placeOf(order, "question-z")).toEqual(Option.none());
+    expect(placeOf(order, undefined)).toEqual(Option.none());
+  });
+});
+
+describe("steppedIndex", () => {
+  it("steps a question up or down by one place", () => {
+    expect(steppedIndex(1, -1, 3)).toEqual(Option.some(0));
+    expect(steppedIndex(1, 1, 3)).toEqual(Option.some(2));
+  });
+
+  it("leaves the order where the step would pass its first or last question", () => {
+    expect(steppedIndex(0, -1, 3)).toEqual(Option.none());
+    expect(steppedIndex(2, 1, 3)).toEqual(Option.none());
   });
 });
