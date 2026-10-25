@@ -6,10 +6,17 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  readinessTimeoutMilliseconds,
+  servedTimeoutMilliseconds,
+} from "@/e2e/support/timeout";
+import { isTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+
+/** The address of the school's exams, where the editor's back link goes. */
+const EXAMS_PATH = /\/exams$/;
 
 /** The header of the editor, which holds the exam's title. */
 function editorHeader(page: Page) {
@@ -35,7 +42,14 @@ test("two teachers in one exam see each other in the editor header, and a teache
 
   const owner = await ownerContext.newPage();
   await owner.goto(hostAddress(baseURL, host, "/exams"));
-  await owner.getByRole("button", { name: "Create exam" }).click();
+  // A press before React takes the button over is lost, so the Owner waits for it.
+  const createAction = owner.getByRole("button", { name: "Create exam" });
+  await expect
+    .poll(() => isTakenOver(createAction), {
+      timeout: readinessTimeoutMilliseconds,
+    })
+    .toBe(true);
+  await createAction.click();
   const dialog = owner.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Kimia");
   await dialog.getByRole("button", { name: "Create exam" }).click();
@@ -44,7 +58,7 @@ test("two teachers in one exam see each other in the editor header, and a teache
   // Alone in the exam, the Owner sees no one, and the actions keep their place when the row comes.
   const ownerHeader = editorHeader(owner);
   const tryAction = ownerHeader.getByRole("link", { name: "Try as student" });
-  await expect(tryAction).toBeVisible();
+  await expect(tryAction).toBeVisible({ timeout: servedTimeoutMilliseconds });
   const before = await tryAction.boundingBox();
 
   const teacher = await teacherContext.newPage();
@@ -53,7 +67,7 @@ test("two teachers in one exam see each other in the editor header, and a teache
     name: "Acceptance Teacher is editing",
   });
   await expect(teacherOnOwner).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
+    timeout: servedTimeoutMilliseconds,
   });
   await expect(
     editorHeader(teacher).getByRole("button", {
@@ -69,11 +83,17 @@ test("two teachers in one exam see each other in the editor header, and a teache
 
   // The avatar's tooltip names the teacher.
   await teacherOnOwner.hover();
-  await expect(owner.getByText("Acceptance Teacher", { exact: true })).toBeVisible();
+  await expect(
+    owner.getByText("Acceptance Teacher", { exact: true })
+  ).toBeVisible();
 
-  // The teacher goes back to the exams, so the editor closes and the Owner's row empties.
+  // The teacher goes back to the exams, so the editor closes and the Owner's row empties. The
+  // editor stays open until the exams list replaces it, so the row is read after the list shows.
   await editorHeader(teacher).getByRole("link", { name: "Exams" }).click();
-  await teacher.waitForURL(/\/exams$/);
+  await teacher.waitForURL(EXAMS_PATH);
+  await expect(
+    teacher.getByRole("button", { name: "Create exam" })
+  ).toBeVisible({ timeout: servedTimeoutMilliseconds });
   await expect(teacherOnOwner).toHaveCount(0, {
     timeout: readinessTimeoutMilliseconds,
   });
