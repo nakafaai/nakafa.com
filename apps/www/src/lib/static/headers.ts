@@ -35,13 +35,6 @@ const SOCIAL_IMAGE_HEADERS: readonly WwwHeader[] = [
   { key: "Cache-Control", value: SOCIAL_IMAGE_CACHE_CONTROL },
 ];
 
-/** The file that names the prerender rules of the content pages, served as the speculation rules media type. */
-const SPECULATION_RULES_PATH = "/speculation-rules.json";
-
-const SPECULATION_RULES_HEADERS: readonly WwwHeader[] = [
-  { key: "Content-Type", value: "application/speculationrules+json" },
-];
-
 /**
  * The social images of each locale. The rule names each locale's path, because a
  * splat before the locale segment matched no image of the emitted `_headers` file.
@@ -66,13 +59,4 @@ export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/llms.txt", headers: LLMS_HEADERS },
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
   ...SOCIAL_IMAGE_RULES,
-  { path: SPECULATION_RULES_PATH, headers: SPECULATION_RULES_HEADERS },
-  // Every document names the rules, which the browser reads from the header
-  // instead of an inline script, so the Content-Security-Policy keeps its form.
-  {
-    path: "/*",
-    headers: [
-      { key: "Speculation-Rules", value: `"${SPECULATION_RULES_PATH}"` },
-    ],
-  },
 ];

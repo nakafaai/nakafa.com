@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { basename, join } from "node:path";
+import { join } from "node:path";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
 import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
 import babel from "@rolldown/plugin-babel";
@@ -12,11 +12,16 @@ import rsc from "@vitejs/plugin-rsc";
 import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
+  verifyPrerenderedPages,
+  writeStaticAnswers,
+} from "#www/prerender.config";
+import {
   createWwwHeaders,
   readWwwHeaderOrigins,
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
+import { PRERENDER_HEADER } from "#www/src/lib/static/calls";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
 import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 import { workerEnvironment, workerSettings } from "#www/worker";
@@ -30,18 +35,6 @@ const PAGE_LIST_FILE = join(import.meta.dirname, ".cache/static-pages.json");
 
 /** How many prerender requests run at once. Set, so the build machine's core count never changes the output. */
 const PRERENDER_CONCURRENCY = 8;
-
-/**
- * The marker that React writes where a Suspense boundary failed on the server, so
- * the browser renders that part. A page that carries it is a server failure.
- */
-const SERVER_FAILURE_MARKER = "<!--$!-->";
-
-/**
- * The robots meta of the standalone not-found page. A prerendered page never
- * renders that page, because TanStack would write the body of a missing route.
- */
-const NOT_FOUND_MARKER = '<meta name="robots" content="noindex,nofollow"';
 
 /**
  * Reads the public paths that the build prerenders. The static runner writes them
@@ -71,55 +64,6 @@ function readPrerenderedPagePaths(): Promise<readonly string[]> {
       );
     });
   });
-}
-
-/**
- * TanStack runs each prerender task in a queue whose failures nobody awaits: a
- * page that fails only logs an unhandled rejection, and the build still exits 0.
- * This check throws unless the client output directory, the directory that
- * TanStack prerenders into, holds exactly the listed pages and none of them
- * carries a server failure marker.
- */
-function assertPrerenderedPages(
-  clientOutputDirectory: string,
-  pages: readonly string[]
-) {
-  const expected = pages.map((path) =>
-    join(clientOutputDirectory, path, "index.html")
-  );
-  const written = readdirSync(clientOutputDirectory, {
-    encoding: "utf8",
-    recursive: true,
-  })
-    .filter((entry) => basename(entry) === "index.html")
-    .map((entry) => join(clientOutputDirectory, entry));
-  const problems = [
-    ...expected
-      .filter((file) => !existsSync(file))
-      .map((file) => `no page at ${file}`),
-    ...written
-      .filter((file) => !expected.includes(file))
-      .map((file) => `unlisted page at ${file}`),
-    ...expected
-      .filter(
-        (file) =>
-          existsSync(file) &&
-          readFileSync(file, "utf8").includes(SERVER_FAILURE_MARKER)
-      )
-      .map((file) => `server failure in ${file}`),
-    ...expected
-      .filter(
-        (file) =>
-          existsSync(file) &&
-          readFileSync(file, "utf8").includes(NOT_FOUND_MARKER)
-      )
-      .map((file) => `not-found page in ${file}`),
-  ];
-  if (problems.length > 0) {
-    throw new Error(
-      `The prerendered pages are not the listed set:\n${problems.join("\n")}`
-    );
-  }
 }
 
 /**
@@ -234,25 +178,6 @@ const writeStaticArtifacts: Plugin = {
   },
   name: "www:write-static-artifacts",
 };
-
-/** Verifies the prerendered pages against the list that the build was given. */
-const verifyPrerenderedPages = (pages: readonly string[]): Plugin => ({
-  apply: "build",
-  // TanStack's prerender is a post plugin too; this check must run after it.
-  enforce: "post",
-  // After every environment is built and TanStack has prerendered the pages.
-  buildApp: {
-    order: "post",
-    handler: (builder) =>
-      Promise.resolve(
-        assertPrerenderedPages(
-          builder.environments.client.config.build.outDir,
-          pages
-        )
-      ),
-  },
-  name: "www:verify-prerendered-pages",
-});
 
 /** The signature verifiers that `@nakafa/aksara-contracts` exports under `node` only. */
 const NODE_ONLY_CONTRACT_PATHS = [
@@ -420,6 +345,9 @@ export default defineConfig(async ({ command, isPreview }) => {
           crawlLinks: false,
           enabled: true,
           failOnError: true,
+          // The Worker records each page's server function calls, which
+          // writeStaticAnswers turns into static files.
+          headers: { [PRERENDER_HEADER]: "1" },
         },
       }),
       // No deployment pin route: a client that asks for a
@@ -433,6 +361,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeRobotsFile,
       serveRobotsFile,
       writeStaticArtifacts,
+      writeStaticAnswers(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
       // `vite dev` runs the Worker as Node runs a development server. `vite build`
       // and `vite preview`, the acceptance server and the prerender included, run

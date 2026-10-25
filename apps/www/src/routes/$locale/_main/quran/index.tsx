@@ -19,6 +19,7 @@ import { quranSurahTarget } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { runServerEffect } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 /** The surah list of the Quran index, with the words of its page and head. */
 const readQuranIndex = createServerFn({ method: "GET" })
@@ -59,7 +60,8 @@ const readQuranIndex = createServerFn({ method: "GET" })
 
 /** The Quran index: every surah, in order, as one link list. */
 export const Route = createFileRoute("/$locale/_main/quran/")({
-  loader: ({ params }) => readQuranIndex({ data: { locale: params.locale } }),
+  loader: ({ params }) =>
+    readStaticData(readQuranIndex, { locale: params.locale }),
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
       return {};
