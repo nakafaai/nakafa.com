@@ -28,9 +28,17 @@ type MaterialNavigationRoute = Readonly<
 >;
 
 /** Small public navigation model shared by the static shell and client controls. */
-type MaterialNavigationPage = Readonly<
+export type MaterialNavigationPage = Readonly<
   ReturnType<typeof toMaterialNavigationPage>
 >;
+
+/** The part of a verified curriculum placement that a lesson's links read. */
+export type MaterialPlacement = Pick<
+  PublishedMaterialContext,
+  "context" | "hash" | "label" | "resolvedCanonicalPath"
+> & {
+  readonly parent: Pick<PublishedMaterialContext["parent"], "publicPath">;
+};
 
 /** Projects one signed route to the identity and label siblings need. */
 function toMaterialNavigationRoute(route: MaterialLessonProjection) {
@@ -118,17 +126,19 @@ function readRoutePagination(
   };
 }
 
-/** Builds navigation from signed routes and an already verified context. */
+/**
+ * Builds navigation from signed routes and an already verified placement: the
+ * curriculum link back, the hint that the lesson's own link and its pagination
+ * carry, and the pagination.
+ */
 export function readMaterialNavigation(
   page: MaterialNavigationPage,
-  published: PublishedMaterialContext | null
+  published: MaterialPlacement | null
 ) {
-  const currentHref = toMaterialHref(page.route);
-
   if (!published || page.kind === "preview") {
     return {
       context: undefined,
-      currentHref,
+      currentContext: undefined,
       link: undefined,
       pagination: readRoutePagination(page.route, page.siblings),
     };
