@@ -109,7 +109,11 @@ Compaction keeps its completed floor and its cycle cursor in the one
 `contentCompaction` row, never in `contentState`: every content query reads the
 state row, so each write to it makes Convex run all of those queries again. A
 tick whose oldest release is still inside retention proves that from the
-compaction row and one release row (two documents) and does nothing else.
+compaction row and one release row (two documents) and does nothing else, once
+no completed bootstrap release sits above the completed floor. That bootstrap is
+the floor of history: no slot, base, latest completed release, snapshot
+reference, or retention window keeps anything below it, and its own base is
+never loaded, so compaction deletes the retired generation in bounded pages.
 
 Artifact staging, retention, cleanup, and compaction likewise read only the
 small `contentArtifactFacts` row written beside each artifact body: its hash,

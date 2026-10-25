@@ -55,4 +55,9 @@ export default Table.make(() =>
 )
   .index("by_releaseId", ["releaseId"])
   .index("by_sequence", ["sequence"])
-  .index("by_status_and_sequence", ["status", "sequence"]);
+  .index("by_status_and_sequence", ["status", "sequence"])
+  .index("by_bootstrap_and_status_and_sequence", [
+    "bootstrap",
+    "status",
+    "sequence",
+  ]);
