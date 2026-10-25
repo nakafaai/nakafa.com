@@ -1778,7 +1778,7 @@
       "description": "Pilih opsinya lagi."
     },
     "sitting-stale-answer": {
-      "title": "Jawaban yang lebih baru sudah tersimpan.",
+      "title": "Jawaban terbaru sudah tersimpan.",
       "description": "Lembar soal sekarang menampilkan jawaban yang lebih baru."
     },
     "sitting-question-missing": {
