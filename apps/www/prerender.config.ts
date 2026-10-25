@@ -6,6 +6,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join } from "node:path";
+import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Option, Schema } from "effect";
 import { HttpClient } from "effect/http";
@@ -17,11 +18,18 @@ import {
   staticDataPath,
   toStaticFile,
 } from "#www/src/lib/static/calls";
+import {
+  notFoundOutputPath,
+  notFoundPagePath,
+  staticNotFoundDocument,
+} from "#www/src/lib/static/notfound";
+import { THEME_PREPAINT_SCRIPT } from "#www/src/lib/theme/prepaint";
 
 /*
  * The build steps that run after TanStack has prerendered the public pages: the
- * static answers that the browser reads on a navigation, then the check that the
- * output holds exactly the listed pages. `vite.config.ts` adds both, in that order.
+ * static answers that the browser reads on a navigation, the static not-found page
+ * of each locale, then the check that the output holds exactly the listed pages.
+ * `vite.config.ts` adds them in that order.
  */
 
 /**
@@ -230,4 +238,54 @@ export const verifyPrerenderedPages = (pages: readonly string[]): Plugin => ({
       ),
   },
   name: "www:verify-prerendered-pages",
+});
+
+/**
+ * The not-found page of each locale, as TanStack prerenders it from the
+ * `/_notfound/$locale` route into that locale's `404.html`. The assets answer a
+ * missing address with the nearest `404.html` and a 404 status, so a missing
+ * address shows the app's own page in the language of its path.
+ */
+export const notFoundPages = LOCALES.map((locale) => ({
+  path: notFoundPagePath(locale),
+  prerender: {
+    autoSubfolderIndex: false,
+    outputPath: notFoundOutputPath(locale),
+  },
+}));
+
+/**
+ * Turns each prerendered not-found page into a static document: it keeps the markup,
+ * the stylesheets and the theme script, and loses the app's scripts and the list of
+ * server calls, so the page never starts the router on an address it does not own.
+ * The default locale's page also answers at the root, for a missing address that
+ * names no locale.
+ */
+export const writeNotFoundPages = (pages: readonly string[]): Plugin => ({
+  apply: "build",
+  enforce: "post",
+  buildApp: {
+    order: "post",
+    handler: (builder) => {
+      if (pages.length === 0) {
+        return Promise.resolve();
+      }
+      const outDir = builder.environments.client.config.build.outDir;
+      for (const locale of LOCALES) {
+        const file = join(outDir, `${notFoundOutputPath(locale)}.html`);
+        const prerendered = readFileSync(file, "utf8");
+        const page = Option.match(readStaticCalls(prerendered), {
+          onNone: () => prerendered,
+          onSome: ({ html }) => html,
+        });
+        const document = staticNotFoundDocument(page, THEME_PREPAINT_SCRIPT);
+        writeFileSync(file, document);
+        if (locale === DEFAULT_LOCALE) {
+          writeFileSync(join(outDir, "404.html"), document);
+        }
+      }
+      return Promise.resolve();
+    },
+  },
+  name: "www:write-not-found-pages",
 });

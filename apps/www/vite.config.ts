@@ -12,7 +12,9 @@ import rsc from "@vitejs/plugin-rsc";
 import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
+  notFoundPages,
   verifyPrerenderedPages,
+  writeNotFoundPages,
   writeStaticAnswers,
 } from "#www/prerender.config";
 import {
@@ -331,7 +333,11 @@ export default defineConfig(async ({ command, isPreview }) => {
           // stay, and this one adds every `node:` specifier, subpaths included.
           client: { specifiers: [NODE_BUILTIN_SPECIFIER] },
         },
-        pages: prerenderedPages.map((path) => ({ path })),
+        // A build that lists no public page, as the static runner's, prerenders none.
+        pages:
+          prerenderedPages.length === 0
+            ? []
+            : [...prerenderedPages.map((path) => ({ path })), ...notFoundPages],
         // Server Components: content bodies render on the server, and only "use
         // client" islands ship JavaScript. An island's heavy module loads on
         // intent, never in the first load of the route.
@@ -362,6 +368,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       serveRobotsFile,
       writeStaticArtifacts,
       writeStaticAnswers(prerenderedPages),
+      writeNotFoundPages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
       // `vite dev` runs the Worker as Node runs a development server. `vite build`
       // and `vite preview`, the acceptance server and the prerender included, run
