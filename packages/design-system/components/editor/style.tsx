@@ -5,6 +5,7 @@ import {
   Heading03Icon,
   TextIcon,
 } from "@hugeicons/core-free-icons";
+import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -94,24 +95,25 @@ export function RichEditorStyle({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={labels.style}
-            className="gap-0.5 has-[>svg]:px-1.5"
-            size="sm"
-            title={labels.style}
-            type="button"
-            variant="ghost"
+      <ToolHint label={labels.style}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={labels.style}
+              className="gap-0.5 has-[>svg]:px-1.5"
+              size="sm"
+              type="button"
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons icon={icon} />
+          <HugeIcons
+            className="size-3 text-muted-foreground"
+            icon={ArrowDown01Icon}
           />
-        }
-      >
-        <HugeIcons icon={icon} />
-        <HugeIcons
-          className="size-3 text-muted-foreground"
-          icon={ArrowDown01Icon}
-        />
-      </DropdownMenuTrigger>
+        </DropdownMenuTrigger>
+      </ToolHint>
       <DropdownMenuContent
         className="w-44"
         // After a pick with the pointer the caret goes back to the text.

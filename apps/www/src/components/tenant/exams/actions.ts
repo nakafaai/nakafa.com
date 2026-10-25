@@ -1,6 +1,9 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import {
+  NEW_QUESTION_POINTS,
+  newChoiceAnswers,
+} from "@repo/backend/confect/exams/question";
 import { Effect, Function as Fn } from "effect";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
@@ -13,7 +16,7 @@ import {
   removeUpdate,
 } from "@/components/tenant/exams/optimistic";
 import {
-  placeholderPromptId,
+  placeholderDocumentId,
   placeholderQuestionId,
 } from "@/components/tenant/exams/placeholder";
 import {
@@ -30,17 +33,31 @@ const act = <A, E>(action: Effect.Effect<A, E>) =>
   });
 
 /**
- * A question the server has not saved yet, with its own placeholder IDs. It takes the answers
- * and the key it starts with, and the prompt it shows at once.
+ * A question the server has not saved yet, with its own placeholder IDs: one for each document it
+ * owns, and its own ID. It takes the answers, the key, and the points it starts with, and the
+ * documents it shows at once.
  */
-const placeholderDraft = (answers: Question["answers"], key: Question["key"]) =>
-  placeholderQuestionId.pipe(
-    Effect.flatMap((id) =>
-      placeholderPromptId.pipe(
-        Effect.map((prompt) =>
-          placeholderQuestion({ answers, id, key, prompt })
-        )
-      )
+const placeholderDraft = (
+  answers: Question["answers"],
+  key: Question["key"],
+  points: Question["points"]
+) =>
+  Effect.all({
+    explanation: placeholderDocumentId,
+    id: placeholderQuestionId,
+    prompt: placeholderDocumentId,
+    rubric: placeholderDocumentId,
+  }).pipe(
+    Effect.map(({ explanation, id, prompt, rubric }) =>
+      placeholderQuestion({
+        answers,
+        explanation,
+        id,
+        key,
+        points,
+        prompt,
+        rubric,
+      })
     )
   );
 
@@ -85,7 +102,7 @@ export function useQuestionActions() {
   /** Adds an empty question right after `after`, or at the end when `after` is none. */
   const addQuestion = (after: QuestionId | null) =>
     act(
-      placeholderDraft(newChoiceAnswers(), null).pipe(
+      placeholderDraft(newChoiceAnswers(), null, NEW_QUESTION_POINTS).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
             sentAction(() =>
@@ -103,7 +120,7 @@ export function useQuestionActions() {
   /** Copies a question right after itself, and selects the copy once the server saves it. */
   const copyQuestion = (question: Question) =>
     act(
-      placeholderDraft(question.answers, question.key).pipe(
+      placeholderDraft(question.answers, question.key, question.points).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
             sentAction(() =>

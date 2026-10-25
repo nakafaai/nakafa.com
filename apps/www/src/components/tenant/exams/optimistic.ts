@@ -148,12 +148,39 @@ export const answerUpdate: OptimisticUpdate<typeof exams.questions.answer> = (
   );
 
 /**
- * A question that the server has not saved yet, with the answers, the key, and the prompt
- * it shows at once. Its revision is zero, as the server starts every new question.
+ * A question that the server has not saved yet, with the answers, the key, the points, and the
+ * documents it shows at once. Its revision is zero, as the server starts every new question.
  */
 export const placeholderQuestion = (
-  input: Pick<Question, "answers" | "id" | "key" | "prompt">
+  input: Pick<
+    Question,
+    "answers" | "explanation" | "id" | "key" | "points" | "prompt" | "rubric"
+  >
 ): Question => ({ ...input, revision: 0, template: "choice" });
+
+/**
+ * The exam with one question's points changed. The server keeps the points it is given, so the
+ * view shows the same number.
+ */
+export const pointedQuestion = (
+  view: ExamView,
+  questionId: QuestionId,
+  points: number
+): ExamView => ({
+  ...view,
+  questions: Arr.map(view.questions, (question) =>
+    question.id === questionId ? { ...question, points } : question
+  ),
+});
+
+/** Shows the points of a question in the store while the server saves them. */
+export const pointsUpdate: OptimisticUpdate<typeof exams.questions.points> = (
+  localStore,
+  args
+) =>
+  changeExam(localStore, examQuery(args), (view) =>
+    pointedQuestion(view, args.questionId, args.points)
+  );
 
 /** The exam with a question added at its end, as the server adds a new question. */
 export const appendedQuestion = (

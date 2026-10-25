@@ -13,6 +13,8 @@ import type {
  * placeholder, so its actions wait for the server's answer.
  */
 const SelectionState = Schema.Struct({
+  /** The question whose grip takes the keyboard focus once the order it moved in shows, or none. */
+  focus: Schema.NullOr(Id("examQuestions")),
   pending: Schema.Array(Id("examQuestions")),
   /** Whether the chosen question is held, so the scroll that brings it into view does not choose another. */
   pinned: Schema.Boolean,
@@ -32,8 +34,15 @@ interface SelectionActions {
    * stays chosen.
    */
   readonly replace: (placeholder: QuestionId, next: QuestionId | null) => void;
+  /**
+   * Asks for the keyboard focus on the grip of a question, once the page shows the order it moved in. A
+   * move by the keyboard or by a page's own button keeps the focus on the moved page this way.
+   */
+  readonly requestFocus: (id: QuestionId) => void;
   /** Makes a question the one that the canvas shows. */
   readonly select: (id: QuestionId) => void;
+  /** Ends the focus request once the page has taken the focus. */
+  readonly settleFocus: () => void;
   /** Marks a question as a placeholder that the server has not saved yet. */
   readonly startPending: (id: QuestionId) => void;
   /** Releases the held question, so the canvas chooses the page the teacher scrolls to again. */
@@ -79,6 +88,7 @@ export const createExamSelection = () =>
       set((state) => ({
         pending: Arr.filter(state.pending, (current) => current !== id),
       })),
+    focus: null,
     pending: [],
     pin: (id) => set({ pinned: true, selected: id }),
     pinned: false,
@@ -86,8 +96,10 @@ export const createExamSelection = () =>
       set((state) =>
         state.selected === placeholder ? { selected: next } : {}
       ),
+    requestFocus: (id) => set({ focus: id }),
     select: (id) => set({ selected: id }),
     selected: null,
+    settleFocus: () => set({ focus: null }),
     startPending: (id) =>
       set((state) => ({ pending: Arr.append(state.pending, id) })),
     unpin: () => set({ pinned: false }),

@@ -1,5 +1,6 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type { QuestionPoints } from "@repo/backend/confect/exams/question";
 import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import type {
@@ -119,6 +120,11 @@ export function scoreResponse(
   });
 }
 
-/** The points that one verdict earns: a correct answer earns one point, and no other verdict earns any. */
-export const pointsOf = (verdict: Verdict): 0 | 1 =>
-  verdict === "correct" ? 1 : 0;
+/**
+ * The points that one verdict earns: a correct answer earns the weight of its question, and no other
+ * verdict earns any. The points of an attempt add up to its score.
+ */
+export const pointsOf = (
+  verdict: Verdict,
+  weight: typeof QuestionPoints.Type
+): number => (verdict === "correct" ? weight : 0);
