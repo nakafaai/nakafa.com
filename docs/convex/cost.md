@@ -174,11 +174,9 @@ production only (Aksara #452), and no production export or one-off production
 query as a working rule. The measured effect belongs in this note after a full
 billing period on the new code.
 
-The Vercel Usage page for the cycle that began on 2026-09-30 showed $11.59 of
-the $20.00 credit used after 12 days: ISR writes $4.43 (1.11M units), Fast
-Origin Transfer $2.34 (37 GB), Fluid active CPU $2.02, provisioned memory
-$1.72. About 7 of 10 requests ran a function, and one invocation moved about
-74 KB. ADR 0007 records what changed on the Vercel side because of them.
+The hosting usage for the cycle that began on 2026-09-30 showed $11.59 of the
+$20.00 credit used after 12 days, with ISR writes at $4.43 (1.11M units). The
+move to Cloudflare is recorded in ADR 0037.
 
 ### 2026-10-11 reads nobody needed
 
@@ -231,9 +229,8 @@ Compaction no longer writes `contentState`, the row every content query reads,
 so a compaction page stops making Convex run those queries again. That saving
 is in function executions, not in Database I/O.
 
-One temporary step of these changes ends in a later change, with its exit and
-cleanup written where it lives: the older scope and `applied` windows of daily
-signals, which age out by 20 October 2026 (ADR 0008). The retirement of the
+One step remains: the older scope and `applied` windows of daily signals are
+cleared in the change that narrows them (ADR 0008). The retirement of the
 older popularity rows and the ignored `windowKey` argument are deleted. The
 carry of the compaction fields out of `contentState` ended on 12 October 2026:
 dev and production each held the `contentCompaction` row and no `contentState`
@@ -381,7 +378,8 @@ bounded pages.
   sorting.
 - Do not claim savings from response projection while the same large stored
   document is still read.
-- Do not add compatibility reads for removed data models; migrate, verify, and
+- Do not add compatibility reads for removed data models. Clear the obsolete rows
+  with the Convex CLI, or remove them with their table in the same change, and
   delete the obsolete path.
 - Do not disable backups without a documented recovery-point objective and a
   tested restore procedure.

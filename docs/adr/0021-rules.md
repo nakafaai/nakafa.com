@@ -115,7 +115,7 @@ A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
 that supports tests, such as `apps/www/src/test/content-page.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
-`.tsx`, imports the Vitest or Vercel configuration API, or has a default export
+`.tsx`, imports the Vitest configuration API, or has a default export
 that `satisfies` a `...Config` type which a package imports, such as Convex's
 `AuthConfig`. A configuration file that a product module imports is still
 configuration. Of 29 configuration files measured, one is imported by product
@@ -374,8 +374,8 @@ sweep that followed removed 52 names: the `export` keyword of 44 and 8
 declarations that nothing used.
 
 The check does not judge a module whose exports are read by name from outside
-the repository's imports: the Next.js file conventions of an app, its
-`vercel.ts`, a generated module, and a workspace that is published as a
+the repository's imports: the TanStack Start route files and entry modules of an
+app, a generated module, and a workspace that is published as a
 package. It also leaves `packages/design-system/components/ui` and
 `packages/design-system/components/evilcharts`, which keep every part that
 their registries, shadcn and EvilCharts, ship. A default export has no name to
@@ -471,22 +471,13 @@ found 6 variables, 1 in `apps/www` and 5 in `packages/design-system`. Reading
 calls, shorthand members, string keys, and destructured names raised neither
 count and found no further variable.
 
-### Vercel deployment policy
-
-Superseded by [ADR 0037](0037-cloudflare.md). The Vercel project files and the
-deployment check that judged them are gone, so no rule judges a deployment
-configuration.
-
 ## Consequences
 
 - `packages/typescript-config/base.json` lists every rule the installed plugin
   defines, as `error`, or as `off` for a rule in the tables above. It holds the
   only `plugins` array of the repository: a `plugins` array replaces the one it
   extends, so a second array would have to repeat the whole block. Every other
-  configuration, the Next.js one included, inherits it. Next.js does not need
-  a plugin entry of its own: measured on Next.js 16.4, its type generation, the
-  start of its dev server, and the configuration step of its build leave the
-  app's configuration unchanged without one.
+  configuration inherits it.
 - The source check reads the plugin's own rule list and rejects a rule that has
   no decision, a name the plugin no longer defines, any other severity, and a
   second `plugins` array anywhere. So a plugin upgrade that adds a rule fails

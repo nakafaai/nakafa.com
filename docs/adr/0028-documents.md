@@ -1,6 +1,6 @@
 # ADR 0028: Collaborative Documents Sync Their Own ProseMirror Steps, And One Module Owns Files
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -266,7 +266,7 @@ The import turns a teacher's file into questions that the teacher reviews. It
 never publishes one.
 
 - The browser uploads the file straight to Convex storage through an upload URL,
-  not through the Vercel server. The Files module scans it first.
+  not through the web server. The Files module scans it first.
 - A model reads a PDF as a file part through the Convex gateway (ADR 0019). A
   request carries its documents in the body, which the gateway accepts up to 16
   MiB, and the adapter inlines a PDF as base64, which adds a third. One request

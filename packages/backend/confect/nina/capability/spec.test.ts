@@ -24,10 +24,9 @@ import { Array as Arr, Schema } from "effect";
  * Nakafa retrieval, 11 for research and 7 for memory.
  *
  * Flattening the card changes the stored shape that the page decodes with
- * `CapabilityOutputSchema`, so the rollout contract of
- * `packages/backend/AGENTS.md` orders it: first the schema accepts both shapes
- * and a web build that reads both is served, then the writer stores the flat
- * one. That is a change of the web round, and nothing here may run ahead of it.
+ * `CapabilityOutputSchema`, so the schema, the writer, and the page change in
+ * one deploy (ADR 0001). The stored math messages of the old shape are
+ * owner-pending: the owner decides whether they are deleted in that deploy.
  *
  * Until then the entry stops the card from growing, and the test fails once the
  * card fits the bound, so the exception cannot outlive its cause. Owner: the

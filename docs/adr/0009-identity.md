@@ -1,6 +1,6 @@
 # ADR 0009: Token-Verified Reads, Session-Validated Writes, And School Sign-In
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Decision
 
@@ -399,11 +399,9 @@ nothing. So no profile is public yet.
 ### Naming The Accounts Made Before
 
 Accounts made before this decision got their usernames from a temporary
-migration, the expand step. On 14 October 2026 it named 1 account on dev and 729
-accounts on production, page by page after a cursor, and a dry pass over every
-account then found none waiting, so the migration and its tests and bindings were
-deleted. The schema keeps `username` optional, because a deleted account holds
-none.
+migration, which named 1 account on dev and 729 accounts on production on 14
+October 2026, and was then deleted with its tests and bindings. The schema keeps
+`username` optional, because a deleted account holds none.
 
 ## Rejected Alternatives
 
