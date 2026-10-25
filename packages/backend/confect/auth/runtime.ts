@@ -27,7 +27,7 @@ import {
   accountTokenHooks,
   googleSignIn,
 } from "@repo/backend/confect/auth/tokens";
-import { readSiteUrl } from "@repo/backend/confect/site/config";
+import { readSiteUrls } from "@repo/backend/confect/site/config";
 import {
   readUsername,
   USERNAME_MAX_LENGTH,
@@ -36,7 +36,15 @@ import {
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { openAPI, username } from "better-auth/plugins";
-import { Config, Effect, Layer, Option, Redacted, Result } from "effect";
+import {
+  Array as Arr,
+  Config,
+  Effect,
+  Layer,
+  Option,
+  Redacted,
+  Result,
+} from "effect";
 
 /**
  * Better Auth's paths for password accounts. Each one stays closed on every
@@ -167,6 +175,25 @@ export const createAuthOptions = (
   } satisfies BetterAuthOptions;
 };
 /**
+ * Better Auth's base URL. A deployment that serves one site has that site's URL.
+ * The dev deployment also serves staging, so Better Auth resolves the base URL,
+ * the trusted origins and the cookies from the host of each request: each site
+ * gets its own, and any other host, a school host included, gets the primary
+ * site, as the fixed base URL does.
+ */
+function readAuthBaseUrl(sites: Arr.NonEmptyReadonlyArray<URL>) {
+  const [primary, ...shared] = sites;
+  if (shared.length === 0) {
+    return primary.href;
+  }
+  return {
+    allowedHosts: Arr.map(sites, (site) => site.origin),
+    fallback: primary.href,
+    protocol: "auto" as const,
+  };
+}
+
+/**
  * Validates request configuration before creating a Better Auth instance. Only the
  * HTTP router passes `routerPlugins`; every other caller builds the instance without them.
  */
@@ -174,18 +201,19 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
   ctx: GenericCtx<DataModel>,
   routerPlugins: AuthPlugins = []
 ) {
-  const siteUrl = yield* readSiteUrl();
+  const sites = yield* readSiteUrls();
+  const [siteUrl] = sites;
   const google = yield* readGoogleAuthConfig();
   return yield* Effect.sync(() => {
     const options = createAuthOptions(ctx, routerPlugins);
     const auth = betterAuth({
       ...options,
       advanced: {
-        // The cookie domain is the host of `SITE_URL`, so every school host
-        // under it shares the session (ADR 0026).
+        // The cookie domain is the host of the request's site, so every school
+        // host under it shares the session (ADR 0026).
         crossSubDomainCookies: { enabled: true },
       },
-      baseURL: siteUrl.href,
+      baseURL: readAuthBaseUrl(sites),
       trustedOrigins: readSchoolTrustedOrigins(siteUrl),
       socialProviders: {
         google: {
@@ -201,7 +229,7 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
           onResponse: (response: Response) => {
             const sanitized = sanitizeProviderErrorRedirectResponse(
               response,
-              siteUrl
+              sites
             );
             return Promise.resolve(
               sanitized

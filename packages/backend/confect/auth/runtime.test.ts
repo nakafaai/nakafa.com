@@ -213,6 +213,75 @@ describe("auth/runtime", () => {
       }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
   it.effect(
+    "answers each site that shares the deployment on its own host, and a school host on the primary site",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("SITE_URL", "https://local.nakafa.com");
+        vi.stubEnv("STAGING_SITE_URL", "https://staging.nakafa.com");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", "test-google-client");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", "test-google-secret");
+        const test = createConvexTestWithBetterAuth();
+        // The auth handler sends the host the browser asked for in these two
+        // headers, and the Convex route restores it before Better Auth answers.
+        const signInFrom = (host: string, siteOrigin: string) =>
+          Effect.gen(function* () {
+            const body = yield* Schema.encodeEffect(JsonTextSchema)({
+              callbackURL: `${siteOrigin}/en/onboarding`,
+              errorCallbackURL: `${siteOrigin}/en/auth/error`,
+              provider: "google",
+            });
+            const response = yield* Effect.promise(() =>
+              test.fetch("/api/auth/sign-in/social", {
+                body,
+                headers: {
+                  "content-type": "application/json",
+                  origin: `https://${host}`,
+                  "x-better-auth-forwarded-host": host,
+                  "x-better-auth-forwarded-proto": "https",
+                },
+                method: "POST",
+              })
+            );
+            const location = yield* Effect.fromNullishOr(
+              response.headers.get("location")
+            ).pipe(Effect.orDie);
+            return {
+              cookieDomains: pipe(
+                response.headers.getSetCookie(),
+                Arr.flatMap((cookie) =>
+                  Arr.filter(cookie.split("; "), (part) =>
+                    part.startsWith("Domain=")
+                  )
+                ),
+                Arr.dedupe
+              ),
+              redirectUri: new URL(location).searchParams.get("redirect_uri"),
+            };
+          });
+        expect(
+          yield* signInFrom("staging.nakafa.com", "https://staging.nakafa.com")
+        ).toEqual({
+          cookieDomains: ["Domain=staging.nakafa.com"],
+          redirectUri: "https://staging.nakafa.com/api/auth/callback/google",
+        });
+        expect(
+          yield* signInFrom("local.nakafa.com", "https://local.nakafa.com")
+        ).toEqual({
+          cookieDomains: ["Domain=local.nakafa.com"],
+          redirectUri: "https://local.nakafa.com/api/auth/callback/google",
+        });
+        expect(
+          yield* signInFrom(
+            "harapan.local.nakafa.com",
+            "https://local.nakafa.com"
+          )
+        ).toEqual({
+          cookieDomains: ["Domain=local.nakafa.com"],
+          redirectUri: "https://local.nakafa.com/api/auth/callback/google",
+        });
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
+  );
+  it.effect(
     "expires the host-only session cookie when the shared one is cleared on the site's host",
     () =>
       Effect.gen(function* () {
