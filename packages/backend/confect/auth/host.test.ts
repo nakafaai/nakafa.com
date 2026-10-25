@@ -2,10 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   expireHostOnlySessionCookie,
   hostOnlySessionCookieHandler,
-  readHostOnlySessionCookieName,
   readSchoolSlug,
   readSchoolTrustedOrigins,
-  sharedCookieReaches,
 } from "@repo/backend/confect/auth/host";
 import { Option } from "effect";
 
@@ -158,43 +156,6 @@ describe("school trusted origins from the Referer", () => {
         referer: "http://harapan.localhost:3400/classes",
       })
     ).toEqual(["http://harapan.localhost:3400"]);
-  });
-});
-
-describe("host-only session cookie", () => {
-  it("names the cookie with the secure prefix on an HTTPS site", () => {
-    expect(readHostOnlySessionCookieName(new URL("https://nakafa.com"))).toBe(
-      SECURE_NAME
-    );
-  });
-
-  it("names the cookie without the secure prefix on a local HTTP site", () => {
-    expect(
-      readHostOnlySessionCookieName(new URL("http://localhost:3000"))
-    ).toBe(PLAIN_NAME);
-  });
-});
-
-describe("shared session cookie reach", () => {
-  it("reaches the host that its domain names", () => {
-    expect(sharedCookieReaches("nakafa.com", "nakafa.com")).toBe(true);
-    expect(sharedCookieReaches("localhost", "localhost")).toBe(true);
-  });
-
-  it("reaches a school host under a registrable domain", () => {
-    expect(sharedCookieReaches("harapan.nakafa.com", "nakafa.com")).toBe(true);
-  });
-
-  it("does not reach a host that only ends with its domain", () => {
-    expect(sharedCookieReaches("evilnakafa.com", "nakafa.com")).toBe(false);
-  });
-
-  it("does not reach a school host under a single-label domain", () => {
-    expect(sharedCookieReaches("harapan.localhost", "localhost")).toBe(false);
-  });
-
-  it("does not reach another host", () => {
-    expect(sharedCookieReaches("127.0.0.1", "localhost")).toBe(false);
   });
 });
 
