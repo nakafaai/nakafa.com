@@ -46,7 +46,7 @@ function failed(status: number, errorCode: string) {
 describe("billing/xendit/plans", () => {
   beforeEach(() => {
     fetcher.mockReset();
-    vi.stubEnv("XENDIT_SECRET_KEY", "test-secret");
+    vi.stubEnv("XENDIT_API_KEY", "test-secret");
   });
 
   it.effect("reads a recurring plan with the documented API version", () =>

@@ -18,10 +18,20 @@ describe("drawFormula", () => {
     expect(markup).toContain("katex-error");
     expect(markup).toContain("var(--destructive)");
   });
+
+  it("draws chemistry with the mhchem macros, which parse without an error", () => {
+    const markup = drawFormula("\\ce{H2O}", false);
+    expect(markup).toContain("katex");
+    expect(markup).not.toContain("katex-error");
+  });
 });
 
 describe("checkFormula", () => {
   it.effect("passes a formula that parses", () => checkFormula("x^2"));
+
+  it.effect("passes chemistry, which parses with the mhchem macros", () =>
+    checkFormula("\\ce{H2O}")
+  );
 
   it.effect("fails a formula that does not parse, with KaTeX's reason", () =>
     Effect.gen(function* () {

@@ -34,10 +34,13 @@ const choice: Interaction = {
 /** A question of an exam, with no key. */
 const question = (id: string): Question => ({
   answers: [choice],
+  explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  points: 1,
   prompt: promptId(`prompt-${id}`),
   revision: 0,
+  rubric: promptId(`rubric-${id}`),
   template: "choice",
 });
 
@@ -139,5 +142,18 @@ describe("createExamSelection", () => {
     selection.getState().select(first.id);
     selection.getState().replace(placeholder, second.id);
     expect(selection.getState().selected).toBe(first.id);
+  });
+});
+
+describe("focus request", () => {
+  it("holds the request for one question until the page settles it", () => {
+    const selection = createExamSelection();
+    const first = questionId("first");
+
+    expect(selection.getState().focus).toBeNull();
+    selection.getState().requestFocus(first);
+    expect(selection.getState().focus).toBe(first);
+    selection.getState().settleFocus();
+    expect(selection.getState().focus).toBeNull();
   });
 });

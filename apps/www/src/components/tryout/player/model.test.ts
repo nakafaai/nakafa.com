@@ -39,7 +39,7 @@ describe("projectTryoutQuestions", () => {
     ]);
   });
 
-  it("answers a question through the save that its response fields use", () => {
+  it("picks an option of a question through the save that its response fields use", () => {
     const answer = vi.fn();
     const first = makeTryoutQuestion("a");
     const second = makeTryoutQuestion("b");
@@ -48,15 +48,14 @@ describe("projectTryoutQuestions", () => {
       questions: [first, second],
     });
 
-    projected?.answer({ kind: "single-choice", optionKey: "second" });
-    projected?.answer(null);
+    expect(projected?.pick(1)).toBe(true);
+    expect(projected?.pick(9)).toBe(false);
 
-    expect(answer).toHaveBeenNthCalledWith(1, second, {
+    expect(answer).toHaveBeenCalledTimes(1);
+    expect(answer).toHaveBeenCalledWith(second, {
       kind: "single-choice",
       optionKey: "second",
     });
-    expect(answer).toHaveBeenNthCalledWith(2, second, null);
-    expect(projected?.responseSpec).toBe(second.responseSpec);
   });
 });
 

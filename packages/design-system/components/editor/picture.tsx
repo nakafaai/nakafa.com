@@ -1,5 +1,6 @@
 import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { altText } from "@repo/design-system/components/editor/image";
+import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
@@ -226,26 +227,28 @@ function PictureNode({
       )}
       {editor.isEditable ? (
         <div className="absolute end-2 top-2 flex gap-1 rounded-md bg-background/90 p-0.5 shadow-sm">
-          <Button
-            aria-label={labels.edit}
-            onClick={() => setEditing(true)}
-            size="icon-sm"
-            title={labels.edit}
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons icon={PencilEdit02Icon} />
-          </Button>
-          <Button
-            aria-label={labels.delete}
-            onClick={() => deleteNode()}
-            size="icon-sm"
-            title={labels.delete}
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons icon={Delete02Icon} />
-          </Button>
+          <ToolHint label={labels.edit}>
+            <Button
+              aria-label={labels.edit}
+              onClick={() => setEditing(true)}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <HugeIcons icon={PencilEdit02Icon} />
+            </Button>
+          </ToolHint>
+          <ToolHint label={labels.delete}>
+            <Button
+              aria-label={labels.delete}
+              onClick={() => deleteNode()}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <HugeIcons icon={Delete02Icon} />
+            </Button>
+          </ToolHint>
         </div>
       ) : null}
       <PictureAltDialog

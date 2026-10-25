@@ -85,7 +85,9 @@ describe("request session memo", () => {
       vi.clearAllMocks();
       const request = signedInRequest();
       current.request = request;
-      fetcher.mockResolvedValueOnce(answer(["convex_jwt=token-ada; Path=/"]));
+      fetcher.mockResolvedValueOnce(
+        answer(["__Secure-better-auth.convex_jwt=token-ada; Path=/"])
+      );
       const first = yield* readSessionMemo(request);
       const second = yield* readSessionMemo(request);
       yield* first;
@@ -98,7 +100,7 @@ describe("request session memo", () => {
       expect(appendResponseHeader).toHaveBeenCalledTimes(1);
       expect(appendResponseHeader).toHaveBeenCalledWith(
         "set-cookie",
-        "convex_jwt=token-ada; Path=/"
+        "__Secure-better-auth.convex_jwt=token-ada; Path=/"
       );
     }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
   );
@@ -107,8 +109,12 @@ describe("request session memo", () => {
     Effect.gen(function* () {
       vi.clearAllMocks();
       fetcher
-        .mockResolvedValueOnce(answer(["convex_jwt=token-1; Path=/"]))
-        .mockResolvedValueOnce(answer(["convex_jwt=token-2; Path=/"]));
+        .mockResolvedValueOnce(
+          answer(["__Secure-better-auth.convex_jwt=token-1; Path=/"])
+        )
+        .mockResolvedValueOnce(
+          answer(["__Secure-better-auth.convex_jwt=token-2; Path=/"])
+        );
       yield* yield* readSessionMemo(signedInRequest());
       yield* yield* readSessionMemo(signedInRequest());
       expect(fetcher).toHaveBeenCalledTimes(2);

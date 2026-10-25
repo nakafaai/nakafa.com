@@ -1,5 +1,7 @@
 import { QueryResult } from "@confect/react";
+import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -99,8 +101,12 @@ function TenantClassItem({ name, slug }: { name: string; slug: string }) {
       <SidebarMenuButton
         isActive={isActive}
         render={<Link params={params} to="/school/$slug/classes/$classSlug" />}
+        tooltip={name}
       >
-        <span dir="auto">{name}</span>
+        <HugeIcons icon={UserMultiple02Icon} />
+        <span className="truncate" dir="auto">
+          {name}
+        </span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

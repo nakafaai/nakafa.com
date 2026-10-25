@@ -11,10 +11,12 @@ import { readTryoutHubFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
 import { HOME_TARGET } from "@/lib/routing/target";
+import { readStaticData } from "@/lib/static/data";
 
 /** The try-out hub: every exam family the catalog publishes, grouped by country. */
 export const Route = createFileRoute("/$locale/_main/try-out/")({
-  loader: ({ params }) => readTryoutHubFn({ data: { locale: params.locale } }),
+  loader: ({ params }) =>
+    readStaticData(readTryoutHubFn, { locale: params.locale }),
   head: ({ loaderData, params }) =>
     loaderData === undefined
       ? {}

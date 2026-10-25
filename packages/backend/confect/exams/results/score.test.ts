@@ -104,9 +104,9 @@ describe("exams/results/score", () => {
     );
   });
 
-  it("earns one point for a correct answer and none for any other verdict", () => {
-    expect(pointsOf("correct")).toBe(1);
-    expect(pointsOf("incorrect")).toBe(0);
-    expect(pointsOf("pending")).toBe(0);
+  it("earns the question's points for a correct answer and none for any other verdict", () => {
+    expect(pointsOf("correct", 10)).toBe(10);
+    expect(pointsOf("incorrect", 10)).toBe(0);
+    expect(pointsOf("pending", 10)).toBe(0);
   });
 });

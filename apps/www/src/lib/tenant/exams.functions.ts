@@ -6,6 +6,7 @@ import {
   ExamRoomsInput,
   ResultsInput,
   SittingInput,
+  StudentSittingInput,
 } from "@/lib/tenant/exams";
 
 /** The first page of the school's exams, which the exam list's loader calls. */
@@ -44,7 +45,7 @@ export const readSittingDashboardFn = createServerFn({ method: "GET" })
 
 /** The student's screen of one sitting, which the student's loader calls. */
 export const readStudentSittingFn = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(SittingInput))
+  .validator(Schema.toStandardSchemaV1(StudentSittingInput))
   .handler(async (options) => {
     const { studentSittingHandler } = await import("@/lib/tenant/exams.server");
     return studentSittingHandler(options);

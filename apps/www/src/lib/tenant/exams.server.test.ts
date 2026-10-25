@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-start/server", () => ({
+  getCookie: () => undefined,
   getRequest: () => new Request("https://harapan.nakafa.com/"),
   setResponseHeader: mocks.setResponseHeader,
 }));
@@ -187,10 +188,16 @@ describe("exam and sitting first screens", () => {
     );
   });
 
-  it("reads the student's screen of one sitting", async () => {
-    await studentSittingHandler({
-      data: { sittingId: sittingIdOf("sitting-1"), slug: SLUG },
+  it("reads the student's screen of one sitting, with the view the server resolves", async () => {
+    const reply = await studentSittingHandler({
+      data: {
+        sittingId: sittingIdOf("sitting-1"),
+        slug: SLUG,
+        view: { kind: "absent" },
+      },
     });
+
+    expect(reply).toMatchObject({ mode: "list" });
 
     expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
       exams.sittings.student,

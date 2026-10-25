@@ -8,9 +8,23 @@ import {
   getRequest,
   setResponseHeader,
 } from "@tanstack/react-start/server";
-import { Array as Arr, Effect, Option, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Duration,
+  Effect,
+  Option,
+  Result,
+  Schema,
+  String as Str,
+} from "effect";
+import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
-import { readSessionCookie } from "@/lib/auth/cookie.server";
+import {
+  isConvexTokenCookieName,
+  readConvexTokenCookie,
+  readSessionCookie,
+} from "@/lib/auth/cookie.server";
 import { SESSION_PATH } from "@/lib/auth/session";
 import { readSessionToken } from "@/lib/auth/token";
 import { ClientSession } from "@/lib/auth/visitor";
@@ -51,8 +65,22 @@ const SessionJson = Schema.fromJsonString(
   )
 );
 
-/** The cookie that Better Auth's Convex plugin writes beside the session. */
-const CONVEX_JWT_COOKIE = "convex_jwt";
+/**
+ * The claims of a Convex token that name its session. Better Auth's Convex plugin
+ * signs the user's fields, the session ID and the expiry, in seconds, with the
+ * user ID as the subject.
+ */
+const TokenClaims = Schema.fromJsonString(
+  Schema.Struct({
+    exp: Schema.Finite,
+    name: Schema.String,
+    sessionId: Schema.String,
+    sub: Schema.String,
+  })
+);
+
+/** How long before its expiry a token is no longer used: a read that starts with it must end while Convex still accepts it. */
+const TOKEN_EXPIRY_MARGIN = Duration.minutes(1);
 
 /** The colon that ends the scheme of a URL protocol, such as `https:`. */
 const PROTOCOL_COLON = /:$/u;
@@ -139,22 +167,60 @@ const readSessionAnswer = (url: URL, headers: Headers) =>
   );
 
 /**
- * The value of the last Set-Cookie of one name, or none when the answer sets no
- * value for it. A cleared cookie has an empty value, so it counts as none.
+ * The value of the last Set-Cookie of the Convex token, or none when the answer
+ * sets no value for it. A cleared cookie has an empty value, so it counts as none.
  */
-function readSetCookieValue(
-  setCookies: readonly string[],
-  name: string
+function readSetConvexToken(
+  setCookies: readonly string[]
 ): Option.Option<string> {
   const values = Arr.filterMap(setCookies, (setCookie) => {
     const [pair] = setCookie.split(";");
     const [cookieName, ...value] = pair.split("=");
-    return cookieName.trim() === name
+    return isConvexTokenCookieName(cookieName.trim())
       ? Result.succeed(Arr.join(value, "=").trim())
       : Result.failVoid;
   });
   return Arr.last(values).pipe(Option.filter((value) => value !== ""));
 }
+
+/**
+ * The session that the request's own Convex token names, while the token holds
+ * longer than the margin: the answer of `jwtCache` in the official Better Auth
+ * helper. The browser sends the token cookie that the last session or token
+ * read set, so a signed-in request inside the token's lifetime makes no call to
+ * the Convex site. The claims are read, not verified: Convex verifies the token on
+ * every read, and a forged one only shows its sender a page Convex then refuses.
+ */
+const readTokenSession = Effect.fn("www.auth.session.cached")(function* (
+  request: Request
+) {
+  const token = readConvexTokenCookie(request);
+  if (token === null) {
+    return Option.none();
+  }
+  const now = yield* Clock.currentTimeMillis;
+  return Arr.get(Str.split(token, "."), 1).pipe(
+    Option.flatMap((payload) =>
+      Result.getSuccess(Base64Url.decodeString(payload))
+    ),
+    Option.flatMap(Schema.decodeOption(TokenClaims)),
+    Option.filter(
+      (claims) =>
+        claims.exp * 1000 - Duration.toMillis(TOKEN_EXPIRY_MARGIN) > now
+    ),
+    Option.map((claims) =>
+      RequestSession.make({
+        client: ClientSession.cases.SignedIn.make({
+          name: claims.name,
+          sessionId: claims.sessionId,
+          userId: claims.sub,
+        }),
+        convexToken: Option.some(token),
+        setCookies: [],
+      })
+    )
+  );
+});
 
 /**
  * The Convex token of a signed-in answer: its JWT cookie, or else one read of the
@@ -166,7 +232,7 @@ const readConvexToken = Effect.fn("www.auth.session.token")(function* (
   site: URL,
   request: Request
 ) {
-  const jwt = readSetCookieValue(answer.setCookies, CONVEX_JWT_COOKIE);
+  const jwt = readSetConvexToken(answer.setCookies);
   if (Option.isSome(jwt)) {
     return jwt.value;
   }
@@ -184,7 +250,8 @@ const readConvexToken = Effect.fn("www.auth.session.token")(function* (
 
 /**
  * Reads the session of one request. A request without a session cookie is a
- * visitor, and it makes no network call. Otherwise one call to the Convex site
+ * visitor, and it makes no network call, and so does a request whose own Convex
+ * token still holds (`readTokenSession`). Otherwise one call to the Convex site
  * reads the session. Every Set-Cookie value of that answer reaches the browser,
  * including a cleared session cookie. Its `convex_jwt` value is the Convex token,
  * and the token route is read only when that cookie is missing. A failure is
@@ -195,6 +262,10 @@ export const readRequestSession = Effect.fn("www.auth.session.read")(function* (
 ) {
   if (readSessionCookie(request.headers) === null) {
     return signedOut([]);
+  }
+  const cached = yield* readTokenSession(request);
+  if (Option.isSome(cached)) {
+    return cached.value;
   }
   const siteUrl = yield* CONVEX_SITE_URL;
   const site = new URL(siteUrl);

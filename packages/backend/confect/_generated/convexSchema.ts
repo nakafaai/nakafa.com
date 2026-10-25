@@ -9,6 +9,7 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import assessmentFlags from "./tables/assessmentFlags";
 import billingAccounts from "./tables/billingAccounts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
@@ -132,6 +133,7 @@ export default $defineSchema({
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
+  assessmentFlags: $Table.tableDefinition(assessmentFlags),
   billingAccounts: $Table.tableDefinition(billingAccounts),
   billingCounters: $Table.tableDefinition(billingCounters),
   billingEvents: $Table.tableDefinition(billingEvents),

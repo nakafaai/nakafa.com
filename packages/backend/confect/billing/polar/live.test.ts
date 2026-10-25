@@ -270,6 +270,43 @@ describe("billing/polar/live", () => {
     })
   );
 
+  it.effect(
+    "finds the customer that holds an email address, none when no customer does, and maps a failed search to the customer error",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(
+          reply(200, {
+            items: [customerWire],
+            pagination: { max_page: 1, total_count: 1 },
+          })
+        );
+        expect(
+          yield* polarGateway.findCustomerByEmail("learner@example.com")
+        ).toEqual({
+          billingCountry: null,
+          email: "learner@example.com",
+          externalId: "user-1",
+          id: "cust_1",
+          name: "Learner",
+        });
+        const url = new URL(sentRequest(0).url);
+        expect(url.searchParams.get("email")).toBe("learner@example.com");
+        expect(url.searchParams.get("limit")).toBe("1");
+        polarFetch.mockResolvedValueOnce(
+          reply(200, { items: [], pagination: { max_page: 0, total_count: 0 } })
+        );
+        expect(
+          yield* polarGateway.findCustomerByEmail("nobody@example.com")
+        ).toBeNull();
+        polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+        expect(
+          yield* failureOf(
+            polarGateway.findCustomerByEmail("learner@example.com")
+          )
+        ).toBe("PolarCustomerError");
+      })
+  );
+
   it.effect("maps a failed customer lookup to the customer error", () =>
     Effect.gen(function* () {
       polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));

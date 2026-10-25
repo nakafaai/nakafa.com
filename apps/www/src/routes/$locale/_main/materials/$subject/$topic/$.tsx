@@ -55,6 +55,7 @@ import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 const MaterialInput = Schema.Struct({
   lesson: Schema.Array(Schema.String),
@@ -172,13 +173,11 @@ export const Route = createFileRoute(
       (params._splat ?? "").split("/"),
       (segment) => segment !== ""
     );
-    const read = await readMaterial({
-      data: {
-        lesson,
-        locale: params.locale,
-        subject: params.subject,
-        topic: params.topic,
-      },
+    const read = await readStaticData(readMaterial, {
+      lesson,
+      locale: params.locale,
+      subject: params.subject,
+      topic: params.topic,
     });
     return Match.value(read).pipe(
       Match.tagsExhaustive({

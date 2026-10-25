@@ -11,12 +11,14 @@ import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
 import { HOME_TARGET } from "@/lib/routing/target";
+import { readStaticData } from "@/lib/static/data";
 
 /** One country of the try-out catalog: its exam families. */
 export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
   loader: async ({ params }) => {
-    const route = await readTryoutCountryFn({
-      data: { country: params.country, locale: params.locale },
+    const route = await readStaticData(readTryoutCountryFn, {
+      country: params.country,
+      locale: params.locale,
     });
     if (route.kind === "notFound") {
       throw notFound();

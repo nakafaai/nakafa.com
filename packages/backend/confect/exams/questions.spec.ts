@@ -14,7 +14,10 @@ import {
   QuestionHistoryLong,
   RevisionStale,
 } from "@repo/backend/confect/exams/errors";
-import { QuestionView } from "@repo/backend/confect/exams/question";
+import {
+  QuestionPoints,
+  QuestionView,
+} from "@repo/backend/confect/exams/question";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -87,6 +90,19 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => QuestionOrder,
+      error: () => Schema.Union([AccessDenied, ExamFrozen]),
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "points",
+      args: () => ({
+        examId: Id("exams"),
+        points: QuestionPoints,
+        questionId: Id("examQuestions"),
+        slug: TenantSlug,
+      }),
+      returns: () => QuestionView,
       error: () => Schema.Union([AccessDenied, ExamFrozen]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )

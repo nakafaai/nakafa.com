@@ -55,6 +55,7 @@ describe("marketing/about/pricing-display", () => {
     });
     expect(price.free.text.replace(/\s+/g, " ")).toBe("Rp 0");
     expect(price.pro.text.replace(/\s+/g, " ")).toBe("Rp 79.000");
+    expect(price.proYearly.text.replace(/\s+/g, " ")).toBe("Rp 790.000");
   });
 
   it("formats euro pricing in the German locale", () => {
@@ -66,6 +67,7 @@ describe("marketing/about/pricing-display", () => {
     });
     expect(price.free.text.replace(/\s+/g, " ")).toBe("0,00 €");
     expect(price.pro.text.replace(/\s+/g, " ")).toBe("8,99 €");
+    expect(price.proYearly.text.replace(/\s+/g, " ")).toBe("89,90 €");
   });
 
   it("formats dollar pricing in the English locale", () => {
@@ -77,5 +79,6 @@ describe("marketing/about/pricing-display", () => {
     });
     expect(price.free.text).toBe("$0.00");
     expect(price.pro.text).toBe("$8.99");
+    expect(price.proYearly).toMatchObject({ text: "$89.90", value: 89.9 });
   });
 });

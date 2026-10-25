@@ -13,7 +13,7 @@ import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import type { withLocalBackend } from "@repo/backend/scripts/content/acceptance/process";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, Exit, Layer, MutableList } from "effect";
+import { ConfigProvider, Effect, Exit, Layer, MutableList } from "effect";
 
 /** What a program run under the acceptance backend or analytics sink can fail with. */
 type AcceptanceError = Effect.Error<ReturnType<typeof runAcceptance>>;
@@ -57,6 +57,7 @@ vi.mock("@repo/backend/scripts/content/acceptance/publication", () => ({
 
 const runtime: LocalRuntime = {
   analytics: "http://127.0.0.1:43122",
+  app: "http://localhost:3000",
   backend: "/test/.cache/acceptance/backend",
   directory: "/test/.cache/acceptance",
   directoryInode: 1n,
@@ -79,7 +80,23 @@ const reservation = {
   directoryInode: runtime.directoryInode,
 };
 
-const services = Layer.merge(nodeServicesLayer, FetchClient);
+// No test reads the shell's ACCEPTANCE_PORT: each one names the port it runs with.
+const services = Layer.mergeAll(
+  nodeServicesLayer,
+  FetchClient,
+  ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))
+);
+
+/** Runs a program with one ACCEPTANCE_PORT, as the shell would name it. */
+const withPort =
+  (port: string) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    program.pipe(
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromEnvRecord({ ACCEPTANCE_PORT: port })
+      )
+    );
 
 layer(services)("signed acceptance lifecycle", (it) => {
   beforeEach(() => {
@@ -216,6 +233,58 @@ layer(services)("signed acceptance lifecycle", (it) => {
         ]);
       })
   );
+
+  it.effect(
+    "serves the port of the origin that prepare recorded, as ACCEPTANCE_PORT names it",
+    () =>
+      Effect.gen(function* () {
+        mocks.reservedRuntime.mockReturnValue(
+          Effect.succeedSome({ ...runtime, app: "http://localhost:3100" })
+        );
+        yield* runAcceptance("/test", "start", []).pipe(withPort("3100"));
+        expect(mocks.command).toHaveBeenCalledWith(
+          "/test",
+          [
+            "bunx",
+            "--cwd",
+            "apps/www",
+            "vite",
+            "preview",
+            "--strictPort",
+            "--port",
+            "3100",
+          ],
+          expect.objectContaining({
+            SITE_URL: "http://localhost:3100",
+            VITE_SITE_URL: "http://localhost:3100",
+            VITE_POSTHOG_UI_HOST: "http://localhost:3100",
+          })
+        );
+      })
+  );
+
+  for (const operation of ["build", "start"] as const) {
+    it.effect(
+      `refuses to ${operation} when ACCEPTANCE_PORT names another origin than prepare recorded`,
+      () =>
+        Effect.gen(function* () {
+          expect(
+            yield* runAcceptance("/test", operation, []).pipe(
+              withPort("3100"),
+              Effect.flip
+            )
+          ).toMatchObject({
+            _tag: "AcceptanceRuntimeError",
+            message: expect.stringContaining(
+              "This runtime serves http://localhost:3000, but ACCEPTANCE_PORT names http://localhost:3100."
+            ),
+          });
+          expect(mocks.backend).not.toHaveBeenCalled();
+          expect(mocks.sink).not.toHaveBeenCalled();
+          expect(mocks.command).not.toHaveBeenCalled();
+        })
+    );
+  }
 
   it.effect("refuses an unprepared acceptance build", () =>
     Effect.gen(function* () {
