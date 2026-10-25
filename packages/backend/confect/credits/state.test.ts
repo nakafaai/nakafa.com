@@ -9,6 +9,7 @@ import {
   getCreditResetGrantTransaction,
   getCurrentCreditResetTimestamp,
   getEffectiveCreditStateForResetTimestamp,
+  getNextCreditResetTimestamp,
   getStoredCreditResetTimestamp,
   resolveCurrentCreditResetTimestamp,
   resolveEffectiveCreditState,
@@ -95,6 +96,16 @@ describe("credit period and balance", () => {
     );
     expect(getCurrentCreditResetTimestamp("pro", now)).toBe(
       Date.UTC(2026, 3, 1)
+    );
+  });
+  it("names the boundary after the current one, so a balance refills at the next day or month", () => {
+    const now = Date.UTC(2026, 3, 18, 18, 45, 12);
+    expect(getNextCreditResetTimestamp("free", now)).toBe(
+      Date.UTC(2026, 3, 19)
+    );
+    expect(getNextCreditResetTimestamp("pro", now)).toBe(Date.UTC(2026, 4, 1));
+    expect(getNextCreditResetTimestamp("pro", Date.UTC(2026, 11, 15))).toBe(
+      Date.UTC(2027, 0, 1)
     );
   });
   it("keeps balances in the current reset window and replaces stale positive balances", () => {

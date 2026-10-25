@@ -7,5 +7,5 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../billing/queries.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
-["hasActiveSubscription"]: RegisteredConvexFunction.register({ ...definitions["hasActiveSubscription"], handler: forward(definitions["hasActiveSubscription"].handler) }),
+["overview"]: RegisteredConvexFunction.register({ ...definitions["overview"], handler: forward(definitions["overview"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../billing/queries.spec")["default"]>;

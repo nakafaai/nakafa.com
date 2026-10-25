@@ -124,16 +124,12 @@ export const memoryScreenHandler = accountHandler(
     })
 );
 
-/** Subscriptions: whether the visitor holds the Pro subscription, and the page head. */
+/** Billing settings: the viewer's billing overview, and the page head. */
 export const subscriptionsScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const subscription = yield* readRequired(
-        billing.queries.hasActiveSubscription,
-        {},
-        token
-      );
+      const overview = yield* readRequired(billing.queries.overview, {}, token);
       const t = createTranslator({
         locale,
         messages: yield* messagesFor(locale),
@@ -148,6 +144,6 @@ export const subscriptionsScreenHandler = accountHandler(
         locale,
         title: t("subscriptions"),
       };
-      return { seo, subscription };
+      return { overview, seo };
     })
 );

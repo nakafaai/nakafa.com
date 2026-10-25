@@ -168,7 +168,32 @@ export declare const api: {
   };
   billing: {
     queries: {
-      hasActiveSubscription: FunctionReference<"query", "public", {}, boolean>;
+      overview: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          credits: { allowance: number; balance: number; resetAt: number };
+          plan: "free" | "pro";
+          subscription: {
+            cancelAtPeriodEnd: boolean;
+            currentPeriodEnd: number | null;
+            currentPeriodStart: number;
+            offer:
+              | "pro.monthly"
+              | "pro.yearly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup"
+              | "school.seat.month"
+              | "school.seat.semester"
+              | "school.seat.year";
+            rail: "polar" | "xendit";
+            status: "pending" | "active" | "pastDue" | "canceled" | "ended";
+          } | null;
+        }
+      >;
     };
     sessions: {
       generateCheckoutLink: FunctionReference<
