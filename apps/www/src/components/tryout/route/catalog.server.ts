@@ -16,6 +16,7 @@ import {
   readTryoutSetList,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/source.server";
+import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
@@ -274,6 +275,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     readonly country: string;
     readonly exam: string;
     readonly locale: Locale;
+    readonly search: CatalogQuery;
     readonly track: string;
   }) {
     const countryPath = getTryoutPublicPath({ country: input.country });
@@ -305,6 +307,17 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
+    // The set list needs the track's keys, so it follows the page here, on the
+    // server beside the database, rather than in a second request from the browser.
+    const list = yield* readTryoutTrackSetList({
+      locale: input.locale,
+      search: input.search,
+      track: {
+        countryKey: page.country.countryKey,
+        examKey: page.exam.examKey,
+        trackKey: page.track.trackKey,
+      },
+    });
     return {
       countryPath: getTryoutPublicPath({ country: input.country }),
       examOptions: buildTryoutExamOptions(countryPage.value.exams),
@@ -312,6 +325,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       head: head.value,
       kind: "found" as const,
       labels,
+      list,
       page,
       selectorLabel: tTryouts("exam-selector-label"),
     };
