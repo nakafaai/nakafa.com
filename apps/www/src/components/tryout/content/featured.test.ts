@@ -154,7 +154,7 @@ beforeEach(() => {
   runtimeSiteMock.mockReset().mockReturnValue(siteUrl);
   runtimeKeysMock.mockReset().mockImplementation(() => {
     throw new ContentRuntimeConfigurationError({
-      key: "CONTENT_RUNTIME_TOKEN",
+      key: "CONTENT_READ_TOKEN",
     });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -206,7 +206,7 @@ describe("featured try-out question", () => {
         const body = yield* readFoundBody(fixture);
         fetchMock.mockResolvedValueOnce(makeFoundResponse(body));
         runtimeKeysMock.mockReturnValue({
-          CONTENT_RUNTIME_TOKEN: "technical-test-token",
+          CONTENT_READ_TOKEN: "technical-test-token",
         });
         const rendered = yield* loadTryoutQuestion(fixture.question);
         expect(renderToStaticMarkup(rendered.content)).toBe(
@@ -227,7 +227,7 @@ describe("featured try-out question", () => {
       Effect.gen(function* () {
         const fixture = yield* readFixture();
         runtimeKeysMock.mockReturnValue({
-          CONTENT_RUNTIME_TOKEN: "technical-test-token",
+          CONTENT_READ_TOKEN: "technical-test-token",
         });
         fetchMock.mockImplementation(() => {
           const response = new Response(encodeJsonText({ kind: "missing" }), {
@@ -262,7 +262,7 @@ describe("featured try-out question", () => {
         const fixture = yield* readFixture();
         const body = yield* readFoundBody(fixture);
         runtimeKeysMock.mockReturnValue({
-          CONTENT_RUNTIME_TOKEN: "technical-test-token",
+          CONTENT_READ_TOKEN: "technical-test-token",
         });
         fetchMock.mockImplementation(() =>
           Promise.resolve(makeFoundResponse(body))

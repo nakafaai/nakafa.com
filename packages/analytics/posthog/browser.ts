@@ -131,7 +131,7 @@ export const enableBaselineAnalytics = Effect.fn(
 
     yield* Effect.try({
       try: () => {
-        client.init(runtimeKeys.VITE_POSTHOG_KEY, {
+        client.init(runtimeKeys.VITE_POSTHOG_PROJECT_TOKEN, {
           advanced_disable_flags: true,
           api_host: runtimeKeys.VITE_POSTHOG_PROXY_HOST,
           autocapture: false,

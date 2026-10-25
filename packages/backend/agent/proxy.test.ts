@@ -27,7 +27,7 @@ afterEach(() => {
 
 const bindings = {
   NAKAFA_API_EDGE_SECRET: "edge-secret",
-  NAKAFA_CONVEX_SITE_URL: "https://origin.convex.site",
+  CONVEX_SITE_URL: "https://origin.convex.site",
   NAKAFA_RELEASE_SHA: "abc123",
 };
 
@@ -110,7 +110,7 @@ describe("forwardAgentEdge", () => {
         NAKAFA_MCP_EDGE_PATHS,
         request,
         {
-          NAKAFA_CONVEX_SITE_URL: "https://origin.convex.site",
+          CONVEX_SITE_URL: "https://origin.convex.site",
           NAKAFA_MCP_EDGE_SECRET: "mcp-secret",
           NAKAFA_RELEASE_SHA: "abc123",
         }
@@ -315,11 +315,11 @@ describe("agentEdgeWorker", () => {
 
     const response = await worker.fetch(
       new Request("https://api.nakafa.com/v1"),
-      { ...bindings, NAKAFA_CONVEX_SITE_URL: undefined }
+      { ...bindings, CONVEX_SITE_URL: undefined }
     );
 
     expect(response.status).toBe(500);
-    expect(await response.text()).not.toContain("NAKAFA_CONVEX_SITE_URL");
+    expect(await response.text()).not.toContain("CONVEX_SITE_URL");
   });
 
   it("answers 502 when the origin cannot be reached", async () => {

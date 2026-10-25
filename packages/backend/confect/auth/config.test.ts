@@ -13,8 +13,8 @@ describe("auth/config", () => {
         Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({
-            AUTH_GOOGLE_ID: "client-id",
-            AUTH_GOOGLE_SECRET: "client-secret",
+            GOOGLE_AUTH_CLIENT_ID: "client-id",
+            GOOGLE_AUTH_CLIENT_SECRET: "client-secret",
           })
         )
       );
@@ -45,8 +45,8 @@ describe("auth/config", () => {
           Effect.provideService(
             ConfigProvider.ConfigProvider,
             ConfigProvider.fromUnknown({
-              AUTH_GOOGLE_ID: credentials[0],
-              AUTH_GOOGLE_SECRET: credentials[1],
+              GOOGLE_AUTH_CLIENT_ID: credentials[0],
+              GOOGLE_AUTH_CLIENT_SECRET: credentials[1],
             })
           ),
           Effect.flip

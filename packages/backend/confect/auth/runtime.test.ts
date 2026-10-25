@@ -37,8 +37,8 @@ describe("auth/runtime", () => {
     () =>
       Effect.gen(function* () {
         vi.stubEnv("SITE_URL", undefined);
-        vi.stubEnv("AUTH_GOOGLE_ID", undefined);
-        vi.stubEnv("AUTH_GOOGLE_SECRET", undefined);
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", undefined);
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", undefined);
         const test = createConvexTestWithBetterAuth();
         const user = yield* Effect.promise(() =>
           test.run((ctx) =>
@@ -51,7 +51,11 @@ describe("auth/runtime", () => {
         expect(user.sessionId).toBeTruthy();
       })
   );
-  it.effect.each(["SITE_URL", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"] as const)(
+  it.effect.each([
+    "SITE_URL",
+    "GOOGLE_AUTH_CLIENT_ID",
+    "GOOGLE_AUTH_CLIENT_SECRET",
+  ] as const)(
     "fails auth creation with a typed error when %s is absent",
     (environment) =>
       Effect.gen(function* () {
@@ -117,8 +121,8 @@ describe("auth/runtime", () => {
     (siteOrigin) =>
       Effect.gen(function* () {
         vi.stubEnv("SITE_URL", siteOrigin);
-        vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
-        vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", "test-google-client");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", "test-google-secret");
         const test = createConvexTestWithBetterAuth();
         const intent = "/en/search?q=geometry#results";
         const errorCallbackURL = `/en/auth/error?${new URLSearchParams({
@@ -183,8 +187,8 @@ describe("auth/runtime", () => {
     () =>
       Effect.gen(function* () {
         vi.stubEnv("SITE_URL", "https://local.nakafa.com");
-        vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
-        vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", "test-google-client");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", "test-google-secret");
         const test = createConvexTestWithBetterAuth();
         const signInBody = yield* Schema.encodeEffect(JsonTextSchema)({
           callbackURL: "/en/onboarding",
@@ -213,8 +217,8 @@ describe("auth/runtime", () => {
     () =>
       Effect.gen(function* () {
         vi.stubEnv("SITE_URL", "https://local.nakafa.com");
-        vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
-        vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", "test-google-client");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", "test-google-secret");
         const test = createConvexTestWithBetterAuth();
         // The auth handler sends the host the browser asked for in these two
         // headers, and the Convex route restores it before Better Auth answers.
@@ -239,8 +243,8 @@ describe("auth/runtime", () => {
     () =>
       Effect.gen(function* () {
         vi.stubEnv("SITE_URL", "https://nakafa.com");
-        vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
-        vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", "test-google-client");
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", "test-google-secret");
         const runtimeServices = yield* Effect.context<never>();
         const test = createConvexTestWithBetterAuth();
         // The test runtime skips Better Auth's origin check, so this asks the

@@ -27,7 +27,7 @@ vi.mock("@/lib/auth/session.server", () => ({
   readSessionMemo: vi.fn(),
 }));
 vi.mock("@repo/site/keys", () => ({
-  contentRuntimeKeys: () => ({ CONTENT_RUNTIME_TOKEN: "technical-test-token" }),
+  contentRuntimeKeys: () => ({ CONTENT_READ_TOKEN: "technical-test-token" }),
 }));
 vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },

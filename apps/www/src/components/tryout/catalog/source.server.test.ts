@@ -92,7 +92,7 @@ vi.mock("@/env", () => ({
 }));
 vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: () => ({
-    CONTENT_RUNTIME_TOKEN: "technical-test-token",
+    CONTENT_READ_TOKEN: "technical-test-token",
   }),
 }));
 vi.mock("@repo/backend/content/trust", async () => {

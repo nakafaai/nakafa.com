@@ -95,8 +95,8 @@ beforeEach(() => {
     "BETTER_AUTH_SECRET",
     "synthetic-better-auth-secret-for-lifecycle-tests"
   );
-  vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
-  vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+  vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", "test-google-client");
+  vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", "test-google-secret");
 });
 afterEach(() => {
   vi.unstubAllEnvs();
