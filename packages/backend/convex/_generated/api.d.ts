@@ -4422,6 +4422,7 @@ export declare const api: {
           response: Array<string>;
           sittingId: Id<"examSittings">;
           slug: string;
+          version: number;
         },
         null
       >;
@@ -4563,6 +4564,18 @@ export declare const api: {
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         null
       >;
+      flag: FunctionReference<
+        "mutation",
+        "public",
+        {
+          deviceId: string;
+          flagged: boolean;
+          questionId: Id<"examQuestions">;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
       images: FunctionReference<
         "query",
         "public",
@@ -4628,6 +4641,7 @@ export declare const api: {
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         {
           questions: Array<{
+            flagged: boolean;
             id: Id<"examQuestions">;
             interactions: Array<
               | {
@@ -4808,6 +4822,7 @@ export declare const api: {
             >;
             number: number;
             response: Array<string> | null;
+            version: number | null;
           }>;
         }
       >;
