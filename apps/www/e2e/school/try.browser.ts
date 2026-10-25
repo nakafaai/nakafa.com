@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
@@ -36,6 +37,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await page.goto(hostAddress(baseURL, host, "/exams"));
 
   // The exam starts with one question, which the editor selects, and the teacher writes it.
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Biologi");

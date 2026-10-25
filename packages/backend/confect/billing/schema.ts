@@ -4,6 +4,7 @@ import {
   BillingOfferKey,
 } from "@repo/backend/confect/billing/catalog";
 import { Space } from "@repo/backend/confect/space";
+import { userPlanValidator } from "@repo/backend/confect/users/schema";
 import { Schema } from "effect";
 
 /** The rail an account pays through. An account keeps the rail it was made with. */
@@ -72,6 +73,30 @@ export const billingSubscriptionValidator = Schema.Struct({
   provider: billingProviderValidator,
   /** The provider's own update time. A webhook older than this never overwrites the row. */
   providerUpdatedAt: Schema.Finite,
+});
+
+/** A subscription as the billing settings show it: its offer, its state, its paid period, and the rail that bills it. */
+export const billingSubscriptionSummaryValidator = Schema.Struct({
+  offer: BillingOfferKey,
+  status: billingSubscriptionStatusValidator,
+  currentPeriodStart: Schema.Finite,
+  currentPeriodEnd: Schema.NullOr(Schema.Finite),
+  cancelAtPeriodEnd: Schema.Boolean,
+  rail: BillingRail,
+});
+
+/** What the billing settings show for a viewer: the plan, the subscription that bills it, and the Nina credits. */
+export const billingOverviewValidator = Schema.Struct({
+  plan: userPlanValidator,
+  subscription: Schema.NullOr(billingSubscriptionSummaryValidator),
+  credits: Schema.Struct({
+    /** The credits the plan grants each reset period. */
+    allowance: Schema.Finite,
+    /** The credits the viewer holds in the current reset period. */
+    balance: Schema.Finite,
+    /** The moment the balance refills next, in epoch milliseconds. */
+    resetAt: Schema.Finite,
+  }),
 });
 
 /** The fields every payment shares, whatever it pays for. `amount` is in the currency's minor unit. */

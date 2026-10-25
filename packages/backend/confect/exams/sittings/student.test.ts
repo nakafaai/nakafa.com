@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
   deviceOf,
@@ -113,6 +114,26 @@ describe("exams/sittings student", () => {
         .query(student, { sittingId: made.id, slug: nf })
         .pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "NotInSitting" });
+    })
+  );
+
+  it.effect("does not show a student a sitting of another school", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const made = yield* openedSitting(fixture, "PTS");
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer
+            .table("examSittings")
+            .patch(made.id, { tenantId: fixture.tenants.other })
+            .pipe(Effect.orDie)
+        )
+      );
+      const failure = yield* fixture
+        .as("student")
+        .query(student, { sittingId: made.id, slug: nf })
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "NotInSitting" });
     })
   );
 });

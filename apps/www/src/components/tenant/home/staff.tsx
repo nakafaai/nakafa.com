@@ -1,5 +1,11 @@
 import { QueryResult } from "@confect/react";
 import {
+  Calendar03Icon,
+  HourglassIcon,
+  LiveStreaming02Icon,
+  PencilEdit02Icon,
+} from "@hugeicons/core-free-icons";
+import {
   HOME_RESULT_LIMIT,
   HOME_ROOM_LIMIT,
 } from "@repo/backend/confect/exams/home/bounds";
@@ -90,9 +96,11 @@ export function StaffHome({
             live.length,
             reachesBound(live.length, HOME_ROOM_LIMIT)
           )}
+          icon={LiveStreaming02Icon}
           period={t("metric-live-period")}
           span={span}
           title={t("metric-live")}
+          tone="success"
         />
       ),
       key: "count-live",
@@ -104,9 +112,11 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(next.length, nextBound)}
+          icon={Calendar03Icon}
           period={t("metric-next-period")}
           span={span}
           title={t("metric-next")}
+          tone="info"
         />
       ),
       key: "count-next",
@@ -118,9 +128,11 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(waitingOf(closed), closedBound)}
+          icon={HourglassIcon}
           period={t("metric-waiting-period")}
           span={span}
           title={t("metric-waiting")}
+          tone="warning"
         />
       ),
       key: "count-waiting",
@@ -132,9 +144,11 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(draftRows.length, draftsBounded)}
+          icon={PencilEdit02Icon}
           period={t("metric-drafts-period")}
           span={span}
           title={t("metric-drafts")}
+          tone="neutral"
         />
       ),
       key: "count-drafts",

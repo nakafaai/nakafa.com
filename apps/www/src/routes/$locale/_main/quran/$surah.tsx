@@ -32,12 +32,14 @@ import {
 } from "@/lib/content/quran/surah.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { readStaticData } from "@/lib/static/data";
 
 /** One surah: its verses, its interpretation controls and its outline. */
 export const Route = createFileRoute("/$locale/_main/quran/$surah")({
   loader: async ({ params }) => {
-    const surah = await readSurahFn({
-      data: { locale: params.locale, surah: params.surah },
+    const surah = await readStaticData(readSurahFn, {
+      locale: params.locale,
+      surah: params.surah,
     });
     if (surah.kind === "notFound") {
       throw notFound();

@@ -15,12 +15,13 @@ import {
   Undo02Icon,
 } from "@hugeicons/core-free-icons";
 import { RichEditorLink } from "@repo/design-system/components/editor/link";
+import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
 import type { ComponentProps } from "react";
 
-/** One control of the toolbar. It shows as pressed while the caret sits in its format. */
+/** One control of the toolbar, named in its tooltip. It shows as pressed while the caret sits in its format. */
 export function RichEditorControl({
   active = false,
   disabled = false,
@@ -35,22 +36,23 @@ export function RichEditorControl({
   onClick: () => void;
 }) {
   return (
-    <Button
-      aria-label={label}
-      aria-pressed={active}
-      className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-      disabled={disabled}
-      onClick={onClick}
-      // The press must not take the focus from the text, or the caret and the
-      // next keystrokes would be lost for a moment.
-      onMouseDown={(event) => event.preventDefault()}
-      size="icon-sm"
-      title={label}
-      type="button"
-      variant="ghost"
-    >
-      <HugeIcons icon={icon} />
-    </Button>
+    <ToolHint label={label}>
+      <Button
+        aria-label={label}
+        aria-pressed={active}
+        className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+        disabled={disabled}
+        onClick={onClick}
+        // The press must not take the focus from the text, or the caret and the
+        // next keystrokes would be lost for a moment.
+        onMouseDown={(event) => event.preventDefault()}
+        size="icon-sm"
+        type="button"
+        variant="ghost"
+      >
+        <HugeIcons icon={icon} />
+      </Button>
+    </ToolHint>
   );
 }
 

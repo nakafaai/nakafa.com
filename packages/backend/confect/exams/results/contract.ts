@@ -2,6 +2,7 @@ import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
+import { QuestionPoints } from "@repo/backend/confect/exams/question";
 import { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -16,11 +17,15 @@ import { Schema } from "effect";
 /** The result actions a caller may take on a sitting: reading its results, and releasing them. */
 const ResultAction = Kind.actions(entries, "result");
 
-/** One question of the exam in its order: its number, and the option IDs of its choice in their order. */
+/**
+ * One question of the exam in its order: its number, the option IDs of its choice in their order, and the
+ * points that a correct answer to it earns.
+ */
 export const QuestionSummary = Schema.Struct({
   id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
+  points: QuestionPoints,
 });
 
 /**
@@ -76,19 +81,20 @@ export const QuestionStats = Schema.Struct({
 
 /**
  * One question of a student's released result: its number, the option IDs of its choice in their
- * order, the option IDs that the student chose, and the verdict. The chosen IDs are empty when the
- * student left the question unanswered.
+ * order, the points that a correct answer earns, the option IDs that the student chose, and the verdict.
+ * The chosen IDs are empty when the student left the question unanswered.
  */
 const StudentAnswer = Schema.Struct({
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
+  points: QuestionPoints,
   response: Schema.Array(LocalIdSchema),
   verdict: Verdict,
 });
 
 /**
  * A student's own released result: the points earned, and each question of the exam in its order,
- * numbered from one.
+ * numbered from one, with the points that a correct answer to it earns.
  */
 export const StudentResult = Schema.Struct({
   points: Schema.Int,

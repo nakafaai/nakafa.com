@@ -88,6 +88,10 @@ describe("refusalCopyOf", () => {
 });
 
 describe("isFinalRefusal", () => {
+  it("is final for a stale answer, which a newer saved answer already replaced", () => {
+    expect(isFinalRefusal({ _tag: "StaleAnswer" })).toBe(true);
+  });
+
   it("is final for a refusal that the server will not take later", () => {
     expect(isFinalRefusal({ _tag: "AttemptClosed" })).toBe(true);
     expect(isFinalRefusal({ _tag: "ResponseDoesNotFit" })).toBe(true);
@@ -104,6 +108,20 @@ describe("isFinalRefusal", () => {
     expect(isFinalRefusal({ _tag: "SittingClosed" })).toBe(false);
     expect(isFinalRefusal({ _tag: "AccessDenied" })).toBe(false);
     expect(isFinalRefusal(new Error("network"))).toBe(false);
+  });
+});
+
+describe("stale answer copy", () => {
+  it("shows the stale toast for a stale answer, and no sentence on the paper", () => {
+    expect(refusalCopyOf({ _tag: "StaleAnswer" })).toEqual(
+      Option.some({
+        description: "sitting-stale-answer.description",
+        title: "sitting-stale-answer.title",
+      })
+    );
+    expect(sittingFailureMessage({ _tag: "StaleAnswer" })).toEqual(
+      Option.none()
+    );
   });
 });
 

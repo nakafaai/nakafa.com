@@ -8,6 +8,7 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import assessmentFlags from "./tables/assessmentFlags";
 import billingAccounts from "./tables/billingAccounts";
 import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
@@ -132,6 +133,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleBuckets: typeof articleBuckets;
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
+  readonly assessmentFlags: typeof assessmentFlags;
   readonly billingAccounts: typeof billingAccounts;
   readonly billingCheckouts: typeof billingCheckouts;
   readonly billingCounters: typeof billingCounters;
@@ -255,6 +257,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleBuckets,
   articleCatalog,
   articleCategories,
+  assessmentFlags,
   billingAccounts,
   billingCheckouts,
   billingCounters,

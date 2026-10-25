@@ -1,32 +1,22 @@
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { PRUNE_PAGE_STEPS } from "@repo/backend/confect/editor/prune";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
-import {
-  batchText,
-  denied,
-  documentRows,
-  nf,
-  plantSteps,
-  snapshotRows,
-  stepRows,
-} from "@repo/backend/test/editor";
+import { denied, documentRows, nf } from "@repo/backend/test/editor";
 import {
   archiveUnit,
   fillExam,
   questionRows,
   teacherExam,
 } from "@repo/backend/test/exams";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { tenancyFixture } from "@repo/backend/test/tenancy";
+import { Array as Arr, Effect, HashSet } from "effect";
 
 const { create, open } = refs.public.exams.exams;
-const { add, move, remove, copy, answer } = refs.public.exams.questions;
-const { submit } = refs.public.editor.steps;
+const { add, answer, copy, move, points, remove } = refs.public.exams.questions;
 
 describe("exams/questions", () => {
   it.effect(
-    "adds a question after the one it names, and writes its prompt document",
+    "adds a question after the one it names, with the default points and its prompt, rubric, and explanation documents",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -39,9 +29,15 @@ describe("exams/questions", () => {
         });
         expect(added).toMatchObject({
           key: null,
+          points: 1,
           revision: 0,
           template: "choice",
         });
+        expect(
+          HashSet.size(
+            HashSet.make(added.prompt, added.rubric, added.explanation)
+          )
+        ).toBe(3);
         const opened = yield* fixture.as("teacher").query(open, {
           examId: exam.id,
           slug: nf,
@@ -50,7 +46,7 @@ describe("exams/questions", () => {
           first.id,
           added.id,
         ]);
-        expect(yield* fixture.run(documentRows)).toHaveLength(2);
+        expect(yield* fixture.run(documentRows)).toHaveLength(6);
       })
   );
 
@@ -70,7 +66,7 @@ describe("exams/questions", () => {
         expect(yield* fixture.run(questionRows)).toHaveLength(
           MAX_EXAM_QUESTIONS
         );
-        expect(yield* fixture.run(documentRows)).toHaveLength(1);
+        expect(yield* fixture.run(documentRows)).toHaveLength(3);
       })
   );
 
@@ -220,8 +216,17 @@ describe("exams/questions", () => {
               slug: nf,
             })
             .pipe(Effect.flip),
+          teacher
+            .mutation(points, {
+              examId: mine.id,
+              points: 3,
+              questionId: foreign.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
         ]);
         expect(refusals).toMatchObject([
+          denied("resource"),
           denied("resource"),
           denied("resource"),
           denied("resource"),
@@ -305,8 +310,17 @@ describe("exams/questions", () => {
               slug: nf,
             })
             .pipe(Effect.flip),
+          teacher
+            .mutation(points, {
+              examId: exam.id,
+              points: 3,
+              questionId: first.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
         ]);
         expect(refusals).toMatchObject([
+          denied("condition"),
           denied("condition"),
           denied("condition"),
           denied("condition"),
@@ -387,8 +401,17 @@ describe("exams/questions", () => {
               slug: nf,
             })
             .pipe(Effect.flip),
+          teacher
+            .mutation(points, {
+              examId: outside.id,
+              points: 3,
+              questionId: theirFirst.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
         ]);
         expect(refusals).toMatchObject([
+          denied("role"),
           denied("role"),
           denied("role"),
           denied("role"),
@@ -399,90 +422,68 @@ describe("exams/questions", () => {
         expect(yield* fixture.run(questionRows)).toHaveLength(2);
       })
   );
-});
-
-describe("exams/questions remove", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(TENANCY_NOW);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it.effect(
-    "refuses to remove the last question of an exam, and removes another with its prompt, snapshot, and steps once the scheduled deletion runs",
+    "sets the points of a question, and keeps its answers, its key, and its revision",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const exam = yield* teacherExam(fixture, "Hapus");
+        const exam = yield* teacherExam(fixture, "Poin");
         const [first] = exam.questions;
-        const last = yield* teacher
-          .mutation(remove, { examId: exam.id, questionId: first.id, slug: nf })
-          .pipe(Effect.flip);
-        expect(last).toMatchObject({ _tag: "ExamEmpty", code: "EXAM_EMPTY" });
-        const second = yield* teacher.mutation(add, {
-          after: first.id,
+        const scored = yield* teacher.mutation(points, {
           examId: exam.id,
-          slug: nf,
-        });
-        yield* teacher.mutation(submit, {
-          batch: yield* batchText(0, "rina", 2),
-          documentId: first.prompt,
-          slug: nf,
-        });
-        const removed = yield* teacher.mutation(remove, {
-          examId: exam.id,
+          points: 7,
           questionId: first.id,
           slug: nf,
         });
-        expect(removed.questions).toEqual([second.id]);
-        yield* fixture.finishScheduled();
-        const documents = yield* fixture.run(documentRows);
-        expect(Arr.map(documents, (document) => document._id)).toEqual([
-          second.prompt,
-        ]);
-        const snapshots = yield* fixture.run(snapshotRows);
-        expect(Arr.map(snapshots, (snapshot) => snapshot.documentId)).toEqual([
-          second.prompt,
-        ]);
-        const steps = yield* fixture.run(stepRows);
-        expect(
-          Arr.filter(steps, (step) => step.documentId === first.prompt)
-        ).toEqual([]);
-        expect(yield* fixture.run(questionRows)).toHaveLength(1);
+        expect(scored).toMatchObject({
+          id: first.id,
+          key: first.key,
+          points: 7,
+          revision: first.revision,
+        });
+        expect(scored.answers).toEqual(first.answers);
+        const opened = yield* teacher.query(open, {
+          examId: exam.id,
+          slug: nf,
+        });
+        expect(opened.questions[0]).toEqual(scored);
       })
   );
 
   it.effect(
-    "removes a question whose prompt has more than one page of steps, and deletes those steps in scheduled calls, not in the removal",
+    "copies a question with its points, and copies its rubric and explanation as documents of their own",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
-        const exam = yield* teacherExam(fixture, "Halaman");
+        const exam = yield* teacherExam(fixture, "Salin");
         const [first] = exam.questions;
-        const second = yield* teacher.mutation(add, {
-          after: first.id,
+        yield* teacher.mutation(points, {
           examId: exam.id,
+          points: 4,
+          questionId: first.id,
           slug: nf,
         });
-        const stepCount = PRUNE_PAGE_STEPS + 1;
-        yield* plantSteps(fixture, first.prompt, stepCount);
-        yield* teacher.mutation(remove, {
+        const copied = yield* teacher.mutation(copy, {
           examId: exam.id,
           questionId: first.id,
           slug: nf,
         });
-        expect(yield* fixture.run(stepRows)).toHaveLength(stepCount);
-        yield* fixture.finishScheduled();
-        expect(yield* fixture.run(stepRows)).toEqual([]);
-        const documents = yield* fixture.run(documentRows);
-        expect(Arr.map(documents, (document) => document._id)).toEqual([
-          second.prompt,
-        ]);
+        expect(copied).toMatchObject({ points: 4 });
+        expect(
+          HashSet.size(
+            HashSet.make(
+              copied.prompt,
+              copied.rubric,
+              copied.explanation,
+              first.prompt,
+              first.rubric,
+              first.explanation
+            )
+          )
+        ).toBe(6);
+        expect(yield* fixture.run(documentRows)).toHaveLength(6);
       })
   );
 });

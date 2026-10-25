@@ -9,6 +9,7 @@ export type AccountDeletionReceiptsDoc = Document.Document<typeof schemaDefiniti
 export type ArticleBucketsDoc = Document.Document<typeof schemaDefinition, "articleBuckets">;
 export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "articleCatalog">;
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
+export type AssessmentFlagsDoc = Document.Document<typeof schemaDefinition, "assessmentFlags">;
 export type BillingAccountsDoc = Document.Document<typeof schemaDefinition, "billingAccounts">;
 export type BillingCheckoutsDoc = Document.Document<typeof schemaDefinition, "billingCheckouts">;
 export type BillingCountersDoc = Document.Document<typeof schemaDefinition, "billingCounters">;
@@ -133,6 +134,7 @@ export interface Docs {
   articleBuckets: ArticleBucketsDoc;
   articleCatalog: ArticleCatalogDoc;
   articleCategories: ArticleCategoriesDoc;
+  assessmentFlags: AssessmentFlagsDoc;
   billingAccounts: BillingAccountsDoc;
   billingCheckouts: BillingCheckoutsDoc;
   billingCounters: BillingCountersDoc;

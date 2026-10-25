@@ -15,11 +15,14 @@ import {
  */
 export function SittingChoice({
   choice,
+  disabled = false,
   labelledBy,
   onChoose,
   response,
 }: {
   readonly choice: Choice;
+  /** Whether the options are read-only, because the attempt takes no answers now. */
+  readonly disabled?: boolean;
   /** The id of the heading that names the choice. */
   readonly labelledBy: string;
   readonly onChoose: (response: readonly string[]) => void;
@@ -38,7 +41,7 @@ export function SittingChoice({
         {Arr.map(choice.options, (option) => (
           <TryoutSelectableRadioOption
             checked={Arr.contains(response, option.id)}
-            disabled={false}
+            disabled={disabled}
             id={`${id}-${option.id}`}
             key={option.id}
             label={
@@ -63,7 +66,7 @@ export function SittingChoice({
       {Arr.map(choice.options, (option) => (
         <TryoutSelectableMultipleChoice
           checked={Arr.contains(response, option.id)}
-          disabled={false}
+          disabled={disabled}
           id={`${id}-${option.id}`}
           key={option.id}
           label={

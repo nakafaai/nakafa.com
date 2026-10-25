@@ -12,6 +12,7 @@ import {
 import { enter } from "@repo/backend/confect/exams/sittings/enter";
 import { expectedSeats } from "@repo/backend/confect/exams/sittings/expected";
 import { finish } from "@repo/backend/confect/exams/sittings/finish";
+import { flag } from "@repo/backend/confect/exams/sittings/flag";
 import { images } from "@repo/backend/confect/exams/sittings/images";
 import { mine } from "@repo/backend/confect/exams/sittings/mine";
 import { paper } from "@repo/backend/confect/exams/sittings/paper";
@@ -213,6 +214,15 @@ const answerFunction = FunctionImpl.make(
   })
 );
 
+const flagFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "flag",
+  Effect.fn("exams.sittings.flag.function")(function* (args) {
+    return yield* flag(args);
+  })
+);
+
 const finishFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -253,6 +263,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(imagesFunction),
   Layer.provide(answerFunction),
   Layer.provide(finishFunction),
+  Layer.provide(flagFunction),
   // The three middlewares in one step, so the group stays within one pipe.
   Layer.provide(Layer.mergeAll(session, member, sittingAccess)),
   GroupImpl.finalize

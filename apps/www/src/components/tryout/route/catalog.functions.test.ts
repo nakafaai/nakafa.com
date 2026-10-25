@@ -109,7 +109,13 @@ describe("try-out catalog server functions", () => {
   it("answers one track through its server handler", async () => {
     await expect(
       readTryoutTrackHandler({
-        data: { country: "id", exam: "snbt", locale: "en", track: "2027" },
+        data: {
+          country: "id",
+          exam: "snbt",
+          locale: "en",
+          search: { direction: "asc", sort: "order", status: "all" },
+          track: "2027",
+        },
       })
     ).resolves.toEqual({ kind: "notFound" });
     expect(catalog.readTryoutTrackPage).toHaveBeenCalledExactlyOnceWith(

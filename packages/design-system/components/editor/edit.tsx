@@ -17,7 +17,13 @@ import {
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Effect, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+  type KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 /** MathLive, which an editor needs only when its popover opens, so no page's first JavaScript holds it. */
 class MathLiveUnavailable extends Schema.TaggedError<MathLiveUnavailable>()(
@@ -100,17 +106,11 @@ export function FormulaEdit({
 }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(latex);
-  const [problem, setProblem] = useState<Option.Option<string>>(Option.none());
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
     Option.none()
   );
   const discarded = useRef(false);
-
-  /** Keeps the draft and checks it in the same event, so the sentence is never a step behind. */
-  function change(next: string) {
-    setDraft(next);
-    setProblem(Effect.runSync(formulaProblem(next)));
-  }
+  const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
   /** Opens the editor on the saved formula, and loads MathLive for its field. */
   function openEditor(next: boolean) {
@@ -123,7 +123,6 @@ export function FormulaEdit({
     }
     discarded.current = false;
     setDraft(latex);
-    setProblem(Effect.runSync(formulaProblem(latex)));
     setOpen(true);
     Effect.runFork(
       loadMathLive.pipe(
@@ -171,7 +170,7 @@ export function FormulaEdit({
             {Option.match(mathlive, {
               onNone: () => null,
               onSome: (module) => (
-                <MathField mathlive={module} onInput={change} value={draft} />
+                <MathField mathlive={module} onInput={setDraft} value={draft} />
               ),
             })}
           </TabsPanel>
@@ -179,7 +178,7 @@ export function FormulaEdit({
             <Textarea
               aria-label={labels.latex}
               className="font-mono"
-              onChange={(event) => change(event.target.value)}
+              onChange={(event) => setDraft(event.target.value)}
               value={draft}
             />
           </TabsPanel>
@@ -197,7 +196,10 @@ export function FormulaEdit({
   );
 }
 
-/** The drawn formula, which KaTeX draws from its LaTeX and never from any other source. */
+/**
+ * The drawn formula, which KaTeX draws from its LaTeX and never from any other source. The server and
+ * the browser draw it alike, so the first HTML already shows the formula, chemistry included.
+ */
 export function FormulaMarkup({
   block,
   latex,

@@ -166,7 +166,6 @@ export function StudentSitting({
                 <Input
                   autoComplete="off"
                   id={tokenId}
-                  name="token"
                   onChange={(event) => setTokenText(event.currentTarget.value)}
                   placeholder={t("student-token-placeholder")}
                   value={tokenText}
@@ -178,7 +177,7 @@ export function StudentSitting({
               tone={message === null ? null : "destructive"}
             >
               <CardSectionActions>
-                <Button disabled={entering} type="submit">
+                <Button disabled={!isSettled || entering} type="submit">
                   {t("student-enter")}
                 </Button>
               </CardSectionActions>

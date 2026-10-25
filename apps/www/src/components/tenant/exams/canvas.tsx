@@ -1,5 +1,5 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
-import { useMediaQuery } from "@mantine/hooks";
+import { useCallbackRef, useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
@@ -7,6 +7,7 @@ import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
+import { useQuestionReorder } from "@/components/tenant/exams/drag";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { pageAt } from "@/components/tenant/exams/pages";
 import { ExamPage } from "@/components/tenant/exams/paper";
@@ -29,11 +30,15 @@ const PAGE_LINE = 96;
  */
 const HAND_EVENTS = ["keydown", "pointerdown", "touchstart", "wheel"] as const;
 
+/** The events that put the teacher's hand in a page: a press on it, or the focus moving into it. */
+const PAGE_EVENTS = ["focusin", "pointerdown"] as const;
+
 /**
  * The canvas of the exam: every question as a page, stacked in order with one gap between them,
- * on a muted ground that scrolls. Each page is its paper at the chosen zoom, and an add button
- * below the last page adds a question at the end. The page the teacher is on follows the scroll,
- * so the footer's position names it. A frozen exam shows its pages without the add button.
+ * on a muted ground that scrolls. Each page is its paper at the chosen zoom, and an add button as
+ * wide as the pages, below the last one, adds a question at the end. The page the teacher is on
+ * follows the scroll and the teacher's hand, so the footer's position and the panel name it. A
+ * frozen exam shows its pages without the add button.
  */
 export function ExamCanvas({
   canvas,
@@ -46,11 +51,57 @@ export function ExamCanvas({
   // The canvas reads the selection from its store when it runs, so a change of the choice draws no page.
   const selection = useExamSelectionStore();
   const actions = useQuestionActions();
+  // A stable move keeps the listeners of the reorder attached across the renders of the canvas.
+  const moveQuestion = useCallbackRef(actions.moveQuestion);
   const percent = useExamZoom((zoom) => zoom.percent);
   // The chosen zoom applies from the medium width up, where the footer shows its slider. A phone
   // keeps the default, since it pinches to zoom and has no slider to undo a stored zoom.
   const wide = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
   const drawnZoom = wide ? percent : ZOOM_DEFAULT;
+  useQuestionReorder({
+    canvas,
+    moveQuestion,
+    questions: exam.questions,
+    requestFocus: selection.getState().requestFocus,
+    zoom: drawnZoom / 100,
+  });
+
+  /** Chooses the page of an element the teacher pressed or focused, as a design tool chooses the page in hand. */
+  const choosePage = useCallbackRef((event: Event) => {
+    const page =
+      event.target instanceof Element
+        ? event.target.closest<HTMLElement>("[data-question]")
+        : null;
+    const { select, selected } = selection.getState();
+    Option.match(
+      Arr.findFirst(
+        exam.questions,
+        (question) => question.id === page?.dataset.question
+      ),
+      {
+        onNone: () => undefined,
+        onSome: (question) => {
+          if (selected !== question.id) {
+            select(question.id);
+          }
+        },
+      }
+    );
+  });
+  useEffect(() => {
+    const root = canvas.current;
+    if (root === null) {
+      return;
+    }
+    Arr.forEach(PAGE_EVENTS, (event) =>
+      root.addEventListener(event, choosePage)
+    );
+    return () => {
+      Arr.forEach(PAGE_EVENTS, (event) =>
+        root.removeEventListener(event, choosePage)
+      );
+    };
+  }, [canvas, choosePage]);
 
   // The teacher's hand ends the hold of a page the footer chose, so the page in view is chosen again.
   useEffect(() => {
@@ -71,12 +122,17 @@ export function ExamCanvas({
 
   /**
    * Chooses the page at the top of the canvas as the one the teacher is on, when the scroll brings a
-   * new one. A page the footer holds stays chosen until the teacher's hand releases it.
+   * new one. A page the footer holds stays chosen until the teacher's hand releases it, and so does the
+   * page the teacher writes in, which a scroll that follows the caret must not take away.
    */
   const syncPage = () => {
     const root = canvas.current;
     const { pinned, select, selected } = selection.getState();
-    if (root === null || pinned) {
+    if (
+      root === null ||
+      pinned ||
+      root.querySelector("[data-page]:focus-within") !== null
+    ) {
       return;
     }
     const top = root.getBoundingClientRect().top;
@@ -116,16 +172,15 @@ export function ExamCanvas({
           />
         ))}
         {frozen ? null : (
-          <div>
-            <Button
-              onClick={() => actions.addQuestion(null)}
-              type="button"
-              variant="outline"
-            >
-              <HugeIcons aria-hidden="true" icon={Add01Icon} />
-              {t("add-question")}
-            </Button>
-          </div>
+          <Button
+            className="w-full"
+            onClick={() => actions.addQuestion(null)}
+            type="button"
+            variant="outline"
+          >
+            <HugeIcons aria-hidden="true" icon={Add01Icon} />
+            {t("add-question")}
+          </Button>
         )}
       </div>
     </section>

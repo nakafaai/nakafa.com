@@ -26,6 +26,7 @@ import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
 import { LocalizedError } from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { readStaticData } from "@/lib/static/data";
 
 /** The messages that every locale page renders, under every route group. */
 const SHELL_NAMESPACES = ["Common", "State", "Toast"] as const;
@@ -47,11 +48,13 @@ export const Route = createFileRoute("/$locale")({
   },
   loader: async ({ params }) => {
     const [messages, metadata, now] = await Promise.all([
-      readRouteMessages({
-        data: { locale: params.locale, namespaces: SHELL_NAMESPACES },
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: SHELL_NAMESPACES,
       }),
-      readRouteMessages({
-        data: { locale: params.locale, namespaces: ["Metadata"] },
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: ["Metadata"],
       }),
       readRequestNow(),
     ]);
