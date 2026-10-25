@@ -3,7 +3,7 @@ import {
   mutationLayer,
 } from "@confect/server/RegisteredConvexFunction";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { proProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
+import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -129,7 +129,7 @@ export function insertProSubscription(
     provider: {
       kind: "polar",
       subscriptionId: overrides.subscriptionId ?? "sub_polar_test",
-      productId: proProductIdFor("sandbox"),
+      productId: polarProductIdFor("pro.monthly", "sandbox"),
       priceId: null,
     },
     providerUpdatedAt: 0,
@@ -235,7 +235,7 @@ export function polarProSubscriptionBody(customerId: string): string {
       ended_at: null,
       id: `sub_${customerId}`,
       modified_at: "2026-10-02T00:00:00.000Z",
-      product_id: proProductIdFor("sandbox"),
+      product_id: polarProductIdFor("pro.monthly", "sandbox"),
       recurring_interval: "month",
       status: "active",
     },

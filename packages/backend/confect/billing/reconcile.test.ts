@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
+import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import {
   PolarCustomerError,
   PolarSubscriptionListError,
@@ -44,7 +44,7 @@ function listedSubscription(
     ended_at: null,
     id,
     modified_at: "2026-10-02T00:00:00.000Z",
-    product_id: proProductIds.sandbox,
+    product_id: polarProductIdFor("pro.monthly", "sandbox"),
     recurring_interval: "month",
     status: "active",
     ...overrides,

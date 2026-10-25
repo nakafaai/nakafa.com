@@ -13,7 +13,7 @@ import {
   getPolarCheckoutLocale,
   polarCheckoutLocaleValidator,
 } from "@repo/backend/confect/billing/locale";
-import { proProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
+import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import { readPolarServer } from "@repo/backend/confect/billing/polar/client";
 import {
   type PolarCheckoutError,
@@ -75,7 +75,7 @@ export const validateCheckoutRequest = Effect.fn(
   return {
     locale: input.locale,
     polarLocale: getPolarCheckoutLocale(input.locale),
-    productId: proProductIdFor(server),
+    productId: polarProductIdFor("pro.monthly", server),
     successUrl: input.successUrl,
   } satisfies typeof validCheckoutRequestValidator.Type;
 });

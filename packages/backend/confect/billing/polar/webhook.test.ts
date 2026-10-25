@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
+import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import { processPolarEvent } from "@repo/backend/confect/billing/polar/webhook";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -46,7 +46,7 @@ function subscriptionEvent(
       id: "sub_webhook_1",
       modified_at: "2026-10-02T00:00:00.000Z",
       price_id: null,
-      product_id: proProductIds.sandbox,
+      product_id: polarProductIdFor("pro.monthly", "sandbox"),
       recurring_interval: "month",
       status: "active",
       ...overrides,

@@ -5,7 +5,6 @@
  * float. Browser code imports this module, so it reads no secret and no server
  * setting.
  */
-import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
 import { HashSet, Schema } from "effect";
 
 /** The currencies an account bills in: IDR in Indonesia, EUR in the euro territories, USD elsewhere. */
@@ -15,19 +14,11 @@ export type BillingCurrency = typeof BillingCurrency.Type;
 /** The rails that sell an offer. Polar is merchant of record outside Indonesia. */
 export const BillingOfferRailSchema = Schema.Literals(["polar", "xendit"]);
 
-/** The Polar product of one offer on each Polar server. Null until the product exists in Polar. */
-const PolarOfferProduct = Schema.Struct({
-  production: Schema.NullOr(Schema.String),
-  sandbox: Schema.NullOr(Schema.String),
-});
-
 /** One offer: what it grants, how it bills, what it costs, and where it is sold. */
 const BillingOffer = Schema.Struct({
   /** `month` and `year` recur. `pass` is paid once for `months` months. */
   interval: Schema.Literals(["month", "pass", "year"]),
   months: Schema.Int,
-  /** Null for an offer Polar does not sell, or whose Polar product is not created yet. */
-  polarProduct: Schema.NullOr(PolarOfferProduct),
   prices: Schema.Struct({
     EUR: Schema.optionalKey(Schema.Int),
     IDR: Schema.optionalKey(Schema.Int),
@@ -61,7 +52,6 @@ const billingOffers = {
     prices: proMonthlyPrices,
     product: "pro",
     rails: ["polar", "xendit"],
-    polarProduct: proProductIds,
   },
   "pro.yearly": {
     interval: "year",
@@ -69,7 +59,6 @@ const billingOffers = {
     prices: { EUR: 8990, IDR: 790_000, USD: 8990 },
     product: "pro",
     rails: ["polar"],
-    polarProduct: null,
   },
   "pro.pass.1": {
     interval: "pass",
@@ -77,7 +66,6 @@ const billingOffers = {
     prices: { IDR: 79_000 },
     product: "pro",
     rails: ["xendit"],
-    polarProduct: null,
   },
   "pro.pass.3": {
     interval: "pass",
@@ -85,7 +73,6 @@ const billingOffers = {
     prices: { IDR: 229_000 },
     product: "pro",
     rails: ["xendit"],
-    polarProduct: null,
   },
   "pro.pass.12": {
     interval: "pass",
@@ -93,7 +80,6 @@ const billingOffers = {
     prices: { IDR: 790_000 },
     product: "pro",
     rails: ["xendit"],
-    polarProduct: null,
   },
   "pro.topup": {
     interval: "pass",
@@ -101,7 +87,6 @@ const billingOffers = {
     prices: { EUR: 499, IDR: 59_000, USD: 499 },
     product: "credits",
     rails: ["polar", "xendit"],
-    polarProduct: null,
   },
   "school.seat.month": {
     interval: "month",
@@ -109,7 +94,6 @@ const billingOffers = {
     prices: { EUR: 100, USD: 100 },
     product: "school",
     rails: ["polar"],
-    polarProduct: null,
   },
   "school.seat.semester": {
     interval: "pass",
@@ -117,7 +101,6 @@ const billingOffers = {
     prices: { IDR: 60_000 },
     product: "school",
     rails: ["xendit"],
-    polarProduct: null,
   },
   "school.seat.year": {
     interval: "year",
@@ -125,7 +108,6 @@ const billingOffers = {
     prices: { EUR: 1000, IDR: 100_000, USD: 1000 },
     product: "school",
     rails: ["polar", "xendit"],
-    polarProduct: null,
   },
 } satisfies Record<BillingOfferKey, BillingOffer>;
 

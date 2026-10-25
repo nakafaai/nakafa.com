@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
+import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import { decodePolarSubscription } from "@repo/backend/confect/billing/polar/payload";
 import {
   polarGrantAction,
@@ -23,7 +23,7 @@ function wire(overrides: Record<string, unknown> = {}) {
     id: "sub_polar_1",
     modified_at: "2026-10-02T00:00:00.000Z",
     price_id: null,
-    product_id: proProductIds.sandbox,
+    product_id: polarProductIdFor("pro.monthly", "sandbox"),
     recurring_interval: "month",
     status: "active",
     ...overrides,
@@ -52,7 +52,7 @@ describe("billing/polar/subscription", () => {
           provider: {
             kind: "polar",
             priceId: null,
-            productId: proProductIds.sandbox,
+            productId: polarProductIdFor("pro.monthly", "sandbox"),
             subscriptionId: "sub_polar_1",
           },
           providerUpdatedAt: Date.parse("2026-10-02T00:00:00.000Z"),
@@ -62,18 +62,22 @@ describe("billing/polar/subscription", () => {
       })
   );
 
-  it.effect(
-    "maps a yearly Pro subscription to the yearly offer and keeps the price it names",
-    () =>
+  it.effect.each(["production", "sandbox"] as const)(
+    "maps a Pro Yearly subscription on %s to the yearly offer and keeps the price it names",
+    (server) =>
       Effect.gen(function* () {
         expect(
           yield* stateOf({
             price_id: "price_yearly",
+            product_id: polarProductIdFor("pro.yearly", server),
             recurring_interval: "year",
           })
         ).toMatchObject({
           offer: "pro.yearly",
-          provider: { priceId: "price_yearly" },
+          provider: {
+            priceId: "price_yearly",
+            productId: polarProductIdFor("pro.yearly", server),
+          },
         });
       })
   );
@@ -121,11 +125,35 @@ describe("billing/polar/subscription", () => {
   );
 
   it.effect(
-    "maps no state for a product that is not Pro, or an interval that sells no offer",
+    "maps no state for a product that is not Pro, or an interval its offer does not bill",
     () =>
       Effect.gen(function* () {
         expect(yield* stateOf({ product_id: "another-product" })).toBeNull();
         expect(yield* stateOf({ recurring_interval: "week" })).toBeNull();
+        expect(yield* stateOf({ recurring_interval: "year" })).toBeNull();
+        expect(
+          yield* stateOf({
+            product_id: polarProductIdFor("pro.yearly", "sandbox"),
+            recurring_interval: "month",
+          })
+        ).toBeNull();
+      })
+  );
+
+  it.effect.each([
+    ["school.seat.month", "month"],
+    ["school.seat.year", "year"],
+    ["pro.topup", null],
+  ] as const)(
+    "never maps the %s product to a personal Pro offer",
+    ([offer, interval]) =>
+      Effect.gen(function* () {
+        expect(
+          yield* stateOf({
+            product_id: polarProductIdFor(offer, "production"),
+            recurring_interval: interval,
+          })
+        ).toBeNull();
       })
   );
 

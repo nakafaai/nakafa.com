@@ -1,10 +1,13 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
-import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
+import {
+  type BillingOfferKey,
+  billingOffer,
+} from "@repo/backend/confect/billing/catalog";
+import { polarOfferOf } from "@repo/backend/confect/billing/polar/catalog";
 import type { PolarSubscriptionSource } from "@repo/backend/confect/billing/polar/payload";
 import type { billingSubscriptionStatusValidator } from "@repo/backend/confect/billing/schema";
 import type { BillingSubscriptionState } from "@repo/backend/confect/billing/subscriptions";
-import { Array as Arr, Match, Option, Schema } from "effect";
+import { Match, Option, Schema } from "effect";
 
 type BillingSubscriptionStatus = typeof billingSubscriptionStatusValidator.Type;
 
@@ -24,21 +27,21 @@ function statusOf(
   );
 }
 
-/** Both servers' Pro products: a deployment bills through one server, and a webhook names the product of its own server. */
-const proProductIdValues = [proProductIds.production, proProductIds.sandbox];
-
-/** The catalog offer of a Polar Pro subscription, by its recurring interval. Another product or interval sells no offer. */
+/**
+ * The catalog offer of a Polar subscription: the offer its product sells, on
+ * either server, when that offer is Pro and bills on the subscription's
+ * interval. A School seat, a one-time product, an unknown product, or an
+ * interval the offer does not bill sells no personal offer.
+ */
 function offerOf(
   subscription: PolarSubscriptionSource
 ): BillingOfferKey | null {
-  if (!Arr.contains(proProductIdValues, subscription.productId)) {
-    return null;
-  }
-  return Match.value(subscription.recurringInterval).pipe(
-    Match.withReturnType<BillingOfferKey | null>(),
-    Match.when("month", () => "pro.monthly"),
-    Match.when("year", () => "pro.yearly"),
-    Match.orElse(() => null)
+  return polarOfferOf(subscription.productId).pipe(
+    Option.filter((offer) => {
+      const { interval, product } = billingOffer(offer);
+      return product === "pro" && interval === subscription.recurringInterval;
+    }),
+    Option.getOrNull
   );
 }
 
