@@ -167,6 +167,20 @@ describe("router head", () => {
   });
 });
 
+describe("page head JSON-LD", () => {
+  it("renders a document of several nodes as one script", () => {
+    const article = { "@type": "Article" };
+    const breadcrumb = { "@type": "BreadcrumbList" };
+    const routed = toRouterHead(
+      createSeoHead({ ...facts, jsonLd: [[article, breadcrumb]] })
+    );
+
+    expect(Arr.last(routed.meta)).toStrictEqual(
+      Option.some({ "script:ld+json": [article, breadcrumb] })
+    );
+  });
+});
+
 describe("page head alternates", () => {
   it("uses the alternates that the content supplies in place of the route map's", () => {
     const alternates = [

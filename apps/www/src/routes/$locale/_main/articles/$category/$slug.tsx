@@ -181,7 +181,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
           image: getOgUrl(locale, filePath),
           indexable: true,
           jsonLd: [
-            ...makeArticleJsonLd({
+            makeArticleJsonLd({
               authors: metadata.authors,
               dates: metadata,
               description: metadata.description,

@@ -39,13 +39,22 @@ const HeadAlternate = Schema.Struct({
   href: Schema.String,
 });
 
+/**
+ * One JSON-LD script: a single node, or one document that holds several nodes,
+ * such as an article and its breadcrumb trail.
+ */
+const JsonLdDocument = Schema.Union([
+  Schema.Record(Schema.String, Schema.Unknown),
+  Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+]);
+
 /** The head of one page, as the builders decide it on the server. */
 const SeoHead = Schema.Struct({
   alternates: Schema.Array(HeadAlternate),
   canonical: Schema.optionalKey(Schema.String),
   description: Schema.String,
   googlebot: Schema.Literals([GOOGLEBOT_INDEXABLE, GOOGLEBOT_PRIVATE]),
-  jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+  jsonLd: Schema.Array(JsonLdDocument),
   robots: Schema.Literals([ROBOTS_INDEXABLE, "noindex,nofollow"]),
   social: Schema.Record(Schema.String, Schema.String),
   title: Schema.String,
@@ -61,7 +70,7 @@ const PageFacts = Schema.Struct({
   description: Schema.String,
   image: Schema.String,
   indexable: Schema.Boolean,
-  jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+  jsonLd: Schema.Array(JsonLdDocument),
   locale: LocaleSchema,
   parts: Schema.Array(Schema.UndefinedOr(Schema.String)),
   type: SocialOpenGraphType,
