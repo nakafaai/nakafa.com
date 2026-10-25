@@ -6,7 +6,14 @@ import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes, openRoute } from "@/e2e/support/route";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import {
+  createSchool,
+  hostAddress,
+  inviteLearner,
+  seedSitting,
+  signInClassTeacher,
+  signInOwner,
+} from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
@@ -49,8 +56,34 @@ const EXAM_PAGE = /\/en\/try-out\/indonesia\/snbt$/;
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];
 
-/** The pages of a school host that an Owner sees. */
-const schoolPaths = ["/", "/exams", "/settings/profile", "/settings/roles"];
+/** The pages of a school host that an Owner sees without an exam: the home, the exams, and every setting. */
+const schoolPaths = [
+  "/",
+  "/exams",
+  "/settings/profile",
+  "/settings/units",
+  "/settings/periods",
+  "/settings/members",
+  "/settings/students",
+  "/settings/cohorts",
+  "/settings/invites",
+  "/settings/roles",
+  "/settings/policies",
+  "/settings/clients",
+  "/settings/audit",
+];
+
+/** The pages of one exam that its Owner sees: its rooms, its editor, its try, and one sitting with its results. */
+const examPaths = (sitting: { examId: string; sittingId: string }) => [
+  `/exams/${sitting.examId}`,
+  `/exams/${sitting.examId}/edit`,
+  `/exams/${sitting.examId}/try`,
+  `/exams/${sitting.examId}/sittings/${sitting.sittingId}`,
+  `/exams/${sitting.examId}/sittings/${sitting.sittingId}/results`,
+];
+
+/** The pages of the class that the acceptance runtime seeds for its class teacher. */
+const classPaths = ["/classes/fisika-x-1", "/classes/fisika-x-1/forum"];
 
 /**
  * Reads every header row that is drawn, the page's own or the app's bar: its
@@ -196,40 +229,115 @@ test("a signed-in learner's pages keep their headers to one row at every width",
   );
 });
 
-test("a school's pages keep their headers to one row at every width", async ({
+/**
+ * Signs one account of a school into a fresh desktop context and checks the header of each of
+ * its pages at every width, one page after another in the same tab.
+ */
+const checkSchoolPages = <E>(
+  browser: Parameters<typeof withBrowserContext>[0],
+  baseURL: string,
+  signIn: (context: BrowserContext) => Effect.Effect<void, E>,
+  address: (path: string) => string,
+  paths: readonly string[]
+) =>
+  withBrowserContext(
+    browser,
+    {
+      baseURL,
+      serviceWorkers: "block",
+      viewport: viewportSize(desktopViewport),
+    },
+    (context) =>
+      Effect.gen(function* () {
+        yield* signIn(context);
+        const page = yield* Effect.promise(() => context.newPage());
+        yield* Effect.forEach(
+          paths,
+          (path) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() =>
+                page.setViewportSize(viewportSize(desktopViewport))
+              );
+              yield* Effect.promise(() => page.goto(address(path)));
+              yield* expectOneRowHeaders(page, `school ${path}`);
+            }),
+          { discard: true }
+        );
+      })
+  );
+
+test("a school's own pages keep their headers to one row at every width", async ({
   baseURL,
   browser,
 }) => {
   const school = await Effect.runPromise(createSchool());
-  const host = `${school.slug}.localhost`;
-  const home = hostAddress(baseURL, host, "/");
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
   await Effect.runPromise(
-    withBrowserContext(
+    checkSchoolPages(
       browser,
-      {
-        baseURL: String(baseURL),
-        serviceWorkers: "block",
-        viewport: viewportSize(desktopViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          yield* signInOwner(context, school.slug, home);
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* Effect.forEach(
-            schoolPaths,
-            (path) =>
-              Effect.gen(function* () {
-                yield* Effect.promise(() =>
-                  page.setViewportSize(viewportSize(desktopViewport))
-                );
-                yield* Effect.promise(() =>
-                  page.goto(hostAddress(baseURL, host, path))
-                );
-                yield* expectOneRowHeaders(page, `school ${path}`);
-              }),
-            { discard: true }
-          );
-        })
+      String(baseURL),
+      (context) => signInOwner(context, school.slug, address("/")),
+      address,
+      schoolPaths
+    )
+  );
+});
+
+test("an exam's pages keep their headers to one row at every width, for its Owner and for its student", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `student-${school.slug}@acceptance.example.test`;
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  const cookies = await studentContext.cookies();
+  await studentContext.close();
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  await Effect.runPromise(
+    checkSchoolPages(
+      browser,
+      String(baseURL),
+      (context) => signInOwner(context, school.slug, address("/")),
+      address,
+      examPaths(sitting)
+    )
+  );
+  await Effect.runPromise(
+    checkSchoolPages(
+      browser,
+      String(baseURL),
+      (context) => Effect.promise(() => context.addCookies(cookies)),
+      address,
+      [`/sittings/${sitting.sittingId}`]
+    )
+  );
+});
+
+test("a class and its forum keep their headers to one row at every width", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  await Effect.runPromise(
+    checkSchoolPages(
+      browser,
+      String(baseURL),
+      (context) => signInClassTeacher(context, school.slug, address("/")),
+      address,
+      classPaths
     )
   );
 });
