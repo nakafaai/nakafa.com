@@ -56,7 +56,7 @@ const validCheckoutRequestValidator = Schema.Struct({
   successUrl: Schema.String,
 });
 
-export type ValidCheckoutRequest = typeof validCheckoutRequestValidator.Type;
+type ValidCheckoutRequest = typeof validCheckoutRequestValidator.Type;
 
 /** Validates the redirect a caller controls before Polar is contacted. The success URL stays on a site of this deployment. */
 export const validateCheckoutRequest = Effect.fn(
@@ -113,7 +113,7 @@ export const admitCheckoutProgram = Effect.fn("billing.checkout.admitCheckout")(
  * Returns the Polar checkout only if the account is still admitted once Polar has
  * answered. A deletion that starts during the Polar call withholds the checkout.
  */
-export const createAdmittedCheckoutSession = Effect.fn(
+const createAdmittedCheckoutSession = Effect.fn(
   "billing.checkout.createAdmittedSession"
 )(function* (operations: {
   readonly admitCheckout: Effect.Effect<
