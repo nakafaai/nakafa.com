@@ -50,7 +50,7 @@ describe("the release gate command", () => {
   });
 
   it.live(
-    "loads through tsx and refuses a production deployment before any command",
+    "loads through Bun and refuses a production deployment before any command",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -65,12 +65,8 @@ describe("the release gate command", () => {
         // instead. `development/cli.test.ts` proves each refusal in a temporary
         // folder.
         const error = yield* runAcceptanceCommand({
-          args: [
-            "--import",
-            "tsx",
-            fileURLToPath(new URL("./main.ts", import.meta.url)),
-          ],
-          command: process.execPath,
+          args: [fileURLToPath(new URL("./main.ts", import.meta.url))],
+          command: "bun",
           cwd: fileURLToPath(new URL("../..", import.meta.url)),
           env: { CONVEX_DEPLOYMENT: "prod:some-name-1" },
           operation: "Native release gate",

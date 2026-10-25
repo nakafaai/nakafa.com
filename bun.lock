@@ -153,7 +153,6 @@
         "afdocs": "0.22.2",
         "alchemy": "catalog:",
         "jsdom": "^30.1.3",
-        "tsx": "catalog:",
         "typescript": "catalog:",
         "vite": "catalog:",
         "vitest": "catalog:",
@@ -243,7 +242,6 @@
         "@vitest/coverage-istanbul": "catalog:",
         "auth": "1.6.33",
         "convex-test": "^0.0.62",
-        "tsx": "catalog:",
         "typescript": "npm:typescript@7.0.2",
         "vite": "catalog:",
         "vitest": "catalog:",
@@ -619,7 +617,6 @@
     "remark-mdx": "3.1.1",
     "remark-parse": "11.0.0",
     "sonner": "^2.0.8",
-    "tsx": "^4.23.15",
     "typescript": "7.0.2",
     "unified": "11.0.5",
     "use-intl": "4.14.9",
@@ -3050,8 +3047,6 @@
     "tsconfig-paths": ["tsconfig-paths@4.2.0", "", { "dependencies": { "json5": "2.2.3", "minimist": "1.2.8", "strip-bom": "3.0.0" } }, "sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
-
-    "tsx": ["tsx@4.23.15", "", { "dependencies": { "esbuild": "0.28.2" }, "optionalDependencies": { "fsevents": "2.3.3" }, "bin": { "tsx": "dist/cli.mjs" } }, "sha512-Yiex1Ovn8z2xPpOWckIiysV1SSyRMY9BkLF++q0yKiDxCqRhosKfMg3janKkiLBwZ5c/YryloKwGZcrEmtwxKw=="],
 
     "tuf-js": ["tuf-js@6.0.0", "", { "dependencies": { "@gar/promise-retry": "1.0.3", "@tufjs/models": "5.0.0", "debug": "4.4.3" } }, "sha512-zlJVOIO68hmgo1//X4ENEcTGfuOTAtDPi8PsTsG+FyxD85E/ww1ZnwBbWo/yCEExGpI+Kilg7Z3qCdHX2BoJTQ=="],
 
