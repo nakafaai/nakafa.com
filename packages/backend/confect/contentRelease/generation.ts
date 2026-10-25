@@ -11,22 +11,20 @@ import { Effect, Option, Schema } from "effect";
  * instead of reporting an integrity failure. This module owns the only
  * knowledge of what the retired markers look like.
  *
- * Each marker decodes the stored bytes with its own schema, so the check never
+ * Each marker decodes its stored value with its own schema, so the check never
  * widens the current contract and never narrows unknown input by hand.
  */
 
 /** Retired artifact marker: component requirements carry explicit versions. */
-const RetiredArtifactSchema = Schema.fromJsonString(
-  Schema.Struct({
-    payload: Schema.Struct({
-      requiredComponents: Schema.Array(
-        Schema.Struct({
-          version: Schema.Finite,
-        })
-      ).pipe(Schema.check(Schema.isMinLength(1))),
-    }),
-  })
-);
+const RetiredArtifactSchema = Schema.Struct({
+  payload: Schema.Struct({
+    requiredComponents: Schema.Array(
+      Schema.Struct({
+        version: Schema.Finite,
+      })
+    ).pipe(Schema.check(Schema.isMinLength(1))),
+  }),
+});
 
 /** Retired release marker: the manifest declares a renderer contract version. */
 const RetiredReleaseSchema = Schema.fromJsonString(
@@ -37,11 +35,11 @@ const RetiredReleaseSchema = Schema.fromJsonString(
   })
 );
 
-/** Fails one rollback artifact signed under a retired content contract. */
+/** Fails one parsed rollback artifact signed under a retired content contract. */
 export const requireCurrentArtifact = Effect.fn(
   "contentRelease.requireCurrentArtifact"
-)(function* (source: string, identity: string, artifactHash: string) {
-  const retired = Schema.decodeOption(RetiredArtifactSchema)(source);
+)(function* (artifact: unknown, identity: string, artifactHash: string) {
+  const retired = Schema.decodeUnknownOption(RetiredArtifactSchema)(artifact);
   if (Option.isNone(retired)) {
     return;
   }

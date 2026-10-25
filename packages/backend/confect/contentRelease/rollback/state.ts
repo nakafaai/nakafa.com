@@ -1,7 +1,4 @@
-import {
-  type ContentProjection,
-  canonicalizeContentProjection,
-} from "@nakafa/aksara-contracts/projection/spec";
+import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import { ContentUpsertSchema } from "@nakafa/aksara-contracts/release";
 import {
   type RollbackRecord,
@@ -19,15 +16,14 @@ import {
 import { requireCurrentArtifact } from "@repo/backend/confect/contentRelease/generation";
 import { loadExactVersion } from "@repo/backend/confect/contentRelease/model";
 import {
-  decodeArtifactJson,
   decodeItemJson,
-  decodeProjectionJson,
   decodeRollbackJson,
+  parseStoredJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { Effect, Schema } from "effect";
 
 type UpsertChange = typeof ContentUpsertSchema.Type;
-/** Loads one immutable signed artifact required by a rollback state. */
+/** Loads one immutable signed artifact required by a rollback state, parsed once. */
 const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
   function* (artifactHash: string, identity: string) {
     const database = yield* DatabaseReader;
@@ -44,24 +40,29 @@ const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
         `Rollback state ${identity} lost artifact ${artifactHash}.`
       );
     }
-    yield* requireCurrentArtifact(stored.artifactJson, identity, artifactHash);
-    return yield* decodeArtifactJson(stored.artifactJson);
+    const artifact = yield* parseStoredJson(
+      stored.artifactJson,
+      "Signed artifact"
+    );
+    yield* requireCurrentArtifact(artifact, identity, artifactHash);
+    return artifact;
   }
 );
-/** Builds and validates one complete body-bearing rollback state. */
+/** Decodes one complete body-bearing rollback state from its stored JSON in one strict pass. */
 const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
   change: UpsertChange,
-  projection: ContentProjection,
+  projectionJson: string,
   identity: string
 ) {
-  const state = {
-    artifact: yield* loadArtifact(change.artifactHash, identity),
-    change,
-    projection,
-  };
-  return yield* Schema.decodeEffect(RollbackUpsertStateSchema)(state, {
-    onExcessProperty: "error",
-  }).pipe(
+  const artifact = yield* loadArtifact(change.artifactHash, identity);
+  const projection = yield* parseStoredJson(
+    projectionJson,
+    "Content projection"
+  );
+  return yield* Schema.decodeUnknownEffect(RollbackUpsertStateSchema)(
+    { artifact, change, projection },
+    { onExcessProperty: "error" }
+  ).pipe(
     Effect.mapError(
       () =>
         new ReleaseError({
@@ -126,16 +127,9 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
         `Rollback source ${row.releaseId}/${row.index} lost its version.`
       );
     }
-    const state = yield* upsertState(
-      item.change,
-      yield* decodeProjectionJson(row.projectionJson),
-      `${row.releaseId}/${row.index}/current`
-    );
-    yield* validateVersion(
-      head,
-      state,
-      `${row.releaseId}/${row.index}/current`
-    );
+    const identity = `${row.releaseId}/${row.index}/current`;
+    const state = yield* upsertState(item.change, row.projectionJson, identity);
+    yield* validateVersion(head, state, identity);
     return state;
   }
 );
@@ -199,12 +193,9 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
     rendererDomain: prior.rendererDomain,
     sourcePath: prior.sourcePath,
   });
-  const state = yield* upsertState(
-    change,
-    yield* decodeProjectionJson(head.projectionJson),
-    `${row.releaseId}/${row.index}/prior`
-  );
-  yield* validateVersion(head, state, `${row.releaseId}/${row.index}/prior`);
+  const identity = `${row.releaseId}/${row.index}/prior`;
+  const state = yield* upsertState(change, head.projectionJson, identity);
+  yield* validateVersion(head, state, identity);
   if (
     prior.compilerConfigHash !== head.compilerConfigHash ||
     prior.projectionHash !== head.projectionHash ||
