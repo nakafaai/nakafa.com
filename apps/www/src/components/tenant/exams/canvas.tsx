@@ -30,10 +30,13 @@ const PAGE_LINE = 96;
  */
 const HAND_EVENTS = ["keydown", "pointerdown", "touchstart", "wheel"] as const;
 
+/** The events that put the teacher's hand in a page: a press on it, or the focus moving into it. */
+const PAGE_EVENTS = ["focusin", "pointerdown"] as const;
+
 /**
  * The canvas of the exam: every question as a page, stacked in order with one gap between them,
- * on a muted ground that scrolls. Each page is its paper at the chosen zoom, and an add button
- * below the last page adds a question at the end. The page the teacher is on follows the scroll,
+ * on a muted ground that scrolls. Each page is its paper at the chosen zoom, and an add button as
+ * wide as the pages, below the last one, adds a question at the end. The page the teacher is on follows the scroll,
  * so the footer's position names it. A frozen exam shows its pages without the add button.
  */
 export function ExamCanvas({
@@ -62,6 +65,43 @@ export function ExamCanvas({
     zoom: drawnZoom / 100,
   });
 
+  /** Chooses the page of an element the teacher pressed or focused, as a design tool chooses the page in hand. */
+  const choosePage = useCallbackRef((event: Event) => {
+    const page =
+      event.target instanceof Element
+        ? event.target.closest<HTMLElement>("[data-question]")
+        : null;
+    const { select, selected } = selection.getState();
+    Option.match(
+      Arr.findFirst(
+        exam.questions,
+        (question) => question.id === page?.dataset.question
+      ),
+      {
+        onNone: () => undefined,
+        onSome: (question) => {
+          if (selected !== question.id) {
+            select(question.id);
+          }
+        },
+      }
+    );
+  });
+  useEffect(() => {
+    const root = canvas.current;
+    if (root === null) {
+      return;
+    }
+    Arr.forEach(PAGE_EVENTS, (event) =>
+      root.addEventListener(event, choosePage)
+    );
+    return () => {
+      Arr.forEach(PAGE_EVENTS, (event) =>
+        root.removeEventListener(event, choosePage)
+      );
+    };
+  }, [canvas, choosePage]);
+
   // The teacher's hand ends the hold of a page the footer chose, so the page in view is chosen again.
   useEffect(() => {
     const root = canvas.current;
@@ -81,12 +121,17 @@ export function ExamCanvas({
 
   /**
    * Chooses the page at the top of the canvas as the one the teacher is on, when the scroll brings a
-   * new one. A page the footer holds stays chosen until the teacher's hand releases it.
+   * new one. A page the footer holds stays chosen until the teacher's hand releases it, and so does the
+   * page the teacher writes in, which a scroll that follows the caret must not take away.
    */
   const syncPage = () => {
     const root = canvas.current;
     const { pinned, select, selected } = selection.getState();
-    if (root === null || pinned) {
+    if (
+      root === null ||
+      pinned ||
+      root.querySelector("[data-page]:focus-within") !== null
+    ) {
       return;
     }
     const top = root.getBoundingClientRect().top;
@@ -126,16 +171,15 @@ export function ExamCanvas({
           />
         ))}
         {frozen ? null : (
-          <div>
-            <Button
-              onClick={() => actions.addQuestion(null)}
-              type="button"
-              variant="outline"
-            >
-              <HugeIcons aria-hidden="true" icon={Add01Icon} />
-              {t("add-question")}
-            </Button>
-          </div>
+          <Button
+            className="w-full"
+            onClick={() => actions.addQuestion(null)}
+            type="button"
+            variant="outline"
+          >
+            <HugeIcons aria-hidden="true" icon={Add01Icon} />
+            {t("add-question")}
+          </Button>
         )}
       </div>
     </section>

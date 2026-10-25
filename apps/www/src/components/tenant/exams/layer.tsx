@@ -188,11 +188,11 @@ interface TeacherLayerProps {
 }
 
 /**
- * The teacher's layer of a question, under its paper: the points, the answer key, then the rubric and
- * the explanation. The paper is what the student reads, so the layer is solid and apart from it, on a
- * muted ground with no dashed line. Each rich text keeps its height in both states: while its editor
- * is not mounted it is drawn from its document, as the editor draws it. A frozen exam shows its values
- * without changes.
+ * The teacher's layer of a question, in the editor's panel beside the canvas: the points, the answer
+ * key, then the rubric and the explanation. The paper on the canvas is what the student reads, so the
+ * layer stands on its own screen and never on the canvas. Each rich text keeps its height in both
+ * states: while its editor is not mounted it is drawn from its document, as the editor draws it. A
+ * frozen exam shows its values without changes.
  */
 export function TeacherLayer({
   live,
@@ -216,11 +216,7 @@ export function TeacherLayer({
   });
 
   return (
-    <section
-      aria-label={t("teacher-layer")}
-      className="grid gap-4 rounded-xl bg-muted p-4 md:p-6"
-    >
-      <h3 className="font-medium text-sm">{t("teacher-layer")}</h3>
+    <div className="grid gap-6">
       <PointsField
         editable={editable}
         points={question.points}
@@ -271,6 +267,6 @@ export function TeacherLayer({
           <PreviewProse article doc={notes.explanation} size="line" />
         )}
       </div>
-    </section>
+    </div>
   );
 }

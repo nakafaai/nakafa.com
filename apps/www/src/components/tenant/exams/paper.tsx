@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
@@ -18,6 +18,7 @@ import {
   useState,
 } from "react";
 import { useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,
@@ -38,6 +39,7 @@ import {
   type Question,
 } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
+import { TeacherPortal } from "@/components/tenant/exams/panel";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   PaperSketch,
@@ -178,11 +180,13 @@ type QuestionEditing = ReturnType<typeof useQuestionEditing>;
 
 /**
  * One question as a page of the canvas: a row above the paper names the question and holds its
- * actions, and the paper below it is what the student reads. A page mounts its editors while it is
- * within a viewport of the canvas and unmounts them past three viewports. Until then, and while it
- * is far away, the paper shows the same document as drawn text, so the page keeps its shape. The
- * drawn paper stays until the prompt's editor loads. A page the server has not saved yet shows its
- * options only, and they take no change until it answers.
+ * actions, and the paper below it is what the student reads, with nothing else on the canvas. The
+ * chosen page draws its teacher layer into the editor's panel. A page mounts its editors while it is within a viewport of the canvas and
+ * unmounts them past three viewports, and only once Convex holds the session, since the server
+ * opens a text only for a signed-in editor. Until then, and while it is far away, the paper shows
+ * the same document as drawn text, so the page keeps its shape. The drawn paper stays until the
+ * prompt's editor loads. A page the server has not saved yet shows its options only, and they take
+ * no change until it answers.
  */
 export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const t = useTranslations("Exams");
@@ -195,6 +199,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const chosen = useExamSelection((state) => state.selected === question.id);
   const focused = useExamSelection((state) => state.focus === question.id);
   const settleFocus = useExamSelection((state) => state.settleFocus);
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const saved = !(awaiting || isPlaceholderId(question.prompt));
   const number = index + 1;
   const page = useRef<HTMLElement>(null);
@@ -214,7 +219,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
     }
   }, [focused, settleFocus]);
 
-  const live = mounted && saved;
+  const live = mounted && saved && isSettled;
   const read = reached && !live;
   const prompt = usePageDocument({
     documentId: question.prompt,
@@ -234,7 +239,14 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
     read,
     saved,
   });
-  const paper = <PaperSketch doc={prompt} question={question} withControls />;
+  const paper = (
+    <PaperSketch
+      doc={prompt}
+      question={question}
+      selected={chosen}
+      withControls
+    />
+  );
 
   return (
     <section
@@ -270,29 +282,45 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
       </div>
       {live ? (
         <Suspense fallback={paper}>
-          <LivePaper editing={editing} number={number} question={question} />
+          <LivePaper
+            chosen={chosen}
+            editing={editing}
+            number={number}
+            question={question}
+          />
         </Suspense>
       ) : (
         paper
       )}
-      <TeacherLayer
-        live={live}
-        notes={{ explanation, rubric }}
-        number={number}
-        onMark={editing.markOption}
-        question={question}
-        shown={editing.displayed}
-      />
+      {chosen ? (
+        <TeacherPortal>
+          <TeacherLayer
+            live={live}
+            notes={{ explanation, rubric }}
+            number={number}
+            onMark={editing.markOption}
+            question={question}
+            shown={editing.displayed}
+          />
+        </TeacherPortal>
+      ) : null}
     </section>
   );
 }
 
-/** The paper of a page with its editors: the prompt as an editor, then each option with its controls. */
+/**
+ * The paper of a page with its editors: the prompt as an editor, then each option with its controls,
+ * then the action that adds an option. The action shows on the chosen page alone, as a design tool
+ * shows its handles on the page in hand, and its row keeps its room on every page, so choosing a
+ * page moves nothing.
+ */
 function LivePaper({
+  chosen,
   editing,
   number,
   question,
 }: {
+  chosen: boolean;
   editing: QuestionEditing;
   number: number;
   question: Question;
@@ -321,51 +349,50 @@ function LivePaper({
         ),
     });
 
+  const canAddOption =
+    choice !== null && choice.options.length < CHOICE_OPTIONS_MAX && !frozen;
+
   return (
-    <>
-      <QuestionPaper>
-        <ExamText
-          documentId={question.prompt}
-          key={`${question.prompt}-${frozen}`}
-          label={t("question-text", { number })}
-          placeholder={t("prompt-placeholder")}
-        />
-        {choice === null ? null : (
-          <PaperOptions>
-            {Arr.map(choice.options, (option, index) => (
-              <OptionRow
-                key={option.id}
-                label={savedLabel(option)}
-                letter={optionLetter(index)}
-                locked={frozen}
-                number={number}
-                onRemove={
-                  choice.options.length > CHOICE_OPTIONS_MIN
-                    ? () =>
-                        saveAnswers((draft) => ({
-                          answers: withOptionRemoved(draft.answers, option.id),
-                          key: keyWithoutOption(draft.key, option.id),
-                        }))
-                    : null
-                }
-                onSave={(label: OptionLabel, unstored: () => void) =>
-                  saveAnswers(
-                    (draft) => ({
-                      answers: withOptionLabel(draft.answers, option.id, label),
-                      key: draft.key,
-                    }),
-                    unstored
-                  )
-                }
-              />
-            ))}
-          </PaperOptions>
-        )}
-      </QuestionPaper>
-      {choice !== null &&
-      choice.options.length < CHOICE_OPTIONS_MAX &&
-      !frozen ? (
-        <div>
+    <QuestionPaper selected={chosen}>
+      <ExamText
+        documentId={question.prompt}
+        key={`${question.prompt}-${frozen}`}
+        label={t("question-text", { number })}
+        placeholder={t("prompt-placeholder")}
+      />
+      {choice === null ? null : (
+        <PaperOptions>
+          {Arr.map(choice.options, (option, index) => (
+            <OptionRow
+              key={option.id}
+              label={savedLabel(option)}
+              letter={optionLetter(index)}
+              locked={frozen}
+              number={number}
+              onRemove={
+                choice.options.length > CHOICE_OPTIONS_MIN
+                  ? () =>
+                      saveAnswers((draft) => ({
+                        answers: withOptionRemoved(draft.answers, option.id),
+                        key: keyWithoutOption(draft.key, option.id),
+                      }))
+                  : null
+              }
+              onSave={(label: OptionLabel, unstored: () => void) =>
+                saveAnswers(
+                  (draft) => ({
+                    answers: withOptionLabel(draft.answers, option.id, label),
+                    key: draft.key,
+                  }),
+                  unstored
+                )
+              }
+            />
+          ))}
+        </PaperOptions>
+      )}
+      {canAddOption ? (
+        <div className={chosen ? undefined : "invisible"}>
           <Button
             onClick={() =>
               saveAnswers((draft) => ({
@@ -375,12 +402,13 @@ function LivePaper({
             }
             size="sm"
             type="button"
-            variant="outline"
+            variant="ghost"
           >
+            <HugeIcons aria-hidden="true" icon={Add01Icon} />
             {t("option-add")}
           </Button>
         </div>
       ) : null}
-    </>
+    </QuestionPaper>
   );
 }

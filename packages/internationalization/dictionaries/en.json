@@ -281,6 +281,7 @@
     "explanation": "Explanation",
     "explanation-of": "Explanation of question {number}",
     "explanation-placeholder": "Why the answer is correct.",
+    "reorder": "Drag to reorder",
     "reorder-of": "Reorder question {number}",
     "option-placeholder": "Option text",
     "key-option": "Mark option {letter} of question {number} as correct",

@@ -9,6 +9,7 @@ import {
 import { DocumentInsert } from "@repo/design-system/components/editor/insert";
 import { RichEditorStyle } from "@repo/design-system/components/editor/style";
 import { DocumentTable } from "@repo/design-system/components/editor/table";
+import { ToolHint } from "@repo/design-system/components/editor/tip";
 import {
   RichEditorBlocks,
   RichEditorHistory,
@@ -76,10 +77,13 @@ function BarGroup(props: Omit<ComponentProps<"div">, "className">) {
  * keeps them open until the writer has chosen. Until the editor exists, every control waits.
  */
 function EditorBar({
+  align,
   className,
   groups,
   more,
 }: {
+  /** Where the controls gather in the row: at its start, or in its middle over a page. */
+  align?: "center" | "start";
   /** Extra classes of the bar, such as its place in the page. */
   className?: string;
   /** The groups of controls, the one a writer needs most first. */
@@ -139,7 +143,7 @@ function EditorBar({
       data-slot="editor-toolbar"
       role="toolbar"
     >
-      <div className={editorRow()} ref={row}>
+      <div className={editorRow({ align })} ref={row}>
         {Arr.map(groups, ({ name, tools }) => (
           <BarGroup
             data-group={name}
@@ -153,19 +157,20 @@ function EditorBar({
       {Arr.isReadonlyArrayNonEmpty(wrapped) ? (
         <BarGroup>
           <Popover onOpenChange={setOpen} open={open}>
-            <PopoverTrigger
-              render={
-                <Button
-                  aria-label={more}
-                  size="icon-sm"
-                  title={more}
-                  type="button"
-                  variant="ghost"
-                />
-              }
-            >
-              <HugeIcons icon={MoreVerticalIcon} />
-            </PopoverTrigger>
+            <ToolHint label={more}>
+              <PopoverTrigger
+                render={
+                  <Button
+                    aria-label={more}
+                    size="icon-sm"
+                    type="button"
+                    variant="ghost"
+                  />
+                }
+              >
+                <HugeIcons icon={MoreVerticalIcon} />
+              </PopoverTrigger>
+            </ToolHint>
             <PopoverContent
               align="end"
               className="flex w-auto flex-col gap-1 p-1.5"
@@ -240,8 +245,8 @@ interface DocumentToolbarProps {
 }
 
 /**
- * The toolbar of an assessment document, on one line: history, the style of the paragraph,
- * marks, lists, quote and code block, and tables. It offers only the blocks and marks of the
+ * The toolbar of an assessment document, on one line in the middle of its bar: history, the style of
+ * the paragraph, marks, lists, quote and code block, and tables. It offers only the blocks and marks of the
  * contract. It is drawn by its caller, outside the document, and acts on the editor it reads
  * through `useCurrentEditor`.
  */
@@ -249,6 +254,7 @@ export function DocumentToolbar({ editor, labels }: DocumentToolbarProps) {
   return (
     <EditorContext value={{ editor }}>
       <EditorBar
+        align="center"
         groups={[
           { name: "history", tools: <RichEditorHistory labels={labels} /> },
           { name: "style", tools: <RichEditorStyle labels={labels} /> },

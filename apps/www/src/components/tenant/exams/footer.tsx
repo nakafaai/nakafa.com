@@ -8,11 +8,17 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Slider } from "@repo/design-system/components/ui/slider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
 import type { Question } from "@/components/tenant/exams/optimistic";
+import { ExamPanelButton } from "@/components/tenant/exams/panel";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { QuestionPreview } from "@/components/tenant/exams/preview";
 import {
@@ -67,9 +73,10 @@ interface ExamFooterProps {
 
 /**
  * The footer of the editor, a full-width bar under the canvas, as a design tool keeps its
- * navigation there: a toggle for a strip of the pages, the position of the page in view, the zoom
- * (on a wide screen only, since a phone pinches), a grid of every page, and fullscreen where the
- * browser allows it. The strip and the grid go to a page, and the page they choose becomes the one
+ * navigation there: on a phone, the action that opens the teacher's panel at its start; then at its
+ * end the zoom (on a wide screen only, since a phone pinches), a toggle for a strip of the pages, the
+ * position of the page in view, a grid of every page, and fullscreen where the browser allows it.
+ * Each icon names its action in a tooltip. The strip and the grid go to a page, and the page they choose becomes the one
  * the teacher is on.
  */
 export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
@@ -171,19 +178,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
         </nav>
       ) : null}
       <div className="flex min-h-12 items-center gap-2 px-3 py-1.5">
-        <Button
-          aria-pressed={pagesOpen}
-          onClick={() => setPagesOpen((open) => !open)}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons aria-hidden="true" icon={Layout01Icon} />
-          {t("pages")}
-        </Button>
-        <span className="text-muted-foreground text-sm tabular-nums">
-          {current} / {total}
-        </span>
+        <ExamPanelButton />
         <div className="ms-auto flex items-center gap-2">
           <div className="hidden items-center gap-2 text-sm md:flex">
             <Slider
@@ -198,25 +193,52 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
             <output className="w-12 text-end tabular-nums">{zoom}%</output>
           </div>
           <Button
-            aria-label={t("grid")}
-            onClick={() => setGridOpen(true)}
-            size="icon-sm"
+            aria-pressed={pagesOpen}
+            onClick={() => setPagesOpen((open) => !open)}
+            size="sm"
             type="button"
             variant="ghost"
           >
-            <HugeIcons aria-hidden="true" icon={GridViewIcon} />
+            <HugeIcons aria-hidden="true" icon={Layout01Icon} />
+            {t("pages")}
           </Button>
-          <Button
-            aria-label={t("fullscreen")}
-            aria-pressed={fullscreen}
-            disabled={!canFullscreen}
-            onClick={toggleFullscreen}
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
-          </Button>
+          <span className="text-muted-foreground text-sm tabular-nums">
+            {current} / {total}
+          </span>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label={t("grid")}
+                  onClick={() => setGridOpen(true)}
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeIcons aria-hidden="true" icon={GridViewIcon} />
+            </TooltipTrigger>
+            <TooltipContent>{t("grid")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label={t("fullscreen")}
+                  aria-pressed={fullscreen}
+                  disabled={!canFullscreen}
+                  onClick={toggleFullscreen}
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeIcons aria-hidden="true" icon={FullScreenIcon} />
+            </TooltipTrigger>
+            <TooltipContent>{t("fullscreen")}</TooltipContent>
+          </Tooltip>
         </div>
       </div>
       <ResponsiveDialog open={gridOpen} setOpen={setGridOpen} title={t("grid")}>

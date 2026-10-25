@@ -2,6 +2,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
+import { CHOICE_OPTIONS_MAX } from "@repo/backend/confect/exams/question";
 import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import {
   editorContent,
@@ -18,11 +19,13 @@ import {
   type OptionLabel,
   optionLetter,
 } from "@/components/tenant/exams/answer";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import {
   ControlRoom,
+  OptionAddRoom,
   PaperOption,
   PaperOptions,
   QuestionPaper,
@@ -199,21 +202,32 @@ function PaperChoice({
  * them. The page draws it when its editors are not mounted, and the thumbnails draw it small, so a
  * page and its thumbnail look alike. The prompt keeps its room even before its document is known, so
  * the paper takes the height it takes once its editor mounts. A page passes `withControls`, which keeps
- * the room of its option controls, so an option is as wide on the paper as it is when the editor mounts.
+ * the room of its option controls and of the action that adds an option, so the paper is as wide and as
+ * tall as it is when the editor mounts.
  */
 export function PaperSketch({
   doc,
   question,
+  selected = false,
   withControls = false,
 }: {
   doc: Option.Option<Node>;
   question: Question;
+  selected?: boolean;
   withControls?: boolean;
 }) {
+  const { exam } = useExam();
   const choice = choiceOf(question.answers);
+  const addsOption =
+    withControls &&
+    !isLocked(exam) &&
+    Option.exists(
+      choice,
+      (current) => current.options.length < CHOICE_OPTIONS_MAX
+    );
 
   return (
-    <QuestionPaper>
+    <QuestionPaper selected={selected}>
       <PreviewProse article doc={doc} size="page" />
       {Option.isSome(choice) ? (
         <PaperOptions>
@@ -227,6 +241,7 @@ export function PaperSketch({
           ))}
         </PaperOptions>
       ) : null}
+      {addsOption ? <OptionAddRoom /> : null}
     </QuestionPaper>
   );
 }

@@ -281,6 +281,7 @@
     "explanation": "Pembahasan",
     "explanation-of": "Pembahasan soal {number}",
     "explanation-placeholder": "Mengapa jawabannya benar.",
+    "reorder": "Seret untuk mengurutkan",
     "reorder-of": "Urutkan soal {number}",
     "option-placeholder": "Teks pilihan",
     "key-option": "Tandai pilihan {letter} soal {number} sebagai kunci",
