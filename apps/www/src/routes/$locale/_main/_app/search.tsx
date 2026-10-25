@@ -1,30 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back";
 import { signedInHead } from "@/lib/account/head";
 import { searchScreenFn } from "@/lib/account/home.functions";
-import { SearchInput } from "@/lib/nuqs/search";
+import { SearchInput } from "@/lib/search/input";
 
 export const Route = createFileRoute("/$locale/_main/_app/search")({
   validateSearch: Schema.toStandardSchemaV1(SearchInput),
+  search: { middlewares: [stripSearchParams({ q: "" })] },
   loader: ({ params }) => searchScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>
     loaderData === undefined ? {} : signedInHead(loaderData.seo),
-  component: SearchPage,
+  component: SearchScreen,
 });
-
-/** The search screen reads its query state through the URL-state adapter it mounts. */
-function SearchPage() {
-  return (
-    <NuqsAdapter>
-      <SearchScreen />
-    </NuqsAdapter>
-  );
-}
 
 function SearchScreen() {
   const { name } = Route.useLoaderData();
