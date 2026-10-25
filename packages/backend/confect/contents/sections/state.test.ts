@@ -16,10 +16,10 @@ const ACTIVE = KNOWLEDGE_RELEASE.releaseId;
 /** What a test does to the state of the index of one deployment. */
 function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
   /** Finishes the build and gives, with the answer, how many documents the transaction wrote. */
-  const finishMeasured = (releaseId: string, model = MODEL) =>
+  const finishMeasured = (releaseId: string, model = MODEL, missing = 0) =>
     t.mutation(async (ctx) => {
       const result = await Effect.runPromise(
-        finishBuild({ model, releaseId }).pipe(
+        finishBuild({ missing, model, releaseId }).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
           )
@@ -28,8 +28,8 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
       const metrics = await ctx.meta.getTransactionMetrics();
       return { documentsWritten: metrics.documentsWritten.used, result };
     });
-  const finish = async (releaseId: string, model = MODEL) =>
-    (await finishMeasured(releaseId, model)).result;
+  const finish = async (releaseId: string, model = MODEL, missing = 0) =>
+    (await finishMeasured(releaseId, model, missing)).result;
   /** Asks whether the index may answer and gives, with the answer, how many documents the transaction read. */
   const readyMeasured = (model = MODEL) =>
     t.mutation(async (ctx) => {
@@ -132,6 +132,18 @@ describe("section index state", () => {
     expect(await records()).toEqual([first]);
   });
 
+  it("records how many sections the build left out, and writes the record again when that count changes", async () => {
+    const { finish, finishMeasured, records } = await setup();
+    await finish(ACTIVE);
+    expect(await finishMeasured(ACTIVE, MODEL, 2)).toEqual({
+      documentsWritten: 1,
+      result: { recorded: true },
+    });
+    expect(await records()).toMatchObject([
+      { key: "primary", missing: 2, model: MODEL, releaseId: ACTIVE },
+    ]);
+  });
+
   it("replaces the record when the model that embedded the index changed", async () => {
     const { finish, ready, records } = await setup();
     await finish(ACTIVE);
@@ -169,5 +181,23 @@ describe("section index state", () => {
   it("is not ready while no release is active", async () => {
     const { ready } = against(createConvexTestWithBetterAuth());
     expect(await ready()).toBe(false);
+  });
+
+  it("refuses a record of a finished build that does not say how many sections it left out", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(seedKnowledge);
+    await expect(
+      t.mutation((ctx) =>
+        // @ts-expect-error a record without its count does not compile
+        ctx.db.insert("contentSectionState", {
+          key: "primary",
+          model: MODEL,
+          releaseId: ACTIVE,
+        })
+      )
+    ).rejects.toThrow();
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toEqual([]);
   });
 });

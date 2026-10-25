@@ -290,9 +290,9 @@ build:
   versions, whose head is read twice.
 - Documents written: 14,335, which are 12,822 sections, 1,512 records, and the
   record of the build.
-- Embedding calls: 356, which are 231 for the lessons in 195 steps and 125 for the
-  Quran in 114 steps, for 12,822 texts. A step embeds the sections of its own
-  documents in batches of 64. `quran.test.ts` pins the calls of one surah.
+- Embedding calls: 12,822, one for each text, since each text goes in a request of
+  its own. A step embeds the sections of its own documents, four requests at a
+  time. `embed.test.ts` pins one request for each text.
 - Bytes written: the vectors are 88.7 MB (12,822 times 6,914), the text of the
   lessons is 12.9 MB, the text of the Quran is estimated at 12 MB from the size of
   its sources, and the other fields of a row are about 0.7 KB each, 9 MB, so about
