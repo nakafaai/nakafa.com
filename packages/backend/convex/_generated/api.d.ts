@@ -11275,6 +11275,21 @@ export declare const internal: {
           }
       >;
     };
+    migration: {
+      markRetiredGeneration: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        {
+          outcome:
+            | "marked"
+            | "alreadyRecorded"
+            | "noActiveRelease"
+            | "unverifiable"
+            | "notRetired";
+        }
+      >;
+    };
     models: {
       restart: FunctionReference<
         "mutation",
