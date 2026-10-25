@@ -52,7 +52,7 @@ const WorkflowJobJson = Schema.fromJsonString(WorkflowJobSchema);
 const SETUP_NODE_ACTION =
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020";
 const UPLOAD_ACTION =
-  "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
+  "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9";
 /** Digest of the decoded publish job after a complete OIDC boundary review, at Node 24.22.1; the reviewed job at 24.21.0 differs only in that version. */
 const TRUSTED_PUBLISH_SHA256 =
   "7d997a44c863215f3fa7baa0c7286ba16f817115b7e1fe17be386904a138d08c";
@@ -67,7 +67,7 @@ const REQUIRED_BUILD_SOURCE = [
   "npm pack ./packages/cli",
   "bunx --no-install esbuild scripts/provenance/main.ts",
   "createRequire(import.meta.url)",
-  "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+  "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
   "cli-package",
   "cli-verifier",
   "provenance.mjs",

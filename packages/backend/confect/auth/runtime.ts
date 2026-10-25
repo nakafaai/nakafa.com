@@ -6,6 +6,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import authConfig from "@repo/backend/confect/auth";
 import { authComponent } from "@repo/backend/confect/auth/client";
 import { readGoogleAuthConfig } from "@repo/backend/confect/auth/config";
+import { readAuthCookiePrefix } from "@repo/backend/confect/auth/cookie";
 import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
 import {
   deletionUnavailableError,
@@ -209,6 +210,7 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
     const auth = betterAuth({
       ...options,
       advanced: {
+        cookiePrefix: readAuthCookiePrefix(siteUrl),
         // The cookie domain is the host of the request's site, so every school
         // host under it shares the session (ADR 0026).
         crossSubDomainCookies: { enabled: true },
