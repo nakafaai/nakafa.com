@@ -75,7 +75,14 @@ export const forwardAgentEdge = Effect.fn("agent.edge.forward")(function* (
   const target = new URL(`${originPath}${url.search}`, origin);
   const upstream = yield* HttpClient.execute(
     HttpClientRequest.make(method)(target, {
-      body: request.body === null ? HttpBody.empty : HttpBody.raw(request.body),
+      // Effect deletes a Content-Type header that its body does not name, so the
+      // body carries the caller's media type and the origin sees it.
+      body:
+        request.body === null
+          ? HttpBody.empty
+          : HttpBody.raw(request.body, {
+              contentType: request.headers.get("content-type") ?? undefined,
+            }),
       headers: agentEdgeRequestHeaders(request.headers, contract, secret),
     })
   ).pipe(
