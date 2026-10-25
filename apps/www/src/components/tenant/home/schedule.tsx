@@ -43,7 +43,11 @@ export function ScheduleCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-schedule")} />
+      <Dashboard.CellHeader
+        icon={Calendar03Icon}
+        title={t("tile-schedule")}
+        tone="info"
+      />
       <div className="flex gap-1 px-6">
         {Arr.map(days, (day, index) => (
           <ScheduleColumn day={day} index={index} key={day.key} />
@@ -79,7 +83,7 @@ function ScheduleColumn({
       aria-current={day.today ? "date" : undefined}
       className="flex min-w-0 flex-1 flex-col gap-1"
     >
-      <div className="flex min-h-24 flex-col justify-end gap-1">
+      <div className="flex min-h-16 flex-col justify-end gap-1">
         {Arr.map(day.rooms, (room) => (
           <ScheduleBar key={room.id} room={room} />
         ))}
@@ -105,7 +109,7 @@ function ScheduleBar({ room }: { room: ScheduleItem }) {
   return (
     <TargetLink
       aria-label={`${room.title}, ${room.room}`}
-      className="-my-2 box-content block h-2 rounded-xs bg-primary bg-clip-content py-2 transition-opacity ease-out hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="-my-2 box-content block h-2 rounded-xs bg-info bg-clip-content py-2 transition-opacity ease-out hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
       target={room.target}
       title={room.title}
     />
@@ -120,6 +124,7 @@ function ScheduleRow({ item }: { item: ScheduleItem }) {
       icon={Calendar03Icon}
       render={<TargetLink target={item.target} title={item.title} />}
       title={item.title}
+      tone="info"
       trailing={item.trailing}
     />
   );

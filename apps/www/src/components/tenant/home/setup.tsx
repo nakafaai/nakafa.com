@@ -112,7 +112,7 @@ export function SetupCell({ span }: { span: CellSpan }) {
     <ReadBoundary
       fallback={(failure) => (
         <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-          <Dashboard.CellHeader title={t("tile-setup")} />
+          <Dashboard.CellHeader icon={School01Icon} title={t("tile-setup")} />
           {failure}
         </Dashboard.Cell>
       )}
@@ -140,7 +140,7 @@ function SetupRows({ span }: { span: CellSpan }) {
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-setup")}>
+      <Dashboard.CellHeader icon={School01Icon} title={t("tile-setup")}>
         <span className="text-muted-foreground text-sm tabular-nums">
           {progress}
         </span>

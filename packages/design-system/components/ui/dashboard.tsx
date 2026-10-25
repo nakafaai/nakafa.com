@@ -9,6 +9,7 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import type { ActSchema } from "@repo/mascot/nina/act";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
+import { Schema } from "effect";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 /**
@@ -29,7 +30,7 @@ export type WideColumns = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
  * breakpoint.
  */
 const cellVariants = cva(
-  "flex min-w-0 flex-col gap-4 bg-card py-6 text-card-foreground",
+  "flex min-w-0 flex-col gap-4 bg-card py-6 text-card-foreground has-[>[data-slot=dashboard-list]:last-child]:pb-3",
   {
     defaultVariants: { linked: false, narrow: 1, wide: 12 },
     variants: {
@@ -59,8 +60,51 @@ const cellVariants = cva(
   }
 );
 
+/** The icon data of a row's icon, which the design system's icon takes. */
+type RowIcon = ComponentProps<typeof HugeIcons>["icon"];
+
+/**
+ * The tone of an icon's tile, which ties a figure to the list that shows it, so a page reads at a glance: success for
+ * what runs now, info for what is scheduled, warning for what waits on the viewer, and neutral for the rest. The tone
+ * colours the tile, never the text.
+ */
+export const DashboardTone = Schema.Literals([
+  "info",
+  "neutral",
+  "success",
+  "warning",
+]);
+
+/** The tile of an icon: small beside a cell's title, larger at the start of a row. */
+const iconTileVariants = cva(
+  "flex shrink-0 items-center justify-center rounded-md text-foreground",
+  {
+    defaultVariants: { size: "row", tone: "neutral" },
+    variants: {
+      size: {
+        header: "size-6 [&_svg]:size-3.5",
+        row: "size-8 [&_svg]:size-4",
+      },
+      tone: {
+        info: "bg-info/25",
+        neutral: "bg-muted",
+        success: "bg-success/25",
+        warning: "bg-warning/30",
+      } satisfies Record<typeof DashboardTone.Type, string>,
+    },
+  }
+);
+
+/** The bar under a row's text, set in by the icon's tile and its gap, so the bar starts where the text starts. */
+const rowFooterVariants = cva("min-w-0", {
+  defaultVariants: { indented: false },
+  variants: {
+    indented: { false: "", true: "ps-11" },
+  },
+});
+
 /** A row of a list. A row that opens a page lights up on hover, the way a link row does. */
-const rowVariants = cva("group flex min-w-0 items-center gap-3 px-6 py-3", {
+const rowVariants = cva("group flex min-w-0 flex-col gap-2 px-6 py-3", {
   defaultVariants: { linked: false },
   variants: {
     linked: {
@@ -116,18 +160,34 @@ function DashboardCell({
   });
 }
 
-/** The title of a cell at its top left, and one meta or link at its right. A long title wraps rather than cuts off. */
+/**
+ * The title of a cell at its top left, after its icon in the tone of what the cell holds, and one meta or link at its
+ * right. A long title wraps rather than cuts off.
+ */
 function DashboardCellHeader({
   children,
+  icon,
   title,
+  tone,
 }: {
   /** One meta or link at the right of the title. */
   children?: ReactNode;
+  /** The icon of what the cell holds, the same as its rows'. */
+  icon?: RowIcon;
   title: string;
+  /** The tone of the icon's tile. */
+  tone?: typeof DashboardTone.Type;
 }) {
   return (
     <div className="flex min-w-0 items-center justify-between gap-4 px-6">
-      <h3 className="min-w-0 text-balance font-medium text-base">{title}</h3>
+      <div className="flex min-w-0 items-center gap-2.5">
+        {icon === undefined ? null : (
+          <span className={iconTileVariants({ size: "header", tone })}>
+            <HugeIcons icon={icon} />
+          </span>
+        )}
+        <h3 className="min-w-0 text-balance font-medium text-base">{title}</h3>
+      </div>
       {children}
     </div>
   );
@@ -178,19 +238,24 @@ function DashboardMeter({
   );
 }
 
-/** The rows of a cell, divided by hairlines and set off from the cell's header. */
+/**
+ * The rows of a cell, divided by hairlines and set off from the cell's header. A cell that ends with its list keeps as
+ * much room under the last row as above its title.
+ */
 function DashboardList({ children }: { children: ReactNode }) {
-  return <ul className="divide-y border-t">{children}</ul>;
+  return (
+    <ul className="divide-y border-t" data-slot="dashboard-list">
+      {children}
+    </ul>
+  );
 }
-
-/** The icon data of a row's icon, which the design system's icon takes. */
-type RowIcon = ComponentProps<typeof HugeIcons>["icon"];
 
 /**
  * One row of a list: an icon in a tile, two lines that truncate, an optional trailing value such as a relative time,
- * and an optional action. `render` makes the row's text a link to the page it shows. `footer` sits under the two
- * lines, for a bar of progress. The action stays outside the link, so a row may hold a button. The trailing value and
- * the detail take the muted colour, and the accent colour on hover, so they read on a lit row.
+ * and an optional action. The tile stands centred on the two lines, so it lines up with the text it names. `render`
+ * makes the row's text a link to the page it shows. `footer` sits under the two lines, where the text starts, for a
+ * bar of progress. The action stays outside the link, so a row may hold a button. The trailing value and the detail
+ * take the muted colour, and the accent colour on hover, so they read on a lit row.
  */
 function DashboardRow({
   action,
@@ -199,6 +264,7 @@ function DashboardRow({
   icon,
   render,
   title,
+  tone,
   trailing,
 }: {
   /** An action of the row, such as a button, which sits outside the link. */
@@ -212,20 +278,29 @@ function DashboardRow({
   /** The element that the row's text renders as, such as a link to the page it opens. */
   render?: ReactElement | undefined;
   title: string;
+  /** The tone of the icon's tile, the same as its cell's. */
+  tone?: typeof DashboardTone.Type;
   /** A value at the row's end, such as a relative time, which shares the link. */
   trailing?: ReactNode;
 }) {
   return (
     <li className={rowVariants({ linked: render !== undefined })}>
-      <DashboardRowText
-        detail={detail}
-        footer={footer}
-        icon={icon}
-        render={render}
-        title={title}
-        trailing={trailing}
-      />
-      {action}
+      <div className="flex min-w-0 items-center gap-3">
+        <DashboardRowText
+          detail={detail}
+          icon={icon}
+          render={render}
+          title={title}
+          tone={tone}
+          trailing={trailing}
+        />
+        {action}
+      </div>
+      {footer === undefined || footer === null ? null : (
+        <div className={rowFooterVariants({ indented: icon !== undefined })}>
+          {footer}
+        </div>
+      )}
     </li>
   );
 }
@@ -233,17 +308,17 @@ function DashboardRow({
 /** The text of a row, which is a link when the row opens a page and a plain block when it does not. */
 function DashboardRowText({
   detail,
-  footer,
   icon,
   render,
   title,
+  tone,
   trailing,
 }: {
   detail: string | undefined;
-  footer: ReactNode;
   icon: RowIcon | undefined;
   render: ReactElement | undefined;
   title: string;
+  tone: typeof DashboardTone.Type | undefined;
   trailing: ReactNode;
 }) {
   return useRender({
@@ -252,21 +327,20 @@ function DashboardRowText({
       children: (
         <>
           {icon === undefined ? null : (
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
-              <HugeIcons className="size-4" icon={icon} />
+            <span className={iconTileVariants({ size: "row", tone })}>
+              <HugeIcons icon={icon} />
             </span>
           )}
-          <span className="grid min-w-0 flex-1 gap-1">
+          <span className="grid min-w-0 flex-1 gap-0.5">
             <span className="truncate font-medium">{title}</span>
             {detail === undefined ? null : (
               <span className="truncate text-muted-foreground text-xs group-hover:text-accent-foreground">
                 {detail}
               </span>
             )}
-            {footer}
           </span>
           {trailing === undefined || trailing === null ? null : (
-            <span className="shrink-0 text-muted-foreground text-sm group-hover:text-accent-foreground">
+            <span className="shrink-0 text-muted-foreground text-sm tabular-nums group-hover:text-accent-foreground">
               {trailing}
             </span>
           )}

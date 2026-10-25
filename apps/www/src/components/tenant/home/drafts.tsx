@@ -35,7 +35,7 @@ export function DraftsCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-drafts")} />
+      <Dashboard.CellHeader icon={PencilEdit02Icon} title={t("tile-drafts")} />
       <Dashboard.List>
         {Arr.map(drafts, (draft) => (
           <DraftRow
