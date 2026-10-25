@@ -19,7 +19,7 @@ export const importAcceptanceRows = Effect.fn("contentAcceptance.importRows")(
     const runtime = yield* readLocalRuntime(root);
     if (runtime === undefined) {
       return yield* acceptanceRuntimeError(
-        "Run pnpm acceptance:prepare and start acceptance before importing rows."
+        "Run bun run acceptance:prepare and start acceptance before importing rows."
       );
     }
     yield* runLocalConvex(runtime, "Row import", [

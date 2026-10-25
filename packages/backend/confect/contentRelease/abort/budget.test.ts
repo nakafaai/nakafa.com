@@ -42,6 +42,22 @@ function transactionMetrics(
       remaining: overrides.scheduledFunctionArgsBytes ?? defaultRemaining,
       used: 0,
     },
+    fileReadBytes: {
+      remaining: overrides.fileReadBytes ?? defaultRemaining,
+      used: 0,
+    },
+    fileWriteBytes: {
+      remaining: overrides.fileWriteBytes ?? defaultRemaining,
+      used: 0,
+    },
+    filesRead: {
+      remaining: overrides.filesRead ?? defaultRemaining,
+      used: 0,
+    },
+    filesWritten: {
+      remaining: overrides.filesWritten ?? defaultRemaining,
+      used: 0,
+    },
   };
 }
 

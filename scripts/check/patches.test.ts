@@ -45,11 +45,7 @@ describe("dependency patch policy", () => {
       const root = yield* fileSystem.makeTempDirectoryScoped({
         prefix: "patch-policy-clean-",
       });
-      yield* writeFixture(
-        root,
-        "pnpm-workspace.yaml",
-        "packages:\n  - apps/*\n"
-      );
+      yield* writeFixture(root, "package.json", "{}\n");
       yield* writeFixture(root, "apps/web/notes.md", "patch notes\n");
       for (const directory of [
         ".cache/acceptance",
@@ -69,28 +65,30 @@ describe("dependency patch policy", () => {
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect("rejects application patches and registered pnpm patches", () =>
-    Effect.gen(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const root = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "patch-policy-dirty-",
-      });
-      yield* writeFixture(
-        root,
-        "pnpm-workspace.yaml",
-        "patchedDependencies:\n  react: patches/react.patch\n"
-      );
-      yield* writeFixture(root, "patches/react.patch", "diff\n");
-      yield* writeFixture(root, "apps/web/fix.patch", "diff\n");
+  it.effect(
+    "rejects application patches and registered dependency patches",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const root = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "patch-policy-dirty-",
+        });
+        yield* writeFixture(
+          root,
+          "package.json",
+          '{ "patchedDependencies": { "react": "patches/react.patch" } }\n'
+        );
+        yield* writeFixture(root, "patches/react.patch", "diff\n");
+        yield* writeFixture(root, "apps/web/fix.patch", "diff\n");
 
-      assert.deepStrictEqual(yield* checkFixture(root), {
-        status: 1,
-        stderr: [
-          "Application dependency patches require explicit review: apps/web/fix.patch, patches/react.patch.\n" +
-            "pnpm-workspace.yaml must not register dependency patches.\n",
-        ],
-        stdout: [],
-      });
-    }).pipe(Effect.provide(NodeServices.layer))
+        assert.deepStrictEqual(yield* checkFixture(root), {
+          status: 1,
+          stderr: [
+            "Application dependency patches require explicit review: apps/web/fix.patch, patches/react.patch.\n" +
+              "package.json must not register dependency patches.\n",
+          ],
+          stdout: [],
+        });
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 });

@@ -19,7 +19,7 @@ export const createAcceptanceOwner = Effect.fn("contentAcceptance.createOwner")(
     const runtime = yield* readLocalRuntime(root);
     if (runtime === undefined) {
       return yield* acceptanceRuntimeError(
-        "Run pnpm acceptance:prepare and start acceptance before creating an owner."
+        "Run bun run acceptance:prepare and start acceptance before creating an owner."
       );
     }
     yield* signInInvitedMember(runtime, ownerAddress(slug), output);

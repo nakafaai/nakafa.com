@@ -3,7 +3,7 @@
   "version": "2.0.2",
   "private": true,
   "scripts": {
-    "build": "pnpm typecheck",
+    "build": "bun run typecheck",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },

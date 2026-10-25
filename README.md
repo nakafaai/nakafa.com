@@ -19,7 +19,7 @@ authored content source or publication path.
 `package.json` is the toolchain source of truth:
 
 - Node.js 24
-- pnpm 11.28.5
+- Bun 1.4.4
 - Turborepo
 - TanStack Start and React 19
 - Native TypeScript 7
@@ -36,7 +36,7 @@ cannot express.
 ```sh
 git clone https://github.com/nakafaai/nakafa.com.git
 cd nakafa.com
-pnpm install --frozen-lockfile
+bun install --frozen-lockfile
 cp apps/www/.env.example apps/www/.env.local
 ```
 
@@ -51,19 +51,19 @@ Nakafa uses Portless HTTPS URLs for local development. Google rejects
 Nakafa's owned development suffix before testing Google sign-in:
 
 ```sh
-pnpm exec portless proxy start --tld local.nakafa.com
+bunx portless proxy start --tld local.nakafa.com
 ```
 
 Stop an existing proxy before changing its suffix. This setting is shared by
 local projects. Portless listens on port 443, creates and trusts a local
 certificate authority, and registers local DNS entries for running apps.
 
-Run `pnpm dev` for hot reload. The canonical checkout serves
+Run `bun run dev` for hot reload. The canonical checkout serves
 `https://nakafa.local.nakafa.com`; worktrees receive their own prefix, such as
 `https://ci.nakafa.local.nakafa.com`. The web and email preview servers
-receive separate names. CAS runs as Cloudflare Workers, so it has no local server. Use `pnpm exec portless list` to inspect active routes,
-`pnpm exec portless get nakafa` to obtain this checkout's web URL, and
-`pnpm exec portless doctor` to check the proxy, DNS, and certificate trust.
+receive separate names. CAS runs as Cloudflare Workers, so it has no local server. Use `bunx portless list` to inspect active routes,
+`bunx portless get nakafa` to obtain this checkout's web URL, and
+`bunx portless doctor` to check the proxy, DNS, and certificate trust.
 
 Set `SITE_URL` in `apps/www/.env.local` and the selected development backend
 to that exact web origin. Set `VITE_CONVEX_URL` and
@@ -79,13 +79,13 @@ Google does not accept wildcard callbacks. See the
 Acceptance databases use inert authentication credentials. Real sign-in requires
 a development backend configured with the Google client credentials.
 
-Ordinary `pnpm build` and `pnpm start` use your configured nonproduction backend.
+Ordinary `bun run build` and `bun run start` use your configured nonproduction backend.
 For a reproducible production-mode acceptance run, use:
 
 ```sh
-pnpm acceptance:prepare
-pnpm acceptance:build
-pnpm acceptance:start
+bun run acceptance:prepare
+bun run acceptance:build
+bun run acceptance:start
 ```
 
 Preparation creates a private native Convex database under `.cache/acceptance`,
@@ -114,15 +114,15 @@ Playwright at this checkout's URL and let its Node HTTP client trust the same
 local certificate authority:
 
 ```sh
-PLAYWRIGHT_BASE_URL="$(pnpm exec portless get nakafa)" \
+PLAYWRIGHT_BASE_URL="$(bunx portless get nakafa)" \
 NODE_EXTRA_CA_CERTS="${PORTLESS_STATE_DIR:-$HOME/.portless}/ca.pem" \
-pnpm --filter www test:browser --workers=1
+bun --filter www test:browser --workers=1
 ```
 
 If the proxy uses a custom state directory, set `PORTLESS_STATE_DIR` to that
 directory in both terminals.
 
-Stop acceptance services before `pnpm acceptance:clean` removes their database,
+Stop acceptance services before `bun run acceptance:clean` removes their database,
 source checkout, signer, logs, and the web app's cached signed fetch responses.
 Cleanup verifies filesystem ownership and refuses a database whose identity
 changed. To refresh the fixture, clean it and repeat preparation. Update the
@@ -161,25 +161,25 @@ tests, type-level tests, module structure, and API design in the vendored source
 ## Commands
 
 ```sh
-pnpm dev
-pnpm dev:all
-pnpm build
-pnpm start
-pnpm test
-pnpm lint
-pnpm security:audit
-pnpm format
-pnpm boundaries
-pnpm effect:source:check
+bun run dev
+bun run dev:all
+bun run build
+bun run start
+bun run test
+bun run lint
+bun run security:audit
+bun run format
+bun run boundaries
+bun run effect:source:check
 ```
 
 There is no root typecheck script. Run the typecheck owned by each changed
 workspace, for example:
 
 ```sh
-pnpm --filter www typecheck
-pnpm --filter @repo/backend typecheck
-pnpm --filter @repo/design-system typecheck
+bun --filter www typecheck
+bun --filter @repo/backend typecheck
+bun --filter @repo/design-system typecheck
 ```
 
 Tests use Vitest config files owned by each workspace. Keep tests colocated as

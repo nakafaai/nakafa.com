@@ -6,13 +6,13 @@ import {
   Duration,
   Effect,
   Order,
-  Record as Rec,
   Result,
   Schema,
 } from "effect";
-import { DependencyCommandError, runPnpm } from "#scripts/dependencies/command";
+import { DependencyCommandError, runBun } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
+import { heldDependencyNames } from "#scripts/dependencies/validate";
 import { runEntry } from "#scripts/entry";
 import {
   fetchLatestGithubActionTag,
@@ -45,9 +45,9 @@ const inspectRepositoryPolicy = Effect.fn("RepositoryPolicy.inspectRepository")(
 );
 
 /**
- * The longest one `pnpm view` may take. It is the 10 second attempt budget of
+ * The longest one `bun info` may take. It is the 10 second attempt budget of
  * the web app's network reads, kept here because the root scripts do not depend
- * on `@repo/backend`. Only `view` is bounded: `pnpm outdated` scans every
+ * on `@repo/backend`. Only the registry lookup is bounded: `bun outdated` scans every
  * dependency and may run longer.
  */
 const REGISTRY_VIEW_DEADLINE = Duration.seconds(10);
@@ -70,35 +70,47 @@ function decodeRegistryVersion(registry: string, source: string) {
   );
 }
 
-/** pnpm outdated keys each package by name; the policy reads only the names. */
-const OutdatedDependenciesJson = Schema.fromJsonString(
-  Schema.Record(Schema.String, Schema.Unknown)
-);
+const OUTDATED_HEADER = "Package";
+const SEPARATOR_CELL = /^-+$/u;
+const PACKAGE_CELL = /^\|\s*([^|]+?)\s*\|/u;
+const PACKAGE_SUFFIX = /\s+\((?:dev|peer|optional)\)$/u;
+const NPM_ALIAS = /@npm:.*$/u;
 
-function decodeOutdatedDependencies(source: string) {
-  if (!source.trim()) {
-    return Effect.succeed<string[]>([]);
+/** The package name of one `bun outdated` table row, or nothing for a header, a rule, or prose. */
+function outdatedPackage(line: string): string[] {
+  const cell = PACKAGE_CELL.exec(line)?.[1];
+  if (
+    cell === undefined ||
+    cell === OUTDATED_HEADER ||
+    SEPARATOR_CELL.test(cell)
+  ) {
+    return [];
   }
+  return [cell.replace(PACKAGE_SUFFIX, "").replace(NPM_ALIAS, "")];
+}
 
-  return Schema.decodeEffect(OutdatedDependenciesJson)(source).pipe(
-    Effect.map((dependencies) =>
-      Arr.sort(Rec.keys(dependencies), Order.String)
-    ),
-    Effect.mapError(
-      (cause) =>
-        new DependencyMetadataError({
-          cause,
-          message: "pnpm outdated returned invalid JSON.",
-        })
-    )
+/**
+ * Names the outdated packages in `bun outdated` output. Bun prints one box table
+ * for each matching workspace, so a package can repeat; the policy reads only the names.
+ */
+export function outdatedNames(source: string): readonly string[] {
+  return Arr.sort(
+    Arr.dedupe(Arr.flatMap(source.split("\n"), outdatedPackage)),
+    Order.String
   );
+}
+
+/** Routine packages are the outdated ones that no reviewed hold leaves in place. */
+function routineNames(names: readonly string[]): readonly string[] {
+  const held = heldDependencyNames();
+  return Arr.filter(names, (name) => !Arr.contains(held, name));
 }
 
 /** Reviews held package versions and reports registry or metadata failures. */
 const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
   function* (
     root: string,
-    run: typeof runPnpm,
+    run: typeof runBun,
     writeOutputMessage: typeof writeOutput
   ) {
     const problems = yield* Effect.forEach(
@@ -106,7 +118,7 @@ const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
       Effect.fnUntraced(function* ([registry, reviewedLatest, reason]) {
         const result = yield* run(
           root,
-          ["view", registry, "version", "--json"],
+          ["info", registry, "version", "--json"],
           { capture: true }
         ).pipe(
           Effect.timeoutOrElse({
@@ -115,7 +127,7 @@ const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
               Effect.fail(
                 new DependencyCommandError({
                   cause: new RegistryViewDeadline(),
-                  message: `pnpm view ${registry} did not finish within 10 seconds.`,
+                  message: `bun info ${registry} did not finish within 10 seconds.`,
                 })
               ),
           })
@@ -153,7 +165,7 @@ const BumpDependenciesOptionsSchema = Schema.Struct({
 });
 type BumpDependenciesOptions = typeof BumpDependenciesOptionsSchema.Type;
 type InspectPolicy = typeof inspectRepositoryPolicy;
-type RunPnpm = typeof runPnpm;
+type RunBun = typeof runBun;
 type WriteError = typeof writeError;
 type WriteOutput = typeof writeOutput;
 
@@ -162,7 +174,7 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
   function* (
     { root }: BumpDependenciesOptions,
     inspectPolicy: InspectPolicy = inspectRepositoryPolicy,
-    run: RunPnpm = runPnpm,
+    run: RunBun = runBun,
     writeErrorMessage: WriteError = writeError,
     writeOutputMessage: WriteOutput = writeOutput
   ) {
@@ -172,9 +184,20 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
       return 1;
     }
 
-    const update = yield* run(root, ["update", "--recursive", "--latest"]);
-    if (update.exitCode !== 0) {
-      return update.exitCode;
+    const before = yield* run(root, ["outdated", "--recursive"], {
+      capture: true,
+    });
+    const routine = routineNames(outdatedNames(before.stdout));
+    if (routine.length > 0) {
+      const update = yield* run(root, [
+        "update",
+        "--recursive",
+        "--latest",
+        ...routine,
+      ]);
+      if (update.exitCode !== 0) {
+        return update.exitCode;
+      }
     }
 
     const policyProblems = yield* inspectPolicy(root);
@@ -213,24 +236,17 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
       })
     );
 
-    const outdated = yield* run(
-      root,
-      ["outdated", "--recursive", "--format", "json"],
-      { capture: true }
-    );
+    const outdated = yield* run(root, ["outdated", "--recursive"], {
+      capture: true,
+    });
+    const unresolved = routineNames(outdatedNames(outdated.stdout));
     const outdatedProblems =
       outdated.exitCode === 0 || outdated.exitCode === 1
-        ? yield* decodeOutdatedDependencies(outdated.stdout).pipe(
-            Effect.match({
-              onFailure: (failure) => [failure.message],
-              onSuccess: (unresolved) =>
-                problemWhen(
-                  unresolved.length > 0,
-                  `Routine dependencies remain outdated: ${Arr.join(unresolved, ", ")}.`
-                ),
-            })
+        ? problemWhen(
+            unresolved.length > 0,
+            `Routine dependencies remain outdated: ${Arr.join(unresolved, ", ")}.`
           )
-        : [outdated.stderr.trim() || "pnpm outdated failed."];
+        : [outdated.stderr.trim() || "bun outdated failed."];
     const problems = Arr.flatten([
       policyProblems,
       registryProblems,

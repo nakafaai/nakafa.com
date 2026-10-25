@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@repo/utilities": "workspace:*",
-    "@tanstack/react-start": "1.169.3",
+    "@tanstack/react-start": "1.169.4",
     "effect": "catalog:",
-    "posthog-js": "1.438.12",
-    "posthog-node": "^5.56.2"
+    "posthog-js": "1.438.21",
+    "posthog-node": "^5.57.1"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

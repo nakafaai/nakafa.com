@@ -29,17 +29,17 @@ Do not submit a contribution if you cannot grant these rights.
 The supported toolchain is declared in `package.json`:
 
 - Node.js 24
-- pnpm 11.28.5
+- Bun 1.4.4
 - Git
 
 ```sh
 git clone https://github.com/YOUR-USERNAME/nakafa.com.git
 cd nakafa.com
-pnpm install --frozen-lockfile
-pnpm dev
+bun install --frozen-lockfile
+bun run dev
 ```
 
-Use the HTTPS Portless URL printed by `pnpm dev`. Run `pnpm exec portless get nakafa`
+Use the HTTPS Portless URL printed by `bun run dev`. Run `bunx portless get nakafa`
 from the checkout to obtain its branch-specific web URL.
 
 ## Before editing
@@ -74,21 +74,21 @@ Run the smallest relevant checks while developing, then the complete affected
 workspace gates before opening a pull request:
 
 ```sh
-pnpm lint
-pnpm security:audit
-pnpm test
-pnpm boundaries
-pnpm --filter www typecheck
-pnpm build
+bun run lint
+bun run security:audit
+bun run test
+bun run boundaries
+bun --filter www typecheck
+bun run build
 ```
 
 The PostHog browser SDK is exact-pinned. Its scoped Socket heuristic exception
 in `packages/analytics/doctor.config.ts` must be revalidated or removed
 whenever that pin changes. Registry advisories remain a hard failure through
-`pnpm security:audit`.
+`bun run security:audit`.
 
 Run typechecks and tests for every other changed workspace. For production-mode
-runtime verification, run `pnpm start` after a successful root build.
+runtime verification, run `bun run start` after a successful root build.
 
 ## Pull requests
 

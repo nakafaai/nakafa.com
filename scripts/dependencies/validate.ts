@@ -125,23 +125,22 @@ function cohortProblems(workspace: WorkspaceManifest) {
 }
 
 /** Validates exact cohort declarations and the absence of v3 packages. */
+/** The dependencies that routine updates leave to their reviewed holds. */
+export function heldDependencyNames(): readonly string[] {
+  return Arr.sort(
+    Arr.dedupe([
+      ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
+      "node",
+    ]),
+    Order.String
+  );
+}
+
 export function validateDependencyPolicy({
   manifests,
   rootManifest,
   workspace,
 }: DependencyPolicyInput) {
-  const expectedIgnores = Arr.sort(
-    Arr.dedupe([
-      ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
-      "node",
-      "pnpm",
-    ]),
-    Order.String
-  );
-  const actualIgnores = Arr.sort(
-    workspace.update?.ignoreDeps ?? [],
-    Order.String
-  );
   return Arr.flatten([
     declarationProblems(manifests),
     Arr.flatMap(
@@ -166,10 +165,6 @@ export function validateDependencyPolicy({
         `${hold.manifestPath} script ${hold.script} is ${String(actual ?? "missing")}; approved ${hold.approved}.`
       );
     }),
-    problemWhen(
-      !sameStrings(actualIgnores, expectedIgnores),
-      "pnpm update.ignoreDeps does not match the reviewed hold policy."
-    ),
     cohortProblems(workspace),
     problemWhen(
       rootManifest.packageManager !== PACKAGE_MANAGER,

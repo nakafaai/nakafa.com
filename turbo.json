@@ -134,6 +134,10 @@
       "dependsOn": ["^lint"],
       "outputs": []
     },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "cache": false
+    },
     "bump-deps": {
       "cache": false,
       "outputs": ["uv.lock"]

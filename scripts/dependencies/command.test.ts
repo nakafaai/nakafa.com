@@ -9,7 +9,7 @@ import {
   Stream,
 } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
-import { runPnpm } from "#scripts/dependencies/command";
+import { runBun } from "#scripts/dependencies/command";
 
 /** Builds one scripted child process from its exit code and output streams. */
 function scriptedProcess(
@@ -59,7 +59,7 @@ function scriptedSpawner(
   );
 }
 
-/** Returns the options pnpm was started with. */
+/** Returns the options bun was started with. */
 function startedOptions(spawned: readonly ChildProcess.Command[]) {
   return Arr.map(spawned, (command) =>
     ChildProcess.isStandardCommand(command)
@@ -74,11 +74,11 @@ function startedOptions(spawned: readonly ChildProcess.Command[]) {
   );
 }
 
-describe("pnpm command", () => {
+describe("bun command", () => {
   it.effect("captures exact output without a shell", () =>
     Effect.gen(function* () {
       const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
-      const result = yield* runPnpm(
+      const result = yield* runBun(
         "/repository",
         ["view", "effect@rc", "version", "--json"],
         { capture: true }
@@ -108,7 +108,7 @@ describe("pnpm command", () => {
       assert.deepStrictEqual(startedOptions(yield* Ref.get(spawned)), [
         {
           args: ["view", "effect@rc", "version", "--json"],
-          command: "pnpm",
+          command: "bun",
           cwd: "/repository",
           stderr: "pipe",
           stdout: "pipe",
@@ -120,7 +120,7 @@ describe("pnpm command", () => {
   it.effect("inherits the terminal and preserves the exit code", () =>
     Effect.gen(function* () {
       const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
-      const result = yield* runPnpm("/repository", [
+      const result = yield* runBun("/repository", [
         "update",
         "--recursive",
         "--latest",
@@ -139,7 +139,7 @@ describe("pnpm command", () => {
       assert.deepStrictEqual(startedOptions(yield* Ref.get(spawned)), [
         {
           args: ["update", "--recursive", "--latest"],
-          command: "pnpm",
+          command: "bun",
           cwd: "/repository",
           stderr: "inherit",
           stdout: "inherit",
@@ -151,13 +151,13 @@ describe("pnpm command", () => {
   it.effect("reports processes that cannot start or finish", () =>
     Effect.gen(function* () {
       const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
-      const spawnFailure = yield* runPnpm("/repository", ["install"], {
+      const spawnFailure = yield* runBun("/repository", ["install"], {
         capture: true,
       }).pipe(
         Effect.provide(scriptedSpawner(spawned, Effect.fail(brokenPipe))),
         Effect.flip
       );
-      const exitFailure = yield* runPnpm("/repository", ["update"]).pipe(
+      const exitFailure = yield* runBun("/repository", ["update"]).pipe(
         Effect.provide(
           scriptedSpawner(
             spawned,
@@ -172,7 +172,7 @@ describe("pnpm command", () => {
         ),
         Effect.flip
       );
-      const outputFailure = yield* runPnpm("/repository", ["outdated"], {
+      const outputFailure = yield* runBun("/repository", ["outdated"], {
         capture: true,
       }).pipe(
         Effect.provide(
@@ -197,16 +197,16 @@ describe("pnpm command", () => {
           failure.message,
         ]),
         [
-          ["DependencyCommandError", brokenPipe, "Unable to run pnpm install."],
+          ["DependencyCommandError", brokenPipe, "Unable to run bun install."],
           [
             "DependencyCommandError",
             brokenPipe,
-            "Unable to finish pnpm update.",
+            "Unable to finish bun update.",
           ],
           [
             "DependencyCommandError",
             brokenPipe,
-            "Unable to finish pnpm outdated.",
+            "Unable to finish bun outdated.",
           ],
         ]
       );

@@ -108,6 +108,7 @@ function FieldLabel({
   ...props
 }: React.ComponentProps<typeof Label>) {
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: htmlFor arrives through props at each call site.
     <Label
       className={cn(
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50",

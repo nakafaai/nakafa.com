@@ -12,7 +12,7 @@ import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
 const PATCH_FILE_PATTERN = /\.patch$/u;
-const PATCHED_DEPENDENCIES_PATTERN = /^patchedDependencies:/mu;
+const PATCHED_DEPENDENCIES_PATTERN = /"patchedDependencies"\s*:/u;
 /** Directories that never hold application patches; `.cache` holds live runtime state. */
 const IGNORED_DIRECTORIES = HashSet.make(
   ".cache",
@@ -50,7 +50,7 @@ export const checkPatchPolicy = Effect.fn("RepositoryPolicy.checkPatches")(
     const path = yield* Path.Path;
     const [patchFiles, workspace] = yield* Effect.all([
       readApplicationPatchFiles(root),
-      fileSystem.readFileString(path.join(root, "pnpm-workspace.yaml")),
+      fileSystem.readFileString(path.join(root, "package.json")),
     ]);
     const failures = Arr.appendAll(
       Arr.isReadonlyArrayEmpty(patchFiles)
@@ -59,7 +59,7 @@ export const checkPatchPolicy = Effect.fn("RepositoryPolicy.checkPatches")(
             `Application dependency patches require explicit review: ${Arr.join(patchFiles, ", ")}.`,
           ],
       PATCHED_DEPENDENCIES_PATTERN.test(workspace)
-        ? ["pnpm-workspace.yaml must not register dependency patches."]
+        ? ["package.json must not register dependency patches."]
         : []
     );
 

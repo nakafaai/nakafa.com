@@ -58,7 +58,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.1
           package-manager-cache: false
 
       - name: Install dependencies
@@ -74,7 +74,7 @@ jobs:
         working-directory: packages/backend
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: pnpm codegen && pnpm exec convex deploy --yes
+        run: bun run codegen && bunx --no-install convex deploy --yes
 
       - name: Set up uv for the CAS engine
         uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
@@ -83,4 +83,4 @@ jobs:
 
       - name: Deploy the Cloudflare stack
         working-directory: apps/www
-        run: pnpm exec alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
+        run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
