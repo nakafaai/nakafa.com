@@ -19,6 +19,8 @@ import {
   movedQuestion,
   moveUpdate,
   placeholderQuestion,
+  pointedQuestion,
+  pointsUpdate,
   type Question,
   removedQuestion,
   removeUpdate,
@@ -57,10 +59,13 @@ const answers: [Interaction] = [choice];
 /** A question of the exam with no key, at the given revision. */
 const question = (id: string, revision = 0): Question => ({
   answers,
+  explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  points: 1,
   prompt: promptId(`prompt-${id}`),
   revision,
+  rubric: promptId(`rubric-${id}`),
   template: "choice",
 });
 
@@ -221,14 +226,20 @@ describe("placeholderQuestion", () => {
   it("starts a question at revision zero with the answers and key it is given", () => {
     const draft = placeholderQuestion({
       answers,
+      explanation: promptId("draft-explanation"),
       id: questionId("draft"),
       key: null,
+      points: 3,
       prompt: promptId("draft-prompt"),
+      rubric: promptId("draft-rubric"),
     });
 
     expect(draft).toEqual({
       ...placeholder("draft"),
+      explanation: promptId("draft-explanation"),
+      points: 3,
       prompt: promptId("draft-prompt"),
+      rubric: promptId("draft-rubric"),
     });
     expect(draft.revision).toBe(0);
   });
@@ -417,5 +428,37 @@ describe("the optimistic updates of the new questions", () => {
     });
 
     expect(setQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe("pointedQuestion", () => {
+  it("sets the points of one question and keeps the others", () => {
+    const pointed = pointedQuestion(viewOf([first, second]), second.id, 5);
+
+    expect(pointed.questions[0]).toEqual(first);
+    expect(pointed.questions[1]).toEqual({ ...second, points: 5 });
+  });
+});
+
+describe("pointsUpdate", () => {
+  it("shows the points of a question in the store while the server saves them", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    pointsUpdate(localStore, {
+      examId,
+      points: 3,
+      questionId: first.id,
+      slug,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some({
+        ...view,
+        questions: [{ ...first, points: 3 }, second],
+      })
+    );
   });
 });

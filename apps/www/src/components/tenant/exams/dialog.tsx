@@ -34,6 +34,7 @@ import {
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
+import { useConvexAuth } from "@/components/auth/convex";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceKey,
@@ -63,6 +64,9 @@ export function CreateExam({
   const common = useTranslations("Common");
   const navigate = useNavigate();
   const create = useMutation(exams.exams.create);
+  // A create sent before Convex holds the session's token is refused as signed out, so the
+  // dialog's submit waits for Convex to answer for the session.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
@@ -88,7 +92,7 @@ export function CreateExam({
    * press during the close cannot save a second exam.
    */
   const submit = () => {
-    if (!ready || Option.isNone(choice)) {
+    if (!(ready && isSettled) || Option.isNone(choice)) {
       return;
     }
     const { scope } = choice.value;
@@ -135,7 +139,7 @@ export function CreateExam({
               {common("cancel")}
             </Button>
             <Button
-              disabled={!ready || isPending}
+              disabled={!(ready && isSettled) || isPending}
               inert={isPending}
               onClick={submit}
             >

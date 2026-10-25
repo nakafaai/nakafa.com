@@ -12,6 +12,7 @@ import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
 import { runServerEffect } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 const ShellInput = Schema.Struct({ locale: Schema.String });
 
@@ -44,10 +45,11 @@ const localeRoute = getRouteApi("/$locale");
 export const Route = createFileRoute("/$locale/_main")({
   loader: async ({ params }) => {
     const [messages, shell] = await Promise.all([
-      readRouteMessages({
-        data: { locale: params.locale, namespaces: MAIN_NAMESPACES },
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: MAIN_NAMESPACES,
       }),
-      readShellNavigation({ data: { locale: params.locale } }),
+      readStaticData(readShellNavigation, { locale: params.locale }),
     ]);
     return { ...shell, messages };
   },

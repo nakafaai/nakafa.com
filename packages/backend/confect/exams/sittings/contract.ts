@@ -142,8 +142,8 @@ export const StudentSittingView = Schema.Struct({
 });
 
 /**
- * The student's points in a sitting whose results are released, out of the questions of its exam. A student sees
- * no score before the release, so the row holds `null` until then.
+ * The student's points in a sitting whose results are released, out of the points of every question of its exam.
+ * A student sees no score before the release, so the row holds `null` until then.
  */
 const StudentScore = Schema.Struct({
   points: Schema.Int,

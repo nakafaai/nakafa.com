@@ -83,7 +83,12 @@ const countryPage = {
   sourceRevision: SOURCE,
 };
 const examPage = { exam: { examKey: "snbt" }, publicPath: EXAM };
-const trackPage = { publicPath: TRACK, track: { title: "2027" } };
+const trackPage = {
+  country: { countryKey: "id" },
+  exam: { examKey: "snbt" },
+  publicPath: TRACK,
+  track: { title: "2027", trackKey: "2027" },
+};
 const hub = {
   countries: [{ publicPath: COUNTRY, title: "Indonesia" }],
   sourceRevision: undefined,
@@ -370,58 +375,65 @@ describe("readTryoutExamRoute", () => {
   );
 });
 
+/** The default catalog query of a track page. */
+const TRACK_SEARCH = {
+  direction: "asc",
+  sort: "order",
+  status: "all",
+} satisfies CatalogQuery;
+
+/** Reads the track route of the fixture address with the default query. */
+const readTrack = () =>
+  readTryoutTrackRoute({
+    country: "id",
+    exam: "snbt",
+    locale: "en",
+    search: TRACK_SEARCH,
+    track: "2027",
+  });
+
 describe("readTryoutTrackRoute", () => {
   it.effect(
     "answers not found when the track, its country or its head is missing",
     () =>
       Effect.gen(function* () {
         catalog.readTryoutTrackPage.mockReturnValueOnce(Effect.void);
-        expect(
-          yield* readTryoutTrackRoute({
-            country: "id",
-            exam: "snbt",
-            locale: "en",
-            track: "2027",
-          })
-        ).toEqual({ kind: "notFound" });
+        expect(yield* readTrack()).toEqual({ kind: "notFound" });
 
         catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
-        expect(
-          yield* readTryoutTrackRoute({
-            country: "id",
-            exam: "snbt",
-            locale: "en",
-            track: "2027",
-          })
-        ).toEqual({ kind: "notFound" });
+        expect(yield* readTrack()).toEqual({ kind: "notFound" });
 
         publishRoute(undefined);
-        expect(
-          yield* readTryoutTrackRoute({
-            country: "id",
-            exam: "snbt",
-            locale: "en",
-            track: "2027",
-          })
-        ).toEqual({ kind: "notFound" });
+        expect(yield* readTrack()).toEqual({ kind: "notFound" });
       })
   );
 
-  it.effect("builds the track page with its exam and its selector", () =>
-    Effect.gen(function* () {
-      const route = yield* readTryoutTrackRoute({
-        country: "id",
-        exam: "snbt",
-        locale: "en",
-        track: "2027",
-      });
+  it.effect(
+    "builds the track page with its exam, its selector and its set list",
+    () =>
+      Effect.gen(function* () {
+        catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
+        catalog.readTryoutSetList.mockReturnValue(
+          Effect.succeed({ isDone: true, page: [] })
+        );
 
-      expect(route).toMatchObject({
-        examPath: EXAM,
-        kind: "found",
-        page: trackPage,
-      });
-    })
+        const route = yield* readTrack();
+
+        expect(route).toMatchObject({
+          examPath: EXAM,
+          kind: "found",
+          list: { result: { isDone: true, page: [] } },
+          page: trackPage,
+        });
+        expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
+          Option.none(),
+          expect.objectContaining({
+            countryKey: "id",
+            examKey: "snbt",
+            trackKey: "2027",
+          })
+        );
+      })
   );
 });
 

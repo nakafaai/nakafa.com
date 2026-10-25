@@ -6,6 +6,7 @@ import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
+import { readStaticData } from "@/lib/static/data";
 
 /**
  * The messages of the marketing pages that the locale route does not carry. The
@@ -42,10 +43,11 @@ const localeRoute = getRouteApi("/$locale");
 export const Route = createFileRoute("/$locale/_marketing")({
   loader: async ({ params }) => {
     const [messages, shell] = await Promise.all([
-      readRouteMessages({
-        data: { locale: params.locale, namespaces: MARKETING_NAMESPACES },
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: MARKETING_NAMESPACES,
       }),
-      readMarketingShellFn({ data: { locale: params.locale } }),
+      readStaticData(readMarketingShellFn, { locale: params.locale }),
     ]);
     return { ...shell, messages };
   },

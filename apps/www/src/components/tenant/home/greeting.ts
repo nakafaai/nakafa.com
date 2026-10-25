@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import type { ActSchema } from "@repo/mascot/nina/act";
+import type { EdgeSchema } from "@repo/mascot/nina/edge";
 import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 
 /** The viewer of a school, as the viewer read answers it. */
@@ -25,11 +25,14 @@ const PART_STARTS: readonly (typeof PartStart.Type)[] = [
 /** The evening, which the hours before the morning belong to, because the day has not begun yet. */
 const EVENING: DayPart = "evening";
 
-/** The act that Nina does in each part of the day: a wave in the morning, typing in the afternoon, reading in the evening. */
-export const DAY_PART_ACT: Record<DayPart, typeof ActSchema.Type> = {
-  afternoon: "typing",
-  evening: "reading",
-  morning: "waving",
+/**
+ * What Nina does over the edge of the header in each part of the day: she greets in the morning, drums on the edge in
+ * the afternoon, and holds on to it in the evening.
+ */
+export const DAY_PART_EDGE: Record<DayPart, typeof EdgeSchema.Type> = {
+  afternoon: "drumming",
+  evening: "gripping",
+  morning: "greeting",
 };
 
 /**

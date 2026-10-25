@@ -143,5 +143,14 @@ test("the username address of the entry opens the form from the route's search",
   );
 
   await expect(page.getByLabel("School username")).toBeVisible();
+  // One way at a time: the form stands alone, and Back returns to Google.
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" })
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" })
+  ).toBeVisible();
+  await expect(page.getByLabel("School username")).toHaveCount(0);
   await context.close();
 });

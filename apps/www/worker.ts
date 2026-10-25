@@ -15,6 +15,12 @@ import { weatherKeys } from "#www/src/lib/weather/keys";
  * `vite.config.ts` runs `vite dev`, `vite build` and `vite preview` in workerd
  * with the same ones, so neither keeps a copy.
  */
+/** A prerendered page answers at its path without a trailing slash. */
+const HTML_HANDLING = "drop-trailing-slash" as const;
+
+/** A path with no asset answers the nearest `404.html`. */
+const NOT_FOUND_HANDLING = "404-page" as const;
+
 export const workerSettings = {
   /**
    * The Worker name that a local preview gives workerd. A deploy keeps the name
@@ -46,6 +52,17 @@ export const workerSettings = {
   ],
   /** `ssr` is the Worker entry, and `rsc` is the React Server Components environment it loads. */
   viteEnvironments: { entry: "ssr", children: ["rsc"] },
+  /**
+   * How the static assets answer, in the deployed Worker and in the local preview
+   * alike. A prerendered page is `<path>/index.html`, and its URL has no trailing
+   * slash, so the asset answers at `/en` instead of redirecting to `/en/`. A path
+   * with no asset reaches the Worker, a browser navigation included under the
+   * flag above, and the Worker answers the nearest `404.html`.
+   */
+  assets: {
+    htmlHandling: HTML_HANDLING,
+    notFoundHandling: NOT_FOUND_HANDLING,
+  },
 };
 
 /**

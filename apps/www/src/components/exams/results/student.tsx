@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Array as Arr } from "effect";
+import { Array as Arr, Number as Num } from "effect";
 import { useTranslations } from "use-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
 import { responseLetters, verdictKeys } from "@/components/exams/results/model";
@@ -122,15 +122,14 @@ function StudentResultsContent({
     );
   }
   const { points, questions } = result.value;
+  const total = Num.sumAll(Arr.map(questions, (question) => question.points));
   return (
     <CardSection>
       <CardHeader>
         <CardTitle>{t("student-results-title")}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 text-sm">
-        <p className="font-medium">
-          {t("student-score", { points, total: questions.length })}
-        </p>
+        <p className="font-medium">{t("student-score", { points, total })}</p>
         <ul aria-label={t("student-answers")} className="grid gap-3">
           {Arr.map(questions, (question) => (
             <AnswerItem key={question.number} question={question} />

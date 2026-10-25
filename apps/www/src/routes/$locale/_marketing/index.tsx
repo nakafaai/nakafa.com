@@ -36,6 +36,7 @@ import {
 } from "@/lib/marketing/home.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { readStaticData } from "@/lib/static/data";
 
 /**
  * The marketing home. Its first HTML holds the whole page: the featured try-out,
@@ -46,13 +47,11 @@ import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 export const Route = createFileRoute("/$locale/_marketing/")({
   loader: async ({ params }) => {
     const [curricula, featuredTryout, messages] = await Promise.all([
-      readHomeCurriculaFn({ data: { locale: params.locale } }),
-      readHomeTryout({ data: { locale: params.locale } }),
-      readRouteMessages({
-        data: {
-          locale: params.locale,
-          namespaces: ["Landing", "Metadata", "Subject"],
-        },
+      readStaticData(readHomeCurriculaFn, { locale: params.locale }),
+      readStaticData(readHomeTryout, { locale: params.locale }),
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: ["Landing", "Metadata", "Subject"],
       }),
     ]);
     const t = createTranslator({

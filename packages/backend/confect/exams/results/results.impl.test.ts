@@ -206,6 +206,7 @@ describe("exams/results", () => {
             id: questionId,
             number: 1,
             optionIds: ["option-1", "option-2", "option-3", "option-4"],
+            points: 1,
           },
         ]);
         expect(
@@ -320,6 +321,7 @@ describe("exams/results", () => {
             {
               number: 1,
               optionIds: ["option-1", "option-2", "option-3", "option-4"],
+              points: 1,
               response: ["option-2"],
               verdict: "incorrect",
             },

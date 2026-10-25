@@ -31,6 +31,7 @@ import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 /**
  * Reads the article categories of one locale on the server. The decision to
@@ -109,8 +110,9 @@ export const Route = createFileRoute("/$locale/_main/articles/")({
     release: search.release,
   }),
   loader: async ({ params, deps }) => {
-    const read = await readArticleIndex({
-      data: { ...deps, locale: params.locale },
+    const read = await readStaticData(readArticleIndex, {
+      ...deps,
+      locale: params.locale,
     });
     return Match.value(read).pipe(
       Match.tagsExhaustive({
