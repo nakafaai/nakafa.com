@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
@@ -49,6 +50,7 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
   );
   const page = await context.newPage();
   await page.goto(hostAddress(baseURL, host, "/exams"));
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Exam title" }).fill("Layer");
@@ -58,29 +60,42 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
   await openExam(page);
 
   // Each question has its prompt, and the second one is the one the arrow keys and the drag move.
-  const first = page.getByRole("region", { name: FIRST_QUESTION });
   const second = page.getByRole("region", { name: SECOND_QUESTION });
-  await page.getByRole("textbox", { name: "Question 1 text" }).click();
+  const firstText = page.getByRole("textbox", { name: "Question 1 text" });
+  const secondText = page.getByRole("textbox", { name: "Question 2 text" });
+  await expect(firstText).toBeEditable();
+  await firstText.click();
   await page.keyboard.type("Soal pertama");
-  await page.getByRole("textbox", { name: "Question 2 text" }).click();
+  await expect(secondText).toBeEditable();
+  await secondText.click();
   await page.keyboard.type("Soal kedua");
   await expect(second).toContainText("Soal kedua");
 
-  // The teacher layer under the first paper: five points, a rubric, and an explanation.
-  const points = first.getByRole("spinbutton", { name: "Points" });
+  // The canvas holds only the papers. The teacher layer of the chosen page stands in the panel
+  // beside it: the teacher goes back to the first page, then sets five points, the key, a rubric,
+  // and an explanation there.
+  await firstText.click();
+  const panel = page.getByRole("complementary", { name: "For teachers" });
+  await expect(panel).toContainText("Question 1");
+  await expect(
+    page
+      .getByRole("region", { name: FIRST_QUESTION })
+      .getByRole("spinbutton", { name: "Points" })
+  ).toHaveCount(0);
+  const points = panel.getByRole("spinbutton", { name: "Points" });
   await expect(points).toHaveValue("1");
   await points.fill("5");
   await points.press("Enter");
   await expect(points).toHaveValue("5");
   // The answer key is marked in the layer, so the paper of the student carries no mark.
-  const keyOfB = first.getByRole("button", {
+  const keyOfB = panel.getByRole("button", {
     name: "Mark option B of question 1 as correct",
   });
   await keyOfB.click();
   await expect(keyOfB).toHaveAttribute("aria-pressed", "true");
-  await first.getByRole("textbox", { name: "Rubric of question 1" }).click();
+  await panel.getByRole("textbox", { name: "Rubric of question 1" }).click();
   await page.keyboard.type("Nilai penuh untuk opsi benar.");
-  await first
+  await panel
     .getByRole("textbox", { name: "Explanation of question 1" })
     .click();
   await page.keyboard.type("Dua tambah tiga sama dengan lima.");
@@ -130,31 +145,34 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
     page.getByRole("region", { name: FIRST_QUESTION })
   ).toContainText("Soal pertama");
 
-  // Everything reaches the server, so the editor opened again shows the order and the layer.
+  // Everything reaches the server, so the editor opened again shows the order and, in the panel of
+  // the first page, which a new visit starts on, the layer.
   const reopened = await context.newPage();
   await reopened.goto(page.url());
   await openExam(reopened);
-  const reopenedFirst = reopened.getByRole("region", {
-    name: FIRST_QUESTION,
-  });
-  await expect(reopenedFirst).toContainText("Soal pertama", {
+  await expect(
+    reopened.getByRole("region", { name: FIRST_QUESTION })
+  ).toContainText("Soal pertama", {
     timeout: readinessTimeoutMilliseconds,
   });
+  const reopenedPanel = reopened.getByRole("complementary", {
+    name: "For teachers",
+  });
   await expect(
-    reopenedFirst.getByRole("spinbutton", { name: "Points" })
+    reopenedPanel.getByRole("spinbutton", { name: "Points" })
   ).toHaveValue("5");
   await expect(
-    reopenedFirst.getByRole("button", {
+    reopenedPanel.getByRole("button", {
       name: "Mark option B of question 1 as correct",
     })
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    reopenedFirst.getByRole("textbox", { name: "Rubric of question 1" })
+    reopenedPanel.getByRole("textbox", { name: "Rubric of question 1" })
   ).toContainText("Nilai penuh untuk opsi benar.", {
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(
-    reopenedFirst.getByRole("textbox", { name: "Explanation of question 1" })
+    reopenedPanel.getByRole("textbox", { name: "Explanation of question 1" })
   ).toContainText("Dua tambah tiga sama dengan lima.", {
     timeout: readinessTimeoutMilliseconds,
   });

@@ -155,10 +155,11 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(firstReopened).toContainText("Berapa hasil 2 + 3?", {
     timeout: readinessTimeoutMilliseconds,
   });
+  // The key of the first page, which a new visit starts on, stands in the teacher's panel.
   await expect(
-    firstReopened.getByRole("button", {
-      name: KEY_OF_FIRST_QUESTION,
-    })
+    reopened
+      .getByRole("complementary", { name: "For teachers" })
+      .getByRole("button", { name: KEY_OF_FIRST_QUESTION })
   ).toHaveCount(OPTIONS.length);
 
   // A question without a key keeps the exam from being scheduled: the dialog names the keys,

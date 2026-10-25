@@ -46,6 +46,7 @@ import {
   usePageDocument,
 } from "@/components/tenant/exams/preview";
 import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
+import { activeQuestion } from "@/components/tenant/exams/selection";
 import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
 import { usePageWindow } from "@/components/tenant/exams/window";
 import {
@@ -196,7 +197,13 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const awaiting = useExamSelection((state) =>
     Arr.contains(state.pending, question.id)
   );
-  const chosen = useExamSelection((state) => state.selected === question.id);
+  // The page the teacher is on, the first one before any choice, as the footer and the panel name it.
+  const chosen = useExamSelection((state) =>
+    Option.exists(
+      activeQuestion(exam.questions, state.selected),
+      (active) => active.question.id === question.id
+    )
+  );
   const focused = useExamSelection((state) => state.focus === question.id);
   const settleFocus = useExamSelection((state) => state.settleFocus);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
