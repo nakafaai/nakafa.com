@@ -80,7 +80,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     expectedTag: "v7.0.0",
     expectedUsages: 4,
     reason:
-      "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide. The deploy job runs the environment loader on that Node.",
+      "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide.",
   },
 ]);
 

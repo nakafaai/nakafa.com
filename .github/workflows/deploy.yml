@@ -3,11 +3,10 @@ name: Deploy
 on:
   push:
     branches: [main]
-  repository_dispatch:
-    types: [aksara-release]
   workflow_dispatch:
     inputs:
       stage:
+        # An Aksara production release dispatches stage prod from main with the deploy app's token.
         description: Stage to deploy. Production deploys run only from main.
         type: choice
         options: [staging, prod]
