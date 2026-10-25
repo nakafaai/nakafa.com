@@ -12627,9 +12627,9 @@ export declare const internal: {
           "internal",
           {
             position?:
-              | { cursor: string | null; phase: "lessons" }
-              | { phase: "quran"; surah: number }
-              | { cursor: string | null; phase: "prune" };
+              | { cursor: string | null; missing: number; phase: "lessons" }
+              | { missing: number; phase: "quran"; surah: number }
+              | { cursor: string | null; missing: number; phase: "prune" };
             releaseId?: string;
           },
           {
@@ -12638,15 +12638,15 @@ export declare const internal: {
             missing: number;
             next: {
               position:
-                | { cursor: string | null; phase: "lessons" }
-                | { phase: "quran"; surah: number }
-                | { cursor: string | null; phase: "prune" };
+                | { cursor: string | null; missing: number; phase: "lessons" }
+                | { missing: number; phase: "quran"; surah: number }
+                | { cursor: string | null; missing: number; phase: "prune" };
               releaseId: string;
             } | null;
             position:
-              | { cursor: string | null; phase: "lessons" }
-              | { phase: "quran"; surah: number }
-              | { cursor: string | null; phase: "prune" };
+              | { cursor: string | null; missing: number; phase: "lessons" }
+              | { missing: number; phase: "quran"; surah: number }
+              | { cursor: string | null; missing: number; phase: "prune" };
             removed: number;
             skipped: number;
             stale: boolean;
@@ -12753,7 +12753,7 @@ export declare const internal: {
         finish: FunctionReference<
           "mutation",
           "internal",
-          { model: string; releaseId: string },
+          { missing: number; model: string; releaseId: string },
           { recorded: boolean }
         >;
         lessons: FunctionReference<

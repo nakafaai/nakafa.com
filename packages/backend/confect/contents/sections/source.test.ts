@@ -43,7 +43,7 @@ async function setup() {
         )
       )
     );
-  return { find, holds };
+  return { find, holds, t };
 }
 
 describe("section sources", () => {
@@ -63,5 +63,14 @@ describe("section sources", () => {
     expect(await holds({ ...lesson, appLocale: "de" }, lesson.version)).toBe(
       false
     );
+  });
+
+  it("does not hold the version of a record that counts the sections a document lacks", async () => {
+    const { holds, t } = await setup();
+    const partial = { ...lesson, contentKey: "material/lesson/lain" };
+    await t.mutation((ctx) =>
+      ctx.db.insert("contentSectionSources", { ...partial, missing: 1 })
+    );
+    expect(await holds(partial, lesson.version)).toBe(false);
   });
 });

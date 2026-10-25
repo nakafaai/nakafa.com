@@ -4,13 +4,12 @@ import { createRequire } from "node:module";
 import { basename, join } from "node:path";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
 import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
   createWwwHeaders,
@@ -19,18 +18,18 @@ import {
 } from "#www/src/lib/security/headers";
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
+import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 import { workerEnvironment, workerSettings } from "#www/worker";
 
 /**
- * The marketing pages that prerender in every active locale. Their first HTML is
- * complete at build time, so the server never reads them at request time. The
- * crawl stays off, so the footer links of a page never queue more pages.
+ * The file where the static runner writes the public paths that the build
+ * prerenders. TanStack reads its page list from the config before the build runs,
+ * so the list is written first, by a separate process.
  */
-const PRERENDERED_PAGES = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
-  { path: `/${locale}` },
-  { path: `/${locale}/contributor` },
-  { path: `/${locale}/pricing` },
-]);
+const PAGE_LIST_FILE = join(import.meta.dirname, ".cache/static-pages.json");
+
+/** How many prerender requests run at once. Set, so the build machine's core count never changes the output. */
+const PRERENDER_CONCURRENCY = 8;
 
 /**
  * The marker that React writes where a Suspense boundary failed on the server, so
@@ -39,14 +38,53 @@ const PRERENDERED_PAGES = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
 const SERVER_FAILURE_MARKER = "<!--$!-->";
 
 /**
+ * The robots meta of the standalone not-found page. A prerendered page never
+ * renders that page, because TanStack would write the body of a missing route.
+ */
+const NOT_FOUND_MARKER = '<meta name="robots" content="noindex,nofollow"';
+
+/**
+ * Reads the public paths that the build prerenders. The static runner writes them
+ * from the active release, so an absent release fails the build here.
+ */
+function readPrerenderedPagePaths(): Promise<readonly string[]> {
+  return new Promise((resolve, reject) => {
+    const runner = spawn(
+      process.execPath,
+      [
+        join(import.meta.dirname, "scripts/static/run.mjs"),
+        "pages",
+        PAGE_LIST_FILE,
+      ],
+      { cwd: import.meta.dirname, env: process.env, stdio: "inherit" }
+    );
+    runner.on("error", reject);
+    runner.on("exit", (code, signal) => {
+      if (code !== 0) {
+        reject(new Error(`The page list failed with exit ${code ?? signal}.`));
+        return;
+      }
+      resolve(
+        Schema.decodeSync(PrerenderedPagesJson)(
+          readFileSync(PAGE_LIST_FILE, "utf8")
+        )
+      );
+    });
+  });
+}
+
+/**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
  * This check throws unless the client output directory, the directory that
  * TanStack prerenders into, holds exactly the listed pages and none of them
  * carries a server failure marker.
  */
-function assertPrerenderedPages(clientOutputDirectory: string) {
-  const expected = PRERENDERED_PAGES.map(({ path }) =>
+function assertPrerenderedPages(
+  clientOutputDirectory: string,
+  pages: readonly string[]
+) {
+  const expected = pages.map((path) =>
     join(clientOutputDirectory, path, "index.html")
   );
   const written = readdirSync(clientOutputDirectory, {
@@ -69,6 +107,13 @@ function assertPrerenderedPages(clientOutputDirectory: string) {
           readFileSync(file, "utf8").includes(SERVER_FAILURE_MARKER)
       )
       .map((file) => `server failure in ${file}`),
+    ...expected
+      .filter(
+        (file) =>
+          existsSync(file) &&
+          readFileSync(file, "utf8").includes(NOT_FOUND_MARKER)
+      )
+      .map((file) => `not-found page in ${file}`),
   ];
   if (problems.length > 0) {
     throw new Error(
@@ -156,6 +201,9 @@ const serveRobotsFile: Plugin = {
  */
 const writeStaticArtifacts: Plugin = {
   apply: "build",
+  // The Markdown twins link from the prerendered pages, so this writer runs after
+  // TanStack has written them, and before the verifier, which reads the same output.
+  enforce: "post",
   buildApp: {
     order: "post",
     handler: (builder) =>
@@ -164,7 +212,9 @@ const writeStaticArtifacts: Plugin = {
           process.execPath,
           [
             join(import.meta.dirname, "scripts/static/run.mjs"),
+            "artifacts",
             builder.environments.client.config.build.outDir,
+            PAGE_LIST_FILE,
           ],
           { cwd: import.meta.dirname, env: process.env, stdio: "inherit" }
         );
@@ -185,7 +235,8 @@ const writeStaticArtifacts: Plugin = {
   name: "www:write-static-artifacts",
 };
 
-const verifyPrerenderedPages: Plugin = {
+/** Verifies the prerendered pages against the list that the build was given. */
+const verifyPrerenderedPages = (pages: readonly string[]): Plugin => ({
   apply: "build",
   // TanStack's prerender is a post plugin too; this check must run after it.
   enforce: "post",
@@ -194,11 +245,14 @@ const verifyPrerenderedPages: Plugin = {
     order: "post",
     handler: (builder) =>
       Promise.resolve(
-        assertPrerenderedPages(builder.environments.client.config.build.outDir)
+        assertPrerenderedPages(
+          builder.environments.client.config.build.outDir,
+          pages
+        )
       ),
   },
   name: "www:verify-prerendered-pages",
-};
+});
 
 /** The signature verifiers that `@nakafa/aksara-contracts` exports under `node` only. */
 const NODE_ONLY_CONTRACT_PATHS = [
@@ -301,71 +355,91 @@ function alchemyWorker(
   ];
 }
 
-export default defineConfig(({ command, isPreview }) => ({
-  build: {
-    // The font-src policy allows only this origin, so a font file stays a file
-    // even when it is smaller than the inline limit. Other assets keep the limit.
-    assetsInlineLimit: (filePath) =>
-      FONT_FILE_PATTERN.test(filePath) ? false : undefined,
-  },
-  environments: {
-    // Workers Logs maps stack traces without the embedded sources, and the
-    // upload refuses more than 60 MiB of maps: the sources were 47 of 65 MiB.
-    [workerSettings.viteEnvironments.entry]: {
-      build: { rolldownOptions: { output: { sourcemapExcludeSources: true } } },
+/**
+ * The pages to prerender. Only the build's own process reads the list: the
+ * static runner, the prerender's preview server and the dev server render no
+ * page list, so they skip the release read.
+ */
+function listPrerenderedPages(
+  command: "build" | "serve"
+): Promise<readonly string[]> {
+  if (command !== "build" || STATIC_RUNNER) {
+    return Promise.resolve([]);
+  }
+  return readPrerenderedPagePaths();
+}
+
+export default defineConfig(async ({ command, isPreview }) => {
+  const prerenderedPages = await listPrerenderedPages(command);
+  return {
+    build: {
+      // The font-src policy allows only this origin, so a font file stays a file
+      // even when it is smaller than the inline limit. Other assets keep the limit.
+      assetsInlineLimit: (filePath: string) =>
+        FONT_FILE_PATTERN.test(filePath) ? false : undefined,
     },
-  },
-  resolve: {
-    // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
-    // condition only. Workers resolve them by file, since the `workerd` condition
-    // does not match and the `node` condition would select posthog-node's Node build.
-    alias: [...NODE_ONLY_CONTRACT_ALIASES, ...STATIC_RUNNER_ALIASES],
-    tsconfigPaths: true,
-  },
-  plugins: [
-    tanstackStart({
-      // The default rules stay in both passes: the browser rejects `.server`
-      // modules, and the server pass rejects `.client` modules, so a module
-      // that the server imports carries no `.client` suffix. The boundary is
-      // recorded in docs/adr/0036-boundary.md.
-      importProtection: {
-        behavior: { dev: "error", build: "error" },
-        // Node built-ins have no browser build. The default client specifiers
-        // stay, and this one adds every `node:` specifier, subpaths included.
-        client: { specifiers: [NODE_BUILTIN_SPECIFIER] },
+    environments: {
+      // Workers Logs maps stack traces without the embedded sources, and the
+      // upload refuses more than 60 MiB of maps: the sources were 47 of 65 MiB.
+      [workerSettings.viteEnvironments.entry]: {
+        build: {
+          rolldownOptions: { output: { sourcemapExcludeSources: true } },
+        },
       },
-      pages: PRERENDERED_PAGES,
-      // Server Components: content bodies render on the server, and only "use
-      // client" islands ship JavaScript. An island's heavy module loads on
-      // intent, never in the first load of the route.
-      rsc: { enabled: true },
-      // Only the listed pages prerender: discovery would add the root route,
-      // whose 307 answer depends on the request. A failed page does not fail
-      // the build by itself; verifyPrerenderedPages does.
-      prerender: {
-        autoStaticPathsDiscovery: false,
-        crawlLinks: false,
-        enabled: true,
-        failOnError: true,
-      },
-    }),
-    // No deployment pin route: a client that asks for a
-    // chunk the deploy replaced reloads the document once.
-    rsc(),
-    tailwindcss(),
-    react(),
-    babel({ presets: [reactCompilerPreset()] }),
-    bundleCommonJsReactPeers,
-    writeHeadersFile,
-    writeRobotsFile,
-    serveRobotsFile,
-    writeStaticArtifacts,
-    verifyPrerenderedPages,
-    // `vite dev` runs the Worker as Node runs a development server. `vite build`
-    // and `vite preview`, the acceptance server and the prerender included, run
-    // it as the deployed Worker does.
-    ...alchemyWorker(
-      command === "serve" && !isPreview ? "development" : "production"
-    ),
-  ],
-}));
+    },
+    resolve: {
+      // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
+      // condition only. Workers resolve them by file, since the `workerd` condition
+      // does not match and the `node` condition would select posthog-node's Node build.
+      alias: [...NODE_ONLY_CONTRACT_ALIASES, ...STATIC_RUNNER_ALIASES],
+      tsconfigPaths: true,
+    },
+    plugins: [
+      tanstackStart({
+        // The default rules stay in both passes: the browser rejects `.server`
+        // modules, and the server pass rejects `.client` modules, so a module
+        // that the server imports carries no `.client` suffix. The boundary is
+        // recorded in docs/adr/0036-boundary.md.
+        importProtection: {
+          behavior: { dev: "error", build: "error" },
+          // Node built-ins have no browser build. The default client specifiers
+          // stay, and this one adds every `node:` specifier, subpaths included.
+          client: { specifiers: [NODE_BUILTIN_SPECIFIER] },
+        },
+        pages: prerenderedPages.map((path) => ({ path })),
+        // Server Components: content bodies render on the server, and only "use
+        // client" islands ship JavaScript. An island's heavy module loads on
+        // intent, never in the first load of the route.
+        rsc: { enabled: true },
+        // Only the listed pages prerender: discovery would add the root route,
+        // whose 307 answer depends on the request. A failed page does not fail
+        // the build by itself; verifyPrerenderedPages does.
+        prerender: {
+          autoStaticPathsDiscovery: false,
+          concurrency: PRERENDER_CONCURRENCY,
+          crawlLinks: false,
+          enabled: true,
+          failOnError: true,
+        },
+      }),
+      // No deployment pin route: a client that asks for a
+      // chunk the deploy replaced reloads the document once.
+      rsc(),
+      tailwindcss(),
+      react(),
+      babel({ presets: [reactCompilerPreset()] }),
+      bundleCommonJsReactPeers,
+      writeHeadersFile,
+      writeRobotsFile,
+      serveRobotsFile,
+      writeStaticArtifacts,
+      verifyPrerenderedPages(prerenderedPages),
+      // `vite dev` runs the Worker as Node runs a development server. `vite build`
+      // and `vite preview`, the acceptance server and the prerender included, run
+      // it as the deployed Worker does.
+      ...alchemyWorker(
+        command === "serve" && !isPreview ? "development" : "production"
+      ),
+    ],
+  };
+});

@@ -20,9 +20,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** A picture of the site that loads, and an address that holds no picture. */
 const LOADING_PHOTO = "/logo.png";
 /**
- * An address that holds no picture. The site answers any `.png` address with
- * its social image (`apps/www/src/lib/og/alias.ts` rewrites it to the image route `apps/www/src/routes/og/$.ts`), so the photo test answers this
- * one with a 404 itself, as a real missing image answers.
+ * An address that holds no picture. The site answers it with its not-found page,
+ * as a real missing image answers.
  */
 const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";
 /** The names an account can hold from its provider: sixty letters with no space, one letter, and another script. */

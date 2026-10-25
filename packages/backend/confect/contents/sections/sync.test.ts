@@ -18,6 +18,7 @@ import {
   refusal,
   seedKnowledge,
 } from "@repo/backend/test/knowledge";
+import { APICallError } from "ai";
 import { MockEmbeddingModelV4 } from "ai/test";
 import { getFunctionName } from "convex/server";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
@@ -159,7 +160,7 @@ describe("section sync", () => {
     ]);
   });
 
-  it("embeds the sections of several documents together and stores each document with its own version", async () => {
+  it("embeds the sections of each document, and stores each document with its own version", async () => {
     const model = embedWithKnowledge();
     const { rows, sources, sync } = await setup();
     expect(
@@ -171,7 +172,10 @@ describe("section sync", () => {
         }),
       ])
     ).toMatchObject({ embedded: 5, written: 5 });
-    expect(model.doEmbedCalls).toHaveLength(1);
+    // One request for each text: three for the first document, two for the second.
+    expect(Arr.map(model.doEmbedCalls, ({ values }) => values.length)).toEqual([
+      1, 1, 1, 1, 1,
+    ]);
     expect(await rows()).toHaveLength(5);
     expect(
       Arr.map(await sources(), ({ contentKey, version }) => [
@@ -248,7 +252,7 @@ describe("section sync", () => {
         maxEmbeddingsPerCall: 512,
       })
     );
-    const { rows, sync } = await setup();
+    const { rows, sources, sync } = await setup();
     expect(
       await sync([
         lesson(3, (number) => (number === 2 ? "Terlarang." : "Aman.")),
@@ -265,13 +269,55 @@ describe("section sync", () => {
       expect.not.arrayContaining(["bagian-2"])
     );
     expect(await rows()).toHaveLength(2);
+    // A document that lacks a section keeps its record with the count, so the next build reads it again.
+    expect(await sources()).toMatchObject([{ missing: 1, version: "first" }]);
   });
 
-  it("fails with the failure of the embedder when the model refuses every section, and stores nothing", async () => {
+  it("leaves out a section that the model cannot embed while it takes the probe text, and counts it as missing", async () => {
+    const real = embedWithKnowledge();
+    const failing = new MockEmbeddingModelV4({
+      doEmbed: (options) =>
+        Arr.some(options.values, (text) => text.includes("Terlarang"))
+          ? Promise.reject(
+              new APICallError({
+                message: "private provider response",
+                requestBodyValues: {},
+                statusCode: 404,
+                url: "https://provider.example.invalid",
+              })
+            )
+          : real.doEmbed(options),
+      maxEmbeddingsPerCall: 512,
+    });
+    provider.embeddingModel.mockReturnValue(failing);
+    const { rows, sources, sync } = await setup();
+    expect(
+      await sync([
+        lesson(3, (number) => (number === 2 ? "Terlarang." : "Aman.")),
+      ])
+    ).toEqual({
+      embedded: 2,
+      kept: 0,
+      missing: 1,
+      removed: 0,
+      stale: false,
+      written: 2,
+    });
+    // The text the model could not embed, and then the probe text, which the model takes.
+    expect(
+      Arr.map(failing.doEmbedCalls, ({ values }) => values)
+    ).toContainEqual(["Nakafa"]);
+    expect(await rows()).toHaveLength(2);
+    expect(await sources()).toMatchObject([{ missing: 1, version: "first" }]);
+  });
+
+  it("fails with the document whose sections the model refuses, and the refusal, and stores nothing", async () => {
     embedWithRefusal();
     const { rows, sources, sync } = await setup();
     await expect(sync([lesson(3)])).rejects.toMatchObject({
-      reason: "invalid",
+      _tag: "DocumentEmbedFailure",
+      contentKey: source.contentKey,
+      failure: { reason: "invalid" },
     });
     expect(await rows()).toEqual([]);
     expect(await sources()).toEqual([]);

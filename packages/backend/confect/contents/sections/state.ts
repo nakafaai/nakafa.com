@@ -55,10 +55,12 @@ export const isReady = Effect.fn("contents.sections.isReady")(function* (
 });
 
 /**
- * Records that the index holds every section of `releaseId`, made by
- * `model`, which is when search may trust it. Nothing is recorded once the
- * release is no longer the active one, because the build of the newer release
- * records its own, and a record that says it already is not written again.
+ * Records that the index of `releaseId`, made by `model`, is finished, and how
+ * many of its sections the build left out, which is none when the index is
+ * complete. Search may trust the index whatever that count is, and the count says
+ * how much of the release it lacks. Nothing is recorded once the release is no
+ * longer the active one, because the build of the newer release records its own,
+ * and a record that already says the same is not written again.
  */
 export const finishBuild = Effect.fn("contents.sections.finish")(function* (
   input: typeof finishInputValidator.Type
@@ -66,8 +68,19 @@ export const finishBuild = Effect.fn("contents.sections.finish")(function* (
   if (!(yield* isActive(input.releaseId))) {
     return { recorded: false };
   }
+  yield* Effect.logInfo("Section build finished.").pipe(
+    Effect.annotateLogs({
+      complete: input.missing === 0,
+      missing: input.missing,
+      releaseId: input.releaseId,
+    })
+  );
   const build = yield* findBuild();
-  if (build?.releaseId === input.releaseId && build.model === input.model) {
+  if (
+    build?.releaseId === input.releaseId &&
+    build.model === input.model &&
+    build.missing === input.missing
+  ) {
     return { recorded: true };
   }
   const table = (yield* DatabaseWriter).table("contentSectionState");

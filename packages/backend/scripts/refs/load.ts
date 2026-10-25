@@ -7,8 +7,8 @@ import { createServer, type ViteDevServer } from "vite";
 /**
  * Starts Vite's module loader for the backend package, with the `@repo` alias of
  * the repository's Vitest configuration. Native Node cannot load the leaf graph,
- * because generated tables import without extensions, and tsx compiles workspace
- * packages without `type: module` as CommonJS. Vite loads the graph as the tests do.
+ * because generated tables import without extensions. Vite loads the graph as
+ * the tests do.
  */
 const startLoader = Effect.fn("RefsLoad.startLoader")(function* (
   backendRoot: string

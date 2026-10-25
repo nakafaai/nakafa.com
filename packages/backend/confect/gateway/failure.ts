@@ -46,3 +46,14 @@ export class GatewayFailure extends Schema.TaggedError<GatewayFailure>()(
     type: Schema.optional(GatewayType),
   }
 ) {}
+
+/** The routing facts of a failure: the only part of it that a log names. */
+export function routingFacts({
+  reason,
+  retryAfter,
+  retryable,
+  status,
+  type,
+}: GatewayFailure) {
+  return { reason, retryAfter, retryable, status, type };
+}

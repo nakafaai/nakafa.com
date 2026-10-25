@@ -73,7 +73,7 @@ describe("pinned Aksara acceptance publication", () => {
         expect(calls[0]).toMatchObject({
           command: "bun",
           cwd: "/test/nakafa",
-          args: ["--silent", "--filter", "www", "renderer:manifest"],
+          args: ["--silent", "run", "--cwd", "apps/www", "renderer:manifest"],
         });
         expect(
           Arr.map(Arr.take(Arr.drop(calls, 1), 5), ({ command, args }) => [

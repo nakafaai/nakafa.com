@@ -204,7 +204,7 @@ export const Route = createFileRoute(
         image: getOgUrl(route.appLocale, route.publicPath),
         indexable: true,
         jsonLd: [
-          ...makeArticleJsonLd({
+          makeArticleJsonLd({
             authors: metadata.authors,
             dates: metadata,
             description: headMetadata.description,

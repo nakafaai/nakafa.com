@@ -4,22 +4,33 @@ import { Schema } from "effect";
 /**
  * Where a build step works: the lessons after a cursor, one surah of the
  * Quran, or the clean-up of documents that are not published any more. A build
- * walks them in this order, and a position is all it needs to resume.
+ * walks them in this order. Each position also counts the sections the build
+ * has left out before it, so that a position is all a later run needs to resume.
  */
 const positionValidator = Schema.Union([
   Schema.Struct({
     cursor: Schema.NullOr(Schema.String),
+    missing: Schema.Finite,
     phase: Schema.Literal("lessons"),
   }),
-  Schema.Struct({ phase: Schema.Literal("quran"), surah: Schema.Finite }),
+  Schema.Struct({
+    missing: Schema.Finite,
+    phase: Schema.Literal("quran"),
+    surah: Schema.Finite,
+  }),
   Schema.Struct({
     cursor: Schema.NullOr(Schema.String),
+    missing: Schema.Finite,
     phase: Schema.Literal("prune"),
   }),
 ]);
 export type Position = typeof positionValidator.Type;
 
-/** One build step: the release it is for, if known, and where it works. */
+/**
+ * One build step: the release it is for, if known, and where it works. A build
+ * that starts has no position, so it begins at the first lesson with none left
+ * out.
+ */
 export const stepInputValidator = Schema.Struct({
   position: Schema.optionalKey(positionValidator),
   releaseId: Schema.optionalKey(Schema.String),

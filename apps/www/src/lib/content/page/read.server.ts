@@ -40,11 +40,7 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
   const canonicalPath: LocalizedPath = `/${locale}/${projection.publicPath}`;
   return {
     _tag: "Legal" as const,
-    alternates: createResolvedRouteAlternates(projection, counterparts, {
-      types: {
-        "text/markdown": `/${projection.appLocale}/${projection.publicPath}.md`,
-      },
-    }),
+    alternates: createResolvedRouteAlternates(projection, counterparts),
     body: page.value.body,
     canonicalPath,
     description: projection.metadata.description,

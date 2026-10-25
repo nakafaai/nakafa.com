@@ -15,6 +15,7 @@ import {
   embeddingModelId,
 } from "@repo/backend/confect/gateway/model";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   ActionCtx,
   MutationCtx,
@@ -40,7 +41,7 @@ import {
 import { sha256Hex } from "@repo/utilities/digest";
 import { APICallError } from "ai";
 import { MockEmbeddingModelV4 } from "ai/test";
-import { Array as Arr, Effect, Layer, Option } from "effect";
+import { Array as Arr, Effect, Layer, Number as Num, Option } from "effect";
 
 /** The release that the knowledge fixture makes active. */
 export const KNOWLEDGE_RELEASE = TEST_RUNTIME_RELEASE;
@@ -341,6 +342,23 @@ export function embedWithKnowledge() {
   return model;
 }
 
+/**
+ * Lets the test gateway embed with the concept model, except that it refuses
+ * every text that holds `poison`, as a model refuses a text it cannot take.
+ */
+export function embedWithKnowledgeRefusing(poison: string) {
+  const concepts = conceptEmbedder(KNOWLEDGE_CONCEPTS);
+  const model = new MockEmbeddingModelV4({
+    doEmbed: (options) =>
+      Arr.some(options.values, (text) => text.includes(poison))
+        ? refusal()
+        : concepts.doEmbed(options),
+    maxEmbeddingsPerCall: 512,
+  });
+  provider.embeddingModel.mockReturnValue(model);
+  return model;
+}
+
 type KnowledgeInput = Parameters<typeof runStep>[0];
 type KnowledgeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
@@ -424,4 +442,39 @@ export async function measuredBuild(t: KnowledgeTest) {
     samples = Arr.append(samples, sample);
   }).build();
   return { steps, total: totalOf(samples) };
+}
+
+/** The steps of a build, as `knowledgeBuild` gives them. */
+type KnowledgeSteps = Awaited<
+  ReturnType<ReturnType<typeof knowledgeBuild>["build"]>
+>;
+
+/** The texts that the steps sent to the embedder. */
+export const embeddedBy = (steps: KnowledgeSteps) =>
+  Num.sumAll(Arr.map(steps, ({ embedded }) => embedded));
+
+/** The documents that the steps passed over because the index held them. */
+export const skippedBy = (steps: KnowledgeSteps) =>
+  Num.sumAll(Arr.map(steps, ({ skipped }) => skipped));
+
+/** The vector and the place of the Indonesian determinant section of the first lesson, as the index stores them. */
+export const determinantOf = (stored: readonly Doc<"contentSections">[]) =>
+  Option.map(
+    Arr.findFirst(
+      stored,
+      (row) =>
+        row.appLocale === "id" &&
+        row.anchor === "determinan" &&
+        row.contentKey.endsWith("section-1")
+    ),
+    ({ embedding, ordinal }) => ({ embedding, ordinal })
+  );
+
+/** Makes the record of the finished build name an earlier release, as it does after an activation. */
+export async function finishedEarlierRelease(ctx: MutationCtx) {
+  for (const record of await ctx.db.query("contentSectionState").collect()) {
+    await ctx.db.patch("contentSectionState", record._id, {
+      releaseId: "release-earlier",
+    });
+  }
 }
