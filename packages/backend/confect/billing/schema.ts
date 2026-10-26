@@ -1,3 +1,4 @@
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
   BillingCurrency,
@@ -16,15 +17,6 @@ export const BillingCountry = Schema.String.check(
   Schema.isPattern(/^[A-Z]{2}$/u)
 );
 export type BillingCountry = typeof BillingCountry.Type;
-
-/** The Xendit channels a recurring Pro or School subscription can be linked through. */
-const XenditChannel = Schema.Literals([
-  "CARDS",
-  "DANA",
-  "GOPAY_RECURRING",
-  "OVO",
-  "SHOPEEPAY",
-]);
 
 /** A payer. The owner is the person or the school, never both. */
 export const billingAccountValidator = Schema.Struct({
@@ -46,10 +38,10 @@ export const billingProviderValidator = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("xendit"),
-    planId: Schema.String,
+    /** The recurring plan that charges every month after the first, which opens once the first month is paid; none until then. */
+    planId: Schema.NullOr(Schema.String),
+    /** The payment token of the channel the first month saved, which the plan charges. */
     tokenId: Schema.NullOr(Schema.String),
-    /** The channel the buyer linked. Checkout opens the plan before the buyer picks one, so it starts unknown. */
-    channel: Schema.NullOr(XenditChannel),
   }),
 ]).pipe(Schema.toTaggedUnion("kind"));
 
@@ -86,10 +78,15 @@ export const billingSubscriptionSummaryValidator = Schema.Struct({
   rail: BillingRail,
 });
 
-/** What the billing settings show for a viewer: the plan, the subscription that bills it, and the Nina credits. */
+/** What Pro a learner holds: none, only passes, which another pass extends, or a plan billed elsewhere. */
+export const ProHolding = Schema.Literals(["none", "pass", "plan"]);
+
+/** What the billing settings show for a viewer: the plan, the subscription that bills it, the passes, and the Nina credits. */
 export const billingOverviewValidator = Schema.Struct({
   plan: userPlanValidator,
   subscription: Schema.NullOr(billingSubscriptionSummaryValidator),
+  /** The Pro passes a viewer holds while only passes give them Pro: the moment the last of them ends, which another pass extends. */
+  pass: Schema.NullOr(Schema.Struct({ endsAt: Schema.Finite })),
   credits: Schema.Struct({
     /** The credits the plan grants each reset period. */
     allowance: Schema.Finite,
@@ -297,6 +294,8 @@ export const billingCheckoutValidator = Schema.Struct({
   openedAt: Schema.Finite,
   /** When the rail closes the session unpaid. */
   expiresAt: Schema.Finite,
+  /** The language the buyer checked out in, which every message about this purchase is written in. */
+  locale: ActiveAppLocaleCodeSchema,
   /** The school invoice the session pays, or null for a learner's Pro checkout. */
   invoiceId: Schema.NullOr(Id("billingInvoices")),
 });

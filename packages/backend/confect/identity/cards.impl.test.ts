@@ -373,6 +373,7 @@ describe("identity/cards enroll", () => {
         expect(listed.page).toContainEqual({
           id: expect.any(String),
           name: "Siswa Baru",
+          removable: true,
           roles: [],
           status: "cardIssued",
         });

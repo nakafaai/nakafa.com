@@ -183,4 +183,32 @@ describe("Nakafa CLI command tree", () => {
       expect(error?.message).toContain("Invalid command options");
     })
   );
+
+  it.effect("parses the school commands into their requests", () =>
+    Effect.gen(function* () {
+      const commands = Arr.map(
+        [
+          ["school", "login", "harapan.nakafa.com"],
+          ["school", "logout"],
+          ["school", "periods"],
+          ["school", "cohorts", "--period", "p1", "--cursor", "next"],
+          ["school", "people", "--status", "suspended"],
+          ["school", "placements", "--period", "p1"],
+        ],
+        (argv) => readRequests(argv)
+      );
+      const requests = Arr.flatten(yield* Effect.all(commands));
+      expect(Arr.map(requests, (request) => request.command)).toEqual([
+        { host: "harapan.nakafa.com", kind: "school-login" },
+        { kind: "school-logout" },
+        { kind: "school-read", read: { read: "periods" } },
+        {
+          kind: "school-read",
+          read: { cursor: "next", period: "p1", read: "cohorts" },
+        },
+        { kind: "school-read", read: { read: "people", status: "suspended" } },
+        { kind: "school-read", read: { period: "p1", read: "placements" } },
+      ]);
+    })
+  );
 });

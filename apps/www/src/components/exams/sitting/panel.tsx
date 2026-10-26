@@ -1,23 +1,7 @@
 import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
-import {
-  ArrowDown01Icon,
-  LockIcon,
-  SquareUnlock02Icon,
-  StopWatchIcon,
-  TabletConnectedWifiIcon,
-} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { awayFor } from "@repo/backend/confect/exams/sittings/away";
-import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
@@ -32,6 +16,10 @@ import {
   useSittingStore,
 } from "@/components/exams/sitting/context";
 import {
+  type PanelDialog,
+  StudentPanelActions,
+} from "@/components/exams/sitting/controls";
+import {
   AddMinutesDialog,
   AllowDeviceDialog,
   LockDialog,
@@ -45,9 +33,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-
-/** The dialog of a panel action that is open, or none. */
-type PanelDialog = "add-minutes" | "allow-device" | "lock" | "unlock";
 
 /** How many signals one page of the panel's list holds, the first one and each one after it. */
 const SIGNAL_PAGE_SIZE = 20;
@@ -138,10 +123,9 @@ function SelectedPanel() {
 }
 
 /**
- * The content of the panel for one student. The actions follow the table of ADR 0013: a lock
- * for an attempt in progress, an unlock for a locked one, and added minutes for either. A
- * second device is allowed in every state. The actions show only when the page lists them for
- * the viewer, so a viewer who may only view sees the signals and no action.
+ * The content of the panel for one student. The actions follow the table of ADR 0013 (see
+ * `StudentPanelActions`), and show only when the page lists them for the viewer, so a viewer who
+ * may only view sees the signals and no action.
  */
 function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
   const t = useTranslations("Exams");
@@ -171,74 +155,17 @@ function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
   );
 }
 
-/**
- * A proctor's actions on one student: Lock an attempt in progress or Unlock a locked one as
- * the main action, with Add minutes and Allow a second device in the menu joined to it. An
- * attempt that takes no lock and no minutes keeps Allow a second device as its one action.
- */
+/** A proctor's actions on one student (see `StudentPanelActions`) and the dialog each one opens. */
 function StudentActions({ attempt }: { readonly attempt: DashboardAttempt }) {
-  const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const [dialog, setDialog] = useState<PanelDialog | null>(null);
-  const takesMinutes =
-    attempt.state === "inProgress" || attempt.state === "locked";
 
   return (
     <>
-      {takesMinutes ? (
-        <ButtonGroup aria-label={t("panel-label")}>
-          {attempt.state === "inProgress" ? (
-            <Button
-              onClick={() => setDialog("lock")}
-              type="button"
-              variant="destructive"
-            >
-              <HugeIcons icon={LockIcon} />
-              {t("lock")}
-            </Button>
-          ) : (
-            <Button onClick={() => setDialog("unlock")} type="button">
-              <HugeIcons icon={SquareUnlock02Icon} />
-              {t("unlock")}
-            </Button>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  aria-label={common("more-actions")}
-                  size="icon"
-                  type="button"
-                  variant={
-                    attempt.state === "inProgress" ? "destructive" : "default"
-                  }
-                />
-              }
-            >
-              <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setDialog("add-minutes")}>
-                <HugeIcons icon={StopWatchIcon} />
-                {t("add-minutes")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDialog("allow-device")}>
-                <HugeIcons icon={TabletConnectedWifiIcon} />
-                {t("allow-device")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </ButtonGroup>
-      ) : (
-        <Button
-          onClick={() => setDialog("allow-device")}
-          type="button"
-          variant="outline"
-        >
-          <HugeIcons icon={TabletConnectedWifiIcon} />
-          {t("allow-device")}
-        </Button>
-      )}
+      <StudentPanelActions
+        name={attempt.name}
+        onOpen={setDialog}
+        state={attempt.state}
+      />
       <LockDialog
         attemptId={attempt.id}
         name={attempt.name}

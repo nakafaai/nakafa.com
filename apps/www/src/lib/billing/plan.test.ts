@@ -1,16 +1,21 @@
 import { describe, expect, it } from "@effect/vitest";
+import billing from "@repo/backend/confect/_generated/refs/billing";
+import { Option } from "effect";
 import {
   type BillingOverview,
   type BillingSubscription,
+  cancelPlanChange,
   creditFooterKey,
   creditPeriodKey,
   formatBillingDate,
   formatCount,
+  formatMinorAmount,
   planStateOf,
   providerNameOf,
   subscribedDescriptionKey,
   usedPercent,
 } from "@/lib/billing/plan";
+import { createLocalStore } from "@/test/optimistic";
 
 const SUBSCRIPTION: BillingSubscription = {
   cancelAtPeriodEnd: false,
@@ -30,6 +35,7 @@ const FREE: BillingOverview = {
     resetAt: Date.UTC(2026, 9, 26),
   },
   plan: "free",
+  pass: null,
   subscription: null,
 };
 
@@ -96,6 +102,22 @@ describe("billing/plan", () => {
     );
   });
 
+  it("shows the end of the passes that alone give Pro, so another pass extends them", () => {
+    expect(
+      planStateOf({
+        ...FREE,
+        pass: { endsAt: Date.UTC(2026, 10, 26) },
+        plan: "pro",
+      })
+    ).toEqual({ endsAt: Date.UTC(2026, 10, 26), kind: "pass" });
+  });
+
+  it("writes an amount in minor units the way the prices write its currency", () => {
+    expect(formatMinorAmount(43_696, "IDR")).toBe("Rp 43.696");
+    expect(formatMinorAmount(1000, "EUR")).toBe("10,00 €");
+    expect(formatMinorAmount(1000, "USD")).toBe("$10.00");
+  });
+
   it("names the credits a viewer spends now: the school's day for a pool member, otherwise the plan's period", () => {
     const member: BillingOverview = {
       ...FREE,
@@ -141,5 +163,34 @@ describe("billing/plan", () => {
   it("counts a balance above the allowance as nothing used, and a period without an allowance as all used", () => {
     expect(usedPercent({ allowance: 10, balance: 25 })).toBe(0);
     expect(usedPercent({ allowance: 0, balance: 0 })).toBe(100);
+  });
+});
+
+describe("billing/plan optimistic cancel", () => {
+  it("shows a canceled plan as ending at once, and nothing while the overview loads or holds no plan", () => {
+    const local = createLocalStore();
+    cancelPlanChange(local.store, {});
+    expect(local.store.getQuery(billing.queries.overview, {})).toEqual(
+      Option.none()
+    );
+    local.seed(billing.queries.overview, {}, FREE);
+    cancelPlanChange(local.store, {});
+    expect(
+      Option.getOrThrow(local.store.getQuery(billing.queries.overview, {}))
+    ).toEqual(FREE);
+    local.seed(
+      billing.queries.overview,
+      {},
+      {
+        ...FREE,
+        plan: "pro",
+        subscription: { ...SUBSCRIPTION, rail: "xendit" },
+      }
+    );
+    cancelPlanChange(local.store, {});
+    expect(
+      Option.getOrThrow(local.store.getQuery(billing.queries.overview, {}))
+        .subscription
+    ).toMatchObject({ cancelAtPeriodEnd: true, rail: "xendit" });
   });
 });
