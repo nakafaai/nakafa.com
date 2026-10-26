@@ -167,26 +167,30 @@ describe("homeScreenHandler", () => {
     expect(screen.seo).toMatchObject({ canonicalPath: "/en", indexable: true });
   });
 
-  it("reads the gate and the page together, in one round trip", async () => {
-    sessionWith(Option.some("token"));
-    const pageRead = Effect.runSync(Deferred.make<void>());
-    mocks.preloadConfectQuery.mockImplementation((ref) => {
-      if (ref === onboarding.queries.getStatus) {
-        // The gate answers only once a read of the page has gone out beside it.
-        return Deferred.await(pageRead).pipe(
-          Effect.as({ isAuthenticated: true, isRequired: false })
+  it.effect("reads the gate and the page together, in one round trip", () =>
+    Effect.gen(function* () {
+      sessionWith(Option.some("token"));
+      const pageRead = yield* Deferred.make<void>();
+      mocks.preloadConfectQuery.mockImplementation((ref) => {
+        if (ref === onboarding.queries.getStatus) {
+          // The gate answers only once a read of the page has gone out beside it.
+          return Deferred.await(pageRead).pipe(
+            Effect.as({ isAuthenticated: true, isRequired: false })
+          );
+        }
+        return Deferred.succeed(pageRead, undefined).pipe(
+          Effect.as(ref === auth.queries.getCurrentUser ? account : [])
         );
-      }
-      return Deferred.succeed(pageRead, undefined).pipe(
-        Effect.as(ref === auth.queries.getCurrentUser ? account : [])
+      });
+      const screen = yield* Effect.promise(() =>
+        homeScreenHandler({ data: { locale: "en" } })
       );
-    });
-    const screen = await homeScreenHandler({ data: { locale: "en" } });
-    expect(screen.name).toBe("Nabil");
-    expect(mocks.readHomeTrendingSubjects).toHaveBeenCalledExactlyOnceWith(
-      "en"
-    );
-  });
+      expect(screen.name).toBe("Nabil");
+      expect(mocks.readHomeTrendingSubjects).toHaveBeenCalledExactlyOnceWith(
+        "en"
+      );
+    })
+  );
 
   it("answers the home screen with no recent subjects when the server refuses them", async () => {
     sessionWith(Option.some("token"));
