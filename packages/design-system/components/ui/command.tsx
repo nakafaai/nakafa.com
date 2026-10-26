@@ -20,7 +20,6 @@ import type * as React from "react";
 const CommandDialog = CommandDialogPrimitive.Root;
 const CommandDialogPortal = CommandDialogPrimitive.Portal;
 const CommandDialogCreateHandle = CommandDialogPrimitive.createHandle;
-const commandSearchIcon = <HugeIcons className="size-4" icon={Search02Icon} />;
 
 type CommandProps<ItemValue> = Omit<
   AutocompleteRootProps<ItemValue>,
@@ -178,7 +177,7 @@ function CommandInput({
         )}
         showClear={showClear}
         size="lg"
-        startAddon={commandSearchIcon}
+        startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
         {...props}
       />
     </div>

@@ -53,7 +53,12 @@ const draftAt = (revision: number, texts = ["", "Paris", "Rome", "Berlin"]) => {
     })),
     shuffle: false,
   };
-  return { answers: [choice], key: null, revision } satisfies QuestionDraft;
+  return {
+    answers: [choice],
+    key: null,
+    revision,
+    template: "choice",
+  } satisfies QuestionDraft;
 };
 
 /** The edit that gives the option with `optionId` the text `text`, keeping the rest of the draft. */
@@ -61,6 +66,7 @@ const typeOption =
   (optionId: string, text: string) => (draft: QuestionDraft) => ({
     answers: withOptionLabel(draft.answers, optionId, labelOf(text)),
     key: draft.key,
+    template: draft.template,
   });
 
 /** The refusal of a save whose revision is no longer the one the server holds. */
@@ -77,14 +83,16 @@ const serverHolding = (initial: QuestionDraft, held: boolean) =>
   Effect.gen(function* () {
     const stored = yield* Ref.make(initial);
     const sent = yield* Ref.make<readonly QuestionDraft[]>([]);
+    const bases = yield* Ref.make<readonly QuestionDraft[]>([]);
     const arrived = yield* Deferred.make<void>();
     const release = yield* Deferred.make<void>();
     if (!held) {
       yield* Deferred.succeed(release, undefined);
     }
-    const send = (draft: QuestionDraft) =>
+    const send = (draft: QuestionDraft, base: QuestionDraft) =>
       Effect.gen(function* () {
         yield* Ref.update(sent, (drafts) => [...drafts, draft]);
+        yield* Ref.update(bases, (drafts) => [...drafts, base]);
         yield* Deferred.succeed(arrived, undefined);
         yield* Deferred.await(release);
         const current = yield* Ref.get(stored);
@@ -95,11 +103,12 @@ const serverHolding = (initial: QuestionDraft, held: boolean) =>
           answers: draft.answers,
           key: draft.key,
           revision: current.revision + 1,
+          template: draft.template,
         } satisfies QuestionDraft;
         yield* Ref.set(stored, next);
         return next;
       });
-    return { arrived, release, send, sent, stored };
+    return { arrived, bases, release, send, sent, stored };
   });
 
 describe("makeQuestionWriter", () => {
@@ -131,6 +140,10 @@ describe("makeQuestionWriter", () => {
         const sent = yield* Ref.get(server.sent);
         expect(Arr.map(sent, (draft) => draft.revision)).toEqual([3, 4]);
         expect(textsOf(sent[1])).toEqual(["", "Lyon", "Milan", "Berlin"]);
+        // Each save also hands its call the draft it was built on: the render, then the first answer.
+        const bases = yield* Ref.get(server.bases);
+        expect(Arr.map(bases, (draft) => draft.revision)).toEqual([3, 4]);
+        expect(textsOf(bases[1])).toEqual(["", "Lyon", "Rome", "Berlin"]);
       })
   );
 

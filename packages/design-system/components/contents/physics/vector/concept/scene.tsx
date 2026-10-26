@@ -155,36 +155,21 @@ function LoadCart({
         </mesh>
       ))}
       {Arr.map(wheelPositions, ([x, z]) => (
-        <LoadCartWheel
-          color={wheelColor}
-          hubColor={hubColor}
+        <group
           key={`wheel-${x}-${z}`}
           position={[x, -0.18, z] satisfies ScenePoint}
-        />
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <mesh castShadow>
+            <cylinderGeometry args={[0.09, 0.09, 0.07, 28]} />
+            <meshStandardMaterial color={wheelColor} roughness={0.54} />
+          </mesh>
+          <mesh position={[0, 0, 0.038]}>
+            <cylinderGeometry args={[0.038, 0.038, 0.01, 20]} />
+            <meshStandardMaterial color={hubColor} roughness={0.48} />
+          </mesh>
+        </group>
       ))}
-    </group>
-  );
-}
-
-function LoadCartWheel({
-  color,
-  hubColor,
-  position,
-}: {
-  color: string;
-  hubColor: string;
-  position: ScenePoint;
-}) {
-  return (
-    <group position={position} rotation={[Math.PI / 2, 0, 0]}>
-      <mesh castShadow>
-        <cylinderGeometry args={[0.09, 0.09, 0.07, 28]} />
-        <meshStandardMaterial color={color} roughness={0.54} />
-      </mesh>
-      <mesh position={[0, 0, 0.038]}>
-        <cylinderGeometry args={[0.038, 0.038, 0.01, 20]} />
-        <meshStandardMaterial color={hubColor} roughness={0.48} />
-      </mesh>
     </group>
   );
 }

@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { Function as Fn } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { DataFailure } from "@/components/shared/failure";
@@ -31,7 +32,7 @@ interface TenantRead<Query extends Ref.AnyPublicQuery> {
  */
 export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
   children,
-  fallback,
+  fallback = Fn.identity,
   read,
 }: {
   children: ReactNode;
@@ -40,15 +41,15 @@ export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
 }) {
   return (
     <ErrorBoundary
-      fallbackRender={({ error, resetErrorBoundary }) => {
-        const failure =
-          read === undefined ? (
-            <PageFailure error={error} />
-          ) : (
-            <ReadFailure error={error} read={read} reset={resetErrorBoundary} />
-          );
-        return fallback === undefined ? failure : fallback(failure);
-      }}
+      fallbackRender={({ error, resetErrorBoundary }) =>
+        fallback(
+          <BoundaryFailure
+            error={error}
+            read={read}
+            reset={resetErrorBoundary}
+          />
+        )
+      }
       onError={(error, info) => {
         // A refusal is an answer that the part shows, not a failure, so it is not reported.
         if (isLostAccess(error) || isDenied(error)) {
@@ -63,6 +64,23 @@ export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
     >
       {children}
     </ErrorBoundary>
+  );
+}
+
+/** The failure of the boundary's read, or of the page's paginated read when the boundary names none. */
+function BoundaryFailure<Query extends Ref.AnyPublicQuery>({
+  error,
+  read,
+  reset,
+}: {
+  error: unknown;
+  read: TenantRead<Query> | undefined;
+  reset: () => void;
+}) {
+  return read === undefined ? (
+    <PageFailure error={error} />
+  ) : (
+    <ReadFailure error={error} read={read} reset={reset} />
   );
 }
 

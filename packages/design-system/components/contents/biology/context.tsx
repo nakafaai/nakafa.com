@@ -1,4 +1,5 @@
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
@@ -22,6 +23,7 @@ interface BiologyLabProviderProps {
   children: ReactNode;
   colors: BiologySceneColors;
   store: BiologyItemStore;
+  view: NarrowCameraPose;
 }
 
 const BiologyLabContext = createContext<Omit<
@@ -30,16 +32,17 @@ const BiologyLabContext = createContext<Omit<
 > | null>(null);
 
 /**
- * Provides the scene colors and the item store of one biology lab to its stage
- * and scenes. The value changes only with the colors, so a reader of the colors
- * never reruns when the reader picks another item.
+ * Provides the scene colors, the item store, and the camera view of one biology
+ * lab to its stage and scenes. The value changes only with the colors, so a
+ * reader of the colors never reruns when the reader picks another item.
  */
 export function BiologyLabProvider({
   children,
   colors,
   store,
+  view,
 }: BiologyLabProviderProps) {
-  const value = useMemo(() => ({ colors, store }), [colors, store]);
+  const value = useMemo(() => ({ colors, store, view }), [colors, store, view]);
 
   return <BiologyLabContext value={value}>{children}</BiologyLabContext>;
 }
@@ -56,6 +59,11 @@ function useBiologyLab() {
 /** Reads the scene colors of the surrounding biology lab. */
 export function useBiologyColors() {
   return useBiologyLab().colors;
+}
+
+/** Reads the camera view of the surrounding biology lab. */
+export function useBiologyView() {
+  return useBiologyLab().view;
 }
 
 /** Selects one part of the surrounding lab's item, so a reader reruns only for it. */

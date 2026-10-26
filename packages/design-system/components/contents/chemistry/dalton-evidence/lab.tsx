@@ -6,7 +6,11 @@ import {
   type DaltonModeId,
   isDaltonModeId,
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
-import { DaltonEvidenceScene } from "@repo/design-system/components/contents/chemistry/dalton-evidence/scene";
+import {
+  ComparisonExpression,
+  DaltonEvidenceScene,
+  MoleculePanel,
+} from "@repo/design-system/components/contents/chemistry/dalton-evidence/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
@@ -85,13 +89,17 @@ export function DaltonEvidenceLab({
       </VisualCardToolbar>
 
       <VisualCardBody className="p-(--card-spacing)">
-        <DaltonEvidenceScene
-          afterMolecules={selectedLayout.after}
-          afterTitle={selectedLabels.afterTitle}
-          beforeMolecules={selectedLayout.before}
-          beforeTitle={selectedLabels.beforeTitle}
-          expression={selectedLabels.expression}
-        />
+        <DaltonEvidenceScene>
+          <MoleculePanel
+            molecules={selectedLayout.before}
+            title={selectedLabels.beforeTitle}
+          />
+          <ComparisonExpression expression={selectedLabels.expression} />
+          <MoleculePanel
+            molecules={selectedLayout.after}
+            title={selectedLabels.afterTitle}
+          />
+        </DaltonEvidenceScene>
       </VisualCardBody>
 
       <VisualCardActions>

@@ -95,6 +95,48 @@ describe("exams seed sitting", () => {
   );
 
   it.effect(
+    "adds an essay worth four points with no key after the two choices when the seed asks for one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const user = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("users")
+              .get(fixture.users.student.userId)
+              .pipe(Effect.orDie)
+          )
+        );
+        const made = yield* fixture.internal.mutation(seed, {
+          email: addressOf(user.email),
+          essay: true,
+          slug: nf,
+        });
+        const questions = yield* fixture.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const exam = yield* reader
+              .table("exams")
+              .get(made.examId)
+              .pipe(Effect.orDie);
+            return yield* Effect.forEach(exam.questions, (id) =>
+              reader.table("examQuestions").get(id).pipe(Effect.orDie)
+            );
+          })
+        );
+        expect(
+          Arr.map(questions, (question) => [question.template, question.points])
+        ).toEqual([
+          ["choice", 1],
+          ["choice", 1],
+          ["essay", 4],
+        ]);
+        expect(questions[2]?.key).toBeNull();
+      })
+  );
+
+  it.effect(
     "seats a crowd of numbered students with attempts in progress, more than one dashboard page holds",
     () =>
       Effect.gen(function* () {

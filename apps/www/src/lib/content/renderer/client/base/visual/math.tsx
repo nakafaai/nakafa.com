@@ -14,8 +14,6 @@ import { type ReactNode, useId } from "react";
 
 import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/deferred";
 
-const EMPTY_LABELS: Readonly<Record<string, ReactNode>> = {};
-
 interface Props {
   readonly description: ReactNode;
   readonly labels?: Readonly<Record<string, ReactNode>>;
@@ -24,12 +22,7 @@ interface Props {
 }
 
 /** Renders one stable mathematical scene without content-specific components. */
-export function MathVisual({
-  description,
-  labels = EMPTY_LABELS,
-  scene,
-  title,
-}: Props) {
+export function MathVisual({ description, title, ...scene }: Props) {
   const identifier = useId();
   const descriptionId = `${identifier}-description`;
   const titleId = `${identifier}-title`;
@@ -48,7 +41,7 @@ export function MathVisual({
           data-scene="math"
           render={<figure />}
         >
-          <DeferredMathScene labels={labels} scene={scene} />
+          <DeferredMathScene {...scene} />
         </VisualCardBody>
         <CoordinateControls />
       </VisualCard>

@@ -1,6 +1,9 @@
 import { useChemicalReactionTypeScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
 import type { ChemicalReactionTypeSceneLabelsSchema } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
-import { ReactionModel } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/models";
+import {
+  ReactionModel,
+  ReactionPhaseContext,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/models";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 
 const BEFORE_X = -1.18;
@@ -31,11 +34,15 @@ export function ChemicalReactionTypesScene({
         {labels.after}
       </ThreeLabel>
       <group position={[BEFORE_X, 0, 0]}>
-        <ReactionModel phase="before" />
+        <ReactionPhaseContext value="before">
+          <ReactionModel />
+        </ReactionPhaseContext>
       </group>
 
       <group position={[AFTER_X, 0, 0]}>
-        <ReactionModel phase="after" />
+        <ReactionPhaseContext value="after">
+          <ReactionModel />
+        </ReactionPhaseContext>
       </group>
     </group>
   );

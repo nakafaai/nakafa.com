@@ -5,6 +5,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
 import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
+import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
   ResultsPaperContext,
   ResultsScopeContext,
@@ -12,6 +13,7 @@ import {
 } from "@/components/exams/results/context";
 import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
+import { ResultsSelectionProvider } from "@/components/exams/results/selection";
 import {
   type StatusFilter,
   StudentStatusFilter,
@@ -102,7 +104,13 @@ function SittingResultsContent({
         Arr.map(overview.value.questions, (question) => question.points)
       )
     : 0;
-  const paper = useMemo(() => ({ timeZone, total }), [timeZone, total]);
+  const canGrade =
+    QueryResult.isSuccess(overview) &&
+    Arr.contains(overview.value.can, "result.grade");
+  const paper = useMemo(
+    () => ({ canGrade, timeZone, total }),
+    [canGrade, timeZone, total]
+  );
   const [status, setStatus] = useState<StatusFilter>("all");
   const t = useTranslations("Exams");
 
@@ -126,24 +134,29 @@ function SittingResultsContent({
     sitting.state === "closed" && Arr.contains(can, "result.release");
   return (
     <ResultsScopeContext value={scope}>
-      <TableFiltersProvider>
-        <ResultsHeader
-          examId={examId}
-          examTitle={sitting.examTitle}
-          room={sitting.room}
-          sittingId={scope.sittingId}
-        >
-          <TableSearch placeholder={t("results-search")} />
-          <StudentStatusFilter onChange={setStatus} value={status} />
-          <QuestionsAction questions={questions} />
-          <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
-        </ResultsHeader>
-        <div className="flex w-full min-w-0 flex-1 flex-col">
-          <ResultsPaperContext value={paper}>
-            <StudentsTable first={preload?.students} status={status} />
-          </ResultsPaperContext>
-        </div>
-      </TableFiltersProvider>
+      <ResultsPaperContext value={paper}>
+        <ResultsSelectionProvider>
+          <TableFiltersProvider>
+            <ResultsHeader
+              examId={examId}
+              examTitle={sitting.examTitle}
+              room={sitting.room}
+              sittingId={scope.sittingId}
+            >
+              <TableSearch placeholder={t("results-search")} />
+              <StudentStatusFilter onChange={setStatus} value={status} />
+              <QuestionsAction questions={questions} />
+              <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
+            </ResultsHeader>
+            <div className="flex min-h-0 w-full min-w-0 flex-1">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <StudentsTable first={preload?.students} status={status} />
+              </div>
+              <StudentAnswersPanel />
+            </div>
+          </TableFiltersProvider>
+        </ResultsSelectionProvider>
+      </ResultsPaperContext>
     </ResultsScopeContext>
   );
 }

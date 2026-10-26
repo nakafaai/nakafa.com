@@ -12,6 +12,21 @@ export type BillingOverview = typeof billingOverviewValidator.Type;
 export type BillingSubscription =
   typeof billingSubscriptionSummaryValidator.Type;
 
+/** The name of the credits a viewer spends now: their school's day while they draw from its pool (K46), otherwise their plan's period. */
+export function creditPeriodKey({ credits, plan }: BillingOverview) {
+  if (credits.pool !== null) {
+    return "school-credits";
+  }
+  return plan === "pro" ? "credits-month" : "credits-today";
+}
+
+/** The credits card's footer sentence for a viewer who buys no pack there: a school member's pool, or the Free upgrade. */
+export function creditFooterKey({ credits }: BillingOverview) {
+  return credits.pool === null
+    ? "credits-free-footer"
+    : "school-credits-footer";
+}
+
 /**
  * The state of the plan card for one overview. A subscription on the account
  * decides the card, so a past-due subscription keeps its billing portal in reach.

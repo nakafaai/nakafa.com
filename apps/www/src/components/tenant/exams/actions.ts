@@ -2,9 +2,10 @@ import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   NEW_QUESTION_POINTS,
+  NEW_QUESTION_TEMPLATE,
   newChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
-import { Effect, Function as Fn } from "effect";
+import { Effect, Function as Fn, Option } from "effect";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   addQuestionUpdate,
@@ -24,6 +25,7 @@ import {
   useExamSelection,
   useExamSelectionStore,
 } from "@/components/tenant/exams/provider";
+import { afterRemoval } from "@/components/tenant/exams/selection";
 
 /** Runs an action of a page from a browser event, without any handler of its own. */
 const act = <A, E>(action: Effect.Effect<A, E>) =>
@@ -34,13 +36,11 @@ const act = <A, E>(action: Effect.Effect<A, E>) =>
 
 /**
  * A question the server has not saved yet, with its own placeholder IDs: one for each document it
- * owns, and its own ID. It takes the answers, the key, and the points it starts with, and the
- * documents it shows at once.
+ * owns, and its own ID. It takes the answers, the key, the points, and the template it starts with,
+ * and the documents it shows at once.
  */
 const placeholderDraft = (
-  answers: Question["answers"],
-  key: Question["key"],
-  points: Question["points"]
+  question: Pick<Question, "answers" | "key" | "points" | "template">
 ) =>
   Effect.all({
     explanation: placeholderDocumentId,
@@ -50,11 +50,9 @@ const placeholderDraft = (
   }).pipe(
     Effect.map(({ explanation, id, prompt, rubric }) =>
       placeholderQuestion({
-        answers,
+        ...question,
         explanation,
         id,
-        key,
-        points,
         prompt,
         rubric,
       })
@@ -102,7 +100,12 @@ export function useQuestionActions() {
   /** Adds an empty question right after `after`, or at the end when `after` is none. */
   const addQuestion = (after: QuestionId | null) =>
     act(
-      placeholderDraft(newChoiceAnswers(), null, NEW_QUESTION_POINTS).pipe(
+      placeholderDraft({
+        answers: newChoiceAnswers(),
+        key: null,
+        points: NEW_QUESTION_POINTS,
+        template: NEW_QUESTION_TEMPLATE,
+      }).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
             sentAction(() =>
@@ -120,7 +123,7 @@ export function useQuestionActions() {
   /** Copies a question right after itself, and selects the copy once the server saves it. */
   const copyQuestion = (question: Question) =>
     act(
-      placeholderDraft(question.answers, question.key, question.points).pipe(
+      placeholderDraft(question).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
             sentAction(() =>
@@ -139,9 +142,33 @@ export function useQuestionActions() {
   const moveQuestion = (questionId: QuestionId, index: number) =>
     act(sentAction(() => move({ examId: exam.id, index, questionId, slug })));
 
-  /** Removes a question, once the teacher confirmed it. */
-  const removeQuestion = (questionId: QuestionId) =>
-    act(sentAction(() => remove({ examId: exam.id, questionId, slug })));
+  /**
+   * Removes a question, once the teacher confirmed it. A teacher on that question moves to its neighbour at
+   * once (`afterRemoval`), and back to it when the server refuses the removal, unless the teacher chose another.
+   */
+  const removeQuestion = (questionId: QuestionId) => {
+    const next = afterRemoval(
+      exam.questions,
+      selection.getState().selected,
+      questionId
+    );
+    if (Option.isSome(next)) {
+      select(next.value);
+    }
+    act(
+      sentAction(() => remove({ examId: exam.id, questionId, slug })).pipe(
+        Effect.tapError(() =>
+          Effect.sync(() => {
+            if (
+              Option.exists(next, (id) => id === selection.getState().selected)
+            ) {
+              select(questionId);
+            }
+          })
+        )
+      )
+    );
+  };
 
   return { addQuestion, copyQuestion, moveQuestion, removeQuestion };
 }

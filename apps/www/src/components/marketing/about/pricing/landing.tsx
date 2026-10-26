@@ -2,7 +2,10 @@ import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { useTranslations } from "use-intl";
 import { PricingButton } from "@/components/marketing/about/pricing/button";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
-import type { PriceProps } from "@/components/marketing/about/pricing/price";
+import {
+  type PriceProps,
+  PricingPrice,
+} from "@/components/marketing/about/pricing/price";
 
 /** Animates prices only on the landing surface that owns this treatment. */
 function AnimatedPrice({ price }: PriceProps) {
@@ -22,6 +25,7 @@ function AnimatedPrice({ price }: PriceProps) {
  */
 export function Pricing() {
   const t = useTranslations("Landing");
+  const tPricing = useTranslations("Pricing");
 
   return (
     <section aria-labelledby="pricing-heading" className="scroll-mt-28">
@@ -39,9 +43,16 @@ export function Pricing() {
 
       <div className="px-6 lg:px-10">
         <PricingCards
+          freePrice={<PricingPrice Price={AnimatedPrice} plan="free" />}
           headingLevel="h3"
-          Price={AnimatedPrice}
           proAction={<PricingButton variant="secondary" />}
+          proPrice={
+            <PricingPrice
+              Price={AnimatedPrice}
+              period={tPricing("pro-period")}
+              plan="pro"
+            />
+          }
         />
       </div>
     </section>

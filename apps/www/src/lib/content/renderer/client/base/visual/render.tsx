@@ -20,8 +20,11 @@ import {
 } from "@/lib/content/renderer/client/base/visual/transform";
 import { resolveMathView } from "@/lib/content/renderer/client/base/visual/view";
 
+const EMPTY_LABELS: Readonly<Record<string, ReactNode>> = {};
+
 export interface MathSceneProps {
-  readonly labels: Readonly<Record<string, ReactNode>>;
+  /** The rendered label of each label key; a scene whose labels have none draws no text. */
+  readonly labels?: Readonly<Record<string, ReactNode>>;
   readonly scene: PlaneVisual | SpaceVisual;
 }
 type LabelAnchor = Pick<
@@ -65,7 +68,7 @@ function resolveArrow(position: "both" | "end" | "none", size: number) {
 }
 
 /** All authored dimensions compose the same interactive Nakafa primitives. */
-export function MathScene({ labels, scene }: MathSceneProps) {
+export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
   const projection = resolveVisualProjection(scene);
   const geometry = resolveVisualGeometry(scene, projection);
   const view = resolveMathView(scene, projection);
