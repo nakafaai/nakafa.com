@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import type { reportClientException } from "@/lib/analytics/client";
+import { KNOWN_ACCOUNT_KEY } from "@/lib/auth/keys";
 import {
   expectSession,
   loadKnownSession,
@@ -62,12 +63,16 @@ describe("the session the browser last had", () => {
     })
   );
 
-  it.effect("forgets it once Better Auth settles on signed out", () =>
-    Effect.gen(function* () {
-      yield* saveKnownSession(signedIn);
-      yield* saveKnownSession(signedOut);
-      expect(yield* loadKnownSession()).toBeNull();
-    })
+  it.effect(
+    "forgets it and the account row kept for it once Better Auth settles on signed out",
+    () =>
+      Effect.gen(function* () {
+        yield* saveKnownSession(signedIn);
+        window.localStorage.setItem(KNOWN_ACCOUNT_KEY, "row");
+        yield* saveKnownSession(signedOut);
+        expect(yield* loadKnownSession()).toBeNull();
+        expect(window.localStorage.getItem(KNOWN_ACCOUNT_KEY)).toBeNull();
+      })
   );
 
   it.effect.each([
