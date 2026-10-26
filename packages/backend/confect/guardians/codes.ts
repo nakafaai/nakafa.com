@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { components } from "@repo/backend/confect/_generated/components";
 import type {
   GuardianCodesDoc,
@@ -27,10 +28,9 @@ import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { bindPerson } from "@repo/backend/confect/tenancy/claim";
 import { Email } from "@repo/backend/confect/tenancy/schema";
-import { allocateUsername } from "@repo/backend/confect/users/allocation";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { guardianCodeEmail } from "@repo/email/templates/guardian/content";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { allocateUsername } from "@repo/backend/confect/users/allocation";
+import { guardianCodeEmail } from "@repo/email/templates/guardian/content";
 import { Array as Arr, Clock, Duration, Effect, Option, Schema } from "effect";
 
 /**
@@ -141,8 +141,10 @@ export const sendCode = Effect.fn("guardians.codes.send")(function* (input: {
   const expiresAt = now + Duration.toMillis(CODE_TERM);
   const answer = { expiresAt };
   if (
-    !(yield* admit("guardianCodeByDevice", input.deviceId)) ||
-    !(yield* admit("guardianCodeByAddress", input.email))
+    !(
+      (yield* admit("guardianCodeByDevice", input.deviceId)) &&
+      (yield* admit("guardianCodeByAddress", input.email))
+    )
   ) {
     return answer;
   }
@@ -182,7 +184,10 @@ const checkCode = Effect.fn("guardians.codes.check")(function* (
     yield* dropCode(code);
     return false;
   }
-  if ((yield* hashGuardianCode(code.tenantId, code.email, typed)) === code.codeHash) {
+  if (
+    (yield* hashGuardianCode(code.tenantId, code.email, typed)) ===
+    code.codeHash
+  ) {
     yield* dropCode(code);
     return true;
   }
@@ -274,7 +279,12 @@ export const redeemCode = Effect.fn("guardians.codes.redeem")(function* (
   if (Option.isNone(tenant)) {
     return refused;
   }
-  if (!(yield* admit("guardianSignInByAddress", `${tenant.value._id}:${email.value}`))) {
+  if (
+    !(yield* admit(
+      "guardianSignInByAddress",
+      `${tenant.value._id}:${email.value}`
+    ))
+  ) {
     return refused;
   }
   const code = yield* codeOf(tenant.value._id, email.value);

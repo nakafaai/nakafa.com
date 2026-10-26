@@ -13,6 +13,9 @@ import { Effect } from "effect";
 
 const { code } = refs.internal.guardians.seed;
 
+/** A sign-in code as the parent receives it. */
+const CODE = /^\d{6}$/;
+
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(TENANCY_NOW);
@@ -36,7 +39,7 @@ describe("guardians/seed", () => {
           nisn: NISN,
           slug: "nf",
         });
-        expect(seeded.code).toMatch(/^\d{6}$/);
+        expect(seeded.code).toMatch(CODE);
         expect(
           yield* fixture.as("admin").query(refs.public.roster.entries.get, {
             personId: fixture.people.student.personId,

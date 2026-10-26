@@ -18,7 +18,10 @@ import { Effect, Option, Predicate, Schema, String as Str } from "effect";
 export const GUARDIAN_SIGN_IN_PATH = "/school/guardian/sign-in";
 
 /** The two fields the sign-in reads from the body. */
-const SignInFields = Schema.Struct({ code: Schema.String, email: Schema.String });
+const SignInFields = Schema.Struct({
+  code: Schema.String,
+  email: Schema.String,
+});
 
 /** The action method that the endpoint calls: the internal redeem of the code. */
 type ActionCtx = Pick<GenericActionCtx<GenericDataModel>, "runMutation">;
@@ -62,8 +65,10 @@ const signIn = Effect.fn("auth.guardian.signIn")(function* (
   ctx: ActionCtx,
   endpoint: SignInContext
 ) {
-  const slug = Option.flatMap(Option.fromNullishOr(endpoint.request), (request) =>
-    readSchoolSlug(request, new URL(endpoint.context.baseURL).hostname)
+  const slug = Option.flatMap(
+    Option.fromNullishOr(endpoint.request),
+    (request) =>
+      readSchoolSlug(request, new URL(endpoint.context.baseURL).hostname)
   );
   if (Option.isNone(slug)) {
     return yield* Effect.fail(passwordSignInDisabledError());

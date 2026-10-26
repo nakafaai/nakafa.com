@@ -45,9 +45,7 @@ describe("identity/secret", () => {
 describe("identity/secret guardian codes", () => {
   it.effect("draws six digits", () =>
     Effect.gen(function* () {
-      const codes = yield* Effect.all(
-        Arr.makeBy(20, () => drawGuardianCode())
-      );
+      const codes = yield* Effect.all(Arr.makeBy(20, () => drawGuardianCode()));
       for (const code of codes) {
         expect(code).toMatch(SIX_DIGITS);
       }
@@ -59,11 +57,15 @@ describe("identity/secret guardian codes", () => {
     "binds a guardian code to its school and address, apart from a card hash",
     () =>
       Effect.gen(function* () {
-        const first = yield* hashGuardianCode("t1", "ibu@example.com", "123456");
+        const first = yield* hashGuardianCode(
+          "t1",
+          "ibu@example.com",
+          "123456"
+        );
         expect(first).toMatch(HEX_DIGEST_PATTERN);
-        expect(
-          yield* hashGuardianCode("t1", "ibu@example.com", "123456")
-        ).toBe(first);
+        expect(yield* hashGuardianCode("t1", "ibu@example.com", "123456")).toBe(
+          first
+        );
         expect(
           yield* hashGuardianCode("t2", "ibu@example.com", "123456")
         ).not.toBe(first);

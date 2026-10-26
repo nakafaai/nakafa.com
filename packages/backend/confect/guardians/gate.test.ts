@@ -38,21 +38,29 @@ describe("guardians/gate", () => {
         expect(yield* gate(fixture)).toBe("CONSENT_REQUIRED");
         yield* fixture
           .as("counselor")
-          .mutation(refs.public.guardians.links.verify, { linkId: link.id, slug: nf });
+          .mutation(refs.public.guardians.links.verify, {
+            linkId: link.id,
+            slug: nf,
+          });
         expect(yield* gate(fixture)).toBe("passed");
         yield* fixture
           .as("counselor")
-          .mutation(refs.public.guardians.links.revoke, { linkId: link.id, slug: nf });
+          .mutation(refs.public.guardians.links.revoke, {
+            linkId: link.id,
+            slug: nf,
+          });
         expect(yield* gate(fixture)).toBe("CONSENT_REQUIRED");
       })
   );
 
-  it.effect("passes a student whom the school marks at or above the limit", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* asStaffSchool(fixture);
-      yield* setRoster(fixture, { underAgeLimit: false });
-      expect(yield* gate(fixture)).toBe("passed");
-    })
+  it.effect(
+    "passes a student whom the school marks at or above the limit",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        yield* setRoster(fixture, { underAgeLimit: false });
+        expect(yield* gate(fixture)).toBe("passed");
+      })
   );
 });

@@ -12,8 +12,8 @@ import {
   readLinkedPerson,
 } from "@repo/backend/confect/guardians/authority";
 import {
-  CONSENT_POLICY_VERSION,
   type ChildView,
+  CONSENT_POLICY_VERSION,
   type ConsentMethod,
   type LinkEndReason,
   type LinkState,
