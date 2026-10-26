@@ -38,6 +38,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-report-not-placed.description",
     title: "school-refusal-report-not-placed.title",
   },
+  DeviceUnknown: {
+    description: "school-refusal-device-unknown.description",
+    title: "school-refusal-device-unknown.title",
+  },
   AddressInvited: {
     description: "school-refusal-address-invited.description",
     title: "school-refusal-address-invited.title",

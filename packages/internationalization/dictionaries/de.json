@@ -32,8 +32,6 @@
     },
     "sign-in-title": "Anmelden bei {school}",
     "sittings-empty": "Deine Lehrkraft hat noch keine Sitzung geplant.",
-    "refused-title": "Dein Zugang zu dieser Schule hat sich geändert.",
-    "refused-description": "Frag einen Admin der Schule, deinen Zugang zu prüfen, oder geh zurück zu Nakafa.",
     "answers-saved": "Antworten gespeichert",
     "quiet-staff": "Gerade läuft keine Sitzung, und in den nächsten 14 Tagen beginnt keine.",
     "setup-invites": "Offene Einladungen prüfen",
@@ -65,13 +63,15 @@
     "all-exams": "Alle Prüfungen"
   },
   "SchoolEntry": {
+    "username-placeholder": "ayu.lestari",
+    "password-placeholder": "Dein Passwort",
     "card-code-label": "Kartencode",
     "card-code-placeholder": "Erste Anmeldung oder neue Karte",
-    "card-expired": "Diese Karte ist abgelaufen. Bitte deine Lehrkraft oder einen Admin um eine neue Karte.",
+    "card-expired": "Bitte deine Lehrkraft oder einen Admin um eine neue Karte, denn diese ist abgelaufen.",
     "card-invalid": "Benutzername oder Kartencode stimmen nicht.",
-    "card-rate-limited": "Zu viele Versuche von diesem Gerät. Warte einige Minuten und versuche es erneut.",
-    "card-used": "Diese Karte wurde schon benutzt. Bitte deine Lehrkraft oder einen Admin um eine neue Karte.",
-    "failed": "Anmeldung fehlgeschlagen. Versuche es erneut.",
+    "card-rate-limited": "Warte einige Minuten, bevor du es auf diesem Gerät erneut versuchst.",
+    "card-used": "Bitte deine Lehrkraft oder einen Admin um eine neue Karte, denn diese wurde schon benutzt.",
+    "failed": "Die Anmeldung hat nicht geklappt, also versuche es erneut.",
     "outsider-card": "Mit Karte anmelden",
     "outsider-description": "Du bist als {account} angemeldet, und dieses Konto hat hier noch keine Einladung.",
     "outsider-switch": "Konto wechseln",
@@ -179,6 +179,7 @@
     "apply": "Schüler importieren"
   },
   "Exams": {
+    "minutes-placeholder": "10",
     "token": "Token",
     "change-token": "Token ändern",
     "close-sitting": "Sitzung beenden",
@@ -229,6 +230,7 @@
     "lock": "Sperren",
     "unlock": "Entsperren",
     "allow-device": "Zweites Gerät erlauben",
+    "student-more": "Weitere Aktionen für {name}",
     "confirm-lock-title": "Sitzung von {name} sperren?",
     "confirm-lock-description": "Der Schüler kann nicht antworten, bis die Aufsicht die Sitzung entsperrt.",
     "confirm-lock-action": "Sitzung sperren",
@@ -280,7 +282,7 @@
     "gone-note": "Diese Prüfung wurde gelöscht oder für Sie geschlossen, daher wird hier nichts mehr gespeichert.",
     "room-cancel": "Raum absagen",
     "room-cancel-title": "Diesen Raum absagen?",
-    "room-cancel-description": "Schüler können ihn nicht betreten. Die Fragen der Prüfung können sich wieder ändern, sobald kein Raum mehr dafür besteht.",
+    "room-cancel-description": "Schüler können ihn nicht mehr betreten, und die Fragen lassen sich wieder ändern, sobald kein Raum mehr besteht.",
     "room-cancel-confirm": "Raum absagen",
     "questions": "Fragen",
     "question": "Frage {number}",
@@ -344,10 +346,12 @@
     "room": "Raum",
     "room-placeholder": "Labor 2",
     "starts": "Beginnt",
+    "starts-day-placeholder": "Tag wählen",
+    "starts-time-placeholder": "Uhrzeit",
     "length": "Dauer",
     "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
-    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
+    "schedule-past": "Wähle einen Beginn, der noch nicht vorbei ist.",
     "rooms-title": "Räume",
     "edit-action": "Prüfung bearbeiten",
     "rooms-empty": "Noch keine Räume",
@@ -415,9 +419,9 @@
     "seat-last-activity": "Letzte Aktivität {time}.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
     "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
-    "no-unit-description": "Eine Prüfung gehört zu einer Einheit. Lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
+    "no-unit-description": "Jede Prüfung gehört zu einer Einheit, also lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
     "no-unit-action": "Einheiten öffnen",
-    "no-unit-member": "Eine Prüfung gehört zu einer Einheit. Frag einen Admin der Schule, eine anzulegen.",
+    "no-unit-member": "Jede Prüfung gehört zu einer Einheit, also frag einen Admin der Schule, eine anzulegen.",
     "schedule-keys-numbered": "{count, plural, one {Markiere zuerst die richtige Antwort bei Frage {questions}.} other {Markiere zuerst die richtigen Antworten bei den Fragen {questions}.}}",
     "room-needed": "Gib zuerst einen Namen für den Raum an.",
     "starts-needed": "Wähle, wann die Sitzung beginnt.",
@@ -486,6 +490,12 @@
     "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
   },
   "SchoolSettings": {
+    "student-add-name-placeholder": "Ayu Lestari",
+    "invite-name-placeholder": "Budi Santoso",
+    "invite-email-placeholder": "budi@example.com",
+    "unit-add-name-placeholder": "SMA Harapan Bangsa",
+    "address-placeholder": "harapan-bangsa",
+    "name-placeholder": "Harapan Bangsa",
     "school": "Schule",
     "people": "Personen",
     "integrations": "Integrationen",
@@ -521,14 +531,16 @@
     "billing-school-footer": "Alle Schüler sind bezahlt.",
     "billing-dialog-title": "Zeitraum wählen",
     "billing-dialog-description": "Bezahle pro eingeschriebenem Schüler für die restlichen Tage des Zeitraums.",
-    "billing-dialog-seats": "Bezahle pro eingeschriebenem Schüler. Die Plätze verlängern sich, bis du sie kündigst.",
+    "billing-dialog-seats": "Bezahle pro eingeschriebenem Schüler, mit Plätzen, die sich verlängern, bis du sie kündigst.",
     "billing-term-semester": "Dieses Halbjahr",
     "billing-term-year": "Dieses Schuljahr",
     "billing-offer-month": "Jeden Monat",
     "billing-offer-year": "Jedes Jahr",
     "billing-term-dates": "{start} bis {end}",
-    "billing-quote": "{price} pro Schüler, {total} für {seats} Schüler",
+    "billing-quote-term": "{seats} Schüler bis {date}",
+    "billing-quote-seats": "{seats} Schüler zu je {price}",
     "billing-issue": "Rechnung erstellen",
+    "billing-checkout": "Weiter",
     "billing-invoices": "Rechnungen",
     "billing-invoices-description": "Jede Rechnung, die die Schule erhalten hat.",
     "billing-invoices-footer": "Bezahle eine offene Rechnung vor ihrem Fälligkeitsdatum.",
@@ -587,7 +599,7 @@
     "unit-add-name": "Name",
     "unit-add-level": "Stufe",
     "unit-add-submit": "Schule hinzufügen",
-    "unit-add-footer": "Eine neue Schule hat noch keinen Zeitraum. Lege einen auf der Seite Zeiträume an.",
+    "unit-add-footer": "Lege ihren ersten Zeitraum auf der Seite Zeiträume an.",
     "unit-time-zone": "Zeitzone",
     "unit-page-language": "Seitensprache",
     "unit-archive-footer": "Eine archivierte Schule bleibt lesbar.",
@@ -611,6 +623,8 @@
     "period-name-placeholder": "Halbjahr 1",
     "period-start": "Erster Tag",
     "period-end": "Letzter Tag",
+    "period-start-placeholder": "Ersten Tag wählen",
+    "period-end-placeholder": "Letzten Tag wählen",
     "period-add-footer": "Eine neue Periode beginnt als geplant.",
     "period-rename": "Umbenennen",
     "period-rename-save": "Speichern",
@@ -637,7 +651,7 @@
     "cohorts-unavailable": "Die Klassen dieser Einheit können nicht angezeigt werden.",
     "cohorts-unavailable-description": "Wähle eine andere Einheit, um ihre Klassen zu sehen.",
     "cohort-unavailable": "Diese Klasse kann hier nicht geöffnet werden.",
-    "cohort-unavailable-description": "Diese Klasse gehört vielleicht zu einer anderen Schule oder gibt es nicht mehr. Wähle eine Klasse aus der Liste.",
+    "cohort-unavailable-description": "Wähle eine Klasse aus der Liste, denn diese gibt es nicht mehr oder sie gehört zu einer anderen Schule.",
     "placement-add": "Schüler hinzufügen",
     "placement-add-footer": "Eine Schülerin oder ein Schüler gehört pro Periode zu einer Klasse.",
     "placement-student": "Schüler",
@@ -748,7 +762,8 @@
       "integration": {
         "created": "Client angelegt",
         "rotated": "Geheimnis erneuert",
-        "revoked": "Client gesperrt"
+        "revoked": "Client gesperrt",
+        "authorized": "Gerät verbunden"
       },
       "invite": {
         "expired": "Einladung abgelaufen",
@@ -870,7 +885,7 @@
       "integration": "Liest die Daten der Schule über die Aktionen seines Clients."
     },
     "roles-overview": "Was jede Rolle darf",
-    "roles-overview-description": "Jede Rolle dieser Schule und was sie darf.",
+    "roles-overview-description": "Nur Inhaber:innen vergeben die Rollen Inhaber:in und Admin.",
     "roles-overview-footer": "Eine Person kann mehrere Rollen haben.",
     "secret-copy": "Kopieren",
     "unit-npsn": "NPSN",
@@ -970,12 +985,17 @@
     "cohort-restore": "Wiederherstellen",
     "period-restore": "Wiederherstellen",
     "no-unit-title": "Noch keine aktive Einheit",
-    "no-unit-description": "Perioden und Kohorten gehören zu einer aktiven Einheit. Stelle zuerst eine wieder her oder lege eine an.",
+    "no-unit-description": "Stelle zuerst eine Einheit wieder her oder lege eine an, denn Perioden und Kohorten gehören zu ihr.",
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
-    "policy-domains-invalid": "Ungültige Domains: {domains}; schreibe jede Domain in eine eigene Zeile.",
-    "policy-domains-limit": "Verwende höchstens {limit} Domains, jede in einer eigenen Zeile."
+    "policy-domains-invalid": "Prüfe diese Domains, jede in einer eigenen Zeile: {domains}.",
+    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
+    "device-title": "Gerät verbinden",
+    "device-description": "Gib den Code der Nakafa CLI ein, damit sie die Schule als {name} liest.",
+    "device-code": "Gerätecode",
+    "device-authorize": "Verbinden",
+    "device-deny": "Gerät ablehnen"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1266,7 +1286,7 @@
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort.",
     "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",
-    "address-check-failed": "Diese Adresse konnte nicht geprüft werden. Gib sie noch einmal ein, um sie zu prüfen."
+    "address-check-failed": "Diese Adresse konnte nicht geprüft werden, also gib sie noch einmal ein."
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -1773,6 +1793,15 @@
     "plan-pro-past-due-footer": "Aktualisiere deine Zahlungsmethode.",
     "plan-granted-description": "Pro ist auf diesem Konto aktiv.",
     "plan-granted-footer": "Nakafa rechnet ihn nicht ab.",
+    "plan-pass-description": "Dein Pro-Pass läuft bis {date}.",
+    "plan-pass-footer": "Ein weiterer Pass beginnt, wenn dieser endet.",
+    "plan-pass-extend": "Pro verlängern",
+    "plan-xendit-footer": "Jederzeit kündbar; Pro bleibt bis zum Ende des bezahlten Zeitraums.",
+    "plan-xendit-ending-footer": "Nach diesem Zeitraum wird nichts mehr berechnet.",
+    "plan-cancel": "Abo kündigen",
+    "plan-keep": "Pro behalten",
+    "plan-cancel-title": "Pro kündigen?",
+    "plan-cancel-description": "Pro bleibt bis {date}, danach wird nichts mehr berechnet.",
     "period-start": "Zeitraum beginnt",
     "renews-on": "Verlängert sich am",
     "ends-on": "Endet am",
@@ -1856,7 +1885,16 @@
     "top-up-balance": "Zusatz-Credits",
     "top-up-expires": "Verfällt am {date}",
     "top-up-left": "{count, number} übrig",
-    "buy-credits": "Credits kaufen"
+    "buy-credits": "Credits kaufen",
+    "payments": "Zahlungen",
+    "payments-description": "Die erfolgreichen Zahlungen, die neueste zuerst.",
+    "payment-date": "Datum",
+    "payment-for": "Für",
+    "payment-amount": "Betrag",
+    "payment-credits": "Nina-Credits",
+    "payment-cycle": "Pro-Abo",
+    "payment-invoice": "Rechnung",
+    "payment-pass": "Pro-Pass"
   },
   "Editor": {
     "arabic": "Arabische Tastatur",
@@ -2446,6 +2484,16 @@
     "school-roster-export-failed": {
       "title": "Datei nicht gespeichert."
     },
+    "school-device-authorized": {
+      "title": "Das Gerät ist verbunden."
+    },
+    "school-device-denied": {
+      "title": "Das Gerät wurde abgelehnt."
+    },
+    "school-refusal-device-unknown": {
+      "title": "Kein Gerät mit diesem Code.",
+      "description": "Prüfe den Code auf dem Gerät."
+    },
     "audit-export-error": {
       "title": "Export fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
@@ -2697,7 +2745,14 @@
     "pro-feature-2": "{credits, number} Credits jeden Monat, um Nina zu fragen",
     "pro-feature-3": "Vollständige Lösungswege für alle Probetests, auch für frühere Versuche",
     "pro-feature-5": "Vorrangige Hilfe, wenn du Anleitung brauchst",
-    "pro-cta": "Pro holen"
+    "pro-cta": "Pro holen",
+    "offer-title": "Zahlungsart wählen",
+    "offer-description": "Das Monatsabo verlängert sich selbst, ein Pass wird einmal bezahlt.",
+    "offer-monthly": "Monatlich",
+    "offer-monthly-method": "Verlängert sich per E-Wallet oder Karte.",
+    "offer-pass": "{months, plural, one {Pass für # Monat} other {Pass für # Monate}}",
+    "offer-pass-method": "Einmal per QRIS, Überweisung, E-Wallet.",
+    "offer-continue": "Weiter"
   },
   "PricingPage": {
     "metadata-title": "Nakafa Preise: Kostenlos und Pro",

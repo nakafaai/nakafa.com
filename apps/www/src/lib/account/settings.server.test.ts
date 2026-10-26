@@ -190,6 +190,7 @@ describe("subscriptionsScreenHandler", () => {
         resetAt: 1_792_000_000_000,
       },
       plan: "free",
+      pass: null,
       subscription: null,
     };
     answerQueries([[billing.queries.overview, overview]]);

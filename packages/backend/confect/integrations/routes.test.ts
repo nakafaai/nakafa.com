@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   SCHOOL_API_PATH,
   SchoolApi,
 } from "@repo/backend/confect/integrations/api";
 import { createClient, type Fixture, issue } from "@repo/backend/test/api";
-import { cohort, period } from "@repo/backend/test/classroom";
+import { cohort, nf, period } from "@repo/backend/test/classroom";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { encodePrettyJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
@@ -14,7 +14,32 @@ import { OpenApi } from "effect/http-api";
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(TENANCY_NOW);
+  vi.stubEnv("SITE_URL", "https://nakafa.com");
 });
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+/** A device authorization as the endpoint answers it. */
+const DeviceAnswer = Schema.Struct({
+  device_code: Schema.String,
+  user_code: Schema.String,
+  verification_uri: Schema.String,
+});
+
+/** The user code of a device as it shows it, `XXXX-XXXX`. */
+const SHOWN_CODE = /^[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}$/;
+
+/** Asks the device authorization endpoint for a device code, as the Nakafa CLI does. */
+const postDevice = (fixture: Fixture, form: Record<string, string>) =>
+  Effect.promise(() =>
+    fixture.fetch(`${SCHOOL_API_PATH}/device`, {
+      body: new URLSearchParams(form).toString(),
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      method: "POST",
+    })
+  );
 
 /** One page of a read, with its rows left undecoded. */
 const Page = Schema.Struct({
@@ -195,6 +220,93 @@ describe("school API over HTTP", () => {
             "./openapi.json"
           )
         );
+      })
+  );
+
+  it.effect(
+    "signs a device in with the device grant once the Admin connects it to a client",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const client = yield* createClient(fixture);
+        const started = yield* postDevice(fixture, {
+          client_id: "nakafa-cli",
+          school: "nf",
+        });
+        expect(started.status).toBe(200);
+        const device = yield* json(started).pipe(
+          Effect.flatMap(Schema.decodeUnknownEffect(DeviceAnswer))
+        );
+        expect(device.user_code).toMatch(SHOWN_CODE);
+        expect(device.verification_uri).toBe(
+          "https://nf.nakafa.com/settings/clients"
+        );
+        const grant = {
+          client_id: "nakafa-cli",
+          device_code: device.device_code,
+          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        };
+        const pending = yield* postToken(fixture, grant);
+        expect(pending.status).toBe(400);
+        expect(yield* json(pending)).toMatchObject({
+          error: "authorization_pending",
+        });
+        yield* fixture
+          .as("admin")
+          .mutation(refs.public.integrations.devices.authorize, {
+            clientId: client.id,
+            slug: nf,
+            userCode: device.user_code,
+          });
+        vi.setSystemTime(TENANCY_NOW + 5000);
+        const issued = yield* postToken(fixture, grant);
+        expect(issued.status).toBe(200);
+        const { access_token: token } = yield* json(issued).pipe(
+          Effect.flatMap(Schema.decodeUnknownEffect(IssuedToken))
+        );
+        expect((yield* read(fixture, "/periods", token)).status).toBe(200);
+      })
+  );
+
+  it.effect(
+    "refuses a device request of another client or an unknown school, and a device grant without the CLI or a code",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        expect(
+          (yield* postDevice(fixture, { client_id: "other", school: "nf" }))
+            .status
+        ).toBe(401);
+        for (const school of ["Not A School", "nope"]) {
+          const refused = yield* postDevice(fixture, {
+            client_id: "nakafa-cli",
+            school,
+          });
+          expect(refused.status).toBe(400);
+          expect(yield* json(refused)).toMatchObject({
+            error: "invalid_request",
+          });
+        }
+        expect(
+          (yield* postToken(fixture, {
+            client_id: "other",
+            device_code: "code",
+            grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+          })).status
+        ).toBe(401);
+        const noCode = yield* postToken(fixture, {
+          client_id: "nakafa-cli",
+          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        });
+        expect(yield* json(noCode)).toMatchObject({
+          error: "unsupported_grant_type",
+        });
+        const expired = yield* postToken(fixture, {
+          client_id: "nakafa-cli",
+          device_code: "nope",
+          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        });
+        expect(yield* json(expired)).toMatchObject({ error: "expired_token" });
       })
   );
 });

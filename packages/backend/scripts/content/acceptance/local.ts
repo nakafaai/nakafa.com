@@ -105,6 +105,10 @@ const localEnvironment = {
   RESEND_API_KEY: "build-disabled",
   RESEND_WEBHOOK_SECRET: "build-disabled",
   VAULT_ROOT_KEYS: "local:YWNjZXB0YW5jZS1sb2NhbC12YXVsdC1yb290LWtleSE=",
+  // Indonesia buys Pro through Xendit here, as it will in production, so a test in
+  // Jakarta sees the passes; any call to the Xendit API fails like Polar's.
+  BILLING_INDONESIA_RAIL: "xendit",
+  XENDIT_API_KEY: "build-disabled",
 };
 
 /** Returns child-only app values; no application environment file is written. */
