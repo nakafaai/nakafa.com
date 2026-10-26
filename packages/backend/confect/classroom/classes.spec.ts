@@ -46,7 +46,7 @@ const ClassView = Schema.Struct({
  * A class as `resolve` returns it: the class, and the class actions the caller
  * holds on it, so a page offers only the actions the caller may take.
  */
-const ClassResolved = Schema.Struct({
+export const ClassResolved = Schema.Struct({
   ...ClassView.fields,
   can: Schema.Array(Kind.actions(entries, "class")),
 });

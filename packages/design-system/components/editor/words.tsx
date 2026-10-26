@@ -4,15 +4,21 @@ import {
   keyed,
 } from "@repo/design-system/components/editor/blocks";
 import {
+  editorTask,
+  editorTaskBox,
+  editorTaskWords,
+} from "@repo/design-system/components/editor/frame";
+import {
   isEmptyDocument,
   isEmptyText,
 } from "@repo/design-system/components/editor/hint";
 import { EditorPane } from "@repo/design-system/components/editor/pane";
 import { itemTokens } from "@repo/design-system/components/editor/plain";
 import { decodeReferences } from "@repo/design-system/components/editor/references";
+import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Array as Arr, Match, String as Str } from "effect";
 import type { Token, Tokens } from "marked-tiptap";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 
 /**
  * The saved Markdown of a text, drawn as the rich editor draws it: the same bar,
@@ -186,10 +192,13 @@ function List({ list }: { list: Tokens.List }) {
 
 /**
  * One item of a list: a task with its check box, or the blocks the item holds.
- * The preview changes no check: a controlled box with no change handler takes a
- * click back, as the editor's own box does when the editor is read-only.
+ * A task is drawn as the editor's task view draws it, with the design system's
+ * check box, which the words name. The preview changes no check: the box is read
+ * only and out of the tab order, until the editor takes its place.
  */
 function ListItem({ item }: { item: Tokens.ListItem }) {
+  const words = useId();
+
   if (!item.task) {
     return (
       <li dir="auto">
@@ -202,16 +211,22 @@ function ListItem({ item }: { item: Tokens.ListItem }) {
 
   return (
     <li data-checked={checked} data-type="taskItem" dir="auto">
-      <label>
-        <input checked={checked} readOnly tabIndex={-1} type="checkbox" />
-        <span />
-      </label>
-      <div>
-        <Blocks
-          blocks={keyed(
-            Arr.filter(item.tokens, (token) => token.type !== "checkbox")
-          )}
-        />
+      <div className={editorTask()}>
+        <span className={editorTaskBox()}>
+          <Checkbox
+            aria-labelledby={words}
+            checked={checked}
+            readOnly
+            tabIndex={-1}
+          />
+        </span>
+        <div className={editorTaskWords()} id={words}>
+          <Blocks
+            blocks={keyed(
+              Arr.filter(item.tokens, (token) => token.type !== "checkbox")
+            )}
+          />
+        </div>
       </div>
     </li>
   );

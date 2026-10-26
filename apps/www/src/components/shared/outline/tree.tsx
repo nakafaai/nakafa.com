@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu02Icon } from "@hugeicons/core-free-icons";
+import { TableOfContentsIcon } from "@hugeicons/core-free-icons";
 import type { ParsedHeading } from "@repo/contents/toc";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -161,7 +161,7 @@ function SidebarTreeGroup({
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="gap-2">
-        <HugeIcons icon={Menu02Icon} />
+        <HugeIcons icon={TableOfContentsIcon} />
         {title}
       </SidebarGroupLabel>
       <SidebarGroupContent>{children}</SidebarGroupContent>

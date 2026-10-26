@@ -12,6 +12,7 @@ import { Array as Arr, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { PanePortal } from "@/components/shared/panes";
 import {
   choiceOf,
   entryOf,
@@ -33,7 +34,6 @@ import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
-import { TeacherPortal } from "@/components/tenant/exams/panel";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   PaperSketch,
@@ -262,7 +262,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
         />
       )}
       {chosen ? (
-        <TeacherPortal>
+        <PanePortal>
           <TeacherLayer
             live={live}
             notes={{ explanation, rubric }}
@@ -274,7 +274,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
             question={question}
             shown={editing.displayed}
           />
-        </TeacherPortal>
+        </PanePortal>
       ) : null}
     </section>
   );
