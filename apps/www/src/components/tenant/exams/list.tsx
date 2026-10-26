@@ -1,7 +1,20 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
+import {
+  Calendar03Icon,
+  MoreHorizontalIcon,
+  PencilEdit02Icon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -10,12 +23,15 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { CreateExam } from "@/components/tenant/exams/dialog";
 import {
@@ -85,9 +101,10 @@ export function ExamList({
     !(loadingFirst || failed) &&
     Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
   return (
-    <>
+    <TableFiltersProvider>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {tenant.home.canCreate && !(loadingFirst || empty) ? (
+        {empty ? null : <TableSearch placeholder={t("exams-search")} />}
+        {tenant.home.canCreate && !empty ? (
           <CreateExam
             choices={tenant.home.choices}
             drafts={drafts}
@@ -95,7 +112,7 @@ export function ExamList({
           />
         ) : null}
       </SchoolHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+      <div className="flex w-full min-w-0 flex-1 flex-col">
         {empty ? (
           <NoExamEmpty drafts={drafts} />
         ) : (
@@ -109,8 +126,8 @@ export function ExamList({
         {loadMore !== null && (
           <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
         )}
-      </LayoutContent>
-    </>
+      </div>
+    </TableFiltersProvider>
   );
 }
 
@@ -183,16 +200,9 @@ function ExamTable({
     examColumns.display({
       cell: (info) =>
         Arr.contains(saving, info.row.original.id) ? null : (
-          <Link
-            className="underline-offset-4 hover:underline"
-            params={{ exam: info.row.original.id, slug: tenant.slug }}
-            to="/school/$slug/exams/$exam"
-          >
-            {t("rooms-title")}
-          </Link>
+          <ExamRowMenu exam={info.row.original} />
         ),
-      header: t("rooms-title"),
-      id: "rooms",
+      id: "actions",
     }),
   ]);
 
@@ -201,8 +211,57 @@ function ExamTable({
       columns={columns}
       data={rows}
       rowId={(exam) => exam.id}
-      search={{ column: "title", placeholder: t("exams-search") }}
+      search="title"
     />
+  );
+}
+
+/** An exam's row menu: its editor, and its rooms. */
+function ExamRowMenu({ exam }: { exam: ExamSummary }) {
+  const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const { slug } = useTenant();
+
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            render={
+              <Link
+                params={{ exam: exam.id, slug }}
+                to="/school/$slug/exams/$exam/edit"
+              />
+            }
+          >
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("edit-action")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            render={
+              <Link
+                params={{ exam: exam.id, slug }}
+                to="/school/$slug/exams/$exam"
+              />
+            }
+          >
+            <HugeIcons icon={Calendar03Icon} />
+            {t("rooms-title")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 

@@ -8,6 +8,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -20,6 +21,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { roleIcon } from "@/components/tenant/roles";
 import { assignGrantChange } from "@/components/tenant/settings/mutation";
 import {
   type PersonId,
@@ -135,6 +137,7 @@ export function SchoolGrantDialog({
               <SelectGroup>
                 {Arr.map(roleItems, (item) => (
                   <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={roleIcon(item.value)} />
                     {item.label}
                   </SelectItem>
                 ))}
