@@ -39,14 +39,17 @@ const ZoomContext = createContext<ZoomStore | null>(null);
 export function ExamProvider({
   children,
   exam,
+  prompt,
   slug,
 }: {
   children: ReactNode;
   exam: ExamView;
+  /** The first question's prompt as the loader read it, which the live prompts start from. */
+  prompt: Parameters<typeof createExamLive>[0];
   slug: TenantSlug;
 }) {
   const [selection] = useState(createExamSelection);
-  const [live] = useState(createExamLive);
+  const [live] = useState(() => createExamLive(prompt));
   const [editing] = useState(() => createExamEditing());
   const [zoom] = useState(createExamZoom);
 

@@ -98,7 +98,7 @@ test("a file that is no Word or PDF document is refused in the browser, and the 
   await context.close();
 });
 
-test("the editor imports a Word file into the open exam from its header, as Google Slides imports slides, and a cancelled import keeps no file", async ({
+test("the editor imports a Word file into the open exam from its header menu, as Google Slides imports slides, and a cancelled import keeps no file", async ({
   baseURL,
   browser,
 }) => {
@@ -107,13 +107,17 @@ test("the editor imports a Word file into the open exam from its header, as Goog
   await dialog.getByRole("button", { name: "Create exam" }).click();
   await page.waitForURL(EDITOR_PATH);
 
-  // The header holds the import beside Try as student, in its one row.
+  // The header holds Try as student with the menu of the rarer actions joined to it, in its one row.
   const header = page.locator("header").filter({
-    has: page.getByRole("button", { name: "Import" }),
+    has: page.getByRole("button", { name: "More actions" }),
   });
   await expect(
     header.getByRole("link", { name: "Try as student" })
   ).toBeVisible();
+  const openImport = async () => {
+    await header.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Import" }).click();
+  };
   const importDialog = page.getByRole("dialog");
   const chooseFile = () =>
     importDialog.getByLabel("Questions from a file").setInputFiles({
@@ -125,7 +129,7 @@ test("the editor imports a Word file into the open exam from its header, as Goog
 
   // A removed file leaves the field empty, and a file chosen and then cancelled is gone when the
   // dialog opens again.
-  await page.getByRole("button", { name: "Import" }).click();
+  await openImport();
   await chooseFile();
   await importDialog.getByRole("button", { name: "Remove file" }).click();
   await expect(importDialog.getByText("Bab 2.docx")).toHaveCount(0);
@@ -136,7 +140,7 @@ test("the editor imports a Word file into the open exam from its header, as Goog
   await expect(importDialog.getByText("Bab 2.docx")).toBeVisible();
   await importDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(importDialog).toBeHidden();
-  await page.getByRole("button", { name: "Import" }).click();
+  await openImport();
   await expect(
     importDialog.getByRole("button", { name: "Import" })
   ).toBeDisabled();
