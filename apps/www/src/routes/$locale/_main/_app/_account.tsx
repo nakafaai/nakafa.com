@@ -1,18 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { createIsomorphicFn } from "@tanstack/react-start";
 import { RouteConvexProvider } from "@/components/providers/route";
-import { hasSignedInHint } from "@/lib/auth/hint";
-import { sessionFn } from "@/lib/auth/session.functions";
-
-/**
- * Whether the visitor may open an account screen: the session on the server, and
- * the signed-in hint in the browser. The gate runs on every move between account
- * screens, so the browser reads the hint and waits on no server request. Every
- * account read checks the session itself, so a stale hint opens no data.
- */
-const isSignedIn = createIsomorphicFn()
-  .server(async () => (await sessionFn())._tag === "SignedIn")
-  .client(() => Promise.resolve(hasSignedInHint(document.cookie)));
+import { isSignedIn } from "@/lib/auth/gate";
 
 /**
  * Admits a signed-in visitor to the account screens (home, notifications and

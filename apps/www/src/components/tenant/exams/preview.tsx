@@ -43,16 +43,21 @@ const PREVIEW_CLIENT = "preview";
  * A rich text of a question as a document to draw: the one its editor holds when the question is
  * open, and otherwise the one the server holds, or the one the editor held last until the server
  * answers. The server's document is read only when `read` is set, so an off-screen page reads
- * nothing; a text whose question the server has not saved yet reads nothing either.
+ * nothing; a text whose question the server has not saved yet reads nothing either. While the page's
+ * editors load, the server's document is still read until the text's editor holds it, so the drawn
+ * paper that stands in for the loading editor shows the text instead of an empty page.
  */
 export function usePageDocument({
   documentId,
+  editing,
   open,
   read,
   saved,
 }: {
   /** The document of the text: the prompt, the rubric, or the explanation of a question. */
   documentId: Id<"editorDocuments">;
+  /** Whether the page's editors are mounted, which take the text over once each holds it. */
+  editing: boolean;
   /** Whether the question is the one the teacher works on, which draws its editor's document first. */
   open: boolean;
   /** Whether the server's document may be read now. */
@@ -72,7 +77,7 @@ export function usePageDocument({
     editors.documents.open,
     !(saved && read) ||
       isPlaceholderId(documentId) ||
-      (open && Option.isSome(live))
+      ((open || editing) && Option.isSome(live))
       ? "skip"
       : { clientId: PREVIEW_CLIENT, documentId, slug }
   );
@@ -264,6 +269,7 @@ export function QuestionPreview({
   const { inViewport, ref } = useInViewport();
   const doc = usePageDocument({
     documentId: question.prompt,
+    editing: false,
     open,
     read: inViewport,
     saved,
