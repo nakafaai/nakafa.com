@@ -13,7 +13,6 @@ import {
 } from "@repo/backend/confect/auth/spec";
 import { ensureAccount } from "@repo/backend/confect/billing/accounts";
 import { CheckoutUnavailable } from "@repo/backend/confect/billing/spec";
-import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import spec from "@repo/backend/confect/billing/xendit/checkout.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import { Array as Arr, Clock, Duration, Effect, Layer, Option } from "effect";
@@ -90,9 +89,9 @@ const prepare = FunctionImpl.make(
 );
 
 /**
- * Records the session Xendit opened while the account may still buy: its checkout
- * row, and for a subscription session the pending subscription of its plan. The
- * plan has no provider state yet, so any state Xendit sends for it applies.
+ * Records the session Xendit opened while the account may still buy: its
+ * checkout row, which the session's webhook completes or expires. The monthly
+ * plan's subscription starts once its first month is paid.
  */
 const admit = FunctionImpl.make(
   databaseSchema,
@@ -115,24 +114,6 @@ const admit = FunctionImpl.make(
         locale: args.locale,
       })
       .pipe(Effect.orDie);
-    if (args.session.planId !== null) {
-      yield* applySubscriptionState({
-        accountId: args.accountId,
-        offer: args.offer,
-        quantity: 1,
-        status: "pending",
-        currentPeriodStart: now,
-        currentPeriodEnd: null,
-        cancelAtPeriodEnd: false,
-        provider: {
-          kind: "xendit",
-          planId: args.session.planId,
-          tokenId: null,
-          channel: null,
-        },
-        providerUpdatedAt: 0,
-      });
-    }
     yield* captureProductEvent({
       distinctId: args.userId,
       event: args.event,

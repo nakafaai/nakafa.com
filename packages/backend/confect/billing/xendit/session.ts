@@ -12,17 +12,16 @@ import {
 import {
   latestPersonalGrant,
   scheduleProjection,
+  syncSubscriptionGrant,
 } from "@repo/backend/confect/billing/grants";
 import { recordPayment } from "@repo/backend/confect/billing/payments";
 import {
   BillingRowMissing,
   RailMismatch,
 } from "@repo/backend/confect/billing/spec";
-import {
-  applySubscriptionState,
-  readSubscriptionByXenditPlan,
-} from "@repo/backend/confect/billing/subscriptions";
+import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import { XenditSessionEvent } from "@repo/backend/confect/billing/xendit/contract";
+import { renewalAnchor } from "@repo/backend/confect/billing/xendit/renewal";
 import { Clock, DateTime, Duration, Effect, Option, Schema } from "effect";
 
 const decodeSession = Schema.decodeUnknownOption(XenditSessionEvent);
@@ -136,6 +135,69 @@ const applyPassPaid = Effect.fn("billing.xendit.session.passPaid")(function* (
   yield* scheduleProjection(account.owner);
 });
 
+/**
+ * Starts the subscription of a paid first month: the subscription runs until
+ * its first renewal, the payment is recorded as its first cycle, Pro is granted
+ * for the period, and the recurring plan that charges the saved channel opens in
+ * the background, in the language of the checkout.
+ */
+const applyFirstMonthPaid = Effect.fn("billing.xendit.session.firstMonthPaid")(
+  function* (
+    checkout: Docs["billingCheckouts"],
+    paymentId: string,
+    tokenId: string | null
+  ) {
+    const account = yield* readXenditAccount(checkout.accountId);
+    const amount = billingOfferPrice(checkout.offer, account.currency);
+    // Checkout opens a session only for a priced offer, so an unpriced one is a broken record.
+    if (amount === null) {
+      return yield* new BillingRowMissing({
+        table: "billingCheckouts",
+        message: `${checkout.offer} has no ${account.currency} price.`,
+      });
+    }
+    const now = yield* Clock.currentTimeMillis;
+    const { subscriptionId } = yield* applySubscriptionState({
+      accountId: account._id,
+      offer: checkout.offer,
+      quantity: 1,
+      status: "active",
+      currentPeriodStart: now,
+      currentPeriodEnd: DateTime.toEpochMillis(
+        renewalAnchor(now, billingOffer(checkout.offer).months)
+      ),
+      cancelAtPeriodEnd: false,
+      provider: { kind: "xendit", planId: null, tokenId, channel: null },
+      providerUpdatedAt: now,
+    });
+    yield* recordPayment({
+      kind: "cycle",
+      subscriptionId,
+      accountId: account._id,
+      status: "succeeded",
+      amount,
+      currency: account.currency,
+      rail: "xendit",
+      providerPaymentId: paymentId,
+      providerUpdatedAt: now,
+      method: "session",
+      paidAt: now,
+    });
+    yield* syncSubscriptionGrant(subscriptionId);
+    if (tokenId === null) {
+      return yield* Effect.logError(
+        "A first month was paid without a saved channel, so its plan cannot open",
+        { subscriptionId }
+      );
+    }
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      refs.internal.billing.xendit.renewal.open,
+      { locale: checkout.locale, subscriptionId }
+    );
+  }
+);
+
 /** Marks a checkout as ended, so a redelivered session event finds nothing open. */
 const closeCheckout = Effect.fn("billing.xendit.session.close")(function* (
   checkout: Docs["billingCheckouts"],
@@ -148,9 +210,9 @@ const closeCheckout = Effect.fn("billing.xendit.session.close")(function* (
 });
 
 /**
- * A hosted session completed. A pay session is a paid pass: its payment and its
- * grant are written. A subscription session only linked the buyer's account; the
- * plan's own events activate and charge the subscription.
+ * A hosted session completed. A pass is recorded and granted. The monthly plan's
+ * first month starts its subscription: the payment, Pro until the first renewal,
+ * and the recurring plan that charges the channel the session saved.
  */
 export const applySessionCompleted = Effect.fn(
   "billing.xendit.session.completed"
@@ -163,20 +225,22 @@ export const applySessionCompleted = Effect.fn(
   if (Option.isNone(checkout)) {
     return "unknownSession" as const;
   }
-  if (session.value.session_type === "PAY") {
-    yield* applyPassPaid(
+  const paymentId =
+    session.value.payment_id ?? session.value.payment_session_id;
+  if (billingOffer(checkout.value.offer).interval === "pass") {
+    yield* applyPassPaid(checkout.value, paymentId);
+  } else {
+    yield* applyFirstMonthPaid(
       checkout.value,
-      session.value.payment_id ?? session.value.payment_session_id
+      paymentId,
+      session.value.payment_token_id ?? null
     );
   }
   yield* closeCheckout(checkout.value, "completed");
   return "applied" as const;
 });
 
-/**
- * A hosted session closed unpaid. Its checkout ends, and a subscription it was
- * opened for, which never became active, is canceled with it.
- */
+/** A hosted session closed unpaid: its checkout ends, and nothing else was ever written for it. */
 export const applySessionExpired = Effect.fn("billing.xendit.session.expired")(
   function* (data: unknown) {
     const session = decodeSession(data);
@@ -186,28 +250,6 @@ export const applySessionExpired = Effect.fn("billing.xendit.session.expired")(
     const checkout = yield* readOpenCheckout(session.value.payment_session_id);
     if (Option.isNone(checkout)) {
       return "unknownSession" as const;
-    }
-    const planId = session.value.recurring_plan_id ?? null;
-    const subscription =
-      planId === null
-        ? Option.none()
-        : yield* readSubscriptionByXenditPlan(planId);
-    if (
-      Option.isSome(subscription) &&
-      subscription.value.status === "pending"
-    ) {
-      const row = subscription.value;
-      yield* applySubscriptionState({
-        accountId: row.accountId,
-        offer: row.offer,
-        quantity: row.quantity,
-        provider: row.provider,
-        status: "canceled",
-        cancelAtPeriodEnd: false,
-        currentPeriodStart: row.currentPeriodStart,
-        currentPeriodEnd: row.currentPeriodEnd,
-        providerUpdatedAt: yield* Clock.currentTimeMillis,
-      });
     }
     yield* closeCheckout(checkout.value, "expired");
     return "applied" as const;

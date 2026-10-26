@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { accountUnavailableCode } from "@repo/backend/confect/auth/spec";
 import { xenditCheckoutErrorCode } from "@repo/backend/confect/billing/spec";
-import {
-  proSessionRequest,
-  renewalAnchor,
-} from "@repo/backend/confect/billing/xendit/checkout";
+import { proSessionRequest } from "@repo/backend/confect/billing/xendit/checkout";
 import { XenditRequestFailed } from "@repo/backend/confect/billing/xendit/client";
 import { ensureCustomer } from "@repo/backend/confect/billing/xendit/customers";
 import { createSession } from "@repo/backend/confect/billing/xendit/sessions";
@@ -54,13 +51,10 @@ const request = {
 function openedSession(overrides: Record<string, unknown> = {}) {
   return {
     expires_at: DateTime.makeUnsafe(FAR_FUTURE),
-    payment_id: null,
     payment_link_url: "https://dev.xen.to/session-1",
     payment_session_id: "ps-1",
-    payment_token_id: null,
-    recurring_plan_id: "repl-1",
     reference_id: "reference-1",
-    session_type: "SUBSCRIPTION" as const,
+    session_type: "PAY" as const,
     status: "ACTIVE" as const,
     ...overrides,
   };
@@ -93,22 +87,10 @@ function readRows(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
 }
 
 describe("billing/xendit/checkout requests", () => {
-  it("renews a subscription on the same day in Jakarta, or on the 28th when the day is later", () => {
-    expect(renewalAnchor(NOW, 1)).toBe("2026-11-26T12:00:00.000+07:00");
-    // 30 Oct 20:00 UTC is already 31 Oct in Jakarta, and 30 Nov is past the 28th.
-    expect(renewalAnchor(Date.UTC(2026, 9, 30, 20, 0, 0), 1)).toBe(
-      "2026-11-28T03:00:00.000+07:00"
-    );
-    expect(renewalAnchor(Date.UTC(2027, 0, 10, 0, 0, 0), 12)).toBe(
-      "2028-01-10T07:00:00.000+07:00"
-    );
-  });
-
-  it("opens a pass as one payment and the monthly plan as a subscription charged at once", () => {
+  it("opens a pass as one payment, and the monthly plan's first month as one payment that saves its channel", () => {
     const base = {
       amount: 79_000,
       customerId: "cust-1",
-      now: NOW,
       referenceId: "reference-1",
       returnUrl: request.successUrl,
     };
@@ -130,22 +112,11 @@ describe("billing/xendit/checkout requests", () => {
     expect(
       proSessionRequest({ ...base, locale: "id", offer: "pro.monthly" })
     ).toMatchObject({
+      allow_save_payment_method: "FORCED",
+      amount: 79_000,
       description: "Nakafa Pro, diperpanjang setiap bulan",
       locale: "id",
-      session_type: "SUBSCRIPTION",
-      subscription: {
-        failed_cycle_action: "STOP",
-        immediate_payment: true,
-        schedule: {
-          anchor_date: "2026-11-26T12:00:00.000+07:00",
-          failed_attempt_notifications: [1, 2, 3],
-          interval: "MONTH",
-          interval_count: 1,
-          retry_interval: "DAY",
-          retry_interval_count: 1,
-          total_retry: 3,
-        },
-      },
+      session_type: "PAY",
     });
   });
 });
@@ -163,7 +134,7 @@ describe("billing/xendit/checkout", () => {
   });
 
   it.effect(
-    "opens a subscription for an Indonesian learner, and reopens it on a second request",
+    "opens the monthly plan's first month for an Indonesian learner, and reopens it on a second request",
     () =>
       Effect.gen(function* () {
         const { authed, t, user } = yield* setup();
@@ -184,8 +155,9 @@ describe("billing/xendit/checkout", () => {
         });
         expect(vi.mocked(createSession).mock.calls[0]?.[0]).toMatchObject({
           amount: 79_000,
+          allow_save_payment_method: "FORCED",
           customer_id: "cust-1",
-          session_type: "SUBSCRIPTION",
+          session_type: "PAY",
           success_return_url: request.successUrl,
         });
         const rows = yield* readRows(t);
@@ -206,20 +178,8 @@ describe("billing/xendit/checkout", () => {
             url: "https://dev.xen.to/session-1",
           },
         ]);
-        expect(rows.subscriptions).toMatchObject([
-          {
-            currentPeriodEnd: null,
-            offer: "pro.monthly",
-            provider: {
-              channel: null,
-              kind: "xendit",
-              planId: "repl-1",
-              tokenId: null,
-            },
-            providerUpdatedAt: 0,
-            status: "pending",
-          },
-        ]);
+        // The subscription starts once the first month is paid, never at checkout.
+        expect(rows.subscriptions).toStrictEqual([]);
       })
   );
 
@@ -272,8 +232,6 @@ describe("billing/xendit/checkout", () => {
           Effect.succeed(
             openedSession({
               payment_link_url: "https://dev.xen.to/pass-3",
-              recurring_plan_id: null,
-              session_type: "PAY",
             })
           )
         );
@@ -300,8 +258,6 @@ describe("billing/xendit/checkout", () => {
             openedSession({
               payment_link_url: "https://dev.xen.to/pass-12",
               payment_session_id: "ps-2",
-              recurring_plan_id: null,
-              session_type: "PAY",
             })
           )
         );
@@ -320,7 +276,7 @@ describe("billing/xendit/checkout", () => {
         });
         const rows = yield* readRows(t);
         expect(rows.checkouts).toHaveLength(2);
-        expect(rows.subscriptions).toHaveLength(1);
+        expect(rows.subscriptions).toStrictEqual([]);
       })
   );
 

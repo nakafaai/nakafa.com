@@ -54,11 +54,15 @@ export const cancelXenditPlan = Effect.fn("billing.xendit.cancel")(function* (
       .table("billingSubscriptions")
       .patch(subscription.value._id, { cancelAtPeriodEnd: true })
       .pipe(Effect.orDie);
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      refs.internal.billing.xendit.cancel.deactivate,
-      { planId: subscription.value.provider.planId }
-    );
+    // A plan that has not opened yet never opens for a canceled subscription, so only an open plan is turned off.
+    const planId = subscription.value.provider.planId;
+    if (planId !== null) {
+      yield* (yield* Scheduler).runAfter(
+        Duration.zero,
+        refs.internal.billing.xendit.cancel.deactivate,
+        { planId }
+      );
+    }
     return null;
   }
   return null;

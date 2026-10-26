@@ -9,7 +9,7 @@ import {
 import { encodeJsonText } from "@repo/utilities/json";
 import { Clock, DateTime, Duration, Effect, Schema } from "effect";
 
-/** What a learner seeds: a one-month pass, or the monthly plan with its first cycle paid. */
+/** What a learner seeds: a one-month pass, or the monthly plan with its first month paid. */
 const XenditPurchase = Schema.Literals(["pass", "plan"]);
 
 /** The answers of the checkout's prepare step and of the event inbox, as the Convex CLI prints them. */
@@ -37,63 +37,35 @@ function deliveryOf(event: string, data: object, now: number) {
 }
 
 /**
- * The Xendit webhooks that complete one purchase: a paid pass session, or a
- * plan that activates and charges its first cycle at once.
+ * The Xendit webhook that completes one purchase: a paid pay session, which for
+ * the monthly plan also saved the buyer's channel as a payment token.
  */
-function deliveriesOf(
+function deliveryOfPaid(
   purchase: typeof XenditPurchase.Type,
   sessionId: string,
-  planId: string,
   now: number
 ) {
-  const at = DateTime.formatIso(DateTime.makeUnsafe(now));
-  if (purchase === "pass") {
-    return [
-      deliveryOf(
-        "payment_session.completed",
-        {
-          payment_id: `py_${sessionId}`,
-          payment_session_id: sessionId,
-          recurring_plan_id: null,
-          reference_id: sessionId,
-          session_type: "PAY",
-          status: "COMPLETED",
-        },
-        now
-      ),
-    ];
-  }
-  return [
-    deliveryOf(
-      "recurring.plan.activated",
-      { id: planId, status: "ACTIVE", updated: at },
-      now
-    ),
-    deliveryOf(
-      "recurring.cycle.succeeded",
-      {
-        amount: 79_000,
-        attempt_details: [
-          { created: at, payment_id: `py_${planId}`, status: "SUCCEEDED" },
-        ],
-        currency: "IDR",
-        id: `recy_${planId}`,
-        plan_id: planId,
-        scheduled_timestamp: at,
-        status: "SUCCEEDED",
-        updated: at,
-      },
-      now + 1
-    ),
-  ];
+  return deliveryOf(
+    "payment_session.completed",
+    {
+      payment_id: `py_${sessionId}`,
+      payment_session_id: sessionId,
+      ...(purchase === "plan" ? { payment_token_id: `pt_${sessionId}` } : {}),
+      reference_id: sessionId,
+      session_type: "PAY",
+      status: "COMPLETED",
+    },
+    now
+  );
 }
 
 /**
  * Gives a learner of the running local acceptance backend a Xendit purchase the
  * way production records one: the checkout's own prepare and admit steps open
- * the Xendit account and the checkout, and the event inbox applies the webhooks
- * Xendit would post once the learner paid. No Xendit API is called, so a browser
- * test can show a pass or a Xendit plan without a provider.
+ * the Xendit account and the checkout, and the event inbox applies the webhook
+ * Xendit would post once the learner paid. The monthly plan's recurring plan
+ * then fails to open against the inert Xendit key, which leaves the paid month
+ * to show, so a browser test sees a pass or a Xendit plan without a provider.
  */
 export const seedAcceptanceXendit = Effect.fn("contentAcceptance.seedXendit")(
   function* (
@@ -116,7 +88,6 @@ export const seedAcceptanceXendit = Effect.fn("contentAcceptance.seedXendit")(
       );
     const offer = purchase === "pass" ? "pro.pass.1" : "pro.monthly";
     const sessionId = `ps_acceptance_${now}`;
-    const planId = `repl_acceptance_${now}`;
     const { accountId } = yield* run(
       "xendit prepare",
       "billing/xendit/checkout:prepare",
@@ -139,20 +110,17 @@ export const seedAcceptanceXendit = Effect.fn("contentAcceptance.seedXendit")(
       offer,
       session: {
         expiresAt: now + Duration.toMillis(Duration.minutes(30)),
-        planId: purchase === "plan" ? planId : null,
         sessionId,
         url: `https://checkout-staging.xendit.co/sessions/${sessionId}`,
       },
       userId,
     });
-    for (const delivery of deliveriesOf(purchase, sessionId, planId, now)) {
-      const { eventId } = yield* run(
-        "xendit event",
-        "billing/events:record",
-        delivery
-      ).pipe(Effect.flatMap(Schema.decodeEffect(Recorded)));
-      yield* run("xendit apply", "billing/events:apply", { eventId });
-    }
+    const { eventId } = yield* run(
+      "xendit event",
+      "billing/events:record",
+      deliveryOfPaid(purchase, sessionId, now)
+    ).pipe(Effect.flatMap(Schema.decodeEffect(Recorded)));
+    yield* run("xendit apply", "billing/events:apply", { eventId });
   }
 );
 

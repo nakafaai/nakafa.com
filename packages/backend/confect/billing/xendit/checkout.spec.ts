@@ -25,7 +25,6 @@ const openedSessionValidator = Schema.Struct({
   sessionId: Schema.String,
   url: Schema.String,
   expiresAt: Schema.Finite,
-  planId: Schema.NullOr(Schema.String),
 });
 
 /**

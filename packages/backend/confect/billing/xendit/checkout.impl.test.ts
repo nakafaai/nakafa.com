@@ -124,7 +124,7 @@ describe("billing/xendit/checkout internal steps", () => {
     ).toStrictEqual([]);
   });
 
-  it("records a subscription session with its pending plan, and a pay session alone", async () => {
+  it("records the checkout of the monthly plan's first month and of a pass, and starts no subscription yet", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation((ctx) => insertUser(ctx));
     const prepared = await t.mutation(steps.prepare, {
@@ -138,7 +138,6 @@ describe("billing/xendit/checkout internal steps", () => {
       offer: "pro.monthly",
       session: {
         expiresAt: FAR_FUTURE,
-        planId: "repl-1",
         sessionId: "ps-1",
         url: "https://dev.xen.to/ps-1",
       },
@@ -151,7 +150,6 @@ describe("billing/xendit/checkout internal steps", () => {
       offer: "pro.pass.3",
       session: {
         expiresAt: FAR_FUTURE,
-        planId: null,
         sessionId: "ps-2",
         url: "https://dev.xen.to/ps-2",
       },
@@ -167,17 +165,8 @@ describe("billing/xendit/checkout internal steps", () => {
       { offer: "pro.monthly", sessionId: "ps-1", status: "open" },
       { offer: "pro.pass.3", sessionId: "ps-2", status: "open" },
     ]);
-    expect(rows.subscriptions).toMatchObject([
-      {
-        accountId: prepared.accountId,
-        cancelAtPeriodEnd: false,
-        currentPeriodEnd: null,
-        offer: "pro.monthly",
-        provider: { channel: null, kind: "xendit", planId: "repl-1" },
-        quantity: 1,
-        status: "pending",
-      },
-    ]);
+    // The subscription starts once the first month is paid, never at checkout.
+    expect(rows.subscriptions).toStrictEqual([]);
   });
 
   it("records nothing for a learner whose deletion started during Xendit IO", async () => {
@@ -198,7 +187,6 @@ describe("billing/xendit/checkout internal steps", () => {
         offer: "pro.monthly",
         session: {
           expiresAt: FAR_FUTURE,
-          planId: "repl-1",
           sessionId: "ps-1",
           url: "https://dev.xen.to/ps-1",
         },

@@ -72,7 +72,7 @@ describe("acceptance xendit", () => {
   });
 
   it.effect(
-    "opens the checkout through its own steps and applies the webhooks of a paid pass or of a plan's first cycle",
+    "opens the checkout through its own steps and applies the webhook of a paid pass or of a plan's first month",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -92,9 +92,7 @@ describe("acceptance xendit", () => {
         expect(yield* callsOf(plan)).toEqual([
           ["billing/xendit/checkout:prepare", null],
           ["billing/xendit/checkout:admit", null],
-          ["billing/events:record", "recurring.plan.activated"],
-          ["billing/events:apply", null],
-          ["billing/events:record", "recurring.cycle.succeeded"],
+          ["billing/events:record", "payment_session.completed"],
           ["billing/events:apply", null],
         ]);
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))

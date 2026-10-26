@@ -47,7 +47,9 @@ export const billingProviderValidator = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("xendit"),
-    planId: Schema.String,
+    /** The recurring plan that charges every month after the first, which opens once the first month is paid; none until then. */
+    planId: Schema.NullOr(Schema.String),
+    /** The channel the first month saved, which the plan charges. */
     tokenId: Schema.NullOr(Schema.String),
     /** The channel the buyer linked. Checkout opens the plan before the buyer picks one, so it starts unknown. */
     channel: Schema.NullOr(XenditChannel),

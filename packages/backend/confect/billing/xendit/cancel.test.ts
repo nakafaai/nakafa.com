@@ -100,6 +100,27 @@ describe("billing/xendit/cancel", () => {
     ]);
   });
 
+  it("ends a first month whose plan has not opened yet without asking Xendit, since the plan never opens for it", async () => {
+    const { authed, subscriptionId, t } = await subscriber();
+    await t.run((ctx) =>
+      ctx.db.patch(subscriptionId, {
+        provider: {
+          kind: "xendit",
+          planId: null,
+          tokenId: "pt-1",
+          channel: null,
+        },
+      })
+    );
+    await authed.mutation(api.billing.xendit.cancel.cancelPlan, {});
+    const rows = await t.run(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      subscription: await ctx.db.get(subscriptionId),
+    }));
+    expect(rows.subscription?.cancelAtPeriodEnd).toBe(true);
+    expect(rows.jobs).toEqual([]);
+  });
+
   it("changes nothing for a learner whom Xendit bills no plan", async () => {
     const t = createConvexTestWithBetterAuth();
     const user = await t.mutation((ctx) =>
