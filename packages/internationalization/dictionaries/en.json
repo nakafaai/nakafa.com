@@ -1262,6 +1262,8 @@
     "play": "Play",
     "pause": "Pause",
     "reset": "Reset",
+    "reset-view": "Reset view",
+    "speed": "Speed",
     "no-website": "No website",
     "high": "High",
     "official": "Official",
