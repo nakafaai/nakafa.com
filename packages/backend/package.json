@@ -15,7 +15,7 @@
     "confect:dev": "confect dev",
     "deploy": "bun run codegen && convex deploy",
     "dev": "convex dev --tail-logs",
-    "generate-schema": "cd components/betterAuth && auth generate --config cli.config.ts --yes && bunx --no-install --cwd ../../../.. ultracite fix packages/backend/components/betterAuth/schema.ts",
+    "generate-schema": "JITI_FS_CACHE=false auth generate --config components/betterAuth/cli.config.ts --yes && mv schema.ts components/betterAuth/schema.ts && bunx --no-install --cwd ../.. ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
     "judgment:measure": "bun scripts/judgment/main.ts",
     "knowledge:compare": "bun scripts/knowledge/main.ts",

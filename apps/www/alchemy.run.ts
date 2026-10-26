@@ -11,6 +11,7 @@ import {
   WORKER_OBSERVABILITY,
   WORKER_PLACEMENT,
   webExposure,
+  workerName,
 } from "#www/deploy/stage";
 import { deployedWorkerBindings, workerSettings } from "#www/worker";
 
@@ -25,7 +26,8 @@ import { deployedWorkerBindings, workerSettings } from "#www/worker";
  * build as static assets, and makes the SSR bundle the Worker entry. The runtime
  * settings and the bindings come from worker.ts, the same owner that
  * vite.config.ts reads. Every Worker binds the stage it deploys as
- * NAKAFA_DEPLOY_STAGE, which is the production identity of the runtime.
+ * NAKAFA_DEPLOY_STAGE, which is the production identity of the runtime, and
+ * takes its readable name from workerName.
  *
  * Production Workers and the DNS records are retained: a stack change that drops
  * one leaves the cloud object in place, and never deletes it.
@@ -51,6 +53,7 @@ export default Stack(
     }
 
     const web = yield* Website.Vite("Web", {
+      name: workerName("web", stage),
       // A path with no asset reaches the Worker, a browser navigation included
       // (worker.ts names the flag and the asset settings).
       assets: workerSettings.assets,
@@ -67,6 +70,7 @@ export default Stack(
 
     if (isProduction) {
       yield* Worker("Api", {
+        name: workerName("api", stage),
         main: "../api/worker.ts",
         assets: "../api/public",
         compatibility: { date: workerSettings.compatibilityDate },
@@ -76,6 +80,7 @@ export default Stack(
         ...productionHostExposure("api.nakafa.com"),
       }).pipe(RemovalPolicy.retain());
       yield* Worker("Mcp", {
+        name: workerName("mcp", stage),
         main: "../mcp/worker.ts",
         assets: "../mcp/public",
         compatibility: { date: workerSettings.compatibilityDate },

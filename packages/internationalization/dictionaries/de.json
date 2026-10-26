@@ -572,7 +572,7 @@
     "policy-threads": "Threads von Schülern",
     "policy-threads-description": "Schüler dürfen in dieser Schule Threads eröffnen.",
     "policy-domains": "E-Mail-Domains",
-    "policy-domains-description": "Nur Adressen dieser Domains dürfen dieser Schule beitreten.",
+    "policy-domains-description": "Nur Google-Workspace-Konten dieser Domains, eine pro Zeile, dürfen beitreten.",
     "policy-domains-placeholder": "schule.example.de",
     "policy-domains-footer": "Eine leere Liste lässt jede Adresse zu.",
     "save": "Speichern",
@@ -967,8 +967,8 @@
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
-    "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
-    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
+    "policy-domains-invalid": "Ungültige Domains: {domains}; schreibe jede Domain in eine eigene Zeile.",
+    "policy-domains-limit": "Verwende höchstens {limit} Domains, jede in einer eigenen Zeile."
   },
   "Classroom": {
     "tabs-home": "Start",
