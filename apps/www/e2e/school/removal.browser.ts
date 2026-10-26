@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, String as Str } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
@@ -280,7 +280,10 @@ test("a room cancelled while its dashboard and a student's page are open says so
   await proctor.goto(address(`/exams/${sitting.examId}`));
   await proctor.getByRole("link", { exact: true, name: UPCOMING_ROOM }).click();
   await proctor.waitForURL(SITTING_PATH);
-  const upcoming = new URL(proctor.url()).pathname.split("/").at(-1) ?? "";
+  const upcoming = Option.getOrElse(
+    Arr.last(Str.split(new URL(proctor.url()).pathname, "/")),
+    () => ""
+  );
 
   // The student waits on the room's page, which names the exam.
   const student = await studentContext.newPage();
