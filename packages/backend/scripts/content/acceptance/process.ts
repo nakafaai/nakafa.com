@@ -129,14 +129,33 @@ export const assertLocalPortsFree = Effect.fn(
  * other builds and browsers, a query still waits for CPU while it holds its
  * permit, so the local user time limit of queries and mutations is five
  * seconds instead of the one second a cloud deployment gives them.
+ *
+ * The same contention stretches the start. Each start pushes every function,
+ * and the backend analyzes the pushed modules within four seconds: on a busy
+ * machine the analysis outlasts them and the push fails ("Loading the pushed
+ * modules encountered the following error: Function execution timed out
+ * (maximum duration: 4s)"), so the local analysis gets thirty. The Convex CLI
+ * waits thirty seconds for the backend's own process to answer before it
+ * pushes, which a swapping machine also outlasts, so it waits two minutes.
+ * A cloud deployment keeps its own limits for every real deploy.
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/concurrency_limiter.rs
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/timeout.rs
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/common/src/knobs.rs
+ * @see https://github.com/get-convex/convex-js/blob/main/src/cli/lib/localDeployment/run.ts
  */
 const localBackendEnvironment = {
+  CONVEX_LOCAL_BACKEND_STARTUP_TIMEOUT_SECS: "120",
   DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
   FUNRUN_ISOLATE_ACTIVE_THREADS: String(navigator.hardwareConcurrency),
+  ISOLATE_ANALYZE_USER_TIMEOUT_SECONDS: "30",
 };
+
+/**
+ * How long a start may take before its backend answers: the push of every
+ * function took 2.94 minutes at a load of about 40 on 11 cores (25 Oct 2026),
+ * and longer while the machine swapped, so a start gets ten minutes.
+ */
+const BACKEND_READY_TIMEOUT = "10 minutes";
 
 /**
  * Scopes a private temporary root to one Convex process group.
@@ -222,7 +241,7 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
         schedule: Schedule.spaced("1 second"),
       }),
       Effect.timeoutOrElse({
-        duration: "4 minutes",
+        duration: BACKEND_READY_TIMEOUT,
         orElse: () =>
           acceptanceRuntimeError(
             "The local Convex process did not become ready."
