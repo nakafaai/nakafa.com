@@ -475,5 +475,18 @@ describe("labelText", () => {
       })
     ).toBe("Salah sekali");
     expect(labelText(emptyLabel())).toBe("");
+    // A line break and a formula block hold no text of a label.
+    expect(
+      labelText({
+        content: [
+          {
+            content: [{ text: "Benar", type: "text" }, { type: "hardBreak" }],
+            type: "paragraph",
+          },
+          { attrs: { latex: "x^2" }, type: "mathBlock" },
+        ],
+        type: "doc",
+      })
+    ).toBe("Benar");
   });
 });

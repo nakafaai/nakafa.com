@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import { matchAnswers } from "@repo/backend/confect/exams/question";
+import { matchAnswers, textLabel } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option } from "effect";
 import { emptyLabel } from "@/components/tenant/exams/answer";
 import {
@@ -20,12 +20,6 @@ const [match] = answers;
 /** A text entry, which is not a match, so a match edit leaves it as it is. */
 const entry: Interaction = { id: "entry", kind: "textEntry", label: "Entry" };
 
-/** The label of a part that holds `text` as one paragraph. */
-const textOf = (text: string) => ({
-  content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
-  type: "doc" as const,
-});
-
 /** The pairs that pair every statement of the new match. */
 const full = [
   { source: "source-1", target: "target-2" },
@@ -41,19 +35,19 @@ describe("matchOf and withPartLabel", () => {
 
   it("writes the label of a statement or an answer, and leaves the rest and other interactions", () => {
     const [labelled, other] = withPartLabel(
-      withPartLabel([match, entry], "source-2", textOf("Ibu kota")),
+      withPartLabel([match, entry], "source-2", textLabel("Ibu kota")),
       "target-1",
-      textOf("Jakarta")
+      textLabel("Jakarta")
     );
     expect(other).toEqual(entry);
     expect(labelled).toMatchObject({
       sources: [
         { id: "source-1", label: emptyLabel() },
-        { id: "source-2", label: textOf("Ibu kota") },
+        { id: "source-2", label: textLabel("Ibu kota") },
         { id: "source-3" },
       ],
       targets: [
-        { id: "target-1", label: textOf("Jakarta") },
+        { id: "target-1", label: textLabel("Jakarta") },
         { id: "target-2" },
         { id: "target-3" },
       ],
@@ -100,6 +94,12 @@ describe("withPartAdded and withPartRemoved", () => {
     const two = withPartRemoved(answers, "target-3");
     expect(withPartRemoved(two, "target-2")).toEqual(two);
     expect(withPartRemoved([entry], "source-1")).toEqual([entry]);
+  });
+
+  it("leaves a side as it is when the removal would empty it, as parts sharing one ID would", () => {
+    const part = { id: "source-1", label: emptyLabel(), maxMatches: 1 };
+    const twins: Interaction = { ...match, sources: [part, part, part] };
+    expect(withPartRemoved([twins], "source-1")).toEqual([twins]);
   });
 });
 

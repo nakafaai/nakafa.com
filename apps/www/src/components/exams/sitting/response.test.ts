@@ -116,10 +116,15 @@ describe("writtenOf", () => {
 
 describe("pairedWith", () => {
   /** A match of three statements, whose order the pairs keep. */
-  const match = { sources: [{ id: "source-1" }, { id: "source-2" }, { id: "source-3" }] };
+  const match = {
+    sources: [{ id: "source-1" }, { id: "source-2" }, { id: "source-3" }],
+  };
 
   it("pairs a statement with an answer, which another statement gives up, in the order of the statements", () => {
-    const one = pairedWith(match.sources, [], { source: "source-2", target: "target-1" });
+    const one = pairedWith(match.sources, [], {
+      source: "source-2",
+      target: "target-1",
+    });
     expect(one).toEqual([{ source: "source-2", target: "target-1" }]);
     expect(
       pairedWith(match.sources, one, { source: "source-1", target: "target-1" })
@@ -177,16 +182,25 @@ describe("markedWith and tableOf", () => {
       statement: "statement-2",
     });
     expect(
-      markedWith(statements, one, { column: "column-2", statement: "statement-1" })
+      markedWith(statements, one, {
+        column: "column-2",
+        statement: "statement-1",
+      })
     ).toEqual([
       { column: "column-2", statement: "statement-1" },
       { column: "column-1", statement: "statement-2" },
     ]);
     expect(
-      markedWith(statements, one, { column: "column-2", statement: "statement-2" })
+      markedWith(statements, one, {
+        column: "column-2",
+        statement: "statement-2",
+      })
     ).toEqual([{ column: "column-2", statement: "statement-2" }]);
     expect(
-      markedWith(statements, one, { column: "column-1", statement: "statement-9" })
+      markedWith(statements, one, {
+        column: "column-1",
+        statement: "statement-9",
+      })
     ).toEqual(one);
   });
 

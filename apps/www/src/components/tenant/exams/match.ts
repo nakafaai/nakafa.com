@@ -1,11 +1,12 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import {
-  CHOICE_OPTIONS_MAX,
-  CHOICE_OPTIONS_MIN,
-} from "@repo/backend/confect/exams/question";
+import { CHOICE_OPTIONS_MAX } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option } from "effect";
-import { emptyLabel, type OptionLabel } from "@/components/tenant/exams/answer";
+import {
+  emptyLabel,
+  type OptionLabel,
+  withoutPart,
+} from "@/components/tenant/exams/answer";
 
 /** The match interaction, which a matching question holds. */
 type Match = Extract<Interaction, { kind: "match" }>;
@@ -92,14 +93,8 @@ export const withPartRemoved = (
 ) =>
   changeMatch(answers, (match) => ({
     ...match,
-    sources:
-      match.sources.length > CHOICE_OPTIONS_MIN
-        ? Arr.filter(match.sources, (part) => part.id !== partId)
-        : match.sources,
-    targets:
-      match.targets.length > CHOICE_OPTIONS_MIN
-        ? Arr.filter(match.targets, (part) => part.id !== partId)
-        : match.targets,
+    sources: withoutPart(match.sources, partId),
+    targets: withoutPart(match.targets, partId),
   }));
 
 /** The pairs a key makes for a match, or none while the key is absent or pairs no match. */
