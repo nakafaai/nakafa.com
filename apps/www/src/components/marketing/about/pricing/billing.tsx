@@ -4,10 +4,13 @@ import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { localizeInternalHref } from "@repo/internationalization/src/href";
+import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { Effect } from "effect";
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { ProOfferDialog } from "@/components/billing/offers";
 import { usePricingButtonVariant } from "@/components/marketing/about/pricing/button";
 import { reportClientException } from "@/lib/analytics/client";
 import {
@@ -32,10 +35,15 @@ export function BillingButton({ client }: { client: ConvexReactClient }) {
   );
 }
 
-/** Opens browser-originated checkout or the existing customer's portal. */
+/**
+ * Opens the checkout, or where the learner's plan is managed: Polar's portal for
+ * a Polar plan, the billing settings for a plan Xendit bills. A pass holder is
+ * offered only passes, which extend the pass.
+ */
 function BillingAction() {
   const variant = usePricingButtonVariant();
   const locale = useLocale();
+  const navigate = useNavigate();
   const t = useTranslations("Pricing");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
   const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
@@ -52,8 +60,8 @@ function BillingAction() {
     throw overview.error;
   }
   const overviewResolved = QueryResult.isSuccess(overview);
-  const hasSubscription =
-    overviewResolved && overview.value.subscription !== null;
+  const subscription = overviewResolved ? overview.value.subscription : null;
+  const holdsPass = overviewResolved && overview.value.pass !== null;
   const billingReady = !currentUser || overviewResolved;
 
   const handleBilling = () => {
@@ -89,30 +97,54 @@ function BillingAction() {
       return;
     }
 
-    if (hasSubscription) {
+    // Polar's portal manages a Polar plan; a plan Xendit bills is managed in the settings.
+    if (subscription?.rail === "polar") {
       billing.openPortal({
         source: "pricing-portal",
+      });
+      return;
+    }
+    if (subscription?.rail === "xendit") {
+      navigate({
+        href: localizeInternalHref("/user/settings/subscriptions", locale),
       });
       return;
     }
 
     billing.openCheckout({
       locale,
+      passesOnly: holdsPass,
       source: "pricing-checkout",
     });
+  };
+  // A signed-in learner without a plan reads the offers as soon as they point at the button.
+  const warmBilling = () => {
+    if (currentUser && subscription === null && overviewResolved) {
+      billing.warmCheckout({ passesOnly: holdsPass });
+    }
   };
   const isPending = billing.isPending || isAuthPending;
   const isWaiting = isIdentityPending || !billingReady;
 
   return (
-    <Button
-      className="w-full"
-      disabled={isPending || isWaiting || !isActiveLocale(locale)}
-      onClick={handleBilling}
-      variant={variant}
-    >
-      <Spinner icon={Diamond02Icon} isLoading={isPending || isWaiting} />
-      {t("pro-cta")}
-    </Button>
+    <>
+      <Button
+        className="w-full"
+        disabled={isPending || isWaiting || !isActiveLocale(locale)}
+        onClick={handleBilling}
+        onFocus={warmBilling}
+        onPointerEnter={warmBilling}
+        variant={variant}
+      >
+        <Spinner icon={Diamond02Icon} isLoading={isPending || isWaiting} />
+        {t("pro-cta")}
+      </Button>
+      <ProOfferDialog
+        choose={billing.chooseOffer}
+        dismiss={billing.dismissChoice}
+        isPending={billing.isPending}
+        offers={billing.choice?.offers ?? null}
+      />
+    </>
   );
 }

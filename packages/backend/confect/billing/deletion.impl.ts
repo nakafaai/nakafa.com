@@ -102,10 +102,10 @@ const readSubscriptions = FunctionImpl.make(
 
 /**
  * Deletes one batch of a deleted user's billing rows: the grants, the top-up packs, the listed
- * subscriptions that belong to the user's accounts, one batch of payments, and an
- * account once it holds no subscription and no payment. Only the listed subscriptions
- * are deleted, so a subscription that arrived after they were read is kept until its
- * Xendit plan is turned off. Returns whether rows remain.
+ * subscriptions that belong to the user's accounts, one batch of payments and of checkouts,
+ * and an account once it holds no subscription, payment or checkout. Only the listed
+ * subscriptions are deleted, so a subscription that arrived after they were read is kept
+ * until its Xendit plan is turned off. Returns whether rows remain.
  */
 const deleteRows = FunctionImpl.make(
   databaseSchema,
@@ -173,6 +173,19 @@ const deleteRows = FunctionImpl.make(
           .delete(payment._id)
           .pipe(Effect.orDie);
       }
+      const checkouts = yield* reader
+        .table("billingCheckouts")
+        .index("by_accountId_and_status", (query) =>
+          query.eq("accountId", accountId)
+        )
+        .take(DELETION_BATCH)
+        .pipe(Effect.orDie);
+      for (const checkout of checkouts) {
+        yield* writer
+          .table("billingCheckouts")
+          .delete(checkout._id)
+          .pipe(Effect.orDie);
+      }
       const subscriptions = yield* reader
         .table("billingSubscriptions")
         .index("by_accountId_and_status", (query) =>
@@ -180,7 +193,11 @@ const deleteRows = FunctionImpl.make(
         )
         .take(1)
         .pipe(Effect.orDie);
-      if (payments.length === DELETION_BATCH || subscriptions.length > 0) {
+      if (
+        payments.length === DELETION_BATCH ||
+        checkouts.length === DELETION_BATCH ||
+        subscriptions.length > 0
+      ) {
         remaining = true;
         continue;
       }
