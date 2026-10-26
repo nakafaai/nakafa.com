@@ -287,6 +287,11 @@ export const tenancyFixture = Effect.gen(function* () {
         vi.advanceTimersByTime(ms);
         await t.finishInProgressScheduledFunctions();
       }),
+    /** A client signed in as any session the test made, by the session's ID and its Better Auth user. */
+    signedIn: (identity: {
+      readonly sessionId: string;
+      readonly subject: string;
+    }) => client(t.withIdentity(identity)),
     as: (account: keyof typeof seeded.users) =>
       client(
         t.withIdentity({

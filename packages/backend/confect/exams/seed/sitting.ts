@@ -127,7 +127,7 @@ const seatCrowd = Effect.fn("exams.seed.crowd")(function* (crowd: {
  * The user of the Owner who signed in first, as the author of the seeded exam. An Owner who
  * has not signed in holds no user to author it.
  */
-const ownerUserId = Effect.fn("exams.seed.owner")(function* (
+export const ownerUserId = Effect.fn("exams.seed.owner")(function* (
   tenantId: ExamsDoc["tenantId"]
 ) {
   const grant = yield* required(
@@ -148,7 +148,7 @@ const ownerUserId = Effect.fn("exams.seed.owner")(function* (
  * Places one seeded question after `after`: a prompt of one paragraph, empty rubric and explanation
  * documents, and one choice whose first option is the correct answer. It returns the question's ID.
  */
-const seedQuestion = Effect.fn("exams.seed.question")(function* (
+export const seedQuestion = Effect.fn("exams.seed.question")(function* (
   exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
   after: ExamQuestionsDoc["_id"] | null,
   paragraphs: Arr.NonEmptyReadonlyArray<string>

@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { SeedRefused } from "@repo/backend/confect/acceptance/seed";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
+import { Seat, SeatKind } from "@repo/backend/confect/exams/seed/contract";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
@@ -11,6 +12,27 @@ import { Schema } from "effect";
  * so a browser test reaches the second page, and few enough for one transaction.
  */
 const CROWD_MAX = 150;
+
+/** The most questions of the load test's exam: forty, as one paper of the blueprint's load test (K26). */
+const LOAD_QUESTIONS_MAX = 40;
+
+/** The most rooms of the load test: fifty rooms of sixty seats seat the blueprint's 3,000 students (K26). */
+const LOAD_ROOMS_MAX = 60;
+
+/** The most seats one call seats, few enough for one transaction. */
+const SEATS_MAX = 50;
+
+/** What the load seed answers: the exam, and every room of it with its token. */
+const LoadSeed = Schema.Struct({
+  examId: Id("exams"),
+  sittings: Schema.Array(
+    Schema.Struct({
+      id: Id("examSittings"),
+      room: Schema.String,
+      token: Schema.String,
+    })
+  ),
+});
 
 /** What the acceptance seed answers: the exam, its title, its sitting, and the sitting's token. */
 const SittingSeed = Schema.Struct({
@@ -24,21 +46,50 @@ const SittingSeed = Schema.Struct({
  * The acceptance seed of school exams. It is internal, so no browser can call it, and only the
  * acceptance command line calls it with the deployment's key (ADR 0013).
  */
-export default GroupSpec.make().addFunction(
-  FunctionSpec.internalMutation({
-    name: "sitting",
-    args: () => ({
-      crowd: Schema.optionalKey(
-        Schema.Int.check(Schema.isBetween({ maximum: CROWD_MAX, minimum: 0 }))
-      ),
-      email: Email,
-      /** Whether the seeded exam also holds an essay, which the student writes and the teacher grades. */
-      essay: Schema.optionalKey(Schema.Boolean),
-      slug: TenantSlug,
-      /** Whether the seed also schedules a room for the next day, which a browser test reads as an upcoming room. */
-      upcoming: Schema.optionalKey(Schema.Boolean),
-    }),
-    returns: () => SittingSeed,
-    error: () => SeedRefused,
-  })
-);
+export default GroupSpec.make()
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "sitting",
+      args: () => ({
+        crowd: Schema.optionalKey(
+          Schema.Int.check(Schema.isBetween({ maximum: CROWD_MAX, minimum: 0 }))
+        ),
+        email: Email,
+        /** Whether the seeded exam also holds an essay, which the student writes and the teacher grades. */
+        essay: Schema.optionalKey(Schema.Boolean),
+        slug: TenantSlug,
+        /** Whether the seed also schedules a room for the next day, which a browser test reads as an upcoming room. */
+        upcoming: Schema.optionalKey(Schema.Boolean),
+      }),
+      returns: () => SittingSeed,
+      error: () => SeedRefused,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "load",
+      args: () => ({
+        questions: Schema.Int.check(
+          Schema.isBetween({ maximum: LOAD_QUESTIONS_MAX, minimum: 1 })
+        ),
+        rooms: Schema.Int.check(
+          Schema.isBetween({ maximum: LOAD_ROOMS_MAX, minimum: 1 })
+        ),
+        slug: TenantSlug,
+      }),
+      returns: () => LoadSeed,
+      error: () => SeedRefused,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "seats",
+      args: () => ({
+        kind: SeatKind,
+        seats: Schema.Array(Seat).check(Schema.isMaxLength(SEATS_MAX)),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => SeedRefused,
+    })
+  );

@@ -18,6 +18,7 @@
     "generate-schema": "cd components/betterAuth && auth generate --config cli.config.ts --yes && bunx --no-install --cwd ../../../.. ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
     "judgment:measure": "bun scripts/judgment/main.ts",
+    "load": "bun scripts/load/main.ts",
     "knowledge:compare": "bun scripts/knowledge/main.ts",
     "nina:gate": "bun scripts/nina/main.ts",
     "setup": "bun run codegen && convex dev --once",
