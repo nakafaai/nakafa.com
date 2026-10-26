@@ -37,12 +37,13 @@ test("keeps the open chat in the sheet while the session confirms", async ({
       yield* learner.titleNewest([TITLE]);
       yield* openSheet(page);
       yield* openFromHistory(page, TITLE);
+      const services = yield* Effect.context();
       yield* Effect.promise(async () => {
         await expect(promptWith(inTheSheet(page), PROMPT)).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
         await page.route(SESSION_READ, async (route) => {
-          await Effect.runPromise(Effect.sleep(SESSION_DELAY));
+          await Effect.runPromiseWith(services)(Effect.sleep(SESSION_DELAY));
           await route.continue();
         });
         await page.goto(LESSON_PATH, { waitUntil: "load" });
