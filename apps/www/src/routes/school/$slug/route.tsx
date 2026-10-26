@@ -21,6 +21,7 @@ import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TenantRefused } from "@/components/tenant/refused";
+import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
 import { readAuthLegalFn } from "@/lib/auth/legal.functions";
 import { readShellClassesFn } from "@/lib/tenant/classes.functions";
@@ -157,6 +158,7 @@ function SchoolLayout(): ReactElement {
         account={viewer.account}
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
+        canOpenReports={canOpenReports(viewer)}
         classes={classes}
         greeting={school.greeting}
         home={school.home}

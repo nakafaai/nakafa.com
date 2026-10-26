@@ -11,7 +11,7 @@ import { resultKind } from "@repo/backend/confect/exams/results/kinds";
 import { sittingKind } from "@repo/backend/confect/exams/sittings/kinds";
 import { integration } from "@repo/backend/confect/integrations/kinds";
 import { visit } from "@repo/backend/confect/operators/kinds";
-import { gradeKind } from "@repo/backend/confect/records/kinds";
+import { gradeKind, reportKind } from "@repo/backend/confect/records/kinds";
 import { Space } from "@repo/backend/confect/space";
 import {
   cohort,
@@ -103,6 +103,7 @@ export const JournalEntry = Schema.Union([
   entryOf(period, Kind.changes(entries, period.kind)),
   entryOf(person, Kind.changes(entries, person.kind)),
   entryOf(promotion, Kind.changes(entries, promotion.kind)),
+  entryOf(reportKind, Kind.changes(entries, reportKind.kind)),
   entryOf(resultKind, Kind.changes(entries, resultKind.kind)),
   entryOf(sittingKind, Kind.changes(entries, sittingKind.kind)),
   entryOf(tenant, Kind.changes(entries, tenant.kind)),

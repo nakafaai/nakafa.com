@@ -793,6 +793,33 @@
     "empty": "Noch kein Schüler in dieser Klasse.",
     "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind."
   },
+  "SchoolReports": {
+    "title": "Zeugnisse",
+    "cohort": "Klasse",
+    "period": "Zeitraum",
+    "search-cohorts": "Klassen suchen",
+    "cohorts-empty": "Keine Klasse für Zeugnisse.",
+    "cohorts-empty-description": "Die Klassenleitung sieht hier ihre Klasse, die Schulleitung jede Klasse des Zeitraums.",
+    "student": "Schüler",
+    "status": "Status",
+    "state-none": "Nicht begonnen",
+    "state-draft": "Entwurf",
+    "state-completed": "Abgegeben",
+    "state-approved": "Wird gesperrt",
+    "state-locked": "Gesperrt",
+    "search-students": "Schüler suchen",
+    "students-empty": "Noch kein Schüler in dieser Klasse.",
+    "students-empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "write": "Bemerkung schreiben",
+    "write-description": "Die Bemerkung im Zeugnis von {name}.",
+    "note-label": "Bemerkung der Klassenleitung",
+    "save-note": "Bemerkung speichern",
+    "complete": "Abgeben",
+    "reopen": "Zurückholen",
+    "approve": "Genehmigen",
+    "open-pdf": "PDF öffnen",
+    "open-check": "Prüfseite öffnen"
+  },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
     "metadata-description": "Beantworte fünf Fragen, und deine Nakafa School ist bereit.",
@@ -2015,6 +2042,14 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "school-refusal-report-closed": {
+      "title": "Zeugnis schon weiter.",
+      "description": "Lade die Liste neu, um den Status zu sehen."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "Kind nicht in der Klasse.",
+      "description": "Ordne das Kind zuerst der Klasse zu."
     }
   },
   "Ai": {
@@ -2474,5 +2509,16 @@
       "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Koran.",
       "keywords": "Sure {name}, Koran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "ReportCheck": {
+    "locked": "Dieses Zeugnis ist erfasst.",
+    "locked-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
+    "unknown": "Kein Zeugnis hat diesen Code.",
+    "unknown-description": "Prüfe die Adresse oder frag die Schule, die es ausgestellt hat.",
+    "school": "Schule",
+    "kind": "Dokument",
+    "kind-report": "Zeugnis",
+    "period": "Zeitraum",
+    "approved": "Genehmigt am"
   }
 }

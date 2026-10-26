@@ -793,6 +793,33 @@
     "empty": "No student in this class yet.",
     "empty-description": "Students appear here once they are placed in the class group."
   },
+  "SchoolReports": {
+    "title": "Report cards",
+    "cohort": "Class group",
+    "period": "Period",
+    "search-cohorts": "Search class groups",
+    "cohorts-empty": "No class group to report on.",
+    "cohorts-empty-description": "A homeroom teacher sees their class group here, and the principal every class group of the period.",
+    "student": "Student",
+    "status": "Status",
+    "state-none": "Not started",
+    "state-draft": "Draft",
+    "state-completed": "Handed in",
+    "state-approved": "Locking",
+    "state-locked": "Locked",
+    "search-students": "Search students",
+    "students-empty": "No student in this class group yet.",
+    "students-empty-description": "Students appear here once they are placed in the class group.",
+    "write": "Write note",
+    "write-description": "The note on the report card of {name}.",
+    "note-label": "Homeroom teacher's note",
+    "save-note": "Save note",
+    "complete": "Hand in",
+    "reopen": "Take back",
+    "approve": "Approve",
+    "open-pdf": "Open PDF",
+    "open-check": "Open check page"
+  },
   "SchoolStart": {
     "metadata-title": "Open your school",
     "metadata-description": "Answer five questions and your Nakafa School is ready to use.",
@@ -2015,6 +2042,14 @@
     "import-encrypted": {
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
+    },
+    "school-refusal-report-closed": {
+      "title": "This report card has moved on.",
+      "description": "Reload the list to see its status."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "This student is not here.",
+      "description": "Place the student in the class group first."
     }
   },
   "Ai": {
@@ -2474,5 +2509,16 @@
       "description": "Read Surah {name} ({transliteration}) with verse-by-verse translation. {numberOfVerses} verses from the Holy Quran.",
       "keywords": "Surah {name}, Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "ReportCheck": {
+    "locked": "This report card is on record.",
+    "locked-description": "Its code belongs to a report card that the school locked.",
+    "unknown": "No report card has this code.",
+    "unknown-description": "Check the address, or ask the school that issued it.",
+    "school": "School",
+    "kind": "Document",
+    "kind-report": "Report card",
+    "period": "Period",
+    "approved": "Approved on"
   }
 }
