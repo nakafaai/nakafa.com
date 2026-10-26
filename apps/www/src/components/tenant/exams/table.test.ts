@@ -46,7 +46,10 @@ describe("tableOf and withCellLabel", () => {
     );
     expect(other).toEqual(entry);
     expect(labelled).toMatchObject({
-      columns: [{ id: "column-1" }, { id: "column-2", label: textOf("Keliru") }],
+      columns: [
+        { id: "column-1" },
+        { id: "column-2", label: textOf("Keliru") },
+      ],
       statements: [
         { id: "statement-1", label: textOf("Air mendidih") },
         { id: "statement-2", label: emptyLabel() },
@@ -83,7 +86,10 @@ describe("withStatementAdded and withStatementRemoved", () => {
     ] as const;
     const [added] = withStatementAdded(named);
     expect(
-      Arr.map(added.kind === "matrix" ? added.statements : [], (part) => part.id)
+      Arr.map(
+        added.kind === "matrix" ? added.statements : [],
+        (part) => part.id
+      )
     ).toEqual(["first", "second", "statement-1"]);
   });
 

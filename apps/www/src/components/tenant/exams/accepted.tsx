@@ -129,11 +129,14 @@ export function AcceptedAnswers({
       {Arr.map(accepted, (text, index) => (
         <AcceptedRow
           editable={editable}
-          key={`${index}-${text}`}
+          // The key keeps its accepted answers distinct (`acceptedKey`), so each text names one row.
+          key={text}
           label={t("accepted-of", { index: index + 1, number })}
           onCommit={(next) =>
             onChange(
-              Arr.map(accepted, (current, at) => (at === index ? next : current))
+              Arr.map(accepted, (current, at) =>
+                at === index ? next : current
+              )
             )
           }
           onRemove={() => onChange(Arr.remove(accepted, index))}

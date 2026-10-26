@@ -66,8 +66,7 @@ export const tallyAnswers = (
   answers: readonly ScoredAnswer[],
   optionIds: readonly string[]
 ) => ({
-  answered: Arr.filter(answers, (answer) => isAnswered(answer.response))
-    .length,
+  answered: Arr.filter(answers, (answer) => isAnswered(answer.response)).length,
   correct: countVerdict(answers, "correct"),
   incorrect: countVerdict(answers, "incorrect"),
   partial: countVerdict(answers, "partial"),

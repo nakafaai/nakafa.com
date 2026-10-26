@@ -230,17 +230,16 @@ describe("exams/sittings schedule", () => {
         yield* keyedSchool(fixture);
         const exam = yield* teacherExam(fixture, "Esai");
         const [question] = exam.questions;
-        yield* fixture.as("teacher").mutation(
-          refs.public.exams.questions.template,
-          {
+        yield* fixture
+          .as("teacher")
+          .mutation(refs.public.exams.questions.template, {
             examId: exam.id,
             labels: [],
             questionId: question.id,
             revision: 0,
             slug: nf,
             template: "essay",
-          }
-        );
+          });
         const made = yield* scheduleSitting(fixture, {
           closesAt: CLOSES_AT,
           examId: exam.id,

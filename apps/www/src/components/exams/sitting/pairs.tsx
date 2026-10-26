@@ -40,7 +40,10 @@ export function SittingPairs({
     pairs: readonly { readonly source: string; readonly target: string }[]
   ) => void;
   /** The pairs the paper holds for the question. */
-  readonly pairs: readonly { readonly source: string; readonly target: string }[];
+  readonly pairs: readonly {
+    readonly source: string;
+    readonly target: string;
+  }[];
 }) {
   const t = useTranslations("Exams");
   const items = Arr.map(match.targets, (target, index) => ({
@@ -49,10 +52,9 @@ export function SittingPairs({
   }));
 
   return (
-    <div
+    <fieldset
       aria-labelledby={labelledBy}
       className="grid min-w-0 gap-6 md:grid-cols-2"
-      role="group"
     >
       <ol className="grid content-start gap-3">
         {Arr.map(match.sources, (source, index) => (
@@ -114,6 +116,6 @@ export function SittingPairs({
           </li>
         ))}
       </ol>
-    </div>
+    </fieldset>
   );
 }

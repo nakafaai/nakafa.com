@@ -3,7 +3,10 @@ import { Array as Arr, Option } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
-import { markedWith, type TablePart } from "@/components/exams/sitting/response";
+import {
+  markedWith,
+  type TablePart,
+} from "@/components/exams/sitting/response";
 import { TryoutSelectableRadioOption } from "@/components/tryout/runtime/choice/surface";
 
 /**
@@ -19,7 +22,10 @@ export function SittingTable({
   table,
 }: {
   /** The cells the paper holds for the question. */
-  readonly cells: readonly { readonly column: string; readonly statement: string }[];
+  readonly cells: readonly {
+    readonly column: string;
+    readonly statement: string;
+  }[];
   readonly disabled?: boolean;
   /** The id of the heading that names the question. */
   readonly labelledBy: string;

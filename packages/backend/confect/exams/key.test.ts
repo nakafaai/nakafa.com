@@ -2,7 +2,16 @@ import { describe, expect, it } from "@effect/vitest";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { keyFits } from "@repo/backend/confect/exams/key";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import {
+  essayAnswers,
+  matchAnswers,
+  newChoiceAnswers,
+  tableAnswers,
+} from "@repo/backend/confect/exams/question";
+import type {
+  ExamCell,
+  ExamPair,
+} from "@repo/backend/confect/exams/sittings/response";
 import { Schema } from "effect";
 
 /** A key that marks the given options of the choice `choice` correct. */
@@ -122,6 +131,50 @@ describe("exams/key keyFits", () => {
           { correct: ["option-2"], interaction: "other", kind: "choice" },
         ]
       )
+    ).toBe(false);
+  });
+
+  it("fits a match key that pairs every statement once, and refuses one that leaves a statement or pairs an answer twice", () => {
+    const pairs = [
+      { source: "source-1", target: "target-3" },
+      { source: "source-2", target: "target-1" },
+      { source: "source-3", target: "target-2" },
+    ] as const;
+    const keyOf = (made: readonly ExamPair[]): InteractionKey => ({
+      interaction: "match",
+      kind: "match",
+      pairs: made,
+    });
+    expect(keyFits(matchAnswers(), [keyOf(pairs)])).toBe(true);
+    expect(keyFits(matchAnswers(), [keyOf([pairs[0], pairs[1]])])).toBe(false);
+    expect(
+      keyFits(matchAnswers(), [
+        keyOf([pairs[0], pairs[1], { source: "source-3", target: "target-3" }]),
+      ])
+    ).toBe(false);
+  });
+
+  it("fits a table key that marks every statement, and refuses one that leaves a statement blank", () => {
+    const cells = [
+      { column: "column-1", statement: "statement-1" },
+      { column: "column-2", statement: "statement-2" },
+      { column: "column-2", statement: "statement-3" },
+    ] as const;
+    const keyOf = (marked: readonly ExamCell[]): InteractionKey => ({
+      answers: marked,
+      interaction: "matrix",
+      kind: "matrix",
+    });
+    const table = tableAnswers(["Benar", "Salah"]);
+    expect(keyFits(table, [keyOf(cells)])).toBe(true);
+    expect(keyFits(table, [keyOf([cells[0], cells[1]])])).toBe(false);
+  });
+
+  it("refuses any key for an essay, which its rubric scores", () => {
+    expect(
+      keyFits(essayAnswers(), [
+        { correct: ["option-1"], interaction: "essay", kind: "choice" },
+      ])
     ).toBe(false);
   });
 });

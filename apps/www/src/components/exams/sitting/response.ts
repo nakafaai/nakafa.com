@@ -94,7 +94,7 @@ type Pair = Extract<InteractionKey, { kind: "match" }>["pairs"][number];
  * match's statements, and a pair of a statement the match does not hold is dropped.
  */
 export function pairedWith(
-  sources: readonly { readonly id: string }[],
+  sources: readonly Pick<MatchPart["sources"][number], "id">[],
   pairs: readonly Pair[],
   next: Pair
 ): readonly Pair[] {
@@ -122,7 +122,7 @@ type Cell = Extract<InteractionKey, { kind: "matrix" }>["answers"][number];
  * does not hold is dropped.
  */
 export function markedWith(
-  statements: readonly { readonly id: string }[],
+  statements: readonly Pick<TablePart["statements"][number], "id">[],
   cells: readonly Cell[],
   next: Cell
 ): readonly Cell[] {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { AnswerRow } from "@repo/backend/confect/exams/results/contract";
-import { gradedPage } from "@/components/exams/results/graded";
 import { Schema } from "effect";
+import { gradedPage } from "@/components/exams/results/graded";
 
 const attemptId = Schema.decodeUnknownSync(Id("examAttempts"));
 

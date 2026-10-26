@@ -1,4 +1,5 @@
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import {
   Array as Arr,
   Effect,
@@ -9,7 +10,6 @@ import {
 } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import { isFinalRefusal } from "@/components/exams/sitting/entry";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /**
  * The browser's kept state of a sitting attempt, which holds the answers until the server holds them. Flags are

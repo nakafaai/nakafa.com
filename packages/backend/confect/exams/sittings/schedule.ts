@@ -10,10 +10,7 @@ import {
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { keyFits } from "@repo/backend/confect/exams/key";
-import {
-  needsKey,
-  questionView,
-} from "@repo/backend/confect/exams/question";
+import { needsKey, questionView } from "@repo/backend/confect/exams/question";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import {
   KeysMissing,

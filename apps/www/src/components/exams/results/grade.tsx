@@ -10,10 +10,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useResultsScope } from "@/components/exams/results/context";
 import { gradedPage } from "@/components/exams/results/graded";
-import {
-  runExamAction,
-  sentAction,
-} from "@/components/tenant/exams/action";
+import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 
 /**
  * The points a teacher gives one answer, as a teacher writes a mark beside an answer on a paper: a whole

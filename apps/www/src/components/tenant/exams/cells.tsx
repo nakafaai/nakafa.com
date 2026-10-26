@@ -71,7 +71,10 @@ export function TableKey({
       <FieldTitle>{t("answer-key")}</FieldTitle>
       <ol className="grid gap-2">
         {Arr.map(table.statements, (statement, index) => (
-          <li className="flex items-center justify-between gap-4" key={statement.id}>
+          <li
+            className="flex items-center justify-between gap-4"
+            key={statement.id}
+          >
             <span className="text-sm tabular-nums">
               {t("statement-number", { name: index + 1 })}
             </span>
@@ -86,7 +89,10 @@ export function TableKey({
               type="single"
               value={Option.getOrElse(
                 Option.map(
-                  Arr.findFirst(cells, (cell) => cell.statement === statement.id),
+                  Arr.findFirst(
+                    cells,
+                    (cell) => cell.statement === statement.id
+                  ),
                   (cell) => cell.column
                 ),
                 () => ""

@@ -87,11 +87,9 @@ describe("withPartAdded and withPartRemoved", () => {
       },
     ] as const;
     const [added] = withPartAdded(named, "sources");
-    expect(Arr.map(added.kind === "match" ? added.sources : [], (part) => part.id)).toEqual([
-      "first",
-      "second",
-      "source-1",
-    ]);
+    expect(
+      Arr.map(added.kind === "match" ? added.sources : [], (part) => part.id)
+    ).toEqual(["first", "second", "source-1"]);
   });
 
   it("removes a part down to two on its side, and leaves other interactions", () => {

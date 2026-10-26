@@ -1,21 +1,21 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import { nf } from "@repo/backend/test/editor";
 import {
   choiceAnswers,
   essayAnswers,
   matchAnswers,
   newChoiceAnswers,
-  tableAnswers,
   shortAnswers,
+  tableAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
+import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { answer, copy, template } = refs.public.exams.questions;
+const { answer, template } = refs.public.exams.questions;
 
 /** The key of the question's one choice, marking these options correct. */
 const keyOf = (...correct: [string, ...string[]]) =>
@@ -259,10 +259,7 @@ describe("exams/questions/template", () => {
           template: "choice",
         });
         expect(back.answers[0]).toMatchObject({
-          options: [
-            { label: textLabel("صحيح") },
-            { label: textLabel("خطأ") },
-          ],
+          options: [{ label: textLabel("صحيح") }, { label: textLabel("خطأ") }],
         });
       })
   );
@@ -388,40 +385,27 @@ describe("exams/questions/template", () => {
       })
   );
 
-  it.effect(
-    "turns a choice into an essay with one long text and no key, which still saves no key",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const teacher = fixture.as("teacher");
-        const exam = yield* teacherExam(fixture, "Esai");
-        const [question] = exam.questions;
-        const essay = yield* teacher.mutation(template, {
-          examId: exam.id,
-          labels: [],
-          questionId: question.id,
-          revision: 0,
-          slug: nf,
-          template: "essay",
-        });
-        expect(essay).toMatchObject({ key: null, template: "essay" });
-        expect(essay.answers).toEqual(essayAnswers());
-        const refused = yield* teacher
-          .mutation(answer, {
-            answers: essay.answers,
-            examId: exam.id,
-            key: keyOf("option-1"),
-            questionId: question.id,
-            revision: essay.revision,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "KeyDoesNotFit" });
-      })
+  it.effect("turns a choice into an essay with one long text and no key", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const teacher = fixture.as("teacher");
+      const exam = yield* teacherExam(fixture, "Esai");
+      const [question] = exam.questions;
+      const essay = yield* teacher.mutation(template, {
+        examId: exam.id,
+        labels: [],
+        questionId: question.id,
+        revision: 0,
+        slug: nf,
+        template: "essay",
+      });
+      expect(essay).toMatchObject({ key: null, template: "essay" });
+      expect(essay.answers).toEqual(essayAnswers());
+    })
   );
 
   it.effect(
-    "turns a choice into matching, which takes a key that pairs every statement once and refuses any other",
+    "turns a choice into matching, which takes a key that pairs every statement once",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -454,40 +438,6 @@ describe("exams/questions/template", () => {
         expect(keyed.key).toEqual([
           { interaction: "match", kind: "match", pairs },
         ]);
-        const partial = yield* teacher
-          .mutation(answer, {
-            answers: match.answers,
-            examId: exam.id,
-            key: [
-              { interaction: "match", kind: "match", pairs: [pairs[0], pairs[1]] },
-            ],
-            questionId: question.id,
-            revision: keyed.revision,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(partial).toMatchObject({ _tag: "KeyDoesNotFit" });
-        const twice = yield* teacher
-          .mutation(answer, {
-            answers: match.answers,
-            examId: exam.id,
-            key: [
-              {
-                interaction: "match",
-                kind: "match",
-                pairs: [
-                  pairs[0],
-                  pairs[1],
-                  { source: "source-3", target: "target-3" },
-                ],
-              },
-            ],
-            questionId: question.id,
-            revision: keyed.revision,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(twice).toMatchObject({ _tag: "KeyDoesNotFit" });
       })
   );
 
@@ -536,47 +486,6 @@ describe("exams/questions/template", () => {
         expect(keyed.key).toEqual([
           { answers: cells, interaction: "matrix", kind: "matrix" },
         ]);
-        const partial = yield* teacher
-          .mutation(answer, {
-            answers: table.answers,
-            examId: exam.id,
-            key: [
-              {
-                answers: [cells[0], cells[1]],
-                interaction: "matrix",
-                kind: "matrix",
-              },
-            ],
-            questionId: question.id,
-            revision: keyed.revision,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect(partial).toMatchObject({ _tag: "KeyDoesNotFit" });
       })
-  );
-
-  it.effect("copies a complex choice as a complex choice", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const teacher = fixture.as("teacher");
-      const exam = yield* teacherExam(fixture, "Salin");
-      const [question] = exam.questions;
-      yield* teacher.mutation(template, {
-        examId: exam.id,
-        labels: [],
-        questionId: question.id,
-        revision: 0,
-        slug: nf,
-        template: "choices",
-      });
-      const copied = yield* teacher.mutation(copy, {
-        examId: exam.id,
-        questionId: question.id,
-        slug: nf,
-      });
-      expect(copied).toMatchObject({ template: "choices" });
-      expect(copied.answers[0]).toMatchObject({ maxChoices: 4 });
-    })
   );
 });

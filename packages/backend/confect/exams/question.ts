@@ -159,7 +159,7 @@ export const templateLabels = (template: QuestionTemplate) =>
 export const needsKey = (template: QuestionTemplate) => !takesRubric(template);
 
 /** The most characters of one fixed option's label, as the editor writes it for the template. */
-export const OPTION_LABEL_MAX = 200;
+const OPTION_LABEL_MAX = 200;
 
 /**
  * The labels of the options a template fixes, as plain text in the teacher's language: one
@@ -196,7 +196,10 @@ const matchFits = (answer: Interaction) =>
   answer.sources.length <= CHOICE_OPTIONS_MAX &&
   answer.targets.length >= CHOICE_OPTIONS_MIN &&
   answer.targets.length <= CHOICE_OPTIONS_MAX &&
-  Arr.every([...answer.sources, ...answer.targets], (part) => part.maxMatches === 1);
+  Arr.every(
+    [...answer.sources, ...answer.targets],
+    (part) => part.maxMatches === 1
+  );
 
 /**
  * Whether one interaction is a table that the true or false template takes: two to five statements, and

@@ -103,7 +103,9 @@ export const withPartRemoved = (
   }));
 
 /** The pairs a key makes for a match, or none while the key is absent or pairs no match. */
-export const keyPairs = (key: readonly InteractionKey[] | null): readonly Pair[] =>
+export const keyPairs = (
+  key: readonly InteractionKey[] | null
+): readonly Pair[] =>
   Option.match(
     Arr.findFirst(
       key ?? [],
