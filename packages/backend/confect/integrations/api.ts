@@ -17,6 +17,9 @@ import {
  */
 export const SCHOOL_API_PATH = "/api/school/v1";
 
+/** The path the Convex site serves the school MCP server at; a school host forwards `/mcp` to it. */
+export const SCHOOL_MCP_PATH = "/api/school/mcp";
+
 /** The most rows one page holds; a request for more is clamped (ADR 0029, amendment rule 7). */
 export const PAGE_LIMIT = 100;
 

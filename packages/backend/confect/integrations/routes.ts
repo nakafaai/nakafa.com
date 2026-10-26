@@ -15,6 +15,7 @@ import {
   SchoolApiToken,
   SchoolApiUnauthorized,
 } from "@repo/backend/confect/integrations/api";
+import { pageOr } from "@repo/backend/confect/integrations/reads";
 import { Effect, Layer, Redacted } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 
@@ -72,6 +73,12 @@ const oauthHandlers = HttpApiBuilder.group(
   })
 );
 
+/** The page a read's query names: its cursor, or the first page, and its size, or a full page. */
+const pageArgs = (query: {
+  readonly cursor?: string | undefined;
+  readonly limit?: number | undefined;
+}) => ({ cursor: query.cursor ?? null, numItems: query.limit ?? PAGE_LIMIT });
+
 /** The refusal of a read that the client's action list or scope does not open. */
 const forbidden = () =>
   new SchoolApiForbidden({
@@ -117,9 +124,7 @@ const rosterHandlers = HttpApiBuilder.group(
             refs.internal.integrations.reads.periods,
             { clientId: yield* callerId }
           ).pipe(Effect.orDie);
-          return answer.outcome === "page"
-            ? { data: answer.data, next: answer.next }
-            : yield* forbidden();
+          return yield* pageOr(answer, forbidden);
         })
       )
       .handle("cohorts", ({ query }) =>
@@ -129,14 +134,11 @@ const rosterHandlers = HttpApiBuilder.group(
             refs.internal.integrations.reads.cohorts,
             {
               clientId: yield* callerId,
-              cursor: query.cursor ?? null,
-              numItems: query.limit ?? PAGE_LIMIT,
+              ...pageArgs(query),
               period: query.period,
             }
           ).pipe(Effect.orDie);
-          return answer.outcome === "page"
-            ? { data: answer.data, next: answer.next }
-            : yield* forbidden();
+          return yield* pageOr(answer, forbidden);
         })
       )
       .handle("people", ({ query }) =>
@@ -146,14 +148,11 @@ const rosterHandlers = HttpApiBuilder.group(
             refs.internal.integrations.reads.people,
             {
               clientId: yield* callerId,
-              cursor: query.cursor ?? null,
-              numItems: query.limit ?? PAGE_LIMIT,
+              ...pageArgs(query),
               status: query.status ?? "active",
             }
           ).pipe(Effect.orDie);
-          return answer.outcome === "page"
-            ? { data: answer.data, next: answer.next }
-            : yield* forbidden();
+          return yield* pageOr(answer, forbidden);
         })
       )
       .handle("placements", ({ query }) =>
@@ -163,14 +162,11 @@ const rosterHandlers = HttpApiBuilder.group(
             refs.internal.integrations.reads.placements,
             {
               clientId: yield* callerId,
-              cursor: query.cursor ?? null,
-              numItems: query.limit ?? PAGE_LIMIT,
+              ...pageArgs(query),
               period: query.period,
             }
           ).pipe(Effect.orDie);
-          return answer.outcome === "page"
-            ? { data: answer.data, next: answer.next }
-            : yield* forbidden();
+          return yield* pageOr(answer, forbidden);
         })
       );
   })

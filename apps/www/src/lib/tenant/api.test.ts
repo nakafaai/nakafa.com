@@ -22,6 +22,15 @@ describe("lib/tenant/api", () => {
     ).toEqual(Option.some(`${SITE}/api/school/v1/cohorts?period=p1`));
   });
 
+  it("forwards a school host's MCP path to the school MCP server, and no other path", () => {
+    expect(
+      Option.map(schoolApiTarget(requestTo("harapan.nakafa.com", "/mcp"), SITE), (url) => url.href)
+    ).toEqual(Option.some(`${SITE}/api/school/mcp`));
+    expect(
+      Option.isNone(schoolApiTarget(requestTo("harapan.nakafa.com", "/mcpx"), SITE))
+    ).toBe(true);
+  });
+
   it("forwards nothing from a host that names no school", () => {
     expect(
       Option.isNone(schoolApiTarget(requestTo("nakafa.com", "/api/v1/periods"), SITE))

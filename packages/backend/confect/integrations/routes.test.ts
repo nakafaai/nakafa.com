@@ -1,18 +1,25 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   SCHOOL_API_PATH,
   SchoolApi,
 } from "@repo/backend/confect/integrations/api";
-import { period } from "@repo/backend/test/classroom";
-import { createClient, type Fixture } from "@repo/backend/test/api";
+import { cohort, period } from "@repo/backend/test/classroom";
+import { createClient, type Fixture, issue } from "@repo/backend/test/api";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { encodePrettyJsonText } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { OpenApi } from "effect/http-api";
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(TENANCY_NOW);
+});
+
+/** One page of a read, with its rows left undecoded. */
+const Page = Schema.Struct({
+  data: Schema.Array(Schema.Unknown),
+  next: Schema.NullOr(Schema.String),
 });
 
 /** The access token of an issued token answer. */
@@ -74,13 +81,48 @@ describe("school API over HTTP", () => {
           data: [{ id: term.id }],
           next: null,
         });
-        const cohorts = yield* read(
+        yield* cohort(fixture, term.id, "7A");
+        yield* cohort(fixture, term.id, "7B");
+        const first = yield* read(
           fixture,
-          `/cohorts?period=${term.id}&limit=5`,
+          `/cohorts?period=${term.id}&limit=1`,
           issued.access_token
-        );
-        expect(cohorts.status).toBe(200);
+        ).pipe(Effect.flatMap(json), Effect.flatMap(Schema.decodeUnknownEffect(Page)));
+        expect(first.data).toHaveLength(1);
+        expect(first.next).not.toBeNull();
+        const second = yield* read(
+          fixture,
+          `/cohorts?period=${term.id}&limit=1&cursor=${encodeURIComponent(first.next ?? "")}`,
+          issued.access_token
+        ).pipe(Effect.flatMap(json), Effect.flatMap(Schema.decodeUnknownEffect(Page)));
+        expect(second.data).toHaveLength(1);
+        expect(second.data).not.toEqual(first.data);
+        for (const path of [
+          "/people",
+          "/people?status=suspended",
+          `/placements?period=${term.id}`,
+        ]) {
+          expect((yield* read(fixture, path, issued.access_token)).status).toBe(200);
+        }
       })
+  );
+
+  it.effect("answers a client past its request limit 429 with the seconds to wait", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const client = yield* createClient(fixture);
+      const issued = yield* issue(fixture, client);
+      const token = issued.outcome === "issued" ? issued.token : "";
+      for (const _ of Arr.makeBy(600, (index) => index)) {
+        yield* fixture.internal.mutation(refs.internal.integrations.tokens.check, {
+          resource: "api",
+          token,
+        });
+      }
+      const limited = yield* read(fixture, "/periods", token);
+      expect(limited.status).toBe(429);
+      expect(yield* json(limited)).toMatchObject({ _tag: "SchoolApiRateLimited" });
+    })
   );
 
   it.effect(

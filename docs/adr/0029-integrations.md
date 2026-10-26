@@ -563,8 +563,12 @@ What is built:
 - `confect/integrations/api.ts`: the one `HttpApi` definition (`SchoolApi`) with
   the `oauth` group (`POST /token`, the client credentials grant, form encoded)
   and the `roster` group (`GET /periods`, `/cohorts?period=`, `/people?status=`,
-  `/placements?period=`), behind the `SchoolApiBearer` middleware. It imports no
-  Convex or server code, so the CLI can bundle it.
+  `/placements?period=`), behind the `SchoolApiBearer` security. It imports no
+  Convex or server code, so the CLI can bundle it. The middleware only hands the
+  token to the read, and each read checks it: Confect supplies its Convex runners
+  per request to a handler, never to a middleware layer, so a check in the
+  middleware would need them at build time. Each read declares the 401 and 429 it
+  may answer, so the OpenAPI document lists them.
 - The Convex site serves it under `/api/school/v1` (`confect/integrations/routes.ts`),
   with the OpenAPI document at `/api/school/v1/openapi.json`, which needs no
   token. The committed `confect/integrations/openapi.json` is the contract, and a
@@ -582,6 +586,20 @@ What is built:
   verified, never a school the caller names, and decides every row for that
   client through `allowsClient` of the kind's authority, which reads no relation.
   A read that the action list or the scope does not open answers 403.
+
+- The school MCP server: a school host forwards `/mcp` to `/api/school/mcp` on the
+  Convex site (`confect/integrations/mcp.ts`, `apps/www/src/routes/mcp.ts`). It
+  takes a token issued for the `mcp` resource, answers 401 with a `Bearer`
+  challenge without one, and counts each request against the client's one limit.
+  Then the transport rules of the Nakafa MCP server apply (POST only, one JSON-RPC
+  request, protocol 2026-07-28, the 64 KB cap), and Effect's engine serves four
+  read-only tools (`confect/integrations/tools.ts`): `school_list_periods`,
+  `school_list_cohorts`, `school_list_people`, and `school_list_placements`. Each
+  runs the same internal read as the REST route, so a tool reads no more than the
+  client's action list and scope open, and a closed read is a tool error. Discovery
+  declares the tools capability only. The protected resource metadata of RFC 9728
+  waits for an authorization flow a person signs in to; a client credentials client
+  knows its token endpoint from the school's Integrations page.
 
 Errors are the typed errors of the definition, as JSON. RFC 9457 problem details
 for the school API wait for the change that moves the public API to an `HttpApi`

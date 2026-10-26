@@ -62,6 +62,20 @@ export const pageOptions = (
   numItems: Num.clamp(numItems, { maximum: PAGE_LIMIT, minimum: 1 }),
 });
 
+/**
+ * The rows of one read's answer, as the REST API and the MCP tools both return them, or the
+ * caller's own refusal when the client's action list or scope does not open the read.
+ */
+export const pageOr = <A, E>(
+  answer:
+    | typeof FORBIDDEN
+    | { readonly data: A; readonly next: string | null; readonly outcome: "page" },
+  refusal: () => E
+) =>
+  answer.outcome === "page"
+    ? Effect.succeed({ data: answer.data, next: answer.next })
+    : Effect.fail(refusal());
+
 /** The cursor of the next page, or null on the last one. */
 export const nextOf = (page: { readonly continueCursor: string; readonly isDone: boolean }) =>
   page.isDone ? null : page.continueCursor;
