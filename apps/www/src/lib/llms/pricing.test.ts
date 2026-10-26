@@ -52,7 +52,7 @@ describe("pricing Markdown", () => {
       );
       expect(text).toContain("## Frequently asked");
       expect(text).toContain(
-        "Nina uses 5 AI credits for each answer to your question."
+        "Nina uses 5 credits for each answer to your question."
       );
       expect(text).toContain(
         `Current price and checkout: ${BASE_URL}/en/pricing`
