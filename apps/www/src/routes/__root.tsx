@@ -1,5 +1,6 @@
 import "@fontsource-variable/inter";
 import "@fontsource/amiri/400.css";
+import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
@@ -52,6 +53,15 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // Every page draws its text in Inter, and its Latin file is the one each
+      // page needs, so the page asks for it with the stylesheet instead of after.
+      {
+        as: "font",
+        crossOrigin: "anonymous",
+        href: interLatin,
+        rel: "preload",
+        type: "font/woff2",
+      },
       {
         href: "/favicon.ico",
         rel: "icon",
