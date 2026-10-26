@@ -68,6 +68,7 @@ export type GuardianCodesDoc = Document.Document<typeof schemaDefinition, "guard
 export type GuardianConsentsDoc = Document.Document<typeof schemaDefinition, "guardianConsents">;
 export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guardianLinks">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
+export type IntegrationTokensDoc = Document.Document<typeof schemaDefinition, "integrationTokens">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
@@ -199,6 +200,7 @@ export interface Docs {
   guardianConsents: GuardianConsentsDoc;
   guardianLinks: GuardianLinksDoc;
   integrationClients: IntegrationClientsDoc;
+  integrationTokens: IntegrationTokensDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;

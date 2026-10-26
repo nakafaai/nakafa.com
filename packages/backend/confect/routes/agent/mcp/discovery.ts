@@ -1,7 +1,10 @@
 import { Effect, Option, Schema } from "effect";
 
 /** The capabilities Nakafa serves: tools, resources, and prompts, none with options. */
-const NAKAFA_CAPABILITIES = { prompts: {}, resources: {}, tools: {} };
+export const NAKAFA_CAPABILITIES = { prompts: {}, resources: {}, tools: {} };
+
+/** The capabilities a school serves: tools only (ADR 0029). */
+export const SCHOOL_CAPABILITIES = { tools: {} };
 
 /** A discovery request, identified by its method. */
 const DiscoveryRequest = Schema.Struct({
@@ -19,14 +22,18 @@ const DiscoveryAnswer = Schema.Struct({
 });
 
 /**
- * Replaces the capabilities of a successful discovery answer with the ones
- * Nakafa serves. The engine declares capabilities for every server, so Nakafa
+ * Replaces the capabilities of a successful discovery answer with the ones the
+ * server serves. The engine declares capabilities for every server, so the route
  * corrects this one member; no other member changes. Any other answer, and any
  * body that does not decode, is returned as the same response.
  */
 export const withDiscoveryCapabilities = Effect.fn(
   "agent.mcp.withDiscoveryCapabilities"
-)(function* (requestBody: unknown, response: Response) {
+)(function* (
+  requestBody: unknown,
+  response: Response,
+  capabilities: Readonly<Record<string, object>>
+) {
   if (!Schema.is(DiscoveryRequest)(requestBody)) {
     return response;
   }
@@ -38,7 +45,7 @@ export const withDiscoveryCapabilities = Effect.fn(
   const answer = decoded.value;
   const body = yield* Schema.encodeEffect(JsonObject)({
     ...answer,
-    result: { ...answer.result, capabilities: NAKAFA_CAPABILITIES },
+    result: { ...answer.result, capabilities },
   }).pipe(Effect.orDie);
   const headers = new Headers(response.headers);
   headers.delete("content-length");
