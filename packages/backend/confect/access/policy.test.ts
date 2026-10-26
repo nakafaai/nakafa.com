@@ -118,7 +118,15 @@ describe("access/policy authority", () => {
         expect(results).toEqual({
           checks: ["resource", "resource"],
           foreign: [],
-          own: ["card.issue", "person.invite", "person.manage", "person.view"],
+          own: [
+            "card.issue",
+            "guardian.link",
+            "person.invite",
+            "person.manage",
+            "person.view",
+            "roster.manage",
+            "roster.view",
+          ],
         });
       })
   );
@@ -179,6 +187,7 @@ describe("access/policy authority", () => {
             "exam.rooms",
             "exam.view",
             "grant.manage",
+            "guardian.list",
             "integration.manage",
             "integration.view",
             "invite.view",

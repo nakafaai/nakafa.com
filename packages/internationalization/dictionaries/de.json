@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Filtern",
     "no-results": "Keine Treffer.",
     "reset": "Zurücksetzen"
   },
@@ -85,6 +86,96 @@
     "username-label": "Schul-Benutzername",
     "outsider-hint": "Wenn ein Admin diese Adresse eingeladen hat, kann die Einladung einen Moment brauchen. Prüfe erneut, oder bitte einen Admin, sie noch einmal zu senden. Wurde die Einladung an eine andere Adresse geschickt, melde dich mit dieser an.",
     "outsider-check-again": "Erneut prüfen"
+  },
+  "SchoolGuardians": {
+    "sign-in-action": "Als Elternteil anmelden",
+    "email-label": "E-Mail der Eltern",
+    "email-description": "Nutze die E-Mail, die die Schule hinterlegt hat.",
+    "email-invalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "send-code": "Code senden",
+    "code-label": "Anmeldecode",
+    "code-description": "Wenn die Schule {email} verknüpft hat, wurde dorthin ein sechsstelliger Code gesendet.",
+    "code-invalid": "Gib die sechs Ziffern aus der E-Mail ein.",
+    "code-refused": "Der Code ist falsch oder abgelaufen.",
+    "sign-in": "Anmelden",
+    "resend-code": "Code erneut senden",
+    "failed": "Keine Verbindung. Versuche es noch einmal.",
+    "home-title": "Meine Kinder",
+    "home-empty": "Noch kein Kind verknüpft.",
+    "home-empty-description": "Bitte die Schule, deine E-Mail mit deinem Kind zu verknüpfen.",
+    "child-pending": "Die Verknüpfung wartet auf eine Prüfung.",
+    "child-verified": "Die Verknüpfung ist bestätigt.",
+    "child-expired": "Die Verknüpfung ist abgelaufen.",
+    "child-revoked": "Die Schule hat diese Verknüpfung beendet.",
+    "child-withdrawn": "Du hast die Einwilligung widerrufen.",
+    "child-staff-check": "Die Schule prüft diese Verknüpfung.",
+    "child-ended-hint": "Wende dich an die Schule, um neu zu verknüpfen.",
+    "nisn-label": "NISN des Kindes",
+    "nisn-hint": "Gib die NISN deines Kindes ein, um die Verknüpfung zu bestätigen.",
+    "nisn-refused": "Die Angaben stimmen nicht, prüfe sie oder wende dich an die Schule.",
+    "nisn-submit": "Prüfen",
+    "withdraw": "Einwilligung widerrufen",
+    "withdraw-hint": "Du kannst die Einwilligung jederzeit widerrufen.",
+    "withdraw-title": "Einwilligung widerrufen?",
+    "withdraw-description": "Du siehst die Noten deines Kindes erst wieder, wenn die Schule neu verknüpft.",
+    "grades-empty": "Noch keine Note freigegeben.",
+    "grade-class": "Klasse",
+    "grade-value": "Note",
+    "grade-note": "Hinweis",
+    "kktp-reached": "Erreicht",
+    "kktp-notReached": "Nicht erreicht",
+    "link-add": "Eltern verknüpfen",
+    "link-add-description": "Die Eltern fordern den Anmeldecode selbst auf der Elternseite der Schule an.",
+    "links-empty": "Noch keine Eltern verknüpft.",
+    "links-empty-description": "Verknüpfe die E-Mail der Eltern mit einem Kind, damit sie sich anmelden können.",
+    "links-search": "Schüler suchen",
+    "student": "Schüler",
+    "guardian-name": "Name der Eltern",
+    "status": "Status",
+    "status-pending": "Ausstehend",
+    "status-verified": "Bestätigt",
+    "status-expired": "Abgelaufen",
+    "status-revoked": "Beendet",
+    "status-withdrawn": "Widerrufen",
+    "status-mismatch": "Angaben stimmen nicht",
+    "link-verify": "Von Hand bestätigen",
+    "link-revoke": "Verknüpfung beenden",
+    "link-revoke-title": "Diese Verknüpfung beenden?",
+    "link-revoke-description": "Die Eltern sehen die Daten des Kindes nicht mehr.",
+    "link-detail": "Elternverknüpfung",
+    "link-detail-empty": "Wähle eine Schülerin oder einen Schüler, um die Verknüpfung zu sehen.",
+    "expires": "Läuft ab",
+    "mismatches": "Fehlgeschlagene NISN-Prüfungen",
+    "child": "Kind",
+    "child-detail": "Kind",
+    "child-detail-empty": "Wähle ein Kind, um die Details zu sehen."
+  },
+  "SchoolRoster": {
+    "import": "Importieren",
+    "export": "Exportieren",
+    "file-label": "Schülerliste aus Dapodik",
+    "empty": "Importiere die Schüler aus Dapodik.",
+    "empty-description": "Wähle die Schülerliste, die Dapodik exportiert hat. Die Datei bleibt auf diesem Gerät.",
+    "no-period": "Noch kein aktiver Zeitraum.",
+    "no-period-description": "Öffne einen Zeitraum, bevor du Schüler importierst.",
+    "file-refused": "Diese Datei lässt sich nicht importieren.",
+    "file-unreadable": "Wähle eine XLSX-Datei, die Dapodik exportiert hat.",
+    "file-header": "Die Datei hat keine Spalten Nama und NISN.",
+    "file-empty": "Die Datei hat unter ihrer Kopfzeile keinen Schüler.",
+    "line": "Zeile",
+    "name": "Name",
+    "nisn": "NISN",
+    "cohort": "Klasse",
+    "status": "Status",
+    "search": "Namen suchen",
+    "status-under": "Unter 18",
+    "status-adult": "18 oder älter",
+    "status-name": "Name fehlt",
+    "status-nisn": "NISN hat nicht 10 Ziffern",
+    "status-birth": "Geburtsdatum unlesbar",
+    "status-cohort": "Klassenname zu lang",
+    "cancel": "Abbrechen",
+    "apply": "Schüler importieren"
   },
   "Exams": {
     "token": "Token",
@@ -247,9 +338,9 @@
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
     "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
     "rooms-title": "Räume",
+    "edit-action": "Prüfung bearbeiten",
     "rooms-empty": "Noch keine Räume",
     "rooms-empty-description": "Jeder Raum erscheint hier, sobald die Prüfung geplant ist.",
-    "rooms-empty-action": "Prüfung öffnen",
     "rooms-filter-empty": "Kein Raum hat diesen Status",
     "rooms-filter-empty-description": "Wähle einen anderen Status, um die übrigen Räume zu sehen.",
     "rooms-unavailable": "Du kannst die Räume dieser Prüfung nicht sehen.",
@@ -334,6 +425,7 @@
     "members": "Mitglieder",
     "invites": "Einladungen",
     "students": "Schülerkonten",
+    "roster": "Dapodik",
     "clients": "API-Clients",
     "policies": "Richtlinien",
     "audit": "Prüfprotokoll",
@@ -473,7 +565,6 @@
     "client-secret-title": "Neues Geheimnis",
     "client-secret-description": "Kopiere es jetzt, denn es wird nicht noch einmal angezeigt.",
     "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
-    "audit-footer": "Werte von Richtlinien werden nicht ins Protokoll übernommen.",
     "audit-view": "Protokoll ansehen",
     "audit-when": "Wann",
     "audit-who": "Wer",
@@ -618,7 +709,17 @@
         "declined": "Besuch abgelehnt",
         "ended": "Besuch beendet"
       },
-      "unknown": "Andere Änderung"
+      "unknown": "Andere Änderung",
+      "guardian": {
+        "started": "Eltern verknüpft",
+        "linked": "Elternverknüpfung bestätigt",
+        "withdrawn": "Einwilligung der Eltern widerrufen",
+        "revoked": "Elternverknüpfung beendet"
+      },
+      "roster": {
+        "set": "Schülerdaten aktualisiert",
+        "imported": "Schüler aus Dapodik importiert"
+      }
     },
     "role-description": {
       "owner": "Kann alles in dieser Schule tun.",
@@ -738,10 +839,10 @@
     "no-unit-description": "Perioden und Kohorten gehören zu einer aktiven Einheit. Stelle zuerst eine wieder her oder lege eine an.",
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
-    "members-empty-action": "Einladungen öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
     "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
-    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
+    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
+    "guardians": "Eltern"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -2015,6 +2116,20 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "Verknüpfung schon geändert.",
+      "description": "Lade die Liste neu, um den Status zu sehen."
+    },
+    "school-refusal-guardian-link": {
+      "title": "Verknüpfung nicht angelegt.",
+      "description": "Wähle ein aktives Kind ohne diese E-Mail."
+    },
+    "school-roster-imported": {
+      "title": "Die Schüler sind in der Liste."
+    },
+    "school-roster-export-failed": {
+      "title": "Datei nicht gespeichert."
     }
   },
   "Ai": {

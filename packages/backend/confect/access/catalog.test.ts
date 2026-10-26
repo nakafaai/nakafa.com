@@ -88,6 +88,7 @@ describe("access/catalog", () => {
       "exam",
       "sitting",
       "result",
+      "guardianLink",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
@@ -220,6 +221,12 @@ describe("access/catalog", () => {
           "sitting.cancel",
           "sitting.close",
           "exam.results.released",
+          "guardian.started",
+          "guardian.linked",
+          "guardian.withdrawn",
+          "guardian.revoked",
+          "roster.set",
+          "roster.imported",
         ],
         Order.String
       )
@@ -292,6 +299,7 @@ describe("access/catalog", () => {
       "exam.edit",
       "exam.rooms",
       "exam.view",
+      "guardian.list",
     ]);
   });
 

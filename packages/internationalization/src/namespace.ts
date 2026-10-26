@@ -38,6 +38,8 @@ const messageNamespaceFlags = {
   School: true,
   SchoolEntry: true,
   SchoolGrades: true,
+  SchoolGuardians: true,
+  SchoolRoster: true,
   SchoolSettings: true,
   SchoolStart: true,
   SEO: true,
