@@ -29,6 +29,7 @@ function member(id: string, name: string): Member {
   return {
     id: Schema.decodeUnknownSync(Id("tenantPeople"))(id),
     name,
+    removable: true,
     roles: ["teacher"],
     status: "joined",
   };

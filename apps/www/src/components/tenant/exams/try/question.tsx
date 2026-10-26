@@ -12,6 +12,7 @@ import { Option } from "effect";
 import { lazy, Suspense, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
+import { PromptReserve } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import {
@@ -50,13 +51,7 @@ export function ExamTryQuestion({
   question: Question;
 }) {
   const t = useTranslations("Exams");
-  const slug = useTrySlug();
   const titleId = useId();
-  const reply = useQuery(editors.documents.open, {
-    clientId: TRY_CLIENT,
-    documentId: question.prompt,
-    slug,
-  });
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
   const choice = choiceOf(question.answers);
@@ -69,13 +64,7 @@ export function ExamTryQuestion({
       <h2 className="font-medium" id={titleId}>
         {t("question", { number })}
       </h2>
-      {QueryResult.isSuccess(reply) ? (
-        <Suspense fallback={null}>
-          <ClientOnly fallback={null}>
-            <TryPrompt key={question.prompt} opened={reply.value} />
-          </ClientOnly>
-        </Suspense>
-      ) : null}
+      <ExamTryPrompt documentId={question.prompt} />
       {Option.isSome(choice) ? (
         <SittingChoice
           choice={choice.value}
@@ -109,5 +98,33 @@ export function ExamTryQuestion({
         />
       ) : null}
     </section>
+  );
+}
+
+/**
+ * The prompt of one question. It keeps a prompt's height from the first draw until its reader is
+ * ready, as a sitting's prompt does, so the options below it do not move while the document opens
+ * and the reader loads. A prompt that does not open leaves no space.
+ */
+function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
+  const slug = useTrySlug();
+  const reply = useQuery(editors.documents.open, {
+    clientId: TRY_CLIENT,
+    documentId,
+    slug,
+  });
+
+  if (QueryResult.isFailure(reply)) {
+    return null;
+  }
+  if (!QueryResult.isSuccess(reply)) {
+    return <PromptReserve />;
+  }
+  return (
+    <Suspense fallback={<PromptReserve />}>
+      <ClientOnly fallback={<PromptReserve />}>
+        <TryPrompt key={documentId} opened={reply.value} />
+      </ClientOnly>
+    </Suspense>
   );
 }

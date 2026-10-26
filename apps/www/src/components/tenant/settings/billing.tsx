@@ -1,9 +1,11 @@
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import {
   CreditCardIcon,
+  Diamond02Icon,
   Invoice01Icon,
   Mail01Icon,
   MoreHorizontalIcon,
+  Wallet01Icon,
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -43,12 +45,16 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
-import { formatBillingDate, formatCount } from "@/lib/billing/plan";
 import {
+  formatBillingDate,
+  formatCount,
   formatMinorAmount,
+} from "@/lib/billing/plan";
+import {
   planHintKey,
   purchaseOf,
   type SchoolBilling,
@@ -105,7 +111,7 @@ function SchoolBillingBody({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
-      <SchoolPlanCard billing={overview.value} slug={slug} />
+      <SchoolPlanCard billing={overview.value} />
       <SchoolInvoicesCard billing={overview.value} />
     </>
   );
@@ -116,13 +122,7 @@ function SchoolBillingBody({ slug }: { slug: TenantSlug }) {
  * its grant ends, with its students, and the action that pays for the students not
  * paid for yet when there are any.
  */
-function SchoolPlanCard({
-  billing: overview,
-  slug,
-}: {
-  billing: SchoolBilling;
-  slug: TenantSlug;
-}) {
+function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
   const [isChoosing, setIsChoosing] = useState(false);
@@ -177,6 +177,9 @@ function SchoolPlanCard({
         {canPay ? (
           <CardSectionActions>
             <Button onClick={() => setIsChoosing(true)} type="button">
+              <HugeIcons
+                icon={plan.kind === "free" ? Diamond02Icon : Wallet01Icon}
+              />
               {plan.kind === "free" ? t("billing-upgrade") : t("billing-add")}
             </Button>
           </CardSectionActions>
@@ -187,7 +190,6 @@ function SchoolPlanCard({
           billing={overview}
           open={isChoosing}
           setOpen={setIsChoosing}
-          slug={slug}
         />
       ) : null}
     </CardSection>
@@ -204,13 +206,12 @@ function SchoolTermDialog({
   billing: overview,
   open,
   setOpen,
-  slug,
 }: {
   billing: SchoolBilling;
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const locale = useLocale();
@@ -266,8 +267,12 @@ function SchoolTermDialog({
             onClick={submit}
             type="button"
           >
-            <HugeIcons icon={Invoice01Icon} />
-            {t("billing-issue")}
+            <HugeIcons
+              icon={overview.rail === "xendit" ? Invoice01Icon : Wallet01Icon}
+            />
+            {overview.rail === "xendit"
+              ? t("billing-issue")
+              : t("billing-checkout")}
           </Button>
         </>
       }
@@ -299,7 +304,11 @@ function SchoolTermDialog({
   );
 }
 
-/** One term the school can pay for: its name and dates, a student's price for the days left, and the total. */
+/**
+ * One term the school can pay for: its name and total on one line, and on the
+ * next the students it pays for with the day an invoice's term ends, or the
+ * price of each renewing Polar seat.
+ */
 function SchoolTermOption({
   currency,
   quote,
@@ -315,22 +324,23 @@ function SchoolTermOption({
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-data-checked:border-primary">
       <Radio className="mt-0.5" value={quote.offer} />
-      <span className="grid gap-1">
-        <span className="font-medium text-sm">
-          {t(OFFER_LABELS[rail][quote.offer])}
+      <span className="grid flex-1 gap-1">
+        <span className="flex items-baseline justify-between gap-3 font-medium text-sm">
+          <span>{t(OFFER_LABELS[rail][quote.offer])}</span>
+          <span className="tabular-nums">
+            {formatMinorAmount(quote.total, currency)}
+          </span>
         </span>
         <span className="text-muted-foreground text-sm">
-          {t("billing-term-dates", {
-            end: formatBillingDate(quote.periodEnd - 1, locale),
-            start: formatBillingDate(quote.periodStart, locale),
-          })}
-        </span>
-        <span className="text-sm">
-          {t("billing-quote", {
-            price: formatMinorAmount(quote.unitAmount, currency),
-            seats: quote.seats,
-            total: formatMinorAmount(quote.total, currency),
-          })}
+          {rail === "xendit"
+            ? t("billing-quote-term", {
+                date: formatBillingDate(quote.periodEnd - 1, locale),
+                seats: quote.seats,
+              })
+            : t("billing-quote-seats", {
+                price: formatMinorAmount(quote.unitAmount, currency),
+                seats: quote.seats,
+              })}
         </span>
       </span>
     </label>
