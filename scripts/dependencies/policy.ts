@@ -479,3 +479,11 @@ export const OBSOLETE_DEPENDENCIES = {
   nanoid: "randomUuid from @repo/utilities/uuid",
   next: "TanStack Start and TanStack Router, which the www app runs on",
 };
+
+/**
+ * Packages that bun.lock must not resolve, each with what replaced it. Hono
+ * stays only as an optional peer that convex-helpers declares (ADR 0029).
+ */
+export const RETIRED_LOCK_PACKAGES = {
+  hono: "the Confect router with Effect HttpApi (ADR 0029)",
+};

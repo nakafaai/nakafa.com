@@ -27,7 +27,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 
 interface Props {
-  references: Reference[];
+  references: readonly Reference[];
   title: string;
 }
 
