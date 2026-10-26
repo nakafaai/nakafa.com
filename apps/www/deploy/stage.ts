@@ -27,6 +27,20 @@ export const WORKER_PLACEMENT: WorkerPlacement = {
   region: "aws:us-east-1",
 };
 
+/**
+ * The Cloudflare name of a Worker: `nakafa-<service>` in production and
+ * `nakafa-<service>-<stage>` in every other stage. Without a name Alchemy derives
+ * one with a random suffix. Alchemy plans a changed name as a replacement, which
+ * cannot take over a route or custom domain the old Worker holds, so a rename of
+ * a deployed Worker follows the procedure in ADR 0037.
+ */
+export function workerName(service: string, stage: string) {
+  if (stage === PRODUCTION_DEPLOY_STAGE) {
+    return `nakafa-${service}`;
+  }
+  return `nakafa-${service}-${stage}`;
+}
+
 /** Workers Logs record every invocation, and nothing is sampled away. */
 export const WORKER_OBSERVABILITY: WorkerObservability = {
   enabled: true,
@@ -60,6 +74,7 @@ export function webExposure(stage: string) {
       routes: [hostRoute(`staging.${NAKAFA_ZONE}`)],
       workersDev: false,
       access: {
+        name: workerName("web", stage),
         policies: [
           {
             decision: "allow" as const,
