@@ -3,8 +3,10 @@ import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interacti
 import { Option, Schema } from "effect";
 import {
   choiceOf,
+  markedWith,
   pairedWith,
   pairingOf,
+  tableOf,
   writtenOf,
   toggleOption,
 } from "@/components/exams/sitting/response";
@@ -157,5 +159,50 @@ describe("pairingOf", () => {
     expect(pairingOf([match])).toEqual(Option.some(match));
     expect(pairingOf([match, choice(1)])).toEqual(Option.none());
     expect(pairingOf([choice(1)])).toEqual(Option.none());
+  });
+});
+
+describe("markedWith and tableOf", () => {
+  /** A table of three statements, whose order the cells keep. */
+  const statements = [
+    { id: "statement-1" },
+    { id: "statement-2" },
+    { id: "statement-3" },
+  ];
+
+  it("marks a statement with a column, replaces its earlier mark, and keeps the order of the statements", () => {
+    const one = markedWith(statements, [], {
+      column: "column-1",
+      statement: "statement-2",
+    });
+    expect(
+      markedWith(statements, one, { column: "column-2", statement: "statement-1" })
+    ).toEqual([
+      { column: "column-2", statement: "statement-1" },
+      { column: "column-1", statement: "statement-2" },
+    ]);
+    expect(
+      markedWith(statements, one, { column: "column-2", statement: "statement-2" })
+    ).toEqual([{ column: "column-2", statement: "statement-2" }]);
+    expect(
+      markedWith(statements, one, { column: "column-1", statement: "statement-9" })
+    ).toEqual(one);
+  });
+
+  it("finds the table of a question that holds only it", () => {
+    const table = decodeInteraction({
+      columns: [
+        { id: "column-1", label: label("Benar") },
+        { id: "column-2", label: label("Salah") },
+      ],
+      id: "matrix",
+      kind: "matrix",
+      label: "Table",
+      shuffle: false,
+      statements: [{ id: "statement-1", label: label("Air mendidih") }],
+    });
+    expect(tableOf([table])).toEqual(Option.some(table));
+    expect(tableOf([table, choice(1)])).toEqual(Option.none());
+    expect(tableOf([choice(1)])).toEqual(Option.none());
   });
 });

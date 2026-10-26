@@ -30,10 +30,12 @@ import {
 } from "@/components/tenant/exams/answer";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
+import { tableOf } from "@/components/tenant/exams/table";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
+import { TableKey } from "@/components/tenant/exams/cells";
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam } from "@/components/tenant/exams/provider";
@@ -212,6 +214,10 @@ interface TeacherLayerProps {
   readonly onAccept: (accepted: readonly string[]) => void;
   /** Marks an option as the key of the question, which saves at once. */
   readonly onMark: (optionId: string) => void;
+  /** Saves the cells of a true or false table's key, which saves at once. */
+  readonly onCells: (
+    cells: readonly { readonly column: string; readonly statement: string }[]
+  ) => void;
   /** Saves the pairs of a matching question's key, which saves at once. */
   readonly onPair: (
     pairs: readonly { readonly source: string; readonly target: string }[]
@@ -234,6 +240,7 @@ export function TeacherLayer({
   notes,
   number,
   onAccept,
+  onCells,
   onMark,
   onPair,
   question,
@@ -279,9 +286,22 @@ export function TeacherLayer({
           />
         ),
       })}
+      {Option.match(tableOf(shown.answers), {
+        onNone: () => null,
+        onSome: (table) => (
+          <TableKey
+            editable={editable}
+            keyed={shown.key}
+            number={number}
+            onMark={onCells}
+            table={table}
+          />
+        ),
+      })}
       {needsKey(shown.template) &&
       shown.template !== "short" &&
-      shown.template !== "match" ? (
+      shown.template !== "match" &&
+      shown.template !== "table" ? (
         <AnswerKey
           editable={editable}
           marked={markedOptions(shown.key)}

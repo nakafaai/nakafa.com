@@ -7,6 +7,7 @@ import {
   essayAnswers,
   matchAnswers,
   newChoiceAnswers,
+  tableAnswers,
   shortAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
@@ -487,6 +488,71 @@ describe("exams/questions/template", () => {
           })
           .pipe(Effect.flip);
         expect(twice).toMatchObject({ _tag: "KeyDoesNotFit" });
+      })
+  );
+
+  it.effect(
+    "turns a choice into a true or false table with the two columns it is given, which takes a key that marks every statement",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Tabel");
+        const [question] = exam.questions;
+        const short = yield* teacher
+          .mutation(template, {
+            examId: exam.id,
+            labels: ["Benar"],
+            questionId: question.id,
+            revision: 0,
+            slug: nf,
+            template: "table",
+          })
+          .pipe(Effect.flip);
+        expect(short).toMatchObject({ _tag: "AnswersDoNotFit" });
+        const table = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: ["Benar", "Salah"],
+          questionId: question.id,
+          revision: 0,
+          slug: nf,
+          template: "table",
+        });
+        expect(table).toMatchObject({ key: null, template: "table" });
+        expect(table.answers).toEqual(tableAnswers(["Benar", "Salah"]));
+        const cells = [
+          { column: "column-1", statement: "statement-1" },
+          { column: "column-2", statement: "statement-2" },
+          { column: "column-2", statement: "statement-3" },
+        ] as const;
+        const keyed = yield* teacher.mutation(answer, {
+          answers: table.answers,
+          examId: exam.id,
+          key: [{ answers: cells, interaction: "matrix", kind: "matrix" }],
+          questionId: question.id,
+          revision: table.revision,
+          slug: nf,
+        });
+        expect(keyed.key).toEqual([
+          { answers: cells, interaction: "matrix", kind: "matrix" },
+        ]);
+        const partial = yield* teacher
+          .mutation(answer, {
+            answers: table.answers,
+            examId: exam.id,
+            key: [
+              {
+                answers: [cells[0], cells[1]],
+                interaction: "matrix",
+                kind: "matrix",
+              },
+            ],
+            questionId: question.id,
+            revision: keyed.revision,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(partial).toMatchObject({ _tag: "KeyDoesNotFit" });
       })
   );
 

@@ -8,12 +8,12 @@ import {
 import {
   encodeAnswers,
   encodeKey,
-  fixedOptions,
   type QuestionTemplate,
   questionView,
+  templateLabels,
 } from "@repo/backend/confect/exams/question";
 import { asTemplate } from "@repo/backend/confect/exams/template";
-import { Clock, Effect, Option } from "effect";
+import { Clock, Effect } from "effect";
 
 /**
  * Gives one question another template at the revision the editor saw: its answers take the
@@ -34,8 +34,7 @@ export const switchTemplate = Effect.fn("exams.question.template")(function* (
   if (question.revision !== edit.revision) {
     return yield* new RevisionStale({ current: question.revision });
   }
-  const labelled = Option.getOrElse(fixedOptions(edit.template), () => 0);
-  if (edit.labels.length !== labelled) {
+  if (edit.labels.length !== templateLabels(edit.template)) {
     return yield* new AnswersDoNotFit();
   }
   if (question.template === edit.template) {

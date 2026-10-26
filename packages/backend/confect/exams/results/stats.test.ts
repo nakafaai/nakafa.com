@@ -3,6 +3,7 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import {
   matchAnswers,
   newChoiceAnswers,
+  tableAnswers,
 } from "@repo/backend/confect/exams/question";
 import {
   optionIdsOf,
@@ -34,6 +35,13 @@ describe("exams/results/stats", () => {
     expect(pairIdsOf(newChoiceAnswers())).toEqual({
       sourceIds: [],
       targetIds: [],
+    });
+  });
+
+  it("lists the statements and the columns of a table in their order", () => {
+    expect(pairIdsOf(tableAnswers(["Benar", "Salah"]))).toEqual({
+      sourceIds: ["statement-1", "statement-2", "statement-3"],
+      targetIds: ["column-1", "column-2"],
     });
   });
 

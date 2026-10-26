@@ -10,6 +10,7 @@ import {
   isAnswered,
   isTextResponse,
   madePairs,
+  markedCells,
 } from "@repo/backend/confect/exams/sittings/response";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import type {
@@ -178,6 +179,58 @@ const scorePairs = (
     }
   );
 
+/** A table interaction, which a true or false table holds. */
+type TableInteraction = Extract<Interaction, { readonly kind: "matrix" }>;
+
+/** The key of one table: the column of each statement. */
+type TableKey = Extract<InteractionKey, { readonly kind: "matrix" }>;
+
+/** The table that a question answers: its one interaction, when that is a table. */
+const answeredTable = (
+  interactions: readonly Interaction[]
+): Option.Option<TableInteraction> =>
+  interactions.length === 1
+    ? Arr.findFirst(
+        interactions,
+        (interaction): interaction is TableInteraction =>
+          interaction.kind === "matrix"
+      )
+    : Option.none();
+
+/**
+ * Scores the cells of a table against its key, all or nothing as a choice is: the response is `correct`
+ * when it marks every statement with the key's column, and `incorrect` when it leaves or marks any
+ * statement otherwise. A key with no cells for the table leaves it `pending`.
+ */
+const scoreCells = (
+  table: TableInteraction,
+  key: readonly InteractionKey[],
+  response: ExamResponse
+): Verdict =>
+  Option.match(
+    Arr.findFirst(
+      key,
+      (item): item is TableKey =>
+        item.kind === "matrix" && item.interaction === table.id
+    ),
+    {
+      onNone: () => "pending",
+      onSome: ({ answers }) => {
+        const marked = markedCells(response);
+        return marked.length === answers.length &&
+          Arr.every(answers, (cell) =>
+            Arr.some(
+              marked,
+              (mine) =>
+                mine.statement === cell.statement && mine.column === cell.column
+            )
+          )
+          ? "correct"
+          : "incorrect";
+      },
+    }
+  );
+
 /** Whether a question is an essay: its one interaction is a long text, which the teacher scores (K6). */
 const isEssay = (interactions: readonly Interaction[]) =>
   interactions.length === 1 &&
@@ -219,7 +272,8 @@ const scoreText = (
  * choice is scored with the try-outs'
  * evaluation (`evaluate`, ADR 0031, section 9): an unanswered question, and a response that names no
  * option of its choice, are `incorrect`, as the sitting closes them. A text entry is scored by its
- * accepted answers (`scoreText`), and a match by its pairs (`scorePairs`). A question that holds another shape, a question without a key, or a
+ * accepted answers (`scoreText`), a match by its pairs (`scorePairs`), and a table by its cells
+ * (`scoreCells`). A question that holds another shape, a question without a key, or a
  * key with no answer for its interaction is `pending`, so a person judges it instead of the server
  * (ADR 0031, section 4).
  */
@@ -241,6 +295,10 @@ export function scoreResponse(
   const match = answeredMatch(interactions);
   if (Option.isSome(match)) {
     return scorePairs(match.value, key, response);
+  }
+  const table = answeredTable(interactions);
+  if (Option.isSome(table)) {
+    return scoreCells(table.value, key, response);
   }
   const choice = answeredChoice(interactions);
   if (Option.isNone(choice)) {

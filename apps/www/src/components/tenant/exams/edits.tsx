@@ -19,6 +19,7 @@ import {
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 import { pairsKey } from "@/components/tenant/exams/match";
+import { cellsKey } from "@/components/tenant/exams/table";
 import { useExam } from "@/components/tenant/exams/provider";
 import {
   makeQuestionWriter,
@@ -152,6 +153,7 @@ export function useQuestionEditing(question: Question) {
   function labelsOf(template: QuestionTemplate): readonly string[] {
     return Match.value(template).pipe(
       Match.when("truefalse", () => [t("truefalse-true"), t("truefalse-false")]),
+      Match.when("table", () => [t("truefalse-true"), t("truefalse-false")]),
       Match.when("cause", () => [
         t("cause-related"),
         t("cause-unrelated"),
@@ -190,11 +192,18 @@ export function useQuestionEditing(question: Question) {
   ) =>
     saveAnswers((base) => ({ ...base, key: pairsKey(base.answers, pairs) }));
 
+  /** Sets the cells of a true or false table's key, which saves at once once they mark every statement (`cellsKey`). */
+  const setCells = (
+    cells: readonly { readonly column: string; readonly statement: string }[]
+  ) =>
+    saveAnswers((base) => ({ ...base, key: cellsKey(base.answers, cells) }));
+
   return {
     displayed: shown ?? question,
     markOption,
     saveAnswers,
     setAccepted,
+    setCells,
     setPairs,
     setTemplate,
   };

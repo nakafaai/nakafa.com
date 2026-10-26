@@ -4,6 +4,7 @@ import {
   matchAnswers,
   newChoiceAnswers,
   shortAnswers,
+  tableAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
 import { asTemplate } from "@repo/backend/confect/exams/template";
@@ -89,5 +90,11 @@ describe("exams/template asTemplate", () => {
       answers: matchAnswers(),
       key: null,
     });
+  });
+
+  it("turns any question into a table of empty statements and the two columns it is given, with no key", () => {
+    expect(
+      asTemplate("table", newChoiceAnswers(), null, ["Benar", "Salah"])
+    ).toEqual({ answers: tableAnswers(["Benar", "Salah"]), key: null });
   });
 });

@@ -22,7 +22,7 @@ import {
   withOptionLabel,
   withOptionRemoved,
 } from "@/components/tenant/exams/answer";
-import { MatchColumn } from "@/components/tenant/exams/columns";
+import { MatchColumn, TableColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import {
   type QuestionEditing,
@@ -30,6 +30,7 @@ import {
 } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
+import { tableOf } from "@/components/tenant/exams/table";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
@@ -213,6 +214,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
             notes={{ explanation, rubric }}
             number={number}
             onAccept={editing.setAccepted}
+            onCells={editing.setCells}
             onMark={editing.markOption}
             onPair={editing.setPairs}
             question={question}
@@ -247,6 +249,7 @@ function LivePaper({
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
   const match = Option.getOrNull(matchOf(displayed.answers));
+  const table = Option.getOrNull(tableOf(displayed.answers));
   // The label the server holds for an option. Its editor starts from that label, and a label the server does not
   // store goes back to it, so the editor never keeps text that is not saved. An option the server does not hold
   // yet has the label the paper shows.
@@ -301,6 +304,28 @@ function LivePaper({
             number={number}
             question={question}
             side="targets"
+          />
+        </div>
+      )}
+      {table === null ? null : (
+        <div className="grid min-w-0 gap-6 md:grid-cols-2">
+          <TableColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={frozen}
+            number={number}
+            question={question}
+            side="statements"
+            table={table}
+          />
+          <TableColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={frozen}
+            number={number}
+            question={question}
+            side="columns"
+            table={table}
           />
         </div>
       )}

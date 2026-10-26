@@ -26,6 +26,7 @@ import {
 } from "@/components/tenant/exams/answer";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
+import { tableOf } from "@/components/tenant/exams/table";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
@@ -205,41 +206,47 @@ function PaperChoice({
 }
 
 /**
- * One side of a matching question drawn without editors, as its live column draws it: its heading, its
- * parts numbered or lettered, and the room of the action that adds a part.
+ * One column of a matching or a table question drawn without editors, as its live column draws it: its
+ * heading, its parts numbered or lettered, and the room of the action that adds a part when it takes one.
  */
-function MatchSketch({
-  match,
-  side,
+function PartSketch({
+  adds,
+  heading,
+  letterOf,
+  parts,
   withControls,
 }: {
-  match: Extract<Question["answers"][number], { kind: "match" }>;
-  side: "sources" | "targets";
+  adds: boolean;
+  heading: string;
+  letterOf: (index: number) => string;
+  parts: readonly { readonly id: string; readonly label: OptionLabel }[];
   withControls: boolean;
 }) {
-  const t = useTranslations("Exams");
   const { exam } = useExam();
-  const parts = match[side];
 
   return (
     <div className="grid content-start gap-2">
-      <p className="font-medium text-muted-foreground text-sm">
-        {t(side === "sources" ? "match-statements" : "match-answers")}
-      </p>
+      <p className="font-medium text-muted-foreground text-sm">{heading}</p>
       {Arr.map(parts, (part, index) => (
         <PaperChoice
           key={part.id}
           label={part.label}
-          letter={side === "sources" ? String(index + 1) : optionLetter(index)}
+          letter={letterOf(index)}
           withControls={withControls}
         />
       ))}
-      {withControls && !isLocked(exam) && parts.length < CHOICE_OPTIONS_MAX ? (
+      {withControls &&
+      adds &&
+      !isLocked(exam) &&
+      parts.length < CHOICE_OPTIONS_MAX ? (
         <OptionAddRoom />
       ) : null}
     </div>
   );
 }
+
+/** The number that names a statement by its place: 1 for the first, 2 for the second, and so on. */
+const statementNumber = (index: number) => String(index + 1);
 
 /**
  * The paper of one question drawn without editors: its prompt and its options as the student reads
@@ -260,6 +267,7 @@ export function PaperSketch({
   selected?: boolean;
   withControls?: boolean;
 }) {
+  const t = useTranslations("Exams");
   const { exam } = useExam();
   const choice = choiceOf(question.answers);
   // A template that fixes its options takes no added option, so its page keeps no room for the action.
@@ -291,8 +299,41 @@ export function PaperSketch({
         onNone: () => null,
         onSome: (match) => (
           <div className="grid min-w-0 gap-6 md:grid-cols-2">
-            <MatchSketch match={match} side="sources" withControls={withControls} />
-            <MatchSketch match={match} side="targets" withControls={withControls} />
+            <PartSketch
+              adds
+              heading={t("match-statements")}
+              letterOf={statementNumber}
+              parts={match.sources}
+              withControls={withControls}
+            />
+            <PartSketch
+              adds
+              heading={t("match-answers")}
+              letterOf={optionLetter}
+              parts={match.targets}
+              withControls={withControls}
+            />
+          </div>
+        ),
+      })}
+      {Option.match(tableOf(question.answers), {
+        onNone: () => null,
+        onSome: (table) => (
+          <div className="grid min-w-0 gap-6 md:grid-cols-2">
+            <PartSketch
+              adds
+              heading={t("match-statements")}
+              letterOf={statementNumber}
+              parts={table.statements}
+              withControls={withControls}
+            />
+            <PartSketch
+              adds={false}
+              heading={t("table-columns")}
+              letterOf={optionLetter}
+              parts={table.columns}
+              withControls={withControls}
+            />
           </div>
         ),
       })}

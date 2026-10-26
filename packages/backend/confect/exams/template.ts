@@ -9,6 +9,7 @@ import {
   newChoiceAnswers,
   type QuestionTemplate,
   shortAnswers,
+  tableAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option } from "effect";
@@ -41,6 +42,9 @@ export const asTemplate = (
   }
   if (template === "match") {
     return { answers: matchAnswers(), key: null };
+  }
+  if (template === "table") {
+    return { answers: tableAnswers(labels), key: null };
   }
   const fixed = Option.isSome(fixedOptions(template));
   // A short answer, an essay, and a match hold no choice, so a choice template starts them from a new choice.

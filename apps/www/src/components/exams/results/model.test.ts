@@ -47,6 +47,17 @@ describe("components/exams/results model", () => {
         ],
       })
     ).toBe("1-B, 2-A");
+    expect(
+      responseText(
+        { ...question, sourceIds: ["statement-1", "statement-2"] },
+        {
+          cells: [
+            { column: "target-2", statement: "statement-1" },
+            { column: "target-1", statement: "statement-2" },
+          ],
+        }
+      )
+    ).toBe("1-B, 2-A");
   });
 
   it("gives the share of answered questions that are correct, rounded to a whole percentage", () => {

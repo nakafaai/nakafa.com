@@ -7,7 +7,7 @@ import {
   chosenOptions,
   isAnswered,
 } from "@repo/backend/confect/exams/sittings/response";
-import { Array as Arr } from "effect";
+import { Array as Arr, Match } from "effect";
 
 /** The option IDs of a question's choices, in the order the choices list them. */
 export const optionIdsOf = (interactions: readonly Interaction[]): string[] =>
@@ -18,19 +18,32 @@ export const optionIdsOf = (interactions: readonly Interaction[]): string[] =>
   );
 
 /**
- * The statements and the answers of a question's matches, each in the order the match lists them, and
- * none for another interaction. A result names a pair by the statement's number and the answer's letter.
+ * The statements of a question's matches and tables, and the answers of its matches or the columns of
+ * its tables, each in the order the interaction lists them, and none for another interaction. A result
+ * names a pair or a cell by the statement's number and the letter of its answer or column.
  */
 export const pairIdsOf = (interactions: readonly Interaction[]) => ({
   sourceIds: Arr.flatMap(interactions, (interaction) =>
-    interaction.kind === "match"
-      ? Arr.map(interaction.sources, (part) => part.id)
-      : []
+    Match.value(interaction).pipe(
+      Match.when({ kind: "match" }, (match) =>
+        Arr.map(match.sources, (part) => part.id)
+      ),
+      Match.when({ kind: "matrix" }, (matrix) =>
+        Arr.map(matrix.statements, (part) => part.id)
+      ),
+      Match.orElse(() => [])
+    )
   ),
   targetIds: Arr.flatMap(interactions, (interaction) =>
-    interaction.kind === "match"
-      ? Arr.map(interaction.targets, (part) => part.id)
-      : []
+    Match.value(interaction).pipe(
+      Match.when({ kind: "match" }, (match) =>
+        Arr.map(match.targets, (part) => part.id)
+      ),
+      Match.when({ kind: "matrix" }, (matrix) =>
+        Arr.map(matrix.columns, (part) => part.id)
+      ),
+      Match.orElse(() => [])
+    )
   ),
 });
 

@@ -112,3 +112,45 @@ export function pairedWith(
     )
   );
 }
+
+/** One cell of a table, as the contract names it: a statement and the column the student or the key gives it. */
+type Cell = Extract<InteractionKey, { kind: "matrix" }>["answers"][number];
+
+/**
+ * The cells once one statement takes one column: the statement's earlier cell is replaced, and every
+ * other statement keeps its own, in the order of the table's statements. A cell of a statement the table
+ * does not hold is dropped.
+ */
+export function markedWith(
+  statements: readonly { readonly id: string }[],
+  cells: readonly Cell[],
+  next: Cell
+): readonly Cell[] {
+  return Arr.filterMap(statements, (statement) =>
+    statement.id === next.statement
+      ? Result.succeed(next)
+      : Option.match(
+          Arr.findFirst(cells, (cell) => cell.statement === statement.id),
+          { onNone: () => Result.failVoid, onSome: Result.succeed }
+        )
+  );
+}
+
+/** The table interaction, whose response is the cells the student marked. */
+export type TablePart = Extract<Interaction, { readonly kind: "matrix" }>;
+
+/**
+ * The table of a question, when the question holds exactly one interaction and that interaction is a
+ * table, as a true or false table does. This is the rule that the server applies.
+ */
+export function tableOf(
+  interactions: readonly Interaction[]
+): Option.Option<TablePart> {
+  if (interactions.length !== 1) {
+    return Option.none();
+  }
+  return Arr.findFirst(
+    interactions,
+    (interaction): interaction is TablePart => interaction.kind === "matrix"
+  );
+}

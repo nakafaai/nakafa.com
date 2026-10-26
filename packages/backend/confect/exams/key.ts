@@ -25,14 +25,38 @@ export const pairsFit = (
   );
 
 /**
+ * Whether cells fit a table: each cell marks one of its statements with one of its columns, and no
+ * statement is marked twice. A key marks every statement, and a student's response may leave some blank.
+ */
+export const cellsFit = (
+  matrix: Extract<Interaction, { kind: "matrix" }>,
+  cells: readonly { readonly column: string; readonly statement: string }[]
+) =>
+  hasDistinctIds(Arr.map(cells, (cell) => cell.statement)) &&
+  Arr.every(
+    cells,
+    (cell) =>
+      Arr.some(matrix.statements, (part) => part.id === cell.statement) &&
+      Arr.some(matrix.columns, (part) => part.id === cell.column)
+  );
+
+/**
  * Whether one answer fits one interaction. A choice takes an answer of its own kind,
  * whose correct options are options of that choice, and at most `maxChoices` of them,
- * a text entry takes accepted answers of its own kind, and a match takes pairs that pair
- * every statement once (`pairsFit`). Any other kind of interaction fits no answer.
+ * a text entry takes accepted answers of its own kind, a match takes pairs that pair
+ * every statement once (`pairsFit`), and a table takes cells that mark every statement once
+ * (`cellsFit`). Any other kind of interaction fits no answer.
  */
 const answerFits = (interaction: Interaction, answer: InteractionKey) => {
   if (interaction.kind === "textEntry") {
     return answer.kind === "textEntry";
+  }
+  if (interaction.kind === "matrix") {
+    return (
+      answer.kind === "matrix" &&
+      answer.answers.length === interaction.statements.length &&
+      cellsFit(interaction, answer.answers)
+    );
   }
   if (interaction.kind === "match") {
     return (

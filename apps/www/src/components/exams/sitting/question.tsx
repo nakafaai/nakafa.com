@@ -6,6 +6,7 @@ import {
   chosenOptions,
   type ExamResponse,
   madePairs,
+  markedCells,
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/exams/sittings/response";
@@ -34,8 +35,10 @@ import { SittingPairs } from "@/components/exams/sitting/pairs";
 import {
   choiceOf,
   pairingOf,
+  tableOf,
   writtenOf,
 } from "@/components/exams/sitting/response";
+import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
@@ -83,6 +86,10 @@ export function SittingQuestion({
     () => pairingOf(question.interactions),
     [question.interactions]
   );
+  const table = useMemo(
+    () => tableOf(question.interactions),
+    [question.interactions]
+  );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
   const promptDocument = useMemo(
     () =>
@@ -98,16 +105,23 @@ export function SittingQuestion({
         onNone: () => [],
         onSome: (found) => Arr.map(found.options, (option) => option.label),
       }),
-      Option.match(pairing, {
-        onNone: () => [],
-        onSome: (found) =>
-          Arr.map(Arr.appendAll(found.sources, found.targets), (part) => part.label),
-      })
+      Arr.appendAll(
+        Option.match(pairing, {
+          onNone: () => [],
+          onSome: (found) =>
+            Arr.map(Arr.appendAll(found.sources, found.targets), (part) => part.label),
+        }),
+        Option.match(table, {
+          onNone: () => [],
+          onSome: (found) =>
+            Arr.map(Arr.appendAll(found.statements, found.columns), (part) => part.label),
+        })
+      )
     );
     return pictureIdsOfDocuments(
       promptDocument === null ? labels : [promptDocument, ...labels]
     );
-  }, [choice, pairing, promptDocument]);
+  }, [choice, pairing, promptDocument, table]);
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
@@ -176,6 +190,15 @@ export function SittingQuestion({
               match={pairing.value}
               onPair={(pairs) => onChoose({ pairs })}
               pairs={madePairs(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(table) ? (
+            <SittingTable
+              cells={markedCells(question.response ?? NO_RESPONSE)}
+              disabled={locked}
+              labelledBy={titleId}
+              onMark={(cells) => onChoose({ cells })}
+              table={table.value}
             />
           ) : null}
         </SittingPictures>

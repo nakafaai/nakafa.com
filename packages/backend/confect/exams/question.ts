@@ -20,9 +20,10 @@ import { Array as Arr, Effect, Match, Option, Schema } from "effect";
  * five fixed relations between a statement and its reason, which the prompt
  * holds; a short answer (`short`), a text entry that the key's accepted
  * answers score; an essay (`essay`), a long written answer that the teacher
- * scores by the rubric; and matching (`match`), where the student pairs each
- * statement with one answer. A new question starts as `choice`, and each later
- * template adds its member here.
+ * scores by the rubric; matching (`match`), where the student pairs each
+ * statement with one answer; and a true or false table (`table`), where the
+ * student marks each statement true or false. A new question starts as
+ * `choice`, and each later template adds its member here.
  */
 export const QuestionTemplate = Schema.Literals([
   "choice",
@@ -32,6 +33,7 @@ export const QuestionTemplate = Schema.Literals([
   "short",
   "essay",
   "match",
+  "table",
 ]);
 export type QuestionTemplate = typeof QuestionTemplate.Type;
 
@@ -134,8 +136,21 @@ export const takesRubric = (template: QuestionTemplate) =>
     Match.when("short", () => false),
     Match.when("essay", () => true),
     Match.when("match", () => false),
+    Match.when("table", () => false),
     Match.exhaustive
   );
+
+/** The columns of a true or false table: true and false. */
+const TABLE_COLUMNS = 2;
+
+/**
+ * The labels the editor writes in the teacher's language when a question takes a template: the options a
+ * choice template fixes (`fixedOptions`), the two columns of a true or false table, and none for any other.
+ */
+export const templateLabels = (template: QuestionTemplate) =>
+  template === "table"
+    ? TABLE_COLUMNS
+    : Option.getOrElse(fixedOptions(template), () => 0);
 
 /**
  * Whether a template's question needs an answer key before its exam is scheduled: an essay is scored by
@@ -184,8 +199,19 @@ const matchFits = (answer: Interaction) =>
   Arr.every([...answer.sources, ...answer.targets], (part) => part.maxMatches === 1);
 
 /**
+ * Whether one interaction is a table that the true or false template takes: two to five statements, and
+ * the two columns, true and false.
+ */
+const tableFits = (answer: Interaction) =>
+  answer.kind === "matrix" &&
+  answer.statements.length >= CHOICE_OPTIONS_MIN &&
+  answer.statements.length <= CHOICE_OPTIONS_MAX &&
+  answer.columns.length === TABLE_COLUMNS;
+
+/**
  * Whether the interactions of a question are the ones its template takes: distinct interactions,
- * each a text entry for a short answer, a long text for an essay, a match for matching (`matchFits`),
+ * each a text entry for a short answer, a long text for an essay, a match for matching (`matchFits`), a
+ * table for a true or false table (`tableFits`),
  * and each a choice that fits the template (`choiceFits`) for
  * every other template. A question that holds any other interaction is refused.
  */
@@ -199,6 +225,7 @@ export const answersFit = (
       Match.when("short", () => answer.kind === "textEntry"),
       Match.when("essay", () => answer.kind === "extendedText"),
       Match.when("match", () => matchFits(answer)),
+      Match.when("table", () => tableFits(answer)),
       Match.orElse(() => choiceFits(template, answer))
     )
   );
@@ -373,6 +400,32 @@ export const matchAnswers = (): readonly [
         id: `target-${index + 2}`,
         label: emptyLabel,
         maxMatches: 1,
+      })),
+    ],
+  },
+];
+
+/**
+ * The interactions of a true or false table: one table of `NEW_MATCH_PARTS` empty statements, and its two
+ * columns labelled with `labels`, true then false, in the teacher's language.
+ */
+export const tableAnswers = (
+  labels: readonly string[]
+): readonly [Extract<Interaction, { kind: "matrix" }>] => [
+  {
+    columns: Arr.map(labels, (text, index) => ({
+      id: `column-${index + 1}`,
+      label: textLabel(text),
+    })),
+    id: "matrix",
+    kind: "matrix",
+    label: NEW_CHOICE_LABEL,
+    shuffle: false,
+    statements: [
+      { id: "statement-1", label: emptyLabel },
+      ...Arr.makeBy(NEW_MATCH_PARTS - 1, (index) => ({
+        id: `statement-${index + 2}`,
+        label: emptyLabel,
       })),
     ],
   },

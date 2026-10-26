@@ -10,6 +10,7 @@ import {
   emptyLabel,
   entryOf,
   holdsLabel,
+  labelText,
   keyWithoutOption,
   markedKey,
   markedOptions,
@@ -458,5 +459,21 @@ describe("entryOf, acceptedKey and acceptedOf", () => {
     expect(acceptedKey([entry], ["  ", ""])).toBeNull();
     expect(acceptedOf(null)).toEqual([]);
     expect(acceptedOf(markedKey([choice], "option-1"))).toEqual([]);
+  });
+});
+
+describe("labelText", () => {
+  it("reads the text of a label's paragraphs, and nothing of an empty one", () => {
+    expect(labelText(textOf("Benar"))).toBe("Benar");
+    expect(
+      labelText({
+        content: [
+          { content: [{ text: "Salah", type: "text" }], type: "paragraph" },
+          { content: [{ text: "sekali", type: "text" }], type: "paragraph" },
+        ],
+        type: "doc",
+      })
+    ).toBe("Salah sekali");
+    expect(labelText(emptyLabel())).toBe("");
   });
 });

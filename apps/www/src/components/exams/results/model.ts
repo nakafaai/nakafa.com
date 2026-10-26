@@ -2,6 +2,7 @@ import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import type { QuestionSummary } from "@repo/backend/confect/exams/results/contract";
 import {
   type ExamResponse,
+  isCellsResponse,
   isPairsResponse,
   isTextResponse,
 } from "@repo/backend/confect/exams/sittings/response";
@@ -66,8 +67,8 @@ type QuestionParts = Pick<
 
 /**
  * A saved response as a result shows it: the letters of the chosen options in the order of the choice,
- * the text the student typed without its surrounding spaces, or the pairs of a match (`pairLabels`). A
- * response that answers nothing shows as empty text.
+ * the text the student typed without its surrounding spaces, or the pairs of a match or the cells of a
+ * table (`pairLabels`). A response that answers nothing shows as empty text.
  */
 export const responseText = (
   question: QuestionParts,
@@ -78,6 +79,18 @@ export const responseText = (
   }
   if (isPairsResponse(response)) {
     return Arr.join(pairLabels(question, response.pairs), ", ");
+  }
+  if (isCellsResponse(response)) {
+    return Arr.join(
+      pairLabels(
+        question,
+        Arr.map(response.cells, (cell) => ({
+          source: cell.statement,
+          target: cell.column,
+        }))
+      ),
+      ", "
+    );
   }
   return Arr.join(responseLetters(question.optionIds, response), ", ");
 };

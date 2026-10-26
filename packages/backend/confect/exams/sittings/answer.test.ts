@@ -10,6 +10,7 @@ import {
   encodeAnswers,
   matchAnswers,
   newChoiceAnswers,
+  tableAnswers,
   shortAnswers,
 } from "@repo/backend/confect/exams/question";
 import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
@@ -336,6 +337,38 @@ describe("exams/sittings answer", () => {
           version: 2,
         }).pipe(Effect.flip);
         expect(unknown).toMatchObject({ _tag: "ResponseDoesNotFit" });
+      })
+  );
+
+  it.effect(
+    "saves the cells a student marks in a table, and refuses a statement marked twice",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { question, sittingId } = yield* enteredSitting(fixture);
+        yield* setInteractions(fixture, question, tableAnswers(["Benar", "Salah"]));
+        yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: {
+            cells: [{ column: "column-2", statement: "statement-1" }],
+          },
+          sittingId,
+          version: 1,
+        });
+        const twice = yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: {
+            cells: [
+              { column: "column-1", statement: "statement-1" },
+              { column: "column-2", statement: "statement-1" },
+            ],
+          },
+          sittingId,
+          version: 2,
+        }).pipe(Effect.flip);
+        expect(twice).toMatchObject({ _tag: "ResponseDoesNotFit" });
       })
   );
 

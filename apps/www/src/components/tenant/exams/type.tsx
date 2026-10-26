@@ -6,6 +6,7 @@ import {
   LinkSquare02Icon,
   NoteEditIcon,
   RadioButtonIcon,
+  Table02Icon,
   ThumbsUpDownIcon,
 } from "@hugeicons/core-free-icons";
 import { QuestionTemplate } from "@repo/backend/confect/exams/question";
@@ -25,7 +26,8 @@ import { useTranslations } from "use-intl";
 /**
  * The icon each template shows by: a radio for one answer, a check box for several, a thumb up and
  * down for true or false, a flow from a statement to its reason for cause and effect, a text
- * field for a short answer, a note for an essay, and a link for matching.
+ * field for a short answer, a note for an essay, a link for matching, and a table for a true or false
+ * table.
  */
 const TEMPLATE_ICON = {
   cause: FlowConnectionIcon,
@@ -34,6 +36,7 @@ const TEMPLATE_ICON = {
   essay: NoteEditIcon,
   match: LinkSquare02Icon,
   short: InputTextIcon,
+  table: Table02Icon,
   truefalse: ThumbsUpDownIcon,
 } satisfies Record<QuestionTemplate, typeof RadioButtonIcon>;
 
@@ -45,6 +48,7 @@ const TEMPLATE_NAME = {
   essay: "template-essay",
   match: "template-match",
   short: "template-short",
+  table: "template-table",
   truefalse: "template-truefalse",
 } as const satisfies Record<QuestionTemplate, string>;
 

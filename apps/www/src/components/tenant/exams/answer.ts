@@ -362,3 +362,24 @@ export const acceptedKey = (
     })
   );
 };
+
+/**
+ * The plain text of a label: the text of its paragraphs in order, joined by spaces, as a control that shows
+ * a short label as text reads it, such as the columns of a true or false table in the key.
+ */
+export const labelText = (label: OptionLabel): string =>
+  Arr.join(
+    Arr.flatMap(label.content, (block) =>
+      block.type === "paragraph"
+        ? [
+            Arr.join(
+              Arr.flatMap(block.content ?? [], (node) =>
+                node.type === "text" ? [node.text] : []
+              ),
+              ""
+            ),
+          ]
+        : []
+    ),
+    " "
+  );

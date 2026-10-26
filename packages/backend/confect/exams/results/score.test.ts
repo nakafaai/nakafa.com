@@ -4,6 +4,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import {
   matchAnswers,
   newChoiceAnswers,
+  tableAnswers,
 } from "@repo/backend/confect/exams/question";
 import {
   pointsOf,
@@ -169,6 +170,41 @@ describe("exams/results/score", () => {
     ).toBe("incorrect");
     expect(scoreResponse([match], key, [])).toBe("incorrect");
     expect(scoreResponse([match], keyOf(["option-1"]), { pairs })).toBe(
+      "pending"
+    );
+  });
+
+  it("scores a table correct when it marks every statement with the key's column, and incorrect otherwise", () => {
+    const [table] = tableAnswers(["Benar", "Salah"]);
+    const key: InteractionKey[] = [
+      {
+        answers: [
+          { column: "column-1", statement: "statement-1" },
+          { column: "column-2", statement: "statement-2" },
+          { column: "column-1", statement: "statement-3" },
+        ],
+        interaction: "matrix",
+        kind: "matrix",
+      },
+    ];
+    const cells = [
+      { column: "column-2", statement: "statement-2" },
+      { column: "column-1", statement: "statement-1" },
+      { column: "column-1", statement: "statement-3" },
+    ];
+    expect(scoreResponse([table], key, { cells })).toBe("correct");
+    expect(scoreResponse([table], key, { cells: Arr.take(cells, 2) })).toBe(
+      "incorrect"
+    );
+    expect(
+      scoreResponse([table], key, {
+        cells: [
+          ...Arr.take(cells, 2),
+          { column: "column-2", statement: "statement-3" },
+        ],
+      })
+    ).toBe("incorrect");
+    expect(scoreResponse([table], keyOf(["option-1"]), { cells })).toBe(
       "pending"
     );
   });
