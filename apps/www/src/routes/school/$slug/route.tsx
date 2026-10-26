@@ -67,12 +67,6 @@ type SchoolVisit = Partial<
 >;
 
 /**
- * Starts the memo of one school visit. TanStack keeps the layout's context object
- * for every navigation that keeps its match, so a child navigation reuses the
- * visit's frame. Hydration after a hard load starts a fresh memo, so the first child
- * navigation after it reads the frame once more.
- */
-/**
  * Whether a run of the school's loaders draws the first HTML. On the server the Worker draws
  * it, and each page reads its first screen through its server function, so its rows are in
  * the HTML. In the browser a click reads nothing before it commits: the page commits at once
@@ -82,6 +76,12 @@ const drawsFirstHtml = createIsomorphicFn()
   .server(() => true)
   .client(() => false);
 
+/**
+ * Starts the memo of one school visit. TanStack keeps the layout's context object
+ * for every navigation that keeps its match, so a child navigation reuses the
+ * visit's frame. Hydration after a hard load starts a fresh memo, so the first child
+ * navigation after it reads the frame once more.
+ */
 function startVisit() {
   const visit: SchoolVisit = {};
   return { visit };

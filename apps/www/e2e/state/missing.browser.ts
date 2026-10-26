@@ -26,6 +26,7 @@ import {
   targetViewports,
   touchViewport,
 } from "@/e2e/support/viewport";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const dictionaries = { de, en, id };
 
@@ -34,29 +35,28 @@ type Locale = keyof typeof dictionaries;
 /**
  * An address that no page owns: a Quran surah that does not exist. The proxy
  * rejects it with a 404 whatever the content store holds, so the address needs
- * no data, and rewrites the request to the standalone page.
+ * no data.
  */
 const HARD_ADDRESS = "quran/999";
 
 /**
- * Where the standalone page itself answers, and the request header in which
- * the proxy names the language when it rewrites an address to it. The rewrite
- * reaches the page. The server of a local production build, which
- * these tests run against, draws the app's own document only at this address
- * and answers the rewrite with the framework's built-in page; `main` did the
- * same when this was measured on 13 October 2026. So the tests ask for the
- * address itself, with the header that the proxy would set.
+ * An address that the Worker answers not found before any route renders: the
+ * school tree on the main host. The Worker renders the app's not-found page at
+ * the address itself, in the locale that its path names.
  */
-const STANDALONE_ADDRESS = "/_missing";
-const LOCALE_HEADER = "x-nakafa-locale";
+const SCHOOL_TREE_ADDRESS = "school/anything";
 
 /**
- * Where a page calls `notFound()` after the proxy let the request in: a
- * pagination query with only a cursor, which the article catalog cannot decode.
- * The app's own not-found page answers it, and its status depends on whether
- * the stream had started, so only the page is checked.
+ * Where a page calls `notFound()` inside the app: a pagination query with only a
+ * cursor, which the article catalog cannot decode. The catalog is a prerendered
+ * page, and every address that the Worker answers as missing gets the standalone
+ * page, so a reader reaches the app's own not-found page by a navigation in the
+ * browser, as `openMissing` does.
  */
 const SOFT_ADDRESS = "articles?cursor=x";
+
+/** The prerendered page that the navigation to `SOFT_ADDRESS` starts from. */
+const SOFT_SOURCE = "articles";
 
 /**
  * The narrowest window the page must hold. It is narrower than Nina and the
@@ -73,6 +73,11 @@ const narrowViewport = {
 /** The mark that a document keeps only while it is not loaded again. */
 const STAYED = "nakafaStayed";
 
+/**
+ * Opens the app's own not-found page as a reader reaches it: the catalog loads,
+ * React takes it over, and the router navigates in the browser to an address
+ * whose loader answers not found.
+ */
 const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
   page: Page,
   locale: Locale,
@@ -80,27 +85,50 @@ const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
 ) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* holdWebFont(page);
-  return yield* Effect.promise(() =>
-    page.goto(`/${locale}/${address}`, { waitUntil: "domcontentloaded" })
+  const response = yield* Effect.promise(() =>
+    page.goto(`/${locale}/${SOFT_SOURCE}`, { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(response?.status()).toBe(200));
+  yield* Effect.promise(() =>
+    waitUntilTakenOver(page.getByRole("heading", { level: 1 }))
+  );
+  yield* Effect.promise(() =>
+    page.evaluate(
+      (href) => window.__TSR_ROUTER__?.navigate({ href }),
+      `/${locale}/${address}`
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page).toHaveURL(new URL(`/${locale}/${address}`, page.url()).href)
   );
 });
 
-/** Opens the standalone page as the proxy's rewrite does, in one language. */
+/**
+ * Opens the not-found page that the Worker answers, in one language, and waits
+ * until React has taken it over: the browser hydrates the page that the server
+ * sent at the same address, so a page drawn for another address would fail with
+ * React #418 there.
+ */
 const openStandalone = Effect.fn("NakafaE2E.openStandalone")(function* (
   page: Page,
   locale: Locale
 ) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* holdWebFont(page);
-  yield* Effect.promise(() =>
-    page.setExtraHTTPHeaders({ [LOCALE_HEADER]: locale })
-  );
   const response = yield* Effect.promise(() =>
-    page.goto(STANDALONE_ADDRESS, { waitUntil: "domcontentloaded" })
+    page.goto(`/${locale}/${SCHOOL_TREE_ADDRESS}`, {
+      waitUntil: "domcontentloaded",
+    })
   );
-  // Only the document carries the header: what the page asks for next does not.
-  yield* Effect.promise(() => page.setExtraHTTPHeaders({}));
   yield* Effect.sync(() => expect(response?.status()).toBe(404));
+  yield* Effect.promise(() =>
+    waitUntilTakenOver(
+      page.getByRole("link", {
+        exact: true,
+        name: dictionaries[locale].State["home-button"],
+      })
+    )
+  );
 });
 
 /**
@@ -162,6 +190,50 @@ test("an address that no page owns is answered with 404 in every language", asyn
     const response = await request.get(`/${locale}/${HARD_ADDRESS}`);
     expect(response.status(), locale).toBe(404);
   }
+});
+
+test("the server draws each not-found page before any script runs, and the scripts raise no error, in every language", async ({
+  browser,
+  baseURL,
+  page,
+}) => {
+  const addresses = [SCHOOL_TREE_ADDRESS, HARD_ADDRESS];
+  const withoutScript = await browser.newContext({ javaScriptEnabled: false });
+  const server = await withoutScript.newPage();
+  for (const locale of ["de", "en", "id"] as const) {
+    for (const address of addresses) {
+      const response = await server.goto(
+        new URL(`/${locale}/${address}`, baseURL).href
+      );
+      expect(response?.status(), `${locale}/${address}`).toBe(404);
+      await expect(
+        server.getByRole("heading", {
+          level: 1,
+          name: dictionaries[locale].NotFound.title,
+        })
+      ).toBeVisible();
+    }
+  }
+  await withoutScript.close();
+
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.promise(async () => {
+        for (const locale of ["de", "en", "id"] as const) {
+          for (const address of addresses) {
+            await page.goto(`/${locale}/${address}`);
+            await waitUntilTakenOver(
+              page.getByRole("heading", {
+                level: 1,
+                name: dictionaries[locale].NotFound.title,
+              })
+            );
+          }
+        }
+      })
+    )
+  );
 });
 
 for (const viewport of [touchViewport, desktopViewport]) {
@@ -289,12 +361,11 @@ const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
 });
 
 /**
- * The addresses that the proxy answers with 404 before any page renders: a school
- * tree address on the main host, a removed route, and an unsupported system
- * resource. The proxy rewrites each to the app's not-found page,
- * which `proxy.test.ts` checks; a local production build draws the framework's
- * page for a rewrite, as `STANDALONE_ADDRESS` explains, so here only the status
- * is checked, and the tests above check the page that the rewrite reaches.
+ * The addresses that the Worker answers with 404 before any route renders: a
+ * school tree address on the main host, a removed route, and an unsupported
+ * system resource. `answer.server.test.ts` checks which page answers each, and
+ * the tests above check the not-found page itself, so here only the status is
+ * checked.
  */
 const PROXY_ANSWERS = [
   "/school",

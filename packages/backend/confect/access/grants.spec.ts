@@ -20,11 +20,13 @@ import { Schema } from "effect";
 
 /**
  * One active grant of the school as its Admin lists it: the Person who holds
- * it, the role, and the scope, which is the whole school or one unit.
+ * it, the role, the scope, which is the whole school or one unit, and whether
+ * ending it leaves the school an Owner who has signed in.
  */
 const GrantRow = Schema.Struct({
   id: Id("tenantGrants"),
   person: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
+  revocable: Schema.Boolean,
   role: RoleRef,
   scope: GrantScope,
 });

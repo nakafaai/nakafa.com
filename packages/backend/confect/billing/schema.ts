@@ -48,7 +48,8 @@ export const billingProviderValidator = Schema.Union([
     kind: Schema.Literal("xendit"),
     planId: Schema.String,
     tokenId: Schema.NullOr(Schema.String),
-    channel: XenditChannel,
+    /** The channel the buyer linked. Checkout opens the plan before the buyer picks one, so it starts unknown. */
+    channel: Schema.NullOr(XenditChannel),
   }),
 ]).pipe(Schema.toTaggedUnion("kind"));
 
@@ -266,4 +267,22 @@ export const unprocessedBillingEventValidator = Schema.Struct({
   key: Schema.String,
   receivedAt: Schema.Finite,
   type: Schema.String,
+});
+
+/**
+ * A hosted checkout Nakafa opened at a rail. The end of its session finds the row by
+ * the session ID, so it knows the account and the offer the session was opened for.
+ */
+export const billingCheckoutValidator = Schema.Struct({
+  accountId: Id("billingAccounts"),
+  offer: BillingOfferKey,
+  rail: BillingRail,
+  /** The rail's ID of the hosted session. */
+  sessionId: Schema.String,
+  /** The hosted page the buyer pays on. A second request for the same offer reopens it while it is still open. */
+  url: Schema.String,
+  status: Schema.Literals(["open", "completed", "expired"]),
+  openedAt: Schema.Finite,
+  /** When the rail closes the session unpaid. */
+  expiresAt: Schema.Finite,
 });

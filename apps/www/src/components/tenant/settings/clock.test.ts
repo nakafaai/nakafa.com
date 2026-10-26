@@ -1,23 +1,23 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   schoolDateTimeText,
-  schoolWeekdayTimeText,
+  schoolDayTimeText,
 } from "@/components/tenant/settings/clock";
 
 /** 17:00 UTC on 18 October 2026: 12:00 AM the next day in Jakarta, and 2:00 AM in Tokyo. */
 const AT = Date.UTC(2026, 9, 18, 17, 0);
 
 describe("components/tenant/settings/clock", () => {
-  it("writes the weekday and the time of the moment in the time zone of the school", () => {
+  it("writes the day, the month and the time of the moment in the time zone of the school", () => {
     expect(
-      schoolWeekdayTimeText({
+      schoolDayTimeText({
         at: AT,
         locale: "en",
         timeZone: "Asia/Jakarta",
       })
-    ).toBe("Mon 12:00 AM");
+    ).toBe("Oct 19, 12:00 AM");
     expect(
-      schoolWeekdayTimeText({ at: AT, locale: "fr", timeZone: "Asia/Jakarta" })
+      schoolDayTimeText({ at: AT, locale: "fr", timeZone: "Asia/Jakarta" })
     ).toBeUndefined();
   });
 

@@ -1,8 +1,8 @@
+// The Vite config imports this module, and only package imports resolve there.
+import { MODULE_PRELOAD } from "#www/src/lib/static/scripts";
+
 /** Every script element, with its attributes and its body. */
 const SCRIPT_ELEMENT = /<script\b[^>]*>([\s\S]*?)<\/script>/g;
-
-/** Every link that preloads a JavaScript module. */
-const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/g;
 
 /** The path of the not-found page that the build prerenders for one locale. */
 export function notFoundPagePath(locale: string) {

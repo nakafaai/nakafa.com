@@ -3,33 +3,42 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
-  createNotFoundRequest,
-  NOT_FOUND_LOCALE_HEADER,
-  NOT_FOUND_PATH,
-  readNotFoundLocale,
+  notFoundPageOf,
   readNotFoundPageLocale,
   withContentLanguage,
 } from "@/lib/routing/not-found";
 
-describe("readNotFoundLocale", () => {
-  it("reads the locale that the server names in its header", () => {
+describe("notFoundPageOf", () => {
+  it("names the locale, on the main site", () => {
     expect(
-      readNotFoundLocale(new Headers({ [NOT_FOUND_LOCALE_HEADER]: "id" }))
-    ).toBe("id");
+      notFoundPageOf(
+        new Request("https://nakafa.com/en/school/xyz", {
+          headers: { host: "nakafa.com" },
+        }),
+        "id"
+      )
+    ).toStrictEqual({ locale: "id", school: false });
   });
 
-  it("answers the default locale for a missing or unknown locale", () => {
-    expect(readNotFoundLocale(new Headers())).toBe("en");
+  it("knows a request that came to a school host", () => {
     expect(
-      readNotFoundLocale(new Headers({ [NOT_FOUND_LOCALE_HEADER]: "zz" }))
-    ).toBe("en");
+      notFoundPageOf(
+        new Request("https://harapan.nakafa.com/settings", {
+          headers: { host: "harapan.nakafa.com" },
+        }),
+        "de"
+      )
+    ).toStrictEqual({ locale: "de", school: true });
   });
 });
 
 describe("readNotFoundPageLocale", () => {
   it("reads the locale of the not-found error of the standalone page", () => {
     expect(
-      readNotFoundPageLocale({ data: { locale: "id" }, isNotFound: true })
+      readNotFoundPageLocale({
+        data: { locale: "id", school: false },
+        isNotFound: true,
+      })
     ).toStrictEqual(Option.some("id"));
   });
 
@@ -39,35 +48,15 @@ describe("readNotFoundPageLocale", () => {
     );
     expect(
       Option.isNone(
-        readNotFoundPageLocale({ data: { locale: "zz" }, isNotFound: true })
+        readNotFoundPageLocale({
+          data: { locale: "zz", school: false },
+          isNotFound: true,
+        })
       )
     ).toBe(true);
     expect(Option.isNone(readNotFoundPageLocale({ isNotFound: true }))).toBe(
       true
     );
-  });
-});
-
-describe("createNotFoundRequest", () => {
-  it("moves the request to the standalone page with its locale, keeping the host and the cookies", () => {
-    const next = createNotFoundRequest(
-      new Request("https://harapan.nakafa.com/exams/?page=2", {
-        headers: {
-          cookie: "session=1",
-          host: "harapan.nakafa.com",
-        },
-        method: "HEAD",
-      }),
-      "de"
-    );
-
-    expect(new URL(next.url).href).toBe(
-      `https://harapan.nakafa.com${NOT_FOUND_PATH}`
-    );
-    expect(next.method).toBe("GET");
-    expect(next.headers.get(NOT_FOUND_LOCALE_HEADER)).toBe("de");
-    expect(next.headers.get("cookie")).toBe("session=1");
-    expect(next.headers.get("host")).toBe("harapan.nakafa.com");
   });
 });
 

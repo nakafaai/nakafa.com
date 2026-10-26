@@ -1,17 +1,16 @@
 import type { GenericId } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import {
+  Calendar03Icon,
+  Cancel01Icon,
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,7 +20,7 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -29,10 +28,11 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableChoice } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
-  RoomStateFilter,
+  type RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/filter";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -155,7 +155,7 @@ function ExamRoomsContent({
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
       >
-        <RoomStateSelect onValueChange={setFilter} value={filter} />
+        <RoomStateFilterMenu onValueChange={setFilter} value={filter} />
         {tenant.canOpenExams ? (
           <Link
             className={buttonVariants()}
@@ -204,7 +204,8 @@ function RoomsEmpty({ filter }: { filter: StateFilter }) {
   );
 }
 
-function RoomStateSelect({
+/** The rooms' Filter menu, in the page's header row: every room, or the rooms in one state, which the server reads. */
+function RoomStateFilterMenu({
   onValueChange,
   value,
 }: {
@@ -212,35 +213,27 @@ function RoomStateSelect({
   value: StateFilter;
 }) {
   const t = useTranslations("Exams");
-  const items = [
-    { label: t("state-all"), value: "all" },
-    { label: t("room-state-scheduled"), value: "scheduled" },
-    { label: t("room-state-open"), value: "open" },
-    { label: t("room-state-closed"), value: "closed" },
-  ];
 
   return (
-    <Select
-      items={items}
-      onValueChange={(next) => {
-        const chosen = Schema.decodeUnknownOption(RoomStateFilter)(next);
-        if (Option.isSome(chosen)) {
-          onValueChange(chosen.value);
-        }
-      }}
+    <TableChoice
+      onChange={onValueChange}
+      options={[
+        { icon: Calendar03Icon, label: t("state-all"), value: "all" },
+        {
+          icon: Clock01Icon,
+          label: t("room-state-scheduled"),
+          value: "scheduled",
+        },
+        { icon: PlayIcon, label: t("room-state-open"), value: "open" },
+        {
+          icon: CheckmarkCircle02Icon,
+          label: t("room-state-closed"),
+          value: "closed",
+        },
+      ]}
+      title={t("rooms-state")}
       value={value}
-    >
-      <SelectTrigger aria-label={t("rooms-state")} className="w-32 sm:w-40">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {Arr.map(items, (item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    />
   );
 }
 

@@ -226,9 +226,7 @@
     "release-title": "Ergebnisse den Lernenden freigeben?",
     "release-description": "Jede Lernende und jeder Lernende sieht nach der Freigabe die eigene Punktzahl und die eigenen Antworten.",
     "release-action": "Ergebnisse freigeben",
-    "release-footer": "Lernende sehen ihre Ergebnisse nach der Freigabe.",
-    "release-wait-footer": "Die Administration oder der Autor der Prüfung gibt die Ergebnisse frei, sobald die Sitzung geschlossen ist.",
-    "released-footer": "Die Lernenden können ihre Ergebnisse sehen.",
+    "released": "Freigegeben",
     "student-results-title": "Dein Ergebnis",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
@@ -293,6 +291,19 @@
     "fullscreen": "Vollbild",
     "fullscreen-exit": "Vollbild beenden",
     "zoom": "Zoom",
+    "zoom-options": "Zoomoptionen",
+    "zoom-fit": "Einpassen",
+    "zoom-fill": "Füllen",
+    "page-of": "Frage {current} von {total}, zu einer Frage springen",
+    "page-jump": "Zu Frage springen, 1 bis {total}",
+    "open-question": "Frage {number} öffnen",
+    "select-question": "Frage {number} auswählen",
+    "select-all": "Alle auswählen",
+    "grid-duplicate": "Duplizieren",
+    "grid-delete": "Löschen",
+    "selected-count": "{count} ausgewählt",
+    "remove-many-title": "{count, plural, one {# Frage entfernen?} other {# Fragen entfernen?}}",
+    "remove-many-description": "Die Fragen und ihre Antworten verlassen diese Prüfung.",
     "student-retry": "Diese Sitzung konnte nicht geladen werden, daher versuche es gleich noch einmal.",
     "student-opens-at": "Diese Sitzung beginnt {time}.",
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
@@ -1530,6 +1541,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "Dieser Chat wurde gelöscht."
+    },
     "image-refused-size": {
       "title": "Das Bild wurde nicht hinzugefügt.",
       "description": "Wähle ein Bild von höchstens 2 MB."

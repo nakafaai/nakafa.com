@@ -11,6 +11,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -233,6 +235,72 @@ export function TableFilter({ facets }: { facets: readonly TableFacet[] }) {
             </DropdownMenuItem>
           </>
         ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/**
+ * The Filter menu of a table page whose list keeps the rows of one chosen value, as a list the server filters, in
+ * its header row: one group of values, each with its icon, and the first value keeps every row. The button stands
+ * out while another value is chosen. A narrow header shows the button's icon alone.
+ */
+export function TableChoice<Value extends string>({
+  onChange,
+  options,
+  title,
+  value,
+}: {
+  onChange: (value: Value) => void;
+  /** The values in order, the one that keeps every row first. */
+  options: readonly {
+    readonly icon: FacetIcon;
+    readonly label: string;
+    readonly value: Value;
+  }[];
+  title: string;
+  value: Value;
+}) {
+  const t = useTranslations("DataTable");
+  const filtered = Option.match(Arr.head(options), {
+    onNone: () => false,
+    onSome: (first) => first.value !== value,
+  });
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label={t("filter")}
+            type="button"
+            variant={filtered ? "secondary" : "outline"}
+          >
+            <HugeIcons icon={FilterHorizontalIcon} />
+            <span className="hidden lg:inline">{t("filter")}</span>
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{title}</DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            onValueChange={(next) =>
+              Option.map(
+                Arr.findFirst(options, (option) => option.value === next),
+                (option) => onChange(option.value)
+              )
+            }
+            value={value}
+          >
+            {Arr.map(options, (option) => (
+              <DropdownMenuRadioItem key={option.value} value={option.value}>
+                <HugeIcons icon={option.icon} />
+                <span className="truncate">{option.label}</span>
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

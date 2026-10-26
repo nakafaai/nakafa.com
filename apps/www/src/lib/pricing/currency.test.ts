@@ -8,6 +8,7 @@ import {
   pricingCurrencyCookieFor,
   pricingCurrencyScript,
   readCurrencyCookie,
+  readShownCurrency,
 } from "@/lib/pricing/currency";
 
 /** The headers of one request that carries a `Cookie` header. */
@@ -97,6 +98,19 @@ describe("currency cookie", () => {
 
   it("has no currency without a Cookie header", () => {
     expect(readCurrencyCookie(new Headers())).toStrictEqual(Option.none());
+  });
+});
+
+describe("shown currency", () => {
+  it("reads the currency the inline script set, and the dollar price when it set none or an unknown one", () => {
+    const rootWith = (value: string | null) => ({
+      getAttribute: (name: string) =>
+        name === PRICING_CURRENCY_ATTRIBUTE ? value : null,
+    });
+    expect(readShownCurrency(rootWith("IDR"))).toBe("IDR");
+    expect(readShownCurrency(rootWith("EUR"))).toBe("EUR");
+    expect(readShownCurrency(rootWith(null))).toBe("USD");
+    expect(readShownCurrency(rootWith("GBP"))).toBe("USD");
   });
 });
 

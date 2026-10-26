@@ -60,3 +60,45 @@ export const integrationClientValidator = Schema.Struct({
       "An active client holds a secret and no revocation time; a revoked client holds a revocation time and no secret.",
   })
 );
+
+/** The resource an access token is bound to (RFC 8707): the school REST API or the school MCP server. */
+export const TokenResource = Schema.Literals(["api", "mcp"]);
+
+/**
+ * One access token of an integration client. Only the SHA-256 digest of the token is kept,
+ * so a reader of the table cannot present it, and the token works only for its resource and
+ * until `expiresAt`. Revoking or rotating the client deletes its tokens (ADR 0029).
+ */
+export const integrationTokenValidator = Schema.Struct({
+  clientId: Id("integrationClients"),
+  expiresAt: Schema.Finite,
+  resource: TokenResource,
+  tenantId: Id("tenants"),
+  tokenHash: SecretHash,
+});
+
+/** Why the token endpoint refused a request, as the OAuth error code it answers. */
+const TokenRefusal = Schema.Literals(["invalid_client", "invalid_target"]);
+
+/** What the internal issue answers: the token once, or the refusal. */
+export const TokenIssue = Schema.Union([
+  Schema.Struct({
+    expiresIn: Schema.Finite,
+    outcome: Schema.Literal("issued"),
+    token: Schema.String,
+  }),
+  Schema.Struct({ error: TokenRefusal, outcome: Schema.Literal("refused") }),
+]);
+
+/** What the internal check of a bearer token answers. */
+export const TokenCheck = Schema.Union([
+  Schema.Struct({
+    clientId: Id("integrationClients"),
+    outcome: Schema.Literal("allowed"),
+  }),
+  Schema.Struct({ outcome: Schema.Literal("unauthorized") }),
+  Schema.Struct({
+    outcome: Schema.Literal("limited"),
+    retryAfter: Schema.Finite,
+  }),
+]);
