@@ -7,7 +7,6 @@ import {
   SquareLock01Icon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -33,8 +32,7 @@ import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
-import { TableStatus } from "@/components/shared/table/status";
-import type { StatusTone } from "@/components/shared/table/tone";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableChoice,
   useTableFilters,
@@ -73,7 +71,7 @@ const STATE_LOOKS = {
   submitted: { icon: CheckmarkCircle02Icon, tone: "success" },
 } as const satisfies Record<
   (typeof StudentRowSchema.Type)["state"],
-  { icon: IconSvgElement; tone: typeof StatusTone.Type }
+  StatusLook
 >;
 
 /** The status that the list shows: every attempt, or only the attempts in one state. */

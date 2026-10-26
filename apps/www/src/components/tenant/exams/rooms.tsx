@@ -7,7 +7,6 @@ import {
   Clock01Icon,
   PlayIcon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -29,8 +28,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
-import { TableStatus } from "@/components/shared/table/status";
-import type { StatusTone } from "@/components/shared/table/tone";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableChoice } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -72,10 +70,7 @@ const ROOM_STATE_LOOKS = {
   closed: { icon: CheckmarkCircle02Icon, tone: "neutral" },
   open: { icon: PlayIcon, tone: "success" },
   scheduled: { icon: Clock01Icon, tone: "info" },
-} as const satisfies Record<
-  Room["state"],
-  { icon: IconSvgElement; tone: typeof StatusTone.Type }
->;
+} as const satisfies Record<Room["state"], StatusLook>;
 
 /** How many rooms each page asks for. The next page loads when the end of the table comes into view. */
 export const ROOM_PAGE_SIZE = 20;
