@@ -170,6 +170,15 @@ export const readPublishedLocalizedHref = Effect.fn(
     (candidate) => candidate.routeSlugs[currentLocale] === namespace
   );
 
+  // A surface's own index, such as `try-out`, has no signed source to project:
+  // its address in the chosen locale is the surface's spelling there.
+  if (segments.length === 1 && Option.isSome(surface)) {
+    return toNavigationHref(
+      surface.value.routeSlugs[locale],
+      `${search}${hash}`
+    );
+  }
+
   if (Option.exists(surface, (found) => found.key === "subject")) {
     const current = yield* readPublishedMaterialRoute(
       currentLocale,

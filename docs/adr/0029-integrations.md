@@ -7,10 +7,10 @@
 Accepted on 13 October 2026 with the owner's approval of the School blueprint,
 revision 6 (decisions K1 to K20). Planned. The school REST API, the school MCP
 server, the CLI login, webhooks, and the standards adapters are program wave C.
-Removing `hono` from the lock is program wave A. The public REST API, the public
-MCP server, and the public CLI are live and do not change. ADR 0006 owns the
-namespace of the school API and ADR 0026 owns its host. Implementation Status
-lists each part.
+Removing `hono` from the lock was program wave A, done on 26 October 2026. The
+public REST API, the public MCP server, and the public CLI are live and do not
+change. ADR 0006 owns the namespace of the school API and ADR 0026 owns its
+host. Implementation Status lists each part.
 
 ## Context
 
@@ -450,7 +450,7 @@ The 15 files that import `convex-helpers`:
 | Webhooks and exports | Planned, program wave C |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
 | The OneRoster CSV import, which uses the file import checks of ADR 0015 | Planned, program wave C |
-| `hono@4.13.13` in `bun.lock` | Present. Removal and its check are planned, program wave A. |
+| `hono@4.13.13` in `bun.lock` | Removed on 26 October 2026. `bun.lock` keeps only the peer declaration of `convex-helpers`, `bun install --frozen-lockfile` accepts it, and `RETIRED_LOCK_PACKAGES` in `scripts/dependencies/policy.ts` fails the dependency policy when the lock resolves `hono` again. |
 
 ## Amendment: Decided on 14 October 2026
 
