@@ -58,6 +58,13 @@ test("sign-out lands on the locale home in a new document with no socket", async
                 Object.assign(window, { [name]: true });
               }, LEARNER_DOCUMENT)
             );
+            // The learner's lesson opens its socket after hydration, which can
+            // be after the account shows, so the count waits for that socket.
+            yield* Effect.promise(() =>
+              expect
+                .poll(() => MutableList.toArray(sockets).length)
+                .toBeGreaterThan(0)
+            );
             const socketsBeforeSignOut = MutableList.toArray(sockets).length;
             yield* Effect.promise(() =>
               member.getByRole("button").first().click()
