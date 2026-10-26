@@ -28,8 +28,8 @@ import {
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { useResultsSelection } from "@/components/exams/results/selection";
 import { DataFailure } from "@/components/shared/failure";
+import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
@@ -126,10 +126,11 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
-  const chosen = useResultsSelection(
-    (state) => state.selected === row.attemptId
+  const chosen = usePanes((state) =>
+    Option.exists(state.open, (open) => open === row.attemptId)
   );
-  const choose = useResultsSelection((state) => state.choose);
+  const show = usePanes((state) => state.show);
+  const close = usePanes((state) => state.close);
 
   return (
     <TableRow data-state={chosen ? "selected" : undefined}>
@@ -137,7 +138,7 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
         <Button
           aria-pressed={chosen}
           className="h-auto px-0"
-          onClick={() => choose(chosen ? null : row.attemptId)}
+          onClick={() => (chosen ? close() : show(row.attemptId))}
           type="button"
           variant="link"
         >

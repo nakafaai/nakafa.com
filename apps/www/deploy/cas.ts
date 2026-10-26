@@ -5,6 +5,7 @@ import {
   casFrontExposure,
   WORKER_OBSERVABILITY,
   WORKER_PLACEMENT,
+  workerName,
 } from "#www/deploy/stage";
 import { workerSettings } from "#www/worker";
 
@@ -33,6 +34,7 @@ export const deployCas = Effect.fn("deploy.cas")(function* (
   );
 
   const engine = yield* Worker("CasEngine", {
+    name: workerName("cas-engine", stage),
     main: "../cas/entry.py",
     compatibility: { date: CAS_ENGINE_COMPATIBILITY_DATE },
     env: { CAS_SOLVER: DurableObject("CasSolver") },
@@ -42,6 +44,7 @@ export const deployCas = Effect.fn("deploy.cas")(function* (
   }).pipe(RemovalPolicy.retain(isProduction));
 
   yield* Worker("CasFront", {
+    name: workerName("cas", stage),
     main: "../cas/front/worker.ts",
     compatibility: { date: workerSettings.compatibilityDate },
     env: {

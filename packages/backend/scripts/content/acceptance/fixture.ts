@@ -18,6 +18,14 @@ export const CardFixture = Schema.fromJsonString(
 );
 
 /**
+ * The plain sign-in code of a parent whose address the school linked. The local acceptance
+ * runtime writes it in place of the mail, and the browser test reads it back.
+ */
+export const GuardianFixture = Schema.fromJsonString(
+  Schema.Struct({ code: Schema.String })
+);
+
+/**
  * The sitting that a browser test enters: its exam, the sitting, and the sitting's token. The
  * local acceptance runtime writes it, and the browser test reads it back.
  */

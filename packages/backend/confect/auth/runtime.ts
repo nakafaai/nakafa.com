@@ -112,6 +112,11 @@ export const createAuthOptions = (
         enabled: true,
         allowDifferentEmails: false,
       },
+      // Google's hosted domain claim of the latest sign-in, which the account
+      // hooks read from the ID token before they drop it (ADR 0009).
+      additionalFields: {
+        hostedDomain: { input: false, required: false, type: "string" },
+      },
       // The hooks below keep every provider token out of the table, so this
       // seals only a token that a later plugin might write there.
       encryptOAuthTokens: true,
