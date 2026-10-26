@@ -140,6 +140,28 @@ const keepsFocusWhenRefused = Effect.fn(
   });
 });
 
+/**
+ * While the learner renames the chat, the header's group keeps its two buttons,
+ * the menu and the history, and the rename's two answers sit inside the box.
+ */
+const keepsTwoHeaderButtons = Effect.fn("NakafaE2E.renameKeepsTwoButtons")(
+  function* (page: Page, baseURL: string) {
+    yield* openedChat(page, baseURL);
+
+    yield* Effect.promise(async () => {
+      await startRename(page);
+      const group = page
+        .locator("main main header")
+        .getByRole("group", { exact: true, name: "Chat actions" });
+      await expect(
+        group.getByRole("button").filter({ visible: true })
+      ).toHaveCount(2);
+      await expect(headerControl(page, "Cancel")).toBeVisible();
+      await expect(headerControl(page, "Confirm")).toBeVisible();
+    });
+  }
+);
+
 test.describe("Chat rename focus at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
   test.describe.configure({ timeout: 180_000 });
@@ -186,6 +208,15 @@ test.describe("Chat rename focus at 1440px", () => {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       keepsFocusTheLearnerChose(page, origin)
+    );
+  });
+
+  test("keeps two buttons in the header while the chat is renamed", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      keepsTwoHeaderButtons(page, origin)
     );
   });
 

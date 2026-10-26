@@ -1,20 +1,8 @@
 import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
-import { useMediaQuery } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { awayFor } from "@repo/backend/confect/exams/sittings/away";
-import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { PersonAvatar } from "@repo/design-system/components/ui/person";
-import {
-  Sheet,
-  SheetHeader,
-  SheetPopup,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
-import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -28,6 +16,10 @@ import {
   useSittingStore,
 } from "@/components/exams/sitting/context";
 import {
+  type PanelDialog,
+  StudentPanelActions,
+} from "@/components/exams/sitting/controls";
+import {
   AddMinutesDialog,
   AllowDeviceDialog,
   LockDialog,
@@ -35,13 +27,12 @@ import {
 } from "@/components/exams/sitting/dialogs";
 import { StudentScreen } from "@/components/exams/sitting/screen";
 import { DataFailure } from "@/components/shared/failure";
+import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
+import { PanesDetail } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-
-/** The dialog of a panel action that is open, or none. */
-type PanelDialog = "add-minutes" | "allow-device" | "lock" | "unlock";
 
 /** How many signals one page of the panel's list holds, the first one and each one after it. */
 const SIGNAL_PAGE_SIZE = 20;
@@ -104,7 +95,6 @@ function SelectedPanel() {
   const { sittingId, slug, value } = useSittingData();
   const selected = useSittingStore((state) => state.selected);
   const choose = useSittingStore((state) => state.choose);
-  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
   // A seat on a later page reads that page, which the seats already subscribe to.
   const later = useQuery(
     exams.sittings.dashboard,
@@ -120,135 +110,62 @@ function SelectedPanel() {
     Arr.findFirst(page, (row) => row.id === selected?.attemptId)
   );
 
-  /** Closes the panel by clearing the selection. */
-  function close() {
-    choose(null);
-  }
-
-  if (isDesktop) {
-    if (current === undefined) {
-      return null;
-    }
-    return (
-      <aside
-        aria-label={t("panel-label")}
-        className="w-80 shrink-0 border-s p-4"
-      >
-        <StudentPanel attempt={current} onClose={close} />
-      </aside>
-    );
-  }
-
   return (
-    <Sheet
-      onOpenChange={(open) => {
-        if (!open) {
-          close();
-        }
-      }}
+    <PanesDetail
+      empty={t("panel-empty")}
+      label={t("panel-label")}
+      onClose={() => choose(null)}
       open={current !== undefined}
     >
-      <SheetPopup keepMounted side="bottom">
-        <SheetHeader>
-          <SheetTitle>{t("panel-label")}</SheetTitle>
-        </SheetHeader>
-        {current === undefined ? null : (
-          <div className="px-4 pb-4">
-            <StudentPanel attempt={current} onClose={close} />
-          </div>
-        )}
-      </SheetPopup>
-    </Sheet>
+      {current === undefined ? null : <StudentPanel attempt={current} />}
+    </PanesDetail>
   );
 }
 
 /**
- * The content of the panel for one student. The actions follow the table of ADR 0013: a lock
- * for an attempt in progress, an unlock for a locked one, and added minutes for either. A
- * second device is allowed in every state. The actions show only when the page lists them for
- * the viewer, so a viewer who may only view sees the signals and no action.
+ * The content of the panel for one student. The actions follow the table of ADR 0013 (see
+ * `StudentPanelActions`), and show only when the page lists them for the viewer, so a viewer who
+ * may only view sees the signals and no action.
  */
-function StudentPanel({
-  attempt,
-  onClose,
-}: {
-  readonly attempt: DashboardAttempt;
-  readonly onClose: () => void;
-}) {
+function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
   const t = useTranslations("Exams");
-  const tCommon = useTranslations("Common");
   const mayProctor = useMayProctor();
-  const [dialog, setDialog] = useState<PanelDialog | null>(null);
-  const takesMinutes =
-    attempt.state === "inProgress" || attempt.state === "locked";
 
   return (
-    <div className="grid gap-4">
-      <div className="flex items-center gap-3">
-        <PersonAvatar className="size-9" mascot={attempt.mascot ?? undefined} />
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{attempt.name}</p>
-          <p className="text-muted-foreground text-sm">
-            {t(stateLabels[attempt.state])}
-          </p>
+    <>
+      <PaneHeader
+        description={t(stateLabels[attempt.state])}
+        title={attempt.name}
+      />
+      <PaneBody>
+        <div className="grid gap-4">
+          <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
+          <div className="grid gap-2">
+            <p className="text-muted-foreground text-sm">{t("signals")}</p>
+            <SignalList attemptId={attempt.id} key={attempt.id} />
+          </div>
         </div>
-        <Button
-          aria-label={tCommon("close")}
-          onClick={onClose}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons icon={Cancel01Icon} />
-        </Button>
-      </div>
-      <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
-      <div className="grid gap-2">
-        <p className="text-muted-foreground text-sm">{t("signals")}</p>
-        <SignalList attemptId={attempt.id} key={attempt.id} />
-      </div>
+      </PaneBody>
       {mayProctor ? (
-        <div className="flex flex-wrap gap-2">
-          {attempt.state === "inProgress" ? (
-            <Button
-              onClick={() => setDialog("lock")}
-              size="sm"
-              type="button"
-              variant="destructive"
-            >
-              {t("lock")}
-            </Button>
-          ) : null}
-          {attempt.state === "locked" ? (
-            <Button
-              onClick={() => setDialog("unlock")}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {t("unlock")}
-            </Button>
-          ) : null}
-          {takesMinutes ? (
-            <Button
-              onClick={() => setDialog("add-minutes")}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {t("add-minutes")}
-            </Button>
-          ) : null}
-          <Button
-            onClick={() => setDialog("allow-device")}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {t("allow-device")}
-          </Button>
-        </div>
+        <PaneFooter>
+          <StudentActions attempt={attempt} />
+        </PaneFooter>
       ) : null}
+    </>
+  );
+}
+
+/** A proctor's actions on one student (see `StudentPanelActions`) and the dialog each one opens. */
+function StudentActions({ attempt }: { readonly attempt: DashboardAttempt }) {
+  const [dialog, setDialog] = useState<PanelDialog | null>(null);
+
+  return (
+    <>
+      <StudentPanelActions
+        name={attempt.name}
+        onOpen={setDialog}
+        state={attempt.state}
+      />
       <LockDialog
         attemptId={attempt.id}
         name={attempt.name}
@@ -273,7 +190,7 @@ function StudentPanel({
         onOpenChange={(next) => setDialog(next ? "allow-device" : null)}
         open={dialog === "allow-device"}
       />
-    </div>
+    </>
   );
 }
 

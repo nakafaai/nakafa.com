@@ -421,27 +421,36 @@ describe("tenancy/claims run", () => {
   );
 
   it.effect(
-    "claims an address on one of the email domains the tenant allows",
+    "claims an address on one of the tenant's email domains for a Google Workspace account of them, and no personal Google account",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const account = yield* fixture.account("guru", address, true);
+        const domain = "harapan.example.test";
+        const account = yield* fixture.account("guru", address, true, domain);
+        const personal = yield* fixture.account("lain", other, true, null);
         yield* fixture.run(
-          admitOnly(fixture.tenants.nf, ["belajar.id", "harapan.example.test"])
+          admitOnly(fixture.tenants.nf, ["belajar.id", domain])
         );
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, address)
         );
-        yield* fixture.internal.mutation(run, {
-          cursor: null,
-          userId: account.userId,
-        });
+        const waiting = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, other)
+        );
+        for (const { userId } of [account, personal]) {
+          yield* fixture.internal.mutation(run, { cursor: null, userId });
+        }
         const after = yield* fixture.run(stored(personId, inviteId));
         expect(after.person.account).toMatchObject({
           state: "claimed",
           userId: account.userId,
         });
         expect(after.invite.state).toMatchObject({ status: "accepted" });
+        const pending = yield* fixture.run(
+          stored(waiting.personId, waiting.inviteId)
+        );
+        expect(pending.person.account).toEqual({ state: "unclaimed" });
+        expect(pending.invite.state).toEqual({ status: "pending" });
       })
   );
 

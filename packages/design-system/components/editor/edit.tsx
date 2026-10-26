@@ -179,6 +179,8 @@ export function FormulaEdit({
               aria-label={labels.latex}
               className="font-mono"
               onChange={(event) => setDraft(event.target.value)}
+              // An example of LaTeX, the same in every language.
+              placeholder={String.raw`\frac{a}{b}`}
               value={draft}
             />
           </TabsPanel>

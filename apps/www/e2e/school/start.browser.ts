@@ -1,4 +1,4 @@
-import { expect, type Frame, test } from "@playwright/test";
+import { expect, type Frame, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
@@ -162,3 +162,96 @@ test("a founder types a school name a letter at a time, and the name, the addres
   await expect(nameField).toHaveValue(name);
   await context.close();
 });
+
+/** The words of the questionnaire's button and progress line in each language a founder may use. */
+const LOCALES = [
+  {
+    continue: "Continue",
+    free: "Available",
+    locale: "en",
+    name: "School name",
+    progress: "Question",
+  },
+  {
+    continue: "Lanjut",
+    free: "Tersedia",
+    locale: "id",
+    name: "Nama sekolah",
+    progress: "Pertanyaan",
+  },
+  {
+    continue: "Weiter",
+    free: "Frei",
+    locale: "de",
+    name: "Name der Schule",
+    progress: "Frage",
+  },
+] as const;
+
+/**
+ * Expects every choice on the page to read in full: its title and its description each on exactly
+ * one line, and no line cut off.
+ */
+async function expectChoicesOnOneLine(page: Page) {
+  const lines = await page
+    .locator('[data-slot="questionnaire-choice-label"]')
+    .evaluateAll((labels) =>
+      labels.flatMap((label) =>
+        Array.from(label.querySelectorAll("span"))
+          .filter(
+            (span) =>
+              span.children.length === 0 && span.textContent.trim() !== ""
+          )
+          .map((span) => ({
+            cut: span.scrollWidth > span.clientWidth,
+            lines: Math.round(
+              span.getBoundingClientRect().height /
+                Number.parseFloat(getComputedStyle(span).lineHeight)
+            ),
+            text: span.textContent,
+          }))
+      )
+    );
+  expect(lines.length).toBeGreaterThan(0);
+  expect(Arr.filter(lines, (line) => line.lines !== 1 || line.cut)).toEqual([]);
+}
+
+for (const words of LOCALES) {
+  test(`every questionnaire choice reads in full on a phone, its title and description one line each, in ${words.locale}`, async ({
+    baseURL,
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      viewport: { height: 844, width: 390 },
+    });
+    await Effect.runPromise(signInLearner(context, String(baseURL)));
+    const page = await context.newPage();
+    const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
+    const proceed = page.getByRole("button", { name: words.continue });
+
+    await page.goto(`/${words.locale}/school/new`);
+    await expect(page.getByText(`${words.progress} 1`)).toBeVisible();
+    await page.getByLabel(words.name).fill(`Lebar ${tag}`);
+    await expect(page.getByText(words.free)).toBeAttached();
+    await proceed.click();
+
+    await expect(page.getByText(`${words.progress} 2`)).toBeVisible();
+    await expectChoicesOnOneLine(page);
+    await page.locator('input[value="ID"]').check();
+    await proceed.click();
+
+    await expect(page.getByText(`${words.progress} 3`)).toBeVisible();
+    await expectChoicesOnOneLine(page);
+    await page.locator('input[value="sd"]').check();
+    await proceed.click();
+
+    await expect(page.getByText(`${words.progress} 4`)).toBeVisible();
+    await expectChoicesOnOneLine(page);
+    await page.locator('input[value="foundation"]').check();
+    await proceed.click();
+
+    await expect(page.getByText(`${words.progress} 5`)).toBeVisible();
+    await expectChoicesOnOneLine(page);
+    await context.close();
+  });
+}

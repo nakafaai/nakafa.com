@@ -222,6 +222,20 @@ export class XenditDeactivateError extends Schema.TaggedError<XenditDeactivateEr
 }
 export const XenditDeactivateErrorWire = publicFailure(XenditDeactivateError);
 
+/** Raised when Xendit would not open the recurring plan of a paid first month, after every retry, so an operator opens it. */
+export const xenditPlanErrorCode = "XENDIT_PLAN_ERROR";
+export class XenditPlanError extends Schema.TaggedError<XenditPlanError>()(
+  "XenditPlanError",
+  {
+    code: Schema.Literal(xenditPlanErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof xenditPlanErrorCode;
+  declare readonly message: string;
+}
+
 /** Raised when the offer is not sold to this buyer now: its rail does not sell it in the buyer's currency, or Xendit is not set up on this deployment. */
 export const checkoutOfferUnavailableCode = "BILLING_OFFER_UNAVAILABLE";
 export class CheckoutOfferUnavailable extends Schema.TaggedError<CheckoutOfferUnavailable>()(

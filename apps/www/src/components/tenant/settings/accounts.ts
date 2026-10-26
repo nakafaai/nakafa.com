@@ -68,9 +68,11 @@ export const addMemberChange: OptimisticUpdate<typeof tenancy.roster.invite> = (
     roles: [role],
     status: "pending",
   };
+  // Whoever may give the role may also end it, so the list answers the new row as removable.
   const member: Member = {
     id: personId,
     name,
+    removable: true,
     roles: [role],
     status: "invited",
   };
