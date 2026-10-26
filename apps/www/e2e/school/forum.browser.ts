@@ -3,6 +3,7 @@ import { Effect, MutableList } from "effect";
 import {
   createSchool,
   hostAddress,
+  seedForum,
   signInClassTeacher,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -90,7 +91,14 @@ for (const viewport of [
   });
 }
 
-test("the forum page lists the class's channels in the server's HTML and in the browser, without a page error", async ({
+/**
+ * What React writes into the server's HTML when a part of the page threw while the server rendered
+ * it and the browser has to render it again: the definition of its client-render instruction, and
+ * the instruction itself.
+ */
+const SERVER_RENDER_FAILED = ["$RX=function", '$RX("'];
+
+test("every class page that reads the class's channels renders on the server and in the browser, without an error state or a page error", async ({
   browser,
   baseURL,
 }) => {
@@ -101,21 +109,56 @@ test("the forum page lists the class's channels in the server's HTML and in the 
   await Effect.runPromise(
     signInClassTeacher(context, school.slug, address("/"))
   );
+  const forum = await Effect.runPromise(seedForum(school.slug, 1, 1));
+  const channel = `/classes/fisika-x-1/forum?channel=${forum.channelId}`;
 
-  // The channel rows render on the server: a row that threw there would leave the HTML without it.
-  const served = await context.request.get(
-    address("/classes/fisika-x-1/forum")
-  );
-  expect(served.status()).toBe(200);
-  expect(await served.text()).toContain(">General<");
-
+  // A discussion in the general channel, so its page, which shows the channel beside it, is read too.
   const page = await context.newPage();
   const errors = MutableList.make<string>();
   page.on("pageerror", (error) => MutableList.append(errors, String(error)));
-  await page.goto(address("/classes/fisika-x-1/forum"));
-  const general = page.getByRole("link", { name: "General", exact: true });
-  await waitUntilTakenOver(general);
-  await expect(general).toBeVisible();
+  await page.goto(address(channel));
+  const start = page.getByRole("button", { name: "New discussion" });
+  await waitUntilTakenOver(start);
+  await start.click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Title" }).fill("Gaya gesek");
+  await dialog
+    .getByRole("textbox", { name: "First message" })
+    .fill("Tuliskan contohnya di sini.");
+  await dialog.getByRole("button", { name: "Start" }).click();
+  await expect(page.getByRole("link", { name: "#1 Gaya gesek" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  // The pages of the class, each with what its server HTML must show: the forum lists the
+  // channels, and a channel or a discussion names the channel in its path.
+  const pages = [
+    { path: "/classes/fisika-x-1", shows: ">Fisika X-1<" },
+    { path: "/classes/fisika-x-1/forum", shows: ">General<" },
+    { path: channel, shows: ">General<" },
+    { path: "/classes/fisika-x-1/forum/1", shows: ">General<" },
+    { path: "/classes/fisika-x-1/library", shows: ">Fisika X-1<" },
+    { path: "/classes/fisika-x-1/tasks", shows: ">Fisika X-1<" },
+  ];
+  for (const { path, shows } of pages) {
+    const served = await context.request.get(address(path));
+    expect(served.status(), path).toBe(200);
+    const html = await served.text();
+    expect(html, path).toContain(shows);
+    for (const marker of SERVER_RENDER_FAILED) {
+      expect(html, path).not.toContain(marker);
+    }
+
+    await page.goto(address(path));
+    await waitUntilTakenOver(
+      page
+        .getByRole("navigation", { name: "Class" })
+        .getByRole("link", { name: "Forum" })
+    );
+    await expect(page.getByRole("main").getByRole("alert"), path).toHaveCount(
+      0
+    );
+  }
   expect(MutableList.toArray(errors)).toEqual([]);
   await context.close();
 });

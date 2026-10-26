@@ -125,6 +125,18 @@ for (const viewport of [
       timeout: readinessTimeoutMilliseconds,
     });
 
+    // The read mark follows the reader to the newest message once the view is still, so the
+    // channel list, open in a second tab, loses its unread dot while the reader stays.
+    const list = await context.newPage();
+    await list.goto(address("/classes/fisika-x-1/forum"));
+    await expect(list.getByRole("link", { name: "General" })).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(list.locator("[data-slot=unread-dot]")).toHaveCount(0, {
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await list.close();
+
     // A message that the address names comes into view, older pages loading until it is there.
     const third = Option.getOrThrow(Arr.get(forum.messages, 2));
     await page.goto(address(`${channel}&message=${third}`));
