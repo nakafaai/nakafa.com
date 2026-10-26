@@ -141,7 +141,14 @@
     "link-verify": "Verifikasi manual",
     "link-revoke": "Akhiri tautan",
     "link-revoke-title": "Akhiri tautan ini?",
-    "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi."
+    "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi.",
+    "link-detail": "Tautan orang tua",
+    "link-detail-empty": "Pilih siswa untuk melihat tautannya.",
+    "expires": "Berakhir",
+    "mismatches": "Cek NISN gagal",
+    "child": "Anak",
+    "child-detail": "Anak",
+    "child-detail-empty": "Pilih anak untuk melihat rinciannya."
   },
   "SchoolRoster": {
     "import": "Impor",

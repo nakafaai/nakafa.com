@@ -13,7 +13,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The student's NISN that the seed writes on the roster. */
 const NISN = "0012345678";
 
-test("an admin links a parent, who signs in with the email code, checks the NISN, reads the child, and withdraws consent", async ({
+test("an admin links a parent, who signs in with the email code, opens the child beside the list, checks the NISN, reads the child, and withdraws consent", async ({
   browser,
   baseURL,
 }) => {
@@ -62,11 +62,13 @@ test("an admin links a parent, who signs in with the email code, checks the NISN
   await home.getByLabel("Sign-in code").fill(seeded.code);
   await home.getByRole("button", { name: "Sign in" }).click();
 
+  const open = home.getByRole("button", { name: "Siswa Uji" });
+  await expect(open).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await waitUntilTakenOver(open);
+  await open.click();
   const child = home.locator("[data-child]");
-  await expect(child).toHaveAttribute("data-child", "pending", {
-    timeout: readinessTimeoutMilliseconds,
-  });
-  await expect(child.getByText("Siswa Uji")).toBeVisible();
+  await expect(child).toHaveAttribute("data-child", "pending");
+  await expect(child.getByRole("heading", { name: "Siswa Uji" })).toBeVisible();
   await waitUntilTakenOver(child.getByLabel("Child's NISN"));
   await child.getByLabel("Child's NISN").fill("9999999999");
   await child.getByRole("button", { name: "Check" }).click();

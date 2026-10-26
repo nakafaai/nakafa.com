@@ -3,7 +3,13 @@ import {
   PaginatedQueryResult,
   useMutation,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  CheckmarkBadge01Icon,
+  Clock01Icon,
+  Link01Icon,
+  MoreHorizontalIcon,
+  Unlink01Icon,
+} from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Email, PersonName } from "@repo/backend/confect/tenancy/schema";
@@ -31,22 +37,42 @@ import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
+import {
+  PaneBody,
+  PaneFact,
+  PaneFacts,
+  PaneFooter,
+  PaneHeader,
+  PaneOpen,
+  Panes,
+  PanesDetail,
+  PanesList,
+  PanesProvider,
+  usePanes,
+} from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
+  TableFilter,
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
+import {
   revokeLinkChange,
   startLinkChange,
   verifyLinkChange,
 } from "@/components/tenant/guardian/change";
+import { LINK_STATUS_ICONS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   type PersonId,
   SchoolStudentPicker,
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
+import { SchoolDateTime } from "@/components/tenant/settings/time";
 import {
   type PreloadedPage,
   usePaginatedPreloaded,
@@ -72,9 +98,11 @@ const LinksFirstPageContext = createContext<LinksFirstPage | undefined>(
 );
 
 /**
- * The guardian links of the school (ADR 0034): each student with the guardian's address
- * and the link's state, in a data table with Link guardian in the header. A link that the
- * roster cannot check by NISN is checked by hand here, and any live link can be ended.
+ * The guardian links of the school (ADR 0034). The header holds the search by student, the
+ * status filter and Link a parent. The body is the links table, and the link a press opens
+ * stands beside it on a wide screen and in a sheet on a phone: the parent, the address, the
+ * state, and its actions. A link that the roster cannot check by NISN is checked by hand, and
+ * any live link can be ended, from its row menu or from the open link.
  */
 export function GuardianLinksSettings({
   first,
@@ -87,32 +115,54 @@ export function GuardianLinksSettings({
   const [isStarting, setIsStarting] = useState(false);
 
   return (
-    <SettingsPage
-      actions={
-        <Button onClick={() => setIsStarting(true)} type="button">
-          {t("link-add")}
-        </Button>
-      }
-    >
-      <ReadBoundary>
-        <LinksFirstPageContext value={first}>
-          <GuardianLinkTable slug={slug} />
-        </LinksFirstPageContext>
-      </ReadBoundary>
-      <GuardianLinkStartDialog
-        open={isStarting}
-        setOpen={setIsStarting}
-        slug={slug}
-      />
-    </SettingsPage>
+    <TableFiltersProvider>
+      <PanesProvider>
+        <SettingsTablePage
+          actions={
+            <>
+              <TableSearch placeholder={t("links-search")} />
+              <TableFilter
+                facets={[
+                  {
+                    column: "status",
+                    icon: Clock01Icon,
+                    options: Arr.map(LinkStatus.literals, (status) => ({
+                      icon: LINK_STATUS_ICONS[status],
+                      label: t(`status-${status}`),
+                      value: status,
+                    })),
+                    title: t("status"),
+                  },
+                ]}
+              />
+              <Button onClick={() => setIsStarting(true)} type="button">
+                <HugeIcons icon={Link01Icon} />
+                {t("link-add")}
+              </Button>
+            </>
+          }
+        >
+          <ReadBoundary>
+            <LinksFirstPageContext value={first}>
+              <GuardianLinksBody slug={slug} />
+            </LinksFirstPageContext>
+          </ReadBoundary>
+          <GuardianLinkStartDialog
+            open={isStarting}
+            setOpen={setIsStarting}
+            slug={slug}
+          />
+        </SettingsTablePage>
+      </PanesProvider>
+    </TableFiltersProvider>
   );
 }
 
 /**
- * The links of the school in a data table that filters by student and status and loads more
- * rows as its end comes into view, or the empty state while the school has no link.
+ * The links of the school, read a page at a time: the table, which loads more rows as its end
+ * comes into view, beside the open link; or the empty state while the school has no link.
  */
-function GuardianLinkTable({ slug }: { slug: TenantSlug }) {
+function GuardianLinksBody({ slug }: { slug: TenantSlug }) {
   const first = use(LinksFirstPageContext);
   const t = useTranslations("SchoolGuardians");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -140,12 +190,47 @@ function GuardianLinkTable({ slug }: { slug: TenantSlug }) {
     );
   }
 
+  return (
+    <Panes>
+      <PanesList>
+        {failed ? <DataFailure onRetry={reloadPage} /> : null}
+        <GuardianLinkTable links={pagination.results} slug={slug} />
+        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+        ) : null}
+      </PanesList>
+      <PanesDetail empty={t("link-detail-empty")} label={t("link-detail")}>
+        <GuardianLinkDetail links={pagination.results} slug={slug} />
+      </PanesDetail>
+    </Panes>
+  );
+}
+
+/** The state of a link as staff read it: a pending link whose NISN checks failed says so. */
+function useStatusText() {
+  const t = useTranslations("SchoolGuardians");
+
+  return (link: LinkItem) =>
+    link.status === "pending" && link.mismatches > 0
+      ? t("status-mismatch")
+      : t(`status-${link.status}`);
+}
+
+/** The links in a data table: the student, the parent's address, the state, and the row menu. */
+function GuardianLinkTable({
+  links,
+  slug,
+}: {
+  links: readonly LinkItem[];
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolGuardians");
+  const statusText = useStatusText();
+
   const columns = linkColumns.columns([
     linkColumns.accessor((link) => link.student.name, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
+        <PaneOpen id={info.row.original.id}>{info.getValue()}</PaneOpen>
       ),
       filterFn: "includesString",
       header: t("student"),
@@ -153,17 +238,17 @@ function GuardianLinkTable({ slug }: { slug: TenantSlug }) {
       sortFn: "text",
     }),
     linkColumns.accessor((link) => link.email, {
-      cell: (info) => <span className="break-all">{info.getValue()}</span>,
       header: t("email-label"),
       id: "email",
       sortFn: "text",
     }),
     linkColumns.accessor((link) => link.status, {
-      cell: (info) =>
-        info.row.original.status === "pending" &&
-        info.row.original.mismatches > 0
-          ? t("status-mismatch")
-          : t(`status-${info.getValue()}`),
+      cell: (info) => (
+        <span className="flex items-center gap-2">
+          <HugeIcons icon={LINK_STATUS_ICONS[info.getValue()]} />
+          {statusText(info.row.original)}
+        </span>
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("status"),
@@ -176,27 +261,120 @@ function GuardianLinkTable({ slug }: { slug: TenantSlug }) {
   ]);
 
   return (
+    <DataTable
+      columns={columns}
+      data={links}
+      rowId={(link) => link.id}
+      search="student"
+    />
+  );
+}
+
+/**
+ * The open link: the student, the parent's name and address, the state, when a pending link
+ * expires, and how many NISN checks failed; then the link's actions in the footer. A link the
+ * list no longer holds closes.
+ */
+function GuardianLinkDetail({
+  links,
+  slug,
+}: {
+  links: readonly LinkItem[];
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolGuardians");
+  const statusText = useStatusText();
+  const open = usePanes((state) => state.open);
+  const link = Option.flatMap(open, (id) =>
+    Arr.findFirst(links, (candidate) => candidate.id === id)
+  );
+
+  return Option.match(link, {
+    onNone: () => null,
+    onSome: (found) => (
+      <>
+        <PaneHeader
+          description={found.guardian.name}
+          title={found.student.name}
+        />
+        <PaneBody>
+          <PaneFacts>
+            <PaneFact label={t("guardian-name")}>
+              {found.guardian.name}
+            </PaneFact>
+            <PaneFact label={t("email-label")}>
+              <span className="break-all">{found.email}</span>
+            </PaneFact>
+            <PaneFact label={t("status")}>
+              <span className="flex items-center gap-2">
+                <HugeIcons icon={LINK_STATUS_ICONS[found.status]} />
+                {statusText(found)}
+              </span>
+            </PaneFact>
+            {found.status === "pending" ? (
+              <PaneFact label={t("expires")}>
+                <SchoolDateTime at={found.expiresAt} />
+              </PaneFact>
+            ) : null}
+            {found.mismatches > 0 ? (
+              <PaneFact label={t("mismatches")}>{found.mismatches}</PaneFact>
+            ) : null}
+          </PaneFacts>
+        </PaneBody>
+        {found.status === "pending" || found.status === "verified" ? (
+          <PaneFooter>
+            <GuardianLinkActions link={found} slug={slug} />
+          </PaneFooter>
+        ) : null}
+      </>
+    ),
+  });
+}
+
+/** The actions of a live link in its open pane: check by hand while it is pending, and end it. */
+function GuardianLinkActions({
+  link,
+  slug,
+}: {
+  link: LinkItem;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolGuardians");
+  const verify = useMutation(guardians.links.verify).withOptimisticUpdate(
+    verifyLinkChange
+  );
+  const [, startTransition] = useTransition();
+  const [isRevoking, setIsRevoking] = useState(false);
+
+  return (
     <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <DataTable
-        columns={columns}
-        data={pagination.results}
-        facets={[
-          {
-            column: "status",
-            options: Arr.map(LinkStatus.literals, (status) => ({
-              label: t(`status-${status}`),
-              value: status,
-            })),
-            title: t("status"),
-          },
-        ]}
-        rowId={(link) => link.id}
-        search={{ column: "student", placeholder: t("links-search") }}
-      />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      <Button
+        onClick={() => setIsRevoking(true)}
+        type="button"
+        variant="destructive"
+      >
+        <HugeIcons icon={Unlink01Icon} />
+        {t("link-revoke")}
+      </Button>
+      {link.status === "pending" ? (
+        <Button
+          onClick={() =>
+            startTransition(() =>
+              saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
+            )
+          }
+          type="button"
+        >
+          <HugeIcons icon={CheckmarkBadge01Icon} />
+          {t("link-verify")}
+        </Button>
       ) : null}
+      <GuardianLinkRevokeDialog
+        link={link}
+        open={isRevoking}
+        setOpen={setIsRevoking}
+        slug={slug}
+      />
     </>
   );
 }
@@ -216,9 +394,6 @@ function GuardianLinkMenu({
   const common = useTranslations("Common");
   const verify = useMutation(guardians.links.verify).withOptimisticUpdate(
     verifyLinkChange
-  );
-  const revoke = useMutation(guardians.links.revoke).withOptimisticUpdate(
-    revokeLinkChange
   );
   const [, startTransition] = useTransition();
   const [isRevoking, setIsRevoking] = useState(false);
@@ -251,6 +426,7 @@ function GuardianLinkMenu({
                   )
                 }
               >
+                <HugeIcons icon={CheckmarkBadge01Icon} />
                 {t("link-verify")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -260,40 +436,70 @@ function GuardianLinkMenu({
             onClick={() => setIsRevoking(true)}
             variant="destructive"
           >
+            <HugeIcons icon={Unlink01Icon} />
             {t("link-revoke")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <ResponsiveDialog
-        description={t("link-revoke-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsRevoking(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsRevoking(false);
-                startTransition(() =>
-                  saveSchool(() => revoke({ linkId: link.id, slug }), SOURCE)
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("link-revoke")}
-            </Button>
-          </>
-        }
+      <GuardianLinkRevokeDialog
+        link={link}
         open={isRevoking}
         setOpen={setIsRevoking}
-        title={t("link-revoke-title")}
+        slug={slug}
       />
     </div>
+  );
+}
+
+/** The confirmation that ends a live link, from its row menu or its open pane. */
+function GuardianLinkRevokeDialog({
+  link,
+  open,
+  setOpen,
+  slug,
+}: {
+  link: LinkItem;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolGuardians");
+  const common = useTranslations("Common");
+  const revoke = useMutation(guardians.links.revoke).withOptimisticUpdate(
+    revokeLinkChange
+  );
+  const [, startTransition] = useTransition();
+
+  return (
+    <ResponsiveDialog
+      description={t("link-revoke-description")}
+      footer={
+        <>
+          <Button
+            onClick={() => setOpen(false)}
+            type="button"
+            variant="outline"
+          >
+            {common("cancel")}
+          </Button>
+          <Button
+            onClick={() => {
+              setOpen(false);
+              startTransition(() =>
+                saveSchool(() => revoke({ linkId: link.id, slug }), SOURCE)
+              );
+            }}
+            type="button"
+            variant="destructive"
+          >
+            {t("link-revoke")}
+          </Button>
+        </>
+      }
+      open={open}
+      setOpen={setOpen}
+      title={t("link-revoke-title")}
+    />
   );
 }
 

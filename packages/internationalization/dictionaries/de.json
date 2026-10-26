@@ -141,7 +141,14 @@
     "link-verify": "Von Hand bestätigen",
     "link-revoke": "Verknüpfung beenden",
     "link-revoke-title": "Diese Verknüpfung beenden?",
-    "link-revoke-description": "Die Eltern sehen die Daten des Kindes nicht mehr."
+    "link-revoke-description": "Die Eltern sehen die Daten des Kindes nicht mehr.",
+    "link-detail": "Elternverknüpfung",
+    "link-detail-empty": "Wähle eine Schülerin oder einen Schüler, um die Verknüpfung zu sehen.",
+    "expires": "Läuft ab",
+    "mismatches": "Fehlgeschlagene NISN-Prüfungen",
+    "child": "Kind",
+    "child-detail": "Kind",
+    "child-detail-empty": "Wähle ein Kind, um die Details zu sehen."
   },
   "SchoolRoster": {
     "import": "Importieren",

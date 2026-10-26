@@ -1,5 +1,13 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
+import {
+  Alert02Icon,
+  Cancel01Icon,
+  Download01Icon,
+  FilterHorizontalIcon,
+  Upload01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
@@ -8,17 +16,22 @@ import {
 } from "@repo/backend/confect/roster/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Effect, Option, Result } from "effect";
-import { type ReactNode, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { useViewerQuery } from "@/components/tenant/context";
+import {
+  TableFilter,
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   EXPORT_HEADER,
@@ -28,12 +41,14 @@ import {
   type SheetProblem,
   studentsOf,
 } from "@/components/tenant/roster/dapodik";
-import { saveSchool } from "@/components/tenant/settings/save";
-import { SettingsPage } from "@/components/tenant/settings/section";
 import {
-  SchoolUnitChoice,
-  type UnitId,
-} from "@/components/tenant/settings/unit";
+  RosterUnitChoice,
+  RosterUnitProvider,
+  useRosterUnit,
+} from "@/components/tenant/roster/unit";
+import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
+import type { UnitId } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -93,66 +108,49 @@ const writeFile = (lines: readonly (typeof RosterLine.Type)[]) =>
  */
 export function RosterImportSettings({ slug }: { slug: TenantSlug }) {
   return (
-    <ReadBoundary
-      fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
-      read={{ args: { slug }, ref: tenancy.viewer.get }}
-    >
-      <RosterImportContent slug={slug} />
-    </ReadBoundary>
+    <TableFiltersProvider>
+      <RosterUnitProvider>
+        <ReadBoundary
+          fallback={(failure) => (
+            <SettingsTablePage>{failure}</SettingsTablePage>
+          )}
+          read={{ args: { slug }, ref: tenancy.viewer.get }}
+        >
+          <RosterImportContent slug={slug} />
+        </ReadBoundary>
+      </RosterUnitProvider>
+    </TableFiltersProvider>
   );
 }
 
-/** The import of the school's active unit, once the viewer's units are in. */
+/** The import of the chosen unit, once the viewer's units are in. */
 function RosterImportContent({ slug }: { slug: TenantSlug }) {
-  const viewer = useViewerQuery();
-  const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
+  const read = useRosterUnit();
 
-  if (QueryResult.isFailure(viewer)) {
-    throw viewer.error;
+  if (read === undefined) {
+    return <SettingsTablePage>{null}</SettingsTablePage>;
   }
-  if (!QueryResult.isSuccess(viewer)) {
-    return <SettingsPage>{null}</SettingsPage>;
-  }
-  const units = viewer.value.units;
-  const unit = Option.getOrUndefined(
-    Arr.findFirst(units, (candidate) =>
-      chosenUnit === undefined
-        ? candidate.status === "active"
-        : candidate.id === chosenUnit
-    )
-  );
-  if (unit === undefined) {
+  if (Option.isNone(read.unit)) {
     return (
-      <SettingsPage>
+      <SettingsTablePage>
         <NoActiveUnit />
-      </SettingsPage>
+      </SettingsTablePage>
     );
   }
   return (
     <RosterImportOfUnit
-      choice={
-        units.length > 1 ? (
-          <SchoolUnitChoice
-            onChoose={setChosenUnit}
-            unitId={unit.id}
-            units={units}
-          />
-        ) : null
-      }
-      key={unit.id}
+      key={read.unit.value.id}
       slug={slug}
-      unitId={unit.id}
+      unitId={read.unit.value.id}
     />
   );
 }
 
 /** The import into one unit's active period, or the state of a unit that has none. */
 function RosterImportOfUnit({
-  choice,
   slug,
   unitId,
 }: {
-  choice: ReactNode;
   slug: TenantSlug;
   unitId: UnitId;
 }) {
@@ -168,37 +166,37 @@ function RosterImportOfUnit({
   const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
 
   if (periodId === undefined) {
-    return <SettingsPage>{choice}</SettingsPage>;
+    return (
+      <SettingsTablePage actions={<RosterUnitChoice />}>
+        {null}
+      </SettingsTablePage>
+    );
   }
   if (periodId === null) {
     return (
-      <SettingsPage>
-        {choice}
+      <SettingsTablePage actions={<RosterUnitChoice />}>
         <TableEmpty
           act="pointing"
           description={t("no-period-description")}
           title={t("no-period")}
         />
-      </SettingsPage>
+      </SettingsTablePage>
     );
   }
-  return (
-    <RosterImportOfPeriod choice={choice} periodId={periodId} slug={slug} />
-  );
+  return <RosterImportOfPeriod periodId={periodId} slug={slug} />;
 }
 
 /**
- * The import into one active period. Until a file is read the page shows Export and Import
- * in its header; once a file is read it shows the preview, with Cancel and Import students.
- * The rows go to the server in batches of `IMPORT_BATCH`, each one transaction, so a retry
- * after a failed batch adds no duplicate.
+ * The import into one active period. Until a file is read the header shows the unit choice,
+ * Export and Import, and the body says what to do; once a file is read the header shows the
+ * search and status filter of the preview with Cancel and Import students, and the preview is
+ * the body. The rows go to the server in batches of `IMPORT_BATCH`, each one transaction, so a
+ * retry after a failed batch adds no duplicate.
  */
 function RosterImportOfPeriod({
-  choice,
   periodId,
   slug,
 }: {
-  choice: ReactNode;
   periodId: GenericId.GenericId<"tenantPeriods">;
   slug: TenantSlug;
 }) {
@@ -277,15 +275,37 @@ function RosterImportOfPeriod({
 
   if (preview !== undefined) {
     return (
-      <SettingsPage
+      <SettingsTablePage
         actions={
           <>
+            <TableSearch placeholder={t("search")} />
+            <TableFilter
+              facets={[
+                {
+                  column: "status",
+                  icon: FilterHorizontalIcon,
+                  options: Arr.map(
+                    ["under", "adult", ...RowProblem.literals] as const,
+                    (status) => ({
+                      icon:
+                        status === "under" || status === "adult"
+                          ? UserGroupIcon
+                          : Alert02Icon,
+                      label: t(`status-${status}`),
+                      value: status,
+                    })
+                  ),
+                  title: t("status"),
+                },
+              ]}
+            />
             <Button
               disabled={isApplying}
               onClick={() => setPreview(undefined)}
               type="button"
               variant="outline"
             >
+              <HugeIcons icon={Cancel01Icon} />
               {t("cancel")}
             </Button>
             <Button
@@ -302,13 +322,14 @@ function RosterImportOfPeriod({
         }
       >
         <RosterPreview rows={preview} />
-      </SettingsPage>
+      </SettingsTablePage>
     );
   }
   return (
-    <SettingsPage
+    <SettingsTablePage
       actions={
         <>
+          <RosterUnitChoice />
           <input
             accept={SHEET_TYPES}
             aria-label={t("file-label")}
@@ -329,7 +350,11 @@ function RosterImportOfPeriod({
             type="button"
             variant="outline"
           >
-            <Spinner isLoading={isExporting} />
+            {isExporting ? (
+              <Spinner isLoading />
+            ) : (
+              <HugeIcons icon={Download01Icon} />
+            )}
             {t("export")}
           </Button>
           <Button
@@ -337,13 +362,16 @@ function RosterImportOfPeriod({
             onClick={() => input.current?.click()}
             type="button"
           >
-            <Spinner isLoading={isReading} />
+            {isReading ? (
+              <Spinner isLoading />
+            ) : (
+              <HugeIcons icon={Upload01Icon} />
+            )}
             {t("import")}
           </Button>
         </>
       }
     >
-      {choice}
       <TableEmpty
         act={problem === undefined ? "reading" : "pointing"}
         description={t(
@@ -351,7 +379,7 @@ function RosterImportOfPeriod({
         )}
         title={t(problem === undefined ? "empty" : "file-refused")}
       />
-    </SettingsPage>
+    </SettingsTablePage>
   );
 }
 
@@ -398,18 +426,8 @@ function RosterPreview({ rows }: { rows: readonly (typeof ReadRow.Type)[] }) {
     <DataTable
       columns={columns}
       data={rows}
-      facets={[
-        {
-          column: "status",
-          options: Arr.map(
-            ["under", "adult", ...RowProblem.literals] as const,
-            (status) => ({ label: t(`status-${status}`), value: status })
-          ),
-          title: t("status"),
-        },
-      ]}
       rowId={(row) => String(row.line)}
-      search={{ column: "name", placeholder: t("search") }}
+      search="name"
     />
   );
 }

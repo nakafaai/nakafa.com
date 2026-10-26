@@ -141,7 +141,14 @@
     "link-verify": "Verify by hand",
     "link-revoke": "End link",
     "link-revoke-title": "End this link?",
-    "link-revoke-description": "The parent can no longer see the child's records."
+    "link-revoke-description": "The parent can no longer see the child's records.",
+    "link-detail": "Parent link",
+    "link-detail-empty": "Choose a student to see their link.",
+    "expires": "Expires",
+    "mismatches": "Failed NISN checks",
+    "child": "Child",
+    "child-detail": "Child",
+    "child-detail-empty": "Choose a child to see the details."
   },
   "SchoolRoster": {
     "import": "Import",
