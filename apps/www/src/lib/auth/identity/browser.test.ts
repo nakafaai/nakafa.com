@@ -51,7 +51,6 @@ describe("account browser identity", () => {
     vi.clearAllMocks();
     window.localStorage.clear();
     window.sessionStorage.clear();
-    Effect.runSync(releaseSession());
   });
 
   it.effect("clears browser identity without stopping analytics", () =>
@@ -256,7 +255,8 @@ describe("account browser identity", () => {
         vi.mocked(resetBrowserAnalyticsIdentity).mock.invocationCallOrder[0] ??
           0
       );
-    })
+      // A real page leaves after a sign-out; the test lets the readers follow Better Auth again.
+    }).pipe(Effect.ensuring(releaseSession()))
   );
 
   it.effect("preserves browser identity when sign-out is rejected", () =>
