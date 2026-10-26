@@ -1,6 +1,8 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, FileSystem } from "effect";
+import { chooseDay } from "@/e2e/support/date";
+import { giveRole, revokeRole } from "@/e2e/support/roles";
 import {
   createSchool,
   grantStudent,
@@ -9,8 +11,10 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
-import { chooseDay } from "@/e2e/support/date";
 import { waitUntilTakenOver } from "@/e2e/support/window";
+
+/** The Admin grant that the Owner gives an invited learner. */
+const ADMIN_GRANT = { person: "Acceptance Learner", role: "Admin" } as const;
 
 /** The Owner value of the Filter menu's Role group. */
 const OWNER_OPTION = /^Owner/;
@@ -388,47 +392,18 @@ for (const width of [390, 1440]) {
     );
     const owner = await ownerContext.newPage();
     await owner.goto(address("/settings/roles"));
-    const give = owner
-      .locator("header")
-      .getByRole("button", { name: "Give role" });
-    await waitUntilTakenOver(give);
-    await give.click();
-    const dialog = owner.getByRole("dialog", { name: "Give a role" });
-    await dialog.getByRole("combobox", { name: "Person" }).click();
-    await owner.getByRole("option", { name: "Acceptance Learner" }).click();
-    await dialog.getByRole("combobox", { name: "Role" }).click();
-    await owner.getByRole("option", { exact: true, name: "Admin" }).click();
-    await dialog.getByRole("button", { name: "Give role" }).click();
-    await expect(
-      owner
-        .getByRole("row")
-        .filter({ hasText: "Acceptance Learner" })
-        .getByRole("cell", { exact: true, name: "Admin" })
-    ).toBeVisible();
+    await giveRole(owner, ADMIN_GRANT);
     await ownerContext.close();
 
     // The Admin revokes the role that opens the settings: the page leaves for the school's
-    // home before the role ends, so the settings never turn into the refused page.
+    // home before the role ends, so the settings never turn into the not-found page.
     const admin = await learnerContext.newPage();
     await admin.goto(address("/settings/roles"));
-    const row = admin
-      .getByRole("row")
-      .filter({ hasText: "Acceptance Learner" })
-      .filter({ has: admin.getByRole("cell", { exact: true, name: "Admin" }) });
-    const more = row.getByRole("button", { name: "More actions" });
-    await waitUntilTakenOver(more);
-    await more.click();
-    await admin.getByRole("menuitem", { name: "Revoke" }).click();
-    await admin
-      .getByRole("dialog", { name: "Revoke this role?" })
-      .getByRole("button", { name: "Revoke" })
-      .click();
+    await revokeRole(admin, ADMIN_GRANT);
 
     await expect(admin).toHaveURL(address("/"));
     await expect(admin.getByText("Your role has ended.")).toBeVisible();
-    await expect(
-      admin.getByText("Your access to this school has changed.")
-    ).toHaveCount(0);
+    await expect(admin.getByText("We can't find this page")).toHaveCount(0);
     await learnerContext.close();
   });
 }

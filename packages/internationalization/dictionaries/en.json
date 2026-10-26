@@ -32,8 +32,6 @@
     },
     "sign-in-title": "Sign in to {school}",
     "sittings-empty": "Your teacher has not scheduled a sitting yet.",
-    "refused-title": "Your access to this school has changed.",
-    "refused-description": "Ask an admin of this school to check your access, or go back to Nakafa.",
     "answers-saved": "Answers saved",
     "quiet-staff": "No sitting is running, and none opens in the next 14 days.",
     "setup-invites": "Review pending invites",
@@ -65,6 +63,8 @@
     "all-exams": "All exams"
   },
   "SchoolEntry": {
+    "username-placeholder": "ayu.lestari",
+    "password-placeholder": "Your password",
     "card-code-label": "Card code",
     "card-code-placeholder": "First sign-in or a new card",
     "card-expired": "Ask your teacher or admin for a new card, because this one has expired.",
@@ -179,6 +179,7 @@
     "apply": "Import students"
   },
   "Exams": {
+    "minutes-placeholder": "10",
     "token": "Token",
     "change-token": "Change token",
     "close-sitting": "Close sitting",
@@ -229,6 +230,7 @@
     "lock": "Lock",
     "unlock": "Unlock",
     "allow-device": "Allow a second device",
+    "student-more": "More actions for {name}",
     "confirm-lock-title": "Lock the session of {name}?",
     "confirm-lock-description": "The student cannot answer until a proctor unlocks the session.",
     "confirm-lock-action": "Lock session",
@@ -488,6 +490,12 @@
     "cell-hint": "Each statement takes one column, and the key saves once every statement has one."
   },
   "SchoolSettings": {
+    "student-add-name-placeholder": "Ayu Lestari",
+    "invite-name-placeholder": "Budi Santoso",
+    "invite-email-placeholder": "budi@example.com",
+    "unit-add-name-placeholder": "SMA Harapan Bangsa",
+    "address-placeholder": "harapan-bangsa",
+    "name-placeholder": "Harapan Bangsa",
     "school": "School",
     "people": "People",
     "integrations": "Integrations",
@@ -522,14 +530,16 @@
     "billing-school-footer": "Every student is paid for.",
     "billing-dialog-title": "Choose a term",
     "billing-dialog-description": "Pay per enrolled student for the days left in the term.",
-    "billing-dialog-seats": "Pay per enrolled student. Seats renew until you cancel them.",
+    "billing-dialog-seats": "Pay per enrolled student, with seats that renew until you cancel them.",
     "billing-term-semester": "This semester",
     "billing-term-year": "This school year",
     "billing-offer-month": "Every month",
     "billing-offer-year": "Every year",
     "billing-term-dates": "{start} to {end}",
-    "billing-quote": "{price} per student, {total} for {seats} students",
+    "billing-quote-term": "{seats, plural, one {# student} other {# students}} until {date}",
+    "billing-quote-seats": "{seats, plural, one {# student} other {# students}} at {price} each",
     "billing-issue": "Issue invoice",
+    "billing-checkout": "Continue",
     "billing-invoices": "Invoices",
     "billing-invoices-description": "Every invoice the school was issued.",
     "billing-invoices-footer": "Pay an open invoice before its due date.",
@@ -749,7 +759,8 @@
       "integration": {
         "created": "Client created",
         "rotated": "Secret rotated",
-        "revoked": "Client revoked"
+        "revoked": "Client revoked",
+        "authorized": "Device connected"
       },
       "invite": {
         "expired": "Invite expired",
@@ -973,7 +984,12 @@
     "cohorts-no-period-action": "Open periods",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
     "policy-domains-invalid": "Check these domains, one on each line: {domains}.",
-    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
+    "policy-domains-limit": "Use up to {limit} different domains, each on its own line.",
+    "device-title": "Connect a device",
+    "device-description": "Type the code the Nakafa CLI shows to let it read the school as {name}.",
+    "device-code": "Device code",
+    "device-authorize": "Connect",
+    "device-deny": "Deny device"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1678,6 +1694,15 @@
     "plan-pro-past-due-footer": "Update your payment method.",
     "plan-granted-description": "Pro is active on this account.",
     "plan-granted-footer": "Nakafa does not bill it.",
+    "plan-pass-description": "Your Pro pass runs until {date}.",
+    "plan-pass-footer": "Another pass starts when this one ends.",
+    "plan-pass-extend": "Extend Pro",
+    "plan-xendit-footer": "Cancel any time; Pro stays until the paid period ends.",
+    "plan-xendit-ending-footer": "Nothing is charged after this period.",
+    "plan-cancel": "Cancel plan",
+    "plan-keep": "Keep Pro",
+    "plan-cancel-title": "Cancel Pro?",
+    "plan-cancel-description": "Pro stays until {date}, and nothing is charged after it.",
     "period-start": "Period starts",
     "renews-on": "Renews on",
     "ends-on": "Ends on",
@@ -1759,7 +1784,16 @@
     "top-up-balance": "Top-up credits",
     "top-up-expires": "Expires {date}",
     "top-up-left": "{count, number} left",
-    "buy-credits": "Buy credits"
+    "buy-credits": "Buy credits",
+    "payments": "Payments",
+    "payments-description": "The payments that went through, newest first.",
+    "payment-date": "Date",
+    "payment-for": "For",
+    "payment-amount": "Amount",
+    "payment-credits": "Nina credits",
+    "payment-cycle": "Pro subscription",
+    "payment-invoice": "Invoice",
+    "payment-pass": "Pro pass"
   },
   "Editor": {
     "arabic": "Arabic keyboard",
@@ -2341,6 +2375,16 @@
     "school-roster-export-failed": {
       "title": "The file was not saved."
     },
+    "school-device-authorized": {
+      "title": "The device is connected."
+    },
+    "school-device-denied": {
+      "title": "The device was turned away."
+    },
+    "school-refusal-device-unknown": {
+      "title": "No device has this code.",
+      "description": "Check the code on the device."
+    },
     "audit-export-error": {
       "title": "We could not export the trail.",
       "description": "Check your connection, then try again."
@@ -2590,7 +2634,14 @@
     "pro-feature-2": "{credits, number} credits every month to ask Nina",
     "pro-feature-3": "Full worked solutions for every practice test, including earlier attempts",
     "pro-feature-5": "Priority help when you need guidance",
-    "pro-cta": "Get Pro"
+    "pro-cta": "Get Pro",
+    "offer-title": "Choose how to pay",
+    "offer-description": "The monthly plan renews by itself, and a pass is paid once.",
+    "offer-monthly": "Monthly",
+    "offer-monthly-method": "Renews monthly by e-wallet or card.",
+    "offer-pass": "{months, number}-month pass",
+    "offer-pass-method": "Paid once by QRIS, transfer or e-wallet.",
+    "offer-continue": "Continue"
   },
   "PricingPage": {
     "metadata-title": "Nakafa Pricing: Free and Pro",

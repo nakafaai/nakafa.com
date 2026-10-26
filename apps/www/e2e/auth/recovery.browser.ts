@@ -21,7 +21,6 @@ const CONVEX_AUTH_READ = "**/api/auth/convex/token*";
 /** The words of every state that says a read failed, was refused, or found nothing. */
 const ERROR_STATES = [
   en.Common["load-error"],
-  en.School["refused-title"],
   standalone.Error.title,
   standalone.NotFound.title,
 ];
