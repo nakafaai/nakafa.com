@@ -1,10 +1,10 @@
 import { Array as Arr, Option, Schema } from "effect";
 
 /** The scripts that name the options of a set: Arabic letters for an Arabic set, Latin ones for any other. */
-export const LetterScript = Schema.Literals(["arabic", "latin"]);
+const LetterScript = Schema.Literals(["arabic", "latin"]);
 
 /** The script that names the options of a set. */
-export type LetterScript = typeof LetterScript.Type;
+type LetterScript = typeof LetterScript.Type;
 
 /** The character code of the letter A, which names the first option of a Latin set. */
 const LETTER_A = 65;
