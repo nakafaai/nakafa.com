@@ -759,7 +759,8 @@
       "integration": {
         "created": "Klien dibuat",
         "rotated": "Rahasia diganti",
-        "revoked": "Klien dicabut"
+        "revoked": "Klien dicabut",
+        "authorized": "Perangkat terhubung"
       },
       "invite": {
         "expired": "Undangan kedaluwarsa",
@@ -983,7 +984,12 @@
     "cohorts-no-period-action": "Buka periode",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
     "policy-domains-invalid": "Periksa domain ini, satu di setiap baris: {domains}.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
+    "device-title": "Hubungkan perangkat",
+    "device-description": "Ketik kode dari Nakafa CLI agar perangkat itu membaca sekolah sebagai {name}.",
+    "device-code": "Kode perangkat",
+    "device-authorize": "Hubungkan",
+    "device-deny": "Tolak perangkat"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -2368,6 +2374,16 @@
     },
     "school-roster-export-failed": {
       "title": "File tidak tersimpan."
+    },
+    "school-device-authorized": {
+      "title": "Perangkat sudah terhubung."
+    },
+    "school-device-denied": {
+      "title": "Perangkat ditolak."
+    },
+    "school-refusal-device-unknown": {
+      "title": "Kode perangkat tidak dikenal.",
+      "description": "Periksa kode di perangkat."
     },
     "audit-export-error": {
       "title": "Jejak audit gagal diekspor.",
