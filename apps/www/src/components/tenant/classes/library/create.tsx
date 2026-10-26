@@ -127,12 +127,14 @@ export function AddToLibrary() {
       link: Schema.is(LinkAddress)(link),
     }[mode];
 
-  /** Clears what the dialog holds, after its item was sent. */
+  /** Clears what the dialog holds after its item was sent, so it opens again on a device file. */
   const reset = () => {
+    setMode("file");
     setTitle("");
     setAddress("");
     setFile(null);
     setDrive(Option.none());
+    setDriveMissing(false);
   };
 
   /** Names the item after a chosen file when no title was written yet. */
