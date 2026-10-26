@@ -759,7 +759,8 @@
       "integration": {
         "created": "Client created",
         "rotated": "Secret rotated",
-        "revoked": "Client revoked"
+        "revoked": "Client revoked",
+        "authorized": "Device connected"
       },
       "invite": {
         "expired": "Invite expired",
@@ -983,7 +984,12 @@
     "cohorts-no-period-action": "Open periods",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
     "policy-domains-invalid": "Check these domains, one on each line: {domains}.",
-    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
+    "policy-domains-limit": "Use up to {limit} different domains, each on its own line.",
+    "device-title": "Connect a device",
+    "device-description": "Type the code the Nakafa CLI shows to let it read the school as {name}.",
+    "device-code": "Device code",
+    "device-authorize": "Connect",
+    "device-deny": "Deny device"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -2368,6 +2374,16 @@
     },
     "school-roster-export-failed": {
       "title": "The file was not saved."
+    },
+    "school-device-authorized": {
+      "title": "The device is connected."
+    },
+    "school-device-denied": {
+      "title": "The device was turned away."
+    },
+    "school-refusal-device-unknown": {
+      "title": "No device has this code.",
+      "description": "Check the code on the device."
     },
     "audit-export-error": {
       "title": "We could not export the trail.",

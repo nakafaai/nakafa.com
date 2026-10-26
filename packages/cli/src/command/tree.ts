@@ -19,6 +19,9 @@ type ExecuteRequest<E, R> = (request: CliRequest) => Effect.Effect<void, E, R>;
 
 const FLAG_NAME = {
   apiBase: "api-base",
+  cursor: "cursor",
+  period: "period",
+  status: "status",
   fromVerse: "from-verse",
   limit: "limit",
   locale: "locale",
@@ -30,6 +33,9 @@ const FLAG_NAME = {
 } as const;
 
 const LocaleInputSchema = Schema.String.pipe(Schema.decodeTo(LocaleSchema));
+const PersonStatusInputSchema = Schema.String.pipe(
+  Schema.decodeTo(Schema.Literals(["active", "suspended", "removed"]))
+);
 const SectionInputSchema = Schema.String.pipe(
   Schema.decodeTo(NakafaAgentSectionSchema)
 );
@@ -179,7 +185,88 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
     dispatch({ kind: "mcp" })
   ).pipe(Command.withDescription("Print the public MCP connection metadata"));
 
+  const cursor = Flag.String(FLAG_NAME.cursor).pipe(
+    optionalOnce,
+    Flag.withDescription("The next cursor of the previous page")
+  );
+  const period = Flag.String(FLAG_NAME.period).pipe(
+    Flag.withDescription("The ID of the period, from `nakafa school periods`")
+  );
+
+  const login = Command.make(
+    "login",
+    {
+      host: Argument.String("school-host").pipe(
+        Argument.withDescription(
+          "The school's host, such as harapan.nakafa.com"
+        )
+      ),
+    },
+    ({ host }) => dispatch({ host, kind: "school-login" })
+  ).pipe(
+    Command.withDescription(
+      "Sign in to a school: its Admin connects this device to one integration client"
+    )
+  );
+  const logout = Command.make("logout", {}, () =>
+    dispatch({ kind: "school-logout" })
+  ).pipe(Command.withDescription("Remove the stored school sign-in"));
+  const periods = Command.make("periods", {}, () =>
+    dispatch({ kind: "school-read", read: { read: "periods" } })
+  ).pipe(Command.withDescription("List the periods of the school"));
+  const cohorts = Command.make("cohorts", { cursor, period }, (options) =>
+    dispatch({
+      kind: "school-read",
+      read: {
+        cursor: Option.getOrUndefined(options.cursor),
+        period: options.period,
+        read: "cohorts",
+      },
+    })
+  ).pipe(Command.withDescription("List the class groups of one period"));
+  const placements = Command.make("placements", { cursor, period }, (options) =>
+    dispatch({
+      kind: "school-read",
+      read: {
+        cursor: Option.getOrUndefined(options.cursor),
+        period: options.period,
+        read: "placements",
+      },
+    })
+  ).pipe(Command.withDescription("List which student is in which class group"));
+  const people = Command.make(
+    "people",
+    {
+      cursor,
+      status: Flag.String(FLAG_NAME.status).pipe(
+        Flag.withSchema(PersonStatusInputSchema),
+        optionalOnce,
+        Flag.withDescription("active, suspended, or removed")
+      ),
+    },
+    (options) =>
+      dispatch({
+        kind: "school-read",
+        read: {
+          cursor: Option.getOrUndefined(options.cursor),
+          read: "people",
+          status: Option.getOrUndefined(options.status),
+        },
+      })
+  ).pipe(Command.withDescription("List the people of the school"));
+  const school = Command.make(COMMAND_NAME.school).pipe(
+    Command.withDescription("Read a school's roster as its integration client"),
+    Command.withSubcommands([
+      login,
+      logout,
+      periods,
+      cohorts,
+      people,
+      placements,
+    ])
+  );
+
   return root.pipe(
-    Command.withSubcommands([search, get, taxonomy, quran, mcp])
+    Command.withSubcommands([search, get, taxonomy, quran, mcp, school])
   );
 }

@@ -5993,6 +5993,20 @@ export declare const api: {
         { id: Id<"integrationClients">; secret: string }
       >;
     };
+    devices: {
+      authorize: FunctionReference<
+        "mutation",
+        "public",
+        { clientId: Id<"integrationClients">; slug: string; userCode: string },
+        {}
+      >;
+      deny: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string; userCode: string },
+        {}
+      >;
+    };
   };
   journal: {
     audit: {
@@ -6112,6 +6126,10 @@ export declare const api: {
               | {
                   client: Id<"integrationClients">;
                   type: "integration.revoked";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.authorized";
                 }
               | { type: "period.created" }
               | { type: "period.opened" }
@@ -14605,6 +14623,30 @@ export declare const internal: {
     };
   };
   integrations: {
+    devices: {
+      poll: FunctionReference<
+        "mutation",
+        "internal",
+        { deviceCode: string },
+        | { expiresIn: number; outcome: "issued"; token: string }
+        | { outcome: "pending" | "slow_down" | "denied" | "expired" }
+      >;
+      start: FunctionReference<
+        "mutation",
+        "internal",
+        { slug: string },
+        | {
+            deviceCode: string;
+            expiresIn: number;
+            interval: number;
+            outcome: "started";
+            userCode: string;
+            verificationUri: string;
+          }
+        | { outcome: "unknown" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
     reads: {
       cohorts: FunctionReference<
         "query",
