@@ -1,5 +1,10 @@
 import { PaginatedQueryResult, useMutation } from "@confect/react";
-import { Image01Icon, Link04Icon, Pdf02Icon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  Image01Icon,
+  Link04Icon,
+  Pdf02Icon,
+} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -190,6 +195,7 @@ function ItemRow({ item, teacher }: { item: LibraryItem; teacher: boolean }) {
             action={t("library-remove")}
             confirm={t("library-remove")}
             description={t("library-remove-description")}
+            icon={Delete02Icon}
             onConfirm={() =>
               runForumCall(
                 forumCall(() =>
