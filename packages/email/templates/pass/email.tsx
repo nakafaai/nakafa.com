@@ -54,7 +54,6 @@ export const renderPassEndingEmail = Effect.fn("email.passEnding.render")(
       )
     );
     const copy = getPassEndingEmailCopy(props.locale, props.endsOn);
-    const email = <PassEndingEmail {...props} />;
     const renderFailure = () =>
       new PassEndingEmailRenderError({
         code: "PASS_ENDING_EMAIL_RENDER_FAILED",
@@ -64,11 +63,12 @@ export const renderPassEndingEmail = Effect.fn("email.passEnding.render")(
       [
         Effect.tryPromise({
           catch: renderFailure,
-          try: () => render(email),
+          try: () => render(<PassEndingEmail {...props} />),
         }),
         Effect.tryPromise({
           catch: renderFailure,
-          try: () => render(email, { plainText: true }),
+          try: () =>
+            render(<PassEndingEmail {...props} />, { plainText: true }),
         }),
       ],
       { concurrency: "unbounded" }
