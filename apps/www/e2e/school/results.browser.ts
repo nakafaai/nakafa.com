@@ -95,11 +95,6 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await expect(students.getByRole("row", { name: LEARNER_NAME })).toContainText(
     "1 / 2"
   );
-  // A student's name opens the student's answers in the pane beside the list.
-  await students.getByRole("button", { name: LEARNER_NAME }).click();
-  await expect(
-    proctor.getByRole("complementary", { name: "Answers" })
-  ).toContainText("Question 1");
   await header.getByRole("button", { name: "Questions" }).click();
   await expect(
     proctor.getByRole("dialog", { name: "Questions" }).getByRole("button", {

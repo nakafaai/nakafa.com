@@ -1,6 +1,5 @@
 import registeredFunctions from "../../../confect/_generated/registeredFunctions/exams/results/results";
 
-export const attempt = registeredFunctions.attempt;
 export const byQuestion = registeredFunctions.byQuestion;
 export const byStudent = registeredFunctions.byStudent;
 export const mine = registeredFunctions.mine;

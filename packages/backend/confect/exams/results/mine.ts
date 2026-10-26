@@ -1,11 +1,13 @@
 import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
-import { answersOf } from "@repo/backend/confect/exams/results/answers";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { attemptResults } from "@repo/backend/confect/exams/results/rows";
+import { questionSummary } from "@repo/backend/confect/exams/results/summary";
 import {
   attemptOf,
   sittingOf,
 } from "@repo/backend/confect/exams/sittings/attempt";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Number as Num, Option } from "effect";
 
 /**
  * The student's own result in one sitting, once the teacher releases it: the points that the attempt
@@ -26,5 +28,30 @@ export const mine = Effect.fn("exams.results.mine")(function* (args: {
   ) {
     return null;
   }
-  return yield* answersOf(sitting, member.person._id);
+  const exam = yield* (yield* DatabaseReader)
+    .table("exams")
+    .get(sitting.examId)
+    .pipe(Effect.orDie);
+  const rows = yield* attemptResults(sitting._id, member.person._id);
+  const questions = yield* Effect.forEach(
+    exam.questions,
+    (questionId, index) =>
+      Effect.map(questionSummary(questionId, index + 1), (summary) =>
+        Arr.map(
+          Arr.filter(rows, (row) => row.question === questionId),
+          (row) => ({
+            number: index + 1,
+            optionIds: summary.optionIds,
+            points: summary.points,
+            response: row.response,
+            verdict: row.verdict,
+          })
+        )
+      ),
+    { concurrency: "unbounded" }
+  );
+  return {
+    points: Num.sumAll(Arr.map(rows, (row) => row.points)),
+    questions: Arr.flatten(questions),
+  };
 });

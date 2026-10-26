@@ -83,18 +83,6 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicQuery({
-      name: "attempt",
-      args: () => ({
-        attemptId: Id("examAttempts"),
-        sittingId: Id("examSittings"),
-        slug: TenantSlug,
-      }),
-      returns: () => StudentResult,
-      error: () => AccessDenied,
-    }).middleware(ResultAccess, { action: "result.view", arg: "sittingId" })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
       name: "mine",
       args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
       returns: () => Schema.NullOr(StudentResult),

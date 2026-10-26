@@ -4714,25 +4714,6 @@ export declare const api: {
     };
     results: {
       results: {
-        attempt: FunctionReference<
-          "query",
-          "public",
-          {
-            attemptId: Id<"examAttempts">;
-            sittingId: Id<"examSittings">;
-            slug: string;
-          },
-          {
-            points: number;
-            questions: Array<{
-              number: number;
-              optionIds: Array<string>;
-              points: number;
-              response: Array<string>;
-              verdict: "correct" | "incorrect" | "pending";
-            }>;
-          }
-        >;
         byQuestion: FunctionReference<
           "query",
           "public",

@@ -21,7 +21,6 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
-import { useResultsChoice } from "@/components/exams/results/choice";
 import {
   useResultsPaper,
   useResultsScope,
@@ -65,24 +64,12 @@ export type StatusFilter = typeof StatusFilter.Type;
 /** One student's row: the name, the state, and the scores of a submitted attempt, with the time it was submitted. */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
-  const chosen = useResultsChoice(
-    (state) => state.chosen?.attemptId === row.attemptId
-  );
-  const choose = useResultsChoice((state) => state.choose);
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
 
   return (
-    <TableRow aria-selected={chosen}>
-      <TableCell>
-        <button
-          className="font-medium underline-offset-4 outline-none hover:underline focus-visible:underline"
-          onClick={() => choose(row)}
-          type="button"
-        >
-          {row.name}
-        </button>
-      </TableCell>
+    <TableRow>
+      <TableCell>{row.name}</TableCell>
       <TableCell>{t(stateKeys[row.state])}</TableCell>
       <TableCell className="tabular-nums">
         {row.points === null ? "" : `${row.points} / ${total}`}
