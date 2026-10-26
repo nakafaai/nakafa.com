@@ -76,16 +76,19 @@ export const XenditSessionRequest = Schema.Struct({
 }).check(Schema.makeFilter(amountFitsSessionType));
 export type XenditSessionRequest = typeof XenditSessionRequest.Type;
 
-/** The fields of the 201 answer that the checkout and the billing row need. */
+/**
+ * The fields of the 201 answer that the checkout and the billing row need.
+ * Xendit leaves a nullable field out of the answer while it holds nothing (a
+ * pay session has no plan, and no session has a payment before it is paid),
+ * so each of those may be missing as well as null.
+ */
 export const XenditSessionResponse = Schema.Struct({
   payment_session_id: Schema.String,
   reference_id: Schema.String,
   session_type: XenditSessionType,
   status: XenditSessionStatus,
-  payment_link_url: Schema.NullOr(Schema.String),
-  recurring_plan_id: Schema.NullOr(Schema.String),
-  payment_id: Schema.NullOr(Schema.String),
-  payment_token_id: Schema.NullOr(Schema.String),
+  payment_link_url: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  recurring_plan_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
   expires_at: Schema.DateTimeUtcFromString,
 });
 export type XenditSessionResponse = typeof XenditSessionResponse.Type;
