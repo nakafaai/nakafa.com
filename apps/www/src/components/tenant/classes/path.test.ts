@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { classPath } from "@/components/tenant/classes/path";
 
 const slug = Schema.decodeSync(TenantSlug)("harapan");
@@ -33,9 +33,9 @@ describe("class page path", () => {
     expect(
       Array.from(classPath(view, root, none, none), (item) => item.label)
     ).toEqual(["Fisika X-1", "Forum"]);
-    expect(classPath(view, root, channel, none).at(-1)).toEqual({
-      label: "Umum",
-    });
+    expect(Arr.last(classPath(view, root, channel, none))).toEqual(
+      Option.some({ label: "Umum" })
+    );
   });
 
   it("ends a discussion with its title after a link to its channel", () => {

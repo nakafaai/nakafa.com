@@ -7,7 +7,7 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAddress } from "@repo/backend/confect/classroom/class";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { isNotFound } from "@tanstack/react-router";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   classDiscussionHandler,
   classForumHandler,
@@ -118,13 +118,20 @@ describe("class first screen", () => {
 describe("discussion first screen", () => {
   it("reads the class, its channels, and the discussion of the class by its number", async () => {
     const classId = Schema.decodeUnknownSync(Id("classes"))("class-1");
-    const answers = new Map<unknown, unknown>([
+    const answers = [
       [classroom.classes.resolve, { id: classId, name: "Fisika X-1" }],
       [classroom.forum.channels.list, { isDone: true, page: [] }],
       [classroom.forum.threads.get, { discussion: { number: 12 } }],
-    ]);
+    ] as const;
     mocks.preloadConfectQuery.mockImplementation((ref) =>
-      Effect.succeed(answers.get(ref))
+      Effect.succeed(
+        Option.getOrUndefined(
+          Option.map(
+            Arr.findFirst(answers, ([key]) => key === ref),
+            ([, answer]) => answer
+          )
+        )
+      )
     );
 
     const screen = await classDiscussionHandler({

@@ -618,7 +618,10 @@
         "declined": "Visit declined",
         "ended": "Visit ended"
       },
-      "unknown": "Another change"
+      "unknown": "Another change",
+      "announcement": {
+        "posted": "Announcement posted"
+      }
     },
     "role-description": {
       "owner": "Can do everything in this school.",

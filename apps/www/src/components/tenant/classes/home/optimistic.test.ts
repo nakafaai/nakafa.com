@@ -38,13 +38,11 @@ const listArgs = (forClass: typeof classId, cursor: string | null) => ({
 
 /** A store that holds the given pages, and records what is written. */
 const storeOf = (pages: unknown[]) => {
+  const getAllQueries = vi.fn();
+  getAllQueries.mockReturnValue(pages);
   const setQuery = vi.fn();
   return {
-    localStore: {
-      getAllQueries: vi.fn(() => pages),
-      getQuery: vi.fn(),
-      setQuery,
-    },
+    localStore: { getAllQueries, getQuery: vi.fn(), setQuery },
     setQuery,
   };
 };

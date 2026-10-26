@@ -1,4 +1,4 @@
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Order } from "effect";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 
 /** Whether a message is only on the page while the server saves it: its ID is still its client key. */
@@ -42,6 +42,11 @@ export const newestSeen = (
     {
       onEmpty: () => Option.none(),
       onNonEmpty: (seen) =>
-        Option.some(Arr.max(Arr.map(seen, (message) => message.createdAt))),
+        Option.some(
+          Arr.max(
+            Arr.map(seen, (message) => message.createdAt),
+            Order.Number
+          )
+        ),
     }
   );

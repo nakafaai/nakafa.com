@@ -14,7 +14,7 @@ import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** How many announcements the home reads each time the end of its list comes into view. */
-export const POST_PAGE_SIZE = 20;
+const POST_PAGE_SIZE = 20;
 
 /**
  * The home of a class: its announcements, newest first (ADR 0025). The next page loads when the

@@ -421,12 +421,14 @@ export declare const api: {
             | "forum.manage"
             | "forum.post"
             | "forum.read"
+            | "post.publish"
             | "grade.enter"
             | "grade.list"
           >;
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
           name: string;
+          opens: boolean;
           periodId: Id<"tenantPeriods">;
           slug: string;
           status: "active" | "archived";
@@ -444,6 +446,7 @@ export declare const api: {
             id: Id<"classroomChannels">;
             kind: "general" | "topic";
             name: string;
+            unread: boolean;
           }
         >;
         list: FunctionReference<
@@ -468,6 +471,7 @@ export declare const api: {
               id: Id<"classroomChannels">;
               kind: "general" | "topic";
               name: string;
+              unread: boolean;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
@@ -488,6 +492,13 @@ export declare const api: {
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
             mine: boolean;
@@ -506,6 +517,13 @@ export declare const api: {
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
             mine: boolean;
@@ -535,6 +553,13 @@ export declare const api: {
               author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
               editedAt: number | null;
               id: Id<"classroomMessages">;
               mine: boolean;
@@ -558,6 +583,13 @@ export declare const api: {
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
             mine: boolean;
@@ -565,6 +597,253 @@ export declare const api: {
           }
         >;
       };
+      reads: {
+        get: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            place:
+              | { _tag: "channel"; channelId: Id<"classroomChannels"> }
+              | { _tag: "discussion"; number: number };
+            slug: string;
+          },
+          { at: number | null }
+        >;
+        mark: FunctionReference<
+          "mutation",
+          "public",
+          {
+            at: number;
+            classId: Id<"classes">;
+            place:
+              | { _tag: "channel"; channelId: Id<"classroomChannels"> }
+              | { _tag: "discussion"; number: number };
+            slug: string;
+          },
+          { at: number | null }
+        >;
+      };
+      threads: {
+        get: FunctionReference<
+          "query",
+          "public",
+          { classId: Id<"classes">; number: number; slug: string },
+          {
+            channelId: Id<"classroomChannels">;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            };
+            id: Id<"classroomThreads">;
+            opening: {
+              author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
+              createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mine: boolean;
+              text: string | null;
+            };
+          }
+        >;
+        open: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            clientKey: string;
+            slug: string;
+            text: string;
+            title: string;
+          },
+          {
+            channelId: Id<"classroomChannels">;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            };
+            id: Id<"classroomThreads">;
+            opening: {
+              author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
+              createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mine: boolean;
+              text: string | null;
+            };
+          }
+        >;
+        replies: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            number: number;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
+              createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mine: boolean;
+              text: string | null;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        reply: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            clientKey: string;
+            number: number;
+            slug: string;
+            text: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
+            createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mine: boolean;
+            text: string | null;
+          }
+        >;
+      };
+    };
+    posts: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          postId: Id<"classroomPosts">;
+          slug: string;
+          text: string;
+        },
+        {
+          author: { id: Id<"tenantPeople">; name: string };
+          clientKey: string;
+          createdAt: number;
+          editedAt: number | null;
+          email: boolean;
+          id: Id<"classroomPosts">;
+          mine: boolean;
+          text: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
+            createdAt: number;
+            editedAt: number | null;
+            email: boolean;
+            id: Id<"classroomPosts">;
+            mine: boolean;
+            text: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      publish: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          email: boolean;
+          slug: string;
+          text: string;
+        },
+        {
+          author: { id: Id<"tenantPeople">; name: string };
+          clientKey: string;
+          createdAt: number;
+          editedAt: number | null;
+          email: boolean;
+          id: Id<"classroomPosts">;
+          mine: boolean;
+          text: string;
+        }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
+        null
+      >;
     };
     teachers: {
       assign: FunctionReference<
@@ -5557,6 +5836,7 @@ export declare const api: {
             | "forum.manage"
             | "forum.post"
             | "forum.read"
+            | "post.publish"
             | "grade.release"
             | "grade.view"
             | "visit.end"
@@ -5651,6 +5931,7 @@ export declare const api: {
               | "forum.manage"
               | "forum.post"
               | "forum.read"
+              | "post.publish"
               | "grade.release"
               | "grade.view"
               | "visit.end"
@@ -5756,6 +6037,7 @@ export declare const api: {
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }
+              | { post: Id<"classroomPosts">; type: "announcement.posted" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
@@ -11552,6 +11834,20 @@ export declare const internal: {
     };
   };
   classroom: {
+    forum: {
+      seed: {
+        history: FunctionReference<
+          "mutation",
+          "internal",
+          { classSlug: string; count: number; read: number; slug: string },
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            messages: Array<Id<"classroomMessages">>;
+          }
+        >;
+      };
+    };
     seed: {
       teacher: FunctionReference<
         "mutation",

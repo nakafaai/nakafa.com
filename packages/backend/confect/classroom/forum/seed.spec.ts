@@ -8,7 +8,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /** The most messages one history seed writes, in one transaction. */
-export const SEED_HISTORY_LIMIT = 200;
+const SEED_HISTORY_LIMIT = 200;
 
 /**
  * Seeds the history of a class's general channel for an acceptance run: `count`

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Exit, Option, Result, Schema } from "effect";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
@@ -98,12 +99,19 @@ describe("sendMessage", () => {
 /** Runs the optimistic update a mutation was given against a store that answers `queries`, and returns what it wrote. */
 const applyUpdate = (
   update: unknown,
+  ref: unknown,
   queries: readonly unknown[],
   updateArgs: unknown
 ) => {
   const setQuery = vi.fn();
   if (typeof update === "function") {
-    update({ getAllQueries: () => queries, setQuery }, updateArgs);
+    update(
+      {
+        getAllQueries: (asked: unknown) => (asked === ref ? queries : []),
+        setQuery,
+      },
+      updateArgs
+    );
   }
   return setQuery;
 };
@@ -126,6 +134,7 @@ describe("sendReply and openDiscussion", () => {
         expect(yield* sendReply(reply, author, replyArgs)).toEqual(stored);
         const replied = applyUpdate(
           reply.mock.calls[0]?.[0],
+          classroom.forum.threads.replies,
           [
             {
               args: { number: 3, paginationOpts: { cursor: null } },
@@ -148,6 +157,7 @@ describe("sendReply and openDiscussion", () => {
         expect(yield* openDiscussion(open, author, openArgs)).toBe("opened");
         const opened = applyUpdate(
           open.mock.calls[0]?.[0],
+          classroom.forum.messages.page,
           [
             {
               args: { channelId, paginationOpts: { cursor: null } },

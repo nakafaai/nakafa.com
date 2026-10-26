@@ -618,7 +618,10 @@
         "declined": "Kunjungan ditolak",
         "ended": "Kunjungan selesai"
       },
-      "unknown": "Perubahan lain"
+      "unknown": "Perubahan lain",
+      "announcement": {
+        "posted": "Pengumuman dikirim"
+      }
     },
     "role-description": {
       "owner": "Dapat melakukan semua hal di sekolah ini.",
