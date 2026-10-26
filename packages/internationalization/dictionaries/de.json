@@ -110,6 +110,8 @@
     "screen-title": "Bildschirm der Person",
     "screen-none": "Die Person hat noch keine Frage geöffnet.",
     "results-away": "Prüfung verlassen",
+    "results-student-answers": "Antworten der Person",
+    "results-not-submitted": "Die Person hat die Prüfung noch nicht abgegeben.",
     "results-away-seconds": "{count, plural, one {Einmal} other {# Mal}} für {seconds} s",
     "results-away-minutes": "{count, plural, one {Einmal} other {# Mal}} für {minutes} min {seconds} s",
     "signal-away-seconds": "Hat die Prüfung {seconds} s verlassen",

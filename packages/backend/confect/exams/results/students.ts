@@ -4,7 +4,9 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
+import { attemptAnswers } from "@repo/backend/confect/exams/results/mine";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
+import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
 import type { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Struct } from "effect";
@@ -100,3 +102,27 @@ export const byStudent = Effect.fn("exams.results.students")(function* (args: {
   });
   return Struct.assign(page, { page: rows });
 });
+
+/**
+ * One student's scored answers for a viewer of the sitting's results, as the panel beside the students'
+ * list shows them (two panes): the student's name, the points the attempt earned, and each question with
+ * its answer, its points, and its verdict. An attempt that is not submitted has no scored answers yet, so
+ * it reads `null`. The attempt must belong to the sitting.
+ */
+export const attemptResult = Effect.fn("exams.results.students.attempt")(
+  function* (args: { attemptId: ExamAttemptsDoc["_id"] }) {
+    const sitting = yield* ResultSitting;
+    const attempt = yield* attemptIn(sitting, args.attemptId, "result.view");
+    if (attempt.state !== "submitted") {
+      return null;
+    }
+    const person = yield* (yield* DatabaseReader)
+      .table("tenantPeople")
+      .get(attempt.person)
+      .pipe(Effect.orDie);
+    return {
+      name: person.name,
+      ...(yield* attemptAnswers(sitting, attempt.person)),
+    };
+  }
+);

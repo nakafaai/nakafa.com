@@ -3,6 +3,7 @@ import { PaginatedQueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -21,6 +22,7 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { TableSearch, TableToggle } from "@/components/exams/results/filter";
+import { useResultsSelection } from "@/components/exams/results/selection";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
@@ -83,15 +85,30 @@ function AwayCell({
   });
 }
 
-/** One student's row: the name, the state, and the scores of a submitted attempt, with the time it was submitted. */
+/**
+ * One student's row: the name, which opens the student's answers beside the list, the state, and the
+ * scores of a submitted attempt, with the time it was submitted.
+ */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
+  const chosen = useResultsSelection((state) => state.selected === row.attemptId);
+  const choose = useResultsSelection((state) => state.choose);
 
   return (
-    <TableRow>
-      <TableCell>{row.name}</TableCell>
+    <TableRow data-state={chosen ? "selected" : undefined}>
+      <TableCell>
+        <Button
+          aria-pressed={chosen}
+          className="h-auto px-0"
+          onClick={() => choose(chosen ? null : row.attemptId)}
+          type="button"
+          variant="link"
+        >
+          {row.name}
+        </Button>
+      </TableCell>
       <TableCell>{t(stateKeys[row.state])}</TableCell>
       <TableCell className="tabular-nums">
         {row.points === null ? "" : `${row.points} / ${total}`}

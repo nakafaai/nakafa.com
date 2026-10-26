@@ -322,6 +322,8 @@ describe("exams/results", () => {
           points: 0,
           questions: [
             {
+              earned: 0,
+              id: questionId,
               number: 1,
               optionIds: ["option-1", "option-2", "option-3", "option-4"],
               points: 1,

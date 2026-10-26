@@ -10,7 +10,9 @@ import {
   ResultsScopeContext,
   useSessionSettled,
 } from "@/components/exams/results/context";
+import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import { QuestionResults } from "@/components/exams/results/questions";
+import { ResultsSelectionProvider } from "@/components/exams/results/selection";
 import { ReleaseCard } from "@/components/exams/results/release";
 import { StudentsTable } from "@/components/exams/results/students";
 import { useTenant } from "@/components/tenant/context";
@@ -129,13 +131,18 @@ function SittingResultsContent({
         room={sitting.room}
         sittingId={scope.sittingId}
       />
-      <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
-        <ReleaseCard canRelease={canRelease} releasedAt={releasedAt} />
-        <ResultsPaperContext value={paper}>
-          <StudentsTable first={preload?.students} />
-          <QuestionResults questions={questions} />
-        </ResultsPaperContext>
-      </div>
+      <ResultsPaperContext value={paper}>
+        <ResultsSelectionProvider>
+          <div className="flex min-h-0 min-w-0 flex-1">
+            <div className="grid min-w-0 flex-1 content-start gap-4 p-4 md:p-6">
+              <ReleaseCard canRelease={canRelease} releasedAt={releasedAt} />
+              <StudentsTable first={preload?.students} />
+              <QuestionResults questions={questions} />
+            </div>
+            <StudentAnswersPanel />
+          </div>
+        </ResultsSelectionProvider>
+      </ResultsPaperContext>
     </ResultsScopeContext>
   );
 }

@@ -110,6 +110,8 @@
     "screen-title": "Layar siswa",
     "screen-none": "Siswa belum membuka soal.",
     "results-away": "Keluar ujian",
+    "results-student-answers": "Jawaban siswa",
+    "results-not-submitted": "Siswa belum mengumpulkan ujian.",
     "results-away-seconds": "{count} kali selama {seconds} detik",
     "results-away-minutes": "{count} kali selama {minutes} menit {seconds} detik",
     "signal-away-seconds": "Keluar dari ujian selama {seconds} detik",

@@ -3,16 +3,19 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
+  CLOSES_AT,
   deviceOf,
   enterOk,
+  keyedExam,
   OPENS_AT,
   openedSitting,
+  scheduleSitting,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 const results = refs.public.exams.results.results;
-const { finish, signal } = refs.public.exams.sittings;
+const { answer, finish, paper, signal } = refs.public.exams.sittings;
 
 /** The device that the test student enters the sitting with. */
 const DEVICE = deviceOf(1);
@@ -95,6 +98,66 @@ describe("exams/results students", () => {
         expect((yield* read()).page).toMatchObject([
           { awaySeconds: 0, exits: 0, state: "submitted" },
         ]);
+      })
+  );
+
+  it.effect(
+    "shows a viewer of the results one submitted student's answers with their points, nothing before the submit, and refuses another sitting's attempt",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterOk(fixture, {
+          deviceId: DEVICE,
+          sittingId: made.id,
+          token: made.token,
+        });
+        const read = (sittingId: typeof made.id) =>
+          fixture.as("teacher").query(results.attempt, {
+            attemptId: entered.attempt,
+            sittingId,
+            slug: nf,
+          });
+        expect(yield* read(made.id)).toBeNull();
+        const { questions } = yield* fixture.as("student").query(paper, {
+          deviceId: DEVICE,
+          sittingId: made.id,
+          slug: nf,
+        });
+        yield* fixture.as("student").mutation(answer, {
+          deviceId: DEVICE,
+          questionId: questions[0].id,
+          response: ["option-1"],
+          sittingId: made.id,
+          slug: nf,
+          version: 1,
+        });
+        yield* fixture.as("student").mutation(finish, {
+          deviceId: DEVICE,
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(yield* read(made.id)).toMatchObject({
+          name: "Student",
+          points: 1,
+          questions: [
+            {
+              earned: 1,
+              id: questions[0].id,
+              number: 1,
+              response: ["option-1"],
+              verdict: "correct",
+            },
+          ],
+        });
+        const other = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId: yield* keyedExam(fixture, "Lain"),
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT + 60_000,
+        });
+        const refused = yield* read(other.id).pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "AccessDenied" });
       })
   );
 });

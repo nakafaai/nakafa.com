@@ -9,7 +9,7 @@ import { Function as Fn, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useResultsScope } from "@/components/exams/results/context";
-import { gradedPage } from "@/components/exams/results/graded";
+import { gradedAttempt, gradedPage } from "@/components/exams/results/graded";
 import {
   runExamAction,
   sentAction,
@@ -25,13 +25,33 @@ export function GradeField({
   answer,
   question,
 }: {
-  readonly answer: typeof AnswerRow.Type;
-  readonly question: typeof QuestionSummary.Type;
+  readonly answer: Pick<typeof AnswerRow.Type, "attemptId" | "name" | "points">;
+  readonly question: Pick<typeof QuestionSummary.Type, "id" | "points">;
 }) {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
   const grade = useMutation(exams.results.results.grade).withOptimisticUpdate(
     (localStore, args) => {
+      for (const query of localStore.getAllQueries(
+        exams.results.results.attempt
+      )) {
+        if (
+          Option.isSome(query.value) &&
+          query.value.value !== null &&
+          query.args.attemptId === args.attemptId
+        ) {
+          localStore.setQuery(
+            exams.results.results.attempt,
+            query.args,
+            Option.some(
+              gradedAttempt(query.value.value, {
+                points: args.points,
+                questionId: args.questionId,
+              })
+            )
+          );
+        }
+      }
       for (const query of localStore.getAllQueries(
         exams.results.results.byQuestion
       )) {
