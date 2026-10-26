@@ -86,20 +86,16 @@ export function MaterialBreadcrumb({ title }: { title: string }) {
 }
 
 /** The outline's link to the lesson, carrying its verified placement. */
-export function MaterialHeading({
-  description,
-  title,
-}: {
+export function MaterialHeading(heading: {
   description: string;
   title: string;
 }) {
   const { navigation, page } = useMaterialNavigation();
   return (
     <SidebarRightHeader
+      {...heading}
       context={navigation.currentContext}
-      description={description}
       publicPath={page.route.publicPath}
-      title={title}
     />
   );
 }
@@ -107,5 +103,5 @@ export function MaterialHeading({
 /** The lesson's previous and next pages, carrying its verified placement. */
 export function MaterialPagination() {
   const { navigation } = useMaterialNavigation();
-  return <PaginationContent pagination={navigation.pagination} prefetchNext />;
+  return <PaginationContent pagination={navigation.pagination} />;
 }

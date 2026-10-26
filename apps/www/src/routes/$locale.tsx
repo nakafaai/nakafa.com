@@ -24,7 +24,7 @@ import { Option } from "effect";
 import { IntlProvider, useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
-import { LocalizedError } from "@/components/state/localized";
+import { LocalizedError, useReportedError } from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStaticData } from "@/lib/static/data";
 
@@ -127,9 +127,8 @@ function ShellToaster() {
  */
 function LocaleError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
-  return (
-    <LocalizedError error={error} locale={locale} source="start-locale-error" />
-  );
+  useReportedError(error, "start-locale-error");
+  return <LocalizedError locale={locale} />;
 }
 
 /**

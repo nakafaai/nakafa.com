@@ -9,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
+import { createContext, use } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -21,6 +22,24 @@ import type {
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation";
+
+/** The country on screen, the menu's label, and its options, which both variants of the selector read. */
+const TryoutCountrySelectorContext = createContext<{
+  currentValue: string;
+  label: string;
+  options: readonly TryoutCountrySelectorOption[];
+} | null>(null);
+
+/** Reads the country selector around a variant. */
+function useTryoutCountrySelector() {
+  const value = use(TryoutCountrySelectorContext);
+  if (value === null) {
+    throw new Error(
+      "useTryoutCountrySelector must be used within TryoutCountrySelector"
+    );
+  }
+  return value;
+}
 
 /**
  * Renders the try-out country selector used by country-level pages. A learner's
@@ -37,35 +56,17 @@ export function TryoutCountrySelector({
   options: readonly TryoutCountrySelectorOption[];
 }) {
   return (
-    <ConvexIsland
-      fallback={
-        <TryoutCountrySelect
-          currentValue={currentValue}
-          disabled={false}
-          label={label}
-          options={options}
-        />
-      }
-    >
-      <SignedTryoutCountrySelector
-        currentValue={currentValue}
-        label={label}
-        options={options}
-      />
-    </ConvexIsland>
+    <TryoutCountrySelectorContext value={{ currentValue, label, options }}>
+      <ConvexIsland fallback={<TryoutCountrySelect disabled={false} />}>
+        <SignedTryoutCountrySelector />
+      </ConvexIsland>
+    </TryoutCountrySelectorContext>
   );
 }
 
 /** A learner's country selector: a changed value saves the selected country as the learner's choice. */
-function SignedTryoutCountrySelector({
-  currentValue,
-  label,
-  options,
-}: {
-  currentValue: string;
-  label: string;
-  options: readonly TryoutCountrySelectorOption[];
-}) {
+function SignedTryoutCountrySelector() {
+  const { currentValue, options } = useTryoutCountrySelector();
   const locale = useLocale();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
@@ -109,29 +110,21 @@ function SignedTryoutCountrySelector({
 
   return (
     <TryoutCountrySelect
-      currentValue={currentValue}
       disabled={isLoading}
-      label={label}
       onValueChange={handleValueChange}
-      options={options}
     />
   );
 }
 
 /** The country menu. Its options are links, and `onValueChange` only adds a learner's save. */
 function TryoutCountrySelect({
-  currentValue,
   disabled,
-  label,
   onValueChange,
-  options,
 }: {
-  currentValue: string;
   disabled: boolean;
-  label: string;
   onValueChange?: (value: string | null) => void;
-  options: readonly TryoutCountrySelectorOption[];
 }) {
+  const { currentValue, label, options } = useTryoutCountrySelector();
   const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,

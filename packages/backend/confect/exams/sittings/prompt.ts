@@ -47,24 +47,34 @@ export const prompt = Effect.fn("exams.sittings.prompt")(function* (args: {
         Effect.fail(toSittingError(refusal))
       )
     );
-  const question = live.question;
-  const reader = yield* DatabaseReader;
-  const promptDocument = yield* reader
-    .table("editorDocuments")
-    .get(question.prompt)
-    .pipe(Effect.orDie);
-  const snapshot = yield* snapshotOf(question.prompt);
-  const rows = yield* stepsThrough(
-    question.prompt,
-    snapshot.version,
-    promptDocument.head
-  );
-  if (rows.length < promptDocument.head - snapshot.version) {
-    return yield* new FoldPending();
-  }
-  const steps = yield* decodedSteps(rows);
-  const folded = yield* foldedText(question.prompt, snapshot, steps).pipe(
-    Effect.orDie
-  );
-  return { prompt: folded.content };
+  return { prompt: yield* currentPrompt(live.question.prompt) };
 });
+
+/**
+ * The text of a question's prompt as the document stands now: the editor's snapshot with every step
+ * after it applied, or `FoldPending` while the steps do not reach the head, so no reader sees text
+ * older than the last edit (ADR 0028). The student's paper and the proctor's view of a student's screen
+ * read a prompt the same way.
+ */
+export const currentPrompt = Effect.fn("exams.sittings.prompt.current")(
+  function* (documentId: ExamQuestionsDoc["prompt"]) {
+    const promptDocument = yield* (yield* DatabaseReader)
+      .table("editorDocuments")
+      .get(documentId)
+      .pipe(Effect.orDie);
+    const snapshot = yield* snapshotOf(documentId);
+    const rows = yield* stepsThrough(
+      documentId,
+      snapshot.version,
+      promptDocument.head
+    );
+    if (rows.length < promptDocument.head - snapshot.version) {
+      return yield* new FoldPending();
+    }
+    const steps = yield* decodedSteps(rows);
+    const folded = yield* foldedText(documentId, snapshot, steps).pipe(
+      Effect.orDie
+    );
+    return folded.content;
+  }
+);

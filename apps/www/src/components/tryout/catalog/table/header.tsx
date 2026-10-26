@@ -24,10 +24,8 @@ import {
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
-import type {
-  TryoutSetSort,
-  TryoutSetStatusFilter,
-} from "@/components/tryout/catalog/table/types";
+import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
+import type { TryoutSetStatusFilter } from "@/components/tryout/catalog/table/types";
 import {
   TryoutStatusIcon,
   TryoutStatusLabel,
@@ -56,39 +54,24 @@ const headings = {
   },
 } as const;
 
-interface SortControlsProps {
-  onSort: (sort: TryoutSetSort) => void;
-  sort: TryoutSetSort;
-}
-
 /** Fixed columns keep the same geometry while the server changes row order. */
-export function TryoutTableHeader({
-  filter,
-  onFilter,
-  ...props
-}: SortControlsProps & {
-  filter: TryoutSetStatusFilter;
-  onFilter: (filter: TryoutSetStatusFilter) => void;
-}) {
+export function TryoutTableHeader() {
   return (
     <TableHeader className="sticky top-0 z-10 bg-background">
       <TableRow className="hover:bg-transparent hover:text-inherit">
-        <TryoutSortHeading {...props} field="title" />
-        <TryoutStatusHeading filter={filter} onFilter={onFilter} />
-        <TryoutSortHeading {...props} field="readyQuestionCount" />
-        <TryoutSortHeading {...props} field="durationSeconds" />
-        <TryoutSortHeading {...props} field="publishedScore" />
+        <TryoutSortHeading field="title" />
+        <TryoutStatusHeading />
+        <TryoutSortHeading field="readyQuestionCount" />
+        <TryoutSortHeading field="durationSeconds" />
+        <TryoutSortHeading field="publishedScore" />
       </TableRow>
     </TableHeader>
   );
 }
 
 /** A stable menu updates only the URL sort and preserves keyboard focus. */
-function TryoutSortHeading({
-  field,
-  onSort,
-  sort,
-}: SortControlsProps & { field: keyof typeof headings }) {
+function TryoutSortHeading({ field }: { field: keyof typeof headings }) {
+  const { onSort, sort } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
   const copy = headings[field];
   const direction = sort.field === field ? sort.direction : undefined;
@@ -151,13 +134,8 @@ function TryoutSortHeading({
 }
 
 /** Keeps status filtering in the existing column header. */
-function TryoutStatusHeading({
-  filter,
-  onFilter,
-}: {
-  filter: TryoutSetStatusFilter;
-  onFilter: (filter: TryoutSetStatusFilter) => void;
-}) {
+function TryoutStatusHeading() {
+  const { filter, onFilter } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
   return (
     <TableHead className="px-2 text-center sm:px-4" scope="col">

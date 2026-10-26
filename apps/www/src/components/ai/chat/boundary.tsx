@@ -1,9 +1,10 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { ClientOnly, useLocation } from "@tanstack/react-router";
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import { lazy, Suspense } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
+import { ChatRetryContext } from "@/components/ai/chat/recovery";
 import { useAnswerRetry } from "@/lib/convex/requery";
 
 // The failure card holds the sign-in chain, which only a signed-out visitor who
@@ -50,13 +51,15 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
       fallbackRender={({ error, resetErrorBoundary }) => (
         <div className="flex size-full min-h-0 flex-1 flex-col">
           {read ? (
-            <ChatReadFailure
-              error={error}
-              read={read}
-              reset={resetErrorBoundary}
-            />
+            <ChatReadRetry read={read} reset={resetErrorBoundary}>
+              <ChatFailureCard error={error} />
+            </ChatReadRetry>
           ) : (
-            <ChatFailureCard error={error} onRetry={resetErrorBoundary} />
+            <ChatRetryContext
+              value={{ isPending: false, onRetry: resetErrorBoundary }}
+            >
+              <ChatFailureCard error={error} />
+            </ChatRetryContext>
           )}
         </div>
       )}
@@ -69,44 +72,38 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
 
 /**
  * The failure card of a failed read. An access failure shows the card with no
- * retry. Any other failure shows it with a retry, which is disabled while
- * `isPending` is true.
+ * retry. Any other failure shows it with the retry around it.
  */
-function ChatFailureCard({
-  error,
-  isPending = false,
-  onRetry,
-}: {
-  error: unknown;
-  isPending?: boolean;
-  onRetry: () => void;
-}) {
+function ChatFailureCard({ error }: { error: unknown }) {
   return (
     <Suspense fallback={null}>
       <ClientOnly fallback={null}>
-        {readChatFailureKind(error) === "access" ? (
-          <ChatFailure kind="access" />
-        ) : (
-          <ChatFailure isPending={isPending} kind="retry" onRetry={onRetry} />
-        )}
+        <ChatFailure
+          kind={readChatFailureKind(error) === "access" ? "access" : "retry"}
+        />
       </ClientOnly>
     </Suspense>
   );
 }
 
 /**
- * The failure card of a boundary that has `read`. Its retry waits for the
- * server's answer, then the surface remounts and reads the answer.
+ * The retry of a boundary that has `read`. Its retry waits for the server's
+ * answer, then the surface remounts and reads the answer; the card's retry is
+ * disabled while it waits.
  */
-function ChatReadFailure<Query extends Ref.AnyPublicQuery>({
-  error,
+function ChatReadRetry<Query extends Ref.AnyPublicQuery>({
+  children,
   read,
   reset,
 }: {
-  error: unknown;
+  children: ReactNode;
   read: ChatRead<Query>;
   reset: () => void;
 }) {
   const { retry, waiting } = useAnswerRetry(read.ref, read.args, reset);
-  return <ChatFailureCard error={error} isPending={waiting} onRetry={retry} />;
+  return (
+    <ChatRetryContext value={{ isPending: waiting, onRetry: retry }}>
+      {children}
+    </ChatRetryContext>
+  );
 }

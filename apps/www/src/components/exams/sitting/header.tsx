@@ -13,6 +13,7 @@ import {
   ChangeTokenDialog,
   CloseSittingDialog,
 } from "@/components/exams/sitting/dialogs";
+import { SittingFilterMenu } from "@/components/exams/sitting/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { Link } from "@/lib/routing/link";
@@ -64,6 +65,7 @@ export function SittingHeader({
           {value.token}
         </span>
       )}
+      <SittingFilterMenu />
       {value.sitting.state === "closed" && value.canViewResults ? (
         <Link
           className={buttonVariants({ variant: "outline" })}

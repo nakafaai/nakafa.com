@@ -7,7 +7,7 @@ import { InputGroupTextarea } from "@repo/design-system/components/ui/input-grou
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Option, Result, Schema } from "effect";
-import type { SubmitEventHandler } from "react";
+import { createContext, type SubmitEventHandler, use } from "react";
 import { useTranslations } from "use-intl";
 import { FeedAvatar, FeedForm } from "@/components/user/feed";
 import { insertDraftPost } from "@/components/user/posts/mutation";
@@ -91,11 +91,11 @@ export function PostComposer({
   };
 
   return (
-    <PostComposerFields
-      disabled={disabled}
-      onSubmit={handleSubmit}
-      profile={profile}
-    />
+    <PostComposerContext value={{ disabled, profile }}>
+      <FeedForm onSubmit={handleSubmit}>
+        <PostComposerFields />
+      </FeedForm>
+    </PostComposerContext>
   );
 }
 
@@ -105,7 +105,11 @@ export function PostComposer({
  */
 export function PostComposerFrame({ profile }: { profile: PublicProfile }) {
   return (
-    <PostComposerFields disabled onSubmit={ignoreSubmit} profile={profile} />
+    <PostComposerContext value={{ disabled: true, profile }}>
+      <FeedForm onSubmit={ignoreSubmit}>
+        <PostComposerFields />
+      </FeedForm>
+    </PostComposerContext>
   );
 }
 
@@ -114,23 +118,26 @@ const ignoreSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
   event.preventDefault();
 };
 
-/** The composer's fields and send button, which read the draft and need no client. */
-function PostComposerFields({
-  disabled,
-  onSubmit,
-  profile,
-}: {
+/** Whether the composer around the fields is closed, and the author it writes as. */
+const PostComposerContext = createContext<{
   disabled: boolean;
-  onSubmit: SubmitEventHandler<HTMLFormElement>;
   profile: PublicProfile;
-}) {
+} | null>(null);
+
+/** The composer's fields and send button, which read the draft and need no client. */
+function PostComposerFields() {
+  const composer = use(PostComposerContext);
+  if (composer === null) {
+    throw new Error("PostComposerFields must be used within a composer");
+  }
+  const { disabled, profile } = composer;
   const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);
   const setText = usePostDraft((draft) => draft.setText);
   const body = readLearnerText(text);
   const remaining = remainingToShow(text);
   return (
-    <FeedForm onSubmit={onSubmit}>
+    <>
       <FeedAvatar mascot={profile.mascot} photo={profile.image} />
       <InputGroupTextarea
         aria-label={t("placeholder")}
@@ -155,6 +162,6 @@ function PostComposerFields({
           {t("post")}
         </Button>
       </div>
-    </FeedForm>
+    </>
   );
 }

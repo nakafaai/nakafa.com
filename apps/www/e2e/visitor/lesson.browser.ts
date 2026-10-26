@@ -5,6 +5,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect, MutableList } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SESSION_READ = "/api/auth/get-session";
 
@@ -47,6 +48,13 @@ test("a visitor's lesson load and first interaction open no WebSocket, send no s
           expect(page.locator('[data-account="visitor"]').first()).toBeVisible()
         );
 
+        // The sheet listens for the first interaction once React has taken the
+        // page over; a scroll before then warms nothing.
+        yield* Effect.promise(() =>
+          waitUntilTakenOver(
+            page.getByRole("button", { exact: true, name: app.Ai["ask-nina"] })
+          )
+        );
         yield* Effect.promise(() => page.mouse.wheel(0, 400));
         yield* Effect.promise(() => page.keyboard.press("ArrowDown"));
         yield* Effect.promise(() =>

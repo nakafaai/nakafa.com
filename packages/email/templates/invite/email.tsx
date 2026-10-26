@@ -59,7 +59,6 @@ export const renderInviteEmail = Effect.fn("email.invite.render")(function* (
     )
   );
   const copy = getInviteEmailCopy(props.locale, props.organisation);
-  const email = <InviteEmail {...props} />;
   const renderFailure = () =>
     new InviteEmailRenderError({
       code: "INVITE_EMAIL_RENDER_FAILED",
@@ -69,11 +68,11 @@ export const renderInviteEmail = Effect.fn("email.invite.render")(function* (
     [
       Effect.tryPromise({
         catch: renderFailure,
-        try: () => render(email),
+        try: () => render(<InviteEmail {...props} />),
       }),
       Effect.tryPromise({
         catch: renderFailure,
-        try: () => render(email, { plainText: true }),
+        try: () => render(<InviteEmail {...props} />, { plainText: true }),
       }),
     ],
     { concurrency: "unbounded" }

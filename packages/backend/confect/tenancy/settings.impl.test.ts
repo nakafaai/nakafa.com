@@ -151,6 +151,32 @@ describe("tenancy/settings setPolicy", () => {
       })
   );
 
+  it.effect(
+    "sets the Nina credits one member draws from the school's pool a day, and refuses a cap outside its range",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const owner = fixture.as("owner");
+        const capped = yield* owner.mutation(setPolicy, {
+          policy: { key: "ninaDailyCredits", value: 120 },
+          slug: nf,
+        });
+        expect(capped).toEqual({
+          emailDomains: [],
+          nina: false,
+          ninaDailyCredits: 120,
+          studentThreads: false,
+        });
+        const refused = yield* owner
+          .mutation(setPolicy, {
+            policy: { key: "ninaDailyCredits", value: 1001 },
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(invalid);
+      })
+  );
+
   it.effect("turns one policy off and leaves the others on", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

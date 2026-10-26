@@ -19,9 +19,13 @@ import {
 } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
 import { serverTime } from "@/components/exams/sitting/clock";
-import { sittingFailureMessage } from "@/components/exams/sitting/entry";
+import {
+  isRetiredDevice,
+  sittingFailureMessage,
+} from "@/components/exams/sitting/entry";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
+import { SittingLook } from "@/components/exams/sitting/look";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
 import { SittingNavigator } from "@/components/exams/sitting/navigator";
@@ -78,10 +82,6 @@ export function StudentPlayer({
     exams.sittings.paper,
     isActive(attempt.state) ? { deviceId, sittingId, slug } : "skip"
   );
-  const timer = isActive(attempt.state) ? (
-    <SittingTimer clockOffset={clockOffset} deadline={attempt.deadline} />
-  ) : null;
-
   if (QueryResult.isSuccess(paper) && isActive(attempt.state)) {
     return (
       <RunningPaper
@@ -89,7 +89,10 @@ export function StudentPlayer({
         deviceId={deviceId}
         header={
           <SittingBar examTitle={sitting.examTitle}>
-            {timer}
+            <SittingTimer
+              clockOffset={clockOffset}
+              deadline={attempt.deadline}
+            />
             <StudentFinish
               attempt={attempt}
               deviceId={deviceId}
@@ -109,18 +112,28 @@ export function StudentPlayer({
     );
   }
 
+  // A retired device holds the attempt no more, so its bar keeps the time and offers no Finish.
+  const retired = QueryResult.isFailure(paper) && isRetiredDevice(paper.error);
+
   return (
     <PlayerProvider keys={[]} mode={mode}>
       <SittingBar examTitle={sitting.examTitle}>
-        {timer}
         {isActive(attempt.state) ? (
-          <StudentFinish
-            attempt={attempt}
-            deviceId={deviceId}
-            locked={!takesAnswers(attempt.state)}
-            sittingId={sittingId}
-            slug={slug}
-          />
+          <>
+            <SittingTimer
+              clockOffset={clockOffset}
+              deadline={attempt.deadline}
+            />
+            {retired ? null : (
+              <StudentFinish
+                attempt={attempt}
+                deviceId={deviceId}
+                locked={!takesAnswers(attempt.state)}
+                sittingId={sittingId}
+                slug={slug}
+              />
+            )}
+          </>
         ) : null}
       </SittingBar>
       <PlayerMain navigator={null}>
@@ -262,6 +275,7 @@ function RunningPaper({
           paper,
         })}
       />
+      <SittingLook attemptId={attemptId} deviceId={deviceId} slug={slug} />
       {header}
       <PlayerMain
         navigator={

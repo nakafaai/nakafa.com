@@ -33,6 +33,20 @@ describe("chat/kept", () => {
     expect(nextAnswer(dropped, QueryResult.load<string>(true))).toBe(dropped);
   });
 
+  it("keeps showing the last answer while the page leaves a chat whose read failed, and nothing for a read that failed first", () => {
+    const failed = QueryResult.fail<string, string>("deleted");
+
+    expect(nextAnswer(before, failed)).toBe(before);
+    expect(shownAnswer(before, failed)).toEqual({
+      current: false,
+      value: "the chat of the learner before",
+    });
+    expect(shownAnswer(reading, failed)).toEqual({
+      current: false,
+      value: undefined,
+    });
+  });
+
   it("shows the server's answer as current and nothing while the first read loads", () => {
     expect(shownAnswer(before, after)).toEqual({
       current: true,
