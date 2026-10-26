@@ -1,27 +1,15 @@
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { useTranslations } from "use-intl";
 import { PricingButton } from "@/components/marketing/about/pricing/button";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import {
-  type PriceProps,
   PricingPrice,
+  StaticPrice,
 } from "@/components/marketing/about/pricing/price";
-
-/** Animates prices only on the landing surface that owns this treatment. */
-function AnimatedPrice({ price }: PriceProps) {
-  return (
-    <NumberFormat
-      className="font-semibold text-4xl tracking-tight"
-      format={price.format}
-      locales={price.locales}
-      value={price.value}
-    />
-  );
-}
 
 /**
  * The home pricing part: the heading, then the shared plan comparison with the
- * price of each visitor's region.
+ * price of each visitor's region. Each currency's price is its own text that
+ * never changes on the page, so nothing animates it.
  */
 export function Pricing() {
   const t = useTranslations("Landing");
@@ -43,12 +31,12 @@ export function Pricing() {
 
       <div className="px-6 lg:px-10">
         <PricingCards
-          freePrice={<PricingPrice Price={AnimatedPrice} plan="free" />}
+          freePrice={<PricingPrice Price={StaticPrice} plan="free" />}
           headingLevel="h3"
           proAction={<PricingButton variant="secondary" />}
           proPrice={
             <PricingPrice
-              Price={AnimatedPrice}
+              Price={StaticPrice}
               period={tPricing("pro-period")}
               plan="pro"
             />
