@@ -48,17 +48,21 @@ function startOffersRead(
   );
 }
 
+/** No offers read has started yet, the one value every Pro button starts from. */
+const COLD = Option.none<never>();
+
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
   const [isPending, startTransition] = useTransition();
   // The offers the payment method dialog lists while it is open, and where the request came from.
   // The offers read a Pro button started on the learner's intent, which its click then uses.
-  const warmed = useRef(
-    Option.none<{
-      readonly exit: ReturnType<typeof startOffersRead>;
-      readonly key: string;
-    }>()
-  );
+  const warmed =
+    useRef<
+      Option.Option<{
+        readonly exit: ReturnType<typeof startOffersRead>;
+        readonly key: string;
+      }>
+    >(COLD);
   const [choice, setChoice] = useState<
     | (BillingSource & {
         readonly locale: ActiveAppLocaleCode;
