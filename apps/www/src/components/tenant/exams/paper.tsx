@@ -111,8 +111,8 @@ function PageRow({
   const number = index + 1;
 
   return (
-    <div className="flex min-h-9 items-center justify-between gap-2">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         {editable ? (
           <QuestionGrip number={number} questionId={question.id} />
         ) : (
