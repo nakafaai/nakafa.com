@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Filtern",
     "no-results": "Keine Treffer.",
     "reset": "Zurücksetzen"
   },
@@ -225,13 +226,11 @@
     "release-title": "Ergebnisse den Lernenden freigeben?",
     "release-description": "Jede Lernende und jeder Lernende sieht nach der Freigabe die eigene Punktzahl und die eigenen Antworten.",
     "release-action": "Ergebnisse freigeben",
-    "release-footer": "Lernende sehen ihre Ergebnisse nach der Freigabe.",
-    "release-wait-footer": "Die Administration oder der Autor der Prüfung gibt die Ergebnisse frei, sobald die Sitzung geschlossen ist.",
-    "released-footer": "Die Lernenden können ihre Ergebnisse sehen.",
+    "released": "Freigegeben",
     "student-results-title": "Dein Ergebnis",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
-    "student-answer": "Deine Antwort: {letters}",
+    "student-answer": "Deine Antwort: {answer}",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
@@ -247,9 +246,9 @@
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
     "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
     "rooms-title": "Räume",
+    "edit-action": "Prüfung bearbeiten",
     "rooms-empty": "Noch keine Räume",
     "rooms-empty-description": "Jeder Raum erscheint hier, sobald die Prüfung geplant ist.",
-    "rooms-empty-action": "Prüfung öffnen",
     "rooms-filter-empty": "Kein Raum hat diesen Status",
     "rooms-filter-empty-description": "Wähle einen anderen Status, um die übrigen Räume zu sehen.",
     "rooms-unavailable": "Du kannst die Räume dieser Prüfung nicht sehen.",
@@ -292,6 +291,19 @@
     "fullscreen": "Vollbild",
     "fullscreen-exit": "Vollbild beenden",
     "zoom": "Zoom",
+    "zoom-options": "Zoomoptionen",
+    "zoom-fit": "Einpassen",
+    "zoom-fill": "Füllen",
+    "page-of": "Frage {current} von {total}, zu einer Frage springen",
+    "page-jump": "Zu Frage springen, 1 bis {total}",
+    "open-question": "Frage {number} öffnen",
+    "select-question": "Frage {number} auswählen",
+    "select-all": "Alle auswählen",
+    "grid-duplicate": "Duplizieren",
+    "grid-delete": "Löschen",
+    "selected-count": "{count} ausgewählt",
+    "remove-many-title": "{count, plural, one {# Frage entfernen?} other {# Fragen entfernen?}}",
+    "remove-many-description": "Die Fragen und ihre Antworten verlassen diese Prüfung.",
     "student-retry": "Diese Sitzung konnte nicht geladen werden, daher versuche es gleich noch einmal.",
     "student-opens-at": "Diese Sitzung beginnt {time}.",
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
@@ -319,7 +331,55 @@
     "import-drop": "Lege eine Word- oder PDF-Datei hier ab oder wähle eine aus.",
     "import-remove": "Datei entfernen",
     "presence-editor": "{name} bearbeitet gerade",
-    "presence-more": "{names} bearbeiten gerade"
+    "presence-more": "{names} bearbeiten gerade",
+    "template-choice": "Einfachauswahl",
+    "template-choices": "Mehrfachauswahl",
+    "template-label": "Fragetyp: {type}",
+    "template-truefalse": "Richtig oder falsch",
+    "template-cause": "Ursache und Wirkung",
+    "truefalse-true": "Richtig",
+    "truefalse-false": "Falsch",
+    "cause-related": "Aussage und Begründung sind richtig und hängen zusammen",
+    "cause-unrelated": "Aussage und Begründung sind richtig, hängen aber nicht zusammen",
+    "cause-reason-false": "Die Aussage ist richtig und die Begründung falsch",
+    "cause-statement-false": "Die Aussage ist falsch und die Begründung richtig",
+    "cause-both-false": "Aussage und Begründung sind falsch",
+    "template-short": "Kurzantwort",
+    "short-placeholder": "Antwort eingeben",
+    "short-line": "Antwortzeile",
+    "accepted-answers": "Akzeptierte Antworten",
+    "accepted-of": "Akzeptierte Antwort {index} von Frage {number}",
+    "accepted-remove-of": "Akzeptierte Antwort {index} von Frage {number} entfernen",
+    "accepted-add": "Antwort hinzufügen",
+    "accepted-hint": "Groß- und Kleinschreibung und zusätzliche Leerzeichen zählen nicht, und jede andere Antwort wartet auf deine Bewertung.",
+    "template-essay": "Aufsatz",
+    "essay-placeholder": "Antwort schreiben",
+    "essay-area": "Antwortfeld",
+    "verdict-partial": "Teilweise richtig",
+    "results-points": "Punkte",
+    "grade-of": "Punkte von {name}",
+    "template-match": "Zuordnung",
+    "match-statements": "Aussagen",
+    "match-answers": "Antworten",
+    "statement-of": "Frage {number}, Aussage {name}",
+    "answer-of": "Frage {number}, Antwort {name}",
+    "statement-placeholder": "Aussage",
+    "answer-placeholder": "Antwort",
+    "statement-remove-of": "Aussage {name} von Frage {number} entfernen",
+    "answer-remove-of": "Antwort {name} von Frage {number} entfernen",
+    "statement-add": "Aussage hinzufügen",
+    "match-answer-add": "Antwortmöglichkeit hinzufügen",
+    "statement-number": "Aussage {name}",
+    "pair-of": "Antwort für Aussage {name} von Frage {number}",
+    "pair-choose": "Wählen",
+    "pair-hint": "Jede Antwort gehört zu einer Aussage, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
+    "pair-statement": "Antwort für Aussage {number}",
+    "template-table": "Richtig-oder-falsch-Tabelle",
+    "table-columns": "Spalten",
+    "column-of": "Frage {number}, Spalte {name}",
+    "column-placeholder": "Spalte",
+    "cell-of": "Spalte für Aussage {name} von Frage {number}",
+    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
   },
   "SchoolSettings": {
     "school": "Schule",
@@ -472,13 +532,13 @@
     "client-secret-title": "Neues Geheimnis",
     "client-secret-description": "Kopiere es jetzt, denn es wird nicht noch einmal angezeigt.",
     "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
-    "audit-footer": "Werte von Richtlinien werden nicht ins Protokoll übernommen.",
     "audit-view": "Protokoll ansehen",
     "audit-when": "Wann",
     "audit-who": "Wer",
     "audit-change": "Änderung",
     "audit-empty": "Noch hat sich nichts geändert.",
     "audit-search": "Änderung suchen",
+    "audit-export": "Exportieren",
     "audit-operator": "Nakafa-Team",
     "audit-system": "System",
     "audit-label": {
@@ -578,7 +638,8 @@
       },
       "exam": {
         "results": {
-          "released": "Prüfungsergebnisse freigegeben"
+          "released": "Prüfungsergebnisse freigegeben",
+          "graded": "Prüfungsantwort bewertet"
         }
       },
       "tenant": {
@@ -737,7 +798,6 @@
     "no-unit-description": "Perioden und Kohorten gehören zu einer aktiven Einheit. Stelle zuerst eine wieder her oder lege eine an.",
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
-    "members-empty-action": "Einladungen öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
     "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
     "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
@@ -1534,6 +1594,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "Dieser Chat wurde gelöscht."
+    },
     "image-refused-size": {
       "title": "Das Bild wurde nicht hinzugefügt.",
       "description": "Wähle ein Bild von höchstens 2 MB."
@@ -2006,6 +2069,13 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "audit-export-error": {
+      "title": "Export fehlgeschlagen.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
+    "school-own-role-ended": {
+      "title": "Deine Rolle ist beendet."
     }
   },
   "Ai": {

@@ -1,3 +1,7 @@
+import {
+  type ExamResponse,
+  isAnswered,
+} from "@repo/backend/confect/exams/sittings/response";
 import { Array as Arr, Option } from "effect";
 import type {
   PaperQuestion,
@@ -20,9 +24,9 @@ const pickedOption = (question: PaperQuestion, index: number) =>
       : Option.none()
   );
 
-/** A question is answered once the student saved at least one option of it. */
-const isAnswered = (question: PaperQuestion) =>
-  question.response !== null && question.response.length > 0;
+/** A question is answered once the student saved at least one option of it, or text that is not blank. */
+const isQuestionAnswered = (question: PaperQuestion) =>
+  question.response !== null && isAnswered(question.response);
 
 /**
  * The paper's questions as the navigator and the finish's review mark them, in the paper's order: answered
@@ -32,7 +36,7 @@ export function projectSittingCells(
   paper: PaperValue
 ): readonly PlayerCellModel[] {
   return Arr.map(paper.questions, (question) => ({
-    answered: isAnswered(question),
+    answered: isQuestionAnswered(question),
     flagged: question.flagged,
     key: question.id,
   }));
@@ -44,15 +48,12 @@ export function projectSittingCells(
  * answered once it holds a response.
  */
 export function projectSittingQuestions(input: {
-  readonly choose: (
-    question: PaperQuestion,
-    response: readonly string[]
-  ) => void;
+  readonly choose: (question: PaperQuestion, response: ExamResponse) => void;
   readonly flag: (question: PaperQuestion) => void;
   readonly paper: PaperValue;
 }): readonly PlayerQuestionModel[] {
   return Arr.map(input.paper.questions, (question) => ({
-    answered: isAnswered(question),
+    answered: isQuestionAnswered(question),
     flag: () => input.flag(question),
     flagged: question.flagged,
     key: question.id,

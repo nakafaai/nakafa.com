@@ -1,6 +1,10 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { QUESTION_POINTS_MAX } from "@repo/backend/confect/exams/question";
+import {
+  needsKey,
+  QUESTION_POINTS_MAX,
+  takesRubric,
+} from "@repo/backend/confect/exams/question";
 import {
   Field,
   FieldLabel,
@@ -15,19 +19,26 @@ import type { Node } from "@tiptap/pm/model";
 import { Array as Arr, Function as Fn, Option, Schema } from "effect";
 import { lazy, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
+  acceptedOf,
+  changedOption,
   choiceOf,
-  markedOption,
+  markedOptions,
   optionLetter,
 } from "@/components/tenant/exams/answer";
+import { TableKey } from "@/components/tenant/exams/cells";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { matchOf } from "@/components/tenant/exams/match";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
+import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam } from "@/components/tenant/exams/provider";
+import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
 const ExamText = lazy(() =>
@@ -117,8 +128,10 @@ type KeyOption = typeof KeyOption.Type;
 interface AnswerKeyProps {
   /** Whether the teacher may mark the key now. */
   readonly editable: boolean;
-  /** The option the key marks correct, or none while the key marks none. */
-  readonly marked: string | null;
+  /** The options the key marks correct: one for a single-answer choice, any number for a complex one. */
+  readonly marked: readonly string[];
+  /** Whether the key marks several options, as a complex choice does. */
+  readonly multiple: boolean;
   /** The number of the question, which names each option for assistive technology. */
   readonly number: number;
   /** Marks an option as the key of the question, which saves at once. */
@@ -128,42 +141,60 @@ interface AnswerKeyProps {
 }
 
 /**
- * The answer key of a question: one toggle per option, named by its letter, and the one the key marks
- * is pressed. The key holds one correct option, so the group chooses one, and choosing the marked
- * option again saves nothing.
+ * The answer key of a question: one toggle per option, named by its letter, and the ones the key marks
+ * are pressed. A single-answer key chooses one, and choosing the marked option again saves nothing; a
+ * complex key presses any number, and each press marks or unmarks one option.
  */
 function AnswerKey({
   editable,
   marked,
+  multiple,
   number,
   onMark,
   options,
 }: AnswerKeyProps) {
   const t = useTranslations("Exams");
+  const items = Arr.map(options, (option) => (
+    <ToggleGroupItem
+      aria-label={t("key-option", { letter: option.letter, number })}
+      key={option.id}
+      value={option.id}
+    >
+      {option.letter}
+    </ToggleGroupItem>
+  ));
 
   return (
     <Field orientation="horizontal">
       <FieldTitle>{t("answer-key")}</FieldTitle>
-      <ToggleGroup
-        disabled={!editable}
-        onValueChange={(value) => {
-          if (value !== "") {
-            onMark(value);
+      {multiple ? (
+        <ToggleGroup
+          disabled={!editable}
+          onValueChange={(values) =>
+            Option.match(changedOption(marked, values), {
+              onNone: Fn.constVoid,
+              onSome: onMark,
+            })
           }
-        }}
-        type="single"
-        value={marked ?? ""}
-      >
-        {Arr.map(options, (option) => (
-          <ToggleGroupItem
-            aria-label={t("key-option", { letter: option.letter, number })}
-            key={option.id}
-            value={option.id}
-          >
-            {option.letter}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+          type="multiple"
+          value={marked}
+        >
+          {items}
+        </ToggleGroup>
+      ) : (
+        <ToggleGroup
+          disabled={!editable}
+          onValueChange={(value) => {
+            if (value !== "") {
+              onMark(value);
+            }
+          }}
+          type="single"
+          value={Option.getOrElse(Arr.head(marked), () => "")}
+        >
+          {items}
+        </ToggleGroup>
+      )}
     </Field>
   );
 }
@@ -179,17 +210,27 @@ interface TeacherLayerProps {
   };
   /** The place of the question in the exam, which names its rich texts for assistive technology. */
   readonly number: number;
+  /** Saves the answers a short answer accepts, which saves at once. */
+  readonly onAccept: (accepted: readonly string[]) => void;
+  /** Saves the cells of a true or false table's key, which saves at once. */
+  readonly onCells: (
+    cells: readonly { readonly column: string; readonly statement: string }[]
+  ) => void;
   /** Marks an option as the key of the question, which saves at once. */
   readonly onMark: (optionId: string) => void;
+  /** Saves the pairs of a matching question's key, which saves at once. */
+  readonly onPair: (
+    pairs: readonly { readonly source: string; readonly target: string }[]
+  ) => void;
   /** The question the layer belongs to, as the server holds it. */
   readonly question: Question;
-  /** The answers and the key the page shows, so the key shows a change at once. */
-  readonly shown: Pick<Question, "answers" | "key">;
+  /** The answers, the key, and the template the page shows, so the key shows a change at once. */
+  readonly shown: Pick<Question, "answers" | "key" | "template">;
 }
 
 /**
  * The teacher's layer of a question, in the editor's panel beside the canvas: the points, the answer
- * key, then the rubric and the explanation. The paper on the canvas is what the student reads, so the
+ * key (the marked options, or the accepted answers of a short answer), the rubric when the question's template takes one (`takesRubric`), and the explanation. The paper on the canvas is what the student reads, so the
  * layer stands on its own screen and never on the canvas. Each rich text keeps its height in both
  * states: while its editor is not mounted it is drawn from its document, as the editor draws it. A
  * frozen exam shows its values without changes.
@@ -198,7 +239,10 @@ export function TeacherLayer({
   live,
   notes,
   number,
+  onAccept,
+  onCells,
   onMark,
+  onPair,
   question,
   shown,
 }: TeacherLayerProps) {
@@ -222,31 +266,71 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
-      <AnswerKey
-        editable={editable}
-        marked={markedOption(shown.key)}
-        number={number}
-        onMark={onMark}
-        options={options}
-      />
-      <div className="grid gap-2">
-        <FieldTitle>{t("rubric")}</FieldTitle>
-        {live ? (
-          <Suspense
-            fallback={<PreviewProse article doc={notes.rubric} size="line" />}
-          >
-            <ExamText
-              documentId={question.rubric}
-              key={`${question.rubric}-${frozen}`}
-              label={t("rubric-of", { number })}
-              placeholder={t("rubric-placeholder")}
-              size="line"
-            />
-          </Suspense>
-        ) : (
-          <PreviewProse article doc={notes.rubric} size="line" />
-        )}
-      </div>
+      {shown.template === "short" ? (
+        <AcceptedAnswers
+          accepted={acceptedOf(shown.key)}
+          editable={editable}
+          number={number}
+          onChange={onAccept}
+        />
+      ) : null}
+      {Option.match(matchOf(shown.answers), {
+        onNone: () => null,
+        onSome: (match) => (
+          <MatchKey
+            editable={editable}
+            keyed={shown.key}
+            match={match}
+            number={number}
+            onPair={onPair}
+          />
+        ),
+      })}
+      {Option.match(tableOf(shown.answers), {
+        onNone: () => null,
+        onSome: (table) => (
+          <TableKey
+            editable={editable}
+            keyed={shown.key}
+            number={number}
+            onMark={onCells}
+            table={table}
+          />
+        ),
+      })}
+      {needsKey(shown.template) &&
+      shown.template !== "short" &&
+      shown.template !== "match" &&
+      shown.template !== "table" ? (
+        <AnswerKey
+          editable={editable}
+          marked={markedOptions(shown.key)}
+          multiple={shown.template === "choices"}
+          number={number}
+          onMark={onMark}
+          options={options}
+        />
+      ) : null}
+      {takesRubric(shown.template) ? (
+        <div className="grid gap-2">
+          <FieldTitle>{t("rubric")}</FieldTitle>
+          {live ? (
+            <Suspense
+              fallback={<PreviewProse article doc={notes.rubric} size="line" />}
+            >
+              <ExamText
+                documentId={question.rubric}
+                key={`${question.rubric}-${frozen}`}
+                label={t("rubric-of", { number })}
+                placeholder={t("rubric-placeholder")}
+                size="line"
+              />
+            </Suspense>
+          ) : (
+            <PreviewProse article doc={notes.rubric} size="line" />
+          )}
+        </div>
+      ) : null}
       <div className="grid gap-2">
         <FieldTitle>{t("explanation")}</FieldTitle>
         {live ? (

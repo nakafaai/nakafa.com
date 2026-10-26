@@ -1,4 +1,9 @@
-import { useLocation, useNavigate, useRouter } from "@tanstack/react-router";
+import {
+  useHydrated,
+  useLocation,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
 import type { MouseEvent, SyntheticEvent } from "react";
 import { getPostAuthSignInTarget } from "@/lib/auth/admission";
 import type { LinkTarget } from "@/lib/routing/link";
@@ -23,20 +28,33 @@ function withoutFragment(href: string) {
   return fragment === -1 ? href : href.slice(0, fragment);
 }
 
+/** The browser URL without its query, which a prerendered page never sees. */
+function withoutQuery(href: string) {
+  const query = href.indexOf("?");
+  return query === -1 ? href : href.slice(0, query);
+}
+
 /**
  * Builds deterministic auth-link fallback and exact browser-event navigation.
  *
- * The rendered target leaves the fragment out, so the server and the hydration
- * render agree. A click reads the router's own location, which keeps the fragment.
+ * Until React has hydrated the page, the rendered target names the path alone:
+ * the build renders a prerendered page without the query of a visitor's address,
+ * and React keeps a server attribute that its hydration render disagrees with.
+ * Once hydrated, the target names the query too. A click reads the router's own
+ * location, which keeps the fragment.
  */
 export function useCurrentAuthNavigation() {
   const locale = useCurrentLocale();
   const navigate = useNavigate();
   const router = useRouter();
-  const renderedSource = useLocation({
+  const hydrated = useHydrated();
+  const publicHref = useLocation({
     select: (location) => withoutFragment(location.publicHref),
   });
-  const renderedTarget = getPostAuthSignInTarget(renderedSource, locale);
+  const renderedTarget = getPostAuthSignInTarget(
+    hydrated ? publicHref : withoutQuery(publicHref),
+    locale
+  );
 
   /** The sign-in target that resumes the browser location as it is now. */
   function readTarget(): LinkTarget {

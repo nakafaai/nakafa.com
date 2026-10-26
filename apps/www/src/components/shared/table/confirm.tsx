@@ -8,23 +8,25 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**
- * The menu of one table row whose only action is destructive. The action opens a confirmation, and
- * `onConfirm` runs only once the viewer confirms it, so nothing is removed by a single click.
+ * The menu of one table row whose only action is destructive, with the action's icon. The action opens a
+ * confirmation, and `onConfirm` runs only once the viewer confirms it, so nothing is removed by a single click.
  */
 export function ConfirmRowMenu({
   action,
   confirm,
   description,
+  icon,
   onConfirm,
   title,
 }: {
   readonly action: string;
   readonly confirm: string;
   readonly description: string;
+  readonly icon: ComponentProps<typeof HugeIcons>["icon"];
   readonly onConfirm: () => void;
   readonly title: string;
 }) {
@@ -50,6 +52,7 @@ export function ConfirmRowMenu({
             onClick={() => setIsConfirming(true)}
             variant="destructive"
           >
+            <HugeIcons icon={icon} />
             {action}
           </DropdownMenuItem>
         </DropdownMenuContent>

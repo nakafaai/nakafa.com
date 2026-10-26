@@ -58,12 +58,16 @@ describe("projectSittingCells", () => {
             version: 2,
           }),
           question("q-cleared", [choice(1)], { response: [] }),
+          question("q-typed", [choice(1)], { response: { text: "Jakarta" } }),
+          question("q-blank", [choice(1)], { response: { text: " " } }),
         ],
       })
     ).toEqual([
       { answered: false, flagged: false, key: "q-empty" },
       { answered: true, flagged: true, key: "q-chosen" },
       { answered: false, flagged: false, key: "q-cleared" },
+      { answered: true, flagged: false, key: "q-typed" },
+      { answered: false, flagged: false, key: "q-blank" },
     ]);
   });
 });
@@ -79,10 +83,12 @@ describe("projectSittingQuestions", () => {
           version: 2,
         }),
         question("q-cleared", [choice(1)], { response: [] }),
+        question("q-typed", [choice(1)], { response: { text: "Jakarta" } }),
+        question("q-blank", [choice(1)], { response: { text: " " } }),
       ],
     };
     const flag = vi.fn();
-    const [empty, chosen, cleared] = projectSittingQuestions({
+    const [empty, chosen, cleared, typed, blank] = projectSittingQuestions({
       choose: vi.fn(),
       flag,
       paper,
@@ -99,6 +105,8 @@ describe("projectSittingQuestions", () => {
       key: "q-chosen",
     });
     expect(cleared).toMatchObject({ answered: false });
+    expect(typed).toMatchObject({ answered: true });
+    expect(blank).toMatchObject({ answered: false });
 
     chosen?.flag();
     expect(flag).toHaveBeenCalledExactlyOnceWith(paper.questions[1]);

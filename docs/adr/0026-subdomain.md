@@ -89,11 +89,13 @@ finds the right data.
   member whom the school does not admit (`tenant.view` denied) is refused. A visitor,
   and a signed-in non-member of an existing school, reach the layout, which renders
   the outsider page (`apps/www/src/components/tenant/outsider.tsx`) with a 200 status. The refused page answers
-  with the app's not-found page and a 404 status, through a rewrite to the
-  not-found route, in the locale that the school page negotiates. The school
-  layout cannot answer 404 itself: Next sends the static shell of the route with
-  status 200 first, and a `notFound()` call after that keeps the 200 (the
-  installed docs, `loading.md`, "Status codes").
+  with the app's not-found page and a 404 status at the visitor's own address, in
+  the locale that the school page negotiates: the Worker decides the refusal
+  before the router, hands the router that not-found page as its request context,
+  and the root route answers not found from it. The browser never has that
+  context, and it hydrates the root's not-found match as the server sent it, so
+  the page is never drawn for another address (which React rejects as a hydration
+  mismatch, error #418).
 - A page request is a GET or HEAD document that is not a Flight request. A client
   navigation and a prefetch both carry `rsc: 1`, so they pay no read, and the
   layout still refuses a membership that has ended. A read that fails goes on to

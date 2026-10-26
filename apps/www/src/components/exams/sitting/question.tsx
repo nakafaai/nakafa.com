@@ -1,6 +1,14 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import {
+  chosenOptions,
+  type ExamResponse,
+  madePairs,
+  markedCells,
+  NO_RESPONSE,
+  typedText,
+} from "@repo/backend/confect/exams/sittings/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
@@ -12,17 +20,26 @@ import {
   PromptReserve,
   SittingDocument,
 } from "@/components/exams/sitting/document";
+import { SittingField } from "@/components/exams/sitting/field";
+import { SittingPairs } from "@/components/exams/sitting/pairs";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
-import { choiceOf } from "@/components/exams/sitting/response";
+import {
+  choiceOf,
+  pairingOf,
+  tableOf,
+  writtenOf,
+} from "@/components/exams/sitting/response";
+import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
- * One question of the paper: its number, its prompt as the editor holds it now, and its options. The
- * player's footer flags the current question. A choice is kept in the browser before it is sent, so a reload
+ * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
+ * answer line. The player's footer flags the current question. A choice or a typed answer is kept in the
+ * browser before it is sent, so a reload
  * or a closed tab sends it again. The prompt waits while the server folds the editor's steps, and the
  * query runs again when the fold is written, so a prompt that is not ready shows nothing yet.
  */
@@ -56,6 +73,18 @@ export function SittingQuestion({
     () => choiceOf(question.interactions),
     [question.interactions]
   );
+  const entry = useMemo(
+    () => writtenOf(question.interactions),
+    [question.interactions]
+  );
+  const pairing = useMemo(
+    () => pairingOf(question.interactions),
+    [question.interactions]
+  );
+  const table = useMemo(
+    () => tableOf(question.interactions),
+    [question.interactions]
+  );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
   const promptDocument = useMemo(
     () =>
@@ -66,14 +95,34 @@ export function SittingQuestion({
   );
   // The images of the prompt and of the options, resolved in one read by this student's device.
   const pictureIds = useMemo(() => {
-    const labels = Option.match(choice, {
-      onNone: () => [],
-      onSome: (found) => Arr.map(found.options, (option) => option.label),
-    });
+    const labels = Arr.appendAll(
+      Option.match(choice, {
+        onNone: () => [],
+        onSome: (found) => Arr.map(found.options, (option) => option.label),
+      }),
+      Arr.appendAll(
+        Option.match(pairing, {
+          onNone: () => [],
+          onSome: (found) =>
+            Arr.map(
+              Arr.appendAll(found.sources, found.targets),
+              (part) => part.label
+            ),
+        }),
+        Option.match(table, {
+          onNone: () => [],
+          onSome: (found) =>
+            Arr.map(
+              Arr.appendAll(found.statements, found.columns),
+              (part) => part.label
+            ),
+        })
+      )
+    );
     return pictureIdsOfDocuments(
       promptDocument === null ? labels : [promptDocument, ...labels]
     );
-  }, [choice, promptDocument]);
+  }, [choice, pairing, promptDocument, table]);
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
@@ -90,8 +139,8 @@ export function SittingQuestion({
     [pictures]
   );
 
-  /** Keeps the choice in the browser, then sends it, numbered one above the saved version. */
-  function onChoose(response: readonly string[]) {
+  /** Keeps the choice or the typed text in the browser, then sends it, numbered one above the saved version. */
+  function onChoose(response: ExamResponse) {
     choose({ attemptId, deviceId, question, response, sittingId, slug });
   }
 
@@ -123,7 +172,34 @@ export function SittingQuestion({
               disabled={locked}
               labelledBy={titleId}
               onChoose={onChoose}
-              response={question.response ?? []}
+              response={chosenOptions(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(entry) ? (
+            <SittingField
+              disabled={locked}
+              entry={entry.value}
+              labelledBy={titleId}
+              onType={(text) => onChoose({ text })}
+              text={typedText(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(pairing) ? (
+            <SittingPairs
+              disabled={locked}
+              labelledBy={titleId}
+              match={pairing.value}
+              onPair={(pairs) => onChoose({ pairs })}
+              pairs={madePairs(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(table) ? (
+            <SittingTable
+              cells={markedCells(question.response ?? NO_RESPONSE)}
+              disabled={locked}
+              labelledBy={titleId}
+              onMark={(cells) => onChoose({ cells })}
+              table={table.value}
             />
           ) : null}
         </SittingPictures>

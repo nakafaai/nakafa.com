@@ -82,3 +82,35 @@ test("a member with no class sees no Classes group in the sidebar", async ({
   await expect(sidebar.getByText("Classes", { exact: true })).toHaveCount(0);
   await context.close();
 });
+
+test("a settings group stays open when the viewer opens a section of another group, so the sidebar does not move under the pointer", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+  await page.goto(address("/settings/profile"));
+
+  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  const profile = sidebar.getByRole("link", { name: "Profile", exact: true });
+  await expect(profile).toBeVisible();
+  await waitUntilTakenOver(sidebar.getByRole("button", { name: "People" }));
+  await sidebar.getByRole("button", { name: "People" }).click();
+  const members = sidebar.getByRole("link", { name: "Members", exact: true });
+  // Every settings item carries its icon beside its name.
+  await expect(members.locator("svg")).toHaveCount(1);
+  await expect(profile.locator("svg")).toHaveCount(1);
+  const before = await members.boundingBox();
+  await members.click();
+
+  await expect(page).toHaveURL(address("/settings/members"));
+  await expect(members).toHaveAttribute("data-active", "true");
+  // The School group the viewer came from stays open, so Members keeps its place.
+  await expect(profile).toBeVisible();
+  expect((await members.boundingBox())?.y).toBe(before?.y);
+  await context.close();
+});

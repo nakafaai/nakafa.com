@@ -111,8 +111,8 @@ const copyDocument = Effect.fn("exams.question.copyDocument")(function* (
 
 /**
  * Copies a question right after the original. Its prompt, rubric, and explanation are new
- * documents, each copied with its history (see `copyDocument`). The answers, the key, and the
- * points are copied as they are stored.
+ * documents, each copied with its history (see `copyDocument`). The answers, the key, the
+ * points, and the template are copied as they are stored.
  */
 export const copyQuestion = Effect.fn("exams.question.copy")(function* (
   exam: ExamCopy,
@@ -128,5 +128,6 @@ export const copyQuestion = Effect.fn("exams.question.copy")(function* (
     points: original.points,
     prompt,
     rubric,
+    template: original.template,
   });
 });
