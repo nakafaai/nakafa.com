@@ -12,7 +12,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -156,7 +155,7 @@ function SchoolMembersBody() {
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {pagination._tag === "LoadingFirstPage" ||
       (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolMemberTable members={pagination.results} slug={slug} />
+        <SchoolMemberTable members={pagination.results} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -166,13 +165,7 @@ function SchoolMembersBody() {
 }
 
 /** The members in a data table, or the table's empty state when the school has none. */
-function SchoolMemberTable({
-  members,
-  slug,
-}: {
-  members: readonly MemberItem[];
-  slug: TenantSlug;
-}) {
+function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   const t = useTranslations("SchoolSettings");
 
   if (Arr.isReadonlyArrayEmpty(members)) {
@@ -221,7 +214,7 @@ function SchoolMemberTable({
       cell: (info) =>
         info.row.original.removable &&
         info.row.original.status !== "invited" ? (
-          <SchoolMemberMenu member={info.row.original} slug={slug} />
+          <SchoolMemberMenu member={info.row.original} />
         ) : null,
       id: "actions",
     }),
@@ -243,13 +236,8 @@ function SchoolMemberTable({
  * the account of a member who joined loses the school at once. An invited member is handled on
  * the invitations page, and the list answers which rows the viewer may remove.
  */
-function SchoolMemberMenu({
-  member,
-  slug,
-}: {
-  member: MemberItem;
-  slug: TenantSlug;
-}) {
+function SchoolMemberMenu({ member }: { member: MemberItem }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange
