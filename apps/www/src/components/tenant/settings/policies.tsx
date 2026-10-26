@@ -1,4 +1,5 @@
 import { QueryResult, useMutation } from "@confect/react";
+import { Coins01Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   DEFAULT_NINA_DAILY_CREDITS,
@@ -23,6 +24,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
@@ -252,6 +254,7 @@ function SchoolNinaCreditsPolicy({
           <SelectGroup>
             {Arr.map(items, (item) => (
               <SelectItem key={item.value} value={item.value}>
+                <HugeIcons icon={Coins01Icon} />
                 {item.label}
               </SelectItem>
             ))}
