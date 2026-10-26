@@ -1,4 +1,3 @@
-import { captureException } from "@repo/analytics/posthog/capture";
 import {
   createFileRoute,
   type ErrorComponentProps,
@@ -6,7 +5,6 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { IntlProvider } from "use-intl";
 import { EntryShellArtwork } from "@/components/entry/artwork";
 import {
@@ -18,6 +16,7 @@ import {
 import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { Broken } from "@/components/state/broken";
+import { RouteFailure } from "@/components/state/localized";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
@@ -73,28 +72,27 @@ function EntryLayout() {
 function EntryError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
   const messages = readStandaloneMessages(locale);
-  useEffect(() => {
-    captureException(error, { source: "start-entry-error" });
-  }, [error]);
   return (
-    <EntryShell>
-      <EntryShellPanel>
-        <EntryShellHeader>
-          <div className="ms-auto">
-            <ThemePicker variant="ghost" />
-          </div>
-        </EntryShellHeader>
-        <EntryShellBody>
-          <Broken
-            description={messages.Error.description}
-            home={messages.State["home-button"]}
-            homeHref={`/${locale}`}
-            retry={messages.Error.retry}
-            title={messages.Error.title}
-          />
-        </EntryShellBody>
-      </EntryShellPanel>
-      <EntryShellArtwork />
-    </EntryShell>
+    <RouteFailure error={error} source="start-entry-error">
+      <EntryShell>
+        <EntryShellPanel>
+          <EntryShellHeader>
+            <div className="ms-auto">
+              <ThemePicker variant="ghost" />
+            </div>
+          </EntryShellHeader>
+          <EntryShellBody>
+            <Broken
+              description={messages.Error.description}
+              home={messages.State["home-button"]}
+              homeHref={`/${locale}`}
+              retry={messages.Error.retry}
+              title={messages.Error.title}
+            />
+          </EntryShellBody>
+        </EntryShellPanel>
+        <EntryShellArtwork />
+      </EntryShell>
+    </RouteFailure>
   );
 }
