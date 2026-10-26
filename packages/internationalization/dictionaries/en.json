@@ -831,6 +831,7 @@
     "write": "Write note",
     "write-description": "The note on the report card of {name}.",
     "note-label": "Homeroom teacher's note",
+    "note-placeholder": "What the student did well, and what comes next",
     "save-note": "Save note",
     "complete": "Hand in",
     "reopen": "Take back",

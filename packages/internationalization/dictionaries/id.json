@@ -831,6 +831,7 @@
     "write": "Tulis catatan",
     "write-description": "Catatan pada rapor {name}.",
     "note-label": "Catatan wali kelas",
+    "note-placeholder": "Apa yang sudah baik dari siswa, dan langkah berikutnya",
     "save-note": "Simpan catatan",
     "complete": "Serahkan",
     "reopen": "Tarik kembali",

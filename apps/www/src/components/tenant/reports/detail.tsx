@@ -348,6 +348,7 @@ export function ReportNoteDialog({
           maxLength={NOTE_LIMIT}
           minRows={4}
           onChange={(event) => setNote(event.target.value)}
+          placeholder={t("note-placeholder")}
           value={note}
         />
       </Field>

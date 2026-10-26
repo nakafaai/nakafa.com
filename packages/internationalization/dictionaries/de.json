@@ -831,6 +831,7 @@
     "write": "Bemerkung schreiben",
     "write-description": "Die Bemerkung im Zeugnis von {name}.",
     "note-label": "Bemerkung der Klassenleitung",
+    "note-placeholder": "Was der Schüler gut gemacht hat, und was als Nächstes kommt",
     "save-note": "Bemerkung speichern",
     "complete": "Abgeben",
     "reopen": "Zurückholen",
