@@ -37,7 +37,7 @@ import { Link } from "@/lib/routing/link";
 export function ExamMenu() {
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
-  const { exam, gone } = useExam();
+  const { gone } = useExam();
   const locked = useExamLocked();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
 

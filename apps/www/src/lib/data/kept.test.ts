@@ -13,10 +13,7 @@ const state = vi.hoisted(() => ({
 
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
-  useState: (initial: () => unknown) => [
-    state.value() ?? initial(),
-    state.set,
-  ],
+  useState: (initial: () => unknown) => [state.value() ?? initial(), state.set],
 }));
 
 describe("last value of a query", () => {

@@ -15,7 +15,11 @@ import {
   queuePictureFile,
   refuseFile,
 } from "@/components/tenant/exams/picture";
-import { useExam, useExamEditing, useExamLocked } from "@/components/tenant/exams/provider";
+import {
+  useExam,
+  useExamEditing,
+  useExamLocked,
+} from "@/components/tenant/exams/provider";
 import { reportClientException } from "@/lib/analytics/client";
 import { useDocumentLabels } from "@/lib/editor/labels";
 

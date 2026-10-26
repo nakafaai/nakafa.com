@@ -45,7 +45,11 @@ import {
   PaperSketch,
   usePageDocument,
 } from "@/components/tenant/exams/preview";
-import { useExam, useExamLocked, useExamSelection } from "@/components/tenant/exams/provider";
+import {
+  useExam,
+  useExamLocked,
+  useExamSelection,
+} from "@/components/tenant/exams/provider";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
 import { usePageWindow } from "@/components/tenant/exams/window";

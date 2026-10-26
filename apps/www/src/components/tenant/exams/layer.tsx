@@ -21,12 +21,12 @@ import {
   markedOption,
   optionLetter,
 } from "@/components/tenant/exams/answer";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
 import { PreviewProse } from "@/components/tenant/exams/preview";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */

@@ -35,12 +35,12 @@ import {
   RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/filter";
+import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";

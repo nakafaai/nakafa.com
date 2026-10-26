@@ -78,7 +78,8 @@ async function examOfThree(page: Page, baseURL: string | undefined) {
 }
 
 /** The page header, where each page of a school names its subject. */
-const headerOf = (page: Page) => page.locator('header[data-slot="page-header"]');
+const headerOf = (page: Page) =>
+  page.locator('header[data-slot="page-header"]');
 
 test.describe("at 1440", () => {
   test.use({ viewport: { height: 900, width: 1440 } });

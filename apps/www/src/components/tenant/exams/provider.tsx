@@ -7,8 +7,8 @@ import {
   createExamEditing,
   type ExamEditing,
 } from "@/components/tenant/exams/editing";
-import { createExamLive, type ExamLive } from "@/components/tenant/exams/live";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { createExamLive, type ExamLive } from "@/components/tenant/exams/live";
 import type { ExamView } from "@/components/tenant/exams/optimistic";
 import {
   activeQuestion,

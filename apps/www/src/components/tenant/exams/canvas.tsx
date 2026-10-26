@@ -10,7 +10,12 @@ import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { useQuestionReorder } from "@/components/tenant/exams/drag";
 import { pageAt } from "@/components/tenant/exams/pages";
 import { ExamPage } from "@/components/tenant/exams/paper";
-import { useExam, useExamLocked, useExamSelectionStore, useExamZoom } from "@/components/tenant/exams/provider";
+import {
+  useExam,
+  useExamLocked,
+  useExamSelectionStore,
+  useExamZoom,
+} from "@/components/tenant/exams/provider";
 import { ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
 
 /**

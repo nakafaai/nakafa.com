@@ -21,7 +21,11 @@ import {
 } from "@/components/tenant/exams/answer";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
-import { useExam, useExamLive, useExamLocked } from "@/components/tenant/exams/provider";
+import {
+  useExam,
+  useExamLive,
+  useExamLocked,
+} from "@/components/tenant/exams/provider";
 import {
   ControlRoom,
   OptionAddRoom,

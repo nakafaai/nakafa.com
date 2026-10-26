@@ -6,8 +6,8 @@ import { MAX_STEP_BYTES } from "@repo/backend/confect/editor/batch";
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import { Collab } from "@repo/design-system/components/editor/collab";
 import { slashCommand } from "@repo/design-system/components/editor/command";
-import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { depthGuard } from "@repo/design-system/components/editor/depth";
+import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import {
   documentSizeGuard,
