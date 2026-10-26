@@ -5,5 +5,6 @@ export const create = registeredFunctions.create;
 export const home = registeredFunctions.home;
 export const list = registeredFunctions.list;
 export const open = registeredFunctions.open;
+export const remove = registeredFunctions.remove;
 export const rename = registeredFunctions.rename;
 export const schedule = registeredFunctions.schedule;

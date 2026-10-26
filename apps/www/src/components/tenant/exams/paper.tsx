@@ -227,23 +227,31 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   }, [focused, settleFocus]);
 
   const live = mounted && saved && isSettled;
-  const read = reached && !live;
+  // The server opens a text only for a signed-in editor, so a page reads none before Convex holds the
+  // session. It reads its prompt while its editors are not mounted, and while they load until the
+  // prompt's editor holds it, so the drawn paper keeps the prompt on screen until the editor takes over.
+  const read = reached && isSettled;
+  // The notes are drawn only in the chosen page's panel, so a live page that is not chosen reads none.
+  const readNotes = read && (chosen || !live);
   const prompt = usePageDocument({
     documentId: question.prompt,
+    editing: live,
     open: chosen,
     read,
     saved,
   });
   const rubric = usePageDocument({
     documentId: question.rubric,
+    editing: live,
     open: chosen,
-    read,
+    read: readNotes,
     saved,
   });
   const explanation = usePageDocument({
     documentId: question.explanation,
+    editing: live,
     open: chosen,
-    read,
+    read: readNotes,
     saved,
   });
   const paper = (

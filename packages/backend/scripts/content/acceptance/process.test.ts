@@ -4,9 +4,7 @@ import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
   localConvexEnvironment,
-  runBuildCommand,
   withLocalBackend,
-  withTerminal,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
 import {
@@ -17,7 +15,6 @@ import {
 } from "@repo/backend/test/acceptance";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
-  Array as Arr,
   Deferred,
   Effect,
   Fiber,
@@ -26,7 +23,6 @@ import {
   Logger,
   MutableList,
   Path,
-  Schedule,
   Sink,
   Stream,
 } from "effect";
@@ -132,34 +128,6 @@ describe("application process ownership", () => {
   beforeEach(() => {
     fetcher.mockReset();
   });
-
-  it.live(
-    "handles hangup through the finalizer and then releases its listener",
-    () =>
-      Effect.gen(function* () {
-        const previous = process.listeners("SIGHUP");
-        const interrupt = vi.spyOn(process, "emit").mockReturnValue(process);
-        yield* withTerminal(
-          Effect.gen(function* () {
-            yield* Effect.addFinalizer(() =>
-              Effect.sync(() => {
-                const listeners = Arr.filter(
-                  process.listeners("SIGHUP"),
-                  (listener) => !Arr.some(previous, (item) => item === listener)
-                );
-                expect(listeners).toHaveLength(1);
-                for (const listener of listeners) {
-                  listener("SIGHUP");
-                }
-                expect(interrupt).toHaveBeenCalledWith("SIGINT");
-              })
-            );
-            return yield* acceptanceRuntimeError("interrupted operation");
-          })
-        ).pipe(Effect.flip);
-        expect(process.listeners("SIGHUP")).toEqual(previous);
-      }).pipe(Effect.ensuring(Effect.sync(() => vi.restoreAllMocks())))
-  );
 
   for (const outcome of ["success", "failure", "interruption"]) {
     it.live(`closes its local child after application ${outcome}`, () =>
@@ -395,87 +363,6 @@ describe("application process ownership", () => {
       expect(child.release).toHaveBeenCalledOnce();
     }).pipe(Effect.provide(services))
   );
-
-  it.live("waits for an interrupted command to finish its cleanup", () =>
-    Effect.gen(function* () {
-      const { fs, runtime } = yield* fixture;
-      const script = `${runtime.directory}/worker.mjs`;
-      yield* fs.writeFileString(
-        script,
-        `import { writeFileSync } from "node:fs";
-process.once("SIGINT", () => {
-  writeFileSync("stopped", "SIGINT");
-  process.exit(0);
-});
-setInterval(() => {}, 1000);
-writeFileSync("ready", "ready");`
-      );
-      const child = yield* runBuildCommand(runtime.directory, [
-        process.execPath,
-        script,
-      ]).pipe(Effect.scoped, Effect.forkChild);
-      yield* fs.exists(`${runtime.directory}/ready`).pipe(
-        Effect.repeat({
-          while: (ready) => !ready,
-          schedule: Schedule.spaced("10 millis"),
-        }),
-        Effect.timeout("5 seconds")
-      );
-      yield* Fiber.interrupt(child);
-      expect(yield* fs.readFileString(`${runtime.directory}/stopped`)).toBe(
-        "SIGINT"
-      );
-    }).pipe(Effect.provide(services))
-  );
-
-  for (const code of [0, 7]) {
-    it.effect(
-      `keeps acquisition credentials out of build children with exit ${code}`,
-      () =>
-        Effect.gen(function* () {
-          const child = yield* spawner({
-            exit: Effect.succeed(ChildProcessSpawner.ExitCode(code)),
-          });
-          const result = yield* runBuildCommand(
-            "/tmp",
-            ["bun", "run", "build"],
-            {
-              VITE_CONVEX_URL: "https://production.convex.cloud",
-              AKSARA_ACCEPTANCE_PRIVATE_KEY: "private",
-              AKSARA_SIGNING_PRIVATE_KEY: "private",
-            }
-          ).pipe(
-            Effect.provideService(
-              ChildProcessSpawner.ChildProcessSpawner,
-              child.service
-            ),
-            Effect.result
-          );
-          expect(result._tag).toBe(code === 0 ? "Success" : "Failure");
-          expect(MutableList.toArray(child.commands)).toEqual([
-            expect.objectContaining({
-              options: expect.objectContaining({
-                env: expect.objectContaining({
-                  VITE_CONVEX_URL: "https://production.convex.cloud",
-                  AKSARA_ACCEPTANCE_PRIVATE_KEY: undefined,
-                  AKSARA_SIGNING_PRIVATE_KEY: undefined,
-                  CONVEX_DEPLOY_KEY: undefined,
-                  CONVEX_DEPLOYMENT_TOKEN: undefined,
-                }),
-              }),
-            }),
-          ]);
-          if (code === 0) {
-            yield* runBuildCommand("/tmp", ["bun", "run", "build"]).pipe(
-              Effect.provideService(
-                ChildProcessSpawner.ChildProcessSpawner,
-                child.service
-              )
-            );
-          }
-        }).pipe(Effect.provide(services))
-    );
-  }
 
   it.effect("retries a start answered with a 500 once, then starts clean", () =>
     Effect.gen(function* () {

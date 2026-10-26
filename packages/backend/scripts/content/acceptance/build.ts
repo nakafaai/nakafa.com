@@ -10,11 +10,9 @@ import {
 } from "@repo/backend/scripts/content/acceptance/local";
 import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
 import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
-import {
-  runBuildCommand,
-  withLocalBackend,
-} from "@repo/backend/scripts/content/acceptance/process";
+import { withLocalBackend } from "@repo/backend/scripts/content/acceptance/process";
 import { publishAcceptanceSource } from "@repo/backend/scripts/content/acceptance/publication";
+import { runBuildCommand } from "@repo/backend/scripts/content/acceptance/terminal";
 import { Effect, Exit, Option } from "effect";
 
 /** Creates one signed local acceptance database without touching a cloud deployment. */

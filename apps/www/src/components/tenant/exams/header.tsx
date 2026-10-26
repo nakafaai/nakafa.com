@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { ArrowLeft01Icon, ViewIcon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -15,7 +15,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { isLocked } from "@/components/tenant/exams/freeze";
-import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
+import { ExamMenu } from "@/components/tenant/exams/menu";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { ExamPresence } from "@/components/tenant/exams/presence";
 import { useExam } from "@/components/tenant/exams/provider";
@@ -29,10 +29,10 @@ import { Link } from "@/lib/routing/link";
  * types, so it follows a co-editor's rename. The title is saved when the field loses focus or the
  * teacher presses Enter, and only a trimmed, changed, valid title is sent. The optimistic change
  * restores the saved title when the server refuses the rename. The row ends with the other teachers
- * in the exam (ExamPresence), Import while the exam's questions may change (ImportQuestions), the
- * action that tries the exam as a student, and the button that schedules it, and the title takes the room left between them, truncated while the field is not
- * focused. On a phone the actions keep their icons and their names for screen readers, so the
- * title keeps room to read at 375 pixels.
+ * in the exam (ExamPresence) and two buttons at most: Try as student with a menu of the rarer actions
+ * joined to it (ExamMenu), and Schedule, the main action. The title takes the room left between
+ * them, truncated while the field is not focused. On a phone the buttons keep their icons and their
+ * names for screen readers, so the title keeps room to read at 375 pixels.
  * A frozen exam says why its questions are fixed in a line under the header (ExamLockedNote).
  */
 export function ExamHeader() {
@@ -95,16 +95,7 @@ export function ExamHeader() {
         value={draft ?? exam.title}
       />
       <ExamPresence />
-      {isLocked(exam) ? null : <ImportQuestions />}
-      <Link
-        aria-label={t("try-action")}
-        className={buttonVariants({ variant: "outline" })}
-        params={{ exam: exam.id, slug }}
-        to="/school/$slug/exams/$exam/try"
-      >
-        <HugeIcons aria-hidden="true" icon={ViewIcon} />
-        <span className="max-sm:sr-only">{t("try-action")}</span>
-      </Link>
+      <ExamMenu />
       {exam.archived ? null : <ScheduleExam />}
     </header>
   );

@@ -1,5 +1,6 @@
 import { createRouter } from "@tanstack/react-router";
 import { routeRewrite } from "@/lib/routing/rewrite";
+import { makeScrollRestoration } from "@/lib/routing/scroll";
 import { routeTree } from "@/routeTree.gen";
 
 /**
@@ -20,7 +21,7 @@ export function getRouter() {
     defaultRemountDeps: remountByParams,
     rewrite: routeRewrite,
     routeTree,
-    scrollRestoration: true,
+    scrollRestoration: makeScrollRestoration(),
   });
 }
 
