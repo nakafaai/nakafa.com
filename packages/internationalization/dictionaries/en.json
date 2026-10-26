@@ -306,6 +306,15 @@
     "seats-filter-title": "No seat matches",
     "signals-empty-title": "No signal yet",
     "student-start": "Start exam",
+    "import-label": "Questions from a file",
+    "import-description": "Optional: Nina puts the questions of a Word or PDF file in the exam.",
+    "import-action": "Import",
+    "import-title": "Import questions",
+    "import-dialog-description": "Nina puts the questions of a Word or PDF file at the end of this exam.",
+    "import-submit": "Import",
+    "import-hint": "Word or PDF, up to 20 MB.",
+    "import-drop": "Drop a Word or PDF file here, or choose one.",
+    "import-remove": "Remove file",
     "presence-editor": "{name} is editing",
     "presence-more": "{names} are editing"
   },
@@ -1918,6 +1927,54 @@
     "school-refusal-npsn-taken": {
       "title": "This NPSN is already used.",
       "description": "Another unit of this school already has it."
+    },
+    "import-reading": {
+      "title": "Nina is reading your file.",
+      "description": "Each question shows in the exam as she reads it."
+    },
+    "import-done": {
+      "title": "Your questions are in the exam.",
+      "description": "Every question has its correct answer."
+    },
+    "import-keyless": {
+      "title": "Your questions are in the exam.",
+      "description": "Mark the correct answers that the file did not mark."
+    },
+    "import-mathtype": {
+      "title": "Some equations are pictures.",
+      "description": "Type them again in the editor."
+    },
+    "import-empty": {
+      "title": "Nina found no question.",
+      "description": "Write the questions in the editor, or try another file."
+    },
+    "import-stopped": {
+      "title": "Nina could not read the rest.",
+      "description": "The questions read so far are in the exam."
+    },
+    "import-unread": {
+      "title": "Nina could not read this file.",
+      "description": "Try again, or write the questions in the editor."
+    },
+    "import-type": {
+      "title": "This file cannot be imported.",
+      "description": "Choose a Word or PDF file."
+    },
+    "import-size": {
+      "title": "This file is too large.",
+      "description": "Choose a file of at most 20 MB."
+    },
+    "import-pages": {
+      "title": "This PDF is too long.",
+      "description": "Choose a PDF of at most 30 pages."
+    },
+    "import-macro": {
+      "title": "This file holds macros.",
+      "description": "Save it as a Word document without macros first."
+    },
+    "import-encrypted": {
+      "title": "This PDF has a password.",
+      "description": "Save it without the password first."
     }
   },
   "Ai": {
