@@ -44,6 +44,12 @@ test("a visitor's profile opens no socket, sends no session read, loads more pos
           { discard: true }
         );
         yield* Effect.promise(() => page.context().clearCookies());
+        // The learner's own pages opened a socket and read the session; only
+        // what the visitor's profile does from here on counts.
+        yield* Effect.sync(() => {
+          MutableList.clear(sockets);
+          MutableList.clear(sessionReads);
+        });
         yield* Effect.promise(() =>
           page.goto(`/en/@${learner.username}`, { waitUntil: "load" })
         );

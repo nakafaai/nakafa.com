@@ -12,6 +12,7 @@ import {
 } from "@/e2e/support/paint";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { ownedChat } from "@/e2e/support/share";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -185,6 +186,15 @@ test("the Nina sheet shows its composer in its first frame", async ({
         });
         await expect(askNina).toBeVisible();
         await waitUntilTakenOver(askNina);
+        // A reader's first scroll warms the sheet in the next idle moment, so
+        // the sheet's composer is in the document, hidden, before the press.
+        await page.mouse.wheel(0, 200);
+        await expect(
+          page.getByRole("textbox", {
+            includeHidden: true,
+            name: "Ask Nina anything...",
+          })
+        ).toBeAttached({ timeout: readinessTimeoutMilliseconds });
         await recordPaints(page, {
           contains: "",
           duration: RECORD_MILLISECONDS,
@@ -214,6 +224,7 @@ test("the command palette shows its groups in its first frame", async ({
           .locator('[data-sidebar="sidebar"]:visible')
           .getByRole("button", { name: "Search content..." });
         await expect(search).toBeVisible();
+        await waitUntilTakenOver(search);
         await recordPaints(page, {
           contains: "Search",
           duration: RECORD_MILLISECONDS,
