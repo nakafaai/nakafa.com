@@ -73,12 +73,15 @@ message (ADR 0016).
 - A row is kept for 90 days, the period that K10 proposes. Deleting an account
   deletes the rows of the account and of the Persons it held.
 - There is one inbox, at `nakafa.com/id/notifications` (ADR 0026), served by
-  the cell that holds the account. Inside a school it opens as a panel on the
-  right with a filter, "This school" or "All schools", and it has no second
-  address. A personal notification never shows inside a school, "All schools"
-  included. A click opens the tab it points to on the same host. The filters
-  are the kinds: all, mentions, tasks, grades, announcements, exams, and
-  invitations.
+  the cell that holds the account. Inside a school, the account menu's
+  Notifications opens the same inbox as the school's own page on its host
+  (`/notifications`), as every School page is one header and a body: this
+  school's rows first, and a header filter, "This school" or "All schools",
+  kept in the address (`?schools=all`). Both read `notifications.inbox` (the
+  school page names its slug), so a row read in one is read in the other. A
+  personal notification never shows inside a school, "All schools" included. A
+  click opens the tab it points to on the same host. Filters of the kinds (all,
+  mentions, tasks, grades, announcements, exams, and invitations) follow.
 - The inbox opens in the first frame after the tap (target). A browser test
   measures it at 390 and 1440 px against the budget of the initial bundle. The
   Nina System Blueprint measured the same kind of panel, the Nina sheet, on
