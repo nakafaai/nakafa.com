@@ -155,7 +155,7 @@ describe("tenancy/roster invite and members", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const removableAs = (account: "admin" | "owner") =>
+        const removableAs = (account: "admin" | "owner" | "auditor") =>
           fixture
             .as(account)
             .query(members, { ...everyone, slug: nf })
@@ -178,6 +178,10 @@ describe("tenancy/roster invite and members", () => {
           Owner: false,
           Teacher: true,
           "Unit Admin": true,
+        });
+        expect(yield* removableAs("auditor")).toMatchObject({
+          Admin: false,
+          Owner: false,
         });
       })
   );
