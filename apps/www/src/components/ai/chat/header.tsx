@@ -110,59 +110,57 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
     <>
       <ChatHeader
         actions={
-          <>
-            <DropdownMenu onOpenChange={onMenuOpenChange}>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    aria-label={tCommon("more-actions")}
-                    ref={moreActions}
-                    size="icon"
-                    variant="outline"
-                  >
-                    <HugeIcons icon={MoreHorizontalIcon} />
-                    <span className="sr-only">{tCommon("more-actions")}</span>
-                  </Button>
-                }
-              />
-              <DropdownMenuContent
-                align="end"
-                className="w-56"
-                finalFocus={menuFinalFocus}
-              >
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={handleEdit}
-                  >
-                    <HugeIcons icon={Edit01Icon} />
-                    {t("rename-chat")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => setConfirmShare(true)}
-                    onFocus={warmShare}
-                    onPointerDown={warmShare}
-                    onPointerEnter={warmShare}
-                  >
-                    <HugeIcons icon={LinkForwardIcon} />
-                    {t("share-chat")}
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => setConfirmDelete(true)}
-                    variant="destructive"
-                  >
-                    <HugeIcons icon={Delete02Icon} />
-                    {t("delete-chat")}
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
+          <DropdownMenu onOpenChange={onMenuOpenChange}>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label={tCommon("more-actions")}
+                  ref={moreActions}
+                  size="icon"
+                  variant="outline"
+                >
+                  <HugeIcons icon={MoreHorizontalIcon} />
+                  <span className="sr-only">{tCommon("more-actions")}</span>
+                </Button>
+              }
+            />
+            <DropdownMenuContent
+              align="end"
+              className="w-56"
+              finalFocus={menuFinalFocus}
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={handleEdit}
+                >
+                  <HugeIcons icon={Edit01Icon} />
+                  {t("rename-chat")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => setConfirmShare(true)}
+                  onFocus={warmShare}
+                  onPointerDown={warmShare}
+                  onPointerEnter={warmShare}
+                >
+                  <HugeIcons icon={LinkForwardIcon} />
+                  {t("share-chat")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => setConfirmDelete(true)}
+                  variant="destructive"
+                >
+                  <HugeIcons icon={Delete02Icon} />
+                  {t("delete-chat")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       >
         {/* The rename's two answers sit inside its box, so the header keeps

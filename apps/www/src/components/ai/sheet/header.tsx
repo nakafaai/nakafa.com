@@ -69,7 +69,9 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
               <DropdownMenuTrigger
                 render={
                   <Button
-                    className={activeChatId ? undefined : "hidden sm:inline-flex"}
+                    className={
+                      activeChatId ? undefined : "hidden sm:inline-flex"
+                    }
                     size="icon-sm"
                     variant="ghost"
                   >
