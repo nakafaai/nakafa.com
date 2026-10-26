@@ -38,7 +38,7 @@ async function centreOf(control: Locator) {
 /** How far above the first grip the pointer ends, so the dragged page passes its middle. */
 const ABOVE_THE_FIRST_GRIP = 120;
 
-test("a teacher sets the points, writes the rubric and explanation, moves a question with the keyboard and by drag, and the editor opens with all of it", async ({
+test("a teacher sets the points, the key and the explanation, moves a question with the keyboard and by drag, and the editor opens with all of it", async ({
   browser,
   baseURL,
 }) => {
@@ -72,8 +72,8 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
   await expect(second).toContainText("Soal kedua");
 
   // The canvas holds only the papers. The teacher layer of the chosen page stands in the panel
-  // beside it: the teacher goes back to the first page, then sets five points, the key, a rubric,
-  // and an explanation there.
+  // beside it: the teacher goes back to the first page, then sets five points, the key, and an
+  // explanation there. A choice is marked by the server, so its layer holds no rubric.
   await firstText.click();
   const panel = page.getByRole("complementary", { name: "For teachers" });
   await expect(panel).toContainText("Question 1");
@@ -93,8 +93,9 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
   });
   await keyOfB.click();
   await expect(keyOfB).toHaveAttribute("aria-pressed", "true");
-  await panel.getByRole("textbox", { name: "Rubric of question 1" }).click();
-  await page.keyboard.type("Nilai penuh untuk opsi benar.");
+  await expect(
+    panel.getByRole("textbox", { name: "Rubric of question 1" })
+  ).toHaveCount(0);
   await panel
     .getByRole("textbox", { name: "Explanation of question 1" })
     .click();
@@ -166,11 +167,6 @@ test("a teacher sets the points, writes the rubric and explanation, moves a ques
       name: "Mark option B of question 1 as correct",
     })
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    reopenedPanel.getByRole("textbox", { name: "Rubric of question 1" })
-  ).toContainText("Nilai penuh untuk opsi benar.", {
-    timeout: readinessTimeoutMilliseconds,
-  });
   await expect(
     reopenedPanel.getByRole("textbox", { name: "Explanation of question 1" })
   ).toContainText("Dua tambah tiga sama dengan lima.", {
