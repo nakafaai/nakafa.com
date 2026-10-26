@@ -16,7 +16,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const SESSION_READ = "**/api/auth/get-session*";
-const TOKEN_READ = "**/api/auth/convex/token*";
+const CONVEX_AUTH_READ = "**/api/auth/convex/token*";
 
 /** The words of every state that says a read failed, was refused, or found nothing. */
 const ERROR_STATES = [
@@ -45,12 +45,16 @@ const UNAVAILABLE_SESSION = {
 } as const;
 
 /** Convex's first token request and the one it sends when that fails both get no answer. */
-const DROPPED_TOKENS = { answer: "none", route: TOKEN_READ, times: 2 } as const;
+const DROPPED_AUTH_READS = {
+  answer: "none",
+  route: CONVEX_AUTH_READ,
+  times: 2,
+} as const;
 
 /** How the first requests to one Better Auth route fail. */
 type Failure =
   | typeof DROPPED_SESSION
-  | typeof DROPPED_TOKENS
+  | typeof DROPPED_AUTH_READS
   | typeof UNAVAILABLE_SESSION;
 
 /** Records, from the first paint on, every error state the page shows. */
@@ -149,7 +153,7 @@ for (const width of [390, 1440]) {
       for (const failure of [
         DROPPED_SESSION,
         UNAVAILABLE_SESSION,
-        DROPPED_TOKENS,
+        DROPPED_AUTH_READS,
       ]) {
         const page = await opensWithoutError(
           context,
