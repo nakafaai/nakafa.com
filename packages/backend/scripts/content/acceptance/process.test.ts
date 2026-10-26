@@ -125,7 +125,12 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
       });
     })
   );
-  return { commands, release, service, temporaryRoots };
+  /** Provides this spawner as the program's child process spawner. */
+  const provide = Effect.provideService(
+    ChildProcessSpawner.ChildProcessSpawner,
+    service
+  );
+  return { commands, provide, release, temporaryRoots };
 });
 
 describe("application process ownership", () => {
@@ -180,10 +185,7 @@ describe("application process ownership", () => {
           return "built";
         });
         const result = yield* withLocalBackend(runtime, program).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            child.service
-          ),
+          child.provide,
           Effect.exit
         );
         expect(result._tag).toBe(outcome === "success" ? "Success" : "Failure");
@@ -240,10 +242,7 @@ describe("application process ownership", () => {
           Promise.resolve(new Response("owned"))
         );
         const failure = yield* withLocalBackend(runtime, original).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            child.service
-          ),
+          child.provide,
           Effect.provide(Logger.layer([logger])),
           Effect.flip
         );
@@ -284,10 +283,7 @@ describe("application process ownership", () => {
           });
           expect(
             yield* withLocalBackend(runtime, program).pipe(
-              Effect.provideService(
-                ChildProcessSpawner.ChildProcessSpawner,
-                child.service
-              ),
+              child.provide,
               Effect.provide(Logger.layer([logger])),
               Effect.flip
             )
@@ -306,10 +302,7 @@ describe("application process ownership", () => {
         yield* occupyPort(43_310);
         const child = yield* spawner();
         const error = yield* withLocalBackend(runtime, Effect.void).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            child.service
-          ),
+          child.provide,
           Effect.flip
         );
         expect(error).toMatchObject({
@@ -335,10 +328,7 @@ describe("application process ownership", () => {
             : Promise.resolve(new Response("owned"))
         );
         const error = yield* withLocalBackend(runtime, Effect.never).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            child.service
-          ),
+          child.provide,
           Effect.flip
         );
         const messages = {
@@ -374,10 +364,7 @@ describe("application process ownership", () => {
               .readFileString(path)
               .pipe(Effect.tap((log) => Deferred.succeed(readinessLog, log))),
         }),
-        Effect.provideService(
-          ChildProcessSpawner.ChildProcessSpawner,
-          child.service
-        ),
+        child.provide,
         Effect.flip,
         Effect.forkChild
       );
@@ -444,13 +431,7 @@ writeFileSync("ready", "ready");`
               AKSARA_ACCEPTANCE_PRIVATE_KEY: "private",
               AKSARA_SIGNING_PRIVATE_KEY: "private",
             }
-          ).pipe(
-            Effect.provideService(
-              ChildProcessSpawner.ChildProcessSpawner,
-              child.service
-            ),
-            Effect.result
-          );
+          ).pipe(child.provide, Effect.result);
           expect(result._tag).toBe(code === 0 ? "Success" : "Failure");
           expect(MutableList.toArray(child.commands)).toEqual([
             expect.objectContaining({
@@ -467,10 +448,7 @@ writeFileSync("ready", "ready");`
           ]);
           if (code === 0) {
             yield* runBuildCommand("/tmp", ["bun", "run", "build"]).pipe(
-              Effect.provideService(
-                ChildProcessSpawner.ChildProcessSpawner,
-                child.service
-              )
+              child.provide
             );
           }
         }).pipe(Effect.provide(services))
@@ -488,10 +466,7 @@ writeFileSync("ready", "ready");`
       fetcher.mockImplementation(() => Promise.resolve(new Response("owned")));
       const result = yield* ticking(
         withLocalBackend(runtime, Effect.void).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            child.service
-          ),
+          child.provide,
           Effect.result
         )
       );

@@ -217,12 +217,10 @@ const verifyRun = Effect.fn("NakafaE2E.verifyRun")(function* (
   for (const family of families) {
     const paths = yield* readFamilyPaths(page, family);
     yield* Effect.sync(() => expect(paths.length).toBeGreaterThan(0));
-    const slice = Arr.filterMap(
-      Arr.makeBy(
-        family.count,
-        (offset) => (run.slot * family.count + offset) % paths.length
-      ),
-      (index) => Arr.get(paths, index)
+    const slice = Arr.getSomes(
+      Arr.makeBy(family.count, (offset) =>
+        Arr.get(paths, (run.slot * family.count + offset) % paths.length)
+      )
     );
     yield* Effect.forEach(slice, (path) =>
       verifyServerContentSurvives(page, tokens, run.signedIn, path)
