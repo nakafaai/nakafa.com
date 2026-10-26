@@ -112,7 +112,6 @@ export function GradebookFilters() {
         facets={[
           {
             column: "state",
-            icon: CircleIcon,
             options: Arr.map(
               ["none", "draft", "released"] as const,
               (state) => ({

@@ -72,6 +72,28 @@ export function readAccountName(
   return Option.fromUndefinedOr(name === "" ? username : name);
 }
 
+/**
+ * The outsider frame that a reload answers once the school stops counting a member: the member's
+ * own account and the school's profile, as the server builds that frame. A frame that is not a
+ * member's has none, and so has an account with no name, for which a reload answers not found.
+ */
+export function outsiderOf(
+  frame: SchoolRead
+): Option.Option<typeof OutsiderFrame.Type> {
+  if (frame._tag !== "Member") {
+    return Option.none();
+  }
+  return Option.map(
+    readAccountName(frame.viewer.account.name, frame.viewer.account.username),
+    (account) => ({
+      _tag: "Outsider" as const,
+      account,
+      locale: frame.locale,
+      profile: frame.profile,
+    })
+  );
+}
+
 /** Whether the viewer may manage the school, which the school's settings and its setup need. */
 export function canManageSchool(can: readonly string[]): boolean {
   return Arr.contains(can, "tenant.manage");

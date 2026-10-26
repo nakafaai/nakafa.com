@@ -5,7 +5,19 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { Download01Icon, UserIcon } from "@hugeicons/core-free-icons";
+import {
+  Download01Icon,
+  UserAccountIcon,
+  UserCheck01Icon,
+  UserCircleIcon,
+  UserEdit01Icon,
+  UserIcon,
+  UserLove01Icon,
+  UserSettings01Icon,
+  UserShield01Icon,
+  UserSquareIcon,
+  UserStar01Icon,
+} from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -21,6 +33,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFilter,
@@ -30,6 +43,20 @@ import {
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
+
+/** The icons of the people in the trail's Filter menu, one of a person for each. */
+const PERSON_ICONS = [
+  UserIcon,
+  UserCircleIcon,
+  UserSquareIcon,
+  UserStar01Icon,
+  UserAccountIcon,
+  UserCheck01Icon,
+  UserEdit01Icon,
+  UserLove01Icon,
+  UserSettings01Icon,
+  UserShield01Icon,
+] as const;
 
 /** How many entries one page of the journal loads, and each page after it. */
 const PAGE_SIZE = 25;
@@ -87,8 +114,7 @@ function AuditFilter({ slug }: { slug: TenantSlug }) {
       facets={[
         {
           column: "who",
-          icon: UserIcon,
-          options: Arr.map(actors, (name) => ({ label: name, value: name })),
+          options: namedOptions(actors, PERSON_ICONS),
           title: t("audit-who"),
         },
       ]}

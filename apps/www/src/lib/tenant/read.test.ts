@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -11,19 +11,14 @@ import {
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Layer, Option, Result, Schema } from "effect";
-import { FetchHttpClient } from "effect/http";
 import { readSchoolSignInTitle } from "@/lib/tenant/copy";
-import type { SchoolViewer } from "@/lib/tenant/frame";
+import { outsiderOf, type SchoolViewer } from "@/lib/tenant/frame";
 import {
-  readBrowserSchoolFrame,
   readSchoolFrame,
   SchoolReadFailed,
   SchoolReads,
   SchoolReadsLive,
 } from "@/lib/tenant/read";
-
-/** One fetch double for the whole file: the browser's request to the token route. */
-const fetcher = vi.fn<typeof fetch>();
 
 /** The Convex answer of every query the live reads make, chosen by each test. */
 const queryMock = vi.hoisted(() => vi.fn());
@@ -395,87 +390,64 @@ describe("SchoolReadsLive", () => {
   );
 });
 
-describe("readBrowserSchoolFrame", () => {
-  /** The tokens that the viewer read was asked with. */
-  let tokens: readonly string[] = [];
+describe("outsiderOf", () => {
+  /** The frame that a member's own visit holds, read with the viewer that the test chooses. */
+  const memberFrame = (viewer: SchoolViewer) =>
+    readSchoolFrame({ ...READ, token: Option.some("token") }).pipe(
+      Effect.provide(reads({ viewer: Effect.succeed(Result.succeed(viewer)) }))
+    );
 
-  /** A school read set that records the token of the viewer read and answers a member. */
-  const memberReads = Layer.succeed(
-    SchoolReads,
-    SchoolReads.of({
-      account: () => Effect.die("account not expected"),
-      profile: () => Effect.die("profile not expected"),
-      viewer: (_slug, token) =>
-        Effect.sync(() => {
-          tokens = [...tokens, token];
-          return Result.succeed<SchoolViewer>(VIEWER);
-        }),
-    })
+  it.effect(
+    "gives a member whom the school stops counting the outsider frame that a reload reads",
+    () =>
+      Effect.gen(function* () {
+        const member = yield* memberFrame(VIEWER);
+        const reload = yield* readSchoolFrame({
+          ...READ,
+          token: Option.some("token"),
+        }).pipe(
+          Effect.provide(
+            reads({
+              account: Effect.succeedSome("Ayu"),
+              profile: Effect.succeedSome(PROFILE),
+              viewer: Effect.succeed(Result.fail("Outsider")),
+            })
+          )
+        );
+        expect(Option.getOrThrow(outsiderOf(member))).toMatchObject(reload);
+      })
   );
 
-  /** The browser of these tests: a school host's address. */
-  function stubBrowser() {
-    vi.stubGlobal("window", {
-      location: { origin: "https://harapan.nakafa.com" },
-    });
-  }
+  it.effect(
+    "names the outsider by the username when the account has no name, as a reload does",
+    () =>
+      Effect.gen(function* () {
+        const account = yield* Schema.decodeEffect(ViewerAccount)({
+          mascot: MASCOT,
+          name: "",
+          username: "ayu",
+        });
+        const member = yield* memberFrame({ ...VIEWER, account });
+        expect(
+          Option.map(outsiderOf(member), (outsider) => outsider.account)
+        ).toEqual(Option.some("ayu"));
+      })
+  );
 
-  beforeEach(() => {
-    fetcher.mockReset();
-    tokens = [];
+  it.effect(
+    "gives none for an account that names nothing, where a reload answers not found",
+    () =>
+      Effect.gen(function* () {
+        const account = yield* Schema.decodeEffect(ViewerAccount)({
+          mascot: MASCOT,
+          name: "",
+        });
+        const member = yield* memberFrame({ ...VIEWER, account });
+        expect(outsiderOf(member)).toEqual(Option.none());
+      })
+  );
+
+  it("gives none for a frame that is not a member's", () => {
+    expect(outsiderOf({ _tag: "Refused" })).toEqual(Option.none());
   });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it.effect(
-    "reads a visitor's frame when the token route finds no session",
-    () =>
-      Effect.gen(function* () {
-        stubBrowser();
-        fetcher.mockResolvedValueOnce(new Response(null, { status: 401 }));
-        const read = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
-          Effect.provide(reads({ profile: Effect.succeedSome(PROFILE) })),
-          Effect.provideService(FetchHttpClient.Fetch, fetcher)
-        );
-        expect(read._tag).toBe("Visitor");
-        expect(fetcher).toHaveBeenCalledOnce();
-      })
-  );
-
-  it.effect(
-    "reads a member's frame with the token from the school host's own token route",
-    () =>
-      Effect.gen(function* () {
-        stubBrowser();
-        fetcher.mockResolvedValueOnce(Response.json({ token: "token-ayu" }));
-        const read = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
-          Effect.provide(memberReads),
-          Effect.provideService(FetchHttpClient.Fetch, fetcher)
-        );
-        expect(read._tag).toBe("Member");
-        expect(tokens).toStrictEqual(["token-ayu"]);
-        const [address] = fetcher.mock.calls[0] ?? [];
-        expect(String(address)).toBe(
-          "https://harapan.nakafa.com/api/auth/convex/token"
-        );
-      })
-  );
-
-  it.effect(
-    "fails the frame when the token route refuses, so an outage never reads as a visitor",
-    () =>
-      Effect.gen(function* () {
-        stubBrowser();
-        fetcher.mockResolvedValueOnce(new Response(null, { status: 403 }));
-        const failure = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
-          Effect.provide(memberReads),
-          Effect.provideService(FetchHttpClient.Fetch, fetcher),
-          Effect.flip
-        );
-        expect(failure).toBeInstanceOf(SchoolReadFailed);
-        expect(tokens).toStrictEqual([]);
-      })
-  );
 });

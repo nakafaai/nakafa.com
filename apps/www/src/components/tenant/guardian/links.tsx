@@ -1,5 +1,5 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import { FilterHorizontalIcon, Link01Icon } from "@hugeicons/core-free-icons";
+import { Link01Icon } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -87,7 +87,6 @@ export function GuardianLinksSettings() {
                 facets={[
                   {
                     column: "status",
-                    icon: FilterHorizontalIcon,
                     options: Arr.map(LinkStatus.literals, (status) => ({
                       icon: LINK_STATUS_ICONS[status],
                       label: t(`status-${status}`),

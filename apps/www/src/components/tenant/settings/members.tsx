@@ -91,7 +91,6 @@ export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
               facets={[
                 {
                   column: "status",
-                  icon: UserCircleIcon,
                   options: Arr.map(MemberStatus.literals, (status) => ({
                     icon: STATUS_LOOKS[status].icon,
                     label: t(`member-status-label.${status}`),

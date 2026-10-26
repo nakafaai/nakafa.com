@@ -3,11 +3,7 @@ import {
   QueryResult,
   usePaginatedQuery,
 } from "@confect/react";
-import {
-  BookOpen01Icon,
-  School01Icon,
-  UserIcon,
-} from "@hugeicons/core-free-icons";
+import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -40,7 +36,7 @@ import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolGrantTable } from "@/components/tenant/settings/roles/grants";
-import { scopeNames } from "@/components/tenant/settings/scope";
+import { scopeOptions } from "@/components/tenant/settings/scope";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 
 /** How many grants one page of the list loads, and each page after it. */
@@ -68,7 +64,6 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
               facets={[
                 {
                   column: "role",
-                  icon: UserIcon,
                   options: Arr.map(BuiltinRole.literals, (role) => ({
                     icon: roleIcon(role),
                     label: tSchool(`role.${role}`),
@@ -78,13 +73,9 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
                 },
                 {
                   column: "scope",
-                  icon: School01Icon,
-                  options: Arr.map(
-                    QueryResult.isSuccess(viewer)
-                      ? scopeNames(viewer.value.tenant.name, viewer.value.units)
-                      : [],
-                    (name) => ({ label: name, value: name })
-                  ),
+                  options: QueryResult.isSuccess(viewer)
+                    ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
+                    : [],
                   title: t("grant-scope"),
                 },
               ]}
