@@ -9,7 +9,6 @@ import { Nisn } from "@repo/backend/confect/roster/schema";
 import { cohort, denied, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool, NISN, setRoster } from "@repo/backend/test/guardians";
 import {
-  foreignCohort,
   journal,
   slugOf,
   TENANCY_NOW,
@@ -175,7 +174,6 @@ describe("roster/imports", () => {
           )
         ).toMatchObject(denied("role"));
       }
-      const other = yield* foreignCohort(fixture);
       expect(
         yield* Effect.flip(
           fixture.as("otherOwner").mutation(apply, {
@@ -185,7 +183,6 @@ describe("roster/imports", () => {
           })
         )
       ).toMatchObject(denied("resource"));
-      expect(other.periodId).not.toBe(term.id);
     })
   );
 
