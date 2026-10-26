@@ -10,7 +10,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   type DashboardAttempt,
@@ -112,7 +112,11 @@ export function SittingSeats() {
       className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-2"
     >
       <SeatPage attempts={first.page} cursor={null} />
-      {first.isDone ? null : <NextSeats cursor={first.continueCursor} />}
+      {first.isDone ? null : (
+        <NextSeats>
+          <NextSeatsPage cursor={first.continueCursor} />
+        </NextSeats>
+      )}
       {showExpected
         ? Arr.map(expected.results, (seat) => (
             <li key={seat.id}>
@@ -179,10 +183,10 @@ function SeatPage({
 }
 
 /**
- * The page of attempts that starts at `cursor`, loaded once the end of the seats comes into
- * view, then the page after it in the same way, until the sitting has no more attempts.
+ * The page of attempts the caller composes, mounted once the end of the seats comes into view; that page
+ * holds the page after it in the same way, until the sitting has no more attempts.
  */
-function NextSeats({ cursor }: { readonly cursor: string }) {
+function NextSeats({ children }: { readonly children: ReactNode }) {
   const [reached, setReached] = useState(false);
 
   if (!reached) {
@@ -192,7 +196,7 @@ function NextSeats({ cursor }: { readonly cursor: string }) {
       </li>
     );
   }
-  return <NextSeatsPage cursor={cursor} />;
+  return children;
 }
 
 /** One page of seats after the first, which a failed read shows as its own sentence with Try again. */
@@ -231,7 +235,9 @@ function NextSeatsReady({ cursor }: { readonly cursor: string }) {
     <>
       <SeatPage attempts={page.value.attempts.page} cursor={cursor} />
       {page.value.attempts.isDone ? null : (
-        <NextSeats cursor={page.value.attempts.continueCursor} />
+        <NextSeats>
+          <NextSeatsPage cursor={page.value.attempts.continueCursor} />
+        </NextSeats>
       )}
     </>
   );

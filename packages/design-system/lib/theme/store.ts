@@ -9,7 +9,7 @@ import {
   type ThemeAppearance,
   type ThemeChoice,
 } from "@repo/design-system/lib/theme/registry";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createStore, type StoreApi } from "zustand";
 
 /** The query that matches while the system asks for a dark appearance. */
@@ -97,10 +97,33 @@ function suppressTransitions() {
   });
 }
 
-/** Writes the resolved theme to the root element as its class and color scheme. */
+/** Whether the root element carries this theme's class, no other theme's, and its color scheme. */
+function showsTheme(root: HTMLElement, resolvedTheme: ConcreteTheme) {
+  return (
+    Arr.every(
+      concreteThemeValues,
+      (theme) => root.classList.contains(theme) === (theme === resolvedTheme)
+    ) &&
+    root.style.getPropertyValue("color-scheme") ===
+      getThemeAppearance(resolvedTheme)
+  );
+}
+
+/**
+ * Writes the resolved theme to the root element as its class and color scheme.
+ * A root that already shows the theme is left as it is. The prepaint script has
+ * applied the theme before the first paint, so the store's first state finds it
+ * there, and touching the root would only turn transitions off and on: a style
+ * change to every element of the page, a forced recalculation of all of them,
+ * and another change a frame later, over half a second of work on the home page
+ * at a phone's CPU speed.
+ */
 function applyResolvedTheme(resolvedTheme: ConcreteTheme) {
-  suppressTransitions();
   const root = document.documentElement;
+  if (showsTheme(root, resolvedTheme)) {
+    return;
+  }
+  suppressTransitions();
   root.classList.remove(...concreteThemeValues);
   root.classList.add(resolvedTheme);
   root.style.setProperty("color-scheme", getThemeAppearance(resolvedTheme));

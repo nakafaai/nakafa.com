@@ -1,4 +1,4 @@
-import { AiBrain01Icon } from "@hugeicons/core-free-icons";
+import { Bookmark02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "use-intl";
 import { useMessage } from "@/components/ai/message/context";
@@ -26,7 +26,7 @@ export function AiChatMessageRemembered() {
       title={t("remembered-title")}
       to="/$locale/user/settings/memory"
     >
-      <HugeIcons className="size-3.5" icon={AiBrain01Icon} />
+      <HugeIcons className="size-3.5" icon={Bookmark02Icon} />
       {t("remembered")}
     </Link>
   );

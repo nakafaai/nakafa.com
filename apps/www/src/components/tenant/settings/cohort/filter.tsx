@@ -1,5 +1,4 @@
 import {
-  Archive02Icon,
   Atom01Icon,
   Backpack01Icon,
   Book01Icon,
@@ -14,15 +13,14 @@ import {
   NotebookIcon,
   PencilIcon,
   RulerIcon,
-  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableFilter } from "@/components/shared/table/toolbar";
 import { gradeItems } from "@/components/tenant/settings/choices";
+import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 
 /** The icons of the school years in the Filter menu, one of study for each year. */
 const GRADE_ICONS = [
@@ -42,12 +40,6 @@ const GRADE_ICONS = [
   Mortarboard01Icon,
 ] as const;
 
-/** The icon of each cohort status in the Filter menu: the class together, and an archive. */
-const COHORT_STATUS_ICONS = {
-  active: UserGroupIcon,
-  archived: Archive02Icon,
-} as const satisfies Record<typeof CohortStatus.Type, IconSvgElement>;
-
 /** The cohorts' Filter menu, in the header row of the cohorts page: by school year and by status. */
 export function CohortFilter() {
   const t = useTranslations("SchoolSettings");
@@ -66,7 +58,7 @@ export function CohortFilter() {
         {
           column: "status",
           options: Arr.map(CohortStatus.literals, (status) => ({
-            icon: COHORT_STATUS_ICONS[status],
+            icon: COHORT_STATUS_LOOKS[status].icon,
             label: t(`cohort-${status}`),
             value: status,
           })),

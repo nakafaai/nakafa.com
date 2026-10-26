@@ -59,7 +59,15 @@ export function SchoolHeader({
           {title}
         </h1>
       )}
-      {heading === undefined ? <SchoolPath items={items} /> : heading}
+      {heading === undefined ? (
+        <SchoolPath
+          items={Arr.map(items, (item, index) =>
+            index === items.length - 1 ? { ...item, target: undefined } : item
+          )}
+        />
+      ) : (
+        heading
+      )}
       {children === undefined ? null : (
         <div className="ms-auto flex shrink-0 items-center gap-2">
           {children}
@@ -70,13 +78,13 @@ export function SchoolHeader({
 }
 
 /**
- * The path of a school page after its home, with the page itself last. On the school's
- * home the path is home alone, as the current page.
+ * The path of a school page after its home, with the page itself last, as the current page without a
+ * target. On the school's home the path is home alone, as the current page.
  */
 function SchoolPath({
   items,
 }: {
-  /** The path after the school's home, the page itself last; empty on the school's home. */
+  /** The path after the school's home, the page itself last with no target; empty on the school's home. */
   items: readonly BreadcrumbHeaderItem[];
 }) {
   const { slug } = useTenant();
@@ -97,10 +105,7 @@ function SchoolPath({
     <BreadcrumbHeaderPath
       home={schoolHomeTarget(slug)}
       homeLabel={tCommon("home")}
-      items={Arr.map(items, (item, index) =>
-        index === items.length - 1 ? { ...item, target: undefined } : item
-      )}
-      menuLabel={tCommon("more")}
+      items={items}
     />
   );
 }

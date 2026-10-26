@@ -1,5 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   project,
   projectSelection,
@@ -16,7 +17,7 @@ import {
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
+import { Array as Arr, Effect, HashSet, MutableHashMap, Option } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
@@ -61,6 +62,24 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   };
 });
 
+/**
+ * The placements that the learner flagged for review in the attempt, read by the attempt's prefix of the
+ * shared flags index (ADR 0031). An attempt holds at most one flag per question, so its question count
+ * bounds the read.
+ */
+const loadFlaggedPlacements = Effect.fn(
+  "tryouts.runtime.loadFlaggedPlacements"
+)(function* (attempt: Docs["tryoutAttempts"]) {
+  const flags = yield* (yield* DatabaseReader)
+    .table("assessmentFlags")
+    .index("by_attempt_and_question", (query) =>
+      query.eq("attempt", attempt._id)
+    )
+    .take(attempt.totalQuestions)
+    .pipe(Effect.orDie);
+  return HashSet.fromIterable(Arr.map(flags, (flag) => flag.question));
+});
+
 /** Loads the compact runtime plus immutable content selectors once. */
 export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
   function* (
@@ -91,6 +110,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
         questions: projectRuntimeQuestions(
           loaded.placements,
           loaded.responses,
+          yield* loadFlaggedPlacements(attempt),
           loaded.access
         ),
         section: loaded.currentSection,
@@ -103,6 +123,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
 function projectRuntimeQuestions(
   placements: readonly TryoutPlacement[],
   responses: TryoutResponseIndex["responses"],
+  flagged: HashSet.HashSet<string>,
   access: {
     readonly answers: boolean;
     readonly questions: boolean;
@@ -115,6 +136,7 @@ function projectRuntimeQuestions(
     projectRuntimeQuestion(
       placement,
       Option.getOrNull(MutableHashMap.get(responsesByPlacement, placement._id)),
+      HashSet.has(flagged, placement._id),
       access
     )
   );
@@ -124,6 +146,7 @@ function projectRuntimeQuestions(
 function projectRuntimeQuestion(
   placement: TryoutPlacement,
   response: TryoutResponse | null,
+  flagged: boolean,
   access: {
     readonly answers: boolean;
     readonly questions: boolean;
@@ -141,6 +164,7 @@ function projectRuntimeQuestion(
   const version = readVersion(placement, Option.fromNullOr(response));
   return {
     contentHash: placement.contentHash,
+    flagged,
     placementId: placement._id,
     questionOrder: placement.questionOrder,
     response: runtimeResponse,

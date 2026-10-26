@@ -43,7 +43,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -63,7 +63,7 @@ export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
   return (
     <SettingsPage>
       <ReadBoundary read={{ args: { slug }, ref: tenancy.viewer.get }}>
-        <SchoolPoliciesBody slug={slug} />
+        <SchoolPoliciesBody />
       </ReadBoundary>
     </SettingsPage>
   );
@@ -73,7 +73,7 @@ export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
  * Renders the policies of the school: the students' card with the Nina and thread
  * switches, and the allowed email domains.
  */
-function SchoolPoliciesBody({ slug }: { slug: TenantSlug }) {
+function SchoolPoliciesBody() {
   const viewer = useViewerQuery();
 
   if (QueryResult.isFailure(viewer)) {
@@ -85,14 +85,8 @@ function SchoolPoliciesBody({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
-      <SchoolStudentsPolicy
-        policies={viewer.value.tenant.policies}
-        slug={slug}
-      />
-      <SchoolDomainsPolicy
-        policies={viewer.value.tenant.policies}
-        slug={slug}
-      />
+      <SchoolStudentsPolicy policies={viewer.value.tenant.policies} />
+      <SchoolDomainsPolicy policies={viewer.value.tenant.policies} />
     </>
   );
 }
@@ -101,13 +95,7 @@ function SchoolPoliciesBody({ slug }: { slug: TenantSlug }) {
  * Renders the policies of the students as one card: the Nina and thread switches,
  * each saved at once, with the audit trail in its footer.
  */
-function SchoolStudentsPolicy({
-  policies,
-  slug,
-}: {
-  policies: SchoolPolicies;
-  slug: TenantSlug;
-}) {
+function SchoolStudentsPolicy({ policies }: { policies: SchoolPolicies }) {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -122,18 +110,15 @@ function SchoolStudentsPolicy({
             buildPolicy={(value) => ({ key: "nina", value })}
             checked={policies.nina}
             description="policy-nina-description"
-            slug={slug}
             title="policy-nina"
           />
           <SchoolNinaCreditsPolicy
             current={policies.ninaDailyCredits ?? DEFAULT_NINA_DAILY_CREDITS}
-            slug={slug}
           />
           <SchoolSwitchPolicy
             buildPolicy={(value) => ({ key: "studentThreads", value })}
             checked={policies.studentThreads}
             description="policy-threads-description"
-            slug={slug}
             title="policy-threads"
           />
         </FieldGroup>
@@ -155,15 +140,14 @@ function SchoolSwitchPolicy({
   buildPolicy,
   checked,
   description,
-  slug,
   title,
 }: {
   buildPolicy: (value: boolean) => typeof Policy.Type;
   checked: boolean;
   description: "policy-nina-description" | "policy-threads-description";
-  slug: TenantSlug;
   title: "policy-nina" | "policy-threads";
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const setPolicy = useMutation(
     tenancy.settings.setPolicy
@@ -197,13 +181,8 @@ function SchoolSwitchPolicy({
  * row of the students' card, chosen from a few steps of one answer's cap, and
  * saves each choice at once. A cap set elsewhere stays among the choices.
  */
-function SchoolNinaCreditsPolicy({
-  current,
-  slug,
-}: {
-  current: number;
-  slug: TenantSlug;
-}) {
+function SchoolNinaCreditsPolicy({ current }: { current: number }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const setPolicy = useMutation(
     tenancy.settings.setPolicy
@@ -270,13 +249,8 @@ function SchoolNinaCreditsPolicy({
  * address, and the server refuses a domain it does not accept, so the form saves
  * only a list that the policy schema reads.
  */
-function SchoolDomainsPolicy({
-  policies,
-  slug,
-}: {
-  policies: SchoolPolicies;
-  slug: TenantSlug;
-}) {
+function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const setPolicy = useMutation(
     tenancy.settings.setPolicy

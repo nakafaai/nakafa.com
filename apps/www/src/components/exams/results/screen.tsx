@@ -1,12 +1,5 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult } from "@confect/react";
-import {
-  CheckmarkCircle02Icon,
-  Clock01Icon,
-  HourglassIcon,
-  SquareLock01Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
@@ -22,11 +15,12 @@ import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
 import {
   type StatusFilter,
+  StudentStatusFilter,
   StudentsTable,
 } from "@/components/exams/results/students";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
+import { TablePageBody } from "@/components/shared/table/frame";
 import {
-  TableChoice,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -150,40 +144,20 @@ function SittingResultsContent({
               sittingId={scope.sittingId}
             >
               <TableSearch placeholder={t("results-search")} />
-              <TableChoice
-                onChange={setStatus}
-                options={[
-                  { icon: UserGroupIcon, label: t("filter-all"), value: "all" },
-                  {
-                    icon: Clock01Icon,
-                    label: t("state-in-progress"),
-                    value: "inProgress",
-                  },
-                  {
-                    icon: HourglassIcon,
-                    label: t("state-closing"),
-                    value: "closing",
-                  },
-                  {
-                    icon: SquareLock01Icon,
-                    label: t("state-locked"),
-                    value: "locked",
-                  },
-                  {
-                    icon: CheckmarkCircle02Icon,
-                    label: t("state-submitted"),
-                    value: "submitted",
-                  },
-                ]}
-                title={t("filter-label")}
-                value={status}
-              />
+              <StudentStatusFilter onChange={setStatus} value={status} />
               <QuestionsAction questions={questions} />
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
             <Panes>
               <PanesList>
-                <StudentsTable first={preload?.students} status={status} />
+                <TablePageBody>
+                  {canRelease || releasedAt !== null ? null : (
+                    <p className="border-b px-4 py-3 text-muted-foreground text-sm">
+                      {t("release-wait")}
+                    </p>
+                  )}
+                  <StudentsTable first={preload?.students} status={status} />
+                </TablePageBody>
               </PanesList>
               <StudentAnswersPanel />
             </Panes>

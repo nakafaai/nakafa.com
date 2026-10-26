@@ -15,8 +15,9 @@ import {
 } from "@/components/entry/shell";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { Broken } from "@/components/state/broken";
-import { RouteFailure } from "@/components/state/localized";
+import { ActionLink } from "@/components/state/action";
+import { Broken, BrokenRetry } from "@/components/state/broken";
+import { useRouteFailure } from "@/components/state/localized";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
@@ -76,27 +77,33 @@ function EntryLayout() {
 function EntryError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
   const messages = readStandaloneMessages(locale);
+  const reloading = useRouteFailure(error, "start-entry-error");
+  if (reloading) {
+    return null;
+  }
   return (
-    <RouteFailure error={error} source="start-entry-error">
-      <EntryShell>
-        <EntryShellPanel>
-          <EntryShellHeader>
-            <div className="ms-auto">
-              <ThemePicker variant="ghost" />
-            </div>
-          </EntryShellHeader>
-          <EntryShellBody>
-            <Broken
-              description={messages.Error.description}
-              home={messages.State["home-button"]}
-              homeHref={`/${locale}`}
-              retry={messages.Error.retry}
-              title={messages.Error.title}
+    <EntryShell>
+      <EntryShellPanel>
+        <EntryShellHeader>
+          <div className="ms-auto">
+            <ThemePicker variant="ghost" />
+          </div>
+        </EntryShellHeader>
+        <EntryShellBody>
+          <Broken
+            description={messages.Error.description}
+            title={messages.Error.title}
+          >
+            <BrokenRetry>{messages.Error.retry}</BrokenRetry>
+            <ActionLink
+              href={`/${locale}`}
+              label={messages.State["home-button"]}
+              variant="ghost"
             />
-          </EntryShellBody>
-        </EntryShellPanel>
-        <EntryShellArtwork />
-      </EntryShell>
-    </RouteFailure>
+          </Broken>
+        </EntryShellBody>
+      </EntryShellPanel>
+      <EntryShellArtwork />
+    </EntryShell>
   );
 }

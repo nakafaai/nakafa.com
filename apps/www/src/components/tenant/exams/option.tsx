@@ -10,7 +10,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import {
   holdsLabel,
   type OptionEdit,
@@ -18,8 +18,8 @@ import {
   optionEditOf,
 } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
-import { ExamDocument } from "@/components/tenant/exams/rich";
-import { ControlRoom, PaperOption } from "@/components/tenant/exams/sheet";
+import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
+import { ControlRoom } from "@/components/tenant/exams/sheet";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { makeQuietSaver } from "@/lib/save/quiet";
 
@@ -39,29 +39,28 @@ const OPTION_EXTENSIONS = [
 
 /** The props of one option row: the option it shows, and the teacher's controls beside it. */
 interface OptionRowProps {
+  /**
+   * The option the caller composes: its letter's frame around an `ExamDocument`, named for assistive
+   * technology, such as "Question 1, option A", with the text its empty editor shows.
+   */
+  readonly children: ReactNode;
   /** The label the option holds as the server saved it, which the editor starts with. */
   readonly label: OptionLabel;
-  /** The letter that names the option by its place. */
-  readonly letter: string;
   /** Whether the option is locked, so its text and its controls take no change. */
   readonly locked: boolean;
-  /** The name of the option's editor for assistive technology, such as "Question 1, option A". */
-  readonly name: string;
   /** Removes the option, or none while the question holds the fewest options it may take. */
   readonly onRemove: (() => void) | null;
   /**
    * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
    */
   readonly onSave: (label: OptionLabel, unstored: () => void) => void;
-  /** The text the empty editor shows. */
-  readonly placeholder: string;
   /** The name of the remove control for assistive technology. */
   readonly removeName: string;
 }
 
 /**
- * One option of a question: its letter and its rich text framed as the player frames it, then the
- * teacher's remove control to its right. The key of the question is marked in the teacher's layer,
+ * One option of a question: the letter and the rich text the caller composes, framed as the player
+ * frames it, then the teacher's remove control to its right. The row wires the text it holds. The key of the question is marked in the teacher's layer,
  * not here. Removing is shown when the option may go, on hover or focus, and always on a touch
  * screen. The text saves after its quiet period once the teacher types in it. A change that edits no
  * text, such as the editor taking its lock, saves nothing. Removing the option drops the pending save
@@ -69,13 +68,11 @@ interface OptionRowProps {
  * into the editor, unless the teacher has typed on since. An option the server has not saved yet is locked.
  */
 export function OptionRow({
-  letter,
+  children,
   label,
   locked,
-  name,
   onRemove,
   onSave,
-  placeholder,
   removeName,
 }: OptionRowProps) {
   const editor = useRef<DocumentEditorInstance | null>(null);
@@ -170,37 +167,33 @@ export function OptionRow({
 
   return (
     <div className="group/option grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-      <PaperOption letter={letter}>
-        <ExamDocument
-          extensions={OPTION_EXTENSIONS}
-          key={editorRound}
-          label={name}
-          onChange={(transaction) => {
-            const current = editor.current;
-            if (current === null) {
-              return;
-            }
-            const edit = optionEditOf({
-              docChanged: transaction.docChanged,
-              json: current.getJSON(),
-            });
-            if (Option.isNone(edit)) {
-              return;
-            }
-            Effect.runFork(saver.touch(edit.value));
-          }}
-          onEditor={(next) => {
-            editor.current = next;
-            next.commands.setContent(
-              Node.fromJSON(assessmentSchema, label).toJSON(),
-              { emitUpdate: false }
-            );
-            next.setEditable(!locked, false);
-          }}
-          placeholder={placeholder}
-          size="line"
-        />
-      </PaperOption>
+      <ExamDocumentWiringProvider
+        extensions={OPTION_EXTENSIONS}
+        onChange={(transaction) => {
+          const current = editor.current;
+          if (current === null) {
+            return;
+          }
+          const edit = optionEditOf({
+            docChanged: transaction.docChanged,
+            json: current.getJSON(),
+          });
+          if (Option.isNone(edit)) {
+            return;
+          }
+          Effect.runFork(saver.touch(edit.value));
+        }}
+        onEditor={(next) => {
+          editor.current = next;
+          next.commands.setContent(
+            Node.fromJSON(assessmentSchema, label).toJSON(),
+            { emitUpdate: false }
+          );
+          next.setEditable(!locked, false);
+        }}
+      >
+        <Fragment key={editorRound}>{children}</Fragment>
+      </ExamDocumentWiringProvider>
       <div className="flex items-center gap-1">
         {onRemove === null ? (
           <ControlRoom />

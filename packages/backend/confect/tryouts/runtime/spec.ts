@@ -46,6 +46,8 @@ const runtimeResponseValidator = Schema.Struct({
 });
 const runtimeQuestionValidator = Schema.Struct({
   contentHash: Schema.String,
+  /** Whether the learner flagged the question to come back to it, from the shared flags table (ADR 0031). */
+  flagged: Schema.Boolean,
   placementId: IdSchema("tryoutAttemptPlacements"),
   questionOrder: Schema.Finite,
   response: Schema.Union([runtimeResponseValidator, Schema.Null]),

@@ -1,5 +1,6 @@
 import {
   Globe02Icon,
+  MessageAdd01Icon,
   Search02Icon,
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
@@ -212,7 +213,7 @@ function SidebarChatRows({
           Arr.map(drafts, (key) => (
             <SidebarMenuItem key={key}>
               <SidebarMenuButton disabled isActive={!id}>
-                <HugeIcons icon={SquareLock01Icon} />
+                <HugeIcons icon={MessageAdd01Icon} />
                 <span className="truncate">{t("new-chat")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>

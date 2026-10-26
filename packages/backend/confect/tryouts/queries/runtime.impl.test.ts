@@ -26,6 +26,56 @@ const setRoute = {
   trackKey: TRYOUT_START_TRACK,
 };
 describe("tryouts/queries/runtime", () => {
+  it("reports each question's flag from the shared flags table, and only the attempt's own", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const fixture = await seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "runtime-flags",
+      });
+      const placement = await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
+          query.eq("tryoutAttemptId", fixture.attemptId)
+        )
+        .first();
+      assert(placement);
+      await ctx.db.insert("assessmentFlags", {
+        attempt: fixture.attemptId,
+        kind: "tryout",
+        question: placement._id,
+      });
+      await ctx.db.insert("assessmentFlags", {
+        attempt: "another-attempt",
+        kind: "tryout",
+        question: "another-question",
+      });
+      return { ...fixture, placementId: placement._id };
+    });
+    const owner = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+    const state = await owner.query(
+      api.tryouts.queries.runtime.getSectionAttemptState,
+      {
+        attemptId: seeded.attemptId,
+        locale: "id",
+        sectionKey: TRYOUT_SECTION_KEY,
+      }
+    );
+    const questions = state?.runtime?.questions ?? [];
+    expect(
+      Arr.map(questions, (question) => [question.placementId, question.flagged])
+    ).toEqual(
+      Arr.map(questions, (question) => [
+        question.placementId,
+        question.placementId === seeded.placementId,
+      ])
+    );
+    expect(questions.length).toBeGreaterThan(0);
+  });
   it("rejects persisted section attempts beyond the frozen inventory", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {

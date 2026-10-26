@@ -30,6 +30,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
@@ -42,7 +43,7 @@ import {
   type LinkItem,
 } from "@/components/tenant/guardian/link";
 import { GuardianLinkStartDialog } from "@/components/tenant/guardian/start";
-import { LINK_STATUS_ICONS } from "@/components/tenant/guardian/status";
+import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -104,7 +105,7 @@ export function GuardianLinksSettings({
                   {
                     column: "status",
                     options: Arr.map(LinkStatus.literals, (status) => ({
-                      icon: LINK_STATUS_ICONS[status],
+                      icon: LINK_STATUS_LOOKS[status].icon,
                       label: t(`status-${status}`),
                       value: status,
                     })),
@@ -215,10 +216,11 @@ function GuardianLinkTable() {
     }),
     linkColumns.accessor((link) => link.status, {
       cell: (info) => (
-        <span className="flex items-center gap-2">
-          <HugeIcons icon={LINK_STATUS_ICONS[info.getValue()]} />
-          {statusText(info.row.original)}
-        </span>
+        <TableStatus
+          icon={LINK_STATUS_LOOKS[info.getValue()].icon}
+          label={statusText(info.row.original)}
+          tone={LINK_STATUS_LOOKS[info.getValue()].tone}
+        />
       ),
       enableSorting: false,
       filterFn: "oneOf",
@@ -272,10 +274,11 @@ function GuardianLinkDetail() {
               <span className="break-all">{found.email}</span>
             </PaneFact>
             <PaneFact label={t("status")}>
-              <span className="flex items-center gap-2">
-                <HugeIcons icon={LINK_STATUS_ICONS[found.status]} />
-                {statusText(found)}
-              </span>
+              <TableStatus
+                icon={LINK_STATUS_LOOKS[found.status].icon}
+                label={statusText(found)}
+                tone={LINK_STATUS_LOOKS[found.status].tone}
+              />
             </PaneFact>
             {found.status === "pending" ? (
               <PaneFact label={t("expires")}>
