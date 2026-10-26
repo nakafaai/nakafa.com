@@ -1,4 +1,5 @@
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
+import { EditorArabicKeyboard } from "@repo/design-system/components/editor/arabic";
 import {
   DocumentLists,
   RichEditorBlocks,
@@ -204,6 +205,8 @@ interface RichEditorToolbarProps {
     ComponentProps<typeof RichEditorLists>["labels"] &
     ComponentProps<typeof RichEditorMarks>["labels"] &
     ComponentProps<typeof RichEditorStyle>["labels"] & {
+      /** The control that opens the Arabic keypad. */
+      arabic: string;
       /** The control that opens the groups the row has no room for. */
       more: string;
     };
@@ -211,7 +214,7 @@ interface RichEditorToolbarProps {
 
 /**
  * The formatting controls of the Memory editor, on one line: history, the style of the
- * paragraph, the marks with the link, the lists, and the blocks to insert. Each group holds
+ * paragraph, the marks with the link, the lists, the blocks to insert, and the Arabic keypad. Each group holds
  * two buttons at most, a group of toggles, or one menu.
  */
 export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
@@ -223,6 +226,10 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
         { name: "marks", tools: <RichEditorMarks labels={labels} /> },
         { name: "lists", tools: <RichEditorLists labels={labels} /> },
         { name: "blocks", tools: <RichEditorBlocks labels={labels} /> },
+        {
+          name: "arabic",
+          tools: <EditorArabicKeyboard label={labels.arabic} />,
+        },
       ]}
       more={labels.more}
     />
@@ -239,6 +246,8 @@ interface DocumentToolbarProps {
     ComponentProps<typeof DocumentTable>["labels"] &
     ComponentProps<typeof RichEditorHistory>["labels"] &
     ComponentProps<typeof RichEditorStyle>["labels"] & {
+      /** The control that opens the Arabic keypad. */
+      arabic: string;
       /** The control that opens the groups the row has no room for. */
       more: string;
     };
@@ -246,7 +255,7 @@ interface DocumentToolbarProps {
 
 /**
  * The toolbar of an assessment document, on one line in the middle of its bar: history, the style of
- * the paragraph, the marks with the link, the lists, the blocks to insert, and tables. Each group holds
+ * the paragraph, the marks with the link, the lists, the blocks to insert, tables, and the Arabic keypad. Each group holds
  * two buttons at most, a group of toggles, or one menu. It offers only the blocks and marks of the
  * contract. It is drawn by its caller, outside the document, and acts on the editor it reads
  * through `useCurrentEditor`.
@@ -263,6 +272,10 @@ export function DocumentToolbar({ editor, labels }: DocumentToolbarProps) {
           { name: "lists", tools: <DocumentLists labels={labels} /> },
           { name: "insert", tools: <DocumentInsert labels={labels} /> },
           { name: "table", tools: <DocumentTable labels={labels} /> },
+          {
+            name: "arabic",
+            tools: <EditorArabicKeyboard label={labels.arabic} />,
+          },
         ]}
         more={labels.more}
       />
