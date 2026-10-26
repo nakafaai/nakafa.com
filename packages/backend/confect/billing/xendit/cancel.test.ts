@@ -28,6 +28,21 @@ function answer(status: number, body: unknown) {
   });
 }
 
+/** The plan Xendit holds for the learner, `ACTIVE` until it is turned off. */
+function plan(status: "ACTIVE" | "INACTIVE") {
+  return {
+    amount: 79_000,
+    created: "2026-10-26T05:00:00Z",
+    currency: "IDR",
+    customer_id: "cust-1",
+    id: "repl_cancel",
+    recurring_cycle_count: 1,
+    reference_id: "subscription-1",
+    status,
+    updated: "2026-10-26T05:00:00Z",
+  };
+}
+
 /** A signed-in learner whose Pro plan Xendit bills, active until the end of its paid period. */
 async function subscriber() {
   const t = createConvexTestWithBetterAuth();
@@ -71,11 +86,14 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
   fetcher.mockReset();
+  // The scheduled step reaches Xendit through the global fetch, so the one double stands in for it.
+  vi.stubGlobal("fetch", fetcher);
   vi.stubEnv("XENDIT_API_KEY", "test-secret");
 });
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 describe("billing/xendit/cancel", () => {
@@ -98,6 +116,14 @@ describe("billing/xendit/cancel", () => {
         name: "billing/xendit/cancel:deactivate",
       },
     ]);
+    fetcher
+      .mockResolvedValueOnce(answer(200, plan("ACTIVE")))
+      .mockResolvedValueOnce(answer(200, plan("INACTIVE")));
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(String(fetcher.mock.calls[1]?.[0])).toBe(
+      "https://api.xendit.co/recurring/plans/repl_cancel/deactivate"
+    );
   });
 
   it("ends a first month whose plan has not opened yet without asking Xendit, since the plan never opens for it", async () => {

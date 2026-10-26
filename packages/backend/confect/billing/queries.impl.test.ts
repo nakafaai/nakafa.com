@@ -248,6 +248,16 @@ describe("billing/queries proOffers", () => {
           offer: "pro.pass.12",
         },
       ]);
+      // Without the Xendit key the monthly plan falls back to Polar, and the passes only Xendit sells are left out.
+      vi.stubEnv("XENDIT_API_KEY", "");
+      expect(
+        await t.query(api.billing.queries.proOffers, { currency: "IDR" })
+      ).toMatchObject([{ offer: "pro.monthly" }]);
+      // A switch that names no rail sells nothing in rupiah, so a mistyped value shows up at once.
+      vi.stubEnv("BILLING_INDONESIA_RAIL", "1");
+      expect(
+        await t.query(api.billing.queries.proOffers, { currency: "IDR" })
+      ).toEqual([]);
       expect(
         await t.query(api.billing.queries.proOffers, { currency: "USD" })
       ).toEqual([
