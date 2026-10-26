@@ -12,7 +12,7 @@ import type { AccountRecord } from "@/lib/identity/viewer";
  * holds nothing the row does not show, the email included. The key starts with
  * the prefix of account state, so signing out removes it with the rest.
  */
-export const KnownAccount = Schema.Struct({
+const KnownAccount = Schema.Struct({
   mascot: MascotCode,
   name: Schema.String,
   photo: Schema.optional(Schema.String),
