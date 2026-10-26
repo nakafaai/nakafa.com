@@ -9,6 +9,7 @@ import {
   MutableRef,
   Option,
   Predicate,
+  Queue,
   Schema,
   Stream,
 } from "effect";
@@ -214,17 +215,33 @@ const makeTokenFetcher = Effect.fnUntraced(function* (
 });
 
 /**
- * Each time the reader comes back to the page: the tab shows again, or the
- * network returns. Better Auth reads the session again at the same moments.
+ * Each time the reader comes back to the page, named by the event that brought
+ * them: the tab shows again, or the network returns. Better Auth reads the
+ * session again at the same moments. The tab's state is read when its event
+ * fires, so a tab that was hidden again before the stream is read still counts
+ * only when it showed.
  */
-export const pageReturns = Stream.suspend(() =>
-  Stream.merge(
-    Stream.fromEventListener(document, "visibilitychange").pipe(
-      Stream.filter(() => document.visibilityState === "visible")
-    ),
-    Stream.fromEventListener(window, "online")
-  )
-);
+export const pageReturns = Stream.callback<string>((queue) => {
+  const comeBack = (event: Event) => {
+    Queue.offerUnsafe(queue, event.type);
+  };
+  const showAgain = (event: Event) => {
+    if (document.visibilityState === "visible") {
+      comeBack(event);
+    }
+  };
+  return Effect.acquireRelease(
+    Effect.sync(() => {
+      document.addEventListener("visibilitychange", showAgain);
+      window.addEventListener("online", comeBack);
+    }),
+    () =>
+      Effect.sync(() => {
+        document.removeEventListener("visibilitychange", showAgain);
+        window.removeEventListener("online", comeBack);
+      })
+  );
+});
 
 /** Whether Convex refused the credentials of the session it last answered for. */
 function isRefused(confirmation: Option.Option<ConvexAuthConfirmation>) {

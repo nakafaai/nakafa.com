@@ -387,25 +387,34 @@ describe("Convex authentication", () => {
     () =>
       Effect.gen(function* () {
         const visibility = vi.spyOn(document, "visibilityState", "get");
+        const listened = vi.spyOn(window, "addEventListener");
         const heard = yield* pageReturns.pipe(
           Stream.take(2),
           Stream.runCollect,
           Effect.forkScoped
         );
-        yield* Effect.yieldNow;
+        // The stream hears the page once it has added its listeners.
+        yield* Effect.promise(() =>
+          vi.waitFor(() => {
+            expect(listened).toHaveBeenCalledWith(
+              "online",
+              expect.any(Function)
+            );
+          })
+        );
 
         visibility.mockReturnValue("hidden");
         document.dispatchEvent(new Event("visibilitychange"));
+        window.dispatchEvent(new Event("online"));
         visibility.mockReturnValue("visible");
         document.dispatchEvent(new Event("visibilitychange"));
-        window.dispatchEvent(new Event("online"));
 
-        const events = yield* Fiber.join(heard);
-        expect(events.map((event) => event.type)).toStrictEqual([
-          "visibilitychange",
+        expect(yield* Fiber.join(heard)).toStrictEqual([
           "online",
+          "visibilitychange",
         ]);
         visibility.mockRestore();
+        listened.mockRestore();
       }).pipe(Effect.scoped)
   );
 });
