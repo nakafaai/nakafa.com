@@ -751,6 +751,7 @@
   "Classroom": {
     "tabs-home": "Beranda",
     "tabs-forum": "Forum",
+    "tabs-library": "Pustaka",
     "general-channel": "Umum",
     "channels-title": "Kanal",
     "channels-empty": "Belum ada kanal",
@@ -809,6 +810,27 @@
     "post-email": "Juga kirim lewat email",
     "mention-list": "Orang yang bisa disebut",
     "mention-everyone": "Semua anggota kelas",
+    "library-empty": "Belum ada isi",
+    "library-empty-description": "Berkas dan tautan kelas tampil di sini, yang terbaru di atas.",
+    "library-add": "Tambah ke pustaka",
+    "library-add-description": "Semua anggota kelas dapat membukanya.",
+    "library-file": "Berkas",
+    "library-link": "Tautan",
+    "library-title": "Judul",
+    "library-address": "Alamat",
+    "library-drop": "Pilih atau taruh PDF atau gambar.",
+    "library-file-limit": "Paling besar 20 MB. Video yang lebih besar dibagikan sebagai tautan.",
+    "library-file-oversize": "Berkas ini lebih besar dari 20 MB.",
+    "library-file-clear": "Pilih berkas lain",
+    "library-submit": "Tambah",
+    "library-added-by": "Ditambahkan oleh",
+    "library-added": "Ditambahkan",
+    "library-kind-link": "Tautan",
+    "library-kind-pdf": "PDF",
+    "library-kind-image": "Gambar",
+    "library-remove": "Hapus",
+    "library-remove-title": "Hapus isi ini",
+    "library-remove-description": "Isi ini hilang dari pustaka untuk semua orang dan tidak bisa kembali.",
     "tabs-tasks": "Tugas",
     "tasks-empty": "Belum ada tugas",
     "tasks-empty-description": "Tugas kelas tampil di sini, tenggat terdekat lebih dulu.",
@@ -2067,6 +2089,14 @@
     "import-encrypted": {
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
+    },
+    "library-file-size": {
+      "title": "Berkas tidak ditambahkan.",
+      "description": "Pilih berkas paling besar 20 MB."
+    },
+    "library-file-type": {
+      "title": "Berkas tidak ditambahkan.",
+      "description": "Pilih PDF atau gambar."
     }
   },
   "Ai": {

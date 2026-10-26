@@ -10,10 +10,11 @@ import {
   schoolClassTasksTarget,
 } from "@/lib/routing/school/target";
 
-/** The class a path starts from, the school it belongs to, and the labels of the forum and the tasks. */
+/** The class a path starts from, the school it belongs to, and the labels of the forum, the library, and the tasks. */
 const PathRoot = Schema.Struct({
   classSlug: Schema.String,
   forum: Schema.String,
+  library: Schema.String,
   name: Schema.String,
   slug: TenantSlug,
   tasks: Schema.String,
@@ -29,7 +30,7 @@ const PathChannel = Schema.Struct({
  * The path of a class page after the school's home, the page itself last: the class alone on its
  * home; the class and the forum on the channel list; the forum and the channel on a channel; the
  * channel and the discussion's number and title on a discussion; the class and the tasks on the task
- * list; and the tasks and the task's title on a task. A name that is not known yet is left out, so
+ * list; the class and the library on the library; and the tasks and the task's title on a task. A name that is not known yet is left out, so
  * the path never shows a placeholder. `leaf` is the last name: the discussion's or the task's.
  */
 export const classPath = (
@@ -76,6 +77,7 @@ export const classPath = (
       }),
       ...last,
     ],
+    library: () => [klass, { label: root.library }],
     tasks: () => [klass, { label: root.tasks }],
     task: () => [
       klass,

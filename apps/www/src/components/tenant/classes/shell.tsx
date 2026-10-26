@@ -25,6 +25,9 @@ import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
 import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { ClassHome } from "@/components/tenant/classes/home/home";
 import { channelLabel } from "@/components/tenant/classes/label";
+import { AddToLibrary } from "@/components/tenant/classes/library/create";
+import { LibraryList } from "@/components/tenant/classes/library/list";
+import { LibraryUploadsScope } from "@/components/tenant/classes/library/scope";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
 import {
@@ -208,6 +211,7 @@ function ResolvedClass({
     {
       classSlug,
       forum: t("tabs-forum"),
+      library: t("tabs-library"),
       name: klass.name,
       slug,
       tasks: t("tabs-tasks"),
@@ -233,13 +237,15 @@ function ResolvedClass({
 
   return (
     <DraftsContext value={drafts}>
-      <SchoolHeader items={path} title={klass.name}>
-        <ForumAction klass={klass} view={view} />
-      </SchoolHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        <ClassTabs classSlug={classSlug} tab={view._tag} />
-        <ClassBody found={found} klass={klass} view={view} />
-      </LayoutContent>
+      <LibraryUploadsScope>
+        <SchoolHeader items={path} title={klass.name}>
+          <ForumAction klass={klass} view={view} />
+        </SchoolHeader>
+        <LayoutContent className="flex w-full flex-col gap-6 py-6">
+          <ClassTabs classSlug={classSlug} tab={view._tag} />
+          <ClassBody found={found} klass={klass} view={view} />
+        </LayoutContent>
+      </LibraryUploadsScope>
     </DraftsContext>
   );
 }
@@ -247,7 +253,8 @@ function ResolvedClass({
 /**
  * The header's one action: New announcement on the class home for its subject teachers, Add
  * channel on the channel list for whoever manages the forum, New discussion in a channel for
- * whoever the server lets open one there, and New task on the task list for its teachers.
+ * whoever the server lets open one there, Add to library in the library for its teachers, and New
+ * task on the task list for its teachers.
  */
 function ForumAction({
   klass,
@@ -268,13 +275,16 @@ function ForumAction({
   if (view._tag === "channel" && klass.opens) {
     return <StartDiscussion channelId={view.channelId} />;
   }
+  if (view._tag === "library" && Arr.contains(klass.can, "library.manage")) {
+    return <AddToLibrary />;
+  }
   if (view._tag === "tasks" && Arr.contains(klass.can, "task.manage")) {
     return <NewTask />;
   }
   return null;
 }
 
-/** The body of the view: the class's announcements, its channel list, one channel, or one discussion beside its channel. */
+/** The body of the view: the class's announcements, its channel list, one channel, one discussion beside its channel, its library, its tasks, or one task. */
 function ClassBody({
   found,
   klass,
@@ -319,6 +329,9 @@ function ClassBody({
   if (view._tag === "home") {
     return <ClassHome />;
   }
+  if (view._tag === "library") {
+    return <LibraryList teacher={Arr.contains(klass.can, "library.manage")} />;
+  }
   if (view._tag === "tasks") {
     return <TaskList teacher={Arr.contains(klass.can, "task.manage")} />;
   }
@@ -338,7 +351,7 @@ function ClassBody({
   );
 }
 
-/** The tab bar of a class: its home, its forum, and its tasks, the current one marked as the page. */
+/** The tab bar of a class: its home, its forum, its library, and its tasks, the current one marked as the page. */
 function ClassTabs({
   classSlug,
   tab,
@@ -369,6 +382,14 @@ function ClassTabs({
         to="/school/$slug/classes/$classSlug/forum"
       >
         {t("tabs-forum")}
+      </Link>
+      <Link
+        activeOptions={EXACT_ACTIVE_OPTIONS}
+        className={classTab({ active: tab === "library" })}
+        params={params}
+        to="/school/$slug/classes/$classSlug/library"
+      >
+        {t("tabs-library")}
       </Link>
       <Link
         activeOptions={EXACT_ACTIVE_OPTIONS}

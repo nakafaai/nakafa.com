@@ -23,6 +23,7 @@ export type ClassGradesDoc = Document.Document<typeof schemaDefinition, "classGr
 export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "classTeachers">;
 export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type ClassroomChannelsDoc = Document.Document<typeof schemaDefinition, "classroomChannels">;
+export type ClassroomLibraryDoc = Document.Document<typeof schemaDefinition, "classroomLibrary">;
 export type ClassroomMessagesDoc = Document.Document<typeof schemaDefinition, "classroomMessages">;
 export type ClassroomPostsDoc = Document.Document<typeof schemaDefinition, "classroomPosts">;
 export type ClassroomReadsDoc = Document.Document<typeof schemaDefinition, "classroomReads">;
@@ -34,6 +35,7 @@ export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">
 export type ConnectorConnectionsDoc = Document.Document<typeof schemaDefinition, "connectorConnections">;
 export type ConnectorKeysDoc = Document.Document<typeof schemaDefinition, "connectorKeys">;
 export type ConnectorSecretsDoc = Document.Document<typeof schemaDefinition, "connectorSecrets">;
+export type ConnectorStatesDoc = Document.Document<typeof schemaDefinition, "connectorStates">;
 export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefinition, "contentAnalyticsPartitions">;
 export type ContentArtifactFactsDoc = Document.Document<typeof schemaDefinition, "contentArtifactFacts">;
 export type ContentArtifactsDoc = Document.Document<typeof schemaDefinition, "contentArtifacts">;
@@ -155,6 +157,7 @@ export interface Docs {
   classTeachers: ClassTeachersDoc;
   classes: ClassesDoc;
   classroomChannels: ClassroomChannelsDoc;
+  classroomLibrary: ClassroomLibraryDoc;
   classroomMessages: ClassroomMessagesDoc;
   classroomPosts: ClassroomPostsDoc;
   classroomReads: ClassroomReadsDoc;
@@ -166,6 +169,7 @@ export interface Docs {
   connectorConnections: ConnectorConnectionsDoc;
   connectorKeys: ConnectorKeysDoc;
   connectorSecrets: ConnectorSecretsDoc;
+  connectorStates: ConnectorStatesDoc;
   contentAnalyticsPartitions: ContentAnalyticsPartitionsDoc;
   contentArtifactFacts: ContentArtifactFactsDoc;
   contentArtifacts: ContentArtifactsDoc;

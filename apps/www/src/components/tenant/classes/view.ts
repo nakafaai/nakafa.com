@@ -5,7 +5,7 @@ import { Schema } from "effect";
 
 /**
  * What one class page shows: the class's home, its forum's channel list, one channel, one
- * numbered discussion, its tasks, or one task. A channel and a discussion may name a message to
+ * numbered discussion, its library, its tasks, or one task. A channel and a discussion may name a message to
  * bring into view.
  */
 export const ClassView = Schema.Union([
@@ -19,6 +19,7 @@ export const ClassView = Schema.Union([
     jump: Schema.Option(Id("classroomMessages")),
     number: DiscussionNumber,
   }),
+  Schema.TaggedStruct("library", {}),
   Schema.TaggedStruct("tasks", {}),
   Schema.TaggedStruct("task", { task: TaskAddress }),
 ]);

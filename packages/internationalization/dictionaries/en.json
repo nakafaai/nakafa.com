@@ -751,6 +751,7 @@
   "Classroom": {
     "tabs-home": "Home",
     "tabs-forum": "Forum",
+    "tabs-library": "Library",
     "general-channel": "General",
     "channels-title": "Channel",
     "channels-empty": "No channel yet",
@@ -809,6 +810,27 @@
     "post-email": "Also send by email",
     "mention-list": "People to mention",
     "mention-everyone": "Everyone in the class",
+    "library-empty": "Nothing here yet",
+    "library-empty-description": "The class's files and links show here, the newest first.",
+    "library-add": "Add to library",
+    "library-add-description": "Everyone in the class can open it.",
+    "library-file": "File",
+    "library-link": "Link",
+    "library-title": "Title",
+    "library-address": "Address",
+    "library-drop": "Choose or drop a PDF or an image.",
+    "library-file-limit": "At most 20 MB. A larger video is a link.",
+    "library-file-oversize": "This file is larger than 20 MB.",
+    "library-file-clear": "Choose another file",
+    "library-submit": "Add",
+    "library-added-by": "Added by",
+    "library-added": "Added",
+    "library-kind-link": "Link",
+    "library-kind-pdf": "PDF",
+    "library-kind-image": "Image",
+    "library-remove": "Remove",
+    "library-remove-title": "Remove this item",
+    "library-remove-description": "It leaves the library for everyone, and it cannot come back.",
     "tabs-tasks": "Tasks",
     "tasks-empty": "No task yet",
     "tasks-empty-description": "The class's tasks show here, the soonest deadline first.",
@@ -2067,6 +2089,14 @@
     "import-encrypted": {
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
+    },
+    "library-file-size": {
+      "title": "The file was not added.",
+      "description": "Choose a file of at most 20 MB."
+    },
+    "library-file-type": {
+      "title": "The file was not added.",
+      "description": "Choose a PDF or an image."
     }
   },
   "Ai": {

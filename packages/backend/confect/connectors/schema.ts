@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Space } from "@repo/backend/confect/space";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
@@ -89,4 +90,44 @@ export const ConnectionView = Schema.Struct({
   nextSyncAt: Schema.NullOr(Schema.Finite),
   scopes: Schema.Array(ConnectorScope),
   status: ConnectionStatus,
+});
+
+/**
+ * One connect that waits for Google's callback: who started it, for which owner
+ * and connector, the callback it named, and its PKCE verifier. The callback brings
+ * the state back, and finishing the connect deletes the row, so a state works
+ * once. A row older than `CONNECT_STATE_LIFETIME` finishes nothing. `personId` is
+ * the school member who started a school connection, whom the journal names.
+ */
+export const connectStateValidator = Schema.Struct({
+  connector: GoogleConnector,
+  createdAt: Schema.Finite,
+  owner: Space,
+  personId: Schema.NullOr(Id("tenantPeople")),
+  redirectUri: Schema.String,
+  returnPath: Schema.String,
+  state: Schema.String,
+  userId: Id("users"),
+  verifier: Schema.String,
+});
+
+/**
+ * A path on the site that a connect returns to, such as `/settings/connections`:
+ * it starts with one slash and names no other host, so the return address stays
+ * on the site of the callback.
+ */
+export const ReturnPath = Schema.String.check(
+  Schema.isPattern(/^\/(?![/\\])[^\s]*$/u),
+  Schema.isMaxLength(200)
+);
+
+/**
+ * How a connect ended and where its user goes back to: `connected`, `cancelled`
+ * when the user stopped on Google's screen, or `refused` when Google or the
+ * granted scopes did not allow it. The address is built on the server from the
+ * callback's own site, the school's slug, and the path the start named.
+ */
+export const ConnectOutcome = Schema.Struct({
+  location: Schema.String,
+  outcome: Schema.Literals(["connected", "cancelled", "refused"]),
 });

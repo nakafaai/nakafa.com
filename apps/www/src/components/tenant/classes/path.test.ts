@@ -8,6 +8,7 @@ const slug = Schema.decodeSync(TenantSlug)("harapan");
 const root = {
   classSlug: "fisika-x-1",
   forum: "Forum",
+  library: "Library",
   name: "Fisika X-1",
   slug,
   tasks: "Tasks",
@@ -42,6 +43,15 @@ describe("class page path", () => {
         })
       )
     );
+  });
+
+  it("names the library after the class", () => {
+    expect(
+      Arr.map(
+        classPath({ _tag: "library" }, root, none, none),
+        (item) => item.label
+      )
+    ).toEqual(["Fisika X-1", "Library"]);
   });
 
   it("names the class alone on its home, and the forum after it on the channel list", () => {
