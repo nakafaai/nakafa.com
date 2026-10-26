@@ -321,6 +321,7 @@ function GradeValueField({ line }: { line: SheetLine }) {
           event.currentTarget.blur();
         }
       }}
+      placeholder={t("value-placeholder")}
       value={typed ?? saved}
     />
   );

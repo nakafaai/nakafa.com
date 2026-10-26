@@ -884,6 +884,7 @@
     "student": "Schüler",
     "value": "Note",
     "value-label": "Note von {name}",
+    "value-placeholder": "0-100",
     "note": "Ergebnis",
     "state": "Status",
     "state-none": "Nicht eingetragen",

@@ -884,6 +884,7 @@
     "student": "Student",
     "value": "Grade",
     "value-label": "Grade of {name}",
+    "value-placeholder": "0-100",
     "note": "Result",
     "state": "Status",
     "state-none": "Not entered",

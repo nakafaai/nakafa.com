@@ -183,10 +183,11 @@ function ClassPage({
           >
             <GradebookFilters />
           </SchoolHeader>
-          <div className="px-4 pt-3">
+          <div className="flex h-12 shrink-0 flex-col justify-end px-4">
             <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
           </div>
-          <div className="flex w-full min-w-0 flex-1 flex-col">
+          {/* The header's 4rem and the tabs row's 3rem sit above the gradebook's panes. */}
+          <div className="flex w-full min-w-0 flex-1 flex-col [--panes-offset:7rem]">
             <ClassGradebook classId={klass.id} slug={slug} />
           </div>
         </PanesProvider>

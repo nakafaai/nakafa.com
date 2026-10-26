@@ -884,6 +884,7 @@
     "student": "Siswa",
     "value": "Nilai",
     "value-label": "Nilai {name}",
+    "value-placeholder": "0-100",
     "note": "Hasil",
     "state": "Status",
     "state-none": "Belum diisi",
