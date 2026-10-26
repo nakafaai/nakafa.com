@@ -12,6 +12,7 @@ import {
   checkoutReturnUrl,
 } from "@/lib/billing/navigation";
 import { requireConvexOnline } from "@/lib/convex/online";
+import { readShownCurrency } from "@/lib/pricing/currency";
 
 const BillingSourceSchema = Schema.Struct({
   source: Schema.String,
@@ -78,7 +79,9 @@ export function useBillingNavigation() {
       runBillingRequest(
         Effect.tryPromise(() =>
           createCheckout({
+            currency: readShownCurrency(document.documentElement),
             locale,
+            offer: "pro.monthly",
             successUrl: checkoutReturnUrl(window.location.href),
           })
         ).pipe(

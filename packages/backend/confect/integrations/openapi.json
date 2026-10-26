@@ -1,0 +1,816 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Nakafa School API",
+    "version": "1",
+    "description": "School data of one Nakafa school. Ask /token for an access token with the client credentials grant, then send it as a bearer token."
+  },
+  "paths": {
+    "/api/school/v1/token": {
+      "post": {
+        "tags": [
+          "oauth"
+        ],
+        "operationId": "oauth.token",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "expires_in": {
+                      "type": "number"
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "enum": [
+                        "Bearer"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "access_token",
+                    "expires_in",
+                    "token_type"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "OAuthError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "OAuthClientError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client_id": {
+                    "type": "string"
+                  },
+                  "client_secret": {
+                    "type": "string"
+                  },
+                  "grant_type": {
+                    "type": "string"
+                  },
+                  "resource": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "client_id",
+                  "client_secret",
+                  "grant_type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/school/v1/periods": {
+      "get": {
+        "tags": [
+          "roster"
+        ],
+        "operationId": "roster.periods",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "end": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "start": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "unitId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "end",
+                          "id",
+                          "name",
+                          "start",
+                          "status",
+                          "unitId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "next": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SchoolApiUnauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiUnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SchoolApiForbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "SchoolApiRateLimited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiRateLimitedEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/school/v1/cohorts": {
+      "get": {
+        "tags": [
+          "roster"
+        ],
+        "operationId": "roster.cohorts",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "grade": {
+                            "type": "number"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "periodId": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "grade",
+                          "id",
+                          "name",
+                          "periodId",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "next": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SchoolApiUnauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiUnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SchoolApiForbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "SchoolApiRateLimited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiRateLimitedEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/school/v1/people": {
+      "get": {
+        "tags": [
+          "roster"
+        ],
+        "operationId": "roster.people",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "suspended",
+                    "removed"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "account": {
+                            "type": "string",
+                            "enum": [
+                              "claimed",
+                              "unclaimed"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "account",
+                          "id",
+                          "name",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "next": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SchoolApiUnauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiUnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SchoolApiForbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "SchoolApiRateLimited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiRateLimitedEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/school/v1/placements": {
+      "get": {
+        "tags": [
+          "roster"
+        ],
+        "operationId": "roster.placements",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cohortId": {
+                            "type": "string"
+                          },
+                          "periodId": {
+                            "type": "string"
+                          },
+                          "personId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "cohortId",
+                          "periodId",
+                          "personId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "next": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SchoolApiUnauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiUnauthorizedEncoded"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SchoolApiForbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiForbiddenEncoded"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "SchoolApiRateLimited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolApiRateLimitedEncoded"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SchoolApiRateLimitedEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "SchoolApiRateLimited"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "retryAfter": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "_tag",
+          "message",
+          "retryAfter"
+        ],
+        "additionalProperties": false
+      },
+      "SchoolApiUnauthorizedEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "SchoolApiUnauthorized"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "SchoolApiForbiddenEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "SchoolApiForbidden"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "OAuthClientErrorEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "OAuthClientError"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "enum": [
+              "invalid_client"
+            ]
+          },
+          "error_description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "error",
+          "error_description"
+        ],
+        "additionalProperties": false
+      },
+      "OAuthErrorEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "OAuthError"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "enum": [
+              "invalid_client",
+              "invalid_request",
+              "invalid_target",
+              "unsupported_grant_type"
+            ]
+          },
+          "error_description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "error",
+          "error_description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "Bearer"
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "oauth"
+    },
+    {
+      "name": "roster"
+    }
+  ]
+}
