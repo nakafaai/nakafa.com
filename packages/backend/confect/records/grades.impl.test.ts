@@ -17,7 +17,7 @@ import { Array as Arr, Effect, Option } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-const { enter, list, mine, release } = refs.public.records.grades;
+const { enter, mine, release, scheme, sheet } = refs.public.records.grades;
 const schemes = refs.public.records.schemes;
 const placements = refs.public.tenancy.placements;
 
@@ -86,9 +86,9 @@ const releaseBy = (
   gradeId: GenericId.GenericId<"classGrades">
 ) => fixture.as("teacher").mutation(release, { gradeId, slug: nf });
 
-describe("records/grades entry and list", () => {
+describe("records/grades entry and gradebook", () => {
   it.effect(
-    "lets the subject teacher enter a draft for a placed student, and lists it",
+    "lets the subject teacher enter a draft for a placed student, and shows it in the gradebook",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -102,7 +102,7 @@ describe("records/grades entry and list", () => {
         );
         const listed = yield* fixture
           .as("teacher")
-          .query(list, { ...firstPage, classId, slug: nf });
+          .query(sheet, { ...firstPage, classId, slug: nf });
         expect(entered).toMatchObject({
           classId,
           kktp: "reached",
@@ -111,7 +111,12 @@ describe("records/grades entry and list", () => {
           value: 80,
         });
         expect(entered).not.toHaveProperty("band");
-        expect(listed.page).toEqual([entered]);
+        expect(listed.page).toEqual([
+          {
+            grade: entered,
+            student: { id: fixture.people.student.personId, name: "Student" },
+          },
+        ]);
         expect(yield* fixture.run(journal)).toEqual(before);
       })
   );
@@ -127,10 +132,49 @@ describe("records/grades entry and list", () => {
         const second = yield* draft(fixture, classId, student, 90);
         const listed = yield* fixture
           .as("teacher")
-          .query(list, { ...firstPage, classId, slug: nf });
+          .query(sheet, { ...firstPage, classId, slug: nf });
         expect(second.id).toBe(first.id);
         expect(second.value).toBe(90);
         expect(listed.page).toHaveLength(1);
+      })
+  );
+
+  it.effect(
+    "lists every placed student in the gradebook, a student without an entry with no grade",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { classId, cohortId } = yield* setup(fixture);
+        const other = yield* classmate(fixture, cohortId);
+        yield* draft(fixture, classId, fixture.people.student.personId, 70);
+        const lines = yield* fixture
+          .as("teacher")
+          .query(sheet, { ...firstPage, classId, slug: nf });
+        expect(
+          Arr.map(lines.page, (line) => [
+            line.student.id,
+            line.grade?.value ?? null,
+          ])
+        ).toEqual([
+          [fixture.people.student.personId, 70],
+          [other, null],
+        ]);
+      })
+  );
+
+  it.effect(
+    "answers the scheme the next entry is judged by, the built-in one before any is stored",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { classId } = yield* setup(fixture);
+        const read = fixture.as("teacher").query(scheme, { classId, slug: nf });
+        expect(yield* read).toEqual({ bands: [], kktp: 75 });
+        yield* storeScheme(fixture, 1, 70, [{ label: "Baik", minimum: 80 }]);
+        expect(yield* read).toEqual({
+          bands: [{ label: "Baik", minimum: 80 }],
+          kktp: 70,
+        });
       })
   );
 
@@ -172,11 +216,11 @@ describe("records/grades entry and list", () => {
             .pipe(Effect.flip),
           fixture
             .as("counselor")
-            .query(list, { ...firstPage, classId, slug: nf })
+            .query(sheet, { ...firstPage, classId, slug: nf })
             .pipe(Effect.flip),
           fixture
             .as("student")
-            .query(list, { ...firstPage, classId, slug: nf })
+            .query(sheet, { ...firstPage, classId, slug: nf })
             .pipe(Effect.flip),
         ]);
         expect(refusals).toMatchObject([
@@ -396,7 +440,7 @@ describe("records/grades tenant isolation", () => {
           .pipe(Effect.flip),
         fixture
           .as("admin")
-          .query(list, { ...firstPage, classId: foreign.classId, slug: nf })
+          .query(sheet, { ...firstPage, classId: foreign.classId, slug: nf })
           .pipe(Effect.flip),
         fixture
           .as("admin")

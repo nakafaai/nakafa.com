@@ -20,6 +20,7 @@ import { createChannelDrafts } from "@/components/tenant/classes/drafts";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useTenant } from "@/components/tenant/context";
+import { ClassGradebook } from "@/components/tenant/grades/sheet";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -34,7 +35,7 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 
 /** The tabs of a class that have a page. The other tabs join with the slices that build them. */
-const ClassTab = Schema.Literals(["home", "forum"]);
+const ClassTab = Schema.Literals(["home", "forum", "grades"]);
 type ClassTab = typeof ClassTab.Type;
 
 /** The first screen of a class page, which the page's loader read on the server. */
@@ -83,11 +84,15 @@ export function ClassShell({
   );
 }
 
-/** The first screen of a class page, which its loader read on the server: the class and its first channels. */
+/**
+ * The first screen of a class page, which its loader read on the server: the class, and the
+ * first channels on the tabs that list them. The gradebook's loader reads no channel.
+ */
 type ClassPreload = Pick<
   Awaited<ReturnType<typeof readClassForumFn>>,
-  "channels" | "resolved"
->;
+  "resolved"
+> &
+  Partial<Pick<Awaited<ReturnType<typeof readClassForumFn>>, "channels">>;
 
 /**
  * The class page once the class is resolved: its header, its tabs, and the body of the tab. The
@@ -161,7 +166,14 @@ function ClassPage({
       { label: channelLabel(found, t("general-channel")) },
     ],
   });
-  const path = tab === "home" ? [{ label: klass.name }] : forumPath;
+  const canGrade = Arr.contains(klass.can, "grade.list");
+  const gradesPath = [classItem, { label: t("tabs-grades") }];
+  const path =
+    tab === "home"
+      ? [{ label: klass.name }]
+      : tab === "grades"
+        ? gradesPath
+        : forumPath;
 
   return (
     <>
@@ -171,8 +183,10 @@ function ClassPage({
         ) : null}
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        <ClassTabs classSlug={classSlug} tab={tab} />
-        {Option.isSome(shown) ? (
+        <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
+        {tab === "grades" ? (
+          <ClassGradebook classId={klass.id} slug={slug} />
+        ) : Option.isSome(shown) ? (
           <ForumChannel
             canManage={canManageForum}
             canPost={Arr.contains(klass.can, "forum.post")}
@@ -193,8 +207,19 @@ function ClassPage({
   );
 }
 
-/** The tab bar of a class: its home and its forum, the current one marked as the page. */
-function ClassTabs({ classSlug, tab }: { classSlug: string; tab: ClassTab }) {
+/**
+ * The tab bar of a class: its home, its forum, and its gradebook for a viewer who keeps the
+ * class's grades, the current one marked as the page.
+ */
+function ClassTabs({
+  canGrade,
+  classSlug,
+  tab,
+}: {
+  canGrade: boolean;
+  classSlug: string;
+  tab: ClassTab;
+}) {
   const t = useTranslations("Classroom");
   const { slug } = useTenant();
   const params = { classSlug, slug };
@@ -217,6 +242,16 @@ function ClassTabs({ classSlug, tab }: { classSlug: string; tab: ClassTab }) {
       >
         {t("tabs-forum")}
       </Link>
+      {canGrade ? (
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={classTab({ active: tab === "grades" })}
+          params={params}
+          to="/school/$slug/classes/$classSlug/grades"
+        >
+          {t("tabs-grades")}
+        </Link>
+      ) : null}
     </nav>
   );
 }

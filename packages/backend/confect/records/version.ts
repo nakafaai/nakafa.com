@@ -41,6 +41,22 @@ const storeBuiltIn = Effect.fn("records.version.storeBuiltIn")(function* (
   return { id, scheme: DEFAULT_GRADING_SCHEME };
 });
 
+/** The stored version in force for a school now: the newest that has taken effect, if any. */
+const storedInForce = Effect.fn("records.version.stored")(function* (
+  tenantId: GenericId.GenericId<"tenants">
+) {
+  const now = yield* Clock.currentTimeMillis;
+  return yield* (yield* DatabaseReader)
+    .table("gradingSchemes")
+    .index(
+      "by_tenantId_and_effectiveFrom",
+      (query) => query.eq("tenantId", tenantId).lte("effectiveFrom", now),
+      "desc"
+    )
+    .first()
+    .pipe(Effect.orDie);
+});
+
 /**
  * The scheme in force for a school now, as the stored version that its grades name:
  * the newest version that has taken effect by the current time. A school with none in
@@ -50,19 +66,25 @@ const storeBuiltIn = Effect.fn("records.version.storeBuiltIn")(function* (
 export const schemeInForce = Effect.fn("records.version.inForce")(function* (
   tenantId: GenericId.GenericId<"tenants">
 ) {
-  const now = yield* Clock.currentTimeMillis;
-  const stored = yield* (yield* DatabaseReader)
-    .table("gradingSchemes")
-    .index(
-      "by_tenantId_and_effectiveFrom",
-      (query) => query.eq("tenantId", tenantId).lte("effectiveFrom", now),
-      "desc"
-    )
-    .first()
-    .pipe(Effect.orDie);
+  const stored = yield* storedInForce(tenantId);
   return yield* Option.match(stored, {
     onNone: () => storeBuiltIn(tenantId),
     onSome: (row) => Effect.succeed({ id: row._id, scheme: toScheme(row) }),
+  });
+});
+
+/**
+ * The scheme that judges the next entry of a school, read without writing: the version
+ * in force, or the built-in scheme that the first entry stores as the school's first
+ * version. A gradebook judges a value as it is typed with it, before the server does.
+ */
+export const schemeForEntry = Effect.fn("records.version.forEntry")(function* (
+  tenantId: GenericId.GenericId<"tenants">
+) {
+  const stored = yield* storedInForce(tenantId);
+  return Option.match(stored, {
+    onNone: () => DEFAULT_GRADING_SCHEME,
+    onSome: toScheme,
   });
 });
 

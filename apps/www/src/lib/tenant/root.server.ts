@@ -29,6 +29,7 @@ const SCHOOL_NAMESPACES = [
   "Player",
   "School",
   "SchoolEntry",
+  "SchoolGrades",
   "SchoolSettings",
   "SchoolStart",
   "State",

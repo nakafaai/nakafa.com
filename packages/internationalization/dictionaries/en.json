@@ -746,6 +746,7 @@
   "Classroom": {
     "tabs-home": "Home",
     "tabs-forum": "Forum",
+    "tabs-grades": "Grades",
     "general-channel": "General",
     "channels-title": "Channel",
     "channels-empty": "No channel yet",
@@ -775,6 +776,22 @@
     "messages-empty": "No message yet",
     "messages-empty-description": "The first message of this channel shows here.",
     "scroll-to-latest": "Go to the newest message"
+  },
+  "SchoolGrades": {
+    "student": "Student",
+    "value": "Grade",
+    "value-label": "Grade of {name}",
+    "note": "Result",
+    "state": "Status",
+    "state-none": "Not entered",
+    "state-draft": "Draft",
+    "state-released": "Released",
+    "kktp-reached": "Meets KKTP",
+    "kktp-notReached": "Below KKTP",
+    "search": "Search students",
+    "release": "Release",
+    "empty": "No student in this class yet.",
+    "empty-description": "Students appear here once they are placed in the class group."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
