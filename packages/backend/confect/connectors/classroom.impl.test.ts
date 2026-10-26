@@ -14,6 +14,7 @@ import {
   period,
   writeClass,
 } from "@repo/backend/test/classroom";
+import { otherSchoolTeacher } from "@repo/backend/test/editor";
 import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, DateTime, Effect } from "effect";
@@ -113,7 +114,7 @@ describe("connectors/classroom", () => {
   });
 
   it.effect(
-    "previews the teacher's courses with their students for an Admin, and refuses a student",
+    "previews the teacher's courses with their students for an Admin, and refuses a student and someone of another school",
     () =>
       Effect.gen(function* () {
         const { classId, connectionId, fixture } = yield* school;
@@ -144,6 +145,12 @@ describe("connectors/classroom", () => {
         expect(
           yield* fixture
             .as("student")
+            .action(classroom.preview, { slug: nf })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied" });
+        const outsider = yield* otherSchoolTeacher(fixture);
+        expect(
+          yield* outsider
             .action(classroom.preview, { slug: nf })
             .pipe(Effect.flip)
         ).toMatchObject({ _tag: "AccessDenied" });

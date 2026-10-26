@@ -15,7 +15,7 @@ import { courseWork } from "@repo/backend/confect/connectors/google/classroom";
 import { readGoogleClient } from "@repo/backend/confect/connectors/google/client";
 import { refreshAccess } from "@repo/backend/confect/connectors/google/oauth";
 import { eventTitleField } from "@repo/backend/confect/connectors/mirror";
-import { openRefreshToken } from "@repo/backend/confect/connectors/secret";
+import { connectionToken } from "@repo/backend/confect/connectors/secret";
 import spec from "@repo/backend/confect/connectors/sync.spec";
 import { Space } from "@repo/backend/confect/space";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
@@ -129,24 +129,14 @@ const target = FunctionImpl.make(
     if (Option.isNone(row) || row.value.status !== "active") {
       return null;
     }
-    const secret = yield* reader
-      .table("connectorSecrets")
-      .index("by_connectionId", (query) =>
-        query.eq("connectionId", connectionId)
-      )
-      .first()
-      .pipe(Effect.orDie);
-    if (Option.isNone(secret)) {
+    const refreshToken = yield* connectionToken(row.value);
+    if (Option.isNone(refreshToken)) {
       return null;
     }
     return {
       connector: row.value.connector,
       owner: row.value.owner,
-      refreshToken: yield* openRefreshToken(
-        row.value.owner,
-        connectionId,
-        secret.value.refreshToken
-      ).pipe(Effect.orDie),
+      refreshToken: refreshToken.value,
     };
   })
 );

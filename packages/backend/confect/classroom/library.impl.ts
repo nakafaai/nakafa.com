@@ -29,10 +29,18 @@ import {
 import { libraryField } from "@repo/backend/confect/classroom/library/item";
 import { libraryViews } from "@repo/backend/confect/classroom/library/views";
 import spec from "@repo/backend/confect/classroom/library.spec";
+import { ConnectorOff } from "@repo/backend/confect/connectors/errors";
+import {
+  driveBytes,
+  driveFile,
+} from "@repo/backend/confect/connectors/google/drive";
+import { ownDriveAccess } from "@repo/backend/confect/connectors/google/grant";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { sealText } from "@repo/backend/confect/vault/text";
+import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
   Clock,
@@ -148,6 +156,24 @@ const canAdd = FunctionImpl.make(
   })
 );
 
+/** The Person who may add to the library, asked of the library's own check; one who is no member is refused. */
+const libraryAuthor = Effect.fn("classroom.library.author")(function* (
+  classId: GenericId.GenericId<"classes">,
+  slug: TenantSlug
+) {
+  const { runQuery } = yield* QueryRunner;
+  return yield* runQuery(refs.public.classroom.library.canAdd, {
+    classId,
+    slug,
+  }).pipe(
+    Effect.catchTag("NotMember", () =>
+      Effect.fail(
+        new AccessDenied({ action: "library.manage", reason: "role" })
+      )
+    )
+  );
+});
+
 /** Deletes an uploaded file that the server refuses, so a refused file is never stored. */
 const refuse = (storageId: StorageId) =>
   Effect.gen(function* () {
@@ -170,16 +196,7 @@ const register = FunctionImpl.make(
     function* ({ classId, clientKey, slug, storageId, title }) {
       yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
-      const { authorId } = yield* runQuery(
-        refs.public.classroom.library.canAdd,
-        { classId, slug }
-      ).pipe(
-        Effect.catchTag("NotMember", () =>
-          Effect.fail(
-            new AccessDenied({ action: "library.manage", reason: "role" })
-          )
-        )
-      );
+      const { authorId } = yield* libraryAuthor(classId, slug);
       const { size } = yield* runQuery(refs.internal.exams.assets.stored, {
         storageId,
       }).pipe(Effect.orDie);
@@ -211,6 +228,62 @@ const register = FunctionImpl.make(
               title,
             });
           }),
+      });
+    },
+    Effect.catchTag("SchemaError", Effect.die)
+  )
+);
+
+/**
+ * Imports a file the teacher picked in Google Drive into the library. The
+ * teacher's own Drive connection reads it, which covers only the files the
+ * teacher picked with Nakafa. Its size is read first, so a file over the limit,
+ * or a Google document, which has no size because it is no stored file, is
+ * refused before any byte is read. Its leading bytes must name a PDF or an image.
+ * The file is stored and kept as an upload is.
+ */
+const importDrive = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "importDrive",
+  Effect.fn("classroom.library.importDrive")(
+    function* ({ classId, clientKey, fileId, slug, title }) {
+      const { appUser } = yield* requireAuth();
+      const { authorId } = yield* libraryAuthor(classId, slug);
+      const access = yield* ownDriveAccess(appUser._id);
+      if (Option.isNone(access)) {
+        return yield* new ConnectorOff();
+      }
+      const file = yield* driveFile(access.value, fileId).pipe(
+        Effect.provide(FetchClient)
+      );
+      if (file.size === undefined) {
+        return yield* new FileTypeRefused();
+      }
+      if (file.size > LIBRARY_BYTE_LIMIT) {
+        return yield* new FileSizeRefused();
+      }
+      const bytes = new Uint8Array(
+        yield* driveBytes(access.value, fileId).pipe(
+          Effect.provide(FetchClient)
+        )
+      );
+      const contentType = fileTypeOf(bytes.slice(0, HEAD_BYTES));
+      if (Option.isNone(contentType)) {
+        return yield* new FileTypeRefused();
+      }
+      const storageId = yield* (yield* StorageActionWriter).store(
+        new Blob([bytes], { type: contentType.value })
+      );
+      const { runMutation } = yield* MutationRunner;
+      return yield* runMutation(refs.internal.classroom.library.commit, {
+        authorId,
+        byteSize: bytes.byteLength,
+        classId,
+        clientKey,
+        contentType: contentType.value,
+        storageId,
+        title,
       });
     },
     Effect.catchTag("SchemaError", Effect.die)
@@ -301,6 +374,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(uploadUrl),
   Layer.provide(canAdd),
   Layer.provide(register),
+  Layer.provide(importDrive),
   Layer.provide(commit),
   Layer.provide(remove),
   Layer.provide(session),

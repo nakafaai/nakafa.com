@@ -16,10 +16,10 @@ const EVENTS_ENDPOINT =
   "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 
 /** How far ahead a sync reads: the coming 14 days. */
-export const CALENDAR_WINDOW = Duration.days(14);
+const CALENDAR_WINDOW = Duration.days(14);
 
 /** The most events one sync keeps. */
-export const CALENDAR_LIMIT = 100;
+const CALENDAR_LIMIT = 100;
 
 /** When an event starts or ends, as Google writes it: a day for an all-day event, a time for any other. */
 const EventTime = Schema.Struct({

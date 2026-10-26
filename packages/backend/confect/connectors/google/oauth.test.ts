@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/confect/connectors/google/oauth";
 import { FetchClient } from "@repo/utilities/http/client";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Redacted } from "effect";
+import { Effect, Record as Rec, Redacted } from "effect";
 import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
 
@@ -65,7 +65,7 @@ describe("connectors/google/oauth", () => {
         expect(url.origin + url.pathname).toBe(
           "https://accounts.google.com/o/oauth2/v2/auth"
         );
-        expect(Object.fromEntries(url.searchParams)).toEqual({
+        expect(Rec.fromEntries(url.searchParams)).toEqual({
           access_type: "offline",
           client_id: client.id,
           code_challenge: challenge,
@@ -106,7 +106,9 @@ describe("connectors/google/oauth", () => {
         });
         const [url, init] = fetcher.mock.calls[0] ?? [];
         expect(String(url)).toBe("https://oauth2.googleapis.com/token");
-        expect(Object.fromEntries(new URLSearchParams(String(init?.body)))).toEqual({
+        expect(
+          Rec.fromEntries(new URLSearchParams(String(init?.body)))
+        ).toEqual({
           client_id: client.id,
           client_secret: "test-secret",
           code: "code-1",

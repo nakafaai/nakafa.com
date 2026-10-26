@@ -79,42 +79,41 @@ export function ConnectorCard({
         })}
         tone={reconnect ? "destructive" : "muted"}
       >
-        {Option.match(connection, {
-          onNone: () => connect,
-          onSome: (found) => (
-            <>
-              {reconnect ? connect : null}
-              <Button onClick={() => setConfirming(true)} variant="destructive">
-                {t("disconnect")}
-              </Button>
-              <ResponsiveDialog
-                description={t("disconnect-description")}
-                footer={
-                  <>
-                    <Button
-                      onClick={() => setConfirming(false)}
-                      variant="outline"
-                    >
-                      {common("cancel")}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setConfirming(false);
-                        onDisconnect(found);
-                      }}
-                      variant="destructive"
-                    >
-                      {t("disconnect")}
-                    </Button>
-                  </>
-                }
-                open={confirming}
-                setOpen={setConfirming}
-                title={t("disconnect-title", { name: t(connector) })}
-              />
-            </>
-          ),
-        })}
+        {Option.isNone(connection) ? (
+          connect
+        ) : (
+          <>
+            {reconnect ? connect : null}
+            <Button onClick={() => setConfirming(true)} variant="destructive">
+              {t("disconnect")}
+            </Button>
+            <ResponsiveDialog
+              description={t("disconnect-description")}
+              footer={
+                <>
+                  <Button
+                    onClick={() => setConfirming(false)}
+                    variant="outline"
+                  >
+                    {common("cancel")}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setConfirming(false);
+                      onDisconnect(connection.value);
+                    }}
+                    variant="destructive"
+                  >
+                    {t("disconnect")}
+                  </Button>
+                </>
+              }
+              open={confirming}
+              setOpen={setConfirming}
+              title={t("disconnect-title", { name: t(connector) })}
+            />
+          </>
+        )}
       </CardSectionFooter>
     </CardSection>
   );

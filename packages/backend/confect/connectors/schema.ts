@@ -121,6 +121,11 @@ export const ReturnPath = Schema.String.check(
   Schema.isMaxLength(200)
 );
 
+/** The ID of a file that Google Drive's Picker gives: letters, digits, `_`, and `-`. */
+export const DriveFileId = Schema.String.check(
+  Schema.isPattern(/^[\w-]{1,200}$/u)
+);
+
 /**
  * How a connect ended and where its user goes back to: `connected`, `cancelled`
  * when the user stopped on Google's screen, or `refused` when Google or the

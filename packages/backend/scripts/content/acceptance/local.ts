@@ -85,6 +85,7 @@ const localEnvironment = {
   GOOGLE_CONNECTOR_CLIENT_ID:
     "acceptance-connectors.apps.googleusercontent.com",
   GOOGLE_CONNECTOR_CLIENT_SECRET: "build-disabled",
+  GOOGLE_PICKER_API_KEY: "build-disabled",
   GOOGLE_AUTH_CLIENT_ID: "build-disabled",
   GOOGLE_AUTH_CLIENT_SECRET: "build-disabled",
   BETTER_AUTH_SECRET: LOCAL_AUTH_SECRET,

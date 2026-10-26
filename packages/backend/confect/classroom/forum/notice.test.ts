@@ -128,6 +128,13 @@ describe("classroom/forum mentions", () => {
         );
         const revoked = yield* inboxOf(fixture, "student");
         expect(Arr.map(revoked, (row) => row.detail)).toEqual([null, null]);
+        // Nor is that member offered to mention any more.
+        expect(
+          yield* teacher.query(people.list, {
+            classId: forum.classId,
+            slug: nf,
+          })
+        ).toEqual([]);
       })
   );
 

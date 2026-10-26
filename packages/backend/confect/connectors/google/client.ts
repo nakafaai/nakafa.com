@@ -1,6 +1,13 @@
 import { ConnectorOff } from "@repo/backend/confect/connectors/errors";
 import { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
-import { Array as Arr, Config, Effect, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Config,
+  Effect,
+  Option,
+  Schema,
+  String as Str,
+} from "effect";
 
 /**
  * The Google connectors this deployment offers, from `GOOGLE_CONNECTORS`: their
@@ -40,5 +47,22 @@ export const readGoogleClient = Effect.fn("connectors.google.client")(
       id: Config.String("GOOGLE_CONNECTOR_CLIENT_ID"),
       secret: Config.Redacted("GOOGLE_CONNECTOR_CLIENT_SECRET"),
     }).pipe(Effect.mapError(() => new ConnectorOff()));
+  }
+);
+
+/**
+ * What Google's Picker needs beside the user's token: the browser key of the
+ * connectors project, from `GOOGLE_PICKER_API_KEY`, and the project's number,
+ * which leads the client's ID and lets the Picker grant a picked file to the
+ * client. A deployment that does not offer Drive, or has no key, fails with
+ * `ConnectorOff`.
+ */
+export const readPickerKeys = Effect.fn("connectors.google.pickerKeys")(
+  function* () {
+    const client = yield* readGoogleClient("drive");
+    const apiKey = yield* Config.String("GOOGLE_PICKER_API_KEY").pipe(
+      Effect.mapError(() => new ConnectorOff())
+    );
+    return { apiKey, appId: Arr.headNonEmpty(Str.split(client.id, "-")) };
   }
 );

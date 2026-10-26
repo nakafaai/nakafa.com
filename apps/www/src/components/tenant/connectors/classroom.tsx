@@ -56,7 +56,7 @@ export function ClassroomImport() {
   const { slug } = useTenant();
   const preview = useAction(connectors.classroom.preview);
   const [isLoading, startLoading] = useTransition();
-  const [shown, setShown] = useState<Option.Option<Preview>>(Option.none());
+  const [shown, setShown] = useState<Option.Option<Preview>>(Option.none);
 
   const load = () =>
     startLoading(() =>

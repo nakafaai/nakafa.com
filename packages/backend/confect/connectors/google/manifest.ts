@@ -55,15 +55,7 @@ export const GOOGLE_MANIFEST = {
     syncs: false,
     scopes: [`${SCOPE_ROOT}drive.file`],
   },
-} as const satisfies Record<
-  GoogleConnector,
-  {
-    readonly owner: "personal" | "school";
-    readonly review: boolean;
-    readonly scopes: readonly string[];
-    readonly syncs: boolean;
-  }
->;
+} as const satisfies Record<GoogleConnector, unknown>;
 
 /** The scopes one connection of a connector asks Google for: `openid` and the connector's own. */
 export const requestedScopes = (connector: GoogleConnector) => [

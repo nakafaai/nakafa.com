@@ -218,12 +218,30 @@ describe("connectors/sync", () => {
   );
 
   it.effect(
-    "takes the due connections, at most five of one owner, leases each, and skips one with no due time",
+    "takes the due connections, at most five of one owner and the school's apart, leases each, and skips one with no due time",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const due = yield* Effect.forEach(Arr.range(1, 7), () =>
           connectionOf(fixture, "calendar")
+        );
+        const school = yield* fixture.run(
+          Effect.gen(function* () {
+            const connectionId = yield* connect(
+              { id: fixture.people.admin.personId, kind: "person" },
+              { kind: "tenant", tenantId: fixture.tenants.nf },
+              {
+                connector: "classroom",
+                googleSubject: "subject-school",
+                refreshToken: "refresh-school",
+                scopes: ["openid"],
+              }
+            );
+            yield* (yield* DatabaseWriter)
+              .table("connectorConnections")
+              .patch(connectionId, { nextSyncAt: TENANCY_NOW });
+            return connectionId;
+          }).pipe(Effect.orDie)
         );
         const idle = yield* connectionOf(fixture, "drive");
         yield* fixture.run(
@@ -234,7 +252,7 @@ describe("connectors/sync", () => {
           ).pipe(Effect.orDie)
         );
         expect(yield* fixture.internal.mutation(sync.sweep, {})).toEqual({
-          scheduled: 5,
+          scheduled: 6,
         });
         const leased = yield* fixture.run(
           Effect.forEach(due, (connectionId) => rowOf(connectionId))
@@ -242,6 +260,9 @@ describe("connectors/sync", () => {
         expect(
           Arr.filter(leased, (row) => row.nextSyncAt === TENANCY_NOW + HOUR / 4)
         ).toHaveLength(5);
+        expect((yield* fixture.run(rowOf(school))).nextSyncAt).toBe(
+          TENANCY_NOW + HOUR / 4
+        );
         expect((yield* fixture.run(rowOf(idle))).nextSyncAt).toBeNull();
       })
   );

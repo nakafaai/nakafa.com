@@ -1,9 +1,12 @@
 import { runWithCodec } from "@confect/core/Ref";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { ConvexHttpClient } from "convex/browser";
-import { Effect, Option } from "effect";
+import { Data, Effect, Option } from "effect";
 import { readRequestToken } from "@/lib/auth/session.server";
 import { CONVEX_URL } from "@/lib/server/runtime";
+
+/** Convex did not answer the connect's finish: the network or the server failed. */
+class FinishUnanswered extends Data.TaggedError("FinishUnanswered") {}
 
 /** A redirect that no cache keeps, because it carries one user's connect. */
 const redirectTo = (location: URL) =>
@@ -18,7 +21,8 @@ const redirectTo = (location: URL) =>
  * redirects to the address it answers, the page the connect started from, with
  * the outcome in `connect`. The address comes from the server, never from a
  * parameter, so the callback redirects nowhere else. A callback without a state,
- * without a session, or whose connect expired goes to the site's home.
+ * without a session, whose connect expired, or whose finish Convex did not
+ * answer goes to the site's home.
  */
 export const serveConnectCallback = Effect.fn("www.connectors.callback")(
   function* (request: Request) {
@@ -36,7 +40,8 @@ export const serveConnectCallback = Effect.fn("www.connectors.callback")(
     const finished = yield* runWithCodec(
       connectors.google.finish,
       { code: url.searchParams.get("code"), state },
-      (reference, args) => client.action(reference, args)
+      (reference, args) => client.action(reference, args),
+      () => new FinishUnanswered()
     ).pipe(Effect.option);
     return Option.match(finished, {
       onNone: () => redirectTo(home),

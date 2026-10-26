@@ -9,6 +9,9 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The row of the link the test adds. */
+/** Where the dialog sends a teacher without Drive: the account's connections. */
+const CONNECTIONS_ADDRESS = /\/en\/user\/settings\/connectors$/u;
+
 const VIDEO_ROW = /Video gerak lurus/;
 
 /** The leading bytes of a PDF, which the server keeps. */
@@ -18,7 +21,7 @@ for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`a subject teacher adds a link and a PDF to the class library, sees a refused file leave, and removes an item, at ${viewport.width} px`, async ({
+  test(`a subject teacher is told to connect Drive first, adds a link and a PDF to the class library, sees a refused file leave, and removes an item, at ${viewport.width} px`, async ({
     browser,
     baseURL,
   }) => {
@@ -40,6 +43,18 @@ for (const viewport of [
     const dialog = page.getByRole("dialog");
 
     await add.click();
+    // The teacher has no Drive yet: the dialog says so and links to the account's connections.
+    await dialog.getByRole("tab", { name: "Drive" }).click();
+    await dialog.getByRole("button", { name: "Choose from Drive" }).click();
+    await expect(
+      dialog.getByText("Connect Google Drive to your account first.")
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("link", { name: "Open connections" })
+    ).toHaveAttribute("href", CONNECTIONS_ADDRESS);
+    await expect(
+      dialog.getByRole("button", { name: "Add", exact: true })
+    ).toBeDisabled();
     await dialog.getByRole("tab", { name: "Link" }).click();
     await dialog
       .getByRole("textbox", { name: "Address" })

@@ -193,26 +193,26 @@ function JumpTo({
   messages: readonly ForumMessage[];
 }) {
   const { scrollToMessage } = useMessageScroller();
-  const [done, setDone] = useState(false);
+  const done = useRef(false);
   const asked = useRef(0);
   const target = Option.flatMap(jump, (id) =>
     Arr.findFirst(messages, (message) => message.id === id)
   );
 
   useEffect(() => {
-    if (done || Option.isNone(jump)) {
+    if (done.current || Option.isNone(jump)) {
       return;
     }
     if (Option.isSome(target)) {
       scrollToMessage(target.value.clientKey, { align: "center" });
-      setDone(true);
+      done.current = true;
       return;
     }
     if (loadOlder !== undefined && asked.current !== messages.length) {
       asked.current = messages.length;
       loadOlder();
     }
-  }, [done, jump, loadOlder, messages.length, scrollToMessage, target]);
+  }, [jump, loadOlder, messages.length, scrollToMessage, target]);
 
   return null;
 }

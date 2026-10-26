@@ -4,7 +4,7 @@ import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { ImageType } from "@repo/editor/upload";
 import { isSingleLine } from "@repo/utilities/line";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** The title of a library item: one trimmed line of 1 to 120 characters. */
 export const LibraryTitle = Schema.String.check(
@@ -25,11 +25,20 @@ export const LinkAddress = Schema.String.check(
   )
 );
 
+/** The type of a PDF. */
+const PDF_TYPE = "application/pdf";
+
 /** The kinds of file the library keeps, which a file's leading bytes name: a PDF, or an image the editor draws. */
 export const LibraryFileType = Schema.Union([
   ImageType,
-  Schema.Literal("application/pdf"),
+  Schema.Literal(PDF_TYPE),
 ]);
+
+/** The same kinds as a file input's `accept` list, which Drive's Picker takes as its type filter too. */
+export const LIBRARY_ACCEPT = Arr.join(
+  Arr.append(ImageType.literals, PDF_TYPE),
+  ","
+);
 
 /** What a row holds whatever it is: its class, its author, and its title sealed with the school key. */
 const itemFields = {

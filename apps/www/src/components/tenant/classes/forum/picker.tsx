@@ -13,6 +13,7 @@ import {
   type SyntheticEvent,
   useId,
   useLayoutEffect,
+  useRef,
   useState,
 } from "react";
 import { useTranslations } from "use-intl";
@@ -50,17 +51,18 @@ export function useMentionPicker(
   const [picked, setPicked] = useState<readonly Picked[]>([]);
   const [active, setActive] = useState(0);
   const [dismissed, setDismissed] = useState<number | null>(null);
-  const [placed, setPlaced] = useState<number | null>(null);
+  const placed = useRef<number | null>(null);
   const listId = useId();
 
-  // A pick moves the caret after the inserted name once the field shows the new text.
+  // A pick moves the caret after the inserted name once the field shows the new
+  // text. The check runs after each render and acts only on the one after a pick.
   useLayoutEffect(() => {
-    if (placed === null || field.current === null) {
+    if (placed.current === null || field.current === null) {
       return;
     }
-    field.current.setSelectionRange(placed, placed);
-    setPlaced(null);
-  }, [field, placed]);
+    field.current.setSelectionRange(placed.current, placed.current);
+    placed.current = null;
+  });
 
   const typed = mentionQuery(text, caret);
   const choices: readonly Picked[] = Option.match(typed, {
@@ -95,7 +97,7 @@ export function useMentionPicker(
     );
     setText(next.text);
     setCaret(next.caret);
-    setPlaced(next.caret);
+    placed.current = next.caret;
     setPicked((current) => Arr.append(current, choice));
     setActive(0);
   };

@@ -28,13 +28,13 @@ export const GOOGLE_DEADLINE = Duration.seconds(10);
 const RANDOM_BYTES = 32;
 
 /** The OAuth client of the connectors project: its ID, and its secret, which never leaves the server. */
-export const GoogleClient = Schema.Struct({
+const GoogleClient = Schema.Struct({
   id: Schema.NonEmptyString,
   secret: Schema.Redacted(Schema.NonEmptyString),
 });
 
 /** The OAuth client of the connectors project. */
-export type GoogleClient = typeof GoogleClient.Type;
+type GoogleClient = typeof GoogleClient.Type;
 
 /** What Google's token endpoint answers. A code exchange carries the refresh token and the ID token; a refresh carries neither. */
 const TokenAnswer = Schema.Struct({

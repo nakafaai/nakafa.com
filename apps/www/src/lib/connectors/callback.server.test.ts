@@ -23,13 +23,15 @@ vi.mock("convex/browser", () => ({
 }));
 
 vi.mock("@/lib/auth/session.server", async () => {
-  const { Effect: effect } = await import("effect");
+  const { Data, Effect: effect } = await import("effect");
+  /** The session read failing, as the real reader's `SessionUnavailable` does. */
+  class SessionUnavailable extends Data.TaggedError("SessionUnavailable") {}
   return {
     readRequestToken: () =>
       effect.suspend(() => {
         const token = convex.token();
         return token === "unreadable"
-          ? effect.fail(new Error("The session did not answer."))
+          ? effect.fail(new SessionUnavailable())
           : effect.succeed(token);
       }),
   };

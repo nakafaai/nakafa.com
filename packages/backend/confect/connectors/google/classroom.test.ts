@@ -114,6 +114,12 @@ describe("connectors/google/classroom", () => {
                 title: "Kuis",
               },
               {
+                dueDate: { day: 3, month: 11, year: 2026 },
+                dueTime: { minutes: 30 },
+                id: "w5",
+                title: "Tengah malam",
+              },
+              {
                 dueDate: { day: 2, month: 11, year: 2026 },
                 id: "w3",
                 state: "DRAFT",
@@ -137,6 +143,13 @@ describe("connectors/google/classroom", () => {
             text: "",
             title: "Kuis",
             workId: "w2",
+          },
+          {
+            deadline: at("2026-11-03T00:30:00Z"),
+            points: 0,
+            text: "",
+            title: "Tengah malam",
+            workId: "w5",
           },
         ]);
         fetcher.mockResolvedValueOnce(json(200, {}));

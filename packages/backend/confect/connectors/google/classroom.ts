@@ -11,7 +11,7 @@ import { HttpClient, HttpClientRequest } from "effect/http";
 const CLASSROOM_ROOT = "https://classroom.googleapis.com/v1/";
 
 /** The most courses one preview reads, and the most coursework or students one course reads. */
-export const CLASSROOM_PAGE = 50;
+const CLASSROOM_PAGE = 50;
 
 /** One course as Google answers it. Only the fields an import reads are kept. */
 const CourseAnswer = Schema.Struct({

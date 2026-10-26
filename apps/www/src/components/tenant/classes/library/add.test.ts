@@ -6,9 +6,16 @@ import { Effect, Exit, Option, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import {
   addLibraryLink,
+  pickFromDrive,
+  sendLibraryFile,
   uploadLibraryFile,
 } from "@/components/tenant/classes/library/add";
+import { pickDriveFile } from "@/components/tenant/classes/library/drive";
 import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
+
+vi.mock("@/components/tenant/classes/library/drive", () => ({
+  pickDriveFile: vi.fn(),
+}));
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
 const classId = Schema.decodeUnknownSync(Id("classes"))("class-1");
@@ -113,6 +120,70 @@ describe("uploadLibraryFile", () => {
           Effect.flip
         );
         expect(refusal).toEqual({ _tag: "FileTypeRefused" });
+      })
+  );
+});
+
+describe("sendLibraryFile", () => {
+  it.effect(
+    "shows the row under a new client key, keeps it once the server kept the file, and takes it away on a refusal",
+    () =>
+      Effect.gen(function* () {
+        const uploads = { end: vi.fn(), settle: vi.fn(), start: vi.fn() };
+        const shown = {
+          author: "Bu Rina",
+          kind: "pdf" as const,
+          title: "Modul",
+        };
+        const kept = yield* sendLibraryFile(uploads, shown, (clientKey) =>
+          Effect.succeed(clientKey)
+        );
+        expect(uploads.start).toHaveBeenCalledWith(
+          expect.objectContaining({ ...shown, clientKey: kept, sent: false })
+        );
+        expect(uploads.settle).toHaveBeenCalledWith(kept);
+        const refused = yield* sendLibraryFile(uploads, shown, () =>
+          Effect.fail("FileTypeRefused" as const)
+        ).pipe(Effect.flip);
+        expect(refused).toBe("FileTypeRefused");
+        expect(uploads.end).toHaveBeenCalledTimes(1);
+        expect(uploads.settle).toHaveBeenCalledTimes(1);
+      })
+  );
+});
+
+describe("pickFromDrive", () => {
+  const keys = { accessToken: "access", apiKey: "key", appId: "972685787969" };
+
+  it.effect(
+    "tells an account without Drive before anything opens, and otherwise hides the dialog and answers the Picker's file",
+    () =>
+      Effect.gen(function* () {
+        const hide = vi.fn();
+        const missing = yield* pickFromDrive(
+          () => Promise.resolve(Result.succeed(null)),
+          "id",
+          hide
+        ).pipe(Effect.flip);
+        expect(missing._tag).toBe("DriveMissing");
+        expect(hide).not.toHaveBeenCalled();
+        const picked = {
+          id: "file-1",
+          mimeType: "application/pdf",
+          name: "Modul.pdf",
+        };
+        vi.mocked(pickDriveFile).mockReturnValueOnce(
+          Effect.succeed(Option.some(picked))
+        );
+        expect(
+          yield* pickFromDrive(
+            () => Promise.resolve(Result.succeed(keys)),
+            "id",
+            hide
+          )
+        ).toEqual(Option.some(picked));
+        expect(hide).toHaveBeenCalledTimes(1);
+        expect(pickDriveFile).toHaveBeenCalledWith(keys, "id");
       })
   );
 });

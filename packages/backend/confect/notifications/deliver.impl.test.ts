@@ -150,6 +150,40 @@ describe("notifications/deliver", () => {
   );
 
   it.effect(
+    "pushes a student at once in a class whose zone is no named zone, instead of guessing its quiet hours",
+    () =>
+      Effect.gen(function* () {
+        vi.setSystemTime(Date.UTC(2026, 9, 1, 15, 0, 0));
+        const fixture = yield* keyedFixture;
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenantUnits")
+              .patch(fixture.units.smp, { timeZone: "Mars/Olympus" })
+          ).pipe(Effect.orDie)
+        );
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        yield* fixture
+          .as("student")
+          .mutation(push.subscribe, yield* browserKeys);
+        yield* fixture.as("teacher").mutation(send, {
+          ...forum,
+          clientKey: "zoneless-mention",
+          mentions: [{ _tag: "person", id: fixture.people.student.personId }],
+          slug: nf,
+          text: "@Student",
+        });
+        const pushes = Arr.filter(yield* fixture.run(scheduledJobs), (job) =>
+          job.name.includes("deliver")
+        );
+        expect(Arr.map(pushes, (job) => job.scheduledTime)).toEqual([
+          Date.UTC(2026, 9, 1, 15, 0, 0),
+        ]);
+      })
+  );
+
+  it.effect(
     "writes the notice in Indonesian for a school with no active unit",
     () =>
       Effect.gen(function* () {

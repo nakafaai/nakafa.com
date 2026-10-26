@@ -21,7 +21,7 @@ import {
 } from "@repo/backend/confect/connectors/google/classroom";
 import { readGoogleClient } from "@repo/backend/confect/connectors/google/client";
 import { refreshAccess } from "@repo/backend/confect/connectors/google/oauth";
-import { openRefreshToken } from "@repo/backend/confect/connectors/secret";
+import { connectionToken } from "@repo/backend/confect/connectors/secret";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -103,14 +103,8 @@ const target = FunctionImpl.make(
       return null;
     }
     const connectionId = connection.value._id;
-    const secret = yield* reader
-      .table("connectorSecrets")
-      .index("by_connectionId", (query) =>
-        query.eq("connectionId", connectionId)
-      )
-      .first()
-      .pipe(Effect.orDie);
-    if (Option.isNone(secret)) {
+    const refreshToken = yield* connectionToken(connection.value);
+    if (Option.isNone(refreshToken)) {
       return null;
     }
     const links = yield* reader
@@ -137,11 +131,7 @@ const target = FunctionImpl.make(
         classId: link.classId,
         courseId: link.courseId,
       })),
-      refreshToken: yield* openRefreshToken(
-        connection.value.owner,
-        connectionId,
-        secret.value.refreshToken
-      ).pipe(Effect.orDie),
+      refreshToken: refreshToken.value,
     };
   })
 );

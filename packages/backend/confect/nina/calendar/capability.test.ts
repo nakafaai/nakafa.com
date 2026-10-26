@@ -3,10 +3,12 @@ import { QueryRunner, RegisteredFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
+import type { CalendarEvent } from "@repo/backend/confect/connectors/schema";
 import { calendarCapability } from "@repo/backend/confect/nina/calendar/capability";
 import { runCalendar } from "@repo/backend/confect/nina/calendar/tool";
 import type { Held } from "@repo/backend/confect/nina/capability/held";
 import { GatewayTest } from "@repo/backend/test/gateway";
+import type { createNinaTest } from "@repo/backend/test/nina";
 import {
   finalAnswer,
   playTurn,
@@ -47,7 +49,7 @@ const NOW = at("2026-10-26T06:00:00Z");
  * the mirror, to make that read fail as the platform does.
  */
 async function read(
-  f: Awaited<ReturnType<typeof createMemoryTest>>,
+  f: Awaited<ReturnType<typeof createNinaTest>>,
   {
     calendar = true,
     read: reader,
@@ -87,14 +89,8 @@ async function read(
 
 /** A Calendar connection of the fixture's learner, with the events its sync stored. */
 async function connectCalendar(
-  f: Awaited<ReturnType<typeof createMemoryTest>>,
-  events: readonly {
-    readonly allDay: boolean;
-    readonly end: number;
-    readonly eventId: string;
-    readonly start: number;
-    readonly title: string;
-  }[]
+  f: Awaited<ReturnType<typeof createNinaTest>>,
+  events: readonly (typeof CalendarEvent.Type)[]
 ) {
   const connectionId = await f.t.mutation((ctx) =>
     ctx.db.insert("connectorConnections", {

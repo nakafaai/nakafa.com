@@ -14,6 +14,11 @@ import {
   LibraryView,
   LinkAddress,
 } from "@repo/backend/confect/classroom/library/item";
+import {
+  ConnectorOff,
+  GoogleFailed,
+} from "@repo/backend/confect/connectors/errors";
+import { DriveFileId } from "@repo/backend/confect/connectors/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -27,7 +32,9 @@ const classArgs = { classId: Id("classes"), slug: TenantSlug };
  * add, which whoever reads the forum reads, newest first. A file goes to the
  * upload address first and is then registered: the server reads its size and
  * leading bytes, keeps only a PDF or an image, and deletes any other file. The
- * address of a file is read after the access check of each read (ADR 0028).
+ * address of a file is read after the access check of each read (ADR 0028). A
+ * teacher may also import a file picked in Google Drive, which the server reads
+ * with the teacher's own Drive connection and checks the same way.
  * `commit` is internal: only the registration calls it.
  */
 export default GroupSpec.make()
@@ -96,6 +103,27 @@ export default GroupSpec.make()
           AccessDenied,
           FileSizeRefused,
           FileTypeRefused,
+        ]),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicAction({
+      name: "importDrive",
+      args: () => ({
+        ...classArgs,
+        clientKey: ClientKey,
+        fileId: DriveFileId,
+        title: LibraryTitle,
+      }),
+      returns: () => Schema.Struct({ id: Id("classroomLibrary") }),
+      error: () =>
+        Schema.Union([
+          AuthFailure,
+          AccessDenied,
+          ConnectorOff,
+          FileSizeRefused,
+          FileTypeRefused,
+          GoogleFailed,
         ]),
     }).middleware(Session)
   )
