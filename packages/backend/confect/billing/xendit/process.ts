@@ -20,6 +20,10 @@ import {
   XenditCycle,
   XenditPlanEvent,
 } from "@repo/backend/confect/billing/xendit/contract";
+import {
+  applySessionCompleted,
+  applySessionExpired,
+} from "@repo/backend/confect/billing/xendit/session";
 import { Array as Arr, DateTime, Effect, Match, Option, Schema } from "effect";
 
 /** The envelope with its data left raw, so each event decodes the data it carries. */
@@ -216,6 +220,8 @@ const dispatch = (event: string, data: unknown) =>
     Match.when("recurring.plan.inactivated", () => applyPlan(data, "canceled")),
     Match.when("recurring.cycle.succeeded", () => applyCycleSucceeded(data)),
     Match.when("recurring.cycle.failed", () => applyCycleFailed(data)),
+    Match.when("payment_session.completed", () => applySessionCompleted(data)),
+    Match.when("payment_session.expired", () => applySessionExpired(data)),
     Match.orElse(() => Effect.succeed("ignored" as const))
   );
 
