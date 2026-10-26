@@ -18,9 +18,10 @@ import { Array as Arr, Effect, Match, Option, Schema } from "effect";
  * correct option; true or false (`truefalse`), a single-answer choice of two
  * fixed options; and cause and effect (`cause`), a single-answer choice of the
  * five fixed relations between a statement and its reason, which the prompt
- * holds; and a short answer (`short`), a text entry that the key's accepted
- * answers score. A new question starts as `choice`, and each later template
- * adds its member here.
+ * holds; a short answer (`short`), a text entry that the key's accepted
+ * answers score; and an essay (`essay`), a long written answer that the
+ * teacher scores by the rubric. A new question starts as `choice`, and each
+ * later template adds its member here.
  */
 export const QuestionTemplate = Schema.Literals([
   "choice",
@@ -28,6 +29,7 @@ export const QuestionTemplate = Schema.Literals([
   "truefalse",
   "cause",
   "short",
+  "essay",
 ]);
 export type QuestionTemplate = typeof QuestionTemplate.Type;
 
@@ -116,8 +118,9 @@ export const fixedOptions = (template: QuestionTemplate) =>
 
 /**
  * Whether a template's question takes a rubric, the teacher's guide to scoring an answer by hand.
- * A choice and a short answer are scored by their key, so none takes one; the layer
- * shows a rubric only for a template that takes one. Each template decides it here, so a new
+ * A choice and a short answer are scored by their key, so neither takes one, and an essay
+ * is scored by the teacher, who reads its rubric; the layer shows a rubric only for a
+ * template that takes one. Each template decides it here, so a new
  * template cannot leave it undecided.
  */
 export const takesRubric = (template: QuestionTemplate) =>
@@ -127,8 +130,15 @@ export const takesRubric = (template: QuestionTemplate) =>
     Match.when("truefalse", () => false),
     Match.when("cause", () => false),
     Match.when("short", () => false),
+    Match.when("essay", () => true),
     Match.exhaustive
   );
+
+/**
+ * Whether a template's question needs an answer key before its exam is scheduled: an essay is scored by
+ * the teacher with its rubric, so it needs none, and every other template is scored by its key.
+ */
+export const needsKey = (template: QuestionTemplate) => !takesRubric(template);
 
 /** The most characters of one fixed option's label, as the editor writes it for the template. */
 export const OPTION_LABEL_MAX = 200;
@@ -160,7 +170,7 @@ const choiceFits = (template: QuestionTemplate, answer: Interaction) =>
 
 /**
  * Whether the interactions of a question are the ones its template takes: distinct interactions,
- * each a text entry for a short answer, and each a choice that fits the template (`choiceFits`) for
+ * each a text entry for a short answer, a long text for an essay, and each a choice that fits the template (`choiceFits`) for
  * every other template. A question that holds any other interaction is refused.
  */
 export const answersFit = (
@@ -171,6 +181,7 @@ export const answersFit = (
   Arr.every(answers, (answer) =>
     Match.value(template).pipe(
       Match.when("short", () => answer.kind === "textEntry"),
+      Match.when("essay", () => answer.kind === "extendedText"),
       Match.orElse(() => choiceFits(template, answer))
     )
   );
@@ -315,6 +326,11 @@ export const choiceAnswers = (
 export const shortAnswers = (): readonly [
   Extract<Interaction, { kind: "textEntry" }>,
 ] => [{ id: "entry", kind: "textEntry", label: NEW_CHOICE_LABEL }];
+
+/** The interactions of an essay question: one long text, which the teacher scores by the rubric. */
+export const essayAnswers = (): readonly [
+  Extract<Interaction, { kind: "extendedText" }>,
+] => [{ id: "essay", kind: "extendedText", label: NEW_CHOICE_LABEL }];
 
 /**
  * The interactions of a new question: a single-answer choice with `NEW_QUESTION_OPTIONS`

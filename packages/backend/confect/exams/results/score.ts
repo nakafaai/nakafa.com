@@ -125,6 +125,11 @@ const answeredEntry = (
       )
     : Option.none();
 
+/** Whether a question is an essay: its one interaction is a long text, which the teacher scores (K6). */
+const isEssay = (interactions: readonly Interaction[]) =>
+  interactions.length === 1 &&
+  Arr.every(interactions, (interaction) => interaction.kind === "extendedText");
+
 /**
  * Scores one typed response against its text entry's key (K7). A key with no accepted answers for the
  * entry leaves it `pending`. A blank response is `incorrect`, as an unanswered question, a text that one
@@ -156,7 +161,9 @@ const scoreText = (
   );
 
 /**
- * Scores one saved response against its question's key. A choice is scored with the try-outs'
+ * Scores one saved response against its question's key. An essay is the teacher's to score by its
+ * rubric, so a written essay is `pending` and a blank one `incorrect`, as an unanswered question. A
+ * choice is scored with the try-outs'
  * evaluation (`evaluate`, ADR 0031, section 9): an unanswered question, and a response that names no
  * option of its choice, are `incorrect`, as the sitting closes them. A text entry is scored by its
  * accepted answers (`scoreText`). A question that holds another shape, a question without a key, or a
@@ -168,6 +175,9 @@ export function scoreResponse(
   key: readonly InteractionKey[] | null,
   response: ExamResponse
 ): Verdict {
+  if (isEssay(interactions)) {
+    return isAnswered(response) ? "pending" : "incorrect";
+  }
   if (key === null) {
     return "pending";
   }

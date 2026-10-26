@@ -7,6 +7,7 @@ import {
   byQuestion,
   questionStats,
 } from "@repo/backend/confect/exams/results/questions";
+import { grade } from "@repo/backend/confect/exams/results/grade";
 import { release } from "@repo/backend/confect/exams/results/release";
 import spec from "@repo/backend/confect/exams/results/results.spec";
 import { byStudent } from "@repo/backend/confect/exams/results/students";
@@ -59,6 +60,15 @@ const releaseFunction = FunctionImpl.make(
   })
 );
 
+const gradeFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "grade",
+  Effect.fn("exams.results.grade.function")(function* (args) {
+    return yield* grade(args);
+  })
+);
+
 const mineFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -70,13 +80,14 @@ const mineFunction = FunctionImpl.make(
 
 /**
  * Implements the results group of `results.spec.ts`: the overview, the students' list, a question's
- * answers and statistics, the release, and a student's own released result.
+ * answers and statistics, a grade, the release, and a student's own released result.
  */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(overviewFunction),
   Layer.provide(byStudentFunction),
   Layer.provide(byQuestionFunction),
   Layer.provide(questionStatsFunction),
+  Layer.provide(gradeFunction),
   Layer.provide(releaseFunction),
   Layer.provide(mineFunction),
   Layer.provide(Layer.mergeAll(session, member, resultAccess)),

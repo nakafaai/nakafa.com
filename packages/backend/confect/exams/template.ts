@@ -3,6 +3,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { keyFits } from "@repo/backend/confect/exams/key";
 import {
   choiceLimit,
+  essayAnswers,
   fixedOptions,
   newChoiceAnswers,
   type QuestionTemplate,
@@ -13,7 +14,8 @@ import { Array as Arr, Option } from "effect";
 
 /**
  * A question's interactions and key as another template takes them. A short answer takes one text
- * entry and no key, and a choice template turns a short answer into a new choice first. A template that fixes its
+ * entry and an essay one long text, both with no key, and a choice template turns either into a new
+ * choice first. A template that fixes its
  * options (`fixedOptions`) gives each choice those options, labelled with `labels` in order and
  * numbered from one, and clears the key, because no option the teacher marked is one of them. Any
  * other template keeps each choice's options and gives it the template's bounds (`choiceLimit`),
@@ -33,8 +35,11 @@ export const asTemplate = (
   if (template === "short") {
     return { answers: shortAnswers(), key: null };
   }
+  if (template === "essay") {
+    return { answers: essayAnswers(), key: null };
+  }
   const fixed = Option.isSome(fixedOptions(template));
-  // A short answer holds no choice, so a choice template starts it from a new choice.
+  // A short answer and an essay hold no choice, so a choice template starts them from a new choice.
   const choices = Arr.some(answers, (answer) => answer.kind === "choice")
     ? answers
     : newChoiceAnswers();

@@ -14,6 +14,7 @@ import { sittingGate } from "@repo/backend/confect/exams/sittings/gate";
 import {
   type ExamResponse,
   isTextResponse,
+  TEXT_RESPONSE_MAX,
 } from "@repo/backend/confect/exams/sittings/response";
 import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -36,8 +37,9 @@ const fitsChoice = (choice: Choice, response: readonly string[]) =>
 
 /**
  * Whether a response fits the one interaction of a question: a choice takes the options it holds
- * (`fitsChoice`), and a text entry takes typed text, blank text included, which leaves it unanswered.
- * A question of any other shape, or of more than one interaction, takes no response.
+ * (`fitsChoice`), a text entry takes one line of typed text, and an essay takes written text, blank
+ * text included in both, which leaves the question unanswered. A question of any other shape, or of
+ * more than one interaction, takes no response.
  */
 const fitsQuestion = (
   interactions: readonly Interaction[],
@@ -51,7 +53,13 @@ const fitsQuestion = (
       Match.when({ kind: "choice" }, (choice) =>
         isTextResponse(response) ? false : fitsChoice(choice, response)
       ),
-      Match.when({ kind: "textEntry" }, () => isTextResponse(response)),
+      Match.when(
+        { kind: "textEntry" },
+        () =>
+          isTextResponse(response) &&
+          response.text.length <= TEXT_RESPONSE_MAX
+      ),
+      Match.when({ kind: "extendedText" }, () => isTextResponse(response)),
       Match.orElse(() => false)
     )
   );

@@ -4,18 +4,21 @@ import { Array as Arr, Schema, String as Str } from "effect";
 /** The most characters a student types as a short answer: one line, as long as a try-out's typed answer. */
 export const TEXT_RESPONSE_MAX = 500;
 
+/** The most characters a student writes as an essay: a few pages, well within the row size. */
+export const ESSAY_RESPONSE_MAX = 20_000;
+
 /** The options a student chose in a choice, in the order the student chose them. */
 const ChoiceResponse = Schema.Array(LocalIdSchema);
 
-/** The text a student typed in a text entry, as the student typed it. */
+/** The text a student typed in a text entry or wrote in an essay, as the student wrote it. */
 const TextResponse = Schema.Struct({
-  text: Schema.String.check(Schema.isMaxLength(TEXT_RESPONSE_MAX)),
+  text: Schema.String.check(Schema.isMaxLength(ESSAY_RESPONSE_MAX)),
 });
 
 /**
  * One student's response to one question (ADR 0013): the option IDs the student chose in a choice, or
- * the text the student typed in a text entry. A choice left blank is no option, and a text entry left
- * blank is text with nothing but spaces.
+ * the text the student typed in a text entry or wrote in an essay. A choice left blank is no option, and
+ * a text left blank is text with nothing but spaces.
  */
 export const ExamResponse = Schema.Union([ChoiceResponse, TextResponse]);
 export type ExamResponse = typeof ExamResponse.Type;

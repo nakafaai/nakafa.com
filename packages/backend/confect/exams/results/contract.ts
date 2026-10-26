@@ -74,6 +74,7 @@ export const QuestionStats = Schema.Struct({
   correct: Schema.Int,
   counted: Schema.Int,
   incorrect: Schema.Int,
+  partial: Schema.Int,
   optionCounts: Schema.Array(
     Schema.Struct({ count: Schema.Int, optionId: LocalIdSchema })
   ),

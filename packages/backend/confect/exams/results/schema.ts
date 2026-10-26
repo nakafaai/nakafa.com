@@ -1,26 +1,36 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { QUESTION_POINTS_MAX } from "@repo/backend/confect/exams/question";
-import { Schema } from "effect";
 import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
+import { Schema } from "effect";
 
 /**
  * The verdict of one question of one attempt. A choice is `correct` or `incorrect`; an answer
- * that needs a person to judge it, such as a text or a rubric answer, stays `pending`.
+ * that needs a person to judge it, such as a text or an essay, stays `pending` until the teacher
+ * grades it, and a grade between none and all of the question's points is `partial`.
  */
-export const Verdict = Schema.Literals(["correct", "incorrect", "pending"]);
+export const Verdict = Schema.Literals([
+  "correct",
+  "incorrect",
+  "partial",
+  "pending",
+]);
 export type Verdict = typeof Verdict.Type;
+
+/** The points one answer earns: a whole number from none to the most a question is worth. */
+export const GradePoints = Schema.Int.check(
+  Schema.isBetween({ maximum: QUESTION_POINTS_MAX, minimum: 0 })
+);
 
 /**
  * One scored question of one attempt. `response` holds the option IDs or the text that the attempt
- * saved (`ExamResponse`), and it chooses no option when the student left the question unanswered. `points` is the question's weight for a
- * correct answer and 0 for any other verdict, so the sum of an attempt's points is its score.
+ * saved (`ExamResponse`), and it chooses no option when the student left the question unanswered.
+ * `points` is the question's weight for a correct answer, the teacher's grade for a graded one, and 0
+ * for any other verdict, so the sum of an attempt's points is its score.
  */
 export const examResultValidator = Schema.Struct({
   attempt: Id("examAttempts"),
   person: Id("tenantPeople"),
-  points: Schema.Int.check(
-    Schema.isBetween({ maximum: QUESTION_POINTS_MAX, minimum: 0 })
-  ),
+  points: GradePoints,
   question: Id("examQuestions"),
   response: ExamResponse,
   sitting: Id("examSittings"),

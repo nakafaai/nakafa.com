@@ -40,6 +40,7 @@ export const tallyAnswers = (
     .length,
   correct: countVerdict(answers, "correct"),
   incorrect: countVerdict(answers, "incorrect"),
+  partial: countVerdict(answers, "partial"),
   optionCounts: Arr.map(optionIds, (optionId) => ({
     count: Arr.filter(answers, (answer) =>
       Arr.contains(chosenOptions(answer.response), optionId)
