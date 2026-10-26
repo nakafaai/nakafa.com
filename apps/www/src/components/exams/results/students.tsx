@@ -61,6 +61,37 @@ const stateKeys = {
 const StatusFilter = Schema.Union([Schema.Literal("all"), AttemptState]);
 export type StatusFilter = typeof StatusFilter.Type;
 
+/** The seconds of one minute, which a long time away is told in. */
+const SECONDS_IN_MINUTE = 60;
+
+/**
+ * How often a submitted student left the exam and for how long in all (K25), an indication for the
+ * teacher only: empty before the attempt is submitted, and a zero when the student never left.
+ */
+function AwayCell({
+  awaySeconds,
+  exits,
+}: {
+  readonly awaySeconds: number | null;
+  readonly exits: number | null;
+}) {
+  const t = useTranslations("Exams");
+  if (exits === null || awaySeconds === null) {
+    return null;
+  }
+  if (exits === 0) {
+    return "0";
+  }
+  if (awaySeconds < SECONDS_IN_MINUTE) {
+    return t("results-away-seconds", { count: exits, seconds: awaySeconds });
+  }
+  return t("results-away-minutes", {
+    count: exits,
+    minutes: Math.floor(awaySeconds / SECONDS_IN_MINUTE),
+    seconds: awaySeconds % SECONDS_IN_MINUTE,
+  });
+}
+
 /** One student's row: the name, the state, and the scores of a submitted attempt, with the time it was submitted. */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
@@ -76,6 +107,9 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
       </TableCell>
       <TableCell className="tabular-nums">{row.answered ?? ""}</TableCell>
       <TableCell className="tabular-nums">{row.pending ?? ""}</TableCell>
+      <TableCell className="tabular-nums">
+        <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
+      </TableCell>
       <TableCell className="tabular-nums">
         {row.submittedAt === null
           ? ""
@@ -146,6 +180,7 @@ function StudentTable({
           <TableHead>{t("results-score")}</TableHead>
           <TableHead>{t("results-answered")}</TableHead>
           <TableHead>{t("results-pending")}</TableHead>
+          <TableHead>{t("results-away")}</TableHead>
           <TableHead>{t("results-finished")}</TableHead>
         </TableRow>
       </TableHeader>

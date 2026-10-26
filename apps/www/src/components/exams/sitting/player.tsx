@@ -22,6 +22,7 @@ import { serverTime } from "@/components/exams/sitting/clock";
 import { sittingFailureMessage } from "@/components/exams/sitting/entry";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
+import { SittingLook } from "@/components/exams/sitting/look";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
 import { SittingNavigator } from "@/components/exams/sitting/navigator";
@@ -262,6 +263,7 @@ function RunningPaper({
           paper,
         })}
       />
+      <SittingLook attemptId={attemptId} deviceId={deviceId} slug={slug} />
       {header}
       <PlayerMain
         navigator={

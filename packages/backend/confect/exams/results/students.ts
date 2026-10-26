@@ -15,7 +15,7 @@ const STUDENT_PAGE_SIZE = 100;
 
 /**
  * One attempt as the students' list shows it. An attempt that is not submitted has no scored rows yet,
- * so its score, answered count, and pending count are `null`.
+ * so its score, answered count, pending count, and integrity indication are `null`.
  */
 const studentRow = Effect.fn("exams.results.students.row")(function* (
   attempt: ExamAttemptsDoc
@@ -31,12 +31,21 @@ const studentRow = Effect.fn("exams.results.students.row")(function* (
     submittedAt: attempt.submittedAt ?? null,
   };
   if (attempt.state !== "submitted") {
-    return { ...base, answered: null, pending: null, points: null };
+    return {
+      ...base,
+      answered: null,
+      awaySeconds: null,
+      exits: null,
+      pending: null,
+      points: null,
+    };
   }
   const rows = yield* attemptResults(attempt.sitting, attempt.person);
   return {
     ...base,
     answered: Arr.filter(rows, (row) => isAnswered(row.response)).length,
+    awaySeconds: attempt.integrity?.awaySeconds ?? 0,
+    exits: attempt.integrity?.exits ?? 0,
     pending: Arr.filter(rows, (row) => row.verdict === "pending").length,
     points: Num.sumAll(Arr.map(rows, (row) => row.points)),
   };

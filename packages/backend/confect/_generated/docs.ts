@@ -60,6 +60,7 @@ export type ExamAssetsDoc = Document.Document<typeof schemaDefinition, "examAsse
 export type ExamAttemptsDoc = Document.Document<typeof schemaDefinition, "examAttempts">;
 export type ExamQuestionsDoc = Document.Document<typeof schemaDefinition, "examQuestions">;
 export type ExamResultsDoc = Document.Document<typeof schemaDefinition, "examResults">;
+export type ExamScreensDoc = Document.Document<typeof schemaDefinition, "examScreens">;
 export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSignals">;
 export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
@@ -188,6 +189,7 @@ export interface Docs {
   examAttempts: ExamAttemptsDoc;
   examQuestions: ExamQuestionsDoc;
   examResults: ExamResultsDoc;
+  examScreens: ExamScreensDoc;
   examSignals: ExamSignalsDoc;
   examSittings: ExamSittingsDoc;
   exams: ExamsDoc;
