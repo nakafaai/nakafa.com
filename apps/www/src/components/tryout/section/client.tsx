@@ -199,7 +199,6 @@ function ResolvedTryoutSectionPage({
   );
 
   const currentAttempt = attempt;
-  const locked = binding?.initialState.attempt.status === "in-progress";
   const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
@@ -209,14 +208,14 @@ function ResolvedTryoutSectionPage({
   const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
   const hasActiveSection = currentAttempt?.section?.status === "in-progress";
   if (hasActiveSection && runtimeState.kind === "none") {
-    return locked ? <ShellLock /> : null;
+    return <SectionLock binding={binding} />;
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
   if (finish && binding && isTryoutRuntimeRunning(runtimeState)) {
     return (
       <TryoutPage>
-        {locked ? <ShellLock /> : null}
+        <SectionLock binding={binding} />
         <TryoutPlayer
           finish={finish}
           mode={binding.mode}
@@ -229,7 +228,7 @@ function ResolvedTryoutSectionPage({
 
   return (
     <TryoutPage>
-      {locked ? <ShellLock /> : null}
+      <SectionLock binding={binding} />
       <TryoutSectionHeader
         actionAttempt={actionAttempt}
         activeAttempt={activeAttempt}
@@ -250,6 +249,15 @@ function ResolvedTryoutSectionPage({
       </TryoutPageBody>
     </TryoutPage>
   );
+}
+
+/** Locks the app shell while the attempt this page is bound to runs, so the page takes the whole screen. */
+function SectionLock({
+  binding,
+}: Pick<TryoutSectionPageClientProps, "binding">) {
+  return binding?.initialState.attempt.status === "in-progress" ? (
+    <ShellLock />
+  ) : null;
 }
 
 /** Renders the section heading with its start or return action. */
