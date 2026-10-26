@@ -21,6 +21,7 @@ import {
   readServerDocument,
   type ServerDocument,
 } from "@/e2e/support/crawler";
+import { signInLearner } from "@/e2e/support/learner";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { LINE_SCENE, lineSceneCards } from "@/e2e/support/selector";
@@ -416,7 +417,12 @@ const waitForRecordedViews = Effect.fn("NakafaE2E.waitForRecordedViews")(
   }
 );
 
-test("content views store no device identifier until analytics is allowed", async ({
+/**
+ * Only a signed-in page records a content view: a visitor's page opens no Convex
+ * client, so it records nothing (`ActiveContentViewTracker`). The learner's device
+ * identifier still waits for the analytics grant.
+ */
+test("a learner's content views store no device identifier until analytics is allowed", async ({
   baseURL,
   browser,
 }) => {
@@ -431,6 +437,7 @@ test("content views store no device identifier until analytics is allowed", asyn
       },
       (context) =>
         Effect.gen(function* () {
+          yield* signInLearner(context, baseURL ?? "");
           const page = yield* Effect.promise(() => context.newPage());
           yield* Effect.promise(() => page.clock.install());
           yield* withObservedPageErrors(
