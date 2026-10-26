@@ -56,14 +56,14 @@ describe("classroom/library", () => {
             slug: nf,
             title: "Video gerak lurus",
           });
-        const added = yield* add("video", "https://youtu.be/gerak-lurus");
+        const added = yield* add("video-link", "https://youtu.be/gerak-lurus");
         expect(added).toMatchObject({
           address: "https://youtu.be/gerak-lurus",
           byteSize: null,
           kind: "link",
           title: "Video gerak lurus",
         });
-        expect(yield* add("video", "https://example.com/other")).toEqual(added);
+        expect(yield* add("video-link", "https://example.com/other")).toEqual(added);
         const stored = yield* fixture.run(libraryRows);
         expect(stored).toHaveLength(1);
         expect(encodeJsonText(stored)).not.toContain("gerak");
@@ -82,7 +82,7 @@ describe("classroom/library", () => {
           })
           .pipe(Effect.flip);
         expect(byStudent).toMatchObject(denied("role"));
-        const plain = yield* Effect.exit(add("plain", "http://example.com"));
+        const plain = yield* Effect.exit(add("plain-link", "http://example.com"));
         expect(Exit.isFailure(plain)).toBe(true);
         expect(yield* fixture.run(libraryRows)).toHaveLength(1);
       })
@@ -114,10 +114,10 @@ describe("classroom/library", () => {
             });
             return { ...registered, storageId };
           });
-        const module = yield* register("module", pdf(), "Modul gerak lurus");
+        const module = yield* register("module-file", pdf(), "Modul gerak lurus");
         vi.setSystemTime(TENANCY_NOW + 1000);
-        const photo = yield* register("photo", png(), "Foto praktikum");
-        const repeat = yield* register("photo", png(), "Foto lagi");
+        const photo = yield* register("photo-file", png(), "Foto praktikum");
+        const repeat = yield* register("photo-file", png(), "Foto lagi");
         expect(repeat.id).toBe(photo.id);
         expect(yield* storageUrl(fixture.convex, repeat.storageId)).toBeNull();
         const listed = yield* fixture
@@ -154,7 +154,7 @@ describe("classroom/library", () => {
             const failure = yield* teacher
               .action(library.register, {
                 classId,
-                clientKey: "refused",
+                clientKey: "refused-file",
                 slug: nf,
                 storageId,
                 title: "Berkas",
@@ -191,7 +191,7 @@ describe("classroom/library", () => {
         const storageId = yield* storeFile(fixture.convex, pdf());
         const args = {
           classId,
-          clientKey: "outside",
+          clientKey: "outside-file",
           slug: nf,
           storageId,
           title: "Modul",
@@ -217,14 +217,14 @@ describe("classroom/library", () => {
         const link = yield* teacher.mutation(library.addLink, {
           address: "https://nakafa.com/id/subject/high-school/10/physics",
           classId,
-          clientKey: "material",
+          clientKey: "material-link",
           slug: nf,
           title: "Materi Nakafa",
         });
         const storageId = yield* storeFile(fixture.convex, pdf());
         const file = yield* teacher.action(library.register, {
           classId,
-          clientKey: "module",
+          clientKey: "module-file",
           slug: nf,
           storageId,
           title: "Modul",
