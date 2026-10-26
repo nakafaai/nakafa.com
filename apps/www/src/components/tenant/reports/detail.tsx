@@ -39,7 +39,10 @@ import { TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
 import { useReportActions } from "@/components/tenant/reports/actions";
-import { type ReportLine, writeChange } from "@/components/tenant/reports/change";
+import {
+  type ReportLine,
+  writeChange,
+} from "@/components/tenant/reports/change";
 import { checkAddress } from "@/components/tenant/reports/check";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
