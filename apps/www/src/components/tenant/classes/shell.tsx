@@ -457,7 +457,7 @@ function ClassTabs({
 
 /** One tab of a class, its icon before its name. The current tab is marked as the page, and its underline marks it too. */
 const classTab = cva(
-  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 font-medium text-sm",
+  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 font-medium text-sm [&_svg]:size-4",
   {
     variants: {
       active: {
