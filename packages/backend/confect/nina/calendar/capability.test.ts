@@ -112,7 +112,8 @@ async function connectCalendar(
 
 describe("the calendar capability in a turn", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    // Only the clock is fixed: the turn's own timers must run.
+    vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(NOW);
   });
 

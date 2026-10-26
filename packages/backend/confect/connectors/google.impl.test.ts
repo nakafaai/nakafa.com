@@ -251,23 +251,23 @@ describe("connectors/google", () => {
   );
 
   it.effect(
-    "lets a teacher connect the school to Classroom, refuses a student, and replaces the connection of the same account on a second connect",
+    "lets an Admin connect the school to Classroom, refuses a teacher and a student, and replaces the connection of the same account on a second connect",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* fixture.run(createTenantKey(fixture.tenants.nf));
-        const teacher = fixture.as("teacher");
+        const admin = fixture.as("admin");
         const connect = Effect.gen(function* () {
-          const started = yield* teacher.mutation(google.startSchool, {
+          const started = yield* admin.mutation(google.startSchool, {
             connector: "classroom",
             redirectUri: CALLBACK,
             returnPath: SCHOOL_PAGE,
             slug: nf,
           });
           fetcher.mockResolvedValueOnce(
-            granted("teacher-subject", CLASSROOM_SCOPES)
+            granted("admin-subject", CLASSROOM_SCOPES)
           );
-          return yield* teacher.action(google.finish, {
+          return yield* admin.action(google.finish, {
             code: "code",
             state: stateOf(started.url),
           });
@@ -277,28 +277,35 @@ describe("connectors/google", () => {
           outcome: "connected",
         });
         yield* connect;
-        const listed = yield* fixture
-          .as("admin")
-          .query(listSchool, { ...firstPage, slug: nf });
+        const listed = yield* admin.query(listSchool, {
+          ...firstPage,
+          slug: nf,
+        });
         expect(
           Arr.map(listed.page, (row) => [row.connector, row.status])
         ).toEqual([
           ["classroom", "disconnected"],
           ["classroom", "active"],
         ]);
+        const refused = yield* Effect.forEach(
+          ["teacher", "student"] as const,
+          (account) =>
+            fixture
+              .as(account)
+              .mutation(google.startSchool, {
+                connector: "classroom",
+                redirectUri: CALLBACK,
+                returnPath: SCHOOL_PAGE,
+                slug: nf,
+              })
+              .pipe(Effect.flip)
+        );
+        expect(refused).toMatchObject([
+          { _tag: "AccessDenied" },
+          { _tag: "AccessDenied" },
+        ]);
         expect(
-          yield* fixture
-            .as("student")
-            .mutation(google.startSchool, {
-              connector: "classroom",
-              redirectUri: CALLBACK,
-              returnPath: SCHOOL_PAGE,
-              slug: nf,
-            })
-            .pipe(Effect.flip)
-        ).toMatchObject({ _tag: "AccessDenied" });
-        expect(
-          yield* teacher
+          yield* admin
             .mutation(google.startSchool, {
               connector: "drive",
               redirectUri: CALLBACK,
