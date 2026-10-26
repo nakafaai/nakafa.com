@@ -27,6 +27,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -35,7 +36,10 @@ import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { gradeItems } from "@/components/tenant/settings/choices";
-import { CohortFilter } from "@/components/tenant/settings/cohort/filter";
+import {
+  COHORT_STATUS_LOOKS,
+  CohortFilter,
+} from "@/components/tenant/settings/cohort/filter";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,
@@ -440,7 +444,13 @@ function SchoolCohortTable({
       sortFn: "alphanumeric",
     }),
     cohortColumns.accessor((cohort) => cohort.status, {
-      cell: (info) => t(`cohort-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={COHORT_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`cohort-${info.getValue()}`)}
+          tone={COHORT_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("cohort-status"),

@@ -21,6 +21,7 @@ import { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { namedOptions } from "@/components/shared/table/filter";
+import type { StatusTone } from "@/components/shared/table/tone";
 import { TableFilter } from "@/components/shared/table/toolbar";
 import { gradeItems } from "@/components/tenant/settings/choices";
 
@@ -42,11 +43,17 @@ const GRADE_ICONS = [
   Mortarboard01Icon,
 ] as const;
 
-/** The icon of each cohort status in the Filter menu: the class together, and an archive. */
-const COHORT_STATUS_ICONS = {
-  active: UserGroupIcon,
-  archived: Archive02Icon,
-} as const satisfies Record<typeof CohortStatus.Type, IconSvgElement>;
+/**
+ * The look of each cohort status, in the cohorts table and in its Filter menu: the class together,
+ * and an archive, each in its tone.
+ */
+export const COHORT_STATUS_LOOKS = {
+  active: { icon: UserGroupIcon, tone: "success" },
+  archived: { icon: Archive02Icon, tone: "neutral" },
+} as const satisfies Record<
+  typeof CohortStatus.Type,
+  { icon: IconSvgElement; tone: typeof StatusTone.Type }
+>;
 
 /** The cohorts' Filter menu, in the header row of the cohorts page: by school year and by status. */
 export function CohortFilter() {
@@ -66,7 +73,7 @@ export function CohortFilter() {
         {
           column: "status",
           options: Arr.map(CohortStatus.literals, (status) => ({
-            icon: COHORT_STATUS_ICONS[status],
+            icon: COHORT_STATUS_LOOKS[status].icon,
             label: t(`cohort-${status}`),
             value: status,
           })),

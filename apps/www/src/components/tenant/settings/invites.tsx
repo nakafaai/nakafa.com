@@ -4,6 +4,7 @@ import {
   useMutation,
 } from "@confect/react";
 import {
+  ClockAlertIcon,
   Delete02Icon,
   IdIcon,
   MailSend01Icon,
@@ -39,6 +40,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -212,7 +214,11 @@ function SchoolInviteTable({
     inviteColumns.accessor((invite) => invite.expiresAt, {
       cell: (info) =>
         info.row.original.status === "expired" ? (
-          t("invite-expired")
+          <TableStatus
+            icon={ClockAlertIcon}
+            label={t("invite-expired")}
+            tone="warning"
+          />
         ) : (
           <SchoolDateTime at={info.getValue()} />
         ),
