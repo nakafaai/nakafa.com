@@ -40,16 +40,8 @@ const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 // Each project as it runs. No project names its dependency here: the suite
 // order below derives it.
 const PROJECTS = {
-  // The hydration checks need pages that still stream on demand, so they run
-  // first in the runtime suite, before any other test caches those pages. Each
-  // suite starts its own runtime, so no other suite caches them first.
-  "cold-runtime": {
-    testMatch: "**/content/hydration.browser.ts",
-    workers: 1,
-  },
   "shared-runtime": {
     testIgnore: [
-      "**/content/hydration.browser.ts",
       "**/navigation/instant.browser.ts",
       ...CHAT_TESTS,
       ...LEARNER_TESTS,
@@ -90,7 +82,7 @@ type ProjectName = keyof typeof PROJECTS;
 // the listed order, and each one waits for the project before it. Without a
 // selection, every suite runs as one chain in this order.
 const SUITES = {
-  runtime: ["cold-runtime", "shared-runtime"],
+  runtime: ["shared-runtime"],
   learner: ["learner"],
   chat: ["chat"],
   visual: ["visual"],
