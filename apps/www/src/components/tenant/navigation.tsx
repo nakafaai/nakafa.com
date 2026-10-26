@@ -10,6 +10,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
+import { SettingsReturnProvider } from "@/components/shared/settings/return";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
@@ -17,27 +18,38 @@ import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
 import { Link, useRouteMatched } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
+/** The address under which every school settings section lives. */
+const SETTINGS_PATH = "/school/$slug/settings";
+
 /**
  * Renders the navigation of the school sidebar. The settings sections replace it
  * on a settings route for a viewer who may manage the school, and otherwise the
- * school's own groups show: the exams for a viewer who may open them, then the
+ * school's own groups show. It stays mounted from the page the viewer leaves into
+ * settings, so it remembers that page for the settings' way back.
+ */
+export function TenantNavigation() {
+  const { canManage } = useTenant();
+  const isSettings = useRouteMatched(SETTINGS_PATH, { exact: false });
+
+  return (
+    <SettingsReturnProvider path={SETTINGS_PATH}>
+      {canManage && isSettings ? <SchoolSettingsNav /> : <TenantSchoolGroups />}
+    </SettingsReturnProvider>
+  );
+}
+
+/**
+ * The school's own groups: the exams for a viewer who may open them, then the
  * management group, with the settings entry, only for a viewer who may manage the
  * school. The viewer's classes come last, when the viewer has any, so they never
  * move the groups above them.
  */
-export function TenantNavigation() {
+function TenantSchoolGroups() {
   const { canManage, canOpenExams, slug } = useTenant();
-  const isSettings = useRouteMatched("/school/$slug/settings", {
-    exact: false,
-  });
   const matchRoute = useMatchRoute();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
   const tSettings = useTranslations("SchoolSettings");
-
-  if (canManage && isSettings) {
-    return <SchoolSettingsNav />;
-  }
 
   return (
     <>

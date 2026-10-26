@@ -393,6 +393,7 @@
     "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom."
   },
   "SchoolSettings": {
+    "back-to-school": "Kembali ke {school}",
     "school": "Sekolah",
     "people": "Orang",
     "integrations": "Integrasi",

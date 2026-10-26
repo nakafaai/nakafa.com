@@ -393,6 +393,7 @@
     "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
   },
   "SchoolSettings": {
+    "back-to-school": "Zurück zu {school}",
     "school": "Schule",
     "people": "Personen",
     "integrations": "Integrationen",
