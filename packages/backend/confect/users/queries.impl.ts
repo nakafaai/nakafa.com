@@ -9,6 +9,7 @@ import {
   getAppUserByUsername,
 } from "@repo/backend/confect/users/directory";
 import { photoOf } from "@repo/backend/confect/users/picture";
+import { profileAccess } from "@repo/backend/confect/users/profile";
 import spec from "@repo/backend/confect/users/queries.spec";
 import { Effect, Layer, Result } from "effect";
 
@@ -41,10 +42,10 @@ const getUserByAuthId = FunctionImpl.make(
 );
 
 /**
- * The profile of the account that holds a username, for that account only (K15,
- * ADR 0009, Who Opens A Profile). Every other caller, signed in or not, gets null,
- * the same answer as for a username nobody holds, so the query never tells whether
- * a username exists.
+ * The profile of the account that holds a username (ADR 0009, Who Opens A Profile).
+ * Anyone may read it and share it, unless the account belongs to a school (K15): a
+ * school member's profile answers its own account alone, and every other caller gets
+ * null, the same answer as for a name nobody holds. `shareable` says which it is.
  */
 const getProfileByUsername = FunctionImpl.make(
   databaseSchema,
@@ -53,7 +54,11 @@ const getProfileByUsername = FunctionImpl.make(
   Effect.fn("users.queries.getProfileByUsername")(function* (args) {
     const { appUser } = yield* Session;
     const user = yield* getAppUserByUsername(args.username);
-    if (user === null || appUser === null || appUser._id !== user._id) {
+    if (user === null) {
+      return null;
+    }
+    const access = yield* profileAccess(user._id, appUser?._id ?? null);
+    if (!access.opens) {
       return null;
     }
     // The index matched this exact name, so the account holds the name asked for.
@@ -63,6 +68,7 @@ const getProfileByUsername = FunctionImpl.make(
       _id: user._id,
       mascot: user.mascot,
       name: user.name,
+      shareable: access.shareable,
       username: args.username,
       ...(user.bio === undefined ? {} : { bio: user.bio }),
       ...(photo === undefined ? {} : { image: photo }),

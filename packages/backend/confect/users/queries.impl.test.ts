@@ -9,12 +9,50 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
+import { seedSchoolMember } from "@repo/backend/test/member";
 import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 9, 12, 12, 0, 0);
 const getProfileByUsername = Ref.getFunctionReference(
   refs.public.users.queries.getProfileByUsername
 );
+
+/** Reads the profile of a username as one caller. */
+const profileOf = (
+  caller: Pick<ReturnType<typeof createConvexTestWithBetterAuth>, "query">,
+  username: string
+) => caller.query(getProfileByUsername, { username });
+
+/** The caller signed in as one seeded account. */
+const callerOf = (
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  account: Awaited<ReturnType<typeof seedAuthenticatedUser>>
+) =>
+  t.withIdentity({ sessionId: account.sessionId, subject: account.authUserId });
+
+/** A learner who holds the username nabilfatih with a bio and a photo, and another account. */
+async function seedProfiles(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>
+) {
+  const holder = await t.mutation(async (ctx) => {
+    const seeded = await seedAuthenticatedUser(ctx, {
+      now: NOW,
+      suffix: "profile-holder",
+    });
+    await ctx.db.patch("users", seeded.userId, {
+      bio: "Belajar aljabar setiap hari.",
+      image: "https://photos.example.com/holder.jpg",
+      name: "Nabil Fatih",
+      picture: "photo",
+      username: "nabilfatih",
+    });
+    return seeded;
+  });
+  const stranger = await t.mutation((ctx) =>
+    seedAuthenticatedUser(ctx, { now: NOW, suffix: "profile-stranger" })
+  );
+  return { holder, stranger };
+}
 
 describe("users/queries", () => {
   it("loads users by id and auth id", async () => {
@@ -100,28 +138,9 @@ describe("users/queries", () => {
     expect(await check(other, "admin")).toBe("notAllowed");
   });
 
-  it("shows a profile to the account that holds it, and nothing to anyone else or for a name nobody holds", async () => {
+  it("shows a learner's profile to anyone, to share, and nothing for a name nobody holds", async () => {
     const t = createConvexTestWithBetterAuth();
-    const holder = await t.mutation(async (ctx) => {
-      const seeded = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "profile-holder",
-      });
-      await ctx.db.patch("users", seeded.userId, {
-        bio: "Belajar aljabar setiap hari.",
-        image: "https://photos.example.com/holder.jpg",
-        name: "Nabil Fatih",
-        picture: "photo",
-        username: "nabilfatih",
-      });
-      return seeded;
-    });
-    const stranger = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW, suffix: "profile-stranger" })
-    );
-    const profileOf = (caller: Pick<typeof t, "query">, username: string) =>
-      caller.query(getProfileByUsername, { username });
-
+    const { holder, stranger } = await seedProfiles(t);
     // Only the public fields leave the server: no email, auth id, plan, or settings.
     const expected = {
       _id: holder.userId,
@@ -129,25 +148,48 @@ describe("users/queries", () => {
       image: "https://photos.example.com/holder.jpg",
       mascot: MASCOT_CODE,
       name: "Nabil Fatih",
+      shareable: true,
       username: "nabilfatih",
     };
-    const owner = t.withIdentity({
-      sessionId: holder.sessionId,
-      subject: holder.authUserId,
+    expect(await profileOf(callerOf(t, holder), "nabilfatih")).toStrictEqual(
+      expected
+    );
+    expect(await profileOf(t, "nabilfatih")).toStrictEqual(expected);
+    expect(await profileOf(callerOf(t, stranger), "nabilfatih")).toStrictEqual(
+      expected
+    );
+    expect(await profileOf(t, "nobodyholdsthis")).toBeNull();
+  });
+
+  it("shows a school member's profile to its own account alone, never to share (K15)", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { holder, stranger } = await seedProfiles(t);
+    const personId = await t.mutation((ctx) =>
+      seedSchoolMember(ctx, holder.userId, NOW)
+    );
+    const statusOf = (status: "removed" | "suspended") =>
+      t.mutation((ctx) => ctx.db.patch("tenantPeople", personId, { status }));
+
+    for (const status of ["active", "suspended"] as const) {
+      if (status === "suspended") {
+        await statusOf(status);
+      }
+      expect(await profileOf(callerOf(t, holder), "nabilfatih")).toMatchObject({
+        shareable: false,
+        username: "nabilfatih",
+      });
+      // A visitor and another account get the answer of a name nobody holds.
+      expect(await profileOf(t, "nabilfatih"), status).toBeNull();
+      expect(
+        await profileOf(callerOf(t, stranger), "nabilfatih"),
+        status
+      ).toBeNull();
+    }
+    // A removed member belongs to no school, so the profile is public again.
+    await statusOf("removed");
+    expect(await profileOf(t, "nabilfatih")).toMatchObject({
+      shareable: true,
     });
-    expect(await profileOf(owner, "nabilfatih")).toStrictEqual(expected);
-    // A visitor and another account get the answer of a name nobody holds (K15).
-    expect(await profileOf(t, "nabilfatih")).toBeNull();
-    expect(
-      await profileOf(
-        t.withIdentity({
-          sessionId: stranger.sessionId,
-          subject: stranger.authUserId,
-        }),
-        "nabilfatih"
-      )
-    ).toBeNull();
-    expect(await profileOf(owner, "nobodyholdsthis")).toBeNull();
   });
 
   it("hides the photo of an account that shows its animal, and an empty bio", async () => {
@@ -179,6 +221,7 @@ describe("users/queries", () => {
       _id: holder.userId,
       mascot: MASCOT_CODE,
       name: "Siti Aminah",
+      shareable: true,
       username: "sitiaminah",
     });
   });

@@ -7,6 +7,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { seedSchoolMember } from "@repo/backend/test/member";
 import { Array as Arr, Option, Order, Record } from "effect";
 
 const create = Ref.getFunctionReference(refs.public.posts.mutations.create);
@@ -191,5 +192,23 @@ describe("posts list contract", () => {
         expect.objectContaining({ _id: first, likeCount: 1, liked: false }),
       ],
     });
+  });
+
+  it("reads a school member's posts to the member alone, and an empty page to anyone else (K15)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now);
+    const { anonymous, author, stranger } = await createReaders();
+    const [post] = await writePosts(author, ["Catatan kelas"]);
+    await anonymous.mutation((ctx) =>
+      seedSchoolMember(ctx, author.userId, now)
+    );
+    const readAs = (caller: Pick<typeof anonymous, "query">) =>
+      caller.query(list, { authorId: author.userId, paginationOpts: PAGE });
+    expect(await readAs(author.session)).toMatchObject({
+      page: [expect.objectContaining({ _id: post })],
+    });
+    const empty = { continueCursor: "", isDone: true, page: [] };
+    expect(await readAs(stranger)).toStrictEqual(empty);
+    expect(await readAs(anonymous)).toStrictEqual(empty);
   });
 });

@@ -9,9 +9,12 @@ import { Schema, Struct } from "effect";
 /**
  * The face of a profile as its page shows it. It holds only what every profile
  * shows: never the email, the auth id, the plan, or the settings of the account.
+ * `shareable` is false for a school member's profile, which only its own account
+ * reads.
  */
 const publicProfileValidator = Schema.Struct({
   ...Struct.pick(usersTable.Doc.fields, ["_id", "bio", "mascot", "name"]),
+  shareable: Schema.Boolean,
   username: Schema.String,
   image: Schema.optionalKey(Schema.String),
 });
