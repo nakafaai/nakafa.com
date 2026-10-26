@@ -179,7 +179,7 @@ describe("signed curriculum runtime", () => {
           path: "/curriculum/merdeka/class-11/mathematics",
         },
       ]);
-      expect(readRuntimeCurriculumToc(model)).toEqual({
+      expect(readRuntimeCurriculumToc(model, "Page description")).toEqual({
         description: "Class 11",
         publicPath: "curriculum/merdeka/class-11/mathematics",
         title: "Mathematics",
@@ -187,7 +187,7 @@ describe("signed curriculum runtime", () => {
     })
   );
 
-  it("omits parent presentation for a root route", () => {
+  it("describes a root route by its page description, since it has no parent", () => {
     const model = {
       alternates: [testProgramRoot],
       ancestors: [],
@@ -204,7 +204,10 @@ describe("signed curriculum runtime", () => {
     expect(
       isRenderableCurriculumView({ ...testProgramRoot, sitemap: false })
     ).toBe(false);
-    expect(readRuntimeCurriculumToc(model)).toEqual({
+    expect(
+      readRuntimeCurriculumToc(model, "Every subject of Kurikulum Merdeka.")
+    ).toEqual({
+      description: "Every subject of Kurikulum Merdeka.",
       publicPath: "curriculum/merdeka",
       title: "Kurikulum Merdeka",
     });
