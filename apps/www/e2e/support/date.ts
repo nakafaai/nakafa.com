@@ -3,6 +3,9 @@ import { expect, type Locator, type Page } from "@playwright/test";
 /** How many months a test pages through at most before it gives up on a day. */
 const MONTH_LIMIT = 36;
 
+/** The calendar's button to the next month, by its accessible name. */
+const NEXT_MONTH = /next/i;
+
 /**
  * Chooses one day, written as its day key such as `2027-07-01`, in a design-system date field: it
  * opens the field's calendar, pages forward to the day's month, and presses the day, which closes
@@ -16,7 +19,7 @@ export async function chooseDay(page: Page, field: Locator, day: string) {
     if (await target.isVisible()) {
       break;
     }
-    await calendar.getByRole("button", { name: /next/i }).click();
+    await calendar.getByRole("button", { name: NEXT_MONTH }).click();
   }
   await target.click();
   await expect(calendar).toHaveCount(0);
