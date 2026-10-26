@@ -70,16 +70,13 @@ export function ChannelList({
     ? pagination.loadMore
     : null;
 
-  const failure = PaginatedQueryResult.isFailure(pagination) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
+  const failed = PaginatedQueryResult.isFailure(pagination);
 
   return (
     <>
-      {failure}
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {pagination._tag === "LoadingFirstPage" ||
-      (failure !== null &&
-        Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
+      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
         <ChannelTable channels={pagination.results} saving={saving} />
       )}
       {loadMore !== null && (
