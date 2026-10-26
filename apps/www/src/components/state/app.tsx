@@ -9,12 +9,15 @@ import { LANDING_TARGET, SEARCH_TARGET } from "@/lib/routing/target";
  * The not-found state of a page inside the app. Its two ways on navigate in the
  * app, so the app stays loaded, as the reference app's locale not-found does. The
  * standalone not-found page uses plain anchors instead, so it never loads this
- * module or the app's navigation.
+ * module or the app's navigation. The route whose loader answered not found
+ * renders no head of its own, so the state asks search engines not to index the
+ * address itself, and React keeps the rule in the head only while it is shown.
  */
 export function AppNotFound({ locale }: { readonly locale: Locale }) {
   const messages = readStandaloneMessages(locale);
   return (
     <Stage>
+      <meta content="noindex,nofollow" name="robots" />
       <Missing
         description={messages.NotFound.description}
         title={messages.NotFound.title}
