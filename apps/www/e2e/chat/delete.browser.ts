@@ -4,14 +4,15 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { live, reloadUntil, saved } from "@/e2e/support/changes";
-import { DELETE, FAILED, openChatPage, runOnPage } from "@/e2e/support/chat";
-import { ACCESS_TITLE } from "@/e2e/support/share";
 import {
-  inTheSheet,
-  openFromHistory,
-  openSheet,
-  promptWith,
-} from "@/e2e/support/sheet";
+  DELETE,
+  FAILED,
+  LESSON_PATH,
+  openChatPage,
+  runOnPage,
+} from "@/e2e/support/chat";
+import { ACCESS_TITLE } from "@/e2e/support/share";
+import { inTheSheet, promptWith } from "@/e2e/support/sheet";
 import { shownTexts, watchTexts } from "@/e2e/support/shown";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -302,9 +303,21 @@ const sheetLetsGoWhenDeletedElsewhere = Effect.fn(
   const gone = yield* learner.startChat("The chat that goes");
   yield* learner.startChat("The chat that stays");
   yield* learner.titleNewest(["Staying chat", "Going chat"]);
-  yield* openSheet(page);
-  yield* openFromHistory(page, "Going chat");
   yield* Effect.promise(async () => {
+    // A press before React takes the page over opens nothing.
+    await page.goto(LESSON_PATH);
+    const ask = page.getByRole("button", { exact: true, name: "Ask Nina" });
+    await waitUntilTakenOver(ask);
+    await ask.click();
+    const history = inTheSheet(page).getByRole("button", {
+      name: "Chat history",
+    });
+    await expect(history).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await waitUntilTakenOver(history);
+    await history.click();
+    await page.getByRole("menuitem", { name: "Going chat" }).click();
     await expect(
       promptWith(inTheSheet(page), "The chat that goes")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });

@@ -152,6 +152,15 @@ const signsOutOfAChat = Effect.fn("NakafaE2E.signsOutOfAChat")(function* (
       promptWith(page.locator("main main"), "A chat to sign out of")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     const shown = await watchUntilLeaving(page, [ACCESS_TITLE]);
+    // The home page answers a moment late, so the page that signed out stays
+    // on screen long enough to show what it follows.
+    await page.route(
+      (url) => url.pathname === "/en",
+      async (route) => {
+        await Effect.runPromise(Effect.sleep("3 seconds"));
+        await route.continue();
+      }
+    );
     const member = page.locator('[data-account="member"]').first();
     await member.getByRole("button").first().click();
     await page

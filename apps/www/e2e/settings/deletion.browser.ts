@@ -252,6 +252,9 @@ const verifyRefusedDeletion = Effect.fn("NakafaE2E.verifyRefusedDeletion")(
   }
 );
 
+/** How long a finished deletion may take to reach the home page: it prepares, deletes and checks on the server. */
+const DELETION_MILLISECONDS = 60_000;
+
 /**
  * The deletion goes through: the account reads as gone before the page leaves
  * for the home page, and the profile stays on the page until it does.
@@ -265,7 +268,7 @@ const verifyDeletion = Effect.fn("NakafaE2E.verifyDeletion")(function* (
   yield* confirmDeletion(page);
   yield* Effect.promise(async () => {
     await page.waitForURL((url) => url.pathname === "/en", {
-      timeout: readinessTimeoutMilliseconds,
+      timeout: DELETION_MILLISECONDS,
       waitUntil: "load",
     });
     expect(card.left).toBe(false);
