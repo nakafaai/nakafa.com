@@ -218,6 +218,7 @@ export const createLearnerCheckout = Effect.fn(
               locale: request.locale,
               product_count: input.productIds.length,
               product_id: Arr.join(input.productIds, ","),
+              rail: "polar",
             },
           },
           requiresPro: input.requiresPro,
