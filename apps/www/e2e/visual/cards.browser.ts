@@ -33,10 +33,15 @@ import {
   revealAction,
   revealCard,
   revealLab,
+  revealMenuItem,
   revealScene,
 } from "@/e2e/support/visual";
 
 const SCENE_PROBE = "held";
+
+/** The grid of a coordinate scene, a checked item of the menu that ends its actions band. */
+const GRID = { name: en.Common.grid, role: "menuitemcheckbox" } as const;
+
 /** Room around two scenes shown at once, so neither sits at a viewport edge. */
 const SCENE_PAIR_MARGIN = 160;
 
@@ -68,15 +73,20 @@ function countLabelsInView(card: Locator) {
   }, LINE_SCENE);
 }
 
-/** Proves playback still works: a reset replays the growth from its start. */
+/**
+ * Proves playback still works: a reset, from the menu at the end of the actions
+ * band, replays the growth from its start.
+ */
 const expectPlayback = Effect.fn("NakafaE2E.expectVisualPlayback")(function* (
   card: Locator
 ) {
   const scene = card.locator(BACTERIA_SCENE);
+  const reset = yield* revealMenuItem(card, en.Common["more-actions"], {
+    name: en.Common.reset,
+    role: "menuitem",
+  });
   yield* Effect.promise(async () => {
-    await card
-      .getByRole("button", { exact: true, name: en.Common.reset })
-      .click();
+    await reset.click();
     const start = await scene.getAttribute("data-bacteria-count");
     await expect
       .poll(async () => Number(await scene.getAttribute("data-bacteria-count")))
@@ -214,10 +224,6 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   yield* openVisualLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
   const { canvas, card } = yield* revealScene(page);
   const controls = card.locator(SCENE_ACTIONS);
-  const grid = controls.getByRole("button", {
-    exact: true,
-    name: en.Common.grid,
-  });
   const rotation = controls.getByRole("button", {
     exact: true,
     name: en.Common.play,
@@ -256,15 +262,21 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   });
   yield* waitForCanvasRest(canvas);
 
+  // The grid is checked in the menu at the end of the actions band, which
+  // opens above the card across the screen and closes once it is chosen.
   const beforeGrid = yield* Effect.promise(() => canvas.screenshot());
+  const shown = yield* revealMenuItem(card, en.Common["more-actions"], GRID);
   yield* Effect.promise(async () => {
-    await grid.click();
-    await expect(grid).toHaveAttribute("aria-pressed", "false");
+    await expect(shown).toHaveAttribute("aria-checked", "true");
+    await shown.click();
+    await expect(shown).toHaveCount(0);
   });
   yield* expectCanvasToMove(canvas, beforeGrid);
+  const hidden = yield* revealMenuItem(card, en.Common["more-actions"], GRID);
   yield* Effect.promise(async () => {
-    await grid.click();
-    await expect(grid).toHaveAttribute("aria-pressed", "true");
+    await expect(hidden).toHaveAttribute("aria-checked", "false");
+    await hidden.click();
+    await expect(hidden).toHaveCount(0);
   });
   yield* waitForCanvasRest(canvas);
 
@@ -397,7 +409,10 @@ const toggleInLocale = Effect.fn("NakafaE2E.toggleVisualInLocale")(function* (
       .poll(() => readPresentation(card))
       .toMatchObject({ covers: true, fills: true, topmost: true });
     await expect(
-      card.getByRole("button", { exact: true, name: messages.Common.reset })
+      card.getByRole("button", {
+        exact: true,
+        name: messages.Common["more-actions"],
+      })
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(action).toHaveAttribute("aria-pressed", "false");
