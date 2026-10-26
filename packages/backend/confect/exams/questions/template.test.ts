@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { teacherExam } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const { answer, copy, template } = refs.public.exams.questions;
 
@@ -287,7 +287,7 @@ describe("exams/questions/template", () => {
         expect(cause).toMatchObject({ key: null, template: "cause" });
         expect(cause.answers[0]).toMatchObject({
           maxChoices: 1,
-          options: relations.map((text, index) => ({
+          options: Arr.map(relations, (text, index) => ({
             id: `option-${index + 1}`,
             label: textLabel(text),
           })),
