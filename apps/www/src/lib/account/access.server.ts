@@ -62,7 +62,11 @@ export const messagesFor = Effect.fn("www.account.messages")(function* (
   return yield* Effect.promise(() => loadLocaleMessages(locale));
 });
 
-/** Reads a profile by its username, and ends the request as not found when nobody holds it. */
+/**
+ * Reads a profile by its username as the signed-in account, and ends the request as not
+ * found when the account does not hold it: the backend answers a profile to its own
+ * account only (K15), the same as for a name nobody holds.
+ */
 export const readProfileOrNotFound = Effect.fn("www.account.profile")(
   function* (username: string, token: string | undefined) {
     const [profile, account] = yield* Effect.all(
@@ -70,7 +74,7 @@ export const readProfileOrNotFound = Effect.fn("www.account.profile")(
         readRequired(
           users.queries.getProfileByUsername,
           { username: Str.toLowerCase(username) },
-          undefined
+          token
         ),
         token === undefined
           ? Effect.succeedNone

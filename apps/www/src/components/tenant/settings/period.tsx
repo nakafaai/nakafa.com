@@ -212,6 +212,7 @@ export function SchoolPeriodMenu({
             <Input
               id={`${id}-name`}
               onChange={(event) => setName(event.target.value)}
+              placeholder={t("period-name-placeholder")}
               value={name}
             />
           </Field>

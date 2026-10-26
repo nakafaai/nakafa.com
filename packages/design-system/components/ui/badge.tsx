@@ -34,6 +34,12 @@ const badgeVariants = cva(
           "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        // The tones of a status, each from its colour token of the theme.
+        success:
+          "border-transparent bg-success text-success-foreground [a&]:hover:shadow-sm",
+        warning:
+          "border-transparent bg-warning text-warning-foreground [a&]:hover:shadow-sm",
+        info: "border-transparent bg-info text-info-foreground [a&]:hover:shadow-sm",
       },
     },
     defaultVariants: {
