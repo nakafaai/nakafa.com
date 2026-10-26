@@ -16,7 +16,7 @@ test("a signed-in learner who is not a member gets the card form at once, while 
   const context = await browser.newContext();
   await Effect.runPromise(signInLearner(context, schoolHome));
   const page = await context.newPage();
-  const released = Effect.runSync(Deferred.make<void>());
+  const released = Deferred.makeUnsafe<void>();
   await page.route("**/api/auth/sign-out", (route) =>
     Effect.runPromise(
       Deferred.await(released).pipe(
