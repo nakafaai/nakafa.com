@@ -419,6 +419,7 @@ export declare const api: {
             | "class.manage"
             | "class.view"
             | "forum.manage"
+            | "forum.post"
             | "forum.read"
             | "grade.enter"
             | "grade.list"
@@ -470,6 +471,97 @@ export declare const api: {
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
+          }
+        >;
+      };
+      messages: {
+        edit: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            messageId: Id<"classroomMessages">;
+            slug: string;
+            text: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
+            createdAt: number;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mine: boolean;
+            text: string | null;
+          }
+        >;
+        hide: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            messageId: Id<"classroomMessages">;
+            slug: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
+            createdAt: number;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mine: boolean;
+            text: string | null;
+          }
+        >;
+        page: FunctionReference<
+          "query",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
+              createdAt: number;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mine: boolean;
+              text: string | null;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        send: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            clientKey: string;
+            slug: string;
+            text: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
+            createdAt: number;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mine: boolean;
+            text: string | null;
           }
         >;
       };
@@ -3273,6 +3365,39 @@ export declare const api: {
         { id: Id<"examSittings">; token: string }
       >;
     };
+    imports: {
+      keys: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          keys: Array<{ answer: number; questionId: Id<"examQuestions"> }>;
+          slug: string;
+        },
+        { keyed: number }
+      >;
+      place: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          questions: Array<{
+            answer: number | null;
+            explanation: string;
+            figures: Array<{ alt: string; asset: Id<"examAssets"> }>;
+            number: number | null;
+            options: Array<string>;
+            prompt: string;
+          }>;
+          slug: string;
+        },
+        {
+          keyless: number;
+          left: number;
+          placed: Array<{ id: Id<"examQuestions">; number: number | null }>;
+        }
+      >;
+    };
     presence: {
       join: FunctionReference<
         "mutation",
@@ -4532,6 +4657,49 @@ export declare const api: {
         { questions: Array<Id<"examQuestions">> }
       >;
     };
+    reads: {
+      canRead: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        {}
+      >;
+      read: FunctionReference<
+        "action",
+        "public",
+        {
+          examId: Id<"exams">;
+          slug: string;
+          source:
+            | {
+                kind: "pages";
+                pages: Array<{ image: Id<"_storage">; text: string }>;
+              }
+            | { images: Array<Id<"examAssets">>; kind: "text"; text: string };
+        },
+        {
+          keys: Array<{ answer: number; number: number }>;
+          questions: Array<{
+            answer: number | null;
+            explanation: string;
+            figures: Array<{
+              alt: string;
+              box: {
+                bottom: number;
+                left: number;
+                right: number;
+                top: number;
+              } | null;
+              image: number | null;
+              page: number | null;
+            }>;
+            number: number | null;
+            options: Array<string>;
+            prompt: string;
+          }>;
+        }
+      >;
+    };
     results: {
       results: {
         byQuestion: FunctionReference<
@@ -5381,6 +5549,7 @@ export declare const api: {
             | "class.manage"
             | "class.view"
             | "forum.manage"
+            | "forum.post"
             | "forum.read"
             | "grade.release"
             | "grade.view"
@@ -5474,6 +5643,7 @@ export declare const api: {
               | "class.manage"
               | "class.view"
               | "forum.manage"
+              | "forum.post"
               | "forum.read"
               | "grade.release"
               | "grade.view"
@@ -5579,6 +5749,7 @@ export declare const api: {
               | { type: "class.archived" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
+              | { message: Id<"classroomMessages">; type: "message.hidden" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
@@ -11365,6 +11536,14 @@ export declare const internal: {
       >;
       run: FunctionReference<"action", "internal", { page: number }, null>;
     };
+    topup: {
+      refundWithoutPro: FunctionReference<
+        "action",
+        "internal",
+        { orderId: string; refundableAmount: number },
+        null
+      >;
+    };
   };
   classroom: {
     seed: {
@@ -13499,6 +13678,20 @@ export declare const internal: {
         "internal",
         { storageId: Id<"_storage"> },
         { size: number }
+      >;
+    };
+    reads: {
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { images: Array<Id<"_storage">> },
+        {}
+      >;
+      pictures: FunctionReference<
+        "query",
+        "internal",
+        { assets: Array<Id<"examAssets">>; examId: Id<"exams"> },
+        Array<{ storageId: Id<"_storage"> }>
       >;
     };
     seed: {

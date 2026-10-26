@@ -1,6 +1,5 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { MessageNamespaceSchema } from "@repo/internationalization/src/namespace";
-import { pickRouteMessages } from "@repo/internationalization/src/namespaces";
 import { createServerFn } from "@tanstack/react-start";
 import { Schema } from "effect";
 
@@ -13,16 +12,20 @@ export const RouteMessagesInput = Schema.Struct({
 export type RouteMessagesInput = typeof RouteMessagesInput.Type;
 
 /**
- * The messages of one route in one locale. The dictionaries are read on the
- * server only, and only the namespaces the route declares leave it.
+ * The messages of one route in one locale. The dictionaries live in the server
+ * module, which this imports only when it runs, so the browser's bundle never
+ * carries a dictionary.
  */
-export const routeMessagesHandler = ({
+export const answerRouteMessages = async ({
   data,
 }: {
   readonly data: RouteMessagesInput;
-}) => pickRouteMessages(data.locale, data.namespaces);
+}) => {
+  const { routeMessagesHandler } = await import("@/lib/i18n/messages.server");
+  return routeMessagesHandler({ data });
+};
 
 /** Reads the messages of one route. Route loaders call it on the server and in the browser. */
 export const readRouteMessages = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(RouteMessagesInput))
-  .handler(routeMessagesHandler);
+  .handler(answerRouteMessages);

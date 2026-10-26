@@ -26,6 +26,7 @@ import chats_mutations from "../chats/mutations.spec";
 import chats_queries from "../chats/queries.spec";
 import classroom_classes from "../classroom/classes.spec";
 import classroom_forum_channels from "../classroom/forum/channels.spec";
+import classroom_forum_messages from "../classroom/forum/messages.spec";
 import classroom_seed from "../classroom/seed.spec";
 import classroom_teachers from "../classroom/teachers.spec";
 import comments_mutations from "../comments/mutations.spec";
@@ -101,8 +102,10 @@ import emails_welcome_reconciliation from "../emails/welcome/reconciliation.spec
 import emails_welcome_workflow from "../emails/welcome/workflow.spec";
 import exams_assets from "../exams/assets.spec";
 import exams_exams from "../exams/exams.spec";
+import exams_imports from "../exams/imports.spec";
 import exams_presence from "../exams/presence.spec";
 import exams_questions from "../exams/questions.spec";
+import exams_reads from "../exams/reads.spec";
 import exams_results_results from "../exams/results/results.spec";
 import exams_rooms from "../exams/rooms.spec";
 import exams_seed from "../exams/seed.spec";
@@ -204,7 +207,7 @@ const spec: Spec.Spec<{
   readonly auth: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "auth", never, GroupSpec.NamedAt<typeof auth_actions, "actions"> | GroupSpec.NamedAt<typeof auth_cleanup, "cleanup"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof auth_deletion, GroupSpec.NamedAt<typeof auth_deletion_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof auth_deletion_recovery, "recovery"> | GroupSpec.NamedAt<typeof auth_deletion_verification, "verification"> | GroupSpec.NamedAt<typeof auth_deletion_workflow, "workflow">>, "deletion"> | GroupSpec.NamedAt<typeof auth_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof auth_queries, "queries">>, "auth">;
   readonly billing: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "billing", never, GroupSpec.NamedAt<typeof billing_accounts, "accounts"> | GroupSpec.NamedAt<typeof billing_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_contracts, "contracts"> | GroupSpec.NamedAt<typeof billing_deletion, "deletion"> | GroupSpec.NamedAt<typeof billing_events, "events"> | GroupSpec.NamedAt<typeof billing_grants, "grants"> | GroupSpec.NamedAt<typeof billing_queries, "queries"> | GroupSpec.NamedAt<typeof billing_reconcile, "reconcile"> | GroupSpec.NamedAt<typeof billing_sessions, "sessions"> | GroupSpec.NamedAt<typeof billing_topup, "topup">>, "billing">;
   readonly chats: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof chats_mutations, "mutations"> | GroupSpec.NamedAt<typeof chats_queries, "queries">>, "chats">;
-  readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "forum", never, GroupSpec.NamedAt<typeof classroom_forum_channels, "channels">>, "forum"> | GroupSpec.NamedAt<typeof classroom_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
+  readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "forum", never, GroupSpec.NamedAt<typeof classroom_forum_channels, "channels"> | GroupSpec.NamedAt<typeof classroom_forum_messages, "messages">>, "forum"> | GroupSpec.NamedAt<typeof classroom_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
   readonly comments: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof comments_mutations, "mutations"> | GroupSpec.NamedAt<typeof comments_queries, "queries">>, "comments">;
   readonly connectors: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "connectors", never, GroupSpec.NamedAt<typeof connectors_connections, "connections">>, "connectors">;
   readonly consents: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "consents", never, GroupSpec.NamedAt<typeof consents_current, "current">>, "consents">;
@@ -213,7 +216,7 @@ const spec: Spec.Spec<{
   readonly credits: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "credits", never, GroupSpec.NamedAt<typeof credits_lots, "lots"> | GroupSpec.NamedAt<typeof credits_mutations, "mutations">>, "credits">;
   readonly editor: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "editor", never, GroupSpec.NamedAt<typeof editor_deletion, "deletion"> | GroupSpec.NamedAt<typeof editor_documents, "documents"> | GroupSpec.NamedAt<typeof editor_fold, "fold"> | GroupSpec.NamedAt<typeof editor_prune, "prune"> | GroupSpec.NamedAt<typeof editor_steps, "steps">>, "editor">;
   readonly emails: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "emails", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "invite", never, GroupSpec.NamedAt<typeof emails_invite_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_invite_internal, "internal"> | GroupSpec.NamedAt<typeof emails_invite_workflow, "workflow">>, "invite"> | GroupSpec.NamedAt<typeof emails_retention, "retention"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "welcome", never, GroupSpec.NamedAt<typeof emails_welcome_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_welcome_internal, "internal"> | GroupSpec.NamedAt<typeof emails_welcome_reconciliation, "reconciliation"> | GroupSpec.NamedAt<typeof emails_welcome_workflow, "workflow">>, "welcome">>, "emails">;
-  readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_assets, "assets"> | GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_presence, "presence"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "results", never, GroupSpec.NamedAt<typeof exams_results_results, "results">>, "results"> | GroupSpec.NamedAt<typeof exams_rooms, "rooms"> | GroupSpec.NamedAt<typeof exams_seed, "seed"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof exams_sittings, GroupSpec.NamedAt<typeof exams_sittings_timers, "timers">>, "sittings">>, "exams">;
+  readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_assets, "assets"> | GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_imports, "imports"> | GroupSpec.NamedAt<typeof exams_presence, "presence"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<typeof exams_reads, "reads"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "results", never, GroupSpec.NamedAt<typeof exams_results_results, "results">>, "results"> | GroupSpec.NamedAt<typeof exams_rooms, "rooms"> | GroupSpec.NamedAt<typeof exams_seed, "seed"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof exams_sittings, GroupSpec.NamedAt<typeof exams_sittings_timers, "timers">>, "sittings">>, "exams">;
   readonly identity: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "identity", never, GroupSpec.NamedAt<typeof identity_cards, "cards"> | GroupSpec.NamedAt<typeof identity_logins, "logins"> | GroupSpec.NamedAt<typeof identity_seed, "seed">>, "identity">;
   readonly integrations: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "integrations", never, GroupSpec.NamedAt<typeof integrations_clients, "clients">>, "integrations">;
   readonly journal: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "journal", never, GroupSpec.NamedAt<typeof journal_audit, "audit">>, "journal">;
@@ -275,6 +278,7 @@ const spec: Spec.Spec<{
     ["classes"]: classroom_classes,
     ["forum"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["channels"]: classroom_forum_channels,
+      ["messages"]: classroom_forum_messages,
     }),
     ["seed"]: classroom_seed,
     ["teachers"]: classroom_teachers,
@@ -393,8 +397,10 @@ const spec: Spec.Spec<{
   ["exams"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["assets"]: exams_assets,
     ["exams"]: exams_exams,
+    ["imports"]: exams_imports,
     ["presence"]: exams_presence,
     ["questions"]: exams_questions,
+    ["reads"]: exams_reads,
     ["results"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["results"]: exams_results_results,
     }),

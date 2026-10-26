@@ -98,3 +98,15 @@ export function schoolClassTarget(
     to: "/school/$slug/classes/$classSlug",
   } satisfies LinkTarget;
 }
+
+/** The forum of one class of a school, with its channel list. */
+export function schoolClassForumTarget(
+  slug: TenantSlug,
+  classSlug: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug },
+    to: "/school/$slug/classes/$classSlug/forum",
+  } satisfies LinkTarget;
+}

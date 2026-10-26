@@ -289,7 +289,7 @@ function MaterialPage() {
           }
           header={
             <SidebarRightHeader
-              description={metadata.description ?? metadata.subject}
+              description={page.headMetadata.description}
               publicPath={route.publicPath}
               title={metadata.title}
             />

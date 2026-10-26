@@ -149,10 +149,15 @@ export function readRuntimeCurriculumBreadcrumbs(
 }
 
 /** Builds the right-sidebar header from one resolved curriculum route. */
-export function readRuntimeCurriculumToc(model: CurriculumRouteModel) {
-  const parent = Arr.last(model.ancestors);
+export function readRuntimeCurriculumToc(
+  model: CurriculumRouteModel,
+  pageDescription: string
+) {
   return {
-    ...(Option.isSome(parent) ? { description: parent.value.title } : {}),
+    description: Option.match(Arr.last(model.ancestors), {
+      onNone: () => pageDescription,
+      onSome: (parent) => parent.title,
+    }),
     publicPath: model.route.publicPath,
     title: model.route.title,
   };

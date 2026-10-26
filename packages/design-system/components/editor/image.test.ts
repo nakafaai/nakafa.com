@@ -3,7 +3,7 @@ import {
   altText,
   imageRefusal,
 } from "@repo/design-system/components/editor/image";
-import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { Option } from "effect";
 
 describe("imageRefusal", () => {

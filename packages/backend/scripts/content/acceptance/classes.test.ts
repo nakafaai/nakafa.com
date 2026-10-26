@@ -56,6 +56,10 @@ function answerOf(args: readonly string[], users: string) {
   if (Arr.contains(args, "data")) {
     return users;
   }
+  // No account holds the address yet, and the CLI prints nothing for a null result.
+  if (Arr.contains(args, "adapter:findOne")) {
+    return "";
+  }
   if (
     Arr.contains(args, "auth/lifecycle:onCreate") ||
     Arr.contains(args, "tenancy/claims:run") ||

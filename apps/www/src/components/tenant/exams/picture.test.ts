@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { MutableList } from "effect";
 import type { PendingPicture } from "@/components/tenant/exams/editing";
 import { queuePictureFile } from "@/components/tenant/exams/picture";

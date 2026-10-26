@@ -174,9 +174,12 @@ export function Particles({
     [resolvedTheme]
   );
 
+  // A new size keeps every particle where it was, in proportion to the field, so
+  // a resize or a rotation moves the field instead of drawing it anew.
   const resizeCanvas = useCallback(() => {
     if (canvasContainerRef.current && canvasRef.current && context.current) {
-      circles.current.length = 0;
+      const previousWidth = canvasSize.current.w;
+      const previousHeight = canvasSize.current.h;
       canvasSize.current.w = canvasContainerRef.current.offsetWidth;
       canvasSize.current.h = canvasContainerRef.current.offsetHeight;
       canvasRef.current.width = canvasSize.current.w * dpr;
@@ -184,6 +187,12 @@ export function Particles({
       canvasRef.current.style.width = `${canvasSize.current.w}px`;
       canvasRef.current.style.height = `${canvasSize.current.h}px`;
       context.current.scale(dpr, dpr);
+      if (previousWidth > 0 && previousHeight > 0) {
+        for (const circle of circles.current) {
+          circle.x = (circle.x * canvasSize.current.w) / previousWidth;
+          circle.y = (circle.y * canvasSize.current.h) / previousHeight;
+        }
+      }
     }
   }, [dpr]);
 
@@ -268,12 +277,20 @@ export function Particles({
     [circleParams, clearContext, drawCircle, quantity]
   );
 
+  // The first size draws the field; a later one redraws the particles it has.
   const initCanvas = useCallback(
     (showImmediately: boolean) => {
       resizeCanvas();
-      drawParticles(showImmediately);
+      if (circles.current.length === 0) {
+        drawParticles(showImmediately);
+        return;
+      }
+      clearContext();
+      for (const circle of circles.current) {
+        drawCircle(circle);
+      }
     },
-    [drawParticles, resizeCanvas]
+    [clearContext, drawCircle, drawParticles, resizeCanvas]
   );
 
   const onMouseMove = useCallback(() => {

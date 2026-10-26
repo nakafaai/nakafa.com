@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { useParams } from "@tanstack/react-router";
 import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
@@ -20,8 +21,11 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
+import { channelLabel } from "@/components/tenant/classes/label";
+import { useTenant } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import { Link } from "@/lib/routing/link";
 
 /** How many channels the list asks for each time its end comes into view. */
 export const CHANNEL_PAGE_SIZE = 20;
@@ -136,15 +140,30 @@ function ChannelTable({
   );
 }
 
-/** One saved channel: the general channel shows its translated label, a topic shows its name. */
+/**
+ * One saved channel, which opens its messages: the general channel shows its translated label, a
+ * topic shows its name.
+ */
 function ChannelRow({ channel }: { channel: Channel }) {
   const t = useTranslations("Classroom");
-  const label =
-    channel.kind === "general" ? t("general-channel") : channel.name;
+  const { slug } = useTenant();
+  const classSlug = useParams({
+    from: "/school/$slug/classes/$classSlug/forum",
+    select: (params) => params.classSlug,
+  });
 
   return (
     <TableRow>
-      <TableCell className="font-medium">{label}</TableCell>
+      <TableCell className="font-medium" dir="auto">
+        <Link
+          className="underline-offset-4 hover:underline"
+          params={{ classSlug, slug }}
+          search={{ channel: channel.id }}
+          to="/school/$slug/classes/$classSlug/forum"
+        >
+          {channelLabel(channel, t("general-channel"))}
+        </Link>
+      </TableCell>
     </TableRow>
   );
 }

@@ -1,4 +1,5 @@
-import { QueryResult } from "@confect/react";
+import { PaginatedQueryResult, QueryResult } from "@confect/react";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -11,15 +12,24 @@ import { LayoutContent } from "@/components/shared/content/frame";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 import { AddChannel } from "@/components/tenant/classes/add";
-import { ChannelList } from "@/components/tenant/classes/channels";
+import {
+  CHANNEL_PAGE_SIZE,
+  ChannelList,
+} from "@/components/tenant/classes/channels";
 import { createChannelDrafts } from "@/components/tenant/classes/drafts";
+import { ForumChannel } from "@/components/tenant/classes/forum/channel";
+import { channelLabel } from "@/components/tenant/classes/label";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
-import { schoolClassTarget } from "@/lib/routing/school/target";
+import {
+  schoolClassForumTarget,
+  schoolClassTarget,
+} from "@/lib/routing/school/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 
@@ -39,11 +49,13 @@ const ClassPreloadContext = createContext<ClassPreload | undefined>(undefined);
  * shows only when the server grants the viewer the forum's management.
  */
 export function ClassShell({
+  channel,
   classSlug,
   preload,
   slug,
   tab,
 }: {
+  channel: Option.Option<Id<"classroomChannels">>;
   classSlug: string;
   preload: ClassPreload | undefined;
   slug: TenantSlug;
@@ -60,7 +72,12 @@ export function ClassShell({
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
       <ClassPreloadContext value={preload}>
-        <ClassPage classSlug={classSlug} slug={slug} tab={tab} />
+        <ClassPage
+          channel={channel}
+          classSlug={classSlug}
+          slug={slug}
+          tab={tab}
+        />
       </ClassPreloadContext>
     </ReadBoundary>
   );
@@ -72,12 +89,18 @@ type ClassPreload = Pick<
   "channels" | "resolved"
 >;
 
-/** The class page once the class is resolved: its header, its tabs, and the body of the tab. */
+/**
+ * The class page once the class is resolved: its header, its tabs, and the body of the tab. The
+ * forum's body is its channel list, or the messages of the channel the address names, whose name
+ * ends the page's path.
+ */
 function ClassPage({
+  channel,
   classSlug,
   slug,
   tab,
 }: {
+  channel: Option.Option<Id<"classroomChannels">>;
   classSlug: string;
   slug: TenantSlug;
   tab: ClassTab;
@@ -92,6 +115,16 @@ function ClassPage({
     preload?.resolved
   );
   const [drafts] = useState(createChannelDrafts);
+  const shown = tab === "forum" ? channel : Option.none();
+  // The channel's name ends the path, read from the same channel list the forum shows.
+  const channels = usePaginatedPreloaded(
+    classroom.forum.channels.list,
+    QueryResult.isSuccess(resolved) && Option.isSome(shown)
+      ? { classId: resolved.value.id, slug }
+      : "skip",
+    { initialNumItems: CHANNEL_PAGE_SIZE },
+    Option.fromUndefinedOr(preload?.channels)
+  );
 
   if (QueryResult.isFailure(resolved)) {
     if (isLostAccess(resolved.error)) {
@@ -112,26 +145,49 @@ function ClassPage({
     label: klass.name,
     target: schoolClassTarget(slug, classSlug),
   };
-  const path =
-    tab === "home"
-      ? [{ label: klass.name }]
-      : [classItem, { label: t("tabs-forum") }];
+  const shownChannel = Option.flatMap(shown, (channelId) =>
+    PaginatedQueryResult.isFailure(channels)
+      ? Option.none()
+      : Arr.findFirst(channels.results, (found) => found.id === channelId)
+  );
+  const forumPath = Option.match(shownChannel, {
+    onNone: () => [classItem, { label: t("tabs-forum") }],
+    onSome: (found) => [
+      classItem,
+      {
+        label: t("tabs-forum"),
+        target: schoolClassForumTarget(slug, classSlug),
+      },
+      { label: channelLabel(found, t("general-channel")) },
+    ],
+  });
+  const path = tab === "home" ? [{ label: klass.name }] : forumPath;
 
   return (
     <>
       <SchoolHeader items={path} title={klass.name}>
-        {tab === "forum" && canManageForum ? (
+        {tab === "forum" && Option.isNone(shown) && canManageForum ? (
           <AddChannel classId={klass.id} drafts={drafts} slug={slug} />
         ) : null}
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <ClassTabs classSlug={classSlug} tab={tab} />
-        <ChannelList
-          classId={klass.id}
-          drafts={drafts}
-          first={Option.fromUndefinedOr(preload?.channels)}
-          slug={slug}
-        />
+        {Option.isSome(shown) ? (
+          <ForumChannel
+            canManage={canManageForum}
+            canPost={Arr.contains(klass.can, "forum.post")}
+            channelId={shown.value}
+            classId={klass.id}
+            slug={slug}
+          />
+        ) : (
+          <ChannelList
+            classId={klass.id}
+            drafts={drafts}
+            first={Option.fromUndefinedOr(preload?.channels)}
+            slug={slug}
+          />
+        )}
       </LayoutContent>
     </>
   );

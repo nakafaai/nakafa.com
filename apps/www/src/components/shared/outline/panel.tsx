@@ -26,42 +26,36 @@ type SidebarRightProps = {
   header?: ReactNode;
 } & Omit<ComponentProps<typeof Sidebar>, "label">;
 
-/** Outline heading slot, which can resolve independently from the panel. */
+/**
+ * The outline heading: the page's title and its description, one line each, linked
+ * to the page through the router. A border closes it, as the footer's border opens
+ * the actions, so the panel reads as header, outline and footer.
+ */
 export function SidebarRightHeader({
   description,
   descriptionLanguage,
-  href,
   publicPath,
   title,
 }: {
-  description?: string | undefined;
+  description: string;
   descriptionLanguage?: string;
-  /** An address outside the app, such as the source of the page. */
-  href?: string | undefined;
   /** The signed public path of the page the header names, which the router opens. */
-  publicPath?: string | undefined;
+  publicPath: string;
   title: string;
 }) {
-  const link =
-    publicPath === undefined ? (
-      <a aria-label={title} href={href} title={title}>
-        {title}
-      </a>
-    ) : (
-      <PublicPathLink publicPath={publicPath} title={title} />
-    );
   return (
-    <SidebarHeader>
+    <SidebarHeader className="border-b">
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton render={link} size="lg">
+          <SidebarMenuButton
+            render={<PublicPathLink publicPath={publicPath} title={title} />}
+            size="lg"
+          >
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{title}</span>
-              {!!description && (
-                <SidebarMenuDescription lang={descriptionLanguage}>
-                  {description}
-                </SidebarMenuDescription>
-              )}
+              <SidebarMenuDescription lang={descriptionLanguage}>
+                {description}
+              </SidebarMenuDescription>
             </div>
           </SidebarMenuButton>
         </SidebarMenuItem>

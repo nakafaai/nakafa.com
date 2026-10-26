@@ -23,7 +23,7 @@ import { examAccess } from "@repo/backend/confect/exams/authority";
 import { imageTypeOf } from "@repo/backend/confect/exams/image";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { Clock, Effect, Layer, Option } from "effect";
 
 /** The ID of an uploaded file in Convex storage. */

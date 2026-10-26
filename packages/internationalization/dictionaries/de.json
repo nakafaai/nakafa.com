@@ -306,6 +306,15 @@
     "seats-filter-title": "Kein Platz passt zum Filter",
     "signals-empty-title": "Noch kein Ereignis",
     "student-start": "Prüfung starten",
+    "import-label": "Fragen aus einer Datei",
+    "import-description": "Optional: Nina setzt die Fragen einer Word- oder PDF-Datei in die Prüfung.",
+    "import-action": "Importieren",
+    "import-title": "Fragen importieren",
+    "import-dialog-description": "Nina setzt die Fragen einer Word- oder PDF-Datei ans Ende dieser Prüfung.",
+    "import-submit": "Importieren",
+    "import-hint": "Word oder PDF, höchstens 20 MB.",
+    "import-drop": "Lege eine Word- oder PDF-Datei hier ab oder wähle eine aus.",
+    "import-remove": "Datei entfernen",
     "presence-editor": "{name} bearbeitet gerade",
     "presence-more": "{names} bearbeiten gerade"
   },
@@ -489,6 +498,9 @@
       },
       "grade": {
         "released": "Note freigegeben"
+      },
+      "message": {
+        "hidden": "Nachricht ausgeblendet"
       },
       "scheme": {
         "stored": "Notenschema-Version hinzugefügt"
@@ -742,7 +754,23 @@
     "channel-limit-reached": "Diese Klasse hat die maximale Anzahl an Kanälen erreicht.",
     "add-submit": "Hinzufügen",
     "channel-name-needed": "Gib dem Kanal zuerst einen Namen.",
-    "channel-name-too-long": "Der Name darf höchstens {count} Zeichen lang sein."
+    "channel-name-too-long": "Der Name darf höchstens {count} Zeichen lang sein.",
+    "messages": "Nachrichten",
+    "message-placeholder": "Nachricht schreiben",
+    "send-message": "Senden",
+    "send-failed": "Deine Nachricht wurde nicht gesendet.",
+    "send-retry": "Erneut versuchen",
+    "message-hidden": "Eine Lehrkraft hat diese Nachricht ausgeblendet.",
+    "message-edited": "Bearbeitet",
+    "message-edit": "Bearbeiten",
+    "message-save": "Speichern",
+    "message-hide": "Ausblenden",
+    "hide-title": "Diese Nachricht ausblenden",
+    "hide-description": "Ihr Text verschwindet für alle in der Klasse und kommt nicht zurück.",
+    "read-only": "In diesem Kanal schreiben die Klasse und ihre Lehrkräfte.",
+    "messages-empty": "Noch keine Nachricht",
+    "messages-empty-description": "Die erste Nachricht dieses Kanals erscheint hier.",
+    "scroll-to-latest": "Zur neuesten Nachricht"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1918,6 +1946,54 @@
     "school-refusal-npsn-taken": {
       "title": "Diese NPSN ist schon vergeben.",
       "description": "Eine andere Einheit dieser Schule hat sie schon."
+    },
+    "import-reading": {
+      "title": "Nina liest deine Datei.",
+      "description": "Jede Frage erscheint in der Prüfung, sobald sie sie liest."
+    },
+    "import-done": {
+      "title": "Deine Fragen sind in der Prüfung.",
+      "description": "Jede Frage hat ihre richtige Antwort."
+    },
+    "import-keyless": {
+      "title": "Deine Fragen sind in der Prüfung.",
+      "description": "Markiere die richtigen Antworten, die die Datei nicht markiert."
+    },
+    "import-mathtype": {
+      "title": "Einige Formeln sind Bilder.",
+      "description": "Tipp sie im Editor neu ein."
+    },
+    "import-empty": {
+      "title": "Nina hat keine Frage gefunden.",
+      "description": "Schreib die Fragen im Editor, oder versuch eine andere Datei."
+    },
+    "import-stopped": {
+      "title": "Nina konnte den Rest nicht lesen.",
+      "description": "Die bisher gelesenen Fragen sind in der Prüfung."
+    },
+    "import-unread": {
+      "title": "Nina konnte die Datei nicht lesen.",
+      "description": "Versuch es noch einmal, oder schreib die Fragen im Editor."
+    },
+    "import-type": {
+      "title": "Diese Datei passt nicht.",
+      "description": "Wähle eine Word- oder PDF-Datei."
+    },
+    "import-size": {
+      "title": "Diese Datei ist zu groß.",
+      "description": "Wähle eine Datei von höchstens 20 MB."
+    },
+    "import-pages": {
+      "title": "Dieses PDF ist zu lang.",
+      "description": "Wähle ein PDF mit höchstens 30 Seiten."
+    },
+    "import-macro": {
+      "title": "Diese Datei enthält Makros.",
+      "description": "Speichere sie zuerst als Word-Dokument ohne Makros."
+    },
+    "import-encrypted": {
+      "title": "Dieses PDF hat ein Passwort.",
+      "description": "Speichere es zuerst ohne Passwort."
     }
   },
   "Ai": {
