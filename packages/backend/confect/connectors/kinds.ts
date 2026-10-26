@@ -49,9 +49,19 @@ export const connection = Kind.make("connection", "connectorConnections", {
   relations: [],
 });
 
-/** A school's connections are listed on its tenant, for its Owner and Admin. */
+/**
+ * A school's connections are listed on its tenant, for its Owner and Admin. A
+ * teacher or an Admin connects the school to a source, as a teacher who moves
+ * classes from Google Classroom does (ADR 0015, journey J7).
+ */
 const tenantConnections = Kind.extend(tenant, {
   actions: {
+    "connection.create": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "teacher"],
+    },
     "connection.view": {
       access: "read",
       grantedBy: "roles",

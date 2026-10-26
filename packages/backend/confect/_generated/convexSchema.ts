@@ -23,6 +23,7 @@ import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
+import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
@@ -34,6 +35,7 @@ import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorKeys from "./tables/connectorKeys";
 import connectorSecrets from "./tables/connectorSecrets";
+import connectorStates from "./tables/connectorStates";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
@@ -155,6 +157,7 @@ export default $defineSchema({
   classTeachers: $Table.tableDefinition(classTeachers),
   classes: $Table.tableDefinition(classes),
   classroomChannels: $Table.tableDefinition(classroomChannels),
+  classroomLibrary: $Table.tableDefinition(classroomLibrary),
   classroomMessages: $Table.tableDefinition(classroomMessages),
   classroomPosts: $Table.tableDefinition(classroomPosts),
   classroomReads: $Table.tableDefinition(classroomReads),
@@ -166,6 +169,7 @@ export default $defineSchema({
   connectorConnections: $Table.tableDefinition(connectorConnections),
   connectorKeys: $Table.tableDefinition(connectorKeys),
   connectorSecrets: $Table.tableDefinition(connectorSecrets),
+  connectorStates: $Table.tableDefinition(connectorStates),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),
   contentArtifactFacts: $Table.tableDefinition(contentArtifactFacts),
   contentArtifacts: $Table.tableDefinition(contentArtifacts),

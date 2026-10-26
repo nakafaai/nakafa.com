@@ -90,3 +90,15 @@ export class ScoreOutOfRange extends Schema.TaggedError<ScoreOutOfRange>()(
   "ScoreOutOfRange",
   refusal("SCORE_OUT_OF_RANGE", "The points are more than this task is worth.")
 ) {}
+
+/** A library file larger than the library keeps. The file is deleted. */
+export class FileSizeRefused extends Schema.TaggedError<FileSizeRefused>()(
+  "FileSizeRefused",
+  refusal("FILE_SIZE_REFUSED", "This file is larger than 20 MB.")
+) {}
+
+/** A library file whose bytes name no PDF and no image. The file is deleted. */
+export class FileTypeRefused extends Schema.TaggedError<FileTypeRefused>()(
+  "FileTypeRefused",
+  refusal("FILE_TYPE_REFUSED", "Only a PDF or an image can be added.")
+) {}

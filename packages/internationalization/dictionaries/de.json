@@ -751,6 +751,7 @@
   "Classroom": {
     "tabs-home": "Start",
     "tabs-forum": "Forum",
+    "tabs-library": "Bibliothek",
     "general-channel": "Allgemein",
     "channels-title": "Kanal",
     "channels-empty": "Noch kein Kanal",
@@ -809,6 +810,27 @@
     "post-email": "Auch per E-Mail senden",
     "mention-list": "Personen zum Erwähnen",
     "mention-everyone": "Alle in der Klasse",
+    "library-empty": "Noch nichts hier",
+    "library-empty-description": "Die Dateien und Links der Klasse erscheinen hier, die neuesten zuerst.",
+    "library-add": "Zur Bibliothek",
+    "library-add-description": "Alle in der Klasse können es öffnen.",
+    "library-file": "Datei",
+    "library-link": "Link",
+    "library-title": "Titel",
+    "library-address": "Adresse",
+    "library-drop": "PDF oder Bild wählen oder hier ablegen.",
+    "library-file-limit": "Höchstens 20 MB. Ein größeres Video wird als Link geteilt.",
+    "library-file-oversize": "Diese Datei ist größer als 20 MB.",
+    "library-file-clear": "Andere Datei wählen",
+    "library-submit": "Hinzufügen",
+    "library-added-by": "Hinzugefügt von",
+    "library-added": "Hinzugefügt",
+    "library-kind-link": "Link",
+    "library-kind-pdf": "PDF",
+    "library-kind-image": "Bild",
+    "library-remove": "Entfernen",
+    "library-remove-title": "Diesen Eintrag entfernen",
+    "library-remove-description": "Er verschwindet für alle aus der Bibliothek und lässt sich nicht zurückholen.",
     "tabs-tasks": "Aufgaben",
     "tasks-empty": "Noch keine Aufgabe",
     "tasks-empty-description": "Die Aufgaben der Klasse erscheinen hier, die nächste Frist zuerst.",
@@ -2067,6 +2089,14 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "library-file-size": {
+      "title": "Die Datei wurde nicht hinzugefügt.",
+      "description": "Wähle eine Datei mit höchstens 20 MB."
+    },
+    "library-file-type": {
+      "title": "Die Datei wurde nicht hinzugefügt.",
+      "description": "Wähle ein PDF oder ein Bild."
     }
   },
   "Ai": {

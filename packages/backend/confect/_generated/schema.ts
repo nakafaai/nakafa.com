@@ -22,6 +22,7 @@ import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
+import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
 import classroomPosts from "./tables/classroomPosts";
 import classroomReads from "./tables/classroomReads";
@@ -33,6 +34,7 @@ import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorKeys from "./tables/connectorKeys";
 import connectorSecrets from "./tables/connectorSecrets";
+import connectorStates from "./tables/connectorStates";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
@@ -154,6 +156,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classTeachers: typeof classTeachers;
   readonly classes: typeof classes;
   readonly classroomChannels: typeof classroomChannels;
+  readonly classroomLibrary: typeof classroomLibrary;
   readonly classroomMessages: typeof classroomMessages;
   readonly classroomPosts: typeof classroomPosts;
   readonly classroomReads: typeof classroomReads;
@@ -165,6 +168,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly connectorConnections: typeof connectorConnections;
   readonly connectorKeys: typeof connectorKeys;
   readonly connectorSecrets: typeof connectorSecrets;
+  readonly connectorStates: typeof connectorStates;
   readonly contentAnalyticsPartitions: typeof contentAnalyticsPartitions;
   readonly contentArtifactFacts: typeof contentArtifactFacts;
   readonly contentArtifacts: typeof contentArtifacts;
@@ -285,6 +289,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classTeachers,
   classes,
   classroomChannels,
+  classroomLibrary,
   classroomMessages,
   classroomPosts,
   classroomReads,
@@ -296,6 +301,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   connectorConnections,
   connectorKeys,
   connectorSecrets,
+  connectorStates,
   contentAnalyticsPartitions,
   contentArtifactFacts,
   contentArtifacts,

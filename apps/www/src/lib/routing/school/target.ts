@@ -139,6 +139,18 @@ export function schoolClassDiscussionTarget(
   } satisfies LinkTarget;
 }
 
+/** The library of one class of a school, the newest item first. */
+export function schoolClassLibraryTarget(
+  slug: TenantSlug,
+  classSlug: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug },
+    to: "/school/$slug/classes/$classSlug/library",
+  } satisfies LinkTarget;
+}
+
 /** The tasks of one class of a school, by deadline. */
 export function schoolClassTasksTarget(
   slug: TenantSlug,

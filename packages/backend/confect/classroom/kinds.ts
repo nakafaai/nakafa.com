@@ -19,7 +19,8 @@ const classReaders: (typeof RuleRole.Type)[] = ["admin", "principal", "deputy"];
  * archived class keeps its channels readable and takes no new one. A member of the
  * class or a subject teacher writes messages, and the school's leaders read them
  * and write none (ADR 0025). Whoever manages the forum hides a message, which the
- * journal records without its text.
+ * journal records without its text. A subject teacher adds and removes the
+ * items of its library, which its forum readers read.
  */
 export const classKind = Kind.make("class", "classes", {
   actions: {
@@ -51,6 +52,11 @@ export const classKind = Kind.make("class", "classes", {
       grantedBy: "roles",
       relations: ["classMember", "subjectTeacher"],
       roles: classReaders,
+    },
+    "library.manage": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["subjectTeacher"],
     },
     "post.publish": {
       access: "write",
