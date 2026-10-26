@@ -1,4 +1,4 @@
-import { ArrowUpRight01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -13,7 +13,11 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PricingYearly } from "@/components/marketing/about/pricing/price";
-import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
+import {
+  freePlanFeatures,
+  planFeatureIcons,
+  proPlanFeatures,
+} from "@/lib/marketing/plan";
 import { Link } from "@/lib/routing/link";
 
 interface PricingPlanCardsProps {
@@ -26,11 +30,20 @@ interface PricingPlanCardsProps {
   proPrice: ReactNode;
 }
 
-/** One line of a plan: a tick and its text. */
-function PricingFeature({ text }: { text: string }) {
+/** One line of a plan: its own icon and its text. */
+function PricingFeature({
+  feature,
+  text,
+}: {
+  feature: keyof typeof planFeatureIcons;
+  text: string;
+}) {
   return (
     <li className="flex items-start gap-3 text-base leading-6">
-      <HugeIcons className="mt-1 size-4 shrink-0" icon={Tick01Icon} />
+      <HugeIcons
+        className="mt-1 size-4 shrink-0"
+        icon={planFeatureIcons[feature]}
+      />
       <span>{text}</span>
     </li>
   );
@@ -109,7 +122,7 @@ export function PricingCards({
         <CardContent>
           <ul className="grid gap-3">
             {Arr.map(freePlanFeatures, (key) => (
-              <PricingFeature key={key} text={t(key)} />
+              <PricingFeature feature={key} key={key} text={t(key)} />
             ))}
           </ul>
         </CardContent>
@@ -145,7 +158,11 @@ export function PricingCards({
           <CardContent>
             <ul className="grid gap-3">
               {Arr.map(proPlanFeatures, (key) => (
-                <PricingFeature key={key} text={t(key, { credits })} />
+                <PricingFeature
+                  feature={key}
+                  key={key}
+                  text={t(key, { credits })}
+                />
               ))}
             </ul>
           </CardContent>
