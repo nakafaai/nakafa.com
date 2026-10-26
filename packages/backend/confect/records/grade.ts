@@ -6,6 +6,7 @@ import {
   type GradingScheme,
   reachesKktp,
 } from "@repo/backend/confect/records/scheme";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Option, Schema } from "effect";
 
 /** A grade is a draft until its subject teacher releases it, and a released grade stays on record. */
@@ -68,3 +69,13 @@ export const gradeView = (
     ...(Option.isSome(band) ? { band: band.value.label } : {}),
   };
 };
+
+/**
+ * One line of a class's gradebook: a student placed in the class's cohort, and the
+ * grade the student holds in the class, a draft or a released one, or null before the
+ * first entry (ADR 0033, S2).
+ */
+export const GradeLine = Schema.Struct({
+  grade: Schema.NullOr(GradeView),
+  student: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
+});

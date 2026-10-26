@@ -1,7 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { classKind } from "@repo/backend/confect/classroom/kinds";
-import { tenant } from "@repo/backend/confect/tenancy/kinds";
+import { cohort, tenant, unit } from "@repo/backend/confect/tenancy/kinds";
 import { Schema } from "effect";
 
 /**
@@ -81,8 +81,84 @@ const tenantSchemes = Kind.extend(tenant, {
   published: [],
 });
 
-/** The records module's kinds for the access catalog: the grade, and its extensions on the class and the school. */
+/**
+ * One student's report card in one cohort and period (ADR 0033, S4). The cohort's
+ * homeroom teacher writes the note and hands the report in; the principal approves it,
+ * which locks it once its PDF is drawn (ADR 0012: the Deputy does not approve). Only the
+ * lock is journaled, with the report's hash (ADR 0016).
+ */
+export const reportKind = Kind.make("report", "reportCards", {
+  actions: {
+    "report.approve": {
+      access: "transition",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["principal"],
+    },
+    "report.complete": {
+      access: "transition",
+      grantedBy: "relations",
+      relations: ["homeroom"],
+    },
+    "report.view": {
+      access: "read",
+      grantedBy: "roles",
+      relations: ["homeroom"],
+      roles: ["admin", "principal"],
+    },
+  },
+  changes: [
+    Schema.Struct({
+      hash: Schema.String,
+      type: Schema.Literal("report.locked"),
+    }),
+  ],
+  published: [],
+  relations: ["homeroom"],
+});
+
+/**
+ * The homeroom teacher writes the report cards of their cohort, and the cohort's
+ * reports are listed to them, the principal, and the school's Admin. The note is ruled
+ * on the cohort, the subject that exists before a student's first report does.
+ */
+const cohortReports = Kind.extend(cohort, {
+  actions: {
+    "report.list": {
+      access: "read",
+      grantedBy: "roles",
+      relations: ["homeroom"],
+      roles: ["admin", "principal"],
+    },
+    "report.write": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["homeroom"],
+    },
+  },
+  changes: [],
+  published: [],
+});
+
+/**
+ * The report pages open to the school's teachers, principals, and Admins of a unit, so the
+ * sidebar offers them. Which class groups a viewer reports on is decided per cohort.
+ */
+const unitReports = Kind.extend(unit, {
+  actions: {
+    "report.open": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "principal", "teacher"],
+    },
+  },
+  changes: [],
+  published: [],
+});
+
+/** The records module's kinds for the access catalog: the grade and the report card, and their extensions on the class, the cohort, the unit, and the school. */
 export const records = {
-  extensions: [classGrades, tenantSchemes],
-  kinds: [gradeKind],
+  extensions: [classGrades, tenantSchemes, cohortReports, unitReports],
+  kinds: [gradeKind, reportKind],
 };

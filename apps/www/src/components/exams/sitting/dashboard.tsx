@@ -3,7 +3,7 @@ import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { dashboardArgs } from "@/components/exams/sitting/change";
@@ -17,6 +17,7 @@ import { SittingPanel } from "@/components/exams/sitting/panel";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
+import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -59,7 +60,9 @@ export function SittingDashboard({
     return isDenied(state.error) ? (
       <SittingRefusal examId={examId} message={t("sitting-unavailable")} />
     ) : (
-      <SittingDashboardRetry error={state.error} />
+      <SittingDashboardRetry>
+        <SittingRetry error={state.error} />
+      </SittingDashboardRetry>
     );
   }
   if (!QueryResult.isSuccess(state)) {
@@ -80,13 +83,17 @@ export function SittingDashboard({
   return (
     <SittingStoreContext value={store}>
       <SittingDataContext value={data}>
-        <SittingHeader examId={examId} />
-        <div className="flex min-w-0 flex-1">
-          <div className="grid min-w-0 flex-1 content-start gap-4 p-4 md:p-6">
-            <SittingSeats />
-          </div>
-          <SittingPanel />
-        </div>
+        <PanesProvider>
+          <SittingHeader examId={examId} />
+          <Panes>
+            <PanesList>
+              <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
+                <SittingSeats />
+              </div>
+            </PanesList>
+            <SittingPanel />
+          </Panes>
+        </PanesProvider>
       </SittingDataContext>
     </SittingStoreContext>
   );
@@ -128,13 +135,13 @@ function SittingRefusal({
   );
 }
 
-/** The page when the dashboard could not be read for a reason a reload may fix: the header, why, and the retry. */
-function SittingDashboardRetry({ error }: { readonly error: unknown }) {
+/** The page when the dashboard could not be read for a reason a reload may fix: the header, then why and the retry. */
+function SittingDashboardRetry({ children }: { readonly children: ReactNode }) {
   return (
     <>
       <SchoolHeader items={[]} />
       <div className="grid justify-items-start gap-4 p-4 text-sm md:p-6">
-        <SittingRetry error={error} />
+        {children}
       </div>
     </>
   );

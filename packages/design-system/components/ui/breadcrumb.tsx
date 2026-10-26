@@ -1,9 +1,6 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
-import {
-  ArrowRight01Icon,
-  MoreHorizontalIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, FolderTreeIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import type * as React from "react";
@@ -108,7 +105,7 @@ function BreadcrumbEllipsis({
       role="presentation"
       {...props}
     >
-      <HugeIcons className="size-4" icon={MoreHorizontalIcon} />
+      <HugeIcons className="size-4" icon={FolderTreeIcon} />
       <span className="sr-only">More</span>
     </span>
   );
