@@ -1,12 +1,6 @@
 import { QueryResult, useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import {
-  COHORT_GRADE_MAX,
-  COHORT_GRADE_MIN,
-  CohortGrade,
-  CohortName,
-  CohortStatus,
-} from "@repo/backend/confect/tenancy/cohort";
+import { CohortGrade, CohortName } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -40,16 +34,24 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
+import {
+  CohortFilter,
+  gradeItems,
+} from "@/components/tenant/settings/cohort/filter";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort/menu";
 import { createCohortChange } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 import {
   SchoolUnitChoice,
@@ -61,15 +63,6 @@ import { Link } from "@/lib/routing/link";
 import type { readCohortsFn } from "@/lib/tenant/settings.functions";
 
 const SOURCE = "components/tenant/settings/cohorts";
-
-/** The school years a cohort may hold, as the grade choices of its dialog and of its filter. */
-const gradeItems = Arr.makeBy(
-  COHORT_GRADE_MAX - COHORT_GRADE_MIN + 1,
-  (index) => {
-    const grade = String(COHORT_GRADE_MIN + index);
-    return { label: grade, value: grade };
-  }
-);
 
 /** The columns of the cohorts table. */
 const cohortColumns = createColumnHelper<typeof dataTableFeatures, Cohort>();
@@ -102,14 +95,18 @@ export function SchoolCohortsSettings({
   slug: TenantSlug;
 }) {
   return (
-    <CohortsPreloadContext value={preload}>
-      <ReadBoundary
-        fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
-        read={{ args: { slug }, ref: tenancy.viewer.get }}
-      >
-        <SchoolCohortsContent slug={slug} />
-      </ReadBoundary>
-    </CohortsPreloadContext>
+    <TableFiltersProvider>
+      <CohortsPreloadContext value={preload}>
+        <ReadBoundary
+          fallback={(failure) => (
+            <SettingsTablePage>{failure}</SettingsTablePage>
+          )}
+          read={{ args: { slug }, ref: tenancy.viewer.get }}
+        >
+          <SchoolCohortsContent slug={slug} />
+        </ReadBoundary>
+      </CohortsPreloadContext>
+    </TableFiltersProvider>
   );
 }
 
@@ -122,7 +119,7 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
     throw viewer.error;
   }
   if (!QueryResult.isSuccess(viewer)) {
-    return <SettingsPage>{null}</SettingsPage>;
+    return <SettingsTablePage>{null}</SettingsTablePage>;
   }
   const units = viewer.value.units;
   const unit = Option.getOrUndefined(
@@ -135,9 +132,9 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
 
   if (unit === undefined) {
     return (
-      <SettingsPage>
+      <SettingsTablePage>
         <NoActiveUnit />
-      </SettingsPage>
+      </SettingsTablePage>
     );
   }
   return (
@@ -174,10 +171,7 @@ function SchoolCohortsOfUnit({
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <SettingsPage>
-          {choice}
-          {failure}
-        </SettingsPage>
+        <SettingsTablePage actions={choice}>{failure}</SettingsTablePage>
       )}
       read={{ args: { slug, unitId }, ref: tenancy.cohorts.activePeriod }}
     >
@@ -207,14 +201,13 @@ function SchoolCohortsOfPeriod({
   if (QueryResult.isFailure(active)) {
     if (isDenied(active.error)) {
       return (
-        <SettingsPage>
-          {choice}
+        <SettingsTablePage actions={choice}>
           <TableEmpty
             act="pointing"
             description={t("cohorts-unavailable-description")}
             title={t("cohorts-unavailable")}
           />
-        </SettingsPage>
+        </SettingsTablePage>
       );
     }
     throw active.error;
@@ -222,12 +215,11 @@ function SchoolCohortsOfPeriod({
   const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
 
   if (periodId === undefined) {
-    return <SettingsPage>{choice}</SettingsPage>;
+    return <SettingsTablePage actions={choice}>{null}</SettingsTablePage>;
   }
   if (periodId === null) {
     return (
-      <SettingsPage>
-        {choice}
+      <SettingsTablePage actions={choice}>
         <TableEmpty
           act="pointing"
           action={
@@ -242,18 +234,26 @@ function SchoolCohortsOfPeriod({
           description={t("cohorts-no-period")}
           title={t("cohorts-no-period-title")}
         />
-      </SettingsPage>
+      </SettingsTablePage>
     );
   }
   return (
-    <SettingsPage actions={<SchoolCohortAdd periodId={periodId} slug={slug} />}>
-      {choice}
+    <SettingsTablePage
+      actions={
+        <>
+          {choice}
+          <TableSearch placeholder={t("cohorts-search")} />
+          <CohortFilter />
+          <SchoolCohortAdd periodId={periodId} slug={slug} />
+        </>
+      }
+    >
       <ReadBoundary
         read={{ args: { periodId, slug }, ref: tenancy.cohorts.list }}
       >
         <SchoolCohortTable periodId={periodId} slug={slug} />
       </ReadBoundary>
-    </SettingsPage>
+    </SettingsTablePage>
   );
 }
 
@@ -460,23 +460,8 @@ function SchoolCohortTable({
     <DataTable
       columns={columns}
       data={cohorts.value}
-      facets={[
-        {
-          column: "grade",
-          options: gradeItems,
-          title: t("cohort-grade"),
-        },
-        {
-          column: "status",
-          options: Arr.map(CohortStatus.literals, (status) => ({
-            label: t(`cohort-${status}`),
-            value: status,
-          })),
-          title: t("cohort-status"),
-        },
-      ]}
       rowId={(cohort) => cohort.id}
-      search={{ column: "name", placeholder: t("cohorts-search") }}
+      search="name"
     />
   );
 }

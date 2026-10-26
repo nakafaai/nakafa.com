@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
-import { scopeNameOf } from "@/components/tenant/settings/scope";
+import { scopeNameOf, scopeNames } from "@/components/tenant/settings/scope";
 
 const smp = Schema.decodeUnknownSync(Id("tenantUnits"))("unit-smp");
 const sma = Schema.decodeUnknownSync(Id("tenantUnits"))("unit-sma");
@@ -24,5 +24,15 @@ describe("components/tenant/settings/scope", () => {
     expect(
       scopeNameOf({ kind: "unit", unitId: sma }, "Sekolah Nakafa", units)
     ).toBe("");
+  });
+
+  it("lists the school's name first, then each unit's once", () => {
+    expect(
+      scopeNames("Sekolah Nakafa", [
+        { name: "SMP Nakafa" },
+        { name: "SMA Nakafa" },
+        { name: "SMP Nakafa" },
+      ])
+    ).toEqual(["Sekolah Nakafa", "SMP Nakafa", "SMA Nakafa"]);
   });
 });

@@ -50,13 +50,31 @@ const localeItems = Arr.map(
 type InvitedRoleValue = typeof InvitedRole.Type;
 
 /**
+ * Invite, the main action of the members and the invitations: its button in the page's header row, and the dialog
+ * it opens.
+ */
+export function SchoolInviteAction({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)} type="button">
+        {t("invite-action")}
+      </Button>
+      <SchoolInviteDialog open={open} setOpen={setOpen} slug={slug} />
+    </>
+  );
+}
+
+/**
  * Renders the dialog that adds a teacher or an Admin: the name, the email, the role,
  * and the language of the email, which starts as the language of the school's first
  * active unit. Only an Owner is offered the Admin role. The Person, its role, and its
  * invite are written in one step, and the row shows in the members and the invitations
  * at once.
  */
-export function SchoolInviteDialog({
+function SchoolInviteDialog({
   open,
   setOpen,
   slug,

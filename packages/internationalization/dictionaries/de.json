@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Filtern",
     "no-results": "Keine Treffer.",
     "reset": "Zurücksetzen"
   },
@@ -247,6 +248,7 @@
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
     "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
     "rooms-title": "Räume",
+    "edit-action": "Prüfung bearbeiten",
     "rooms-empty": "Noch keine Räume",
     "rooms-empty-description": "Jeder Raum erscheint hier, sobald die Prüfung geplant ist.",
     "rooms-empty-action": "Prüfung öffnen",
@@ -473,7 +475,6 @@
     "client-secret-title": "Neues Geheimnis",
     "client-secret-description": "Kopiere es jetzt, denn es wird nicht noch einmal angezeigt.",
     "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
-    "audit-footer": "Werte von Richtlinien werden nicht ins Protokoll übernommen.",
     "audit-view": "Protokoll ansehen",
     "audit-when": "Wann",
     "audit-who": "Wer",
@@ -738,7 +739,6 @@
     "no-unit-description": "Perioden und Kohorten gehören zu einer aktiven Einheit. Stelle zuerst eine wieder her oder lege eine an.",
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
-    "members-empty-action": "Einladungen öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
     "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
     "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."

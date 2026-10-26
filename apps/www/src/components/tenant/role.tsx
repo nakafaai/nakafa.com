@@ -60,6 +60,11 @@ const roleLooks = {
   }
 >;
 
+/** The icon of a built-in role, the same as its badge's. */
+export function roleIcon(role: BuiltinRole) {
+  return roleLooks[role].icon;
+}
+
 /** A built-in role as a badge: its icon and its name, in its family's color. */
 export function RoleBadge({ role }: { role: BuiltinRole }) {
   const tSchool = useTranslations("School");

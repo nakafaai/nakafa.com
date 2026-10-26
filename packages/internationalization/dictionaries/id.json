@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Saring",
     "no-results": "Tidak ada hasil.",
     "reset": "Atur ulang"
   },
@@ -247,6 +248,7 @@
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
     "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat.",
     "rooms-title": "Ruang",
+    "edit-action": "Ubah ujian",
     "rooms-empty": "Belum ada ruang",
     "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",
     "rooms-empty-action": "Buka ujian",
@@ -473,7 +475,6 @@
     "client-secret-title": "Rahasia baru",
     "client-secret-description": "Salin sekarang, karena rahasia ini tidak akan ditampilkan lagi.",
     "audit-description": "Siapa mengubah apa di sekolah ini, dan kapan.",
-    "audit-footer": "Nilai kebijakan tidak disalin ke jejak.",
     "audit-view": "Lihat jejak",
     "audit-when": "Kapan",
     "audit-who": "Siapa",
@@ -738,7 +739,6 @@
     "no-unit-description": "Periode dan kelompok milik unit yang aktif. Pulihkan atau tambahkan satu unit dulu.",
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
-    "members-empty-action": "Buka undangan",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
     "policy-domains-invalid": "Periksa domain ini: {domains}. Tulis satu domain di setiap baris.",
     "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."

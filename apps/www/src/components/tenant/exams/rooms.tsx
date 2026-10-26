@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -401,6 +402,7 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
       action={t("room-cancel")}
       confirm={t("room-cancel-confirm")}
       description={t("room-cancel-description")}
+      icon={Cancel01Icon}
       onConfirm={() =>
         startTransition(() =>
           saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
