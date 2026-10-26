@@ -1,8 +1,5 @@
 import type { GenericId } from "@confect/core";
-import {
-  CancelCircleIcon,
-  Key01Icon,
-} from "@hugeicons/core-free-icons";
+import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -14,7 +11,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { SplitMenuTrigger } from "@/components/shared/split";
 import {
   useMayProctor,
   useSittingData,
@@ -24,6 +20,7 @@ import {
   CloseSittingDialog,
 } from "@/components/exams/sitting/dialogs";
 import { SittingFilterMenu } from "@/components/exams/sitting/toolbar";
+import { SplitMenuTrigger } from "@/components/shared/split";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { Link } from "@/lib/routing/link";
