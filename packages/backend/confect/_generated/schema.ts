@@ -66,7 +66,11 @@ import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
+import guardianCodes from "./tables/guardianCodes";
+import guardianConsents from "./tables/guardianConsents";
+import guardianLinks from "./tables/guardianLinks";
 import integrationClients from "./tables/integrationClients";
+import integrationDevices from "./tables/integrationDevices";
 import integrationTokens from "./tables/integrationTokens";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -99,6 +103,8 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import reportCards from "./tables/reportCards";
+import rosterEntries from "./tables/rosterEntries";
 import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import tenantAssignments from "./tables/tenantAssignments";
@@ -197,7 +203,11 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly examSittings: typeof examSittings;
   readonly exams: typeof exams;
   readonly gradingSchemes: typeof gradingSchemes;
+  readonly guardianCodes: typeof guardianCodes;
+  readonly guardianConsents: typeof guardianConsents;
+  readonly guardianLinks: typeof guardianLinks;
   readonly integrationClients: typeof integrationClients;
+  readonly integrationDevices: typeof integrationDevices;
   readonly integrationTokens: typeof integrationTokens;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
@@ -230,6 +240,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly programCatalog: typeof programCatalog;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
+  readonly reportCards: typeof reportCards;
+  readonly rosterEntries: typeof rosterEntries;
   readonly schoolLogins: typeof schoolLogins;
   readonly snapshotBatches: typeof snapshotBatches;
   readonly tenantAssignments: typeof tenantAssignments;
@@ -327,7 +339,11 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   examSittings,
   exams,
   gradingSchemes,
+  guardianCodes,
+  guardianConsents,
+  guardianLinks,
   integrationClients,
+  integrationDevices,
   integrationTokens,
   irtCalibrationRuns,
   irtScaleItems,
@@ -360,6 +376,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   programCatalog,
   quranRows,
   quranSearch,
+  reportCards,
+  rosterEntries,
   schoolLogins,
   snapshotBatches,
   tenantAssignments,

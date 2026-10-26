@@ -71,6 +71,15 @@ connection.
   hooks, so one rule covers every path. The one place outside the table that
   could hold the tokens, the account cookie, is off, because Better Auth turns
   it on only when no database is configured.
+- The same hooks keep one claim of the ID token before they drop it: the
+  hosted domain (`hd`), which only a Google Workspace account carries. A write
+  that carries an ID token stores its hosted domain on the account as
+  `hostedDomain`, lowercase, or null for a token without one, as a personal
+  Google account's token is; a write without one, such as a token refresh,
+  leaves it as it is. The token comes from Google's token endpoint during the
+  sign-in that writes it, so its payload is read without its signature, as
+  Better Auth reads the profile in it. The School Sign-In section says what
+  reads it.
 - `/get-access-token`, `/account-info` and `/refresh-token`, the routes that
   read or refresh a stored token (`confect/auth/routes.ts`), answer 404 like the
   retired credential routes, and the API reference leaves them out. Better Auth
@@ -164,13 +173,23 @@ username, the login card, and the parent code are served on the school host
 only, each at its own address (ADR 0026).
 
 - **Google.** Google sign-in covers a school's Workspace account and belajar.id
-  accounts. When the school has set allowed email domains, the sign-in checks the
-  hosted domain claim (`hd`) against them, and an empty list restricts nothing
-  (ADR 0011). A school account is matched by its Google issuer and subject, never
-  by its email address. The one exception is an invite claim (ADR 0011), which
-  matches the verified email of an account to the address of an invite once, to
-  bind a Person. Google sign-in is live today. The school host, the domain
-  check, and the belajar.id match are planned.
+  accounts. When the school has set allowed email domains, the invite claim
+  checks the hosted domain claim (`hd`) of the account's Google sign-ins against
+  them, and an empty list restricts nothing (ADR 0011). The claim admits an
+  account only when it holds a Google account and the latest sign-in of each
+  Google account it holds stored one of the domains (Provider tokens, above).
+  A personal Google account made on a school address, a Google account that has
+  not signed in since the hosted domain is kept, and an account that never
+  signed in with Google leave the invite pending. A Google sign-in that stores a
+  new hosted domain asks for the claim again, because Google signs a new learner
+  up by writing the user before the account, so the claim that the new user
+  asks for can run before the domain is stored. A school account is matched by
+  its Google issuer and subject, never by its email address. The one exception
+  is an invite claim (ADR 0011), which matches the verified email of an account
+  to the address of an invite once, to bind a Person. Google sign-in, on the main site and from the school host's
+  login page, and the domain check are live. The belajar.id match is planned:
+  it needs the hosted domain and address forms that belajar.id accounts carry,
+  measured on a pilot school's accounts.
 - **Username.** A school issues a username that is unique within the school. It
   is stored in the school's login table and maps to a Better Auth username that
   is unique within the cell, because each cell holds its own Better Auth rows
@@ -212,7 +231,9 @@ only, each at its own address (ADR 0026).
   that an email carries (ADR 0027): it lives five minutes, rests as a keyed hash,
   and is useless without that page. Signing in is not consent for a child (K2).
   Consent is recorded with a second check, and ADR 0012 defines the verified
-  parent relation.
+  parent relation. Built on 26 October 2026 (ADR 0034, Implementation Status): the
+  school host's endpoint `/school/guardian/sign-in` redeems the code, and an
+  address that the school did not link gets the same answer and no mail.
 - **Microsoft Entra ID and SAML.** These come after Google, for the schools that
   ask for them.
 
@@ -360,25 +381,36 @@ never a second one.
 
 ### Who Opens A Profile
 
-A profile is public only for an adult who belongs to no school (owner decision
-K15 of 13 October 2026). The product stores no age: no field, consent, or
-sign-in step records one, and age capture is not built. School membership is
-stored (a claimed person in `tenantPeople`), but without an age it decides
-nothing. So no profile is public yet.
+A profile is not for a school member and not for an account under 18 (owner
+decision K15 of 13 October 2026, restated in the School blueprint revision 11 of
+24 October). Since 17 October anyone opens and shares a learner's profile
+(#1113), and K15 narrows that rule as far as the stored data can.
 
-- The account itself opens its profile, because that page holds its own chats
-  and comments. Every other request, signed in or not, ends as not found, the
-  same as for a username nobody holds, so the profile address never tells
-  whether a username exists. (The availability check and a refused rename do,
-  because a person who picks a name must be told that it is taken, so both
-  answer only a signed-in account: a visitor's check is refused with
-  `SessionRequired`.)
-  The proxy decides before the page renders (`readProfileRefusal` in
-  `apps/www/src/lib/routing/public/profile.ts`): it reads the signed-in account and
-  answers any other request with the app's not-found page and a 404 status, so
-  no stream starts that would have to end as not found. `readProfileOrNotFound` in
-  `apps/www/src/lib/account/access.server.ts` reads the same account for the page and
-  repeats the rule. The backend holds no public lookup of a profile by username.
+- The profile of an account that belongs to no school is public: anyone, signed in
+  or not, reads its name, bio, picture, posts and comments, and shares its address.
+- The profile of a school member opens for its own account alone. An account
+  belongs to a school while it holds an active or a suspended member Person in any
+  tenant (`belongsToSchool` in `confect/tenancy/members.ts`, read through
+  `by_account_userId_and_kind_and_status`); a removed member and an operator Person
+  do not count. Every other request, signed in or not, ends as not found with a 404,
+  the same as for a username nobody holds, so the address never tells whether a
+  school member holds a username. Its own account sees no Share profile button, and
+  neither does anyone else, because nobody else reaches the page.
+- One rule decides all three reads: `profileAccess` in `confect/users/profile.ts`.
+  `users/queries:getProfileByUsername` answers null to a caller that may not open the
+  profile, and its `shareable` field says whether the page shows Share profile;
+  `posts/queries:list` and `comments/queries:getCommentsByUserId` answer the empty
+  page of an author without posts or comments. `readProfileOrNotFound` in
+  `apps/www/src/lib/account/access.server.ts` passes the request's session to the
+  profile query and ends the request as not found before the page streams.
+- The Chat tab of any profile opens for its own account alone. (The availability
+  check and a refused rename tell whether a username is taken, because a person who
+  picks a name must be told so; both answer only a signed-in account, and a
+  visitor's check is refused with `SessionRequired`.)
+- The under-18 part of K15 cannot be enforced yet: the product stores no age, so no
+  field, consent, or sign-in step records one. When an age is stored, an account
+  under 18 joins the school member's rule in `profileAccess`, and this section
+  changes with it.
 - A comment shows no link to the profile of its author.
 - The retired address `/{locale}/user/{id}` and its `chat` tab answer 308 to the
   username address, and only to the account that holds the id: the proxy reads
@@ -390,11 +422,6 @@ nothing. So no profile is public yet.
   account that holds the name now). A profile has no Markdown version, so a
   request for the retired address with `.md` or `.mdx` is not redirected and
   ends as not found, as it does for anyone else.
-- When an age is stored, the rule becomes: the account is of age and holds no
-  claimed person in `tenantPeople` (read through
-  `by_account_userId_and_kind_and_status`). The profile then becomes a public
-  query by username in the backend, the comment link and the retired address
-  follow it, and this section changes with it.
 
 ### Naming The Accounts Made Before
 

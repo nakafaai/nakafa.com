@@ -7,6 +7,7 @@ import {
   type SittingGroup,
 } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   Field,
   FieldDescription,
@@ -285,49 +286,48 @@ export function ScheduleSitting({
             <FieldDescription>{t("room-needed")}</FieldDescription>
           ) : null}
         </Field>
-        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
-          <Field>
-            <FieldLabel htmlFor={`${id}-starts`}>{t("starts")}</FieldLabel>
-            <Input
-              id={`${id}-starts`}
-              onChange={(event) => onStartsChange(event.target.value)}
-              type="datetime-local"
-              value={starts}
-            />
-            {Option.isSome(choice) && Option.isSome(times) ? (
-              <FieldDescription>{choice.value.timeZone}</FieldDescription>
-            ) : (
-              <FieldDescription>{t("starts-needed")}</FieldDescription>
-            )}
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
-            <Select
-              items={lengthItems}
-              onValueChange={(value) => {
-                const next = Arr.findFirst(
-                  LENGTHS,
-                  (length) => `${length}` === value
-                );
-                if (Option.isSome(next)) {
-                  setMinutes(next.value);
-                }
-              }}
-              value={`${minutes}`}
-            >
-              <SelectTrigger className="w-full" id={`${id}-length`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Arr.map(lengthItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
+        <Field>
+          <FieldLabel htmlFor={`${id}-starts`}>{t("starts")}</FieldLabel>
+          <DateTimePicker
+            dayPlaceholder={t("starts-day-placeholder")}
+            id={`${id}-starts`}
+            onValueChange={onStartsChange}
+            timePlaceholder={t("starts-time-placeholder")}
+            value={starts}
+          />
+          {Option.isSome(choice) && Option.isSome(times) ? (
+            <FieldDescription>{choice.value.timeZone}</FieldDescription>
+          ) : (
+            <FieldDescription>{t("starts-needed")}</FieldDescription>
+          )}
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
+          <Select
+            items={lengthItems}
+            onValueChange={(value) => {
+              const next = Arr.findFirst(
+                LENGTHS,
+                (length) => `${length}` === value
+              );
+              if (Option.isSome(next)) {
+                setMinutes(next.value);
+              }
+            }}
+            value={`${minutes}`}
+          >
+            <SelectTrigger className="w-full" id={`${id}-length`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Arr.map(lengthItems, (item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
       </FieldGroup>
     </ResponsiveDialog>
   );

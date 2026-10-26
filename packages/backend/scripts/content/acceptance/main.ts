@@ -8,6 +8,7 @@ import {
 import { cardMode } from "@repo/backend/scripts/content/acceptance/card";
 import { classTeacherMode } from "@repo/backend/scripts/content/acceptance/classes";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { guardianMode } from "@repo/backend/scripts/content/acceptance/guardian";
 import { importMode } from "@repo/backend/scripts/content/acceptance/import";
 import { inviteMode } from "@repo/backend/scripts/content/acceptance/invite";
 import { learnerMode } from "@repo/backend/scripts/content/acceptance/learner";
@@ -21,6 +22,7 @@ import { studentMode } from "@repo/backend/scripts/content/acceptance/student";
 import { teacherMode } from "@repo/backend/scripts/content/acceptance/teacher";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/terminal";
 import { transferMode } from "@repo/backend/scripts/content/acceptance/transfer";
+import { xenditMode } from "@repo/backend/scripts/content/acceptance/xendit";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
@@ -48,9 +50,11 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   inviteMode,
   sittingMode,
   cardMode,
+  guardianMode,
   studentMode,
   importMode,
   profileMode,
+  xenditMode,
   transferMode,
 ];
 
