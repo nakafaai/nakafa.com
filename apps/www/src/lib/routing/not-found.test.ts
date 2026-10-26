@@ -6,30 +6,46 @@ import {
   createNotFoundRequest,
   NOT_FOUND_LOCALE_HEADER,
   NOT_FOUND_PATH,
-  readNotFoundLocale,
+  readNotFoundPage,
   readNotFoundPageLocale,
   withContentLanguage,
 } from "@/lib/routing/not-found";
 
-describe("readNotFoundLocale", () => {
-  it("reads the locale that the server names in its header", () => {
+describe("readNotFoundPage", () => {
+  it("reads the locale that the server names in its header, on the main site", () => {
     expect(
-      readNotFoundLocale(new Headers({ [NOT_FOUND_LOCALE_HEADER]: "id" }))
-    ).toBe("id");
+      readNotFoundPage(
+        new Headers({ [NOT_FOUND_LOCALE_HEADER]: "id", host: "nakafa.com" })
+      )
+    ).toStrictEqual({ locale: "id", school: false });
   });
 
   it("answers the default locale for a missing or unknown locale", () => {
-    expect(readNotFoundLocale(new Headers())).toBe("en");
+    expect(readNotFoundPage(new Headers()).locale).toBe("en");
     expect(
-      readNotFoundLocale(new Headers({ [NOT_FOUND_LOCALE_HEADER]: "zz" }))
+      readNotFoundPage(new Headers({ [NOT_FOUND_LOCALE_HEADER]: "zz" })).locale
     ).toBe("en");
+  });
+
+  it("knows a request that came to a school host", () => {
+    expect(
+      readNotFoundPage(
+        new Headers({
+          [NOT_FOUND_LOCALE_HEADER]: "de",
+          host: "harapan.nakafa.com",
+        })
+      )
+    ).toStrictEqual({ locale: "de", school: true });
   });
 });
 
 describe("readNotFoundPageLocale", () => {
   it("reads the locale of the not-found error of the standalone page", () => {
     expect(
-      readNotFoundPageLocale({ data: { locale: "id" }, isNotFound: true })
+      readNotFoundPageLocale({
+        data: { locale: "id", school: false },
+        isNotFound: true,
+      })
     ).toStrictEqual(Option.some("id"));
   });
 
@@ -39,7 +55,10 @@ describe("readNotFoundPageLocale", () => {
     );
     expect(
       Option.isNone(
-        readNotFoundPageLocale({ data: { locale: "zz" }, isNotFound: true })
+        readNotFoundPageLocale({
+          data: { locale: "zz", school: false },
+          isNotFound: true,
+        })
       )
     ).toBe(true);
     expect(Option.isNone(readNotFoundPageLocale({ isNotFound: true }))).toBe(
