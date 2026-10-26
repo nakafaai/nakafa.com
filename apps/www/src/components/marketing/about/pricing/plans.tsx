@@ -10,21 +10,20 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Array as Arr } from "effect";
-import type { ComponentType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type PriceProps,
-  PricingPrice,
-  PricingYearly,
-} from "@/components/marketing/about/pricing/price";
+import { PricingYearly } from "@/components/marketing/about/pricing/price";
 import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
 import { Link } from "@/lib/routing/link";
 
 interface PricingPlanCardsProps {
+  /** The Free card's price, which the page draws still or animated. */
+  freePrice: ReactNode;
   headingLevel: "h2" | "h3";
-  Price: ComponentType<PriceProps>;
   /** The Pro card's action, which the page gives the emphasis it needs. */
   proAction: ReactNode;
+  /** The Pro card's price and its period, which the page draws still or animated. */
+  proPrice: ReactNode;
 }
 
 /** One line of a plan: a tick and its text. */
@@ -77,12 +76,13 @@ function FreePlanAction() {
  * behind its top edge: the card is drawn over her, so its line cuts her body.
  * From `md` the cards share four rows (heading, price, list, action), so the
  * lists start on one line and the two actions sit on one line at the bottom,
- * whichever plan holds more lines. The prices come from the slots of each plan.
+ * whichever plan holds more lines. The page composes the prices, from the slots of each plan.
  */
 export function PricingCards({
-  Price,
+  freePrice,
   headingLevel,
   proAction,
+  proPrice,
 }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
   const PlanHeading = headingLevel;
@@ -101,7 +101,7 @@ export function PricingCards({
           <p className="text-muted-foreground">{t("free-description")}</p>
         </CardHeader>
         <CardContent className="grid content-start gap-1">
-          <PricingPrice Price={Price} plan="free" />
+          {freePrice}
           <p className="text-muted-foreground text-sm">
             {t("free-worth-card")} {t("free-worth-trial")}
           </p>
@@ -139,7 +139,7 @@ export function PricingCards({
             <p className="text-muted-foreground">{t("pro-description")}</p>
           </CardHeader>
           <CardContent className="grid content-start gap-1">
-            <PricingPrice Price={Price} period={t("pro-period")} plan="pro" />
+            {proPrice}
             <PricingYearly />
           </CardContent>
           <CardContent>

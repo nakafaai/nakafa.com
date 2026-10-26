@@ -137,18 +137,15 @@ export function HomeExplore() {
 
 function ExploreCard({
   children,
-  target,
   title,
+  ...link
 }: {
   children: ReactNode;
   target: LinkTarget;
   title: string;
 }) {
   return (
-    <TargetLink
-      className="group flex flex-col items-center gap-2"
-      target={target}
-    >
+    <TargetLink className="group flex flex-col items-center gap-2" {...link}>
       <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border bg-card">
         {children}
       </div>

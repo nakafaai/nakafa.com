@@ -4,7 +4,9 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
+import { attemptAnswers } from "@repo/backend/confect/exams/results/mine";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
+import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
 import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 import type { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import type { PaginationOptions } from "convex/server";
@@ -15,7 +17,7 @@ const STUDENT_PAGE_SIZE = 100;
 
 /**
  * One attempt as the students' list shows it. An attempt that is not submitted has no scored rows yet,
- * so its score, answered count, and pending count are `null`.
+ * so its score, answered count, pending count, and integrity indication are `null`.
  */
 const studentRow = Effect.fn("exams.results.students.row")(function* (
   attempt: ExamAttemptsDoc
@@ -31,12 +33,21 @@ const studentRow = Effect.fn("exams.results.students.row")(function* (
     submittedAt: attempt.submittedAt ?? null,
   };
   if (attempt.state !== "submitted") {
-    return { ...base, answered: null, pending: null, points: null };
+    return {
+      ...base,
+      answered: null,
+      awaySeconds: null,
+      exits: null,
+      pending: null,
+      points: null,
+    };
   }
   const rows = yield* attemptResults(attempt.sitting, attempt.person);
   return {
     ...base,
     answered: Arr.filter(rows, (row) => isAnswered(row.response)).length,
+    awaySeconds: attempt.integrity?.awaySeconds ?? 0,
+    exits: attempt.integrity?.exits ?? 0,
     pending: Arr.filter(rows, (row) => row.verdict === "pending").length,
     points: Num.sumAll(Arr.map(rows, (row) => row.points)),
   };
@@ -91,3 +102,27 @@ export const byStudent = Effect.fn("exams.results.students")(function* (args: {
   });
   return Struct.assign(page, { page: rows });
 });
+
+/**
+ * One student's scored answers for a viewer of the sitting's results, as the panel beside the students'
+ * list shows them (two panes): the student's name, the points the attempt earned, and each question with
+ * its answer, its points, and its verdict. An attempt that is not submitted has no scored answers yet, so
+ * it reads `null`. The attempt must belong to the sitting.
+ */
+export const attemptResult = Effect.fn("exams.results.students.attempt")(
+  function* (args: { attemptId: ExamAttemptsDoc["_id"] }) {
+    const sitting = yield* ResultSitting;
+    const attempt = yield* attemptIn(sitting, args.attemptId, "result.view");
+    if (attempt.state !== "submitted") {
+      return null;
+    }
+    const person = yield* (yield* DatabaseReader)
+      .table("tenantPeople")
+      .get(attempt.person)
+      .pipe(Effect.orDie);
+    return {
+      name: person.name,
+      ...(yield* attemptAnswers(sitting, attempt.person)),
+    };
+  }
+);

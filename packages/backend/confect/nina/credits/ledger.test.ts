@@ -1,4 +1,3 @@
-import { RegisteredConvexFunction } from "@confect/server";
 import {
   afterEach,
   assert,
@@ -7,42 +6,24 @@ import {
   expect,
   it,
 } from "@effect/vitest";
-import schema from "@repo/backend/confect/_generated/schema";
 import usersTable from "@repo/backend/confect/_generated/tables/users";
 import { projectUserPlan } from "@repo/backend/confect/billing/grants";
 import {
   refundCredits,
   reserveCredits,
 } from "@repo/backend/confect/nina/credits/ledger";
-import type { NinaCreditHold } from "@repo/backend/confect/nina/credits/schema";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
 import { insertTopUpPack, runInMutation } from "@repo/backend/test/billing";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import {
+  CREDITS_NOW,
+  creditFixture,
+  refundHold,
+} from "@repo/backend/test/credits";
+import { Array as Arr, Option, Schema } from "effect";
 
-const NOW = Date.UTC(2026, 8, 1);
+const NOW = CREDITS_NOW;
 /** Reads a raw account the way Confect reads it, so its animal is decoded. */
 const decodeUser = Schema.decodeUnknownSync(usersTable.Doc);
-async function fixture(credits = 5, creditsResetAt = NOW) {
-  const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now: NOW, credits, creditsResetAt })
-  );
-  const reserve = () =>
-    t.mutation(async (ctx) => {
-      const user = await ctx.db.get("users", identity.userId);
-      assert(user);
-      return Effect.runPromise(
-        reserveCredits(decodeUser(user)).pipe(
-          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-        )
-      );
-    });
-  return { t, identity, reserve };
-}
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
@@ -54,14 +35,10 @@ afterEach(() => {
 
 describe("Nina credit transactions", () => {
   it("materializes a due daily grant before the Agent turn debit", async () => {
-    const { t, identity, reserve } = await fixture(0, NOW - 86_400_000);
+    const { t, identity, reserve } = await creditFixture(0, NOW - 86_400_000);
     const hold = await reserve();
     await t.mutation((ctx) =>
-      Effect.runPromise(
-        refundCredits(hold, "settled-turn", 4).pipe(
-          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-        )
-      )
+      runInMutation(ctx, refundCredits(hold, "settled-turn", 4))
     );
     const result = await t.query(async (ctx) => ({
       user: await ctx.db.get("users", identity.userId),
@@ -78,7 +55,7 @@ describe("Nina credit transactions", () => {
   });
 
   it("holds up to fifty credits for one response, the whole balance when less, and refuses an empty balance", async () => {
-    const priced = await fixture(5);
+    const priced = await creditFixture(5);
     const hold = await priced.reserve();
     const state = await priced.t.query(async (ctx) => ({
       user: await ctx.db.get("users", priced.identity.userId),
@@ -89,26 +66,22 @@ describe("Nina credit transactions", () => {
     expect(Arr.map(state.ledger, (row) => row.metadata)).toEqual([
       { phase: "reserved" },
     ]);
-    const capped = await fixture(80);
+    const capped = await creditFixture(80);
     expect(await capped.reserve()).toMatchObject({ credits: 50 });
     const cappedUser = await capped.t.query((ctx) =>
       ctx.db.get("users", capped.identity.userId)
     );
     expect(cappedUser?.credits).toBe(30);
-    await expect((await fixture(0)).reserve()).rejects.toMatchObject({
+    await expect((await creditFixture(0)).reserve()).rejects.toMatchObject({
       code: "INSUFFICIENT_CREDITS",
     });
   });
 
   it("gives nothing back when an answer's cost holds the whole reservation", async () => {
-    const { t, identity, reserve } = await fixture(5);
+    const { t, identity, reserve } = await creditFixture(5);
     const hold = await reserve();
     await t.mutation((ctx) =>
-      Effect.runPromise(
-        refundCredits(hold, "answered-turn", 0).pipe(
-          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-        )
-      )
+      runInMutation(ctx, refundCredits(hold, "answered-turn", 0))
     );
     const result = await t.query(async (ctx) => ({
       user: await ctx.db.get("users", identity.userId),
@@ -121,7 +94,7 @@ describe("Nina credit transactions", () => {
   it.each(["ledger", "state", "quota"] as const)(
     "rolls back admission and returns a typed %s failure",
     async (operation) => {
-      const { t, identity } = await fixture();
+      const { t, identity } = await creditFixture();
       await expect(
         t.mutation(async (ctx) => {
           const user = await ctx.db.get("users", identity.userId);
@@ -132,22 +105,23 @@ describe("Nina credit transactions", () => {
             );
           }
           if (operation === "state") {
-            vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
-              throw new Error("private state detail");
-            });
+            // The credit state reads the reset periods; the school pool's reads before it stay real.
+            const query = ctx.db.query.bind(ctx.db);
+            vi.spyOn(ctx.db, "query").mockImplementation(
+              <Table extends TableNames>(table: Table) => {
+                if (table === "creditResetPeriods") {
+                  throw new Error("private state detail");
+                }
+                return query(table);
+              }
+            );
           }
           if (operation === "quota") {
             vi.spyOn(ctx, "runMutation").mockRejectedValueOnce(
               new Error("private quota detail")
             );
           }
-          return Effect.runPromise(
-            reserveCredits(decodeUser(user)).pipe(
-              Effect.provide(
-                RegisteredConvexFunction.mutationLayer(schema, ctx)
-              )
-            )
-          );
+          return runInMutation(ctx, reserveCredits(decodeUser(user)));
         })
       ).rejects.toMatchObject({ code: "NINA_CREDIT_IO_FAILED" });
       const result = await t.query(async (ctx) => ({
@@ -162,7 +136,7 @@ describe("Nina credit transactions", () => {
   it.each(["user", "state"] as const)(
     "rolls back a refund when its %s cannot be read",
     async (operation) => {
-      const { t, identity, reserve } = await fixture();
+      const { t, identity, reserve } = await creditFixture();
       const hold = await reserve();
       await expect(
         t.mutation((ctx) => {
@@ -176,12 +150,9 @@ describe("Nina credit transactions", () => {
               throw new Error("private state detail");
             });
           }
-          return Effect.runPromise(
-            refundCredits(hold, "failed-turn", hold.credits).pipe(
-              Effect.provide(
-                RegisteredConvexFunction.mutationLayer(schema, ctx)
-              )
-            )
+          return runInMutation(
+            ctx,
+            refundCredits(hold, "failed-turn", hold.credits)
           );
         })
       ).rejects.toMatchObject({ code: "NINA_CREDIT_IO_FAILED" });
@@ -195,7 +166,7 @@ describe("Nina credit transactions", () => {
   );
 
   it("refuses the sixth start within a minute", async () => {
-    const { reserve } = await fixture(1000);
+    const { reserve } = await creditFixture(1000);
     for (let start = 0; start < 5; start += 1) {
       await reserve();
     }
@@ -203,15 +174,11 @@ describe("Nina credit transactions", () => {
   });
 
   it("gives nothing back when the turn's user is gone", async () => {
-    const { t, identity, reserve } = await fixture(5);
+    const { t, identity, reserve } = await creditFixture(5);
     const hold = await reserve();
     await t.mutation((ctx) => ctx.db.delete("users", identity.userId));
     await t.mutation((ctx) =>
-      Effect.runPromise(
-        refundCredits(hold, "gone-turn", hold.credits).pipe(
-          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-        )
-      )
+      runInMutation(ctx, refundCredits(hold, "gone-turn", hold.credits))
     );
     const ledger = await t.query((ctx) =>
       ctx.db.query("creditTransactions").collect()
@@ -220,15 +187,11 @@ describe("Nina credit transactions", () => {
   });
 
   it("does not return a hold from an earlier credit period into the next one", async () => {
-    const { t, identity, reserve } = await fixture(0, NOW - 86_400_000);
+    const { t, identity, reserve } = await creditFixture(0, NOW - 86_400_000);
     const hold = await reserve();
     vi.setSystemTime(NOW + 86_400_000);
     await t.mutation((ctx) =>
-      Effect.runPromise(
-        refundCredits(hold, "late-turn", hold.credits).pipe(
-          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-        )
-      )
+      runInMutation(ctx, refundCredits(hold, "late-turn", hold.credits))
     );
     const result = await t.query(async (ctx) => ({
       user: await ctx.db.get("users", identity.userId),
@@ -248,7 +211,7 @@ describe("Nina credit transactions", () => {
   it.each([false, true])(
     "does not refund into a replacement plan grant (resubscribe %s)",
     async (resubscribe) => {
-      const { t, identity, reserve } = await fixture();
+      const { t, identity, reserve } = await creditFixture();
       const grant = {
         product: "pro" as const,
         userId: identity.userId,
@@ -258,13 +221,7 @@ describe("Nina credit transactions", () => {
       };
       const project = () =>
         t.mutation((ctx) =>
-          Effect.runPromise(
-            projectUserPlan(identity.userId, NOW).pipe(
-              Effect.provide(
-                RegisteredConvexFunction.mutationLayer(schema, ctx)
-              )
-            )
-          )
+          runInMutation(ctx, projectUserPlan(identity.userId, NOW))
         );
       await t.mutation((ctx) => ctx.db.insert("billingGrants", grant));
       await project();
@@ -290,11 +247,7 @@ describe("Nina credit transactions", () => {
         await project();
       }
       await t.mutation((ctx) =>
-        Effect.runPromise(
-          refundCredits(hold, "old-grant-turn", hold.credits).pipe(
-            Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-          )
-        )
+        runInMutation(ctx, refundCredits(hold, "old-grant-turn", hold.credits))
       );
       const result = await t.query(async (ctx) => ({
         user: await ctx.db.get("users", identity.userId),
@@ -314,14 +267,14 @@ const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
 
 /** Adds one top-up pack to a learner, bought by its own payment. */
 const addPack = (
-  t: Awaited<ReturnType<typeof fixture>>["t"],
+  t: Awaited<ReturnType<typeof creditFixture>>["t"],
   userId: Id<"users">,
   pack: Parameters<typeof insertTopUpPack>[2]
 ) => t.mutation((ctx) => insertTopUpPack(ctx, userId, pack));
 
 describe("Nina credit packs", () => {
   it("spends the allowance first, then the packs soonest expiring first, and names each source in the hold", async () => {
-    const { t, identity, reserve } = await fixture(5);
+    const { t, identity, reserve } = await creditFixture(5);
     const soon = await addPack(t, identity.userId, {
       expiresAt: NOW + ONE_MONTH,
       providerPaymentId: "order_soon",
@@ -365,7 +318,7 @@ describe("Nina credit packs", () => {
   });
 
   it("takes the whole hold from packs when the allowance is empty, and names the first pack's usage as the hold's transaction", async () => {
-    const { t, identity, reserve } = await fixture(0);
+    const { t, identity, reserve } = await creditFixture(0);
     const pack = await addPack(t, identity.userId, {
       expiresAt: NOW + ONE_MONTH,
       providerPaymentId: "order_only",
@@ -383,7 +336,7 @@ describe("Nina credit packs", () => {
   });
 
   it("refunds the packs first, the last drawn first, and returns nothing to the allowance while the packs take all of it", async () => {
-    const { t, identity, reserve } = await fixture(5);
+    const { t, identity, reserve } = await creditFixture(5);
     const soon = await addPack(t, identity.userId, {
       expiresAt: NOW + ONE_MONTH,
       providerPaymentId: "order_refund_soon",
@@ -407,7 +360,7 @@ describe("Nina credit packs", () => {
   });
 
   it("returns the rest of a refund to the allowance once the packs have their share back", async () => {
-    const { t, identity, reserve } = await fixture(5);
+    const { t, identity, reserve } = await creditFixture(5);
     await addPack(t, identity.userId, {
       expiresAt: NOW + ONE_MONTH,
       providerPaymentId: "order_allowance_soon",
@@ -432,7 +385,7 @@ describe("Nina credit packs", () => {
   });
 
   it("loses the share of a pack that ended during the turn, and keeps the rest for the packs that run", async () => {
-    const { t, identity, reserve } = await fixture(0);
+    const { t, identity, reserve } = await creditFixture(0);
     const ended = await addPack(t, identity.userId, {
       expiresAt: NOW + ONE_MONTH,
       providerPaymentId: "order_ended_turn",
@@ -459,7 +412,7 @@ describe("Nina credit packs", () => {
   });
 
   it("refunds a turn reserved before packs existed entirely to the allowance", async () => {
-    const { t, identity, reserve } = await fixture(5);
+    const { t, identity, reserve } = await creditFixture(5);
     const hold = await reserve();
     const { lots: _lots, ...legacyHold } = hold;
     await refundHold(t, legacyHold, "turn_legacy", 4);
@@ -467,15 +420,3 @@ describe("Nina credit packs", () => {
     expect(user?.credits).toBe(4);
   });
 });
-
-/** Refunds part of one hold inside a test mutation, as settlement does. */
-async function refundHold(
-  t: Awaited<ReturnType<typeof fixture>>["t"],
-  hold: typeof NinaCreditHold.Type,
-  reservationId: string,
-  amount: number
-) {
-  await t.mutation((ctx) =>
-    runInMutation(ctx, refundCredits(hold, reservationId, amount))
-  );
-}

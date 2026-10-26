@@ -10,7 +10,10 @@ import {
 } from "@repo/backend/confect/exams/results/questions";
 import { release } from "@repo/backend/confect/exams/results/release";
 import spec from "@repo/backend/confect/exams/results/results.spec";
-import { byStudent } from "@repo/backend/confect/exams/results/students";
+import {
+  attemptResult,
+  byStudent,
+} from "@repo/backend/confect/exams/results/students";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
@@ -60,6 +63,15 @@ const releaseFunction = FunctionImpl.make(
   })
 );
 
+const attemptFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "attempt",
+  Effect.fn("exams.results.attempt.function")(function* (args) {
+    return yield* attemptResult(args);
+  })
+);
+
 const gradeFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -87,6 +99,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(byStudentFunction),
   Layer.provide(byQuestionFunction),
   Layer.provide(questionStatsFunction),
+  Layer.provide(attemptFunction),
   Layer.provide(gradeFunction),
   Layer.provide(releaseFunction),
   Layer.provide(mineFunction),

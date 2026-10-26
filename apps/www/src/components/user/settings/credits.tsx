@@ -21,6 +21,8 @@ import {
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import {
   type BillingOverview,
+  creditFooterKey,
+  creditPeriodKey,
   formatBillingDate,
   formatCount,
   usedPercent,
@@ -47,7 +49,9 @@ export function UserSettingsCredits({
   const t = useTranslations("Auth");
   const { credits, plan } = overview;
   const isPro = plan === "pro";
-  const percent = usedPercent(credits);
+  // A school member draws from their school's pool instead of their own credits, so the pool's day is what they see.
+  const period = credits.pool ?? credits;
+  const percent = usedPercent(period);
   const { expiresAt } = credits.lots;
 
   const handleBuy = () => {
@@ -69,21 +73,23 @@ export function UserSettingsCredits({
       </CardHeader>
       <CardContent className="grid gap-6">
         <CreditUsage
-          period={t(isPro ? "credits-month" : "credits-today")}
+          period={t(creditPeriodKey(overview))}
           resets={t("credits-resets", {
-            date: formatBillingDate(credits.resetAt, locale),
+            date: formatBillingDate(period.resetAt, locale),
           })}
           used={t("credits-used", { percent })}
         >
           <Dashboard.Meter
             label={t("credits-left", {
-              left: formatCount(credits.balance, locale),
-              total: formatCount(credits.allowance, locale),
+              left: formatCount(period.balance, locale),
+              total: formatCount(period.allowance, locale),
             })}
             percent={percent}
           />
         </CreditUsage>
-        {credits.lots.balance > 0 && expiresAt !== null ? (
+        {credits.pool === null &&
+        credits.lots.balance > 0 &&
+        expiresAt !== null ? (
           <CreditUsage
             period={t("top-up-balance")}
             resets={t("top-up-expires", {
@@ -93,7 +99,7 @@ export function UserSettingsCredits({
           />
         ) : null}
       </CardContent>
-      {isPro ? (
+      {isPro && credits.pool === null ? (
         <CardSectionFooter hint={<PackPriceSentence />}>
           <CardSectionActions>
             <Button
@@ -106,7 +112,7 @@ export function UserSettingsCredits({
           </CardSectionActions>
         </CardSectionFooter>
       ) : (
-        <CardSectionFooter hint={t("credits-free-footer")} />
+        <CardSectionFooter hint={t(creditFooterKey(overview))} />
       )}
     </CardSection>
   );

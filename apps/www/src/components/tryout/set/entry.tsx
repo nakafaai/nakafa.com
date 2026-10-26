@@ -1,6 +1,5 @@
 import { type ReactNode, Suspense } from "react";
 import type { PlayerMode } from "@/components/player/mode";
-import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
@@ -23,7 +22,6 @@ import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 /** Props of the direct-entry set: its render model and its only section's runtime. */
 interface TryoutSetEntryProps {
   children: ReactNode;
-  content: TryoutRunningContent | null;
   /** Render model for sets whose only section is the set entry itself. */
   value: TryoutSetOverviewProps["value"] & {
     entrySection: SetEntrySection;
@@ -37,21 +35,15 @@ interface TryoutSetEntryProps {
  * Renders a no-nested-section set as the directly startable section surface.
  * A running section is the player, and every other state is the set page.
  */
-export function TryoutSetEntry({
-  children,
-  content,
-  value,
-}: TryoutSetEntryProps) {
+export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
   const state = value.runtimeState;
   if (value.player && isTryoutRuntimeRunning(state)) {
     return (
       <TryoutPage>
         <TryoutPlayer
-          content={content}
           finish={value.player.finish}
-          locked={state.kind === "pending"}
           mode={value.player.mode}
-          runtime={state.runtime}
+          state={state}
           title={value.page.set.title}
         />
       </TryoutPage>
@@ -61,11 +53,12 @@ export function TryoutSetEntry({
   return (
     <TryoutPage>
       <TryoutSetPageHeader
-        action={<TryoutEntryAction value={value} />}
         currentPath={value.currentPath}
         page={value.page}
         returnPath={value.returnPath}
-      />
+      >
+        <TryoutEntryAction value={value} />
+      </TryoutSetPageHeader>
       <TryoutPageBody>
         <TryoutEntryResult value={value} />
         <TryoutEntryReview runtimeState={state}>{children}</TryoutEntryReview>

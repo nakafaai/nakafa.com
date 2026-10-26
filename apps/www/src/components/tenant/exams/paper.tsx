@@ -39,7 +39,11 @@ import {
   PaperSketch,
   usePageDocument,
 } from "@/components/tenant/exams/preview";
-import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
+import {
+  useExam,
+  useExamLocked,
+  useExamSelection,
+} from "@/components/tenant/exams/provider";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperLine,
@@ -101,9 +105,9 @@ function PageRow({
   template,
 }: PageRowProps) {
   const t = useTranslations("Exams");
-  const { exam } = useExam();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const editable = saved && !isLocked(exam);
+  const locked = useExamLocked();
+  const editable = saved && !locked;
   const number = index + 1;
 
   return (
@@ -214,15 +218,6 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
     read: readNotes,
     saved,
   });
-  const paper = (
-    <PaperSketch
-      doc={prompt}
-      question={question}
-      selected={chosen}
-      withControls
-    />
-  );
-
   return (
     <section
       aria-label={t("question", { number })}
@@ -241,7 +236,16 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
         template={editing.displayed.template}
       />
       {live ? (
-        <Suspense fallback={paper}>
+        <Suspense
+          fallback={
+            <PaperSketch
+              doc={prompt}
+              question={question}
+              selected={chosen}
+              withControls
+            />
+          }
+        >
           <LivePaper
             chosen={chosen}
             editing={editing}
@@ -250,7 +254,12 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
           />
         </Suspense>
       ) : (
-        paper
+        <PaperSketch
+          doc={prompt}
+          question={question}
+          selected={chosen}
+          withControls
+        />
       )}
       {chosen ? (
         <TeacherPortal>
@@ -290,7 +299,10 @@ function LivePaper({
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  // The prompt's editor opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone,
+  // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);
+  const locked = useExamLocked();
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
   const match = Option.getOrNull(matchOf(displayed.answers));
@@ -320,7 +332,7 @@ function LivePaper({
     choice !== null &&
     choice.options.length < CHOICE_OPTIONS_MAX &&
     !fixed &&
-    !frozen;
+    !locked;
 
   return (
     <QuestionPaper selected={chosen}>
@@ -335,7 +347,7 @@ function LivePaper({
           <MatchColumn
             chosen={chosen}
             editing={editing}
-            frozen={frozen}
+            frozen={locked}
             match={match}
             number={number}
             question={question}
@@ -344,7 +356,7 @@ function LivePaper({
           <MatchColumn
             chosen={chosen}
             editing={editing}
-            frozen={frozen}
+            frozen={locked}
             match={match}
             number={number}
             question={question}
@@ -357,7 +369,7 @@ function LivePaper({
           <TableColumn
             chosen={chosen}
             editing={editing}
-            frozen={frozen}
+            frozen={locked}
             number={number}
             question={question}
             side="statements"
@@ -366,7 +378,7 @@ function LivePaper({
           <TableColumn
             chosen={chosen}
             editing={editing}
-            frozen={frozen}
+            frozen={locked}
             number={number}
             question={question}
             side="columns"
@@ -381,7 +393,7 @@ function LivePaper({
               key={option.id}
               label={savedLabel(option)}
               letter={optionLetter(index)}
-              locked={frozen}
+              locked={locked}
               name={t("option-of", { letter: optionLetter(index), number })}
               onRemove={
                 choice.options.length > CHOICE_OPTIONS_MIN && !fixed

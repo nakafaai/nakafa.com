@@ -7,6 +7,7 @@ import {
 import {
   BEAKER_CONTENT_BOTTOM_Y,
   Particle,
+  ParticleElementContext,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Array as Arr, Schema } from "effect";
@@ -129,17 +130,16 @@ export function FloatingIons() {
 
   return (
     <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
-      {Arr.map(FLOATING_ION_POINTS, (point) => (
-        <Particle
-          color={colors.calcium}
-          key={Arr.join(Arr.map(point, String), ",")}
-          label=""
-          labelColor={colors.sphereText}
-          labelOutlineColor={colors.sphereTextOutline}
-          position={point}
-          radius={0.07}
-        />
-      ))}
+      <ParticleElementContext
+        value={{ color: colors.calcium, label: "", radius: 0.07 }}
+      >
+        {Arr.map(FLOATING_ION_POINTS, (point) => (
+          <Particle
+            key={Arr.join(Arr.map(point, String), ",")}
+            position={point}
+          />
+        ))}
+      </ParticleElementContext>
     </CameraBounds>
   );
 }
@@ -147,28 +147,30 @@ export function FloatingIons() {
 export function SettledSolid() {
   const { colors } = useChemicalReactionTypeScene();
   return (
-    <group>
-      {Arr.map(SETTLED_SOLID_POINTS, (point) => (
-        <Particle
-          color={colors.precipitate}
-          key={Arr.join(Arr.map(point, String), ",")}
-          label=""
-          labelColor={colors.text}
-          labelOutlineColor={colors.sphereTextOutline}
-          position={point}
-          radius={SETTLED_SOLID_RADIUS}
-        />
-      ))}
-    </group>
+    <ParticleElementContext
+      value={{
+        color: colors.precipitate,
+        label: "",
+        radius: SETTLED_SOLID_RADIUS,
+      }}
+    >
+      <group>
+        {Arr.map(SETTLED_SOLID_POINTS, (point) => (
+          <Particle
+            key={Arr.join(Arr.map(point, String), ",")}
+            position={point}
+          />
+        ))}
+      </group>
+    </ParticleElementContext>
   );
 }
 
-export function GasBubbles({ color }: { color: string }) {
+export function GasBubbles() {
   return (
     <CameraBounds bounds={BUBBLE_BOUNDS}>
       {Arr.map(BUBBLES, (bubble) => (
         <AnimatedBubble
-          color={color}
           key={Arr.join(Arr.map(bubble.position, String), ",")}
           {...bubble}
         />
@@ -177,12 +179,8 @@ export function GasBubbles({ color }: { color: string }) {
   );
 }
 
-function AnimatedBubble({
-  color,
-  phase,
-  position,
-  speed,
-}: GasBubble & { color: string }) {
+function AnimatedBubble({ phase, position, speed }: GasBubble) {
+  const color = useChemicalReactionTypeScene().colors.bubble;
   const meshRef = useRef<Mesh>(null);
   const [x, y, z] = position;
 

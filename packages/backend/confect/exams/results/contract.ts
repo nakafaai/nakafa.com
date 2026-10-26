@@ -53,6 +53,10 @@ export const Overview = Schema.Struct({
 export const StudentRow = Schema.Struct({
   answered: Schema.NullOr(Schema.Int),
   attemptId: Id("examAttempts"),
+  /** The seconds the student spent outside the exam in all, an indication only (K25). */
+  awaySeconds: Schema.NullOr(Schema.Int),
+  /** How many times the student left the exam, an indication only (K25). */
+  exits: Schema.NullOr(Schema.Int),
   name: PersonName,
   pending: Schema.NullOr(Schema.Int),
   points: Schema.NullOr(Schema.Int),
@@ -93,6 +97,9 @@ export const QuestionStats = Schema.Struct({
  * student typed, and the verdict. A question the student left unanswered chose no option.
  */
 const StudentAnswer = Schema.Struct({
+  /** The points the answer earned: the weight for a correct one, the teacher's grade, or none. */
+  earned: GradePoints,
+  id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
   points: QuestionPoints,
@@ -109,4 +116,14 @@ const StudentAnswer = Schema.Struct({
 export const StudentResult = Schema.Struct({
   points: Schema.Int,
   questions: Schema.Array(StudentAnswer),
+});
+
+/**
+ * One student's scored answers as a teacher reads them beside the students' list: the student's name,
+ * the points the attempt earned, and each question with its answer, its points, and its verdict.
+ */
+export const AttemptResult = Schema.Struct({
+  name: PersonName,
+  points: Schema.Int,
+  questions: StudentResult.fields.questions,
 });

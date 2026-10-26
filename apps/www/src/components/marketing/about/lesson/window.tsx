@@ -13,7 +13,15 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useEffect, useId, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  Suspense,
+  use,
+  useEffect,
+  useId,
+  useState,
+} from "react";
 import {
   LESSON_SUBJECTS,
   type Lesson,
@@ -77,8 +85,10 @@ const panelVariants = cva(
   }
 );
 
+/** The decimal separator of the page's locale, which every lab of the window writes its numbers with. */
+const LessonDecimalContext = createContext<DecimalSeparator | null>(null);
+
 interface LessonPanelProps {
-  readonly decimalSeparator: DecimalSeparator;
   readonly id: string;
   readonly labelledBy: string;
   readonly lesson: Lesson;
@@ -100,7 +110,6 @@ interface LessonPanelProps {
  * drawn, so the window would change height when the reader reaches it.
  */
 function LessonPanel({
-  decimalSeparator,
   id,
   labelledBy,
   lesson,
@@ -109,6 +118,10 @@ function LessonPanel({
   placeholder,
 }: LessonPanelProps) {
   const Lab = LESSON_LABS[lesson];
+  const decimalSeparator = use(LessonDecimalContext);
+  if (decimalSeparator === null) {
+    throw new Error("LessonPanel must be used within LessonWindow");
+  }
 
   return (
     <section
@@ -255,18 +268,19 @@ export function LessonWindow({
             ))}
           </ButtonGroup>
           <div className="grid grid-cols-1">
-            {Arr.map(LessonSchema.literals, (id) => (
-              <LessonPanel
-                decimalSeparator={decimalSeparator}
-                id={panelId(windowId, id)}
-                key={id}
-                labelledBy={buttonId(windowId, id)}
-                lesson={id}
-                live={revealed && id === lesson}
-                open={id === lesson}
-                placeholder={placeholders[id]}
-              />
-            ))}
+            <LessonDecimalContext value={decimalSeparator}>
+              {Arr.map(LessonSchema.literals, (id) => (
+                <LessonPanel
+                  id={panelId(windowId, id)}
+                  key={id}
+                  labelledBy={buttonId(windowId, id)}
+                  lesson={id}
+                  live={revealed && id === lesson}
+                  open={id === lesson}
+                  placeholder={placeholders[id]}
+                />
+              ))}
+            </LessonDecimalContext>
           </div>
         </Intersection>
       </div>

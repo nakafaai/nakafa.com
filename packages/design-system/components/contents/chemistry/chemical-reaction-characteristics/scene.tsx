@@ -260,7 +260,7 @@ function ReactionCueVisual({ phase }: { phase: ReactionPhase }) {
   }
 
   if (cueId === GAS_CUE_ID) {
-    return <GasBubbles color={colors.bubble} />;
+    return <GasBubbles />;
   }
 
   if (cueId === PRECIPITATE_CUE_ID) {
@@ -281,11 +281,11 @@ function ReactionCueVisual({ phase }: { phase: ReactionPhase }) {
 /**
  * Animates gas bubbles rising through the product side.
  */
-function GasBubbles({ color }: { color: string }) {
+function GasBubbles() {
   return (
     <group>
       {Arr.map(BUBBLES, (bubble) => (
-        <AnimatedBubble color={color} key={bubble.id} particle={bubble} />
+        <AnimatedBubble key={bubble.id} particle={bubble} />
       ))}
     </group>
   );
@@ -294,13 +294,8 @@ function GasBubbles({ color }: { color: string }) {
 /**
  * Renders one bubble with looping vertical motion.
  */
-function AnimatedBubble({
-  color,
-  particle,
-}: {
-  color: string;
-  particle: ReactionParticle;
-}) {
+function AnimatedBubble({ particle }: { particle: ReactionParticle }) {
+  const color = useReactionCharacteristicsColors().bubble;
   const bubbleRef = useRef<Group>(null);
   const [x, y, z] = particle.position;
   const speed = particle.speed ?? 0.35;
