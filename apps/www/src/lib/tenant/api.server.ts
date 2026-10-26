@@ -1,10 +1,11 @@
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Option, Schema } from "effect";
-import { HttpBody, HttpClient, HttpClientRequest } from "effect/http";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import { runServerEffect } from "@/lib/server/fn";
 import { CONVEX_SITE_URL } from "@/lib/server/runtime";
 import {
   ForwardedMethod,
+  forwardedBody,
   forwardedRequestHeaders,
   forwardedResponseHeaders,
   schoolApiTarget,
@@ -38,12 +39,7 @@ const forward = Effect.fn("www.tenant.api.forward")(
     if (!isForwardedMethod(method)) {
       return NOT_ALLOWED();
     }
-    const body =
-      method === "POST"
-        ? HttpBody.uint8Array(
-            new Uint8Array(yield* Effect.promise(() => request.arrayBuffer()))
-          )
-        : HttpBody.empty;
+    const body = yield* forwardedBody(request);
     const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
     const answer = yield* client.execute(
       HttpClientRequest.make(method)(target.value, {

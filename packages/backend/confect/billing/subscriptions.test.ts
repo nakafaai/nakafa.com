@@ -122,7 +122,6 @@ describe("billing/subscriptions", () => {
       const xendit = polarState(accountId, {
         provider: {
           kind: "xendit",
-          channel: "DANA",
           planId: "repl_1",
           tokenId: "pt_1",
         },

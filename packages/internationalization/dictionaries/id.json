@@ -63,6 +63,8 @@
     "all-exams": "Semua ujian"
   },
   "SchoolEntry": {
+    "username-placeholder": "ayu.lestari",
+    "password-placeholder": "Kata sandimu",
     "card-code-label": "Kode kartu",
     "card-code-placeholder": "Masuk pertama atau kartu baru",
     "card-expired": "Minta kartu baru ke guru atau admin, karena kartu ini sudah kedaluwarsa.",
@@ -177,6 +179,7 @@
     "apply": "Impor siswa"
   },
   "Exams": {
+    "minutes-placeholder": "10",
     "token": "Token",
     "change-token": "Ganti token",
     "close-sitting": "Tutup sesi",
@@ -227,6 +230,7 @@
     "lock": "Kunci",
     "unlock": "Buka kunci",
     "allow-device": "Izinkan perangkat kedua",
+    "student-more": "Aksi lain untuk {name}",
     "confirm-lock-title": "Kunci sesi {name}?",
     "confirm-lock-description": "Siswa tidak bisa menjawab sampai pengawas membuka kunci sesinya.",
     "confirm-lock-action": "Kunci sesi",
@@ -485,6 +489,12 @@
     "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom."
   },
   "SchoolSettings": {
+    "student-add-name-placeholder": "Ayu Lestari",
+    "invite-name-placeholder": "Budi Santoso",
+    "invite-email-placeholder": "budi@example.com",
+    "unit-add-name-placeholder": "SMA Harapan Bangsa",
+    "address-placeholder": "harapan-bangsa",
+    "name-placeholder": "Harapan Bangsa",
     "school": "Sekolah",
     "people": "Orang",
     "integrations": "Integrasi",
@@ -519,14 +529,16 @@
     "billing-school-footer": "Semua siswa sudah dibayar.",
     "billing-dialog-title": "Pilih periode",
     "billing-dialog-description": "Bayar per siswa terdaftar untuk sisa hari periode.",
-    "billing-dialog-seats": "Bayar per siswa terdaftar. Kursi diperpanjang sampai kamu membatalkannya.",
+    "billing-dialog-seats": "Bayar per siswa terdaftar, dengan kursi yang diperpanjang sampai kamu membatalkannya.",
     "billing-term-semester": "Semester ini",
     "billing-term-year": "Tahun ajaran ini",
     "billing-offer-month": "Setiap bulan",
     "billing-offer-year": "Setiap tahun",
     "billing-term-dates": "{start} sampai {end}",
-    "billing-quote": "{price} per siswa, {total} untuk {seats} siswa",
+    "billing-quote-term": "{seats} siswa sampai {date}",
+    "billing-quote-seats": "{seats} siswa, {price} per siswa",
     "billing-issue": "Buat invoice",
+    "billing-checkout": "Lanjut",
     "billing-invoices": "Invoice",
     "billing-invoices-description": "Semua invoice yang diterbitkan untuk sekolah.",
     "billing-invoices-footer": "Bayar invoice terbuka sebelum jatuh tempo.",
@@ -746,7 +758,8 @@
       "integration": {
         "created": "Klien dibuat",
         "rotated": "Rahasia diganti",
-        "revoked": "Klien dicabut"
+        "revoked": "Klien dicabut",
+        "authorized": "Perangkat terhubung"
       },
       "invite": {
         "expired": "Undangan kedaluwarsa",
@@ -970,7 +983,12 @@
     "cohorts-no-period-action": "Buka periode",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
     "policy-domains-invalid": "Periksa domain ini, satu di setiap baris: {domains}.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
+    "device-title": "Hubungkan perangkat",
+    "device-description": "Ketik kode dari Nakafa CLI agar perangkat itu membaca sekolah sebagai {name}.",
+    "device-code": "Kode perangkat",
+    "device-authorize": "Hubungkan",
+    "device-deny": "Tolak perangkat"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1680,6 +1698,15 @@
     "plan-pro-past-due-footer": "Perbarui metode pembayaranmu.",
     "plan-granted-description": "Pro aktif di akun ini.",
     "plan-granted-footer": "Nakafa tidak menagihnya.",
+    "plan-pass-description": "Pass Pro kamu berlaku sampai {date}.",
+    "plan-pass-footer": "Pass berikutnya mulai saat pass ini berakhir.",
+    "plan-pass-extend": "Perpanjang Pro",
+    "plan-xendit-footer": "Batalkan kapan saja; Pro tetap aktif sampai periode yang dibayar berakhir.",
+    "plan-xendit-ending-footer": "Tidak ada tagihan setelah periode ini.",
+    "plan-cancel": "Batalkan paket",
+    "plan-keep": "Tetap Pro",
+    "plan-cancel-title": "Batalkan Pro?",
+    "plan-cancel-description": "Pro tetap aktif sampai {date}, dan tidak ada tagihan setelahnya.",
     "period-start": "Periode mulai",
     "renews-on": "Diperpanjang pada",
     "ends-on": "Berakhir pada",
@@ -1761,7 +1788,16 @@
     "top-up-balance": "Kredit tambahan",
     "top-up-expires": "Berakhir {date}",
     "top-up-left": "Sisa {count, number}",
-    "buy-credits": "Beli kredit"
+    "buy-credits": "Beli kredit",
+    "payments": "Pembayaran",
+    "payments-description": "Pembayaran yang berhasil, dari yang terbaru.",
+    "payment-date": "Tanggal",
+    "payment-for": "Untuk",
+    "payment-amount": "Jumlah",
+    "payment-credits": "Kredit Nina",
+    "payment-cycle": "Langganan Pro",
+    "payment-invoice": "Tagihan",
+    "payment-pass": "Pass Pro"
   },
   "Editor": {
     "arabic": "Papan ketik Arab",
@@ -2347,6 +2383,16 @@
     "school-roster-export-failed": {
       "title": "File tidak tersimpan."
     },
+    "school-device-authorized": {
+      "title": "Perangkat sudah terhubung."
+    },
+    "school-device-denied": {
+      "title": "Perangkat ditolak."
+    },
+    "school-refusal-device-unknown": {
+      "title": "Kode perangkat tidak dikenal.",
+      "description": "Periksa kode di perangkat."
+    },
     "audit-export-error": {
       "title": "Jejak audit gagal diekspor.",
       "description": "Periksa koneksi, lalu coba lagi."
@@ -2596,7 +2642,14 @@
     "pro-feature-2": "{credits, number} kredit setiap bulan untuk tanya Nina",
     "pro-feature-3": "Pembahasan lengkap semua try out, termasuk percobaan sebelumnya",
     "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
-    "pro-cta": "Ambil Pro"
+    "pro-cta": "Ambil Pro",
+    "offer-title": "Pilih cara bayar",
+    "offer-description": "Paket bulanan diperpanjang otomatis, dan pass dibayar sekali.",
+    "offer-monthly": "Bulanan",
+    "offer-monthly-method": "Ditagih tiap bulan ke e-wallet atau kartu.",
+    "offer-pass": "Pass {months} bulan",
+    "offer-pass-method": "Sekali bayar via QRIS, transfer, e-wallet.",
+    "offer-continue": "Lanjut"
   },
   "PricingPage": {
     "metadata-title": "Harga Nakafa: Gratis dan Pro",

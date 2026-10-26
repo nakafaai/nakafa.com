@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { ProHolding } from "@repo/backend/confect/billing/schema";
 import {
   CheckoutSessionIoErrorWire,
   checkoutAdmissionArgsValidator,
@@ -67,10 +68,10 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.internalQuery({
-      name: "holdsPro",
+      name: "proHolding",
       args: () => ({
         userId: IdSchema("users"),
       }),
-      returns: () => Schema.Boolean,
+      returns: () => ProHolding,
     })
   );
