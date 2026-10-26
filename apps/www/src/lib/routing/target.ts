@@ -220,19 +220,16 @@ export function publicPathTarget(
 }
 
 /**
- * The typed target of an app address that a backend query returns as a URL, such
- * as `/en/curriculum/merdeka/class-11?ctx=...`. The first segment is the locale
- * the address was built for, the rest is the signed public path, and the query
- * carries the material context hint. An address that names no page has no target.
+ * The typed target of an app address that a backend query returns, such as
+ * `/subjects/mathematics/algebra/functions?ctx=...`: the signed public path in the
+ * locale the query read, with no locale segment, and the material context hint in
+ * its query. The link keeps the locale of the page on screen. An address that
+ * names no page has no target.
  */
 export function addressTarget(address: string): Option.Option<LinkTarget> {
   const url = new URL(address, SITE_ORIGIN);
-  const [, , ...publicSegments] = url.pathname.split("/");
-  if (publicSegments.length === 0) {
-    return Option.none();
-  }
   const context = url.searchParams.get("ctx") ?? undefined;
-  return publicPathTarget(Arr.join(publicSegments, "/"), context);
+  return publicPathTarget(url.pathname.slice(1), context);
 }
 
 /** The typed target of one Quran surah, which the Quran route names by its number. */

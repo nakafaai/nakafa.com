@@ -353,6 +353,23 @@ describe("published localized route ownership", () => {
   );
 
   it.effect(
+    "projects a surface's own index to its spelling in the chosen locale",
+    () =>
+      Effect.gen(function* () {
+        const href = yield* readPublishedLocalizedHref({
+          currentLocale: "id",
+          hash: "#sets",
+          locale: "en",
+          publicPath: "try-out",
+          search: "?exam=snbt",
+        });
+
+        expect(href).toBe("/try-out?exam=snbt#sets");
+        expect(publishedMocks.tryoutPath).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
     "projects signed try-out counterparts and fails closed for tombstones",
     () =>
       Effect.gen(function* () {

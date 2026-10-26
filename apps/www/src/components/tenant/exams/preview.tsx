@@ -32,12 +32,7 @@ import {
 } from "@/components/tenant/exams/sheet";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
-
-/**
- * The session name a thumbnail reads a prompt under. It never writes, so the server holds no
- * record of it, and the read answers the document alone.
- */
-const PREVIEW_CLIENT = "preview";
+import { PREVIEW_CLIENT } from "@/lib/tenant/exams";
 
 /**
  * A rich text of a question as a document to draw: the one its editor holds when the question is

@@ -64,8 +64,10 @@ const toggleGroupRootVariants = cva(
 const toggleGroupItemLayoutVariants = cva("", {
   variants: {
     layout: {
+      // Only the outline variant draws a border on each item, so only it drops the border between
+      // joined items and keeps the first one's; a default item has no border (as shadcn scopes it).
       default:
-        "group-data-[orientation=vertical]/toggle-group:w-full group-data-[orientation=vertical]/toggle-group:flex-none group-data-[orientation=vertical]/toggle-group:border-t-0 group-data-[orientation=horizontal]/toggle-group:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:border-t group-data-[orientation=horizontal]/toggle-group:first:border-l",
+        "group-data-[orientation=vertical]/toggle-group:w-full group-data-[orientation=vertical]/toggle-group:flex-none group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:border-t-0 group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:first:border-t group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:first:border-l",
       grid: "rounded-none border-0 bg-background hover:bg-accent hover:text-accent-foreground data-pressed:bg-accent",
     },
   },

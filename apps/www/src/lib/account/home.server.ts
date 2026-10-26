@@ -22,16 +22,31 @@ import type { ChatInput, LocaleInput } from "@/lib/account/input";
 import { readHomeTrendingSubjects } from "@/lib/content/trending";
 import { readOptional, readRequired } from "@/lib/data/read.server";
 
-/** Home: the onboarding gate, the account name and the recently viewed subjects. */
+/**
+ * Home: the onboarding gate, the account name and the recently viewed subjects.
+ * The gate's status and the page's reads go out together, so the screen waits on
+ * one Convex round trip instead of three.
+ */
 export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const status = yield* readRequired(
-        onboarding.queries.getStatus,
-        {},
-        token
-      );
+      const [status, messages, account, recentRows, trending] =
+        yield* Effect.all(
+          [
+            readRequired(onboarding.queries.getStatus, {}, token),
+            messagesFor(locale),
+            readOptional(auth.queries.getCurrentUser, {}, token),
+            readOptional(
+              contents.queries.recent.getRecentlyViewed,
+              { locale, limit: 5 },
+              token
+            ),
+            // The icon families stay on the server: each list passes only the looks it shows.
+            readHomeTrendingSubjects(locale),
+          ],
+          { concurrency: "unbounded" }
+        );
       if (!status.isAuthenticated) {
         return yield* redirectToAuth(locale);
       }
@@ -46,20 +61,9 @@ export const homeScreenHandler = accountHandler(
       }
       const t = createTranslator({
         locale,
-        messages: yield* messagesFor(locale),
+        messages,
         namespace: "Metadata",
       });
-      const [account, recentRows] = yield* Effect.all(
-        [
-          readOptional(auth.queries.getCurrentUser, {}, token),
-          readOptional(
-            contents.queries.recent.getRecentlyViewed,
-            { locale, limit: 5 },
-            token
-          ),
-        ],
-        { concurrency: "unbounded" }
-      );
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}`,
         description: t("description"),
@@ -67,8 +71,6 @@ export const homeScreenHandler = accountHandler(
         locale,
         title: t("title"),
       };
-      // The icon families stay on the server: each list passes only the looks it shows.
-      const trending = yield* readHomeTrendingSubjects(locale);
       const recentLooks = getMaterialLooks(recentRows ?? []);
       return {
         name: Option.getOrUndefined(

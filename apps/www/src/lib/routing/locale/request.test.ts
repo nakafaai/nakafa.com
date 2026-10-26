@@ -27,6 +27,26 @@ function neverAnswers() {
 }
 
 describe("requestLocalizedHref", () => {
+  it.effect(
+    "puts the chosen locale in front of the public spelling the endpoint answers",
+    () =>
+      Effect.gen(function* () {
+        const fetcher = vi
+          .fn<typeof fetch>()
+          .mockResolvedValueOnce(Response.json({ href: "/search?q=vektor" }))
+          .mockResolvedValueOnce(Response.json({ href: "/" }))
+          .mockResolvedValueOnce(Response.json({ href: "/kurikulum/merdeka" }));
+
+        expect(yield* request(fetcher)).toEqual({
+          href: "/id/search?q=vektor",
+        });
+        expect(yield* request(fetcher)).toEqual({ href: "/id" });
+        expect(yield* request(fetcher)).toEqual({
+          href: "/id/kurikulum/merdeka",
+        });
+      })
+  );
+
   it.effect("asks the route-owned endpoint for the chosen locale", () =>
     Effect.gen(function* () {
       const fetcher = vi
