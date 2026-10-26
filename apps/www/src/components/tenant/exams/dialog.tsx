@@ -31,7 +31,14 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { createContext, use, useId, useState, useTransition } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useId,
+  useState,
+  useTransition,
+} from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -50,17 +57,26 @@ import { placeholderExamId } from "@/components/tenant/exams/placeholder";
 
 /**
  * The drafts of the list or the home that holds the create action: the exams the server is still saving,
- * which the action starts and ends, and which their rows read. The page creates the store once and provides it.
+ * which the action starts and ends, and which their rows read.
  */
-export const ExamDraftsContext = createContext<StoreApi<ExamDrafts> | null>(
-  null
-);
+const ExamDraftsContext = createContext<StoreApi<ExamDrafts> | null>(null);
+
+/** Gives the page's create action and rows the drafts that the page creates once. */
+export function ExamDraftsProvider({
+  children,
+  drafts,
+}: {
+  children: ReactNode;
+  drafts: StoreApi<ExamDrafts>;
+}) {
+  return <ExamDraftsContext value={drafts}>{children}</ExamDraftsContext>;
+}
 
 /** Reads the page's drafts. It throws outside a page that provides them. */
 export function useExamDrafts() {
   const drafts = use(ExamDraftsContext);
   if (drafts === null) {
-    throw new Error("useExamDrafts must be used within ExamDraftsContext");
+    throw new Error("useExamDrafts must be used within ExamDraftsProvider");
   }
   return drafts;
 }

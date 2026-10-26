@@ -35,7 +35,7 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import {
   CreateExam,
-  ExamDraftsContext,
+  ExamDraftsProvider,
 } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
@@ -101,7 +101,7 @@ export function ExamList({
     !(loadingFirst || failed) &&
     Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
   return (
-    <ExamDraftsContext value={drafts}>
+    <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
         <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
           {empty ? null : <TableSearch placeholder={t("exams-search")} />}
@@ -125,7 +125,7 @@ export function ExamList({
           )}
         </div>
       </TableFiltersProvider>
-    </ExamDraftsContext>
+    </ExamDraftsProvider>
   );
 }
 

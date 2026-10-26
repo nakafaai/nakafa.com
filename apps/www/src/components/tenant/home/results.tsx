@@ -22,16 +22,25 @@ import {
 /** One closed sitting whose results the viewer may view, as the school home holds it. */
 type Result = (typeof HomeView.Type)["closed"][number];
 
-/** The releases in flight of the school home, which the home creates once and provides. */
-export const HomeReleasesContext = createContext<StoreApi<HomeReleases> | null>(
-  null
-);
+/** The releases in flight of the school home. */
+const HomeReleasesContext = createContext<StoreApi<HomeReleases> | null>(null);
+
+/** Gives the home's results the releases in flight, which the home creates once. */
+export function HomeReleasesProvider({
+  children,
+  releases,
+}: {
+  children: ReactNode;
+  releases: StoreApi<HomeReleases>;
+}) {
+  return <HomeReleasesContext value={releases}>{children}</HomeReleasesContext>;
+}
 
 /** Reads the home's releases. It throws outside the home, which always provides them. */
 function useHomeReleases() {
   const releases = use(HomeReleasesContext);
   if (releases === null) {
-    throw new Error("useHomeReleases must be used within TenantHome");
+    throw new Error("useHomeReleases must be used within HomeReleasesProvider");
   }
   return releases;
 }

@@ -7,7 +7,7 @@ import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import {
   CreateExam,
-  ExamDraftsContext,
+  ExamDraftsProvider,
 } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -22,7 +22,7 @@ import {
   useStudentSittings,
 } from "@/components/tenant/home/query";
 import { createHomeReleases } from "@/components/tenant/home/release";
-import { HomeReleasesContext } from "@/components/tenant/home/results";
+import { HomeReleasesProvider } from "@/components/tenant/home/results";
 import { StaffHome } from "@/components/tenant/home/staff";
 import { StudentHome } from "@/components/tenant/home/student";
 import { HomeGreeting } from "@/components/tenant/home/title";
@@ -55,8 +55,8 @@ export function TenantHome({ preload }: { preload: HomePreload }) {
   }
   return (
     <HomePreloadContext value={preload}>
-      <ExamDraftsContext value={drafts}>
-        <HomeReleasesContext value={releases}>
+      <ExamDraftsProvider drafts={drafts}>
+        <HomeReleasesProvider releases={releases}>
           <HomeClock key={serverNow} serverNow={serverNow}>
             <HomePage action={<HomeAction studentView={studentView} />}>
               {studentView ? (
@@ -68,8 +68,8 @@ export function TenantHome({ preload }: { preload: HomePreload }) {
               )}
             </HomePage>
           </HomeClock>
-        </HomeReleasesContext>
-      </ExamDraftsContext>
+        </HomeReleasesProvider>
+      </ExamDraftsProvider>
     </HomePreloadContext>
   );
 }
