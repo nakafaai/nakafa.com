@@ -12,13 +12,18 @@ import { useRef } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { ExamFooter } from "@/components/tenant/exams/footer";
+import { ExamGrid } from "@/components/tenant/exams/grid";
 import { ExamHeader, ExamLockedNote } from "@/components/tenant/exams/header";
 import {
   ExamPanel,
   ExamPanelProvider,
   ExamPanelSheet,
 } from "@/components/tenant/exams/panel";
-import { ExamProvider, useExamZoom } from "@/components/tenant/exams/provider";
+import {
+  ExamProvider,
+  useEditorView,
+  useExamZoom,
+} from "@/components/tenant/exams/provider";
 import { ExamToolbar } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
@@ -76,10 +81,12 @@ export function ExamEditor({
  * teacher's panel in a sheet from the footer. The panel has no default size of the canvas, so the
  * server draws the canvas as wide as the room the panel leaves, and the layout keeps that width once
  * the page loads. The zoom lives in the provider's store, which the canvas reads and the footer changes.
+ * The footer's grid button shows every question as a tile in place of the canvas and the panel.
  */
 function ExamWorkspace() {
   const canvas = useRef<HTMLElement>(null);
   const setZoom = useExamZoom((zoom) => zoom.set);
+  const grid = useEditorView((view) => view.mode === "grid");
 
   return (
     <ExamPanelProvider>
@@ -87,19 +94,23 @@ function ExamWorkspace() {
         <ExamHeader />
         <ExamToolbar />
         <ExamLockedNote />
-        {/* Below the large width the handle and the panel step aside, so the canvas takes the row. */}
-        <ResizablePanelGroup
-          className="max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden! min-h-0 flex-1"
-          orientation="horizontal"
-        >
-          <ResizablePanel className="flex min-w-0 flex-col" minSize="40%">
-            <ExamCanvas canvas={canvas} />
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize="30%" maxSize="50%" minSize="20%">
-            <ExamPanel />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        {grid ? (
+          <ExamGrid />
+        ) : (
+          // Below the large width the handle and the panel step aside, so the canvas takes the row.
+          <ResizablePanelGroup
+            className="max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden! min-h-0 flex-1"
+            orientation="horizontal"
+          >
+            <ResizablePanel className="flex min-w-0 flex-col" minSize="40%">
+              <ExamCanvas canvas={canvas} />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize="30%" maxSize="50%" minSize="20%">
+              <ExamPanel />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
         <ExamPanelSheet />
         <ExamFooter canvas={canvas} onZoom={setZoom} />
       </main>

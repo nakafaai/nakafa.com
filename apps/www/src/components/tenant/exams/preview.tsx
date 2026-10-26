@@ -248,7 +248,10 @@ function PartSketch({
           withControls={withControls}
         />
       ))}
-      {withControls && adds && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
+      {withControls &&
+      adds &&
+      !locked &&
+      parts.length < CHOICE_OPTIONS_MAX ? (
         <OptionAddRoom />
       ) : null}
     </div>

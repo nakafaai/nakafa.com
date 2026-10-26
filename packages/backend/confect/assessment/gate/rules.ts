@@ -24,6 +24,7 @@ export const rules = {
   finish: Rule.make({ deadline: "attempt", lock: "refuse" }),
   flag: Rule.make({ deadline: "live", lock: "refuse" }),
   paper: Rule.make({ deadline: "attempt", lock: "admit" }),
+  screen: Rule.make({ deadline: "attempt", lock: "admit" }),
   signal: Rule.make({ deadline: "attempt", lock: "admit" }),
   start: Rule.make({ deadline: "attempt", lock: "refuse" }),
 };

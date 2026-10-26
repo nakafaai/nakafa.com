@@ -62,6 +62,7 @@ export function useChatState(
   const {
     chat,
     current,
+    deleted,
     loadMoreTurns,
     turn,
     turnAt,
@@ -253,6 +254,7 @@ export function useChatState(
       canWrite,
       chat,
       chatId,
+      deleted,
       draft,
       isLoading: loading,
       isPending,
