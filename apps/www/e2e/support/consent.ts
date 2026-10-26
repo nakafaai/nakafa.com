@@ -231,8 +231,8 @@ export const openConsentPreferences = Effect.fn(
   return { popup, trigger };
 });
 
-/** The first words of the usage-data prompt's description in English. */
-export const PROMPT_DESCRIPTION = "Allow Nakafa to see which features you use";
+/** The usage-data prompt's one-sentence description in English. */
+export const PROMPT_DESCRIPTION = en.AnalyticsConsent.description;
 
 /** A phone, where the prompt covers the lower part of the lesson. */
 export const compactContext: BrowserContextOptions = {

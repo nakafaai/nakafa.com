@@ -191,6 +191,7 @@ export function SchoolCohortMenu({
             <Input
               id={`${id}-name`}
               onChange={(event) => setName(event.target.value)}
+              placeholder={t("cohort-name-placeholder")}
               value={name}
             />
           </Field>
