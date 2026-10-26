@@ -1523,6 +1523,8 @@
     "curriculum-placeholder": "Lehrplan auswählen",
     "memory": "Erinnerungen",
     "memory-description": "Was Nina über dich weiß und in jedem Chat nutzt.",
+    "connectors": "Konnektoren",
+    "connectors-description": "Google Drive und Kalender, die Nina nur für dich liest.",
     "delete-account": "Konto löschen",
     "delete-account-description": "Lösche dein Profil und deine personenbezogenen Daten dauerhaft von Nakafa.",
     "delete-account-footer": "Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -2556,5 +2558,25 @@
       "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Koran.",
       "keywords": "Sure {name}, Koran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "Connectors": {
+    "drive": "Google Drive",
+    "drive-description": "Dateien, die du in Google Drive auswählst, für Notizen und Importe.",
+    "calendar": "Google Kalender",
+    "calendar-description": "Deine nächsten Termine, damit Nina sagen kann, was diese Woche ansteht.",
+    "classroom": "Google Classroom",
+    "classroom-description": "Deine Classroom-Kurse, ihre Schüler und Aufgaben, um sie in die Schule zu holen.",
+    "connect": "Verbinden",
+    "reconnect": "Neu verbinden",
+    "reconnect-hint": "Google nimmt diese Verbindung nicht mehr an.",
+    "connected": "Verbunden.",
+    "not-connected": "Nicht verbunden.",
+    "disconnect": "Trennen",
+    "disconnect-title": "{name} trennen",
+    "disconnect-description": "Nakafa liest es sofort nicht mehr. Entferne Nakafa in deinem Google-Konto, damit der Zugriff auch dort endet.",
+    "none": "Noch kein Konnektor",
+    "none-description": "Konnektoren erscheinen hier, sobald Google sie geprüft hat.",
+    "refused": "Nicht verbunden",
+    "refused-description": "Google hat nicht jeden Zugriff erlaubt, den dieser Konnektor braucht. Verbinde neu und lass jedes Häkchen gesetzt."
   }
 }

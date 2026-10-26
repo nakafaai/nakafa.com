@@ -1,5 +1,8 @@
 import { Schema } from "effect";
 
+/** The path of the one callback of the connectors project on each site (ADR 0015). */
+export const CALLBACK_PATH = "/api/connectors/google/callback";
+
 /** The prefix of every Google scope that a connector asks for. */
 const SCOPE_ROOT = "https://www.googleapis.com/auth/";
 

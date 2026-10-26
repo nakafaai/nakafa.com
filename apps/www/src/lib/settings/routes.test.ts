@@ -19,6 +19,7 @@ describe("user settings routes", () => {
       ["/$locale/user/settings/learning", "learning", "personal"],
       ["/$locale/user/settings/subscriptions", "billing", "personal"],
       ["/$locale/user/settings/memory", "memory", "ai"],
+      ["/$locale/user/settings/connectors", "connectors", "ai"],
     ]);
   });
 
@@ -30,7 +31,7 @@ describe("user settings routes", () => {
       ])
     ).toEqual([
       ["personal", ["account", "learning", "billing"]],
-      ["ai", ["memory"]],
+      ["ai", ["memory", "connectors"]],
     ]);
   });
 
@@ -41,6 +42,7 @@ describe("user settings routes", () => {
       "/$locale/user/settings",
       "/$locale/user/settings",
       "/$locale/user/settings",
+      "/$locale/user/settings/memory",
       "/$locale/user/settings/memory",
     ]);
   });
