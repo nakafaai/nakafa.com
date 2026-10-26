@@ -2292,6 +2292,7 @@
       "nakafa": "Content search failed",
       "deepResearch": "Web research failed",
       "memory": "Memory search failed",
+      "calendar": "Calendar read failed",
       "unknown": "Check failed"
     },
     "review-credits": "View credits",
@@ -2314,6 +2315,7 @@
       "nakafa": "Finding learning materials",
       "deepResearch": "Researching web sources",
       "memory": "Recalled memories",
+      "calendar": "Read the calendar",
       "unknown": "Checking information",
       "stopped": "Stopped",
       "partial": "Partly done",

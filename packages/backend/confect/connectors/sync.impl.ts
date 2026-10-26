@@ -14,6 +14,7 @@ import { upcomingEvents } from "@repo/backend/confect/connectors/google/calendar
 import { courseWork } from "@repo/backend/confect/connectors/google/classroom";
 import { readGoogleClient } from "@repo/backend/confect/connectors/google/client";
 import { refreshAccess } from "@repo/backend/confect/connectors/google/oauth";
+import { eventTitleField } from "@repo/backend/confect/connectors/mirror";
 import { openRefreshToken } from "@repo/backend/confect/connectors/secret";
 import spec from "@repo/backend/confect/connectors/sync.spec";
 import { Space } from "@repo/backend/confect/space";
@@ -57,16 +58,6 @@ const nextInterval = (changed: boolean) =>
 
 /** The most stored events of one connection that a sync replaces. */
 const MIRROR_READ = 200;
-
-/** The sealed field of an event's title, bound to its connection and its event (ADR 0030). */
-const titleField = (
-  connectionId: GenericId.GenericId<"connectorConnections">,
-  eventId: string
-) => ({
-  field: "sealedTitle",
-  row: [connectionId, eventId],
-  table: "connectorEvents",
-});
 
 /** Whose sync a run counts against: the school of a school connection, or the account. */
 const ownerKey = (owner: Space) =>
@@ -302,7 +293,7 @@ const storeEvents = FunctionImpl.make(
       (event) =>
         sealText(
           keys,
-          titleField(connectionId, event.eventId),
+          eventTitleField(connectionId, event.eventId),
           event.title
         ).pipe(
           Effect.flatMap((sealedTitle) =>

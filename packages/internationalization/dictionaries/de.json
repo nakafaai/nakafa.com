@@ -2292,6 +2292,7 @@
       "nakafa": "Inhaltssuche fehlgeschlagen",
       "deepResearch": "Webrecherche fehlgeschlagen",
       "memory": "Erinnerungssuche fehlgeschlagen",
+      "calendar": "Kalender konnte nicht gelesen werden",
       "unknown": "Prüfung fehlgeschlagen"
     },
     "review-credits": "Credits ansehen",
@@ -2314,6 +2315,7 @@
       "nakafa": "Lernmaterial suchen",
       "deepResearch": "Quellen im Web recherchieren",
       "memory": "Erinnerungen abrufen",
+      "calendar": "Kalender gelesen",
       "unknown": "Informationen prüfen",
       "stopped": "Beendet",
       "partial": "Teilweise fertig",
