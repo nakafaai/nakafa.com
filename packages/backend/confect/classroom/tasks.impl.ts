@@ -1,11 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassroomSubmissionsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
@@ -13,36 +11,25 @@ import {
   classAccess,
   classAuthority,
 } from "@repo/backend/confect/classroom/authority";
-import { classSlugOf } from "@repo/backend/confect/classroom/class";
 import {
   ScoreOutOfRange,
   TaskClosed,
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import {
-  submissionField,
-  taskField,
-} from "@repo/backend/confect/classroom/tasks/task";
+import { submissionField } from "@repo/backend/confect/classroom/tasks/task";
 import {
   classTask,
   ownSubmission,
   taskView,
 } from "@repo/backend/confect/classroom/tasks/views";
+import { writeTask } from "@repo/backend/confect/classroom/tasks/write";
 import spec from "@repo/backend/confect/classroom/tasks.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import {
-  Array as Arr,
-  Clock,
-  Duration,
-  Effect,
-  Layer,
-  Option,
-  Struct,
-} from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /** One page of the class's tasks by deadline, the soonest first. */
 const list = FunctionImpl.make(
@@ -73,97 +60,17 @@ const get = FunctionImpl.make(
 );
 
 /**
- * The first free address of a title in a class: the title's own form, then the
- * same with `-2`, `-3`, and on. A title with no letter or digit takes `tugas`.
- */
-const freeAddress = Effect.fn("classroom.tasks.address")(function* (
-  title: string
-) {
-  const row = yield* Class;
-  const reader = yield* DatabaseReader;
-  const base = classSlugOf(title) || "tugas";
-  const firstFree = (index: number): Effect.Effect<string> => {
-    const slug = index === 1 ? base : `${base}-${index}`;
-    return reader
-      .table("classroomTasks")
-      .index("by_classId_and_slug", (query) =>
-        query.eq("classId", row._id).eq("slug", slug)
-      )
-      .first()
-      .pipe(
-        Effect.orDie,
-        Effect.flatMap((taken) =>
-          Option.isNone(taken) ? Effect.succeed(slug) : firstFree(index + 1)
-        )
-      );
-  };
-  return yield* firstFree(1);
-});
-
-/**
- * Publishes a task to the class: its text sealed with the school key, under the
- * first free address of its title, and records `assignment.published`, the
- * published change. The fan-out writes the inbox row of each member of the class,
- * scheduled in the same transaction (ADR 0027). A repeat of a client key of the
- * class answers that task and writes nothing.
+ * Publishes a task to the class for the teacher (`writeTask`). A repeat of a
+ * client key of the class answers that task and writes nothing.
  */
 const publish = FunctionImpl.make(
   databaseSchema,
   spec,
   "publish",
-  Effect.fn("classroom.tasks.publish")(function* ({
-    clientKey,
-    deadline,
-    latePolicy,
-    points,
-    text,
-    title,
-  }) {
+  Effect.fn("classroom.tasks.publish")(function* (args) {
     const { person } = yield* Member;
-    const row = yield* Class;
-    const reader = yield* DatabaseReader;
-    const sent = yield* reader
-      .table("classroomTasks")
-      .index("by_classId_and_clientKey", (query) =>
-        query.eq("classId", row._id).eq("clientKey", clientKey)
-      )
-      .first()
-      .pipe(Effect.orDie);
-    if (Option.isSome(sent)) {
-      return yield* taskView(sent.value);
-    }
-    const fields = { classId: row._id, clientKey };
-    const taskId = yield* (yield* DatabaseWriter)
-      .table("classroomTasks")
-      .insert({
-        ...fields,
-        authorId: person._id,
-        createdAt: yield* Clock.currentTimeMillis,
-        deadline,
-        handedIn: 0,
-        latePolicy,
-        points,
-        sealedText: yield* sealText(
-          yield* schoolKeys(row.tenantId),
-          taskField(fields),
-          text
-        ).pipe(Effect.orDie),
-        slug: yield* freeAddress(title),
-        tenantId: row.tenantId,
-        title,
-      })
-      .pipe(Effect.orDie);
-    yield* classAuthority.record(personActor(person), row, {
-      task: taskId,
-      type: "assignment.published",
-    });
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      refs.internal.notifications.fanout.run,
-      { cursor: null, phase: "students", source: { _tag: "task", taskId } }
-    );
     return yield* taskView(
-      yield* reader.table("classroomTasks").get(taskId).pipe(Effect.orDie)
+      yield* writeTask(person, Struct.omit(args, ["classId", "slug"]))
     );
   })
 );

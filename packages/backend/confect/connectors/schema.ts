@@ -131,3 +131,68 @@ export const ConnectOutcome = Schema.Struct({
   location: Schema.String,
   outcome: Schema.Literals(["connected", "cancelled", "refused"]),
 });
+
+/**
+ * One upcoming event of a Calendar connection, in the mirror that Nina reads
+ * (ADR 0015): when it starts and ends in UTC, whether it is a whole day, and its
+ * title sealed under the account's own key, bound to the connection and the
+ * event. A sync replaces a connection's events, and a disconnect deletes them.
+ */
+export const connectorEventValidator = Schema.Struct({
+  allDay: Schema.Boolean,
+  connectionId: Id("connectorConnections"),
+  end: Schema.Finite,
+  eventId: Schema.NonEmptyString,
+  sealedTitle: Sealed,
+  start: Schema.Finite,
+  userId: Id("users"),
+});
+
+/** One upcoming event as a sync reads it from Google: its title, and when it starts and ends in UTC. */
+export const CalendarEvent = Schema.Struct({
+  allDay: Schema.Boolean,
+  end: Schema.Finite,
+  eventId: Schema.NonEmptyString,
+  start: Schema.Finite,
+  title: Schema.String,
+});
+
+/** One course that a connected teacher teaches in Google Classroom, as an import preview lists it. */
+export const ClassroomCourse = Schema.Struct({
+  courseId: Schema.NonEmptyString,
+  name: Schema.String,
+  section: Schema.NullOr(Schema.String),
+});
+
+/** One piece of published Classroom coursework with a deadline, which an import makes a task. */
+export const ClassroomWork = Schema.Struct({
+  deadline: Schema.Finite,
+  points: Schema.Finite,
+  text: Schema.String,
+  title: Schema.String,
+  workId: Schema.NonEmptyString,
+});
+
+/**
+ * One course of a Classroom import preview: the course, how many students it
+ * has, and the Nakafa class it is linked to, if one is.
+ */
+export const ClassroomPreview = Schema.Struct({
+  ...ClassroomCourse.fields,
+  classId: Schema.NullOr(Id("classes")),
+  students: Schema.Int,
+});
+
+/**
+ * The link of one Google Classroom course to one Nakafa class (ADR 0015): the
+ * school connection that reads it, and the member who linked it, whom the tasks
+ * it imports name as their author. A sync imports the course's coursework into
+ * the class's tasks.
+ */
+export const connectorLinkValidator = Schema.Struct({
+  classId: Id("classes"),
+  connectionId: Id("connectorConnections"),
+  courseId: Schema.NonEmptyString,
+  personId: Id("tenantPeople"),
+  tenantId: Id("tenants"),
+});

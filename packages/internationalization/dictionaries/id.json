@@ -2577,6 +2577,17 @@
     "none": "Belum ada konektor",
     "none-description": "Konektor terbuka di sini setelah Google meninjaunya.",
     "refused": "Tidak terhubung",
-    "refused-description": "Google tidak mengizinkan semua akses yang dibutuhkan konektor ini. Hubungkan lagi dan biarkan semua kotak tercentang."
+    "refused-description": "Google tidak mengizinkan semua akses yang dibutuhkan konektor ini. Hubungkan lagi dan biarkan semua kotak tercentang.",
+    "courses": "Kelas di Classroom",
+    "courses-description": "Kursus yang kamu ajar di Google Classroom. Pilih kelas untuk tiap kursus, dan tugas kursusnya masuk sebagai tugas kelas itu.",
+    "courses-hint": "Siswa bergabung lewat undangan mereka sendiri.",
+    "courses-show": "Tampilkan kursus",
+    "courses-refresh": "Baca lagi",
+    "courses-none": "Tidak ada kursus aktif di akun Classroom ini.",
+    "course": "Kursus",
+    "course-students": "Siswa",
+    "course-class": "Kelas",
+    "course-unlinked": "Tidak diimpor",
+    "course-name": "{name} {section}"
   }
 }

@@ -6,6 +6,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
   MutationRunner,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { requireAuth } from "@repo/backend/confect/auth/session";
@@ -320,7 +321,9 @@ const finish = FunctionImpl.make(
 /**
  * Stores a finished connection. A connection of the same owner, connector, and
  * Google account that is still active or waits to reconnect ends first, so
- * connecting again replaces it and never leaves two. The journal names the
+ * connecting again replaces it and never leaves two. A connector that keeps a
+ * copy syncs at once, so a new Calendar shows its events without waiting for a
+ * sweep. The journal names the
  * school member for a school connection and the account for a personal one.
  */
 const store = FunctionImpl.make(
@@ -353,12 +356,25 @@ const store = FunctionImpl.make(
       (row) => disconnect(actor, row),
       { discard: true }
     );
-    return yield* connect(actor, args.owner, {
+    const connectionId = yield* connect(actor, args.owner, {
       connector: args.connector,
       googleSubject: args.subject,
       refreshToken: args.refreshToken,
       scopes: args.scopes,
     });
+    if (GOOGLE_MANIFEST[args.connector].syncs) {
+      const now = yield* Clock.currentTimeMillis;
+      yield* (yield* DatabaseWriter)
+        .table("connectorConnections")
+        .patch(connectionId, { nextSyncAt: now })
+        .pipe(Effect.orDie);
+      yield* (yield* Scheduler)
+        .runAfter(Duration.zero, refs.internal.connectors.sync.run, {
+          connectionId,
+        })
+        .pipe(Effect.orDie);
+    }
+    return connectionId;
   })
 );
 

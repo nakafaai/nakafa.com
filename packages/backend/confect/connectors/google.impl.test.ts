@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
-import { slugOf, TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  scheduledJobs,
+  slugOf,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 import { Base64Url } from "effect/encoding";
@@ -65,7 +70,10 @@ describe("connectors/google", () => {
     fetcher.mockReset();
     vi.stubEnv("SITE_URL", "http://localhost:3000");
     vi.stubEnv("GOOGLE_CONNECTORS", "drive, calendar,unknown,classroom,drive");
-    vi.stubEnv("GOOGLE_CONNECTOR_CLIENT_ID", "client.apps.googleusercontent.com");
+    vi.stubEnv(
+      "GOOGLE_CONNECTOR_CLIENT_ID",
+      "client.apps.googleusercontent.com"
+    );
     vi.stubEnv("GOOGLE_CONNECTOR_CLIENT_SECRET", "test-secret");
   });
 
@@ -135,9 +143,9 @@ describe("connectors/google", () => {
             Effect.flip
           )
         ).toMatchObject({ _tag: "ConnectorOff" });
-        expect(yield* start("classroom", CALLBACK).pipe(Effect.flip)).toMatchObject(
-          { _tag: "ConnectorOff" }
-        );
+        expect(
+          yield* start("classroom", CALLBACK).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "ConnectorOff" });
       })
   );
 
@@ -299,6 +307,46 @@ describe("connectors/google", () => {
             })
             .pipe(Effect.flip)
         ).toMatchObject({ _tag: "ConnectorOff" });
+      })
+  );
+
+  it.effect(
+    "syncs a new Calendar connection at once, and leaves a Drive connection without a sync",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const student = fixture.as("student");
+        const finishWith = (connector: "calendar" | "drive", scope: string) =>
+          Effect.gen(function* () {
+            const started = yield* student.mutation(google.startPersonal, {
+              connector,
+              redirectUri: CALLBACK,
+              returnPath: OWN_PAGE,
+            });
+            fetcher.mockResolvedValueOnce(
+              granted(`${connector}-subject`, [scope])
+            );
+            yield* student.action(google.finish, {
+              code: "code",
+              state: stateOf(started.url),
+            });
+          });
+        yield* finishWith(
+          "calendar",
+          "https://www.googleapis.com/auth/calendar.events.readonly"
+        );
+        yield* finishWith("drive", DRIVE);
+        const listed = yield* student.query(listOwn, firstPage);
+        expect(
+          Arr.map(listed.page, (row) => [row.connector, row.nextSyncAt])
+        ).toEqual([
+          ["drive", null],
+          ["calendar", TENANCY_NOW],
+        ]);
+        const runs = Arr.filter(yield* fixture.run(scheduledJobs), (job) =>
+          job.name.includes("sync")
+        );
+        expect(runs).toHaveLength(1);
       })
   );
 });

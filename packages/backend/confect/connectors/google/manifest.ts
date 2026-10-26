@@ -28,16 +28,21 @@ export type GoogleConnector = typeof GoogleConnector.Type;
  * before the connector reaches production users: Drive's `drive.file` is
  * non-sensitive, Calendar's scope is sensitive, and Google's pages give no class
  * for the Classroom scopes, so Classroom waits for the Data Access panel.
+ * `syncs` says whether a connection keeps a copy that a sync refreshes: Calendar
+ * keeps its coming events, Classroom the tasks of its linked courses; Drive reads
+ * only the files a user picks.
  */
 export const GOOGLE_MANIFEST = {
   calendar: {
     owner: "personal",
     review: true,
+    syncs: true,
     scopes: [`${SCOPE_ROOT}calendar.events.readonly`],
   },
   classroom: {
     owner: "school",
     review: true,
+    syncs: true,
     scopes: [
       `${SCOPE_ROOT}classroom.courses.readonly`,
       `${SCOPE_ROOT}classroom.rosters.readonly`,
@@ -47,6 +52,7 @@ export const GOOGLE_MANIFEST = {
   drive: {
     owner: "personal",
     review: false,
+    syncs: false,
     scopes: [`${SCOPE_ROOT}drive.file`],
   },
 } as const satisfies Record<
@@ -55,6 +61,7 @@ export const GOOGLE_MANIFEST = {
     readonly owner: "personal" | "school";
     readonly review: boolean;
     readonly scopes: readonly string[];
+    readonly syncs: boolean;
   }
 >;
 

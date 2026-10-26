@@ -11,7 +11,10 @@ import { Array as Arr, Effect, Option } from "effect";
 import { useConvexAuth } from "@/components/auth/convex";
 import { connectCallback } from "@/components/connectors/address";
 import { ConnectorList } from "@/components/connectors/list";
-import { disconnectSchoolUpdate } from "@/components/connectors/optimistic";
+import {
+  currentConnection,
+  disconnectSchoolUpdate,
+} from "@/components/connectors/optimistic";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import {
@@ -19,6 +22,7 @@ import {
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { ClassroomImport } from "@/components/tenant/connectors/classroom";
 import { useTenant } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { SettingsPage } from "@/components/tenant/settings/section";
@@ -85,42 +89,49 @@ function SchoolConnections({
     return null;
   }
 
+  const classroom = currentConnection(connections.results, "classroom");
+
   return (
-    <ConnectorList
-      connections={connections.results}
-      offered={Arr.filter(
-        offered.value,
-        (connector) => GOOGLE_MANIFEST[connector].owner === "school"
-      )}
-      onConnect={(connector) =>
-        runForumCall(
-          forumCall(() =>
-            start({
-              connector,
-              redirectUri: connectCallback(window.location, slug),
-              returnPath: RETURN_PATH,
-              slug,
-            })
-          ).pipe(
-            Effect.tap(({ url }) =>
-              Effect.sync(() => window.location.assign(url))
-            )
-          ),
-          toastForumFailure
-        )
-      }
-      onDisconnect={(connection) =>
-        runForumCall(
-          forumCall(() =>
-            disconnect.withOptimisticUpdate(disconnectSchoolUpdate)({
-              connectionId: connection.id,
-              slug,
-            })
-          ),
-          toastForumFailure
-        )
-      }
-      outcome={outcome}
-    />
+    <div className="flex flex-col gap-6">
+      <ConnectorList
+        connections={connections.results}
+        offered={Arr.filter(
+          offered.value,
+          (connector) => GOOGLE_MANIFEST[connector].owner === "school"
+        )}
+        onConnect={(connector) =>
+          runForumCall(
+            forumCall(() =>
+              start({
+                connector,
+                redirectUri: connectCallback(window.location, slug),
+                returnPath: RETURN_PATH,
+                slug,
+              })
+            ).pipe(
+              Effect.tap(({ url }) =>
+                Effect.sync(() => window.location.assign(url))
+              )
+            ),
+            toastForumFailure
+          )
+        }
+        onDisconnect={(connection) =>
+          runForumCall(
+            forumCall(() =>
+              disconnect.withOptimisticUpdate(disconnectSchoolUpdate)({
+                connectionId: connection.id,
+                slug,
+              })
+            ),
+            toastForumFailure
+          )
+        }
+        outcome={outcome}
+      />
+      {Option.exists(classroom, (row) => row.status === "active") ? (
+        <ClassroomImport />
+      ) : null}
+    </div>
   );
 }
