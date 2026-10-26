@@ -323,7 +323,16 @@
     "presence-more": "{names} sedang mengedit",
     "template-choice": "Pilihan ganda",
     "template-choices": "Pilihan ganda kompleks",
-    "template-label": "Jenis soal: {type}"
+    "template-label": "Jenis soal: {type}",
+    "template-truefalse": "Benar-salah",
+    "template-cause": "Sebab-akibat",
+    "truefalse-true": "Benar",
+    "truefalse-false": "Salah",
+    "cause-related": "Pernyataan dan alasan benar serta berhubungan",
+    "cause-unrelated": "Pernyataan dan alasan benar tetapi tidak berhubungan",
+    "cause-reason-false": "Pernyataan benar dan alasan salah",
+    "cause-statement-false": "Pernyataan salah dan alasan benar",
+    "cause-both-false": "Pernyataan dan alasan salah"
   },
   "SchoolSettings": {
     "school": "Sekolah",

@@ -1,34 +1,53 @@
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { ensureRowSize } from "@repo/backend/confect/editor/document";
-import { RevisionStale } from "@repo/backend/confect/exams/errors";
+import {
+  AnswersDoNotFit,
+  RevisionStale,
+} from "@repo/backend/confect/exams/errors";
 import {
   encodeAnswers,
   encodeKey,
+  fixedOptions,
   type QuestionTemplate,
   questionView,
 } from "@repo/backend/confect/exams/question";
 import { asTemplate } from "@repo/backend/confect/exams/template";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 /**
  * Gives one question another template at the revision the editor saw: its answers take the
- * template's bounds and its key stays only when it still fits (`asTemplate`), and the revision
- * rises by one. A revision that is no longer current is refused as `RevisionStale` and writes
- * nothing, and the question's own template saves nothing.
+ * template's bounds, or the options it fixes labelled with `labels`, and its key stays only when it
+ * still fits (`asTemplate`), and the revision rises by one. A revision that is no longer current is
+ * refused as `RevisionStale`, and labels that do not name each fixed option once, or that a
+ * template without fixed options is given, are refused as `AnswersDoNotFit`; neither writes
+ * anything, and the question's own template saves nothing.
  */
 export const switchTemplate = Effect.fn("exams.question.template")(function* (
   question: ExamQuestionsDoc,
-  edit: { readonly revision: number; readonly template: QuestionTemplate }
+  edit: {
+    readonly labels: readonly string[];
+    readonly revision: number;
+    readonly template: QuestionTemplate;
+  }
 ) {
   if (question.revision !== edit.revision) {
     return yield* new RevisionStale({ current: question.revision });
+  }
+  const labelled = Option.getOrElse(fixedOptions(edit.template), () => 0);
+  if (edit.labels.length !== labelled) {
+    return yield* new AnswersDoNotFit();
   }
   if (question.template === edit.template) {
     return;
   }
   const view = yield* questionView(question);
-  const converted = asTemplate(edit.template, view.answers, view.key);
+  const converted = asTemplate(
+    edit.template,
+    view.answers,
+    view.key,
+    edit.labels
+  );
   const at = yield* Clock.currentTimeMillis;
   const answers = yield* encodeAnswers(converted.answers);
   const key = converted.key === null ? null : yield* encodeKey(converted.key);

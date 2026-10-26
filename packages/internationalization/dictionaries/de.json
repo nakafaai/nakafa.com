@@ -323,7 +323,16 @@
     "presence-more": "{names} bearbeiten gerade",
     "template-choice": "Einfachauswahl",
     "template-choices": "Mehrfachauswahl",
-    "template-label": "Fragetyp: {type}"
+    "template-label": "Fragetyp: {type}",
+    "template-truefalse": "Richtig oder falsch",
+    "template-cause": "Ursache und Wirkung",
+    "truefalse-true": "Richtig",
+    "truefalse-false": "Falsch",
+    "cause-related": "Aussage und Begründung sind richtig und hängen zusammen",
+    "cause-unrelated": "Aussage und Begründung sind richtig, hängen aber nicht zusammen",
+    "cause-reason-false": "Die Aussage ist richtig und die Begründung falsch",
+    "cause-statement-false": "Die Aussage ist falsch und die Begründung richtig",
+    "cause-both-false": "Aussage und Begründung sind falsch"
   },
   "SchoolSettings": {
     "school": "Schule",

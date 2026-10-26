@@ -1,48 +1,33 @@
-import { useMutation } from "@confect/react";
 import { Add01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
-import { useCallbackRef } from "@mantine/hooks";
-import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
-  type QuestionTemplate,
+  fixedOptions,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
-import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Effect, Option } from "effect";
-import {
-  lazy,
-  type RefObject,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Array as Arr, Option } from "effect";
+import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,
   keyWithoutOption,
-  markedKey,
-  markedOptions,
   type OptionLabel,
   optionLetter,
-  toggledKey,
   withOptionAdded,
   withOptionLabel,
   withOptionRemoved,
 } from "@/components/tenant/exams/answer";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
+import {
+  type QuestionEditing,
+  useQuestionEditing,
+} from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
-import {
-  answerUpdate,
-  type Question,
-  templateUpdate,
-} from "@/components/tenant/exams/optimistic";
+import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { TeacherPortal } from "@/components/tenant/exams/panel";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -55,11 +40,6 @@ import { activeQuestion } from "@/components/tenant/exams/selection";
 import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
 import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
-import {
-  makeQuestionWriter,
-  type QuestionDraft,
-  type QuestionWrite,
-} from "@/components/tenant/exams/writer";
 
 /**
  * The prompt loads when a page mounts its editors, never with the page. Until it loads, the page
@@ -82,147 +62,6 @@ interface ExamPageProps {
   /** The question the page shows. */
   readonly question: Question;
 }
-
-/**
- * The answers and the key of one question as its page shows them, with the saves that change them.
- * The page owns the writer, so the paper's option labels and the layer's key save in the same order,
- * and each save starts from the newest draft the writer knows. A change shows at once, and the page
- * shows the server's answer once every save of the question has settled.
- */
-function useQuestionEditing(question: Question) {
-  const { exam, slug } = useExam();
-  const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
-    answerUpdate
-  );
-  const retemplate = useMutation(exams.questions.template).withOptimisticUpdate(
-    templateUpdate
-  );
-  // The writer sends through the latest mutations. It keeps the saves of this question in order, and each
-  // save starts from the newer of the draft its last answer returned and the question the render holds. A
-  // save that changes the template sends the template's call, which converts the answers on the server.
-  const send = useCallbackRef((draft: QuestionDraft, base: QuestionDraft) =>
-    sentAction(() =>
-      draft.template === base.template
-        ? answer({
-            answers: draft.answers,
-            examId: exam.id,
-            key: draft.key,
-            questionId: question.id,
-            revision: draft.revision,
-            slug,
-          })
-        : retemplate({
-            examId: exam.id,
-            questionId: question.id,
-            revision: draft.revision,
-            slug,
-            template: draft.template,
-          })
-    ).pipe(
-      Effect.map((view) => ({
-        answers: view.answers,
-        key: view.key,
-        revision: view.revision,
-        template: view.template,
-      }))
-    )
-  );
-  // The question as the render holds it, which the writer reads each time a save starts.
-  const rendered = useCallbackRef(
-    (): QuestionDraft => ({
-      answers: question.answers,
-      key: question.key,
-      revision: question.revision,
-      template: question.template,
-    })
-  );
-  // The writer lives with this page. A page that unmounts with a save in flight leaves that save to finish.
-  const [writer] = useState(() =>
-    Effect.runSync(makeQuestionWriter(send, Effect.sync(rendered)))
-  );
-
-  // A save shows its change at once, even while an earlier save of this question is still in flight. Each click
-  // applies its edit to the draft the last click left on screen, and the render shows again once every save of
-  // this question has settled.
-  const [shown, setShown] = useState<QuestionDraft | null>(null);
-  const shownRef = useRef<QuestionDraft | null>(null);
-  const unsettled = useRef(0);
-  const current = () => shownRef.current ?? rendered();
-
-  /**
-   * Saves the answers and the key that `edit` makes of this question, and shows them at once. The edit runs on
-   * the draft the writer starts from, so the edits of one question land in the order they were made. `unstored`
-   * runs when the server does not store the change, so the option that asked can take its text back.
-   */
-  const saveAnswers = (
-    edit: (draft: QuestionDraft) => QuestionWrite,
-    unstored?: () => void
-  ) => {
-    const base = current();
-    const next: QuestionDraft = { ...edit(base), revision: base.revision };
-    shownRef.current = next;
-    setShown(next);
-    unsettled.current += 1;
-    const settle = () => {
-      unsettled.current -= 1;
-      if (unsettled.current === 0) {
-        shownRef.current = null;
-        setShown(null);
-      }
-    };
-    runExamAction(writer.save(edit), {
-      onFailure: () => {
-        settle();
-        unstored?.();
-      },
-      onSuccess: settle,
-    });
-  };
-
-  /**
-   * Marks one option of the key, which saves at once. A single-answer choice marks it alone, and marking
-   * its marked option again saves nothing; a complex choice marks it beside the others, or unmarks it.
-   */
-  const markOption = (optionId: string) => {
-    const draft = current();
-    if (draft.template === "choices") {
-      saveAnswers((base) => ({
-        ...base,
-        key: toggledKey(base.answers, base.key, optionId),
-      }));
-      return;
-    }
-    if (!Arr.contains(markedOptions(draft.key), optionId)) {
-      saveAnswers((base) => ({
-        ...base,
-        key: markedKey(base.answers, optionId),
-      }));
-    }
-  };
-
-  /**
-   * Gives the question another template, which saves at once: the answers take the template's bounds, and the
-   * key stays only when it still fits (`asTemplate`), as the server converts them.
-   */
-  const setTemplate = (template: QuestionTemplate) => {
-    if (current().template !== template) {
-      saveAnswers((base) => ({
-        ...asTemplate(template, base.answers, base.key),
-        template,
-      }));
-    }
-  };
-
-  return {
-    displayed: shown ?? question,
-    markOption,
-    saveAnswers,
-    setTemplate,
-  };
-}
-
-/** The answers and the key of one question, as its page edits them. */
-type QuestionEditing = ReturnType<typeof useQuestionEditing>;
 
 /**
  * One question as a page of the canvas: a row above the paper names the question and holds its
@@ -416,8 +255,13 @@ function LivePaper({
         ),
     });
 
+  // A template that fixes its options keeps their number, so the teacher neither adds nor removes one.
+  const fixed = Option.isSome(fixedOptions(displayed.template));
   const canAddOption =
-    choice !== null && choice.options.length < CHOICE_OPTIONS_MAX && !frozen;
+    choice !== null &&
+    choice.options.length < CHOICE_OPTIONS_MAX &&
+    !fixed &&
+    !frozen;
 
   return (
     <QuestionPaper selected={chosen}>
@@ -437,7 +281,7 @@ function LivePaper({
               locked={frozen}
               number={number}
               onRemove={
-                choice.options.length > CHOICE_OPTIONS_MIN
+                choice.options.length > CHOICE_OPTIONS_MIN && !fixed
                   ? () =>
                       saveAnswers((draft) => ({
                         ...draft,
