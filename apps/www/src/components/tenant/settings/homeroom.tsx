@@ -102,7 +102,6 @@ export function SchoolHomeroomCard({
                 id={`${id}-teacher`}
                 onChoose={setTeacherId}
                 personId={teacherId}
-                slug={slug}
               />
             ) : (
               <p id={`${id}-teacher`}>

@@ -12,7 +12,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -45,6 +44,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import {
@@ -96,16 +96,10 @@ const InvitesFirstPageContext = createContext<InvitesFirstPage | undefined>(
  */
 export function SchoolInvitesSettings({
   first,
-  slug,
 }: {
   first: InvitesFirstPage | undefined;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const locale = useLocale();
-  const sendLocale = Option.getOrUndefined(
-    Schema.decodeOption(ActiveAppLocaleCodeSchema)(locale)
-  );
 
   return (
     <TableFiltersProvider>
@@ -113,13 +107,13 @@ export function SchoolInvitesSettings({
         actions={
           <>
             <TableSearch placeholder={t("invites-search")} />
-            <SchoolInviteAction slug={slug} />
+            <SchoolInviteAction />
           </>
         }
       >
         <ReadBoundary>
           <InvitesFirstPageContext value={first}>
-            <SchoolInvitesBody sendLocale={sendLocale} slug={slug} />
+            <SchoolInvitesBody />
           </InvitesFirstPageContext>
         </ReadBoundary>
       </SettingsTablePage>
@@ -128,13 +122,8 @@ export function SchoolInvitesSettings({
 }
 
 /** The invites of the school, read a page at a time, with the table and its end. */
-function SchoolInvitesBody({
-  sendLocale,
-  slug,
-}: {
-  sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolInvitesBody() {
+  const { slug } = useTenant();
   const first = use(InvitesFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
@@ -151,11 +140,7 @@ function SchoolInvitesBody({
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {pagination._tag === "LoadingFirstPage" ||
       (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolInviteTable
-          invites={pagination.results}
-          sendLocale={sendLocale}
-          slug={slug}
-        />
+        <SchoolInviteTable invites={pagination.results} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -165,15 +150,7 @@ function SchoolInvitesBody({
 }
 
 /** The invites in a data table, or the table's empty state when there is none. */
-function SchoolInviteTable({
-  invites,
-  sendLocale,
-  slug,
-}: {
-  invites: readonly InviteItem[];
-  sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const t = useTranslations("SchoolSettings");
 
   if (Arr.isReadonlyArrayEmpty(invites)) {
@@ -227,13 +204,7 @@ function SchoolInviteTable({
       sortFn: "basic",
     }),
     inviteColumns.display({
-      cell: (info) => (
-        <SchoolInviteMenu
-          invite={info.row.original}
-          sendLocale={sendLocale}
-          slug={slug}
-        />
-      ),
+      cell: (info) => <SchoolInviteMenu invite={info.row.original} />,
       id: "actions",
     }),
   ]);
@@ -256,17 +227,13 @@ function SchoolInviteTable({
  * still on its way to the server, has an inert menu, and a send waits until the viewer's
  * language is known.
  */
-function SchoolInviteMenu({
-  invite,
-  sendLocale,
-  slug,
-}: {
-  invite: InviteItem;
-  sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
+  const sendLocale = Option.getOrUndefined(
+    Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale())
+  );
   const resend = useMutation(tenancy.invites.resend);
   const inviteAgain = useMutation(tenancy.invites.invite);
   const revoke = useMutation(tenancy.invites.revoke).withOptimisticUpdate(
@@ -392,11 +359,7 @@ function SchoolInviteMenu({
         setOpen={setIsIssuing}
         slug={slug}
       />
-      <SchoolCardDialog
-        card={issued}
-        onClose={() => setIssued(undefined)}
-        slug={slug}
-      />
+      <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
     </div>
   );
 }
