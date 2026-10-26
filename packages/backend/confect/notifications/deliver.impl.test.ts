@@ -150,10 +150,10 @@ describe("notifications/deliver", () => {
   );
 
   it.effect(
-    "writes the notice in Indonesian for a school with no active unit, and answers none once the recipient's account is unclaimed",
+    "writes the notice in Indonesian for a school with no active unit",
     () =>
       Effect.gen(function* () {
-        const { fixture, forum, notificationId } = yield* mentioned;
+        const { fixture, notificationId } = yield* mentioned;
         yield* fixture.run(
           Effect.gen(function* () {
             const units = yield* (yield* DatabaseReader)
@@ -174,6 +174,14 @@ describe("notifications/deliver", () => {
           notificationId,
         });
         expect(notice?.payload).toContain("Seseorang menyebutmu di kelas.");
+      })
+  );
+
+  it.effect(
+    "answers no notice and schedules no push for a recipient whose account is unclaimed",
+    () =>
+      Effect.gen(function* () {
+        const { fixture, forum, notificationId } = yield* mentioned;
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
             writer
