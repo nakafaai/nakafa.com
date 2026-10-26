@@ -233,7 +233,9 @@ const readGzipBytes = Effect.fn("NakafaE2E.readGzipBytes")(function* (
   const body = yield* Effect.promise(() => response.body());
   const compressed = yield* Effect.promise(() =>
     new Response(
-      new Blob([body]).stream().pipeThrough(new CompressionStream("gzip"))
+      new Blob([new Uint8Array(body)])
+        .stream()
+        .pipeThrough(new CompressionStream("gzip"))
     ).arrayBuffer()
   );
   return compressed.byteLength;
