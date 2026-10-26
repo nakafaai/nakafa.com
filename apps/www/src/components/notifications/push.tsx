@@ -1,4 +1,4 @@
-import { useMutation } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Notification01Icon } from "@hugeicons/core-free-icons";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -8,7 +8,6 @@ import { Effect } from "effect";
 import { useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { FeedNotice } from "@/components/user/feed";
-import { clientEnv } from "@/env.public";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   type PushState,
@@ -26,15 +25,15 @@ import {
 export function PushOffer() {
   const t = useTranslations("Notifications");
   const subscribe = useMutation(notifications.push.subscribe);
-  const publicKey = clientEnv.VITE_WEB_PUSH_PUBLIC_KEY;
+  const key = useQuery(notifications.push.publicKey, {});
+  const publicKey =
+    QueryResult.isSuccess(key) && key.value !== null ? key.value : undefined;
   const [state, setState] = useState<typeof PushState.Type | null>(null);
 
-  // The key is fixed for the build, so the browser is read once, after the first paint.
+  // The browser is read after the first paint, and again only if the deployment's key changes.
   useEffect(() => {
-    Effect.runPromise(readPushState(clientEnv.VITE_WEB_PUSH_PUBLIC_KEY)).then(
-      setState
-    );
-  }, []);
+    Effect.runPromise(readPushState(publicKey)).then(setState);
+  }, [publicKey]);
 
   /** Turns push on at once, and turns it back off with the shared toast when a step fails. */
   const turnOn = () => {

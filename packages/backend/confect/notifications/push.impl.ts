@@ -8,7 +8,7 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/notifications/push.spec";
 import { SUBSCRIPTION_LIMIT } from "@repo/backend/confect/notifications/subscription";
-import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
+import { Array as Arr, Clock, Config, Effect, Layer, Option } from "effect";
 
 /** The stored subscription of an endpoint, whichever account holds it. */
 const byEndpoint = Effect.fn("notifications.push.byEndpoint")(function* (
@@ -62,6 +62,19 @@ const subscribe = FunctionImpl.make(
   })
 );
 
+/** The deployment's VAPID public key, from `WEB_PUSH_PUBLIC_KEY`, or null while push is not set up. */
+const publicKey = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "publicKey",
+  Effect.fn("notifications.push.publicKey")(function* () {
+    const key = yield* Config.option(Config.String("WEB_PUSH_PUBLIC_KEY")).pipe(
+      Effect.orDie
+    );
+    return Option.getOrNull(key);
+  })
+);
+
 /** Forgets the browser's subscription when the signed-in account holds it. */
 const unsubscribe = FunctionImpl.make(
   databaseSchema,
@@ -84,6 +97,7 @@ const unsubscribe = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(publicKey),
   Layer.provide(subscribe),
   Layer.provide(unsubscribe),
   Layer.provide(session),

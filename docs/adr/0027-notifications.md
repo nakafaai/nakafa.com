@@ -331,8 +331,9 @@ sitting does not show.
   address on the school host and a general sentence (`packages/email/templates/notice`).
 - **Operator secrets.** `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` (the
   private scalar, Base64Url) and `WEB_PUSH_SUBJECT` (a `mailto:` address) on the
-  Convex deployment, and `VITE_WEB_PUSH_PUBLIC_KEY`, the same public key, in the
-  web build. Without them no browser is offered push and nothing is sent.
+  Convex deployment. The browser reads the public key from the deployment
+  (`notifications.push.publicKey`), so the web build holds no copy. Without them
+  no browser is offered push and nothing is sent.
 - **The browser.** `apps/www/public/sw.js` shows a push and opens the inbox on a
   press. The inbox offers push under its list after the person's tap, and an
   iPhone or iPad tab outside the Home Screen shows the Home Screen step in place

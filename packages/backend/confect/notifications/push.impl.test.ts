@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { keyedFixture } from "@repo/backend/test/classroom";
@@ -38,6 +38,23 @@ describe("notifications/push", () => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
   });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.effect(
+    "answers the deployment's public key that a browser subscribes with, and null while push is not set up",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const student = fixture.as("student");
+        vi.stubEnv("WEB_PUSH_PUBLIC_KEY", undefined);
+        expect(yield* student.query(push.publicKey, {})).toBeNull();
+        vi.stubEnv("WEB_PUSH_PUBLIC_KEY", "BPublicKey_1");
+        expect(yield* student.query(push.publicKey, {})).toBe("BPublicKey_1");
+      })
+  );
 
   it.effect(
     "keeps one subscription per browser, moves it to the account that subscribed last, and drops the oldest past ten",
