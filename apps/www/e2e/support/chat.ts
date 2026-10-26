@@ -1,7 +1,14 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { Page } from "@playwright/test";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
-import { Array as Arr, Clock, Effect, FileSystem, Schedule, Schema } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  FileSystem,
+  Schedule,
+  Schema,
+} from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { trackChanges } from "@/e2e/support/changes";
 import {

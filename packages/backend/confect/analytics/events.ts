@@ -1,6 +1,8 @@
+import { BillingOfferRailSchema } from "@repo/backend/confect/billing/catalog";
 import {
   checkoutLocaleValidator,
   polarCheckoutLocaleValidator,
+  xenditCheckoutLocaleValidator,
 } from "@repo/backend/confect/billing/locale";
 import { chatTypeValidator } from "@repo/backend/confect/chats/schema";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
@@ -98,11 +100,17 @@ export const productAnalyticsEventValidator = Schema.Union([
   Schema.Struct({
     name: Schema.Literal("checkout started"),
     properties: Schema.Struct({
-      checkout_locale: polarCheckoutLocaleValidator,
+      /** The language of the hosted checkout, as the rail names it. */
+      checkout_locale: Schema.Union([
+        polarCheckoutLocaleValidator,
+        xenditCheckoutLocaleValidator,
+      ]),
       customer_ip_available: Schema.Boolean,
       locale: checkoutLocaleValidator,
       product_count: Schema.Finite,
+      /** The Polar product IDs of a Polar checkout, or the offer of a Xendit checkout. */
       product_id: Schema.String,
+      rail: BillingOfferRailSchema,
     }),
   }),
   Schema.Struct({
