@@ -90,7 +90,10 @@ export function SchoolGrantTable({
       sortFn: "text",
     }),
     grantColumns.display({
-      cell: (info) => <SchoolGrantMenu grant={info.row.original} slug={slug} />,
+      cell: (info) =>
+        info.row.original.revocable ? (
+          <SchoolGrantMenu grant={info.row.original} slug={slug} />
+        ) : null,
       id: "actions",
     }),
   ]);
