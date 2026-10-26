@@ -54,12 +54,12 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
+import { useReportActions } from "@/components/tenant/reports/actions";
 import type { ReportLine } from "@/components/tenant/reports/change";
 import { checkAddress } from "@/components/tenant/reports/check";
 import {
   ReportLineDetail,
   ReportNoteDialog,
-  useReportActions,
 } from "@/components/tenant/reports/detail";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 

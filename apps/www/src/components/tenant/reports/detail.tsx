@@ -38,11 +38,8 @@ import {
 import { TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
-import {
-  type ReportLine,
-  stateChange,
-  writeChange,
-} from "@/components/tenant/reports/change";
+import { useReportActions } from "@/components/tenant/reports/actions";
+import { type ReportLine, writeChange } from "@/components/tenant/reports/change";
 import { checkAddress } from "@/components/tenant/reports/check";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -51,39 +48,6 @@ const SOURCE = "components/tenant/reports/detail";
 
 /** The route of one class group's report cards, whose context holds the class group's ID. */
 const cohortRoute = getRouteApi("/school/$slug/reports/$cohortId");
-
-/**
- * Hands a report in, takes it back, or approves it, each shown at once on the list and
- * undone if the server refuses it. The row menu and the open report share them.
- */
-export function useReportActions() {
-  const { slug } = useTenant();
-  const complete = useMutation(records.reports.complete).withOptimisticUpdate(
-    stateChange("completed")
-  );
-  const reopen = useMutation(records.reports.reopen).withOptimisticUpdate(
-    stateChange("draft")
-  );
-  const approve = useMutation(records.reports.approve).withOptimisticUpdate(
-    stateChange("approved")
-  );
-  const [, startTransition] = useTransition();
-
-  return {
-    approve: (reportId: Id<"reportCards">) =>
-      startTransition(() =>
-        saveSchool(() => approve({ reportId, slug }), SOURCE)
-      ),
-    complete: (reportId: Id<"reportCards">) =>
-      startTransition(() =>
-        saveSchool(() => complete({ reportId, slug }), SOURCE)
-      ),
-    reopen: (reportId: Id<"reportCards">) =>
-      startTransition(() =>
-        saveSchool(() => reopen({ reportId, slug }), SOURCE)
-      ),
-  };
-}
 
 /**
  * The open student's report card: its state, the homeroom teacher's note, and the copy of
