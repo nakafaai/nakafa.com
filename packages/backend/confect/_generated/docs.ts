@@ -103,6 +103,7 @@ export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "prog
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
+export type ReportCardsDoc = Document.Document<typeof schemaDefinition, "reportCards">;
 export type RosterEntriesDoc = Document.Document<typeof schemaDefinition, "rosterEntries">;
 export type SchoolLoginsDoc = Document.Document<typeof schemaDefinition, "schoolLogins">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
@@ -238,6 +239,7 @@ export interface Docs {
   programCatalog: ProgramCatalogDoc;
   quranRows: QuranRowsDoc;
   quranSearch: QuranSearchDoc;
+  reportCards: ReportCardsDoc;
   rosterEntries: RosterEntriesDoc;
   schoolLogins: SchoolLoginsDoc;
   snapshotBatches: SnapshotBatchesDoc;

@@ -102,6 +102,7 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import reportCards from "./tables/reportCards";
 import rosterEntries from "./tables/rosterEntries";
 import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
@@ -237,6 +238,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly programCatalog: typeof programCatalog;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
+  readonly reportCards: typeof reportCards;
   readonly rosterEntries: typeof rosterEntries;
   readonly schoolLogins: typeof schoolLogins;
   readonly snapshotBatches: typeof snapshotBatches;
@@ -371,6 +373,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   programCatalog,
   quranRows,
   quranSearch,
+  reportCards,
   rosterEntries,
   schoolLogins,
   snapshotBatches,

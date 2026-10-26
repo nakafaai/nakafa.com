@@ -723,6 +723,9 @@
       "scheme": {
         "stored": "Versi skema nilai ditambahkan"
       },
+      "report": {
+        "locked": "Rapor dikunci"
+      },
       "cohort": {
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",
@@ -1020,6 +1023,45 @@
     "detail": "Nilai siswa",
     "detail-empty": "Pilih siswa untuk melihat nilainya.",
     "kktp": "KKTP"
+  },
+  "SchoolReports": {
+    "title": "Rapor",
+    "cohort": "Rombel",
+    "period": "Periode",
+    "search-cohorts": "Cari rombel",
+    "cohorts-empty": "Belum ada rombel untuk dirapor.",
+    "cohorts-empty-description": "Wali kelas melihat rombelnya di sini, dan kepala sekolah melihat setiap rombel pada periode ini.",
+    "student": "Siswa",
+    "status": "Status",
+    "state-none": "Belum dimulai",
+    "state-draft": "Draf",
+    "state-completed": "Diserahkan",
+    "state-approved": "Dikunci",
+    "state-locked": "Terkunci",
+    "search-students": "Cari siswa",
+    "students-empty": "Belum ada siswa di rombel ini.",
+    "students-empty-description": "Siswa muncul di sini setelah ditempatkan di rombel.",
+    "write": "Tulis catatan",
+    "write-description": "Catatan pada rapor {name}.",
+    "note-label": "Catatan wali kelas",
+    "note-placeholder": "Apa yang sudah baik dari siswa, dan langkah berikutnya",
+    "save-note": "Simpan catatan",
+    "complete": "Serahkan",
+    "reopen": "Tarik kembali",
+    "approve": "Setujui",
+    "open-pdf": "Buka PDF",
+    "open-check": "Buka halaman pemeriksaan",
+    "detail": "Rapor siswa",
+    "detail-empty": "Pilih siswa untuk melihat rapornya.",
+    "report-empty": "Rapor ini belum dimulai. Tulis catatan wali kelas untuk memulainya.",
+    "approved-at": "Disetujui",
+    "note-empty": "Belum ada catatan.",
+    "subjects-empty": "Belum ada nilai yang dirilis.",
+    "subject": "Mata pelajaran",
+    "grade": "Nilai",
+    "result": "Hasil",
+    "kktp-reached": "Mencapai KKTP",
+    "kktp-notReached": "Belum mencapai KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
@@ -2257,6 +2299,14 @@
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
     },
+    "school-refusal-report-closed": {
+      "title": "Rapor ini sudah berlanjut.",
+      "description": "Muat ulang daftar untuk melihat statusnya."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "Siswa ini tidak di sini.",
+      "description": "Tempatkan siswa di rombel terlebih dahulu."
+    },
     "school-refusal-guardian-closed": {
       "title": "Tautan ini sudah berubah.",
       "description": "Muat ulang daftar untuk melihat statusnya."
@@ -2736,5 +2786,16 @@
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Qur'an.",
       "keywords": "Surat {name}, Al-Qur'an{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
+  },
+  "ReportCheck": {
+    "locked": "Rapor ini tercatat.",
+    "locked-description": "Kodenya milik rapor yang dikunci sekolah.",
+    "unknown": "Tidak ada rapor dengan kode ini.",
+    "unknown-description": "Periksa alamatnya, atau tanyakan sekolah yang menerbitkannya.",
+    "school": "Sekolah",
+    "kind": "Dokumen",
+    "kind-report": "Rapor",
+    "period": "Periode",
+    "approved": "Disetujui pada"
   }
 }

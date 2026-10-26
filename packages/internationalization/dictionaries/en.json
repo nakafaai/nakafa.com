@@ -723,6 +723,9 @@
       "scheme": {
         "stored": "Grading scheme version added"
       },
+      "report": {
+        "locked": "Report card locked"
+      },
       "cohort": {
         "created": "Cohort added",
         "renamed": "Cohort renamed",
@@ -1020,6 +1023,45 @@
     "detail": "Student's grade",
     "detail-empty": "Choose a student to see their grade.",
     "kktp": "KKTP"
+  },
+  "SchoolReports": {
+    "title": "Report cards",
+    "cohort": "Class group",
+    "period": "Period",
+    "search-cohorts": "Search class groups",
+    "cohorts-empty": "No class group to report on.",
+    "cohorts-empty-description": "A homeroom teacher sees their class group here, and the principal every class group of the period.",
+    "student": "Student",
+    "status": "Status",
+    "state-none": "Not started",
+    "state-draft": "Draft",
+    "state-completed": "Handed in",
+    "state-approved": "Locking",
+    "state-locked": "Locked",
+    "search-students": "Search students",
+    "students-empty": "No student in this class group yet.",
+    "students-empty-description": "Students appear here once they are placed in the class group.",
+    "write": "Write note",
+    "write-description": "The note on the report card of {name}.",
+    "note-label": "Homeroom teacher's note",
+    "note-placeholder": "What the student did well, and what comes next",
+    "save-note": "Save note",
+    "complete": "Hand in",
+    "reopen": "Take back",
+    "approve": "Approve",
+    "open-pdf": "Open PDF",
+    "open-check": "Open check page",
+    "detail": "Student's report card",
+    "detail-empty": "Choose a student to see their report card.",
+    "report-empty": "This report card has not started. Write the homeroom teacher's note to start it.",
+    "approved-at": "Approved",
+    "note-empty": "No note yet.",
+    "subjects-empty": "No grade is released yet.",
+    "subject": "Subject",
+    "grade": "Grade",
+    "result": "Result",
+    "kktp-reached": "Meets KKTP",
+    "kktp-notReached": "Below KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
@@ -2257,6 +2299,14 @@
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
     },
+    "school-refusal-report-closed": {
+      "title": "This report card has moved on.",
+      "description": "Reload the list to see its status."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "This student is not here.",
+      "description": "Place the student in the class group first."
+    },
     "school-refusal-guardian-closed": {
       "title": "This link has changed.",
       "description": "Reload the list to see its status."
@@ -2736,5 +2786,16 @@
       "description": "Read Surah {name} ({transliteration}) with verse-by-verse translation. {numberOfVerses} verses from the Holy Quran.",
       "keywords": "Surah {name}, Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "ReportCheck": {
+    "locked": "This report card is on record.",
+    "locked-description": "Its code belongs to a report card that the school locked.",
+    "unknown": "No report card has this code.",
+    "unknown-description": "Check the address, or ask the school that issued it.",
+    "school": "School",
+    "kind": "Document",
+    "kind-report": "Report card",
+    "period": "Period",
+    "approved": "Approved on"
   }
 }

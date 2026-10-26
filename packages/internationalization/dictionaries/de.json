@@ -723,6 +723,9 @@
       "scheme": {
         "stored": "Notenschema-Version hinzugefügt"
       },
+      "report": {
+        "locked": "Zeugnis gesperrt"
+      },
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
@@ -1020,6 +1023,45 @@
     "detail": "Note der Schülerin oder des Schülers",
     "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
     "kktp": "KKTP"
+  },
+  "SchoolReports": {
+    "title": "Zeugnisse",
+    "cohort": "Klasse",
+    "period": "Zeitraum",
+    "search-cohorts": "Klassen suchen",
+    "cohorts-empty": "Keine Klasse für Zeugnisse.",
+    "cohorts-empty-description": "Die Klassenleitung sieht hier ihre Klasse, die Schulleitung jede Klasse des Zeitraums.",
+    "student": "Schüler",
+    "status": "Status",
+    "state-none": "Nicht begonnen",
+    "state-draft": "Entwurf",
+    "state-completed": "Abgegeben",
+    "state-approved": "Wird gesperrt",
+    "state-locked": "Gesperrt",
+    "search-students": "Schüler suchen",
+    "students-empty": "Noch kein Schüler in dieser Klasse.",
+    "students-empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "write": "Bemerkung schreiben",
+    "write-description": "Die Bemerkung im Zeugnis von {name}.",
+    "note-label": "Bemerkung der Klassenleitung",
+    "note-placeholder": "Was der Schüler gut gemacht hat, und was als Nächstes kommt",
+    "save-note": "Bemerkung speichern",
+    "complete": "Abgeben",
+    "reopen": "Zurückholen",
+    "approve": "Genehmigen",
+    "open-pdf": "PDF öffnen",
+    "open-check": "Prüfseite öffnen",
+    "detail": "Zeugnis",
+    "detail-empty": "Wähle eine Person aus der Liste, um ihr Zeugnis zu sehen.",
+    "report-empty": "Dieses Zeugnis ist noch nicht begonnen. Schreibe die Notiz der Klassenleitung, um es zu beginnen.",
+    "approved-at": "Freigegeben",
+    "note-empty": "Noch keine Notiz.",
+    "subjects-empty": "Noch keine Note freigegeben.",
+    "subject": "Fach",
+    "grade": "Note",
+    "result": "Ergebnis",
+    "kktp-reached": "KKTP erreicht",
+    "kktp-notReached": "KKTP nicht erreicht"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -2257,6 +2299,14 @@
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
     },
+    "school-refusal-report-closed": {
+      "title": "Zeugnis schon weiter.",
+      "description": "Lade die Liste neu, um den Status zu sehen."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "Kind nicht in der Klasse.",
+      "description": "Ordne das Kind zuerst der Klasse zu."
+    },
     "school-refusal-guardian-closed": {
       "title": "Verknüpfung schon geändert.",
       "description": "Lade die Liste neu, um den Status zu sehen."
@@ -2736,5 +2786,16 @@
       "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Koran.",
       "keywords": "Sure {name}, Koran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "ReportCheck": {
+    "locked": "Dieses Zeugnis ist erfasst.",
+    "locked-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
+    "unknown": "Kein Zeugnis hat diesen Code.",
+    "unknown-description": "Prüfe die Adresse oder frag die Schule, die es ausgestellt hat.",
+    "school": "Schule",
+    "kind": "Dokument",
+    "kind-report": "Zeugnis",
+    "period": "Zeitraum",
+    "approved": "Genehmigt am"
   }
 }
