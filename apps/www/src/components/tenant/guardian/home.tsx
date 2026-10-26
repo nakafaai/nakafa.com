@@ -300,6 +300,7 @@ function GuardianGrades({ child }: { child: ChildItem }) {
               type="button"
               variant="destructive"
             >
+              <HugeIcons icon={UserRemove01Icon} />
               {t("withdraw")}
             </Button>
           </>
