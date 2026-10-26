@@ -95,6 +95,22 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await expect(students.getByRole("row", { name: LEARNER_NAME })).toContainText(
     "1 / 2"
   );
+  // A student's answers open beside the list in the shared panes, and close from the pane's header.
+  const answers = proctor.getByRole("complementary", {
+    name: "Student's answers",
+  });
+  await expect(
+    answers.getByText("Choose a student to see their answers.")
+  ).toBeVisible();
+  await students.getByRole("button", { name: LEARNER_NAME }).click();
+  await expect(
+    answers.getByRole("heading", { name: LEARNER_NAME })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(answers.getByText("Question 1")).toBeVisible();
+  await answers.getByRole("button", { name: "Close" }).click();
+  await expect(
+    answers.getByText("Choose a student to see their answers.")
+  ).toBeVisible();
   await header.getByRole("button", { name: "Questions" }).click();
   await expect(
     proctor.getByRole("dialog", { name: "Questions" }).getByRole("button", {

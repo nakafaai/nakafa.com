@@ -1,11 +1,14 @@
 import {
   ArrowDown01Icon,
-  ColumnInsertIcon,
   DeleteColumnIcon,
   DeleteIcon,
+  InsertColumnLeftIcon,
+  InsertColumnRightIcon,
+  InsertRowDownIcon,
+  InsertRowUpIcon,
   RowDeleteIcon,
-  RowInsertIcon,
   TableIcon,
+  TablePropertiesIcon,
 } from "@hugeicons/core-free-icons";
 import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
@@ -91,7 +94,7 @@ export function DocumentTable({
                 />
               }
             >
-              <HugeIcons icon={TableIcon} />
+              <HugeIcons icon={TablePropertiesIcon} />
               <HugeIcons
                 className="size-3 text-muted-foreground"
                 icon={ArrowDown01Icon}
@@ -100,12 +103,12 @@ export function DocumentTable({
           </ToolHint>
           <DropdownMenuContent className="w-48">
             <TableAction
-              icon={RowInsertIcon}
+              icon={InsertRowUpIcon}
               label={labels.rowBefore}
               onSelect={() => editor?.chain().focus().addRowBefore().run()}
             />
             <TableAction
-              icon={RowInsertIcon}
+              icon={InsertRowDownIcon}
               label={labels.rowAfter}
               onSelect={() => editor?.chain().focus().addRowAfter().run()}
             />
@@ -115,12 +118,12 @@ export function DocumentTable({
               onSelect={() => editor?.chain().focus().deleteRow().run()}
             />
             <TableAction
-              icon={ColumnInsertIcon}
+              icon={InsertColumnLeftIcon}
               label={labels.columnBefore}
               onSelect={() => editor?.chain().focus().addColumnBefore().run()}
             />
             <TableAction
-              icon={ColumnInsertIcon}
+              icon={InsertColumnRightIcon}
               label={labels.columnAfter}
               onSelect={() => editor?.chain().focus().addColumnAfter().run()}
             />

@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { authReader } from "@repo/backend/confect/auth/reader";
+import { googleHostedDomains } from "@repo/backend/confect/auth/tokens";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import {
@@ -22,7 +23,10 @@ import {
 } from "@repo/backend/confect/tenancy/claim";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
-import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
+import {
+  admitsAddress,
+  admitsHostedDomains,
+} from "@repo/backend/confect/tenancy/policy";
 import type { InviteState } from "@repo/backend/confect/tenancy/schema";
 import { Clock, Duration, Effect, Layer, Option, Struct } from "effect";
 
@@ -47,12 +51,14 @@ const verifiedEmail = Effect.fn("tenancy.claims.email")(function* (
  * Binds the invited Person to the account and accepts the invite, unless the
  * Person is not waiting any more, the account already holds a Person in the
  * tenant, the tenant is suspended, which refuses every write, the invite has
- * reached its expiry, or the tenant's email domains do not admit the address:
- * then the invite stays as it is for the school to resolve.
+ * reached its expiry, or the tenant's email domains do not admit the address or
+ * the hosted domains of the account's Google sign-ins: then the invite stays as
+ * it is for the school to resolve, or for a Google Workspace sign-in to claim.
  */
 const claim = Effect.fn("tenancy.claims.claim")(function* (
   invite: TenantInvitesDoc,
-  userId: GenericId.GenericId<"users">
+  userId: GenericId.GenericId<"users">,
+  hostedDomains: readonly (string | null)[]
 ) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
@@ -79,7 +85,8 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
     person.account.state !== "unclaimed" ||
     Option.isSome(held) ||
     invite.expiresAt <= at ||
-    !admitsAddress(tenant.policies, invite.channel.email)
+    !admitsAddress(tenant.policies, invite.channel.email) ||
+    !admitsHostedDomains(tenant.policies, hostedDomains)
   ) {
     return;
   }
@@ -138,9 +145,12 @@ const run = FunctionImpl.make(
       )
       .paginate({ cursor, numItems: CLAIM_PAGE_SIZE })
       .pipe(Effect.orDie);
-    yield* Effect.forEach(page.page, (invite) => claim(invite, userId), {
-      discard: true,
-    });
+    const hostedDomains = yield* googleHostedDomains(user.value.authId);
+    yield* Effect.forEach(
+      page.page,
+      (invite) => claim(invite, userId, hostedDomains),
+      { discard: true }
+    );
     if (!page.isDone) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,

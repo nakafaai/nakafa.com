@@ -87,6 +87,98 @@
     "outsider-hint": "Wenn ein Admin diese Adresse eingeladen hat, kann die Einladung einen Moment brauchen. Prüfe erneut, oder bitte einen Admin, sie noch einmal zu senden. Wurde die Einladung an eine andere Adresse geschickt, melde dich mit dieser an.",
     "outsider-check-again": "Erneut prüfen"
   },
+  "SchoolGuardians": {
+    "sign-in-action": "Als Elternteil anmelden",
+    "email-label": "E-Mail der Eltern",
+    "email-placeholder": "eltern@beispiel.de",
+    "email-description": "Nutze die E-Mail, die die Schule hinterlegt hat.",
+    "email-invalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "send-code": "Code senden",
+    "code-label": "Anmeldecode",
+    "code-description": "Wenn die Schule {email} verknüpft hat, wurde dorthin ein sechsstelliger Code gesendet.",
+    "code-invalid": "Gib die sechs Ziffern aus der E-Mail ein.",
+    "code-refused": "Der Code ist falsch oder abgelaufen.",
+    "sign-in": "Anmelden",
+    "resend-code": "Code erneut senden",
+    "failed": "Keine Verbindung. Versuche es noch einmal.",
+    "home-title": "Meine Kinder",
+    "home-empty": "Noch kein Kind verknüpft.",
+    "home-empty-description": "Bitte die Schule, deine E-Mail mit deinem Kind zu verknüpfen.",
+    "child-pending": "Die Verknüpfung wartet auf eine Prüfung.",
+    "child-verified": "Die Verknüpfung ist bestätigt.",
+    "child-expired": "Die Verknüpfung ist abgelaufen.",
+    "child-revoked": "Die Schule hat diese Verknüpfung beendet.",
+    "child-withdrawn": "Du hast die Einwilligung widerrufen.",
+    "child-staff-check": "Die Schule prüft diese Verknüpfung.",
+    "child-ended-hint": "Wende dich an die Schule, um neu zu verknüpfen.",
+    "nisn-label": "NISN des Kindes",
+    "nisn-hint": "Gib die NISN deines Kindes ein, um die Verknüpfung zu bestätigen.",
+    "nisn-refused": "Die Angaben stimmen nicht, prüfe sie oder wende dich an die Schule.",
+    "nisn-submit": "Prüfen",
+    "withdraw": "Einwilligung widerrufen",
+    "withdraw-hint": "Du kannst die Einwilligung jederzeit widerrufen.",
+    "withdraw-title": "Einwilligung widerrufen?",
+    "withdraw-description": "Du siehst die Noten deines Kindes erst wieder, wenn die Schule neu verknüpft.",
+    "grades-empty": "Noch keine Note freigegeben.",
+    "grade-class": "Klasse",
+    "grade-value": "Note",
+    "grade-note": "Hinweis",
+    "kktp-reached": "Erreicht",
+    "kktp-notReached": "Nicht erreicht",
+    "link-add": "Eltern verknüpfen",
+    "link-add-description": "Die Eltern fordern den Anmeldecode selbst auf der Elternseite der Schule an.",
+    "links-empty": "Noch keine Eltern verknüpft.",
+    "links-empty-description": "Verknüpfe die E-Mail der Eltern mit einem Kind, damit sie sich anmelden können.",
+    "links-search": "Schüler suchen",
+    "student": "Schüler",
+    "guardian-name": "Name der Eltern",
+    "guardian-name-placeholder": "Vollständiger Name des Elternteils",
+    "status": "Status",
+    "status-pending": "Ausstehend",
+    "status-verified": "Bestätigt",
+    "status-expired": "Abgelaufen",
+    "status-revoked": "Beendet",
+    "status-withdrawn": "Widerrufen",
+    "status-mismatch": "Angaben stimmen nicht",
+    "link-verify": "Von Hand bestätigen",
+    "link-revoke": "Verknüpfung beenden",
+    "link-revoke-title": "Diese Verknüpfung beenden?",
+    "link-revoke-description": "Die Eltern sehen die Daten des Kindes nicht mehr.",
+    "link-detail": "Elternverknüpfung",
+    "link-detail-empty": "Wähle eine Schülerin oder einen Schüler, um die Verknüpfung zu sehen.",
+    "expires": "Läuft ab",
+    "mismatches": "Fehlgeschlagene NISN-Prüfungen",
+    "child": "Kind",
+    "child-detail": "Kind",
+    "child-detail-empty": "Wähle ein Kind, um die Details zu sehen."
+  },
+  "SchoolRoster": {
+    "import": "Importieren",
+    "export": "Exportieren",
+    "file-label": "Schülerliste aus Dapodik",
+    "empty": "Importiere die Schüler aus Dapodik.",
+    "empty-description": "Wähle die Schülerliste, die Dapodik exportiert hat. Die Datei bleibt auf diesem Gerät.",
+    "no-period": "Noch kein aktiver Zeitraum.",
+    "no-period-description": "Öffne einen Zeitraum, bevor du Schüler importierst.",
+    "file-refused": "Diese Datei lässt sich nicht importieren.",
+    "file-unreadable": "Wähle eine XLSX-Datei, die Dapodik exportiert hat.",
+    "file-header": "Die Datei hat keine Spalten Nama und NISN.",
+    "file-empty": "Die Datei hat unter ihrer Kopfzeile keinen Schüler.",
+    "line": "Zeile",
+    "name": "Name",
+    "nisn": "NISN",
+    "cohort": "Klasse",
+    "status": "Status",
+    "search": "Namen suchen",
+    "status-under": "Unter 18",
+    "status-adult": "18 oder älter",
+    "status-name": "Name fehlt",
+    "status-nisn": "NISN hat nicht 10 Ziffern",
+    "status-birth": "Geburtsdatum unlesbar",
+    "status-cohort": "Klassenname zu lang",
+    "cancel": "Abbrechen",
+    "apply": "Schüler importieren"
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Token ändern",
@@ -100,6 +192,7 @@
     "seat-waiting": "Noch nicht eingetreten.",
     "filter-empty": "Kein Schüler passt zu diesem Filter.",
     "panel-label": "Sitzung des Schülers",
+    "panel-empty": "Wähle einen Platz, um die Sitzung des Schülers zu sehen.",
     "state-in-progress": "In Bearbeitung",
     "state-locked": "Gesperrt",
     "state-closing": "Wird beendet",
@@ -112,6 +205,7 @@
     "screen-none": "Die Person hat noch keine Frage geöffnet.",
     "results-away": "Prüfung verlassen",
     "results-student-answers": "Antworten der Person",
+    "results-answers-empty": "Wähle einen Schüler, um seine Antworten zu sehen.",
     "results-not-submitted": "Die Person hat die Prüfung noch nicht abgegeben.",
     "results-away-seconds": "{count, plural, one {Einmal} other {# Mal}} für {seconds} s",
     "results-away-minutes": "{count, plural, one {Einmal} other {# Mal}} für {minutes} min {seconds} s",
@@ -404,6 +498,8 @@
     "members": "Mitglieder",
     "invites": "Einladungen",
     "students": "Schülerkonten",
+    "roster": "Dapodik",
+    "guardians": "Eltern",
     "clients": "API-Clients",
     "policies": "Richtlinien",
     "audit": "Prüfprotokoll",
@@ -478,7 +574,7 @@
     "policy-threads": "Threads von Schülern",
     "policy-threads-description": "Schüler dürfen in dieser Schule Threads eröffnen.",
     "policy-domains": "E-Mail-Domains",
-    "policy-domains-description": "Nur Adressen dieser Domains dürfen dieser Schule beitreten.",
+    "policy-domains-description": "Nur Google-Workspace-Konten dieser Domains, eine pro Zeile, dürfen beitreten.",
     "policy-domains-placeholder": "schule.example.de",
     "policy-domains-footer": "Eine leere Liste lässt jede Adresse zu.",
     "save": "Speichern",
@@ -629,6 +725,9 @@
       "scheme": {
         "stored": "Notenschema-Version hinzugefügt"
       },
+      "report": {
+        "locked": "Zeugnis gesperrt"
+      },
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
@@ -739,7 +838,17 @@
         "declined": "Besuch abgelehnt",
         "ended": "Besuch beendet"
       },
-      "unknown": "Andere Änderung"
+      "unknown": "Andere Änderung",
+      "guardian": {
+        "started": "Eltern verknüpft",
+        "linked": "Elternverknüpfung bestätigt",
+        "withdrawn": "Einwilligung der Eltern widerrufen",
+        "revoked": "Elternverknüpfung beendet"
+      },
+      "roster": {
+        "set": "Schülerdaten aktualisiert",
+        "imported": "Schüler aus Dapodik importiert"
+      }
     },
     "role-description": {
       "owner": "Kann alles in dieser Schule tun.",
@@ -860,12 +969,13 @@
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
-    "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
-    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
+    "policy-domains-invalid": "Ungültige Domains: {domains}; schreibe jede Domain in eine eigene Zeile.",
+    "policy-domains-limit": "Verwende höchstens {limit} Domains, jede in einer eigenen Zeile."
   },
   "Classroom": {
     "tabs-home": "Start",
     "tabs-forum": "Forum",
+    "tabs-grades": "Noten",
     "general-channel": "Allgemein",
     "channels-title": "Kanal",
     "channels-empty": "Noch kein Kanal",
@@ -895,6 +1005,65 @@
     "messages-empty": "Noch keine Nachricht",
     "messages-empty-description": "Die erste Nachricht dieses Kanals erscheint hier.",
     "scroll-to-latest": "Zur neuesten Nachricht"
+  },
+  "SchoolGrades": {
+    "student": "Schüler",
+    "value": "Note",
+    "value-label": "Note von {name}",
+    "value-placeholder": "0-100",
+    "note": "Ergebnis",
+    "state": "Status",
+    "state-none": "Nicht eingetragen",
+    "state-draft": "Entwurf",
+    "state-released": "Freigegeben",
+    "kktp-reached": "Erreicht das KKTP",
+    "kktp-notReached": "Unter dem KKTP",
+    "search": "Schüler suchen",
+    "release": "Freigeben",
+    "empty": "Noch kein Schüler in dieser Klasse.",
+    "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "detail": "Note der Schülerin oder des Schülers",
+    "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
+    "kktp": "KKTP"
+  },
+  "SchoolReports": {
+    "title": "Zeugnisse",
+    "cohort": "Klasse",
+    "period": "Zeitraum",
+    "search-cohorts": "Klassen suchen",
+    "cohorts-empty": "Keine Klasse für Zeugnisse.",
+    "cohorts-empty-description": "Die Klassenleitung sieht hier ihre Klasse, die Schulleitung jede Klasse des Zeitraums.",
+    "student": "Schüler",
+    "status": "Status",
+    "state-none": "Nicht begonnen",
+    "state-draft": "Entwurf",
+    "state-completed": "Abgegeben",
+    "state-approved": "Wird gesperrt",
+    "state-locked": "Gesperrt",
+    "search-students": "Schüler suchen",
+    "students-empty": "Noch kein Schüler in dieser Klasse.",
+    "students-empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "write": "Bemerkung schreiben",
+    "write-description": "Die Bemerkung im Zeugnis von {name}.",
+    "note-label": "Bemerkung der Klassenleitung",
+    "note-placeholder": "Was der Schüler gut gemacht hat, und was als Nächstes kommt",
+    "save-note": "Bemerkung speichern",
+    "complete": "Abgeben",
+    "reopen": "Zurückholen",
+    "approve": "Genehmigen",
+    "open-pdf": "PDF öffnen",
+    "open-check": "Prüfseite öffnen",
+    "detail": "Zeugnis",
+    "detail-empty": "Wähle eine Person aus der Liste, um ihr Zeugnis zu sehen.",
+    "report-empty": "Dieses Zeugnis ist noch nicht begonnen. Schreibe die Notiz der Klassenleitung, um es zu beginnen.",
+    "approved-at": "Freigegeben",
+    "note-empty": "Noch keine Notiz.",
+    "subjects-empty": "Noch keine Note freigegeben.",
+    "subject": "Fach",
+    "grade": "Note",
+    "result": "Ergebnis",
+    "kktp-reached": "KKTP erreicht",
+    "kktp-notReached": "KKTP nicht erreicht"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1030,8 +1199,7 @@
     "arabic-kasratan": "Kasratan",
     "arabic-dammatan": "Dammatan",
     "arabic-space": "Leertaste",
-    "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
-    "load-error-retry": "Diese Daten konnten nicht geladen werden.",
+    "load-error": "Diese Daten konnten nicht geladen werden.",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
     "breadcrumb": "Navigationspfad",
@@ -1102,6 +1270,8 @@
     "play": "Abspielen",
     "pause": "Pausieren",
     "reset": "Zurücksetzen",
+    "reset-view": "Ansicht zurücksetzen",
+    "speed": "Geschwindigkeit",
     "no-website": "Keine Website",
     "high": "Hoch",
     "official": "Offiziell",
@@ -1120,6 +1290,8 @@
     "angle": "Winkel",
     "increase-angle": "Winkel vergrößern",
     "decrease-angle": "Winkel verkleinern",
+    "increase": "Erhöhen",
+    "decrease": "Verringern",
     "number-field": "Zahlenfeld",
     "share": "Teilen",
     "contributor": "Mitwirkende Person",
@@ -1467,7 +1639,7 @@
   },
   "ComingSoon": {
     "title": "Demnächst verfügbar",
-    "description": "Diese Funktion ist noch nicht verfügbar. Schau später wieder vorbei oder wirke am Projekt mit.",
+    "description": "Dieser Inhalt wird noch geschrieben.",
     "contribute": "Mitwirken"
   },
   "Auth": {
@@ -2143,6 +2315,28 @@
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
     },
+    "school-refusal-report-closed": {
+      "title": "Zeugnis schon weiter.",
+      "description": "Lade die Liste neu, um den Status zu sehen."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "Kind nicht in der Klasse.",
+      "description": "Ordne das Kind zuerst der Klasse zu."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "Verknüpfung schon geändert.",
+      "description": "Lade die Liste neu, um den Status zu sehen."
+    },
+    "school-refusal-guardian-link": {
+      "title": "Verknüpfung nicht angelegt.",
+      "description": "Wähle ein aktives Kind ohne diese E-Mail."
+    },
+    "school-roster-imported": {
+      "title": "Die Schüler sind in der Liste."
+    },
+    "school-roster-export-failed": {
+      "title": "Datei nicht gespeichert."
+    },
     "audit-export-error": {
       "title": "Export fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
@@ -2563,7 +2757,7 @@
     "title": "Nutzungsdaten",
     "prompt-description": "Details zu teilen ist freiwillig.",
     "prompt-footer": "Du kannst das später ändern.",
-    "description": "Erlaube Nakafa zu sehen, welche Funktionen du nutzt und was verbessert werden muss, ohne deinen Bildschirm aufzuzeichnen. Nakafa zählt Besuche immer ohne Cookies oder Konten, um die Seite zu betreiben. Wähle Erlauben nur, wenn du mindestens 18 bist oder mit 13 bis 17 die Zustimmung eines Elternteils oder Erziehungsberechtigten hast.",
+    "description": "Nakafa zählt Besuche ohne Cookies und sieht mit deiner Zustimmung auch, welche Funktionen du nutzt, nie deinen Bildschirm.",
     "allow": "Erlauben",
     "decline": "Ablehnen",
     "manage": "Nutzungsdaten",
@@ -2572,10 +2766,10 @@
     "status-browser-signal": "Deine Browser-Datenschutzeinstellungen lassen das Teilen von Details ausgeschaltet.",
     "status-pending": "Deine Entscheidung wird geladen.",
     "status-prompt": "Du hast noch keine Auswahl getroffen.",
-    "policy": "<privacy-policy>Datenschutzerklärung</privacy-policy>",
-    "load-error": "Deine Auswahl konnte nicht geladen werden. Das Teilen bleibt ausgeschaltet, während wir es erneut versuchen.",
-    "runtime-error": "Deine Auswahl wurde gespeichert, konnte aber nicht angewendet werden. Der bisherige Status bleibt bestehen.",
-    "save-error": "Deine Auswahl konnte nicht gespeichert werden. Das Teilen bleibt ausgeschaltet. Versuche es erneut."
+    "policy": "Erlaube es ab 18 oder mit 13 bis 17 mit Zustimmung eines Erziehungsberechtigten, wie die <privacy-policy>Datenschutzerklärung</privacy-policy> erklärt.",
+    "load-error": "Deine Auswahl konnte nicht geladen werden, daher bleibt das Teilen aus, während wir es erneut versuchen.",
+    "runtime-error": "Deine Auswahl ist gespeichert, aber das Teilen bleibt wie bisher.",
+    "save-error": "Deine Auswahl konnte nicht gespeichert werden, daher bleibt das Teilen aus."
   },
   "SEO": {
     "subject": {
@@ -2608,5 +2802,16 @@
       "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Koran.",
       "keywords": "Sure {name}, Koran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "ReportCheck": {
+    "locked": "Dieses Zeugnis ist erfasst.",
+    "locked-description": "Sein Code gehört zu einem Zeugnis, das die Schule gesperrt hat.",
+    "unknown": "Kein Zeugnis hat diesen Code.",
+    "unknown-description": "Prüfe die Adresse oder frag die Schule, die es ausgestellt hat.",
+    "school": "Schule",
+    "kind": "Dokument",
+    "kind-report": "Zeugnis",
+    "period": "Zeitraum",
+    "approved": "Genehmigt am"
   }
 }
