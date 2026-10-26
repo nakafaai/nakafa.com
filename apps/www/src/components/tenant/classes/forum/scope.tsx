@@ -5,14 +5,15 @@ import { Schema } from "effect";
 import { createContext, use } from "react";
 
 /**
- * The channel a forum shows, its class and school, whether the viewer manages the forum, and the
- * discussion of the channel when the view is that discussion's.
+ * The channel a forum shows, its class and school, whether the viewer manages the forum and may
+ * mention everyone in it, and the discussion of the channel when the view is that discussion's.
  */
 const ChannelScope = Schema.Struct({
   canManage: Schema.Boolean,
   channelId: Id("classroomChannels"),
   classId: Id("classes"),
   discussion: Schema.UndefinedOr(DiscussionNumber),
+  everyone: Schema.Boolean,
   slug: TenantSlug,
 });
 

@@ -54,6 +54,7 @@ describe("classroom/forum reads", () => {
         const sent = yield* fixture.as("teacher").mutation(send, {
           ...forum,
           clientKey: "teacher-message",
+          mentions: [],
           slug: nf,
           text: "Selamat pagi",
         });
@@ -101,6 +102,7 @@ describe("classroom/forum reads", () => {
         yield* fixture.as("teacher").mutation(open, {
           ...forum,
           clientKey: "read-discussion",
+          mentions: [],
           slug: nf,
           text: "Pembuka",
           title: "Diskusi",
@@ -109,6 +111,7 @@ describe("classroom/forum reads", () => {
         yield* fixture.as("student").mutation(reply, {
           classId: forum.classId,
           clientKey: "read-reply",
+          mentions: [],
           number: 1,
           slug: nf,
           text: "Balasan",

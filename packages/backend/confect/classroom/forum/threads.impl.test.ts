@@ -34,6 +34,7 @@ describe("classroom/forum threads", () => {
         const first = yield* teacher.mutation(open, {
           ...forum,
           clientKey: "first-discussion",
+          mentions: [],
           slug: nf,
           text: "Tuliskan contohnya di sini.",
           title: "Kenapa gaya gesek berlawanan arah gerak?",
@@ -42,6 +43,7 @@ describe("classroom/forum threads", () => {
         const second = yield* teacher.mutation(open, {
           ...forum,
           clientKey: "second-discussion",
+          mentions: [],
           slug: nf,
           text: "Satu pertanyaan per balasan.",
           title: "Persiapan ulangan",
@@ -49,6 +51,7 @@ describe("classroom/forum threads", () => {
         const retried = yield* teacher.mutation(open, {
           ...forum,
           clientKey: "first-discussion",
+          mentions: [],
           slug: nf,
           text: "Tuliskan contohnya di sini.",
           title: "Kenapa gaya gesek berlawanan arah gerak?",
@@ -99,6 +102,7 @@ describe("classroom/forum threads", () => {
         const args = {
           ...forum,
           clientKey: "student-discussion",
+          mentions: [],
           slug: nf,
           text: "Ada yang mau belajar bersama?",
           title: "Belajar bersama",
@@ -129,6 +133,7 @@ describe("classroom/forum threads", () => {
         yield* teacher.mutation(open, {
           ...forum,
           clientKey: "replied-discussion",
+          mentions: [],
           slug: nf,
           text: "Pertanyaan pembuka",
           title: "Diskusi bab 2",
@@ -137,6 +142,7 @@ describe("classroom/forum threads", () => {
         const answer = yield* student.mutation(reply, {
           classId: forum.classId,
           clientKey: "student-reply",
+          mentions: [],
           number: 1,
           slug: nf,
           text: "Karena gaya gesek melawan gerak.",
@@ -145,6 +151,7 @@ describe("classroom/forum threads", () => {
         const second = yield* teacher.mutation(reply, {
           classId: forum.classId,
           clientKey: "teacher-reply",
+          mentions: [],
           number: 1,
           slug: nf,
           text: "Betul.",
@@ -152,6 +159,7 @@ describe("classroom/forum threads", () => {
         const retried = yield* student.mutation(reply, {
           classId: forum.classId,
           clientKey: "student-reply",
+          mentions: [],
           number: 1,
           slug: nf,
           text: "Karena gaya gesek melawan gerak.",
@@ -212,12 +220,14 @@ describe("classroom/forum threads", () => {
         const plain = yield* teacher.mutation(send, {
           ...forum,
           clientKey: "plain-message",
+          mentions: [],
           slug: nf,
           text: "Pesan biasa",
         });
         yield* teacher.mutation(open, {
           ...forum,
           clientKey: "keyed-discussion",
+          mentions: [],
           slug: nf,
           text: "Pembuka",
           title: "Diskusi",
@@ -225,6 +235,7 @@ describe("classroom/forum threads", () => {
         yield* teacher.mutation(reply, {
           classId: forum.classId,
           clientKey: "teacher-key",
+          mentions: [],
           number: 1,
           slug: nf,
           text: "Balasan guru",
@@ -235,6 +246,7 @@ describe("classroom/forum threads", () => {
             .mutation(open, {
               ...forum,
               clientKey: plain.clientKey,
+              mentions: [],
               slug: nf,
               text: "Pembuka",
               title: "Judul",
@@ -244,6 +256,7 @@ describe("classroom/forum threads", () => {
             .mutation(reply, {
               classId: forum.classId,
               clientKey: "teacher-key",
+              mentions: [],
               number: 1,
               slug: nf,
               text: "Kunci orang lain",
@@ -253,6 +266,7 @@ describe("classroom/forum threads", () => {
             .mutation(reply, {
               classId: forum.classId,
               clientKey: plain.clientKey,
+              mentions: [],
               number: 1,
               slug: nf,
               text: "Kunci pesan kanal",
@@ -275,6 +289,7 @@ describe("classroom/forum threads", () => {
         yield* teacher.mutation(open, {
           ...other,
           clientKey: "other-discussion",
+          mentions: [],
           slug: nf,
           text: "Kelas lain",
           title: "Diskusi kelas lain",
@@ -295,6 +310,7 @@ describe("classroom/forum threads", () => {
             .mutation(reply, {
               classId: forum.classId,
               clientKey: "missing-discussion",
+              mentions: [],
               number: 1,
               slug: nf,
               text: "Tidak ada",
@@ -307,6 +323,7 @@ describe("classroom/forum threads", () => {
           .mutation(reply, {
             classId: other.classId,
             clientKey: "admin-reply",
+            mentions: [],
             number: 1,
             slug: nf,
             text: "Pengumuman",

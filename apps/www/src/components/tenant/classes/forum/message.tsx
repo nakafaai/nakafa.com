@@ -26,7 +26,14 @@ import {
 } from "@repo/design-system/components/ui/message";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { Clock, DateTime, Effect, Schema, String as Str } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  DateTime,
+  Effect,
+  Schema,
+  String as Str,
+} from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -43,6 +50,7 @@ import {
   type ForumMessage,
   hideUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
+import { mentionSegments } from "@/components/tenant/classes/forum/mentions";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 
 /**
@@ -111,7 +119,19 @@ function MessageBubble({ message }: { message: ForumMessage }) {
         className={message.text === null ? "italic" : "whitespace-pre-wrap"}
         dir="auto"
       >
-        {message.text ?? t("message-hidden")}
+        {message.text === null
+          ? t("message-hidden")
+          : Arr.map(
+              mentionSegments(message.text, message.mentions),
+              (segment) =>
+                segment._tag === "mention" ? (
+                  <bdi className="font-semibold" key={segment.at}>
+                    {segment.text}
+                  </bdi>
+                ) : (
+                  <span key={segment.at}>{segment.text}</span>
+                )
+            )}
       </BubbleContent>
     </Bubble>
   );

@@ -16,6 +16,10 @@ import {
   missing,
 } from "@repo/backend/confect/classroom/forum/lookup";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
+import {
+  checkMentions,
+  noticeMentions,
+} from "@repo/backend/confect/classroom/forum/notice";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import spec from "@repo/backend/confect/classroom/forum/messages.spec";
 import {
@@ -58,8 +62,9 @@ const page = FunctionImpl.make(
 );
 
 /**
- * Sends a message to a channel, sealed with the school key, and moves the sender's
- * read mark in the channel to it. A send that repeats the client key of the
+ * Sends a message to a channel, sealed with the school key, writes the inbox row
+ * of each Person it mentions, and moves the sender's read mark in the channel to
+ * it. A send that repeats the client key of the
  * sender's message in this channel answers that message and writes nothing, so a
  * retry after a lost answer never posts twice.
  */
@@ -70,6 +75,7 @@ const send = FunctionImpl.make(
   Effect.fn("classroom.forum.messages.send")(function* ({
     channelId,
     clientKey,
+    mentions,
     text,
   }) {
     const { person } = yield* Member;
@@ -89,6 +95,7 @@ const send = FunctionImpl.make(
       }
       return yield* messageView(sent.value);
     }
+    const checked = yield* checkMentions(row, mentions);
     const fields = { channelId: channel._id, classId: row._id, clientKey };
     const sealedText = yield* sealText(
       yield* schoolKeys(row.tenantId),
@@ -102,10 +109,12 @@ const send = FunctionImpl.make(
         ...fields,
         authorId: person._id,
         createdAt,
+        mentions: checked.stored,
         sealedText,
         tenantId: row.tenantId,
       })
       .pipe(Effect.orDie);
+    yield* noticeMentions(messageId, row, createdAt, checked);
     yield* moveMark(
       person._id,
       row,

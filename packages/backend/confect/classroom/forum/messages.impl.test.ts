@@ -39,6 +39,7 @@ describe("classroom/forum messages", () => {
         const first = yield* student.mutation(send, {
           ...forum,
           clientKey: "first-message",
+          mentions: [],
           slug: nf,
           text: "Kapan tugasnya dikumpulkan?",
         });
@@ -46,12 +47,14 @@ describe("classroom/forum messages", () => {
         const second = yield* fixture.as("teacher").mutation(send, {
           ...forum,
           clientKey: "second-message",
+          mentions: [],
           slug: nf,
           text: "Jumat, sebelum jam 12.",
         });
         const retried = yield* student.mutation(send, {
           ...forum,
           clientKey: "first-message",
+          mentions: [],
           slug: nf,
           text: "Kapan tugasnya dikumpulkan?",
         });
@@ -89,6 +92,7 @@ describe("classroom/forum messages", () => {
         const sent = yield* fixture.as("student").mutation(send, {
           ...forum,
           clientKey: "student-key",
+          mentions: [],
           slug: nf,
           text: "Halo",
         });
@@ -118,6 +122,7 @@ describe("classroom/forum messages", () => {
             .mutation(send, {
               ...forum,
               clientKey: "student-key",
+              mentions: [],
               slug: nf,
               text: "Kunci orang lain",
             })
@@ -141,6 +146,7 @@ describe("classroom/forum messages", () => {
         const sent = yield* student.mutation(send, {
           ...forum,
           clientKey: "hidden-message",
+          mentions: [],
           slug: nf,
           text: "Pesan yang disembunyikan",
         });
@@ -194,6 +200,7 @@ describe("classroom/forum messages", () => {
         yield* fixture.as("student").mutation(send, {
           ...forum,
           clientKey: "student-post",
+          mentions: [],
           slug: nf,
           text: "Selamat pagi",
         });
@@ -210,6 +217,7 @@ describe("classroom/forum messages", () => {
           .mutation(send, {
             ...forum,
             clientKey: "admin-post",
+            mentions: [],
             slug: nf,
             text: "Pengumuman",
           })
@@ -230,6 +238,7 @@ describe("classroom/forum messages", () => {
         const elsewhere = yield* teacher.mutation(send, {
           ...other,
           clientKey: "other-class",
+          mentions: [],
           slug: nf,
           text: "Kelas lain",
         });
@@ -247,6 +256,7 @@ describe("classroom/forum messages", () => {
               channelId: other.channelId,
               classId: own.classId,
               clientKey: "wrong-channel",
+              mentions: [],
               slug: nf,
               text: "Salah kanal",
             })

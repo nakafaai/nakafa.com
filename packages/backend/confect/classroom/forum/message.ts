@@ -1,4 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import {
+  Mention,
+  MentionView,
+} from "@repo/backend/confect/classroom/forum/mention";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
@@ -56,6 +60,7 @@ export const messageValidator = Schema.Struct({
   createdAt: Schema.Finite,
   editedAt: Schema.optionalKey(Schema.Finite),
   hiddenAt: Schema.optionalKey(Schema.Finite),
+  mentions: Schema.optionalKey(Schema.Array(Mention)),
   sealedText: Schema.NullOr(Sealed),
   startsThreadId: Schema.optionalKey(Id("classroomThreads")),
   tenantId: Id("tenants"),
@@ -67,7 +72,8 @@ export const messageValidator = Schema.Struct({
  * teacher hid it, when it was written and last edited, and whether the viewer
  * wrote it. Its client key is the one the composer gave it, so the forum keeps
  * one row for the message from the moment it is sent to the server's answer. A
- * message that opens a discussion carries the discussion.
+ * message that opens a discussion carries the discussion, and a message carries
+ * the Persons it mentions by name.
  */
 export const MessageView = Schema.Struct({
   author: Schema.Struct({
@@ -79,6 +85,7 @@ export const MessageView = Schema.Struct({
   discussion: Schema.NullOr(DiscussionView),
   editedAt: Schema.NullOr(Schema.Finite),
   id: Id("classroomMessages"),
+  mentions: Schema.Array(MentionView),
   mine: Schema.Boolean,
   text: Schema.NullOr(Schema.String),
 });

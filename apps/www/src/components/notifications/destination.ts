@@ -3,13 +3,29 @@ import type { ListNotification } from "@/components/notifications/state";
 import { schoolOrigin } from "@/lib/routing/school/host";
 
 /**
- * The page that a row opens, when its subject has one. An invitation's subject is
- * the Person it invites, and its page is the home of the school on its school host.
- * A subject of any other kind has no page, so its row only marks itself read.
+ * The page that a row opens, on the school's own host, when its subject has one. An invitation
+ * opens the home of the school. A mention opens its message, in its discussion when it is a reply
+ * and in its channel otherwise, and an announcement opens the class home, both while the server
+ * gives the row its detail. Any other row has no page, so it only marks itself read.
  */
 export function pageOf(notification: ListNotification): Option.Option<URL> {
+  const origin = schoolOrigin(notification.tenant.slug);
   if (notification.subject.kind === "person") {
-    return Option.some(schoolOrigin(notification.tenant.slug));
+    return Option.some(origin);
   }
-  return Option.none();
+  return Option.map(Option.fromNullOr(notification.detail), (detail) => {
+    const page = new URL(`/classes/${detail.classSlug}`, origin);
+    if (detail.messageId === null) {
+      return page;
+    }
+    page.pathname =
+      detail.discussion === null
+        ? `${page.pathname}/forum`
+        : `${page.pathname}/forum/${detail.discussion}`;
+    if (detail.discussion === null && detail.channelId !== null) {
+      page.searchParams.set("channel", detail.channelId);
+    }
+    page.searchParams.set("message", detail.messageId);
+    return page;
+  });
 }

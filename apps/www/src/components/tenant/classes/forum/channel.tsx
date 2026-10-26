@@ -30,11 +30,14 @@ export function ForumChannel({
   canManage,
   canPost,
   channelId,
+  everyone,
   jump,
 }: {
   canManage: boolean;
   canPost: boolean;
   channelId: Id<"classroomChannels">;
+  /** Whether the viewer, a subject teacher, may mention everyone. */
+  everyone: boolean;
   jump: Option.Option<Id<"classroomMessages">>;
 }) {
   const t = useTranslations("Classroom");
@@ -42,7 +45,14 @@ export function ForumChannel({
 
   return (
     <ChannelScopeContext
-      value={{ canManage, channelId, classId, discussion: undefined, slug }}
+      value={{
+        canManage,
+        channelId,
+        classId,
+        discussion: undefined,
+        everyone,
+        slug,
+      }}
     >
       <div className="flex h-[70dvh] min-h-96 w-full min-w-0 flex-col gap-3">
         <ChannelMessages jump={jump} key={channelId} />

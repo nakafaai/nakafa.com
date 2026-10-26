@@ -801,7 +801,9 @@
     "post-new-description": "Semua anggota kelas membacanya di beranda kelas dan di notifikasi.",
     "post-submit": "Kirim",
     "post-text": "Pengumuman",
-    "post-email": "Juga kirim lewat email"
+    "post-email": "Juga kirim lewat email",
+    "mention-list": "Orang yang bisa disebut",
+    "mention-everyone": "Semua anggota kelas"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
@@ -1144,7 +1146,11 @@
     "title": "Notifikasi",
     "mark-all-read": "Tandai semua dibaca",
     "empty": "Belum ada notifikasi.",
-    "person-invited": "Kamu diundang bergabung ke sekolah ini."
+    "person-invited": "Kamu diundang bergabung ke sekolah ini.",
+    "forum-mentioned": "{actor} menyebutmu di {className}.",
+    "forum-mentioned-gone": "Kamu disebut di kelas yang tidak lagi kamu baca.",
+    "announcement-posted": "{actor} mengirim pengumuman di {className}.",
+    "announcement-posted-gone": "Pengumuman yang sudah tidak ada."
   },
   "Posts": {
     "placeholder": "Apa yang baru?",

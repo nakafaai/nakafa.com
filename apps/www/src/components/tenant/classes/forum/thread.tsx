@@ -39,11 +39,14 @@ type Thread = Ref.Returns<typeof classroom.forum.threads.get>;
 export function ForumDiscussion({
   canManage,
   canPost,
+  everyone,
   jump,
   thread,
 }: {
   canManage: boolean;
   canPost: boolean;
+  /** Whether the viewer, a subject teacher, may mention everyone. */
+  everyone: boolean;
   jump: Option.Option<Id<"classroomMessages">>;
   thread: Thread;
 }) {
@@ -61,6 +64,7 @@ export function ForumDiscussion({
           canManage={canManage}
           canPost={canPost}
           channelId={thread.channelId}
+          everyone={everyone}
           jump={Option.none()}
         />
       </div>
@@ -91,6 +95,7 @@ export function ForumDiscussion({
             channelId: thread.channelId,
             classId,
             discussion: thread.discussion.number,
+            everyone,
             slug,
           }}
         >

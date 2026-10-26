@@ -59,20 +59,44 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
     const row = yield* Class;
     const reader = yield* DatabaseReader;
     const keys = yield* schoolKeys(row.tenantId);
-    const authors = yield* Effect.forEach(
-      Arr.dedupe(Arr.map(rows, (message) => message.authorId)),
-      (authorId) =>
-        reader.table("tenantPeople").get(authorId).pipe(Effect.orDie),
+    // The authors and the mentioned Persons of the page, each read once. A mentioned
+    // Person who is gone is left out of its message's mentions.
+    const people = yield* Effect.forEach(
+      Arr.dedupe(
+        Arr.appendAll(
+          Arr.map(rows, (message) => message.authorId),
+          Arr.flatMap(rows, (message) =>
+            Arr.flatMap(message.mentions ?? [], (mention) =>
+              mention._tag === "person" ? [mention.id] : []
+            )
+          )
+        )
+      ),
+      (personId) =>
+        reader.table("tenantPeople").get(personId).pipe(Effect.option),
       { concurrency: "unbounded" }
-    );
+    ).pipe(Effect.map(Arr.getSomes));
     return yield* Effect.forEach(rows, (message) =>
       Effect.gen(function* () {
         // Every author was read above, so a message without its author is a defect.
         const author = yield* Effect.fromOption(
           Arr.findFirst(
-            authors,
+            people,
             (candidate) => candidate._id === message.authorId
           )
+        );
+        const mentions = Arr.flatMap(message.mentions ?? [], (mention) =>
+          mention._tag === "everyone"
+            ? [mention]
+            : Option.match(
+                Arr.findFirst(people, (found) => found._id === mention.id),
+                {
+                  onNone: () => [],
+                  onSome: (found) => [
+                    { _tag: "person" as const, id: found._id, name: found.name },
+                  ],
+                }
+              )
         );
         const text =
           message.sealedText === null
@@ -93,6 +117,7 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
           discussion,
           editedAt: message.editedAt ?? null,
           id: message._id,
+          mentions,
           mine: message.authorId === person._id,
           text,
         };

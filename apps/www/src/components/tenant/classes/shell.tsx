@@ -270,6 +270,8 @@ function ClassBody({
   const drafts = useDrafts();
   const canManage = Arr.contains(klass.can, "forum.manage");
   const canPost = Arr.contains(klass.can, "forum.post");
+  // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
+  const everyone = Arr.contains(klass.can, "post.publish");
 
   if (view._tag === "channel") {
     return (
@@ -277,6 +279,7 @@ function ClassBody({
         canManage={canManage}
         canPost={canPost}
         channelId={view.channelId}
+        everyone={everyone}
         jump={view.jump}
       />
     );
@@ -288,6 +291,7 @@ function ClassBody({
         <ForumDiscussion
           canManage={canManage}
           canPost={canPost}
+          everyone={everyone}
           jump={view.jump}
           thread={thread}
         />

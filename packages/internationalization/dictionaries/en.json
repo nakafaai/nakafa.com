@@ -801,7 +801,9 @@
     "post-new-description": "Everyone in the class reads it on the class home and in their notifications.",
     "post-submit": "Post",
     "post-text": "Announcement",
-    "post-email": "Also send by email"
+    "post-email": "Also send by email",
+    "mention-list": "People to mention",
+    "mention-everyone": "Everyone in the class"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
@@ -1144,7 +1146,11 @@
     "title": "Notifications",
     "mark-all-read": "Mark all read",
     "empty": "You have no notifications yet.",
-    "person-invited": "You have been invited to join this school."
+    "person-invited": "You have been invited to join this school.",
+    "forum-mentioned": "{actor} mentioned you in {className}.",
+    "forum-mentioned-gone": "You were mentioned in a class you no longer read.",
+    "announcement-posted": "{actor} posted an announcement in {className}.",
+    "announcement-posted-gone": "An announcement that is no longer there."
   },
   "Posts": {
     "placeholder": "What's new?",

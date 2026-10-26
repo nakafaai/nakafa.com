@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
+import type { MentionView } from "@repo/backend/confect/classroom/forum/mention";
 import { Clock, Effect, type Result, Schema } from "effect";
 import { forumCall } from "@/components/tenant/classes/forum/call";
 import {
@@ -25,15 +26,19 @@ type Optimistic<U, Args, A, E> = (
   args: Args
 ) => Promise<Result.Result<A, E>>;
 
+/** The mentions of a message as it shows them. */
+type Shown = readonly (typeof MentionView.Type)[];
+
 /**
  * The message the viewer writes now, as the forum shows it before the server answers: its client
- * key is its placeholder ID, and it carries the discussion it opens, if any.
+ * key is its placeholder ID, and it carries its mentions and the discussion it opens, if any.
  */
 const draft = Effect.fn("classroom.forum.draft")(function* (
   author: ForumMessage["author"],
   clientKey: string,
   text: string,
-  discussion: ForumMessage["discussion"]
+  discussion: ForumMessage["discussion"],
+  mentions: Shown
 ) {
   const createdAt = yield* Clock.currentTimeMillis;
   const id = yield* Schema.decodeUnknownEffect(Id("classroomMessages"))(
@@ -46,6 +51,7 @@ const draft = Effect.fn("classroom.forum.draft")(function* (
     discussion,
     editedAt: null,
     id,
+    mentions,
     mine: true,
     text,
   };
@@ -55,9 +61,10 @@ const draft = Effect.fn("classroom.forum.draft")(function* (
 export const sendMessage = Effect.fn("classroom.forum.send")(function* <E>(
   send: Optimistic<ReturnType<typeof sendUpdate>, SendArgs, ForumMessage, E>,
   author: ForumMessage["author"],
-  args: SendArgs
+  args: SendArgs,
+  mentions: Shown
 ) {
-  const message = yield* draft(author, args.clientKey, args.text, null);
+  const message = yield* draft(author, args.clientKey, args.text, null, mentions);
   return yield* forumCall(() => send(sendUpdate(message), args));
 });
 
@@ -65,9 +72,10 @@ export const sendMessage = Effect.fn("classroom.forum.send")(function* <E>(
 export const sendReply = Effect.fn("classroom.forum.reply")(function* <E>(
   reply: Optimistic<ReturnType<typeof replyUpdate>, ReplyArgs, ForumMessage, E>,
   author: ForumMessage["author"],
-  args: ReplyArgs
+  args: ReplyArgs,
+  mentions: Shown
 ) {
-  const message = yield* draft(author, args.clientKey, args.text, null);
+  const message = yield* draft(author, args.clientKey, args.text, null, mentions);
   return yield* forumCall(() => reply(replyUpdate(message), args));
 });
 
@@ -83,12 +91,18 @@ export const openDiscussion = Effect.fn("classroom.forum.open")(function* <
   author: ForumMessage["author"],
   args: OpenArgs
 ) {
-  const message = yield* draft(author, args.clientKey, args.text, {
-    lastReplyAt: null,
-    number: 1,
-    replies: 0,
-    title: args.title,
-    unread: false,
-  });
+  const message = yield* draft(
+    author,
+    args.clientKey,
+    args.text,
+    {
+      lastReplyAt: null,
+      number: 1,
+      replies: 0,
+      title: args.title,
+      unread: false,
+    },
+    []
+  );
   return yield* forumCall(() => open(openUpdate(message), args));
 });

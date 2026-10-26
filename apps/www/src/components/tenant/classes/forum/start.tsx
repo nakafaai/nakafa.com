@@ -76,7 +76,15 @@ export function StartDiscussion({
         openDiscussion(
           (update, args) => open.withOptimisticUpdate(update)(args),
           { id: person.id, name: person.name },
-          { channelId, classId, clientKey, slug, text: body, title: heading }
+          {
+            channelId,
+            classId,
+            clientKey,
+            mentions: [],
+            slug,
+            text: body,
+            title: heading,
+          }
         ).pipe(
           Effect.catchTag("DiscussionsClosed", () =>
             Effect.sync(() => restore(t("discussions-closed")))

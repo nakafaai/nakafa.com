@@ -801,7 +801,9 @@
     "post-new-description": "Alle in der Klasse lesen sie auf der Startseite der Klasse und in ihren Benachrichtigungen.",
     "post-submit": "Posten",
     "post-text": "Ankündigung",
-    "post-email": "Auch per E-Mail senden"
+    "post-email": "Auch per E-Mail senden",
+    "mention-list": "Personen zum Erwähnen",
+    "mention-everyone": "Alle in der Klasse"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1144,7 +1146,11 @@
     "title": "Benachrichtigungen",
     "mark-all-read": "Alle gelesen",
     "empty": "Du hast noch keine Benachrichtigungen.",
-    "person-invited": "Du wurdest eingeladen, dieser Schule beizutreten."
+    "person-invited": "Du wurdest eingeladen, dieser Schule beizutreten.",
+    "forum-mentioned": "{actor} hat dich in {className} erwähnt.",
+    "forum-mentioned-gone": "Du wurdest in einer Klasse erwähnt, die du nicht mehr liest.",
+    "announcement-posted": "{actor} hat in {className} eine Ankündigung gepostet.",
+    "announcement-posted-gone": "Eine Ankündigung, die es nicht mehr gibt."
   },
   "Posts": {
     "placeholder": "Was gibt es Neues?",

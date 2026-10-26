@@ -27,3 +27,9 @@ export class DiscussionsClosed extends Schema.TaggedError<DiscussionsClosed>()(
     "Only teachers open discussions in this school."
   )
 ) {}
+
+/** A mention of someone who does not write in the class, or of everyone by a member who is not its subject teacher. */
+export class MentionRefused extends Schema.TaggedError<MentionRefused>()(
+  "MentionRefused",
+  refusal("MENTION_REFUSED", "This message mentions someone it may not.")
+) {}

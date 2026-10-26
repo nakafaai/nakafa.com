@@ -60,8 +60,25 @@ export function NotificationRow({
   const href = Option.getOrUndefined(
     Option.map(pageOf(notification), (url) => url.href)
   );
+  const { detail } = notification;
   const sentence = Match.value(notification.changeType).pipe(
     Match.when("person.invited", () => t("person-invited")),
+    Match.when("forum.mentioned", () =>
+      detail === null
+        ? t("forum-mentioned-gone")
+        : t("forum-mentioned", {
+            actor: detail.actor,
+            className: detail.className,
+          })
+    ),
+    Match.when("announcement.posted", () =>
+      detail === null
+        ? t("announcement-posted-gone")
+        : t("announcement-posted", {
+            actor: detail.actor,
+            className: detail.className,
+          })
+    ),
     Match.exhaustive
   );
   // The change shows at once. The server's answer ends the effect: a refusal is reported

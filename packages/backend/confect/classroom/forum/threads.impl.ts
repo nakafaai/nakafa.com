@@ -14,6 +14,10 @@ import {
   missing,
 } from "@repo/backend/confect/classroom/forum/lookup";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
+import {
+  checkMentions,
+  noticeMentions,
+} from "@repo/backend/confect/classroom/forum/notice";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
@@ -67,6 +71,7 @@ const open = FunctionImpl.make(
   Effect.fn("classroom.forum.threads.open")(function* ({
     channelId,
     clientKey,
+    mentions,
     text,
     title,
   }) {
@@ -98,6 +103,7 @@ const open = FunctionImpl.make(
     if (!(yield* opensDiscussions(row, principal))) {
       return yield* new DiscussionsClosed();
     }
+    const checked = yield* checkMentions(row, mentions);
     const last = yield* reader
       .table("classroomThreads")
       .index(
@@ -128,12 +134,13 @@ const open = FunctionImpl.make(
         tenantId: row.tenantId,
       })
       .pipe(Effect.orDie);
-    yield* writer
+    const messageId = yield* writer
       .table("classroomMessages")
       .insert({
         ...fields,
         authorId: principal.person._id,
         createdAt,
+        mentions: checked.stored,
         sealedText: yield* sealText(keys, messageField(fields), text).pipe(
           Effect.orDie
         ),
@@ -141,6 +148,7 @@ const open = FunctionImpl.make(
         tenantId: row.tenantId,
       })
       .pipe(Effect.orDie);
+    yield* noticeMentions(messageId, row, createdAt, checked);
     yield* moveMark(
       principal.person._id,
       row,
@@ -204,6 +212,7 @@ const reply = FunctionImpl.make(
   "reply",
   Effect.fn("classroom.forum.threads.reply")(function* ({
     clientKey,
+    mentions,
     number,
     text,
   }) {
@@ -227,6 +236,7 @@ const reply = FunctionImpl.make(
       }
       return yield* messageView(sent.value);
     }
+    const checked = yield* checkMentions(row, mentions);
     const fields = { channelId: thread.channelId, classId: row._id, clientKey };
     const createdAt = yield* Clock.currentTimeMillis;
     const writer = yield* DatabaseWriter;
@@ -236,6 +246,7 @@ const reply = FunctionImpl.make(
         ...fields,
         authorId: person._id,
         createdAt,
+        mentions: checked.stored,
         sealedText: yield* sealText(
           yield* schoolKeys(row.tenantId),
           messageField(fields),
@@ -245,6 +256,7 @@ const reply = FunctionImpl.make(
         threadId: thread._id,
       })
       .pipe(Effect.orDie);
+    yield* noticeMentions(messageId, row, createdAt, checked);
     yield* writer
       .table("classroomThreads")
       .replace(

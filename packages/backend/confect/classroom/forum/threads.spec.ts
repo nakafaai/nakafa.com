@@ -2,7 +2,11 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
-import { DiscussionsClosed } from "@repo/backend/confect/classroom/forum/errors";
+import {
+  DiscussionsClosed,
+  MentionRefused,
+} from "@repo/backend/confect/classroom/forum/errors";
+import { Mentions } from "@repo/backend/confect/classroom/forum/mention";
 import {
   ClientKey,
   DiscussionNumber,
@@ -36,12 +40,14 @@ export default GroupSpec.make()
         channelId: Id("classroomChannels"),
         classId: Id("classes"),
         clientKey: ClientKey,
+        mentions: Mentions,
         slug: TenantSlug,
         text: MessageText,
         title: DiscussionTitle,
       }),
       returns: () => ThreadView,
-      error: () => Schema.Union([AccessDenied, DiscussionsClosed]),
+      error: () =>
+        Schema.Union([AccessDenied, DiscussionsClosed, MentionRefused]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(
@@ -74,11 +80,12 @@ export default GroupSpec.make()
       args: () => ({
         classId: Id("classes"),
         clientKey: ClientKey,
+        mentions: Mentions,
         number: DiscussionNumber,
         slug: TenantSlug,
         text: MessageText,
       }),
       returns: () => MessageView,
-      error: () => AccessDenied,
+      error: () => Schema.Union([AccessDenied, MentionRefused]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   );
