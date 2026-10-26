@@ -40,6 +40,8 @@ const FirstPartyManifest = Schema.Struct({
 export type FirstPartyManifest = typeof FirstPartyManifest.Type;
 
 const DependencyPolicyInput = Schema.Struct({
+  /** The text of bun.lock, which the policy reads for retired packages. */
+  lock: Schema.String,
   manifests: Schema.Array(FirstPartyManifest),
   rootManifest: PackageManifest,
   workspace: WorkspaceManifest,
@@ -147,13 +149,23 @@ export const readFirstPartyManifests = Effect.fn(
 export const inspectDependencyPolicy = Effect.fn(
   "RepositoryPolicy.inspectDependencies"
 )(function* (root: string) {
+  const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const rootManifest = yield* readPackageManifest(
     path.join(root, "package.json")
   );
   const workspace = workspaceManifestOf(rootManifest);
   const manifests = yield* readFirstPartyManifests(root);
+  const lockPath = path.join(root, "bun.lock");
+  const lock = yield* fileSystem
+    .readFileString(lockPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        readError(`Unable to read ${lockPath}.`, cause)
+      )
+    );
   return validateDependencyPolicy({
+    lock,
     manifests,
     rootManifest,
     workspace,
