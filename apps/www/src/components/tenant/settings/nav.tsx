@@ -13,6 +13,7 @@ import {
   SecurityLockIcon,
   StudentIcon,
   UserGroupIcon,
+  UserListIcon,
   UserMultiple02Icon,
   UserSettings01Icon,
 } from "@hugeicons/core-free-icons";
@@ -53,7 +54,11 @@ const groupIcons: Record<
   security: SecurityLockIcon,
 };
 
-/** The icon of each section, beside its name. A section added without one does not compile. */
+/**
+ * The icon of each section, beside its name. A section added without one does not compile, and
+ * no section draws the icon of a group or of another section, so each entry of the sidebar is told
+ * apart by its icon alone.
+ */
 const sectionIcons: Record<
   SchoolSettingsGroup["sections"][number]["labelKey"],
   ComponentProps<typeof HugeIcons>["icon"]
@@ -63,7 +68,7 @@ const sectionIcons: Record<
   clients: Plug01Icon,
   cohorts: UserMultiple02Icon,
   invites: Mail01Icon,
-  members: UserGroupIcon,
+  members: UserListIcon,
   periods: Calendar03Icon,
   policies: SecurityCheckIcon,
   profile: InformationCircleIcon,

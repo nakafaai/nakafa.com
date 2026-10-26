@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -112,5 +112,38 @@ test("a settings group stays open when the viewer opens a section of another gro
   // The School group the viewer came from stays open, so Members keeps its place.
   await expect(profile).toBeVisible();
   expect((await members.boundingBox())?.y).toBe(before?.y);
+  await context.close();
+});
+
+test("no two entries of the settings sidebar draw the same icon, a group and its sections included", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+  await page.goto(address("/settings/profile"));
+
+  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  await waitUntilTakenOver(sidebar.getByRole("button", { name: "People" }));
+  for (const group of ["People", "Integrations", "Security"]) {
+    await sidebar.getByRole("button", { name: group }).click();
+  }
+  const entries = sidebar.locator(
+    '[data-slot="sidebar-menu-button"], [data-slot="sidebar-menu-sub-button"]'
+  );
+  await expect(
+    sidebar.getByRole("link", { name: "Audit trail", exact: true })
+  ).toBeVisible();
+
+  // Each entry's first icon is its own; the fold arrow after a group's name is not an entry's icon.
+  const icons = await entries.evaluateAll((nodes) =>
+    nodes.map((node) => node.querySelector("svg")?.innerHTML ?? "")
+  );
+  expect(icons.length).toBeGreaterThan(10);
+  expect(Arr.dedupe(icons)).toEqual(icons);
   await context.close();
 });
