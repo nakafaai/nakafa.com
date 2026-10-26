@@ -1,66 +1,109 @@
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
 } from "@repo/design-system/components/ui/empty";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
-import { TableRow } from "@repo/design-system/components/ui/table";
+import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { cva } from "class-variance-authority";
 import { Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
-import { useTranslations } from "use-intl";
+import { createPortal } from "react-dom";
 import { createStore, type StoreApi, useStore } from "zustand";
 
-/** Which row of a page's list is open beside it, by its ID. */
-const PanesState = Schema.Struct({ open: Schema.Option(Schema.String) });
+/** From which width the open row stands beside the list: tablet for a list, laptop for the exam editor. */
+const PanesWidth = Schema.Literals(["md", "lg"]);
 
-/** The actions that open a row beside the list and close it again. */
+/** Which row of a page's list is open beside it, by its ID, and whether the phone's sheet shows it. */
+const PanesState = Schema.Struct({
+  open: Schema.Option(Schema.String),
+  sheet: Schema.Boolean,
+});
+
+/**
+ * The actions of a page's panes, and the elements that a detail drawn elsewhere on the page
+ * portals into: the body of the pane beside the list and the body of the phone's sheet. No
+ * Schema describes an element, so this part is a plain shape.
+ */
 interface PanesActions {
+  readonly aside: HTMLElement | null;
+  /** Closes the open row and the phone's sheet. */
   readonly close: () => void;
+  readonly setAside: (element: HTMLElement | null) => void;
+  readonly setSheetBody: (element: HTMLElement | null) => void;
+  readonly sheetBody: HTMLElement | null;
+  /** Opens a row beside the list, or in the sheet on a phone. */
   readonly show: (id: string) => void;
+  /** Opens the phone's sheet of a detail that is always on, such as the exam editor's panel. */
+  readonly showSheet: () => void;
 }
 
-/** The open row of one page, with its actions. */
+/** The panes of one page, with their actions. */
 type PanesStore = typeof PanesState.Type & PanesActions;
 
-/** Creates the panes of one page, with no row open. */
+/** Creates the panes of one page, with no row open and the sheet closed. */
 const createPanes = () =>
   createStore<PanesStore>()((set) => ({
-    close: () => set({ open: Option.none() }),
+    aside: null,
+    close: () => set({ open: Option.none(), sheet: false }),
     open: Option.none(),
-    show: (id) => set({ open: Option.some(id) }),
+    setAside: (aside) => set({ aside }),
+    setSheetBody: (sheetBody) => set({ sheetBody }),
+    sheet: false,
+    sheetBody: null,
+    show: (id) => set({ open: Option.some(id), sheet: true }),
+    showSheet: () => set({ sheet: true }),
   }));
 
 const PanesContext = createContext<StoreApi<PanesStore> | null>(null);
 
-/** Where an open row draws its detail: the pane beside the list, or the phone's sheet. */
-const PaneMode = Schema.Literals(["aside", "sheet"]);
-
-const PaneModeContext = createContext<typeof PaneMode.Type>("aside");
+const PanesWidthContext = createContext<typeof PanesWidth.Type>("md");
 
 /**
- * Gives a page its two panes, created once for the page: the list in the first, and
- * the row open in the second, beside it from tablet width and in a sheet on a phone.
+ * Where a detail draws, and how its header closes it: beside the first pane, where a row's
+ * detail closes and an always-on detail does not, or in the phone's sheet, which closes itself.
+ * It holds the close action, a function, so it is a plain shape.
  */
-export function PanesProvider({ children }: { children: ReactNode }) {
+interface PaneMode {
+  /** Closes the detail from its header; none for an always-on detail beside the first pane. */
+  readonly close: (() => void) | undefined;
+  readonly place: "aside" | "sheet";
+}
+
+const PaneModeContext = createContext<PaneMode>({
+  close: undefined,
+  place: "aside",
+});
+
+/** Where the detail around the caller draws, and how its header closes it. */
+export function usePaneMode() {
+  return use(PaneModeContext);
+}
+
+/**
+ * Gives a page its two panes, created once for the page: the list or the canvas in the first,
+ * and the open row or the panel in the second, beside it from `wideFrom` and in a sheet below it.
+ */
+export function PanesProvider({
+  children,
+  wideFrom = "md",
+}: {
+  children: ReactNode;
+  wideFrom?: typeof PanesWidth.Type;
+}) {
   const [store] = useState(createPanes);
 
-  return <PanesContext value={store}>{children}</PanesContext>;
+  return (
+    <PanesContext value={store}>
+      <PanesWidthContext value={wideFrom}>{children}</PanesWidthContext>
+    </PanesContext>
+  );
 }
 
 /** Reads one selected slice of the page's panes. */
@@ -79,18 +122,54 @@ export function useHasPanes() {
   return use(PanesContext) !== null;
 }
 
+/** Whether the screen is wide enough for the second pane to stand beside the first. */
+function useWide() {
+  const width = use(PanesWidthContext);
+
+  return useMediaQuery(
+    width === "lg"
+      ? TAILWIND_MEDIA_QUERIES.lgAndUp
+      : TAILWIND_MEDIA_QUERIES.mdAndUp
+  );
+}
+
 /**
- * The two panes as the whole body of a page, from under its header to the bottom of the
- * screen: the list, then the open row beside it, each scrolling on its own, and the handle
- * between them that resizes both, as the exam editor does. The group keeps its sizes while
- * rows open and close. Below tablet width the handle and the second pane step aside, so the
- * list takes the row and the open row shows in a sheet. A page whose header is taller than
- * the school header's 4rem sets `--panes-offset` to its height.
+ * The group's width, height, and where its second pane steps aside. It fills the page up to the
+ * app's widest content, `max-w-7xl`, and no further. A list's panes run from under its
+ * header to the bottom of the screen, and a page whose header is taller than the school header's
+ * 4rem sets `--panes-offset` to its height; the exam editor's panes fill the room its shell leaves.
  */
-export function Panes({ children }: { children: ReactNode }) {
+const panesVariants = cva("mx-auto min-h-0 w-full max-w-7xl", {
+  variants: {
+    fill: {
+      parent: "flex-1",
+      screen: "h-[calc(100svh-var(--panes-offset,4rem))]",
+    },
+    wideFrom: {
+      lg: "max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!",
+      md: "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
+    },
+  },
+});
+
+/**
+ * The two panes: the first, then the second beside it, each scrolling on its own, with the
+ * handle between them that resizes both. The group keeps its sizes while rows open and close.
+ * Below `wideFrom` the handle and the second pane step aside, so the first takes the row and
+ * the second shows in a sheet.
+ */
+export function Panes({
+  children,
+  fill = "screen",
+}: {
+  children: ReactNode;
+  fill?: "parent" | "screen";
+}) {
+  const wideFrom = use(PanesWidthContext);
+
   return (
     <ResizablePanelGroup
-      className="max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden! h-[calc(100svh-var(--panes-offset,4rem))] min-h-0"
+      className={panesVariants({ fill, wideFrom })}
       orientation="horizontal"
     >
       {children}
@@ -98,7 +177,7 @@ export function Panes({ children }: { children: ReactNode }) {
   );
 }
 
-/** The first pane: the page's list, which takes the width the open row leaves. */
+/** The first pane: the page's list or canvas, which takes the width the second pane leaves. */
 export function PanesList({ children }: { children: ReactNode }) {
   return (
     <ResizablePanel className="flex min-w-0 flex-col" id="list" minSize="40%">
@@ -108,25 +187,38 @@ export function PanesList({ children }: { children: ReactNode }) {
 }
 
 /**
- * The second pane: the handle, then the open row's detail beside the list from tablet
- * width, where it says what it will show while no row is open, and a sheet from the bottom
- * on a phone, which closes the row as it closes. The detail draws in one place at a time.
+ * The second pane: the handle, then the detail beside the first pane, and the phone's sheet from
+ * the bottom of the screen. A row's detail says in `empty` what it will show while no row is open,
+ * shows a row as it opens, and closes the row as its sheet closes. A detail without `empty` is
+ * always on beside the first pane, and its sheet opens by `showSheet`. A page whose own selection
+ * holds the open row passes `open` and `onClose`. The detail draws in one place at a time.
  */
 export function PanesDetail({
   children,
   empty,
   label,
+  onClose,
+  open,
 }: {
-  /** The open row's header, body and footer. */
+  /** The detail's header, body and footer. */
   children: ReactNode;
-  /** What the pane shows while no row is open, in one sentence. */
-  empty: string;
+  /** What the pane shows while no row is open, in one sentence; none for an always-on detail. */
+  empty?: string;
   /** The pane's name for a screen reader. */
   label: string;
+  /** Closes a row that the page's own selection holds, in place of the panes' own. */
+  onClose?: () => void;
+  /** Whether a row that the page's own selection holds is open, in place of the panes' own. */
+  open?: boolean;
 }) {
-  const wide = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
-  const isOpen = usePanes((state) => Option.isSome(state.open));
-  const close = usePanes((state) => state.close);
+  const wide = useWide();
+  const rowOpen = usePanes((state) => Option.isSome(state.open));
+  const sheetOpen = usePanes((state) => state.sheet);
+  const closePanes = usePanes((state) => state.close);
+  const isOpen = open ?? rowOpen;
+  const sheet = open ?? sheetOpen;
+  const close = onClose ?? closePanes;
+  const closes = empty !== undefined;
 
   return (
     <>
@@ -136,14 +228,18 @@ export function PanesDetail({
           aria-label={label}
           className="flex h-full flex-col bg-background"
         >
-          {wide && isOpen ? (
-            <PaneModeContext value="aside">{children}</PaneModeContext>
-          ) : (
+          {closes && !(wide && isOpen) ? (
             <Empty className="flex-1">
               <EmptyHeader>
                 <EmptyDescription>{empty}</EmptyDescription>
               </EmptyHeader>
             </Empty>
+          ) : (
+            <PaneModeContext
+              value={{ close: closes ? close : undefined, place: "aside" }}
+            >
+              {children}
+            </PaneModeContext>
           )}
         </aside>
       </ResizablePanel>
@@ -153,11 +249,13 @@ export function PanesDetail({
             close();
           }
         }}
-        open={!wide && isOpen}
+        open={!wide && sheet}
       >
         <SheetContent className="max-h-[85svh]" side="bottom">
-          {!wide && isOpen ? (
-            <PaneModeContext value="sheet">{children}</PaneModeContext>
+          {!wide && sheet ? (
+            <PaneModeContext value={{ close, place: "sheet" }}>
+              {children}
+            </PaneModeContext>
           ) : null}
         </SheetContent>
       </Sheet>
@@ -166,162 +264,28 @@ export function PanesDetail({
 }
 
 /**
- * The open row's header: its title, and what it is on a second line. Beside the list it
- * holds the button that closes the row; the phone's sheet has its own.
+ * The place in a detail's body where a part drawn elsewhere on the page shows, through
+ * `PanePortal`: the pane beside the first only while it shows, and the phone's sheet while it is open.
  */
-export function PaneHeader({
-  description,
-  title,
-}: {
-  description?: string;
-  title: string;
-}) {
-  const t = useTranslations("Common");
-  const mode = use(PaneModeContext);
-  const close = usePanes((state) => state.close);
+export function PaneTarget() {
+  const wide = useWide();
+  const { place } = use(PaneModeContext);
+  const setAside = usePanes((state) => state.setAside);
+  const setSheetBody = usePanes((state) => state.setSheetBody);
 
-  if (mode === "sheet") {
-    return (
-      <SheetHeader>
-        <SheetTitle dir="auto">{title}</SheetTitle>
-        {description === undefined ? null : (
-          <SheetDescription dir="auto">{description}</SheetDescription>
-        )}
-      </SheetHeader>
-    );
+  if (place === "sheet") {
+    return <div className="contents" ref={setSheetBody} />;
   }
 
-  return (
-    <header className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <h2 className="truncate font-medium text-sm" dir="auto">
-          {title}
-        </h2>
-        {description === undefined ? null : (
-          <p className="truncate text-muted-foreground text-sm" dir="auto">
-            {description}
-          </p>
-        )}
-      </div>
-      <Button
-        aria-label={t("close")}
-        onClick={close}
-        size="icon-sm"
-        type="button"
-        variant="ghost"
-      >
-        <HugeIcons icon={Cancel01Icon} />
-      </Button>
-    </header>
-  );
+  return <div className="contents" ref={wide ? setAside : null} />;
 }
-
-/** The open row's body, which scrolls on its own. */
-export function PaneBody({ children }: { children: ReactNode }) {
-  const mode = use(PaneModeContext);
-
-  return (
-    <div
-      className={
-        mode === "sheet"
-          ? "min-h-0 flex-1 overflow-y-auto px-4 pb-4"
-          : "min-h-0 flex-1 overflow-y-auto p-4"
-      }
-    >
-      {children}
-    </div>
-  );
-}
-
-/** The open row's footer: one row of its actions, at the end. */
-export function PaneFooter({ children }: { children: ReactNode }) {
-  return (
-    <footer className="flex shrink-0 items-center justify-end gap-2 border-t px-4 py-3">
-      {children}
-    </footer>
-  );
-}
-
-/** A fact of the open row: its label, and its value under it. */
-export function PaneFact({
-  children,
-  label,
-}: {
-  children: ReactNode;
-  label: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="font-medium text-sm" dir="auto">
-        {children}
-      </dd>
-    </div>
-  );
-}
-
-/** The facts of the open row, one under another. */
-export function PaneFacts({ children }: { children: ReactNode }) {
-  return <dl className="flex flex-col gap-4">{children}</dl>;
-}
-
-/** The row's main cell: its name, as a button that opens the row beside the list. */
-export function PaneOpen({
-  children,
-  id,
-}: {
-  children: ReactNode;
-  id: string;
-}) {
-  const show = usePanes((state) => state.show);
-
-  return (
-    <button
-      className="font-medium underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
-      dir="auto"
-      onClick={() => show(id)}
-      type="button"
-    >
-      {children}
-    </button>
-  );
-}
-
-/** The elements of a row that do their own thing when pressed, so pressing them opens no row. */
-const ROW_CONTROLS =
-  "a, button, input, label, select, textarea, [role=menuitem]";
 
 /**
- * A data table's row on a page with panes: pressing it opens the row beside the list,
- * unless the press lands on a control of its own, and the open row stays marked.
+ * Draws a part of the page, such as the teacher layer of the exam editor's chosen question, in
+ * the detail's `PaneTarget`: the open sheet, else the pane beside the first, else nowhere.
  */
-export function PaneTableRow({
-  children,
-  id,
-}: {
-  children: ReactNode;
-  id: string;
-}) {
-  const isOpen = usePanes((state) =>
-    Option.exists(state.open, (open) => open === id)
-  );
-  const show = usePanes((state) => state.show);
+export function PanePortal({ children }: { children: ReactNode }) {
+  const target = usePanes((state) => state.sheetBody ?? state.aside);
 
-  return (
-    <TableRow
-      className="h-12 cursor-pointer"
-      data-state={isOpen ? "selected" : undefined}
-      onClick={(event) => {
-        if (
-          event.target instanceof Element &&
-          event.target.closest(ROW_CONTROLS) !== null
-        ) {
-          return;
-        }
-        show(id);
-      }}
-    >
-      {children}
-    </TableRow>
-  );
+  return target === null ? null : createPortal(children, target);
 }

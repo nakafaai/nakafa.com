@@ -18,6 +18,8 @@ import {
   PaneFooter,
   PaneHeader,
   PaneOpen,
+} from "@/components/shared/pane";
+import {
   Panes,
   PanesDetail,
   PanesList,
