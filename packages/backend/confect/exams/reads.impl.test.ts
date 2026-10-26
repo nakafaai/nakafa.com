@@ -13,7 +13,7 @@ import { deployment, provider } from "@repo/backend/test/gateway";
 import { storeFile } from "@repo/backend/test/logo";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect } from "effect";

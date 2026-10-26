@@ -15,6 +15,7 @@ import spec from "@repo/backend/confect/exams/exams.spec";
 import { readHome } from "@repo/backend/confect/exams/home/read";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
 import { readQuestion } from "@repo/backend/confect/exams/questions/read";
+import { removeExam } from "@repo/backend/confect/exams/remove";
 import { scheduleCohortsOf } from "@repo/backend/confect/exams/sittings/audience";
 import { scheduleSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -158,6 +159,17 @@ const rename = FunctionImpl.make(
   })
 );
 
+/** Deletes a draft exam with its questions, their documents, and its images (`removeExam`). */
+const remove = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "remove",
+  Effect.fn("exams.remove")(function* () {
+    yield* removeExam(yield* Exam);
+    return null;
+  })
+);
+
 /**
  * Schedules a sitting of this exam for one group and room, with a new token. The exam
  * must have a key that fits each question, so the sitting can be marked (round 2, decision 10).
@@ -185,13 +197,14 @@ const cohorts = FunctionImpl.make(
   })
 );
 
-/** Implements the exams group of `exams.spec.ts`: create, list, home, open, rename, schedule, and cohorts. */
+/** Implements the exams group of `exams.spec.ts`: create, list, home, open, rename, remove, schedule, and cohorts. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(list),
   Layer.provide(home),
   Layer.provide(open),
   Layer.provide(rename),
+  Layer.provide(remove),
   Layer.provide(schedule),
   Layer.provide(cohorts),
   Layer.provide(session),
