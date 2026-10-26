@@ -101,6 +101,9 @@ test("a settings group stays open when the viewer opens a section of another gro
   await waitUntilTakenOver(sidebar.getByRole("button", { name: "People" }));
   await sidebar.getByRole("button", { name: "People" }).click();
   const members = sidebar.getByRole("link", { name: "Members", exact: true });
+  // Every settings item carries its icon beside its name.
+  await expect(members.locator("svg")).toHaveCount(1);
+  await expect(profile.locator("svg")).toHaveCount(1);
   const before = await members.boundingBox();
   await members.click();
 

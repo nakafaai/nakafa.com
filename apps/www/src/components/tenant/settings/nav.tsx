@@ -1,9 +1,19 @@
 import {
   ArrowRight01Icon,
+  Building03Icon,
+  Calendar03Icon,
+  DocumentValidationIcon,
+  InformationCircleIcon,
   Link01Icon,
+  Mail01Icon,
+  Plug01Icon,
   School01Icon,
+  SecurityCheckIcon,
   SecurityLockIcon,
+  StudentIcon,
   UserGroupIcon,
+  UserMultiple02Icon,
+  UserSettings01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   Collapsible,
@@ -40,6 +50,24 @@ const groupIcons: Record<
   people: UserGroupIcon,
   school: School01Icon,
   security: SecurityLockIcon,
+};
+
+/** The icon of each section, beside its name. A section added without one does not compile. */
+const sectionIcons: Record<
+  SchoolSettingsGroup["sections"][number]["labelKey"],
+  ComponentProps<typeof HugeIcons>["icon"]
+> = {
+  audit: DocumentValidationIcon,
+  clients: Plug01Icon,
+  cohorts: UserMultiple02Icon,
+  invites: Mail01Icon,
+  members: UserGroupIcon,
+  periods: Calendar03Icon,
+  policies: SecurityCheckIcon,
+  profile: InformationCircleIcon,
+  roles: UserSettings01Icon,
+  students: StudentIcon,
+  units: Building03Icon,
 };
 
 /**
@@ -109,6 +137,7 @@ function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
                 isActive={isSectionActive(section)}
                 render={<TargetLink target={section.target} />}
               >
+                <HugeIcons icon={sectionIcons[section.labelKey]} />
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
