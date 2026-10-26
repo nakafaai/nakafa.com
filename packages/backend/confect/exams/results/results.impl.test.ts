@@ -339,6 +339,69 @@ describe("exams/results", () => {
   );
 
   it.effect(
+    "shows the staff one student's scored answers, and refuses an attempt of another sitting and a student",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const questionId = yield* firstQuestion(fixture, made.id);
+        yield* enterOk(fixture, {
+          deviceId: DEVICE,
+          sittingId: made.id,
+          token: made.token,
+        });
+        yield* answer(fixture, made.id, questionId, "option-2");
+        yield* finish(fixture, made.id);
+        const students = yield* fixture.as("teacher").query(results.byStudent, {
+          paginationOpts: { cursor: null, numItems: 10 },
+          sittingId: made.id,
+          slug: nf,
+        });
+        const attemptId = (yield* Effect.fromOption(Arr.head(students.page)))
+          .attemptId;
+        const otherExam = yield* keyedExam(fixture, "PAS");
+        const other = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT + 7_200_000,
+          examId: otherExam,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: CLOSES_AT + 3_600_000,
+        });
+        expect(
+          yield* fixture
+            .as("teacher")
+            .query(results.attempt, { attemptId, sittingId: made.id, slug: nf })
+        ).toEqual({
+          points: 0,
+          questions: [
+            {
+              number: 1,
+              optionIds: ["option-1", "option-2", "option-3", "option-4"],
+              points: 1,
+              response: ["option-2"],
+              verdict: "incorrect",
+            },
+          ],
+        });
+        expect(
+          yield* fixture
+            .as("teacher")
+            .query(results.attempt, {
+              attemptId,
+              sittingId: other.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied", reason: "resource" });
+        expect(
+          yield* fixture
+            .as("student")
+            .query(results.attempt, { attemptId, sittingId: made.id, slug: nf })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied" });
+      })
+  );
+
+  it.effect(
     "lists a student who has not finished with no score, and shows that student no result",
     () =>
       Effect.gen(function* () {

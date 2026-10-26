@@ -18,12 +18,23 @@ import {
 } from "@/components/shared/card/section";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
+/** Who reads an answer: the student who gave it, or the staff who read the sitting's results. */
+type AnswerReader = "staff" | "student";
+
+/** The line of each reader's answer, addressed to the student or naming the answer for the staff. */
+const answerKeys = {
+  staff: "staff-answer",
+  student: "student-answer",
+} satisfies Record<AnswerReader, "staff-answer" | "student-answer">;
+
 /** The letters of the options that a student chose, or a line that says the question was left unanswered. */
 function AnswerLine({
   optionIds,
+  reader,
   response,
 }: {
   readonly optionIds: readonly string[];
+  readonly reader: AnswerReader;
   readonly response: readonly string[];
 }) {
   const t = useTranslations("Exams");
@@ -31,14 +42,16 @@ function AnswerLine({
   if (letters.length === 0) {
     return t("student-no-answer");
   }
-  return t("student-answer", { letters: Arr.join(letters, ", ") });
+  return t(answerKeys[reader], { letters: Arr.join(letters, ", ") });
 }
 
-/** One question of the student's result: its number and verdict, with the answer that the student chose beneath. */
-function AnswerItem({
+/** One question of a student's result: its number and verdict, with the answer that the student chose beneath. */
+export function AnswerItem({
   question,
+  reader,
 }: {
   readonly question: (typeof StudentResult.Type)["questions"][number];
+  readonly reader: AnswerReader;
 }) {
   const t = useTranslations("Exams");
 
@@ -51,6 +64,7 @@ function AnswerItem({
       <span className="text-muted-foreground">
         <AnswerLine
           optionIds={question.optionIds}
+          reader={reader}
           response={question.response}
         />
       </span>
@@ -132,7 +146,11 @@ function StudentResultsContent({
         <p className="font-medium">{t("student-score", { points, total })}</p>
         <ul aria-label={t("student-answers")} className="grid gap-3">
           {Arr.map(questions, (question) => (
-            <AnswerItem key={question.number} question={question} />
+            <AnswerItem
+              key={question.number}
+              question={question}
+              reader="student"
+            />
           ))}
         </ul>
       </CardContent>

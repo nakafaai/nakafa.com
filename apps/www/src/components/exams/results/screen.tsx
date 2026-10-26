@@ -5,6 +5,8 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
 import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
+import { StudentAnswersPane } from "@/components/exams/results/answers";
+import { ResultsChoiceProvider } from "@/components/exams/results/choice";
 import {
   ResultsPaperContext,
   ResultsScopeContext,
@@ -40,8 +42,8 @@ const ResultsPreloadContext = createContext<ResultsPreload | undefined>(
 );
 
 /**
- * The results of one sitting for its teacher: the students' list as the page's body, and in its one
- * header row the search and Filter of that list, Questions, which opens each question's statistics and
+ * The results of one sitting for its teacher: the students' list as the page's body, with the chosen
+ * student's answers in a pane beside it (a sheet on a phone), and in its one header row the search and Filter of that list, Questions, which opens each question's statistics and
  * answers in a sheet, and Release results, the page's main action. A viewer who may not read the results gets one sentence instead. A failed
  * read shows its own sentence and Try again in place of the page, and a viewer who lost the school's
  * access is sent to the refused page.
@@ -138,11 +140,16 @@ function SittingResultsContent({
           <QuestionsAction questions={questions} />
           <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
         </ResultsHeader>
-        <div className="flex w-full min-w-0 flex-1 flex-col">
+        <ResultsChoiceProvider>
           <ResultsPaperContext value={paper}>
-            <StudentsTable first={preload?.students} status={status} />
+            <div className="flex w-full min-w-0 flex-1">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <StudentsTable first={preload?.students} status={status} />
+              </div>
+              <StudentAnswersPane />
+            </div>
           </ResultsPaperContext>
-        </div>
+        </ResultsChoiceProvider>
       </TableFiltersProvider>
     </ResultsScopeContext>
   );
