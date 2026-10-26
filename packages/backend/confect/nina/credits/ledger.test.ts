@@ -105,8 +105,13 @@ describe("Nina credit transactions", () => {
             );
           }
           if (operation === "state") {
-            vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
-              throw new Error("private state detail");
+            // The credit state reads the reset periods; the school pool's reads before it stay real.
+            const query = ctx.db.query.bind(ctx.db);
+            vi.spyOn(ctx.db, "query").mockImplementation((table) => {
+              if (table === "creditResetPeriods") {
+                throw new Error("private state detail");
+              }
+              return query(table);
             });
           }
           if (operation === "quota") {

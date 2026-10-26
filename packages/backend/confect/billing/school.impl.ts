@@ -58,14 +58,10 @@ const readInvoices = Effect.fn("billing.school.readInvoices")(function* (
     )
     .take(INVOICE_LIST_LIMIT)
     .pipe(Effect.orDie);
-  return Arr.sort(
+  return Arr.sortWith(
     invoices,
-    Order.flip(
-      Order.mapInput(
-        Order.Number,
-        (invoice: (typeof invoices)[number]) => invoice._creationTime
-      )
-    )
+    (invoice) => invoice._creationTime,
+    Order.flip(Order.Number)
   );
 });
 

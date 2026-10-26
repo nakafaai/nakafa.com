@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
@@ -10,7 +11,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, DateTime, Duration, Effect, Schema } from "effect";
 
 const nf = slugOf("nf");
 const other = slugOf("other");
@@ -155,6 +156,62 @@ describe("billing/school", () => {
           .as("otherOwner")
           .query(overview, { slug: other });
         expect(read.invoices).toEqual([]);
+      })
+  );
+
+  it.effect("lists a school's invoices newest first", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const owner = fixture.as("owner");
+      const semester = yield* owner.mutation(pay, {
+        offer: "school.seat.semester",
+        slug: nf,
+      });
+      const year = yield* owner.mutation(pay, {
+        offer: "school.seat.year",
+        slug: nf,
+      });
+      const read = yield* owner.query(overview, { slug: nf });
+      expect(Arr.map(read.invoices, (invoice) => invoice.number)).toEqual([
+        year.number,
+        semester.number,
+      ]);
+    })
+  );
+
+  it.effect(
+    "shows a paid school's Nina pool: what its grants hold this month and what its members drew",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            yield* writer.table("billingGrants").insert({
+              product: "school",
+              tenantId: fixture.tenants.nf,
+              scope: { kind: "tenant" },
+              seats: 3,
+              ninaSeats: 3,
+              source: { kind: "contract", contractId: "contract-pool" },
+              validFrom: 0,
+              validTo: TENANCY_NOW + Duration.toMillis(Duration.days(90)),
+            });
+            yield* writer.table("creditPools").insert({
+              tenantId: fixture.tenants.nf,
+              month: DateTime.formatIsoDateUtc(
+                DateTime.makeUnsafe(TENANCY_NOW)
+              ).slice(0, 7),
+              used: 120,
+            });
+          })
+        );
+        const read = yield* fixture.as("owner").query(overview, { slug: nf });
+        expect(read.plan).toMatchObject({
+          kind: "school",
+          nina: { capacity: 300, used: 120 },
+          seats: 3,
+        });
       })
   );
 });

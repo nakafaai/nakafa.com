@@ -394,19 +394,54 @@ describe("billing/contracts", () => {
           }
         );
         expect(issued.total).toBe(160_000);
-        const opensSession = yield* t.run(
+        // A school outside Indonesia pays its contract by transfer, so no session opens for it.
+        yield* t.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            yield* writer.table("tenants").insert({
+              country: "DE",
+              currency: "EUR",
+              kind: "school",
+              name: "Gymnasium Harapan",
+              policies: {
+                emailDomains: [],
+                nina: false,
+                studentThreads: false,
+              },
+              slug: yield* Schema.decodeEffect(TenantSlug)("gymnasium-harapan"),
+              status: "active",
+            });
+          })
+        );
+        yield* t.mutation(
+          refs.internal.billing.contracts.issueContractInvoice,
+          {
+            buyerTaxId: null,
+            description: "Enterprise 2026/2027",
+            periodEnd: TERM_END,
+            periodStart: TERM_START,
+            seats: 2,
+            tenantSlug: "gymnasium-harapan",
+            unitAmount: 1000,
+          }
+        );
+        const sessions = yield* t.run(
           Effect.flatMap(MutationCtx, (ctx) =>
             Effect.promise(() =>
               ctx.db.system.query("_scheduled_functions").collect()
             )
           ).pipe(
-            Effect.map(
-              Arr.some((job) => job.name.includes("billing/xendit/invoice"))
+            Effect.map((jobs) =>
+              Arr.length(
+                Arr.filter(jobs, (job) =>
+                  job.name.includes("billing/xendit/invoice")
+                )
+              )
             )
           ),
-          Schema.Boolean
+          Schema.Number
         );
-        expect(opensSession).toBe(true);
+        expect(sessions).toBe(1);
       }).pipe(
         Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())),
         Effect.provide(confectLayer)
