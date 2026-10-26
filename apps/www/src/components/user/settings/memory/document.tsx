@@ -181,6 +181,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
             defaultValue={starting.text}
             label={t("text")}
             labels={{
+              arabic: labels("arabic"),
               bold: labels("bold"),
               bullets: labels("bullets"),
               code: labels("code"),

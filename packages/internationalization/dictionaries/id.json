@@ -1021,6 +1021,15 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "arabic-fatha": "Fathah",
+    "arabic-kasra": "Kasrah",
+    "arabic-damma": "Dammah",
+    "arabic-sukun": "Sukun",
+    "arabic-shadda": "Syaddah",
+    "arabic-fathatan": "Fathatain",
+    "arabic-kasratan": "Kasratain",
+    "arabic-dammatan": "Dammatain",
+    "arabic-space": "Spasi",
     "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
     "load-error-retry": "Data ini belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
@@ -1577,6 +1586,7 @@
     "buy-credits": "Beli kredit"
   },
   "Editor": {
+    "arabic": "Papan ketik Arab",
     "undo": "Urungkan",
     "redo": "Ulangi",
     "heading-1": "Judul 1",

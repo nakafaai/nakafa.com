@@ -1021,6 +1021,15 @@
     "classification": "Bildung"
   },
   "Common": {
+    "arabic-fatha": "Fatha",
+    "arabic-kasra": "Kasra",
+    "arabic-damma": "Damma",
+    "arabic-sukun": "Sukun",
+    "arabic-shadda": "Schadda",
+    "arabic-fathatan": "Fathatan",
+    "arabic-kasratan": "Kasratan",
+    "arabic-dammatan": "Dammatan",
+    "arabic-space": "Leertaste",
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
     "load-error-retry": "Diese Daten konnten nicht geladen werden.",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
@@ -1577,6 +1586,7 @@
     "buy-credits": "Credits kaufen"
   },
   "Editor": {
+    "arabic": "Arabische Tastatur",
     "undo": "Rückgängig",
     "redo": "Wiederholen",
     "heading-1": "Überschrift 1",

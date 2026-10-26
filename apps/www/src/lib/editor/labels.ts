@@ -54,6 +54,7 @@ export function useDocumentLabels() {
       insert,
       slash,
       toolbar: {
+        arabic: t("arabic"),
         bold: t("bold"),
         bullets,
         code: t("code"),
