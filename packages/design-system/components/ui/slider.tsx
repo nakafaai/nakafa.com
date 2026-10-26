@@ -32,9 +32,11 @@ function Slider<Value extends number | readonly number[]>({
 
   const thumbKeys = createThumbKeys(thumbCount);
 
+  // The root is a plain `w-full`, so a caller's width wins the merge. A data variant would outrank that width
+  // in the cascade, and in a row that sizes to its content the track would measure nothing and only the thumb show.
   return (
     <SliderPrimitive.Root
-      className={cn("data-vertical:h-full data-horizontal:w-full", className)}
+      className={cn("w-full data-vertical:h-full data-vertical:w-auto", className)}
       data-slot="slider"
       defaultValue={defaultValue}
       max={max}
@@ -50,7 +52,7 @@ function Slider<Value extends number | readonly number[]>({
       >
         <SliderPrimitive.Track
           className={cn(
-            "relative grow cursor-pointer select-none overflow-hidden rounded-full border border-input bg-background data-horizontal:h-1.5 data-vertical:h-full data-horizontal:w-full data-vertical:w-1.5 data-disabled:cursor-not-allowed"
+            "relative grow cursor-pointer select-none overflow-hidden rounded-full bg-muted data-horizontal:h-1.5 data-vertical:h-full data-horizontal:w-full data-vertical:w-1.5 data-disabled:cursor-not-allowed"
           )}
           data-slot="slider-track"
         >
