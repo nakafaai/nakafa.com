@@ -5,7 +5,7 @@ import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
@@ -183,13 +183,13 @@ function ClassPage({
           >
             <GradebookFilters />
           </SchoolHeader>
-          <div className="flex h-12 shrink-0 flex-col justify-end px-4">
-            <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
-          </div>
           {/* The header's 4rem and the tabs row's 3rem sit above the gradebook's panes. */}
-          <div className="flex w-full min-w-0 flex-1 flex-col [--panes-offset:7rem]">
-            <ClassGradebook classId={klass.id} slug={slug} />
-          </div>
+          <ClassFrame>
+            <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
+            <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
+              <ClassGradebook classId={klass.id} slug={slug} />
+            </div>
+          </ClassFrame>
         </PanesProvider>
       </TableFiltersProvider>
     );
@@ -205,32 +205,46 @@ function ClassPage({
           <AddChannel classId={klass.id} drafts={drafts} slug={slug} />
         ) : null}
       </SchoolHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+      <ClassFrame>
         <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
-        {Option.isSome(shown) ? (
-          <ForumChannel
-            canManage={canManageForum}
-            canPost={Arr.contains(klass.can, "forum.post")}
-            channelId={shown.value}
-            classId={klass.id}
-            slug={slug}
-          />
-        ) : (
-          <ChannelList
-            classId={klass.id}
-            drafts={drafts}
-            first={Option.fromUndefinedOr(preload?.channels)}
-            slug={slug}
-          />
-        )}
-      </LayoutContent>
+        <div className="wrap-anywhere flex flex-col gap-6 px-4 py-6">
+          {Option.isSome(shown) ? (
+            <ForumChannel
+              canManage={canManageForum}
+              canPost={Arr.contains(klass.can, "forum.post")}
+              channelId={shown.value}
+              classId={klass.id}
+              slug={slug}
+            />
+          ) : (
+            <ChannelList
+              classId={klass.id}
+              drafts={drafts}
+              first={Option.fromUndefinedOr(preload?.channels)}
+              slug={slug}
+            />
+          )}
+        </div>
+      </ClassFrame>
     </>
   );
 }
 
 /**
- * The tab bar of a class: its home, its forum, and its gradebook for a viewer who keeps the
- * class's grades, the current one marked as the page.
+ * The frame of every class view: the tab bar, then the tab's body, in one column capped at the
+ * app's widest content, so the tabs stand in the same place on every tab.
+ */
+function ClassFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col">
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The tab bar of a class, one 3rem row on every tab: its home, its forum, and its gradebook for a
+ * viewer who keeps the class's grades, the current one marked as the page.
  */
 function ClassTabs({
   canGrade,
@@ -246,7 +260,7 @@ function ClassTabs({
   const params = { classSlug, slug };
 
   return (
-    <nav className="flex gap-1 border-b">
+    <nav className="flex h-12 shrink-0 items-end gap-1 border-b px-4">
       <Link
         activeOptions={EXACT_ACTIVE_OPTIONS}
         className={classTab({ active: tab === "home" })}
