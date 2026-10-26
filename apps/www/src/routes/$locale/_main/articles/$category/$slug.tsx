@@ -29,6 +29,7 @@ import { SidebarTree } from "@/components/shared/outline/tree";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
+import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import { ContentViewTracker } from "@/components/tracking/tracker";
@@ -135,6 +136,7 @@ const readArticle = createServerFn({ method: "GET" })
             locale,
             metadata: published.metadata,
             publicPath,
+            references: published.references,
             sourceUrl: published.sourceRevision
               ? getAksaraUrl({
                   path: published.sourcePath,
@@ -294,6 +296,10 @@ function ArticlePage() {
             footer={
               <SidebarRightFooter>
                 <CommentsButton />
+                <ReferenceButton
+                  references={article.references}
+                  title={metadata.title}
+                />
                 <ReportButton />
                 {article.sourceUrl ? (
                   <GithubButton githubUrl={article.sourceUrl} />

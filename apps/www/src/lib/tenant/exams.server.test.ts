@@ -2,12 +2,14 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import editors from "@repo/backend/confect/_generated/refs/editor";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { isNotFound } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
 import {
+  examEditorHandler,
   examListHandler,
   examOpenHandler,
   examRoomsHandler,
@@ -171,6 +173,40 @@ describe("exam and sitting first screens", () => {
       { examId: examIdOf("exam-1"), slug: SLUG },
       "token-exam"
     );
+  });
+
+  it("reads one exam as its editor opens it, with the prompt of its first question", async () => {
+    const prompt = Schema.decodeUnknownSync(Id("editorDocuments"))("prompt-1");
+    const exam = { questions: [{ prompt }, { prompt: "prompt-2" }] };
+    const opened = { client: null, snapshot: { content: "{}", version: 0 } };
+    mocks.preloadConfectQuery.mockImplementation((ref) =>
+      Effect.succeed(ref === exams.exams.open ? exam : opened)
+    );
+
+    const read = await examEditorHandler({
+      data: { examId: examIdOf("exam-1"), slug: SLUG },
+    });
+
+    expect(read).toStrictEqual({
+      exam,
+      prompt: { documentId: prompt, opened },
+    });
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      editors.documents.open,
+      { clientId: "preview", documentId: prompt, slug: SLUG },
+      "token-exam"
+    );
+  });
+
+  it("fails the editor's read as a defect for an exam that holds no question", async () => {
+    mocks.preloadConfectQuery.mockReturnValue(
+      Effect.succeed({ questions: [] })
+    );
+
+    await expect(
+      examEditorHandler({ data: { examId: examIdOf("exam-1"), slug: SLUG } })
+    ).rejects.toThrow();
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledTimes(1);
   });
 
   it("reads the proctor's dashboard of one sitting from its first page of seats", async () => {

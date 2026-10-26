@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /**
  * Back and forward move through the router's history inside the same document:
@@ -25,7 +26,10 @@ test("back and forward restore each page without reloading the document", async 
           })
         );
 
+        // The home page is static HTML, so a press before React takes the
+        // link over loads the next page as a document, as any link does.
         const pricing = page.locator('a[href="/en/pricing"]:visible').first();
+        yield* Effect.promise(() => waitUntilTakenOver(pricing));
         yield* Effect.promise(() => pricing.click());
         yield* Effect.promise(() => page.waitForURL("**/en/pricing"));
 

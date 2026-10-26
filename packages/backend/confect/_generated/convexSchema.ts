@@ -11,6 +11,7 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import assessmentFlags from "./tables/assessmentFlags";
 import billingAccounts from "./tables/billingAccounts";
+import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
 import billingGrants from "./tables/billingGrants";
@@ -147,6 +148,7 @@ export default $defineSchema({
   articleCategories: $Table.tableDefinition(articleCategories),
   assessmentFlags: $Table.tableDefinition(assessmentFlags),
   billingAccounts: $Table.tableDefinition(billingAccounts),
+  billingCheckouts: $Table.tableDefinition(billingCheckouts),
   billingCounters: $Table.tableDefinition(billingCounters),
   billingEvents: $Table.tableDefinition(billingEvents),
   billingGrants: $Table.tableDefinition(billingGrants),
