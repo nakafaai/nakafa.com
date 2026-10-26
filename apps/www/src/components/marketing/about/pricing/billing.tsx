@@ -4,6 +4,7 @@ import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { localizeInternalHref } from "@repo/internationalization/src/href";
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { Effect } from "effect";
 import { useTransition } from "react";
@@ -39,7 +40,11 @@ export function BillingButton({
   );
 }
 
-/** Opens browser-originated checkout or the existing customer's portal. */
+/**
+ * Opens the checkout, or where the learner's plan is managed: Polar's portal for
+ * a Polar plan, the billing settings for a plan Xendit bills. A pass holder is
+ * offered only passes, which extend the pass.
+ */
 function BillingAction({ variant }: { variant: PricingButtonVariant }) {
   const locale = useLocale();
   const t = useTranslations("Pricing");
@@ -58,8 +63,8 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
     throw overview.error;
   }
   const overviewResolved = QueryResult.isSuccess(overview);
-  const hasSubscription =
-    overviewResolved && overview.value.subscription !== null;
+  const subscription = overviewResolved ? overview.value.subscription : null;
+  const holdsPass = overviewResolved && overview.value.pass !== null;
   const billingReady = !currentUser || overviewResolved;
 
   const handleBilling = () => {
@@ -95,15 +100,23 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
       return;
     }
 
-    if (hasSubscription) {
+    // Polar's portal manages a Polar plan; a plan Xendit bills is managed in the settings.
+    if (subscription?.rail === "polar") {
       billing.openPortal({
         source: "pricing-portal",
       });
       return;
     }
+    if (subscription?.rail === "xendit") {
+      window.location.assign(
+        localizeInternalHref("/user/settings/subscriptions", locale)
+      );
+      return;
+    }
 
     billing.openCheckout({
       locale,
+      passesOnly: holdsPass,
       source: "pricing-checkout",
     });
   };
