@@ -1,5 +1,10 @@
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
-import { MoreHorizontalIcon, SentIcon } from "@hugeicons/core-free-icons";
+import {
+  CircleIcon,
+  Edit02Icon,
+  MoreHorizontalIcon,
+  SentIcon,
+} from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import {
@@ -29,10 +34,23 @@ import {
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
+import {
+  PaneBody,
+  PaneFact,
+  PaneFacts,
+  PaneFooter,
+  PaneHeader,
+  PaneOpen,
+  Panes,
+  PanesDetail,
+  PanesList,
+  usePanes,
+} from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableFilter, TableSearch } from "@/components/shared/table/toolbar";
 import {
   enterChange,
   releaseChange,
@@ -48,8 +66,16 @@ const SOURCE = "components/tenant/grades/sheet";
 /** How many students one page of the gradebook loads, and each page after it. */
 export const GRADEBOOK_PAGE_SIZE = 50;
 
-/** The states a line's grade is in, as the state filter offers them. */
-const LINE_STATES = ["none", "draft", "released"] as const;
+/** The states a line's grade is in, each with its icon, as the list, its filter, and the open student show them. */
+const LINE_STATE_ICONS = {
+  draft: Edit02Icon,
+  none: CircleIcon,
+  released: SentIcon,
+};
+
+/** The state of a line: no grade yet, a draft, or released. */
+const stateOf = (line: SheetLine) =>
+  line.grade === null ? "none" : line.grade.state;
 
 /** The columns of the gradebook. */
 const lineColumns = createColumnHelper<typeof dataTableFeatures, SheetLine>();
@@ -98,11 +124,41 @@ function useGradebook() {
   return value;
 }
 
+/** The gradebook's search by student and its state filter, in the class page's header. */
+export function GradebookFilters() {
+  const t = useTranslations("SchoolGrades");
+
+  return (
+    <>
+      <TableSearch placeholder={t("search")} />
+      <TableFilter
+        facets={[
+          {
+            column: "state",
+            icon: CircleIcon,
+            options: Arr.map(
+              ["none", "draft", "released"] as const,
+              (state) => ({
+                icon: LINE_STATE_ICONS[state],
+                label: t(`state-${state}`),
+                value: state,
+              })
+            ),
+            title: t("state"),
+          },
+        ]}
+      />
+    </>
+  );
+}
+
 /**
  * The gradebook of one class (ADR 0033, S2): every student of the class's cohort with the
- * grade they hold. A subject teacher types a value, which saves as the draft when the field
- * loses focus or Enter is pressed, and releases a draft from the row's menu, which shows it
- * to the student. A released grade stays as it is.
+ * grade they hold, beside the student a press opens, on a wide screen, and in a sheet on a
+ * phone. A subject teacher types a value, in the row or in the open student, which saves as
+ * the draft when the field loses focus or Enter is pressed, and releases a draft from the
+ * row's menu or the open student, which shows it to the student. A released grade stays as
+ * it is.
  */
 export function ClassGradebook({
   classId,
@@ -152,9 +208,7 @@ export function ClassGradebook({
   const columns = lineColumns.columns([
     lineColumns.accessor((line) => line.student.name, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
+        <PaneOpen id={info.row.original.student.id}>{info.getValue()}</PaneOpen>
       ),
       filterFn: "includesString",
       header: t("student"),
@@ -173,16 +227,18 @@ export function ClassGradebook({
           : (line.grade.band ?? t(`kktp-${line.grade.kktp}`)),
       { enableSorting: false, header: t("note"), id: "note" }
     ),
-    lineColumns.accessor(
-      (line) => (line.grade === null ? "none" : line.grade.state),
-      {
-        cell: (info) => t(`state-${info.getValue()}`),
-        enableSorting: false,
-        filterFn: "oneOf",
-        header: t("state"),
-        id: "state",
-      }
-    ),
+    lineColumns.accessor(stateOf, {
+      cell: (info) => (
+        <span className="flex items-center gap-2">
+          <HugeIcons icon={LINE_STATE_ICONS[info.getValue()]} />
+          {t(`state-${info.getValue()}`)}
+        </span>
+      ),
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: t("state"),
+      id: "state",
+    }),
     lineColumns.display({
       cell: (info) => <GradeLineMenu line={info.row.original} />,
       id: "actions",
@@ -191,28 +247,25 @@ export function ClassGradebook({
 
   return (
     <GradebookContext value={{ classId, scheme: scheme.value, slug }}>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <DataTable
-        columns={columns}
-        data={pagination.results}
-        facets={[
-          {
-            column: "state",
-            options: Arr.map(LINE_STATES, (state) => ({
-              label: t(`state-${state}`),
-              value: state,
-            })),
-            title: t("state"),
-          },
-        ]}
-        rowId={(line) => line.student.id}
-        search={{ column: "student", placeholder: t("search") }}
-      />
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection
-          onIntersect={() => pagination.loadMore(GRADEBOOK_PAGE_SIZE)}
-        />
-      ) : null}
+      <Panes>
+        <PanesList>
+          {failed ? <DataFailure onRetry={reloadPage} /> : null}
+          <DataTable
+            columns={columns}
+            data={pagination.results}
+            rowId={(line) => line.student.id}
+            search="student"
+          />
+          {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+            <Intersection
+              onIntersect={() => pagination.loadMore(GRADEBOOK_PAGE_SIZE)}
+            />
+          ) : null}
+        </PanesList>
+        <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+          <GradeLineDetail lines={pagination.results} />
+        </PanesDetail>
+      </Panes>
     </GradebookContext>
   );
 }
@@ -270,6 +323,87 @@ function GradeValueField({ line }: { line: SheetLine }) {
       }}
       value={typed ?? saved}
     />
+  );
+}
+
+/**
+ * The open student: the grade field, the result the scheme judges, the state, and the
+ * scheme's KKTP; a draft releases from the footer. A student the list no longer holds closes.
+ */
+function GradeLineDetail({ lines }: { lines: readonly SheetLine[] }) {
+  const t = useTranslations("SchoolGrades");
+  const { scheme } = useGradebook();
+  const open = usePanes((state) => state.open);
+  const line = Option.flatMap(open, (id) =>
+    Arr.findFirst(lines, (candidate) => candidate.student.id === id)
+  );
+
+  return Option.match(line, {
+    onNone: () => null,
+    onSome: (found) => (
+      <>
+        <PaneHeader
+          description={t(`state-${stateOf(found)}`)}
+          title={found.student.name}
+        />
+        <PaneBody>
+          <PaneFacts>
+            <PaneFact label={t("value")}>
+              <GradeValueField line={found} />
+            </PaneFact>
+            <PaneFact label={t("note")}>
+              {found.grade === null
+                ? t("state-none")
+                : (found.grade.band ?? t(`kktp-${found.grade.kktp}`))}
+            </PaneFact>
+            <PaneFact label={t("state")}>
+              <span className="flex items-center gap-2">
+                <HugeIcons icon={LINE_STATE_ICONS[stateOf(found)]} />
+                {t(`state-${stateOf(found)}`)}
+              </span>
+            </PaneFact>
+            <PaneFact label={t("kktp")}>
+              <span className="tabular-nums">{scheme.kktp}</span>
+            </PaneFact>
+          </PaneFacts>
+        </PaneBody>
+        {found.grade?.state === "draft" ? (
+          <PaneFooter>
+            <GradeReleaseButton gradeId={found.grade.id} line={found} />
+          </PaneFooter>
+        ) : null}
+      </>
+    ),
+  });
+}
+
+/** Releases one draft from the open student, which shows it to the student. */
+function GradeReleaseButton({
+  gradeId,
+  line,
+}: {
+  gradeId: NonNullable<SheetLine["grade"]>["id"];
+  line: SheetLine;
+}) {
+  const t = useTranslations("SchoolGrades");
+  const { classId, slug } = useGradebook();
+  const release = useMutation(records.grades.release).withOptimisticUpdate(
+    releaseChange(classId, line.student.id)
+  );
+  const [, startTransition] = useTransition();
+
+  return (
+    <Button
+      onClick={() =>
+        startTransition(() =>
+          saveSchool(() => release({ gradeId, slug }), SOURCE)
+        )
+      }
+      type="button"
+    >
+      <HugeIcons icon={SentIcon} />
+      {t("release")}
+    </Button>
   );
 }
 

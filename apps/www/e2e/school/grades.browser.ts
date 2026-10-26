@@ -96,5 +96,16 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   await expect(row).toContainText("Released", {
     timeout: readinessTimeoutMilliseconds,
   });
+
+  // The student opens beside the list with the grade, its result and the scheme's KKTP.
+  const open = row.getByRole("button", { name: "Acceptance Learner" });
+  await waitUntilTakenOver(open);
+  await open.click();
+  const detail = page.getByRole("complementary", { name: "Student's grade" });
+  await expect(
+    detail.getByRole("heading", { name: "Acceptance Learner" })
+  ).toBeVisible();
+  await expect(detail.getByRole("textbox")).toHaveValue("82");
+  await expect(detail.getByText("KKTP")).toBeVisible();
   await teacher.close();
 });

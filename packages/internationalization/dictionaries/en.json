@@ -892,7 +892,10 @@
     "search": "Search students",
     "release": "Release",
     "empty": "No student in this class yet.",
-    "empty-description": "Students appear here once they are placed in the class group."
+    "empty-description": "Students appear here once they are placed in the class group.",
+    "detail": "Student's grade",
+    "detail-empty": "Choose a student to see their grade.",
+    "kktp": "KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",

@@ -892,7 +892,10 @@
     "search": "Schüler suchen",
     "release": "Freigeben",
     "empty": "Noch kein Schüler in dieser Klasse.",
-    "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind."
+    "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "detail": "Note der Schülerin oder des Schülers",
+    "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
+    "kktp": "KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
