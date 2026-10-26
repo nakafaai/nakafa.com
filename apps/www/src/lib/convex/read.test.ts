@@ -10,7 +10,7 @@ vi.mock("@/lib/convex/client", () => ({
   readConvexClient: () => client,
 }));
 
-const slug = Schema.decodeUnknownSync(TenantSlug)("harapan");
+const slug = Schema.decodeSync(TenantSlug)("harapan");
 
 describe("convex readOnce", () => {
   it.effect(
