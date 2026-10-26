@@ -105,6 +105,30 @@ export function readConvexSessionId(
   });
 }
 
+/** Whether Better Auth has settled on no session, so Convex holds no credentials. */
+export function hasSettledSignedOut(session: AuthSession) {
+  return ConvexAuthTarget.match(readTarget(session), {
+    Pending: () => false,
+    SignedIn: () => false,
+    SignedOut: () => true,
+  });
+}
+
+/** Convex's token request for a session that is none. */
+const readNoToken = () => Promise.resolve(null);
+
+/**
+ * Lets the page's client send its calls without a token, once the session has
+ * settled on none. The client holds every call until it has sent a token
+ * (`readConvexClient`), and Convex resumes it when a token request answers
+ * `null`, so a signed-out page's calls go out unauthenticated, as they did before
+ * the hold.
+ * https://docs.convex.dev/api/classes/react.ConvexReactClient#setauth
+ */
+export function releaseConvexAuth(client: ConvexAuthClient) {
+  client.setAuth(readNoToken);
+}
+
 /**
  * Derives the Convex authentication a reader sees, the way
  * `ConvexProviderWithAuth` does while it renders: loading while the session is
