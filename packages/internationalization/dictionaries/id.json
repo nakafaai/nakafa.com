@@ -491,6 +491,7 @@
     "audit-change": "Perubahan",
     "audit-empty": "Belum ada perubahan.",
     "audit-search": "Cari perubahan",
+    "audit-export": "Ekspor",
     "audit-operator": "Staf Nakafa",
     "audit-system": "Sistem",
     "audit-label": {
@@ -2011,6 +2012,10 @@
     "import-encrypted": {
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
+    },
+    "audit-export-error": {
+      "title": "Jejak audit gagal diekspor.",
+      "description": "Periksa koneksi, lalu coba lagi."
     }
   },
   "Ai": {
