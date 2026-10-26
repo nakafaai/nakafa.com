@@ -97,7 +97,7 @@ export function SidebarRight(props: SidebarRightProps) {
 export function SidebarRightProvider({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider
-      className="min-w-0"
+      className="min-w-0 transition-[padding-right] duration-surface motion-reduce:transition-none xl:pr-64 xl:has-[[data-side=right][data-sidebar-state=collapsed]]:pr-0"
       cookieName="sidebar_state:right"
       keyboardShortcut="shift+x"
       sidebarDesktop={1279.98}
@@ -119,7 +119,7 @@ export function SidebarRightPanel({
   return (
     <aside>
       <Sidebar
-        containerClassName="lg:hidden xl:block"
+        containerClassName="lg:hidden xl:block [&>[data-slot=sidebar-gap]]:hidden"
         label={tCommon("on-this-page")}
         side="right"
         {...props}
