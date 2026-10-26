@@ -9,6 +9,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { getRouteApi } from "@tanstack/react-router";
@@ -188,6 +189,7 @@ function GuardianSignInForm() {
             type="button"
             variant="ghost"
           >
+            <HugeIcons icon={MailSend01Icon} />
             {t("resend-code")}
           </Button>
         )}
