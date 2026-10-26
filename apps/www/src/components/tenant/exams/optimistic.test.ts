@@ -26,6 +26,7 @@ import {
   removeUpdate,
   renamedExam,
   renameUpdate,
+  templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 
 const examId = Schema.decodeUnknownSync(Id("exams"))("exam-1");
@@ -210,6 +211,40 @@ describe("the optimistic updates", () => {
     );
   });
 
+  it("show a question in its new template in the store", () => {
+    const key: [InteractionKey] = [
+      { correct: ["option-2"], interaction: "choice", kind: "choice" },
+    ];
+    const keyed = { ...first, key };
+    const view = viewOf([keyed, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    templateUpdate(localStore, {
+      examId,
+      questionId: first.id,
+      revision: first.revision,
+      slug,
+      template: "choices",
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some({
+        ...view,
+        questions: [
+          {
+            ...keyed,
+            answers: [{ ...choice, maxChoices: 2 }],
+            revision: first.revision + 1,
+            template: "choices",
+          },
+          second,
+        ],
+      })
+    );
+  });
+
   it("write nothing for an exam the store does not hold", () => {
     const { localStore, setQuery } = storeHolding(Option.none());
 
@@ -232,6 +267,7 @@ describe("placeholderQuestion", () => {
       points: 3,
       prompt: promptId("draft-prompt"),
       rubric: promptId("draft-rubric"),
+      template: "choice",
     });
 
     expect(draft).toEqual({

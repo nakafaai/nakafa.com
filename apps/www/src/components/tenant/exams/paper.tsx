@@ -2,12 +2,13 @@ import { useMutation } from "@confect/react";
 import { Add01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
-import { asTemplate } from "@repo/backend/confect/exams/template";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
+  type QuestionTemplate,
+  takesRubric,
 } from "@repo/backend/confect/exams/question";
+import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Effect, Option } from "effect";
@@ -39,8 +40,8 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import {
   answerUpdate,
-  templateUpdate,
   type Question,
+  templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { TeacherPortal } from "@/components/tenant/exams/panel";
@@ -52,6 +53,7 @@ import {
 import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
+import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
 import {
   makeQuestionWriter,
@@ -92,9 +94,9 @@ function useQuestionEditing(question: Question) {
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
   );
-  const retemplate = useMutation(
-    exams.questions.template
-  ).withOptimisticUpdate(templateUpdate);
+  const retemplate = useMutation(exams.questions.template).withOptimisticUpdate(
+    templateUpdate
+  );
   // The writer sends through the latest mutations. It keeps the saves of this question in order, and each
   // save starts from the newer of the draft its last answer returned and the question the render holds. A
   // save that changes the template sends the template's call, which converts the answers on the server.
@@ -287,7 +289,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
     documentId: question.rubric,
     editing: live,
     open: chosen,
-    read: readNotes,
+    read: readNotes && takesRubric(question.template),
     saved,
   });
   const explanation = usePageDocument({
@@ -322,7 +324,14 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
           ) : (
             <span aria-hidden className="size-8 shrink-0" />
           )}
-          <h2 className="font-medium text-sm">{t("question", { number })}</h2>
+          <h2 className="shrink-0 font-medium text-sm">
+            {t("question", { number })}
+          </h2>
+          <QuestionType
+            editable={saved && !frozen && isSettled}
+            onChange={editing.setTemplate}
+            template={editing.displayed.template}
+          />
           {question.key === null ? (
             <span className="flex items-center gap-1 text-muted-foreground text-xs">
               <HugeIcons

@@ -84,6 +84,18 @@ export const choiceLimit = (template: QuestionTemplate, options: number) =>
   );
 
 /**
+ * Whether a template's question takes a rubric, the teacher's guide to scoring an answer by hand.
+ * A choice is scored by its key, so neither choice template takes one; the layer shows a rubric
+ * only for a template that takes one.
+ */
+export const takesRubric = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("choice", () => false),
+    Match.when("choices", () => false),
+    Match.exhaustive
+  );
+
+/**
  * Whether the interactions of a question are the ones its template takes: distinct
  * choices of two to five options, each taking at least one option and at most the
  * template's limit (`choiceLimit`). A question that holds any other interaction, or a

@@ -169,6 +169,19 @@ export const markedOptions = (
 };
 
 /**
+ * The one option whose mark changed between two sets of marked options: the option that joined, or
+ * else the option that left, or none when the sets mark the same options.
+ */
+export const changedOption = (
+  before: readonly string[],
+  after: readonly string[]
+): Option.Option<string> =>
+  Option.orElse(
+    Arr.findFirst(after, (id) => !Arr.contains(before, id)),
+    () => Arr.findFirst(before, (id) => !Arr.contains(after, id))
+  );
+
+/**
  * The key of a complex choice once one option is marked or unmarked: the option joins the correct
  * ones, or leaves them when it was one, and the correct options keep the order of the choice. A key
  * that marks no option any more is null.
