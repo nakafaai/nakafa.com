@@ -74,6 +74,32 @@ export const insertMention = (
 };
 
 /**
+ * A mention the writer finished, by a pick or by Escape: where its `@` stands,
+ * and the text from there up to the caret at that moment.
+ */
+export const closeMention = (text: string, start: number, caret: number) => ({
+  start,
+  token: Str.slice(start, caret)(text),
+});
+
+/**
+ * Whether the mention being typed at `start` is one the writer finished: the
+ * text from its `@` still begins with what it held then. Typing on keeps the
+ * list closed, so a picked name is not offered again, while a new `@`, or
+ * deleting back into the mention, opens the list again.
+ */
+export const isClosedMention = (
+  text: string,
+  start: number,
+  closed: Option.Option<ReturnType<typeof closeMention>>
+) =>
+  Option.exists(
+    closed,
+    (done) =>
+      done.start === start && Str.startsWith(done.token)(Str.slice(start)(text))
+  );
+
+/**
  * The mentions a message sends: each picked one whose `@name` the text still
  * holds, each once, at most MENTION_LIMIT. A picked name the writer deleted is
  * not sent.

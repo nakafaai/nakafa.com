@@ -2,7 +2,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Option, Schema } from "effect";
 import {
+  closeMention,
   insertMention,
+  isClosedMention,
   keptMentions,
   matchPeople,
   mentionQuery,
@@ -41,6 +43,22 @@ describe("forum mentions", () => {
       caret: 19,
       text: "Halo @Raka Pratama  apa kabar",
     });
+  });
+
+  it("keeps a finished mention closed while the text goes on from it, and opens a new `@` or one edited back", () => {
+    const picked = closeMention("Halo @Raka Pratama ", 5, 19);
+    expect(picked).toEqual({ start: 5, token: "@Raka Pratama " });
+    const after = Option.some(picked);
+    // The picked name and what follows it keep the list closed.
+    expect(isClosedMention("Halo @Raka Pratama ", 5, after)).toBe(true);
+    expect(isClosedMention("Halo @Raka Pratama apa", 5, after)).toBe(true);
+    // A new `@`, the name edited back, or the same place written anew opens it.
+    expect(isClosedMention("Halo @Raka Pratama dan @ev", 23, after)).toBe(
+      false
+    );
+    expect(isClosedMention("Halo @Raka Prat", 5, after)).toBe(false);
+    expect(isClosedMention("Halo @", 5, after)).toBe(false);
+    expect(isClosedMention("Halo @", 5, Option.none())).toBe(false);
   });
 
   it("sends the picked mentions the text still holds, each once", () => {

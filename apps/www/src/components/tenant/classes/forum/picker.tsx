@@ -19,7 +19,9 @@ import {
 import { useTranslations } from "use-intl";
 import { caretRect } from "@/components/tenant/classes/forum/caret";
 import {
+  closeMention,
   insertMention,
+  isClosedMention,
   keptMentions,
   matchPeople,
   mentionQuery,
@@ -37,7 +39,8 @@ const EVERYONE = "everyone";
  * caret of the Persons who write in the class, `everyone` first for a subject teacher, and the
  * letters typed after `@` narrow it. The arrow keys move the active choice, Enter or Tab picks it,
  * and Escape closes the list, while the field keeps the focus and the caret. A pick replaces the
- * typed mention with the name. The message sends the picked mentions that its text still holds.
+ * typed mention with the name and closes the list until the next `@`. The message sends the picked
+ * mentions that its text still holds.
  */
 export function useMentionPicker(
   field: RefObject<HTMLTextAreaElement | null>,
@@ -50,7 +53,10 @@ export function useMentionPicker(
   const [caret, setCaret] = useState(0);
   const [picked, setPicked] = useState<readonly Picked[]>([]);
   const [active, setActive] = useState(0);
-  const [dismissed, setDismissed] = useState<number | null>(null);
+  // The mention the writer last finished, by a pick or by Escape, keeps the list closed.
+  const [closed, setClosed] = useState<
+    Option.Option<ReturnType<typeof closeMention>>
+  >(Option.none);
   const placed = useRef<number | null>(null);
   const listId = useId();
 
@@ -81,7 +87,7 @@ export function useMentionPicker(
   const open =
     Option.isSome(typed) &&
     choices.length > 0 &&
-    dismissed !== typed.value.start;
+    !isClosedMention(text, typed.value.start, closed);
   const index = Num.clamp(active, { maximum: choices.length - 1, minimum: 0 });
 
   /** Replaces the typed mention with the chosen name, and keeps the choice for the send. */
@@ -97,6 +103,9 @@ export function useMentionPicker(
     );
     setText(next.text);
     setCaret(next.caret);
+    setClosed(
+      Option.some(closeMention(next.text, typed.value.start, next.caret))
+    );
     placed.current = next.caret;
     setPicked((current) => Arr.append(current, choice));
     setActive(0);
@@ -123,7 +132,7 @@ export function useMentionPicker(
     }
     if (event.key === "Escape") {
       event.preventDefault();
-      setDismissed(typed.value.start);
+      setClosed(Option.some(closeMention(text, typed.value.start, caret)));
       return true;
     }
     return false;
@@ -172,7 +181,11 @@ export function useMentionPicker(
         anchor={anchor}
         id={listId}
         label={t("mention-list")}
-        onClose={() => Option.map(typed, ({ start }) => setDismissed(start))}
+        onClose={() =>
+          Option.map(typed, ({ start }) =>
+            setClosed(Option.some(closeMention(text, start, caret)))
+          )
+        }
         open={open}
       >
         {Arr.map(choices, (choice, position) => (
