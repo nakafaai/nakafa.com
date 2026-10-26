@@ -99,11 +99,15 @@ for (const viewport of sidebarViewports) {
           });
           yield* Effect.promise(() => expect(learnMoreButton).toBeVisible());
           yield* Effect.promise(() => learnMoreButton.hover());
-          yield* Effect.promise(() =>
-            expect(
-              page.getByRole("menuitem", { exact: true, name: "Usage data" })
-            ).toBeVisible()
-          );
+          const usageData = page.getByRole("menuitem", {
+            exact: true,
+            name: "Usage data",
+          });
+          yield* Effect.promise(() => expect(usageData).toBeVisible());
+          // On a phone the open menu covers the footer below it, so the reader
+          // closes it before reaching for the language menu.
+          yield* Effect.promise(() => page.keyboard.press("Escape"));
+          yield* Effect.promise(() => expect(usageData).toBeHidden());
           yield* Effect.promise(() => expect(loginLink).toBeVisible());
           yield* Effect.promise(() =>
             expect(loginLink).toHaveAttribute(
