@@ -18,3 +18,12 @@ export class MessageHidden extends Schema.TaggedError<MessageHidden>()(
   "MessageHidden",
   refusal("MESSAGE_HIDDEN", "A teacher hid this message.")
 ) {}
+
+/** A student opening a discussion while the school keeps discussions to teachers (`studentThreads` off). */
+export class DiscussionsClosed extends Schema.TaggedError<DiscussionsClosed>()(
+  "DiscussionsClosed",
+  refusal(
+    "DISCUSSIONS_CLOSED",
+    "Only teachers open discussions in this school."
+  )
+) {}

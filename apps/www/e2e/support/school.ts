@@ -2,6 +2,7 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
 import {
   CardFixture,
+  ForumFixture,
   SchoolFixture,
   SessionCookie,
   SittingFixture,
@@ -195,6 +196,34 @@ export const seedCard = Effect.fn("NakafaE2E.seedCard")(
     return yield* fs
       .readFileString(output)
       .pipe(Effect.flatMap(Schema.decodeEffect(CardFixture)));
+  },
+  Effect.scoped,
+  Effect.provide(nodeServicesLayer)
+);
+
+/**
+ * Seeds the history of the general channel of the class `signInClassTeacher` seeds, in a school
+ * that `createSchool` opened: `count` messages from a classmate, a minute apart and ending now,
+ * and the class teacher's read mark after the first `read` of them. It returns the channel and the
+ * messages, oldest first. Each call adds a new classmate and its messages.
+ */
+export const seedForum = Effect.fn("NakafaE2E.seedForum")(
+  function* (slug: string, count: number, read: number) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "nakafa-forum-",
+    });
+    const output = `${directory}/forum.json`;
+    yield* runAcceptanceCommand(
+      "forum",
+      slug,
+      String(count),
+      String(read),
+      output
+    );
+    return yield* fs
+      .readFileString(output)
+      .pipe(Effect.flatMap(Schema.decodeEffect(ForumFixture)));
   },
   Effect.scoped,
   Effect.provide(nodeServicesLayer)

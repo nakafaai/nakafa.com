@@ -774,7 +774,21 @@
     "read-only": "In diesem Kanal schreiben die Klasse und ihre Lehrkräfte.",
     "messages-empty": "Noch keine Nachricht",
     "messages-empty-description": "Die erste Nachricht dieses Kanals erscheint hier.",
-    "scroll-to-latest": "Zur neuesten Nachricht"
+    "scroll-to-latest": "Zur neuesten Nachricht",
+    "unread-divider": "Neue Nachrichten",
+    "unread": "Ungelesen",
+    "discussion-label": "#{number} {title}",
+    "discussion-reply": "Antworten",
+    "discussion-replies": "{count, plural, one {# Antwort} other {# Antworten}}",
+    "discussion-close": "Diskussion schließen",
+    "discussion-new": "Neue Diskussion",
+    "discussion-new-description": "Alle in der Klasse lesen sie, und sie bekommt die nächste Nummer der Klasse.",
+    "discussion-title": "Titel",
+    "discussion-text": "Erste Nachricht",
+    "discussion-start": "Starten",
+    "discussions-closed": "An dieser Schule eröffnen nur Lehrkräfte Diskussionen.",
+    "discussion-failed": "Deine Diskussion wurde nicht gestartet.",
+    "reply-placeholder": "Antwort schreiben"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

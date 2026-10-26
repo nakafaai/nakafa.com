@@ -1,9 +1,7 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
-import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -13,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { useParams } from "@tanstack/react-router";
 import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
@@ -22,10 +19,11 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
 import { channelLabel } from "@/components/tenant/classes/label";
-import { useTenant } from "@/components/tenant/context";
+import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { Link } from "@/lib/routing/link";
+import { TargetLink } from "@/lib/routing/link";
+import { schoolClassChannelTarget } from "@/lib/routing/school/target";
 
 /** How many channels the list asks for each time its end comes into view. */
 export const CHANNEL_PAGE_SIZE = 20;
@@ -48,16 +46,13 @@ type Channel = typeof ChannelView.Type;
  * school's access is sent to the refused page.
  */
 export function ChannelList({
-  classId,
   drafts,
   first,
-  slug,
 }: {
-  classId: Id<"classes">;
   drafts: StoreApi<ChannelDrafts>;
   first: Option.Option<ChannelsFirstPage>;
-  slug: TenantSlug;
 }) {
+  const { classId, slug } = useClassScope();
   const pagination = usePaginatedPreloaded(
     classroom.forum.channels.list,
     { classId, slug },
@@ -142,27 +137,33 @@ function ChannelTable({
 
 /**
  * One saved channel, which opens its messages: the general channel shows its translated label, a
- * topic shows its name.
+ * topic shows its name. A channel with a message the viewer has not read carries one dot, with no
+ * count (ADR 0027), and its name says so to assistive technology.
  */
 function ChannelRow({ channel }: { channel: Channel }) {
   const t = useTranslations("Classroom");
-  const { slug } = useTenant();
-  const classSlug = useParams({
-    from: "/school/$slug/classes/$classSlug/forum",
-    select: (params) => params.classSlug,
-  });
+  const { classSlug, slug } = useClassScope();
+  const label = channelLabel(channel, t("general-channel"));
 
   return (
     <TableRow>
       <TableCell className="font-medium" dir="auto">
-        <Link
-          className="underline-offset-4 hover:underline"
-          params={{ classSlug, slug }}
-          search={{ channel: channel.id }}
-          to="/school/$slug/classes/$classSlug/forum"
+        <TargetLink
+          className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
+          target={schoolClassChannelTarget(slug, classSlug, channel.id)}
         >
-          {channelLabel(channel, t("general-channel"))}
-        </Link>
+          <span className="wrap-anywhere min-w-0">{label}</span>
+          {channel.unread ? (
+            <>
+              <span
+                aria-hidden="true"
+                className="size-2 shrink-0 rounded-full bg-primary"
+                data-slot="unread-dot"
+              />
+              <span className="sr-only">{t("unread")}</span>
+            </>
+          ) : null}
+        </TargetLink>
       </TableCell>
     </TableRow>
   );

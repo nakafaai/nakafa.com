@@ -1,118 +1,39 @@
-import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { ClassroomMessagesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Class } from "@repo/backend/confect/classroom/access";
 import {
   classAccess,
   classAuthority,
 } from "@repo/backend/confect/classroom/authority";
 import { MessageHidden } from "@repo/backend/confect/classroom/forum/errors";
+import {
+  classChannel,
+  classMessage,
+  missing,
+} from "@repo/backend/confect/classroom/forum/lookup";
+import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import spec from "@repo/backend/confect/classroom/forum/messages.spec";
+import {
+  messageView,
+  messageViews,
+  schoolKeys,
+} from "@repo/backend/confect/classroom/forum/views";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
-import { readTenantKeys } from "@repo/backend/confect/vault/keys";
-import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
-
-/** The keys of the school of a class, which seal and open its messages. A school without keys is a defect. */
-const schoolKeys = (tenantId: GenericId.GenericId<"tenants">) =>
-  readTenantKeys(tenantId).pipe(Effect.orDie);
-
-/** A channel or a message that is not the allowed class's own, refused as a missing object. */
-const missing = (action: "forum.manage" | "forum.post" | "forum.read") =>
-  new AccessDenied({ action, reason: "resource" });
-
-/** The channel a read or a send names, when it belongs to the class the check allowed. */
-const classChannel = Effect.fn("classroom.forum.messages.channel")(function* (
-  channelId: GenericId.GenericId<"classroomChannels">,
-  action: "forum.post" | "forum.read"
-) {
-  const row = yield* Class;
-  const channel = yield* (yield* DatabaseReader)
-    .table("classroomChannels")
-    .get(channelId)
-    .pipe(Effect.option);
-  if (Option.isNone(channel) || channel.value.classId !== row._id) {
-    return yield* missing(action);
-  }
-  return channel.value;
-});
-
-/** The message an edit or a hide names, when it belongs to the class the check allowed. */
-const classMessage = Effect.fn("classroom.forum.messages.message")(function* (
-  messageId: GenericId.GenericId<"classroomMessages">,
-  action: "forum.manage" | "forum.post"
-) {
-  const row = yield* Class;
-  const message = yield* (yield* DatabaseReader)
-    .table("classroomMessages")
-    .get(messageId)
-    .pipe(Effect.option);
-  if (Option.isNone(message) || message.value.classId !== row._id) {
-    return yield* missing(action);
-  }
-  return message.value;
-});
-
-/**
- * The views of some messages for the viewer: each text opened with the school
- * key, each author's name read once, and a hidden message without its text.
- */
-const messageViews = Effect.fn("classroom.forum.messages.views")(function* (
-  rows: readonly ClassroomMessagesDoc[]
-) {
-  const { person } = yield* Member;
-  const row = yield* Class;
-  const reader = yield* DatabaseReader;
-  const keys = yield* schoolKeys(row.tenantId);
-  const authors = yield* Effect.forEach(
-    Arr.dedupe(Arr.map(rows, (message) => message.authorId)),
-    (authorId) => reader.table("tenantPeople").get(authorId).pipe(Effect.orDie),
-    { concurrency: "unbounded" }
-  );
-  return yield* Effect.forEach(rows, (message) =>
-    Effect.gen(function* () {
-      // Every author was read above, so a message without its author is a defect.
-      const author = yield* Effect.fromOption(
-        Arr.findFirst(
-          authors,
-          (candidate) => candidate._id === message.authorId
-        )
-      );
-      const text =
-        message.sealedText === null
-          ? null
-          : yield* openText(keys, messageField(message), message.sealedText);
-      return {
-        author: { id: message.authorId, name: author.name },
-        clientKey: message.clientKey,
-        createdAt: message.createdAt,
-        editedAt: message.editedAt ?? null,
-        id: message._id,
-        mine: message.authorId === person._id,
-        text,
-      };
-    }).pipe(Effect.orDie)
-  );
-});
-
-/** The view of one message for the viewer. */
-const messageView = (row: ClassroomMessagesDoc) =>
-  Effect.map(messageViews([row]), (views) => Arr.getUnsafe(views, 0));
+import { sealText } from "@repo/backend/confect/vault/text";
+import { Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
  * One page of a channel's messages, newest first, so the forum loads older ones
- * as the reader scrolls up. The read is indexed by channel and bounded by the
- * page size.
+ * as the reader scrolls up. The replies of its discussions stay in their
+ * discussions. The read is indexed by channel and bounded by the page size.
  */
 const page = FunctionImpl.make(
   databaseSchema,
@@ -126,8 +47,8 @@ const page = FunctionImpl.make(
     const found = yield* (yield* DatabaseReader)
       .table("classroomMessages")
       .index(
-        "by_channelId",
-        (query) => query.eq("channelId", channelId),
+        "by_channelId_and_threadId",
+        (query) => query.eq("channelId", channelId).eq("threadId", undefined),
         "desc"
       )
       .paginate(paginationOpts)
@@ -137,9 +58,10 @@ const page = FunctionImpl.make(
 );
 
 /**
- * Sends a message to a channel, sealed with the school key. A send that repeats
- * the client key of the sender's message in this channel answers that message and
- * writes nothing, so a retry after a lost answer never posts twice.
+ * Sends a message to a channel, sealed with the school key, and moves the sender's
+ * read mark in the channel to it. A send that repeats the client key of the
+ * sender's message in this channel answers that message and writes nothing, so a
+ * retry after a lost answer never posts twice.
  */
 const send = FunctionImpl.make(
   databaseSchema,
@@ -173,16 +95,23 @@ const send = FunctionImpl.make(
       messageField(fields),
       text
     ).pipe(Effect.orDie);
+    const createdAt = yield* Clock.currentTimeMillis;
     const messageId = yield* (yield* DatabaseWriter)
       .table("classroomMessages")
       .insert({
         ...fields,
         authorId: person._id,
-        createdAt: yield* Clock.currentTimeMillis,
+        createdAt,
         sealedText,
         tenantId: row.tenantId,
       })
       .pipe(Effect.orDie);
+    yield* moveMark(
+      person._id,
+      row,
+      { channelId: channel._id, threadId: undefined },
+      createdAt
+    );
     return yield* messageView(
       yield* reader.table("classroomMessages").get(messageId).pipe(Effect.orDie)
     );

@@ -774,7 +774,21 @@
     "read-only": "The class and its teachers write in this channel.",
     "messages-empty": "No message yet",
     "messages-empty-description": "The first message of this channel shows here.",
-    "scroll-to-latest": "Go to the newest message"
+    "scroll-to-latest": "Go to the newest message",
+    "unread-divider": "New messages",
+    "unread": "Unread",
+    "discussion-label": "#{number} {title}",
+    "discussion-reply": "Reply",
+    "discussion-replies": "{count, plural, one {# reply} other {# replies}}",
+    "discussion-close": "Close discussion",
+    "discussion-new": "New discussion",
+    "discussion-new-description": "Everyone in the class reads it, and it takes the next number of the class.",
+    "discussion-title": "Title",
+    "discussion-text": "First message",
+    "discussion-start": "Start",
+    "discussions-closed": "Only teachers open discussions in this school.",
+    "discussion-failed": "Your discussion was not started.",
+    "reply-placeholder": "Write a reply"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",

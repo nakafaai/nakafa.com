@@ -31,6 +31,19 @@ export const SittingFixture = Schema.fromJsonString(
 );
 
 /**
+ * The history of a class's general channel that a browser test reads: the channel, the class,
+ * and the seeded messages, oldest first. The local acceptance runtime writes it, and the browser
+ * test reads it back.
+ */
+export const ForumFixture = Schema.fromJsonString(
+  Schema.Struct({
+    channelId: Schema.String,
+    classId: Schema.String,
+    messages: Schema.Array(Schema.String),
+  })
+);
+
+/**
  * The session cookie of an account that the local acceptance runtime signed in.
  * The runtime writes it, and the browser test reads it back before it sends it.
  */

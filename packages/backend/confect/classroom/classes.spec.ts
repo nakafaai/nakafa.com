@@ -43,12 +43,14 @@ const ClassView = Schema.Struct({
 });
 
 /**
- * A class as `resolve` returns it: the class, and the class actions the caller
- * holds on it, so a page offers only the actions the caller may take.
+ * A class as `resolve` returns it: the class, the class actions the caller holds
+ * on it, and whether the caller may open a discussion in its forum, so a page
+ * offers only the actions the caller may take.
  */
 const ClassResolved = Schema.Struct({
   ...ClassView.fields,
   can: Schema.Array(Kind.actions(entries, "class")),
+  opens: Schema.Boolean,
 });
 
 /**

@@ -35,6 +35,10 @@ import {
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import {
+  DiscussionReplies,
+  DiscussionTitle,
+} from "@/components/tenant/classes/forum/discussion";
+import {
   editUpdate,
   type ForumMessage,
   hideUpdate,
@@ -42,9 +46,10 @@ import {
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 
 /**
- * One message of a channel. The viewer's own messages stand at the end of the row, and another
- * member's show the author's name above the first message of a run by the same author (`opens`).
- * The viewer's own message turns into its edit field in place.
+ * One message of a channel or of a discussion. The viewer's own messages stand at the end of the
+ * row, and another member's show the author's name above the first message of a run by the same
+ * author (`opens`). A message that opens a discussion shows the discussion's title above it and its
+ * replies under it in the channel. The viewer's own message turns into its edit field in place.
  */
 export function ForumMessageRow({
   message,
@@ -54,12 +59,18 @@ export function ForumMessageRow({
   opens: boolean;
 }) {
   const [editing, setEditing] = useState(false);
+  const scope = useChannelScope();
+  // Inside its own discussion the opening message needs no summary: the discussion is the page.
+  const discussion = scope.discussion === undefined ? message.discussion : null;
 
   return (
     <Message align={message.mine ? "end" : "start"}>
       <MessageContent>
-        {message.mine || !opens ? null : (
+        {message.mine || !(opens || discussion !== null) ? null : (
           <MessageHeader dir="auto">{message.author.name}</MessageHeader>
+        )}
+        {discussion === null ? null : (
+          <DiscussionTitle discussion={discussion} message={message} />
         )}
         {editing && message.text !== null ? (
           <MessageEditor
@@ -69,6 +80,9 @@ export function ForumMessageRow({
           />
         ) : (
           <MessageBubble message={message} />
+        )}
+        {discussion === null ? null : (
+          <DiscussionReplies discussion={discussion} message={message} />
         )}
         <MessageMeta
           editing={editing}

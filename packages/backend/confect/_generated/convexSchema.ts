@@ -24,6 +24,8 @@ import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
 import classroomMessages from "./tables/classroomMessages";
+import classroomReads from "./tables/classroomReads";
+import classroomThreads from "./tables/classroomThreads";
 import commentLikes from "./tables/commentLikes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
@@ -150,6 +152,8 @@ export default $defineSchema({
   classes: $Table.tableDefinition(classes),
   classroomChannels: $Table.tableDefinition(classroomChannels),
   classroomMessages: $Table.tableDefinition(classroomMessages),
+  classroomReads: $Table.tableDefinition(classroomReads),
+  classroomThreads: $Table.tableDefinition(classroomThreads),
   commentLikes: $Table.tableDefinition(commentLikes),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),

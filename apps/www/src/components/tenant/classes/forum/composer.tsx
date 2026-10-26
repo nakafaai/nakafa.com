@@ -17,29 +17,33 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { runForumCall } from "@/components/tenant/classes/forum/call";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
-import { sendMessage } from "@/components/tenant/classes/forum/send";
+import { sendMessage, sendReply } from "@/components/tenant/classes/forum/send";
 import { useViewerQuery } from "@/components/tenant/context";
 
 /** A message the server refused, kept with its key so Try again never posts it twice. */
 const Unsent = Schema.Struct({ clientKey: Schema.String, text: Schema.String });
 
 /**
- * The composer of a channel, as Nina's composer looks: one text field and a send button. Enter
- * sends and Shift with Enter starts a new line. A sent message shows in the channel at once with
- * the viewer as its author, and the field empties. A send that fails leaves the message out of the
- * channel, puts its text back in the field, and says so with Try again, which sends it under the
- * same key, so the server stores it once.
+ * The composer of a channel or of a discussion, as Nina's composer looks: one text field and a send
+ * button. Enter sends and Shift with Enter starts a new line. A sent message shows in the channel,
+ * or as a reply in the discussion, at once with the viewer as its author, and the field empties. A
+ * send that fails leaves the message out, puts its text back in the field, and says so with Try
+ * again, which sends it under the same key, so the server stores it once.
  */
 export function ForumComposer() {
   const t = useTranslations("Classroom");
-  const { channelId, classId, slug } = useChannelScope();
+  const { channelId, classId, discussion, slug } = useChannelScope();
   const send = useMutation(classroom.forum.messages.send);
+  const reply = useMutation(classroom.forum.threads.reply);
   const viewer = useViewerQuery();
   const [text, setText] = useState("");
   const [unsent, setUnsent] = useState<Option.Option<typeof Unsent.Type>>(
     Option.none
   );
   const body = Str.trim(text);
+  const placeholder = t(
+    discussion === undefined ? "message-placeholder" : "reply-placeholder"
+  );
   const ready = Schema.is(MessageText)(body) && viewer._tag === "Success";
 
   /** Sends `message` under `clientKey`, showing it at once, and keeps it when the send fails. */
@@ -48,14 +52,21 @@ export function ForumComposer() {
       return;
     }
     const { person } = viewer.value;
+    const author = { id: person.id, name: person.name };
     setText("");
     setUnsent(Option.none());
     runForumCall(
-      sendMessage(
-        (update, args) => send.withOptimisticUpdate(update)(args),
-        { id: person.id, name: person.name },
-        { channelId, classId, clientKey, slug, text: message }
-      ),
+      discussion === undefined
+        ? sendMessage(
+            (update, args) => send.withOptimisticUpdate(update)(args),
+            author,
+            { channelId, classId, clientKey, slug, text: message }
+          )
+        : sendReply(
+            (update, args) => reply.withOptimisticUpdate(update)(args),
+            author,
+            { classId, clientKey, number: discussion, slug, text: message }
+          ),
       () => {
         setText((current) => (current === "" ? message : current));
         setUnsent(Option.some({ clientKey, text: message }));
@@ -91,7 +102,7 @@ export function ForumComposer() {
       ) : null}
       <InputGroup className="rounded-3xl bg-muted/50 text-chat shadow-none">
         <InputGroupTextarea
-          aria-label={t("message-placeholder")}
+          aria-label={placeholder}
           className="max-h-[min(12rem,35dvh)] min-h-12 px-3 py-3"
           dir="auto"
           onChange={(event) => setText(event.target.value)}
@@ -104,7 +115,7 @@ export function ForumComposer() {
               submit();
             }
           }}
-          placeholder={t("message-placeholder")}
+          placeholder={placeholder}
           value={text}
         />
         <InputGroupAddon

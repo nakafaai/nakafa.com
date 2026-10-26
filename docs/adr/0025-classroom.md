@@ -88,9 +88,19 @@ Signing in does not count as consent (ADR 0009).
 - A discussion starts with a titled message. It has a number that counts per
   class, like the number of an issue, and an address such as
   `harapan.nakafa.com/classes/fisika-x-1/forum/12` (ADR 0026). The mutation that
-  opens a discussion takes the number from a counter that only discussions
-  write, in the same transaction that inserts the discussion, so two discussions
-  of one class never share a number.
+  opens a discussion reads the highest number of the class from the index of
+  `classroomThreads`, which only discussions write, and inserts the discussion
+  under the next number in the same transaction. Convex runs mutations as
+  serializable transactions and retries one whose read range another commit
+  changed, so two discussions of one class never share a number.
+- The opening message stays in its channel and names the discussion it opens
+  (`startsThreadId`), so the channel shows the title and the number of replies
+  under it. A reply carries the discussion it answers (`threadId`) and is not part
+  of the channel's own list. The title is sealed like a message, bound to the
+  class, the channel, and the client key that the opening message shares.
+- A subject teacher always opens a discussion. A member of the class opens one
+  only while the school lets students open discussions (`studentThreads`, ADR
+  0011), and the class page offers New discussion only to whoever may.
 - The replies to a discussion are its thread. The thread opens in the right
   panel, and as a full screen on a phone.
 - The title of a discussion is the same in the browser tab, in the header of its
@@ -148,7 +158,14 @@ Mentions).
 - Search uses the blind index of the school key (ADR 0030). Attachments go
   through the Files module (ADR 0028). The read state of a member, which message
   they have read in a channel or a discussion, belongs to this module
-  (`classroomReads`, planned).
+  (`classroomReads`): one row for each member and place, holding the time of the
+  newest message the member has seen there. A mark only moves forward, a time in
+  the future reads as now, and a mark that would not move writes nothing. Sending
+  a message or a reply moves the sender's own mark to it, so the sender's own
+  message never reads as unread. A channel is unread while its newest message
+  came after the member's mark, and a discussion while its newest reply did. The
+  channel list and the opening message show one dot for that, with no count (ADR
+  0027).
 - An announcement is a class post. The post owns its content, Home shows a
   projection of it, and the inbox row reads its title from the post (ADR 0027).
 - Names, mentions, and message text take `dir="auto"` or `bdi`, while formulas,
@@ -283,6 +300,21 @@ on a desktop.
 A behavior of the old engine that this table does not name is not carried over.
 The persisted snapshots and the navigation history of ADR 0005 are two of them.
 
+How the forum meets the table, decided with the first build (26 October 2026):
+
+- The place opens at the first message that another member wrote after the mark
+  the place had when it opened. That message is the scroller's one anchor
+  (`defaultScrollPosition` `last-anchor`), and it is chosen once, so a message
+  that arrives later is never an anchor and never moves a reader who is not at
+  the newest edge. A `Marker` divider stands before it while the message before
+  it is loaded. A place the member never read opens at its newest edge.
+- The mark follows the newest message in view once the view has been still for
+  600 milliseconds, so scrolling through history writes once.
+- A message the address names (`?message=`) is brought to the middle of the view,
+  and older pages load until it is there.
+- `e2e/school/scroll.browser.ts` runs the open, follow, older history, and jump
+  rows at 390 and 1440 px. The screen reader row stays a manual test.
+
 ## Consequences
 
 - The first School's forum goes with K11. Its web app and viewport are already
@@ -320,9 +352,13 @@ The persisted snapshots and the navigation history of ADR 0005 are two of them.
 | The first School's forum screens and viewport in `apps/www/src/components/school` | Deleted from main by #1051 |
 | ADR 0005, and the glossary section `Forum Conversation` | Deleted by #1037 |
 | `Message`, `Bubble`, `Attachment`, and `MessageScroller` in `packages/design-system/components/ui` | Live |
-| `Marker`, `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, program wave B, from the registry |
-| The rest of `confect/classroom` and its tables `classrooms`, `classroomMembers`, `classroomPosts`, `classroomThreads`, `classroomMessages`, `classroomReactions`, `classroomReads`, `classroomFolders`, `classroomTasks`, `classroomSubmissions`, and `classroomChannels` | Planned, program wave B |
+| `Marker` in `packages/design-system/components/ui/marker.tsx`, from the `base-vega` registry | Live: the unread divider |
+| `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, program wave B, from the registry |
+| Numbered discussions: `classroomThreads`, `confect/classroom/forum/threads` (`open`, `get`, `replies`, `reply`), the opening message and replies in `classroomMessages`, the address `/classes/<class>/forum/<number>` beside its channel on a wide screen and on its own on a phone | Live |
+| Read marks: `classroomReads`, `confect/classroom/forum/reads` (`get`, `mark`), unread dots on the channel list and on the opening message of a discussion, the unread divider | Live |
+| The channels and messages of the forum: `classroomChannels` and `classroomMessages` | Live |
+| The rest of `confect/classroom` and its tables `classroomMembers`, `classroomPosts`, `classroomReactions`, `classroomFolders`, `classroomTasks`, and `classroomSubmissions` | Planned, program wave B |
 | The classes of a school: `confect/classroom/classes` (`create`, `rename`, `archive`, `get`, `list`, `mine`, `resolve`) and `confect/classroom/teachers` (`assign`, `remove`, `list`), the tables `classes` and `classTeachers`, the `class` kind in `confect/classroom/kinds` with the actions `class.manage` and `class.view` and the extensions `class.create` on a cohort and `class.list` on a period, and the changes `class.created`, `class.renamed`, `class.archived`, `class.teacherAssigned`, and `class.teacherRemoved` | Live |
 | The mention popup | Planned. A spike comes first. |
-| The parity tests of the scroller | Planned, program wave B |
+| The parity tests of the scroller | Live for open, follow, older history, and jump at 390 and 1440 px (`e2e/school/scroll.browser.ts`); the screen reader row is a manual test |
 | Nina in a class | Planned, program wave B |

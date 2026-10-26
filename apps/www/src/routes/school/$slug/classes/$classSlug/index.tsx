@@ -40,11 +40,10 @@ function SchoolClassPage(): ReactElement {
   const preload = Route.useLoaderData();
   return (
     <ClassShell
-      channel={Option.none()}
       classSlug={classAddress}
       preload={preload}
       slug={slug}
-      tab="home"
+      view={{ _tag: "home" }}
     />
   );
 }

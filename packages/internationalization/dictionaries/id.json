@@ -774,7 +774,21 @@
     "read-only": "Siswa dan guru kelas ini yang menulis di kanal ini.",
     "messages-empty": "Belum ada pesan",
     "messages-empty-description": "Pesan pertama kanal ini akan tampil di sini.",
-    "scroll-to-latest": "Ke pesan terbaru"
+    "scroll-to-latest": "Ke pesan terbaru",
+    "unread-divider": "Pesan baru",
+    "unread": "Belum dibaca",
+    "discussion-label": "#{number} {title}",
+    "discussion-reply": "Balas",
+    "discussion-replies": "{count} balasan",
+    "discussion-close": "Tutup diskusi",
+    "discussion-new": "Diskusi baru",
+    "discussion-new-description": "Semua anggota kelas membacanya, dan diskusi ini mendapat nomor berikutnya di kelas.",
+    "discussion-title": "Judul",
+    "discussion-text": "Pesan pertama",
+    "discussion-start": "Mulai",
+    "discussions-closed": "Hanya guru yang membuka diskusi di sekolah ini.",
+    "discussion-failed": "Diskusimu belum dimulai.",
+    "reply-placeholder": "Tulis balasan"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

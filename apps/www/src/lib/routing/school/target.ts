@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/confect/_generated/id";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 
 import type { LinkTarget } from "@/lib/routing/link";
@@ -108,5 +109,32 @@ export function schoolClassForumTarget(
     from: LOCALE_ROUTE,
     params: { classSlug, slug },
     to: "/school/$slug/classes/$classSlug/forum",
+  } satisfies LinkTarget;
+}
+
+/** One channel of a class's forum, by the channel's ID. */
+export function schoolClassChannelTarget(
+  slug: TenantSlug,
+  classSlug: string,
+  channel: Id<"classroomChannels">
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug },
+    search: { channel },
+    to: "/school/$slug/classes/$classSlug/forum",
+  } satisfies LinkTarget;
+}
+
+/** One numbered discussion of a class's forum, by its number (ADR 0026). */
+export function schoolClassDiscussionTarget(
+  slug: TenantSlug,
+  classSlug: string,
+  number: number
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, number: String(number), slug },
+    to: "/school/$slug/classes/$classSlug/forum/$number",
   } satisfies LinkTarget;
 }

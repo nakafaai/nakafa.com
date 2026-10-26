@@ -9,6 +9,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { isNotFound } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
 import {
+  classDiscussionHandler,
   classForumHandler,
   shellClassesHandler,
 } from "@/lib/tenant/classes.server";
@@ -111,6 +112,35 @@ describe("class first screen", () => {
         data: { classSlug: CLASS, numItems: 20, slug: SLUG },
       })
     ).rejects.toMatchObject({ _tag: "PreloadFailed" });
+  });
+});
+
+describe("discussion first screen", () => {
+  it("reads the class, its channels, and the discussion of the class by its number", async () => {
+    const classId = Schema.decodeUnknownSync(Id("classes"))("class-1");
+    const answers = new Map<unknown, unknown>([
+      [classroom.classes.resolve, { id: classId, name: "Fisika X-1" }],
+      [classroom.forum.channels.list, { isDone: true, page: [] }],
+      [classroom.forum.threads.get, { discussion: { number: 12 } }],
+    ]);
+    mocks.preloadConfectQuery.mockImplementation((ref) =>
+      Effect.succeed(answers.get(ref))
+    );
+
+    const screen = await classDiscussionHandler({
+      data: { classSlug: CLASS, number: 12, numItems: 20, slug: SLUG },
+    });
+
+    expect(screen).toStrictEqual({
+      channels: { isDone: true, page: [] },
+      resolved: { id: classId, name: "Fisika X-1" },
+      thread: { discussion: { number: 12 } },
+    });
+    expect(mocks.preloadConfectQuery).toHaveBeenLastCalledWith(
+      classroom.forum.threads.get,
+      { classId, number: 12, slug: SLUG },
+      "token-class"
+    );
   });
 });
 

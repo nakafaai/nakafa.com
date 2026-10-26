@@ -29,6 +29,7 @@ const MODE_WORDS = [
   "owner",
   "teacher",
   "class-teacher",
+  "forum",
   "invite",
   "sitting",
   "card",
