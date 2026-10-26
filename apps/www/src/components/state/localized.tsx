@@ -3,7 +3,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useEffect } from "react";
 import { ActionLink } from "@/components/state/action";
-import { Broken } from "@/components/state/broken";
+import { Broken, BrokenRetry } from "@/components/state/broken";
 import { Missing } from "@/components/state/missing";
 import { Stage } from "@/components/state/stage";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
@@ -64,11 +64,15 @@ export function LocalizedError({ locale }: { readonly locale: Locale }) {
     <Stage>
       <Broken
         description={messages.Error.description}
-        home={messages.State["home-button"]}
-        homeHref={`/${locale}`}
-        retry={messages.Error.retry}
         title={messages.Error.title}
-      />
+      >
+        <BrokenRetry>{messages.Error.retry}</BrokenRetry>
+        <ActionLink
+          href={`/${locale}`}
+          label={messages.State["home-button"]}
+          variant="ghost"
+        />
+      </Broken>
     </Stage>
   );
 }

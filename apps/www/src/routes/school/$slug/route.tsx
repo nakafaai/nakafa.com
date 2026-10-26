@@ -14,7 +14,8 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
-import { Broken } from "@/components/state/broken";
+import { ActionLink } from "@/components/state/action";
+import { Broken, BrokenRetry } from "@/components/state/broken";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
@@ -145,18 +146,10 @@ export const Route = createFileRoute("/school/$slug")({
 });
 
 function SchoolLayout(): ReactElement {
-  const { legal, school } = Route.useRouteContext();
+  const { school } = Route.useRouteContext();
   const classes = Route.useLoaderData();
   if (school._tag === "Visitor") {
-    return (
-      <TenantEntry
-        legal={legal}
-        logo={school.profile.logo}
-        mascot={school.profile.mascot}
-        slug={school.profile.slug}
-        title={school.title}
-      />
-    );
+    return <TenantEntry title={school.title} />;
   }
   if (school._tag === "Outsider") {
     return (
@@ -194,9 +187,16 @@ function SchoolLayout(): ReactElement {
 /** The page of a school that the gate refused: no school has the address, or the viewer may not open it. */
 function SchoolRefused(): ReactElement {
   const locale = useLocale();
+  const tState = useTranslations("State");
   return (
     <Stage>
-      <TenantMissing homeHref={new URL(`/${locale}`, SITE_ORIGIN).href} />
+      <TenantMissing>
+        <ActionLink
+          href={new URL(`/${locale}`, SITE_ORIGIN).href}
+          label={tState("home-button")}
+          variant="default"
+        />
+      </TenantMissing>
     </Stage>
   );
 }
@@ -224,13 +224,14 @@ function SchoolError({ error }: ErrorComponentProps): ReactElement {
   }
   return (
     <Stage>
-      <Broken
-        description={t("description")}
-        home={tState("home-button")}
-        homeHref={new URL(`/${locale}`, SITE_ORIGIN).href}
-        retry={t("retry")}
-        title={t("title")}
-      />
+      <Broken description={t("description")} title={t("title")}>
+        <BrokenRetry>{t("retry")}</BrokenRetry>
+        <ActionLink
+          href={new URL(`/${locale}`, SITE_ORIGIN).href}
+          label={tState("home-button")}
+          variant="ghost"
+        />
+      </Broken>
     </Stage>
   );
 }

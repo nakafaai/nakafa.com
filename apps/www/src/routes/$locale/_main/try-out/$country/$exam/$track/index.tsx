@@ -94,7 +94,6 @@ function TryoutTrackPage() {
               },
               { label: route.page.track.title },
             ],
-            menuLabel: route.labels.more,
             title: route.page.track.title,
           }}
         />

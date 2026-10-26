@@ -1,7 +1,6 @@
 import { useMutation } from "@confect/react";
 import { Login03Icon } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -10,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { getRouteApi } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { type FormEvent, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -24,6 +24,9 @@ import {
 import { clientEnv } from "@/env.public";
 import { readAuthClient } from "@/lib/auth/client";
 
+/** The school layout's route, which holds the profile of the school the student signs in to. */
+const schoolRoute = getRouteApi("/school/$slug");
+
 /**
  * The school login form: the school username and a password, with an optional card code for
  * a first sign-in or a reissued card, which its placeholder names. A typed card code redeems the card and sets the password
@@ -31,10 +34,10 @@ import { readAuthClient } from "@/lib/auth/client";
  * problem without telling whether the username exists. The signed-out school tree mounts no
  * Convex provider, so the form mounts one for its redemption.
  */
-export function TenantLogin({ slug }: { slug: TenantSlug }) {
+export function TenantLogin() {
   return (
     <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
-      <TenantLoginForm slug={slug} />
+      <TenantLoginForm />
     </ConvexProvider>
   );
 }
@@ -43,8 +46,9 @@ export function TenantLogin({ slug }: { slug: TenantSlug }) {
  * The form under the provider of `TenantLogin`. Its hooks read that provider, so they cannot run
  * in the component that renders it.
  */
-function TenantLoginForm({ slug }: { slug: TenantSlug }) {
+function TenantLoginForm() {
   const t = useTranslations("SchoolEntry");
+  const { slug } = schoolRoute.useRouteContext().school.profile;
   const id = useId();
   const redeem = useMutation(identity.cards.redeem);
   const [isPending, startTransition] = useTransition();

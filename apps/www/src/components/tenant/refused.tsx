@@ -2,7 +2,14 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useLocale, useTranslations } from "use-intl";
 import { ActionLink } from "@/components/state/action";
 import { DeferredFigure } from "@/components/state/mascot";
-import { Screen } from "@/components/state/screen";
+import {
+  Screen,
+  ScreenActions,
+  ScreenDescription,
+  ScreenFigure,
+  ScreenHeader,
+  ScreenTitle,
+} from "@/components/state/screen";
 
 /**
  * The page of a school whose access the viewer has lost: a removed or demoted
@@ -15,17 +22,21 @@ export function TenantRefused() {
   const homeHref = new URL(`/${locale}`, SITE_ORIGIN).href;
 
   return (
-    <Screen
-      actions={
+    <Screen>
+      <ScreenHeader>
+        <ScreenFigure>
+          <DeferredFigure scene="refused" />
+        </ScreenFigure>
+        <ScreenTitle>{t("refused-title")}</ScreenTitle>
+        <ScreenDescription>{t("refused-description")}</ScreenDescription>
+      </ScreenHeader>
+      <ScreenActions>
         <ActionLink
           href={homeHref}
           label={t("back-to-learning")}
           variant="default"
         />
-      }
-      description={t("refused-description")}
-      figure={<DeferredFigure scene="refused" />}
-      title={t("refused-title")}
-    />
+      </ScreenActions>
+    </Screen>
   );
 }

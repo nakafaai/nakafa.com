@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody } from "@/components/entry/shell";
-import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
 
 /**
  * The sign-in body of the main site and of a school host. The page passes its
@@ -10,8 +8,8 @@ import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
  * control also signs out a visitor who is already signed in, and a school's
  * returns the visitor to the school root. The page also passes the figure above the
  * title: Nina on the main site, and the school's own mark on a school host. The body
- * adds the sentence that says why signing in keeps progress saved, and the privacy
- * and terms sentence.
+ * adds the sentence that says why signing in keeps progress saved, under which the
+ * page puts its privacy and terms sentence (`AuthLegal`).
  */
 export function SignInScreen({
   action,
@@ -23,8 +21,8 @@ export function SignInScreen({
   children: ReactNode;
   /** What stands above the title: Nina on the main site, the school's mark on a school host. */
   figure: ReactNode;
-  /** The privacy and terms addresses that the route loader read for this locale. */
-  legal: AuthLegalLinks | null;
+  /** The privacy and terms sentence, with the addresses that the route loader read for this locale. */
+  legal: ReactNode;
 }) {
   const t = useTranslations("Auth");
 
@@ -39,7 +37,7 @@ export function SignInScreen({
 
       {action}
 
-      <AuthLegal links={legal} />
+      {legal}
     </EntryShellBody>
   );
 }

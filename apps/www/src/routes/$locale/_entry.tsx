@@ -17,7 +17,8 @@ import {
 } from "@/components/entry/shell";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { Broken } from "@/components/state/broken";
+import { ActionLink } from "@/components/state/action";
+import { Broken, BrokenRetry } from "@/components/state/broken";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
@@ -87,11 +88,15 @@ function EntryError({ error }: ErrorComponentProps) {
         <EntryShellBody>
           <Broken
             description={messages.Error.description}
-            home={messages.State["home-button"]}
-            homeHref={`/${locale}`}
-            retry={messages.Error.retry}
             title={messages.Error.title}
-          />
+          >
+            <BrokenRetry>{messages.Error.retry}</BrokenRetry>
+            <ActionLink
+              href={`/${locale}`}
+              label={messages.State["home-button"]}
+              variant="ghost"
+            />
+          </Broken>
         </EntryShellBody>
       </EntryShellPanel>
       <EntryShellArtwork />

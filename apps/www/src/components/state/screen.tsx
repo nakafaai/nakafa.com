@@ -11,17 +11,6 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import type { ReactNode } from "react";
 import { NINA_SIZE } from "@/components/state/size";
 
-interface ScreenProps {
-  /** The ways on: one main action and one quiet one. */
-  actions: ReactNode;
-  /** One sentence, with no blame. */
-  description: string;
-  /** Nina in what she does, and what lies beside her. */
-  figure: ReactNode;
-  /** The heading the page composes, which is the page's `h1`. */
-  title: ReactNode;
-}
-
 /**
  * The arrangement of every full-page state, whether something is missing or
  * something broke: the design system's empty state, without its frame, because
@@ -38,24 +27,46 @@ interface ScreenProps {
  * nothing. A figure that cannot be drawn leaves its place empty and the words
  * and actions stay, because this page may be the last that works.
  */
-export function Screen({ actions, description, figure, title }: ScreenProps) {
+export function Screen({ children }: { children: ReactNode }) {
+  return <Empty className="wrap-anywhere w-full p-0 md:p-0">{children}</Empty>;
+}
+
+/** The figure, the title, and the description of a full-page state. */
+export function ScreenHeader({ children }: { children: ReactNode }) {
+  return <EmptyHeader className="w-full">{children}</EmptyHeader>;
+}
+
+/** Nina in what she does, and what lies beside her, in a place of her final height. */
+export function ScreenFigure({ children }: { children: ReactNode }) {
   return (
-    <Empty className="wrap-anywhere w-full p-0 md:p-0">
-      <EmptyHeader className="w-full">
-        <EmptyMedia
-          className="w-full overflow-x-clip"
-          style={{ height: wholeHeight(NINA_SIZE) }}
-        >
-          <ErrorBoundary fallback={null}>{figure}</ErrorBoundary>
-        </EmptyMedia>
-        <EmptyTitle className="text-2xl sm:text-3xl">{title}</EmptyTitle>
-        <EmptyDescription className="max-w-[34ch] text-base">
-          {description}
-        </EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent className="max-w-xs items-stretch gap-2 *:h-auto *:whitespace-normal sm:w-auto sm:max-w-none sm:flex-row">
-        {actions}
-      </EmptyContent>
-    </Empty>
+    <EmptyMedia
+      className="w-full overflow-x-clip"
+      style={{ height: wholeHeight(NINA_SIZE) }}
+    >
+      <ErrorBoundary fallback={null}>{children}</ErrorBoundary>
+    </EmptyMedia>
+  );
+}
+
+/** The heading the page composes, which is the page's `h1`. */
+export function ScreenTitle({ children }: { children: ReactNode }) {
+  return <EmptyTitle className="text-2xl sm:text-3xl">{children}</EmptyTitle>;
+}
+
+/** One sentence, with no blame. */
+export function ScreenDescription({ children }: { children: ReactNode }) {
+  return (
+    <EmptyDescription className="max-w-[34ch] text-base">
+      {children}
+    </EmptyDescription>
+  );
+}
+
+/** The ways on: one main action and one quiet one. */
+export function ScreenActions({ children }: { children: ReactNode }) {
+  return (
+    <EmptyContent className="max-w-xs items-stretch gap-2 *:h-auto *:whitespace-normal sm:w-auto sm:max-w-none sm:flex-row">
+      {children}
+    </EmptyContent>
   );
 }

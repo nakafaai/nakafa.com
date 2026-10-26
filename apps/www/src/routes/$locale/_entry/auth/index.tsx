@@ -4,6 +4,7 @@ import { Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { Auth } from "@/components/auth";
+import { AuthLegal } from "@/components/auth/legal";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";
 import { BackButton } from "@/components/shared/back";
@@ -106,7 +107,7 @@ function AuthPage() {
             whole
           />
         }
-        legal={legal}
+        legal={<AuthLegal links={legal} />}
       >
         <h1 className="font-semibold text-2xl">{t("sign-in-title")}</h1>
       </SignInScreen>
