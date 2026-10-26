@@ -1,9 +1,22 @@
 import type { PaginatedQueryItem } from "@confect/react";
 import { useMutation } from "@confect/react";
+import {
+  ArrowDown01Icon,
+  CommandLineIcon,
+  UnavailableIcon,
+} from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -54,46 +67,67 @@ export function SchoolDeviceDialog({
           <Button onClick={close} type="button" variant="outline">
             {common("cancel")}
           </Button>
-          <Button
-            disabled={!isComplete || isPending}
-            inert={isPending}
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(
-                  () => deny({ slug, userCode: code }),
-                  SOURCE,
-                  () => {
-                    close();
-                    toast.success({ title: "school-device-denied.title" });
-                  }
+          <ButtonGroup aria-label={t("device-title")}>
+            <Button
+              disabled={!isComplete || isPending}
+              inert={isPending}
+              onClick={() =>
+                startTransition(() =>
+                  saveSchool(
+                    () =>
+                      authorize({ clientId: client.id, slug, userCode: code }),
+                    SOURCE,
+                    () => {
+                      close();
+                      toast.success({
+                        title: "school-device-authorized.title",
+                      });
+                    }
+                  )
                 )
-              )
-            }
-            type="button"
-            variant="destructive"
-          >
-            {t("device-deny")}
-          </Button>
-          <Button
-            disabled={!isComplete || isPending}
-            inert={isPending}
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(
-                  () =>
-                    authorize({ clientId: client.id, slug, userCode: code }),
-                  SOURCE,
-                  () => {
-                    close();
-                    toast.success({ title: "school-device-authorized.title" });
+              }
+              type="button"
+            >
+              <HugeIcons icon={CommandLineIcon} />
+              {t("device-authorize")}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                disabled={!isComplete || isPending}
+                render={
+                  <Button
+                    aria-label={common("more-actions")}
+                    size="icon"
+                    type="button"
+                  />
+                }
+              >
+                <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() =>
+                    startTransition(() =>
+                      saveSchool(
+                        () => deny({ slug, userCode: code }),
+                        SOURCE,
+                        () => {
+                          close();
+                          toast.success({
+                            title: "school-device-denied.title",
+                          });
+                        }
+                      )
+                    )
                   }
-                )
-              )
-            }
-            type="button"
-          >
-            {t("device-authorize")}
-          </Button>
+                  variant="destructive"
+                >
+                  <HugeIcons icon={UnavailableIcon} />
+                  {t("device-deny")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ButtonGroup>
         </>
       }
       open={open}

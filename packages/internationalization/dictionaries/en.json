@@ -744,10 +744,10 @@
     "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
     "policy-domains-limit": "Use up to {limit} different domains, each on its own line.",
     "device-title": "Connect a device",
-    "device-description": "Type the code the Nakafa CLI shows. The device then reads the school as {name}.",
+    "device-description": "Type the code the Nakafa CLI shows to let it read the school as {name}.",
     "device-code": "Device code",
     "device-authorize": "Connect",
-    "device-deny": "Turn away"
+    "device-deny": "Deny device"
   },
   "Classroom": {
     "tabs-home": "Home",

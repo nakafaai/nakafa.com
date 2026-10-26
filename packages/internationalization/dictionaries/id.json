@@ -744,10 +744,10 @@
     "policy-domains-invalid": "Periksa domain ini: {domains}. Tulis satu domain di setiap baris.",
     "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
     "device-title": "Hubungkan perangkat",
-    "device-description": "Ketik kode yang ditampilkan Nakafa CLI. Perangkat itu lalu membaca sekolah sebagai {name}.",
+    "device-description": "Ketik kode dari Nakafa CLI agar perangkat itu membaca sekolah sebagai {name}.",
     "device-code": "Kode perangkat",
     "device-authorize": "Hubungkan",
-    "device-deny": "Tolak"
+    "device-deny": "Tolak perangkat"
   },
   "Classroom": {
     "tabs-home": "Beranda",
