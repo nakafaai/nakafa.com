@@ -192,6 +192,50 @@ test("an address that no page owns is answered with 404 in every language", asyn
   }
 });
 
+test("the server draws each not-found page before any script runs, and the scripts raise no error, in every language", async ({
+  browser,
+  baseURL,
+  page,
+}) => {
+  const addresses = [SCHOOL_TREE_ADDRESS, HARD_ADDRESS];
+  const withoutScript = await browser.newContext({ javaScriptEnabled: false });
+  const server = await withoutScript.newPage();
+  for (const locale of ["de", "en", "id"] as const) {
+    for (const address of addresses) {
+      const response = await server.goto(
+        new URL(`/${locale}/${address}`, baseURL).href
+      );
+      expect(response?.status(), `${locale}/${address}`).toBe(404);
+      await expect(
+        server.getByRole("heading", {
+          level: 1,
+          name: dictionaries[locale].NotFound.title,
+        })
+      ).toBeVisible();
+    }
+  }
+  await withoutScript.close();
+
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.promise(async () => {
+        for (const locale of ["de", "en", "id"] as const) {
+          for (const address of addresses) {
+            await page.goto(`/${locale}/${address}`);
+            await waitUntilTakenOver(
+              page.getByRole("heading", {
+                level: 1,
+                name: dictionaries[locale].NotFound.title,
+              })
+            );
+          }
+        }
+      })
+    )
+  );
+});
+
 for (const viewport of [touchViewport, desktopViewport]) {
   test.describe(`the state of a page that calls notFound at ${viewport.name}`, () => {
     test.use({

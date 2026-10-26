@@ -76,6 +76,8 @@ test("the not-found page of an unknown school links to Nakafa, because the schoo
           hostAddress(baseURL, `${UNKNOWN_SCHOOL}.localhost`, "/")
         );
         expect(response?.status()).toBe(404);
+        // The first HTML holds the page, so nothing paints blank before React.
+        expect(await response?.text()).toContain("find this page");
         const home = page.getByRole("link", { exact: true, name: "Go home" });
         await waitUntilTakenOver(home);
         await expect(home).toHaveAttribute(
