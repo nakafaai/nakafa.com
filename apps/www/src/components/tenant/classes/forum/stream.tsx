@@ -21,7 +21,7 @@ import {
   useMessageScrollerVisibility,
 } from "@shadcn/react/message-scroller";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   forumCall,
@@ -55,21 +55,21 @@ const MARK_DELAY_MILLISECONDS = 600;
 export function MessageStream({
   at,
   jump,
-  lead,
   loadOlder,
   messages,
+  opening,
   place,
 }: {
   /** The read mark of the place now, which only moves forward. */
   at: number | null;
   /** The message the address asks to show, if any. */
   jump: Option.Option<Id<"classroomMessages">>;
-  /** What stands above the oldest message once the whole history is loaded, such as a discussion's opening message. */
-  lead?: ReactNode;
   /** Loads the next older page, while the place holds one. */
   loadOlder: (() => void) | undefined;
   /** The loaded messages, oldest first. */
   messages: readonly ForumMessage[];
+  /** A discussion's opening message, which stands above the oldest reply once the whole history is loaded. */
+  opening: Option.Option<ForumMessage>;
   place: typeof ReadPlace.Type;
 }) {
   const t = useTranslations("Classroom");
@@ -101,8 +101,10 @@ export function MessageStream({
           preserveScrollOnPrepend
         >
           <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-4 py-2">
-            {loadOlder === undefined && lead !== undefined ? (
-              <MessageScrollerItem>{lead}</MessageScrollerItem>
+            {loadOlder === undefined && Option.isSome(opening) ? (
+              <MessageScrollerItem>
+                <ForumMessageRow message={opening.value} opens />
+              </MessageScrollerItem>
             ) : null}
             {Arr.map(messages, (message, index) => (
               // The client key stays the same from the send to the server's answer, so the row

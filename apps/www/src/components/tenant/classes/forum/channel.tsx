@@ -131,6 +131,7 @@ function ChannelMessages({
           : undefined
       }
       messages={Arr.reverse(pagination.results)}
+      opening={Option.none()}
       place={place}
     />
   );

@@ -13,6 +13,12 @@ const DISCUSSION_PATH = /\/classes\/fisika-x-1\/forum\/1$/;
 
 const TITLE = "Kenapa gaya gesek berlawanan arah gerak?";
 
+/** The discussion's close button, which leads back to its channel. */
+const CLOSE = "Close discussion";
+
+/** The address of the channel the discussion belongs to. */
+const CHANNEL_PATH = /\/classes\/fisika-x-1\/forum\?channel=/u;
+
 for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
@@ -79,10 +85,13 @@ for (const viewport of [
         .locator("[data-slot=discussion]")
         .getByText("Karena gaya gesek melawan arah gerak.")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-    // From tablet width the channel stays beside the discussion, and it counts the reply.
-    if (viewport.width >= 768) {
-      await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
-    }
+    // The channel stays beside the discussion from tablet width and under its sheet on a phone,
+    // and it counts the reply; closing the discussion leaves the channel where it was.
+    await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
+    await page.getByRole("link", { name: CLOSE }).click();
+    await page.waitForURL(CHANNEL_PATH);
+    await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
     await context.close();
   });
 }

@@ -15,7 +15,6 @@ import {
   MESSAGE_PAGE_SIZE,
 } from "@/components/tenant/classes/forum/channel";
 import { ForumComposer } from "@/components/tenant/classes/forum/composer";
-import { ForumMessageRow } from "@/components/tenant/classes/forum/message";
 import {
   ChannelScopeContext,
   useChannelScope,
@@ -32,8 +31,9 @@ type Thread = Ref.Returns<typeof classroom.forum.threads.get>;
 
 /**
  * One numbered discussion of a class (ADR 0025). From tablet width it opens as a panel beside its
- * channel, which stays readable; on a phone it fills the screen, and the path above leads back to the
- * channel. Its opening message stands first, its replies follow, and the composer under them
+ * channel, which stays readable; on a phone it opens as a sheet over its channel, which the close
+ * button or a press beside the sheet closes. CSS alone decides the two, so the server's page and
+ * the first paint already match the screen. Its opening message stands first, its replies follow, and the composer under them
  * replies, for a member of the class or a subject teacher.
  */
 export function ForumDiscussion({
@@ -59,7 +59,7 @@ export function ForumDiscussion({
 
   return (
     <div className="grid w-full min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-      <div className="hidden min-w-0 md:flex">
+      <div className="flex min-w-0">
         <ForumChannel
           canManage={canManage}
           canPost={canPost}
@@ -68,9 +68,16 @@ export function ForumDiscussion({
           jump={Option.none()}
         />
       </div>
+      {/* On a phone the discussion is a sheet over its channel, and a press beside it closes it. */}
+      <TargetLink
+        aria-hidden="true"
+        className="fixed inset-0 z-40 bg-black/40 md:hidden"
+        tabIndex={-1}
+        target={schoolClassChannelTarget(slug, classSlug, thread.channelId)}
+      />
       <section
         aria-label={title}
-        className="flex h-[70dvh] min-h-96 min-w-0 flex-col gap-3 md:border-s md:ps-6"
+        className="flex min-h-96 min-w-0 flex-col gap-3 max-md:fixed max-md:inset-x-0 max-md:top-24 max-md:bottom-0 max-md:z-50 max-md:rounded-t-2xl max-md:border-t max-md:bg-background max-md:px-4 max-md:pt-4 max-md:pb-4 max-md:shadow-lg md:h-[70dvh] md:border-s md:ps-6"
         data-slot="discussion"
       >
         <div className="flex min-w-0 items-start justify-between gap-2">
@@ -80,7 +87,7 @@ export function ForumDiscussion({
           <TargetLink
             aria-label={t("discussion-close")}
             className={buttonVariants({
-              className: "hidden shrink-0 md:inline-flex",
+              className: "shrink-0",
               size: "icon-sm",
               variant: "ghost",
             })}
@@ -167,13 +174,13 @@ function DiscussionReplies({
     <MessageStream
       at={read.value.at}
       jump={jump}
-      lead={<ForumMessageRow message={opening} opens />}
       loadOlder={
         PaginatedQueryResult.isCanLoadMore(pagination)
           ? () => pagination.loadMore(MESSAGE_PAGE_SIZE)
           : undefined
       }
       messages={Arr.reverse(pagination.results)}
+      opening={Option.some(opening)}
       place={place}
     />
   );
