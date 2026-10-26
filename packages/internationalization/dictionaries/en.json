@@ -478,7 +478,7 @@
     "policy-threads": "Student threads",
     "policy-threads-description": "Students may open threads in this school.",
     "policy-domains": "Email domains",
-    "policy-domains-description": "Only addresses on these domains may join this school.",
+    "policy-domains-description": "Only Google Workspace accounts on these domains, one per line, may join.",
     "policy-domains-placeholder": "sekolah.sch.id",
     "policy-domains-footer": "An empty list admits every address.",
     "save": "Save",
@@ -860,8 +860,8 @@
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
-    "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
-    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
+    "policy-domains-invalid": "Invalid domains: {domains}; write one domain on each line.",
+    "policy-domains-limit": "Use up to {limit} domains, each on its own line."
   },
   "Classroom": {
     "tabs-home": "Home",
