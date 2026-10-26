@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { SchoolSettingsHeader } from "@/components/tenant/settings/header";
 
 /**
  * One School settings section that changes something: its one header, with the path to
- * the section and the section's own action at the end, then one card per change in the
- * settings column.
+ * the section and the section's own action at the end, then one card per change across
+ * the page's full width, two side by side from the large width. Cards in one row take the
+ * same height and end with their footers on one line; a card that would stand alone in its
+ * row, or a body with one card, spans the row.
  */
 export function SettingsPage({
   actions,
@@ -18,9 +19,9 @@ export function SettingsPage({
   return (
     <>
       <SchoolSettingsHeader>{actions}</SchoolSettingsHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+      <div className="wrap-anywhere grid w-full min-w-0 grid-cols-1 gap-6 p-6 lg:grid-cols-2 lg:[&>:last-child:nth-child(odd)]:col-span-2 [&_[data-slot=card-footer]]:mt-auto">
         {children}
-      </LayoutContent>
+      </div>
     </>
   );
 }
