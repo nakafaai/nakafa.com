@@ -105,8 +105,6 @@ export function GradeField({
       aria-label={t("grade-of", { name: answer.name })}
       className="w-20 text-right"
       inputMode="numeric"
-      max={question.points}
-      min={0}
       onBlur={commit}
       onChange={(event) => setDraft(event.currentTarget.value)}
       onKeyDown={(event) => {
@@ -114,7 +112,6 @@ export function GradeField({
           event.currentTarget.blur();
         }
       }}
-      type="number"
       value={draft ?? String(answer.points)}
     />
   );
