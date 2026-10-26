@@ -222,24 +222,32 @@ function RosterImportOfPeriod({
       setPreview(read.success.rows);
     });
 
+  // The batches go one after another and stop at the first refusal, which the save reports.
+  const applyBatches = (rows: readonly (typeof ReadRow.Type)[]) =>
+    Effect.runPromise(
+      Effect.result(
+        Effect.forEach(
+          Arr.chunksOf(studentsOf(rows), IMPORT_BATCH),
+          (batch) =>
+            Effect.tryPromise(() =>
+              apply({ periodId, rows: batch, slug })
+            ).pipe(Effect.flatMap(Effect.fromResult)),
+          { discard: true }
+        )
+      )
+    );
+
   const submit = (rows: readonly (typeof ReadRow.Type)[]) =>
-    startApplying(async () => {
-      for (const batch of Arr.chunksOf(studentsOf(rows), IMPORT_BATCH)) {
-        let applied = false;
-        await saveSchool(
-          () => apply({ periodId, rows: batch, slug }),
-          SOURCE,
-          () => {
-            applied = true;
-          }
-        );
-        if (!applied) {
-          return;
+    startApplying(() =>
+      saveSchool(
+        () => applyBatches(rows),
+        SOURCE,
+        () => {
+          toast.success({ title: "school-roster-imported.title" });
+          setPreview(undefined);
         }
-      }
-      toast.success({ title: "school-roster-imported.title" });
-      setPreview(undefined);
-    });
+      )
+    );
 
   const download = () =>
     startExporting(() =>
