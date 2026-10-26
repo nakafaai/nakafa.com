@@ -11,6 +11,9 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 /** The address of an exam's try as a student on the school host. */
 const TRY_PATH = /\/exams\/[^/]+\/try$/;
 
+/** The page of the first question, whose name starts with its number. */
+const FIRST_QUESTION = /^Question 1\b/;
+
 /** The four options of the question, each with its letter and its text. B and D are correct. */
 const OPTIONS = [
   { letter: "A", text: "2" },
@@ -124,7 +127,7 @@ test("a teacher turns a question into complex multiple choice, marks two answers
   await expect(keyOf("B")).toHaveAttribute("aria-pressed", "false");
   await expect(keyOf("D")).toHaveAttribute("aria-pressed", "false");
   await expect(
-    page.getByRole("region", { name: /^Question 1\b/ })
+    page.getByRole("region", { name: FIRST_QUESTION })
   ).toContainText("No key yet");
   await context.close();
 });
