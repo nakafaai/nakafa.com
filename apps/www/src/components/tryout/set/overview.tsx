@@ -41,25 +41,24 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
   return (
     <TryoutPage>
       <TryoutSetPageHeader
-        action={
-          <TryoutSetAction
-            value={{
-              activeAttempt: value.activeAttempt,
-              currentPath: value.currentPath,
-              ...(value.actionAttempt === undefined
-                ? {}
-                : { currentAttempt: value.actionAttempt }),
-              destination: value.start.destination,
-              entrySection: value.start.entrySection,
-              locale: value.route.locale,
-              set: value.start.set,
-            }}
-          />
-        }
         currentPath={value.currentPath}
         page={value.page}
         returnPath={value.returnPath}
-      />
+      >
+        <TryoutSetAction
+          value={{
+            activeAttempt: value.activeAttempt,
+            currentPath: value.currentPath,
+            ...(value.actionAttempt === undefined
+              ? {}
+              : { currentAttempt: value.actionAttempt }),
+            destination: value.start.destination,
+            entrySection: value.start.entrySection,
+            locale: value.route.locale,
+            set: value.start.set,
+          }}
+        />
+      </TryoutSetPageHeader>
       <TryoutPageBody>
         <TryoutSectionRows
           {...(value.actionAttempt === undefined

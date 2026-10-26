@@ -1,9 +1,8 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { CurriculumList } from "@/components/marketing/about/curricula/list";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
-import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 
 /**
  * The curricula part: a heading, then Nina pointing at the curricula of the
@@ -11,11 +10,7 @@ import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
  * catalog, so the page never names a class. On a phone, where the list stands
  * under the heading on its own, Nina is left out.
  */
-export function Curricula({
-  curricula,
-}: {
-  readonly curricula: ReturnType<typeof readRuntimeCurriculumOptions>;
-}) {
+export function Curricula({ children }: { readonly children: ReactNode }) {
   const t = useTranslations("Landing");
 
   return (
@@ -28,7 +23,7 @@ export function Curricula({
           <div className="hidden md:block" id={NINA_SLOT.curricula}>
             <Nina act="pointing" label="" size={200} whole />
           </div>
-          <CurriculumList curricula={curricula} label={t("curricula-list")} />
+          {children}
         </div>
       </div>
     </MarketingSection>

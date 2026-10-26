@@ -2,12 +2,13 @@ import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutRunningContent } from "@/components/tryout/content/model";
+import { TryoutContentContext } from "@/components/tryout/player/articles";
 import {
   type TryoutFinish,
   useTryoutFinish,
@@ -55,6 +56,21 @@ interface TryoutSetPageClientProps {
   route: TryoutSetRoute;
 }
 
+/** The page the set client draws: its set page, the attempt to restart, and its route. Fixed for one page. */
+const TryoutSetPageContext = createContext<Pick<
+  TryoutSetPageClientProps,
+  "page" | "restartTarget" | "route"
+> | null>(null);
+
+/** Reads the page of the surrounding set client. */
+function useTryoutSetPage() {
+  const value = use(TryoutSetPageContext);
+  if (value === null) {
+    throw new Error("useTryoutSetPage must be used within TryoutSetPageClient");
+  }
+  return value;
+}
+
 /** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSetPageClient({
   binding,
@@ -64,49 +80,24 @@ export function TryoutSetPageClient({
   restartTarget,
   route,
 }: TryoutSetPageClientProps) {
-  if (!binding) {
-    return (
-      <ResolvedTryoutSetPage
-        binding={null}
-        content={content}
-        finish={null}
-        page={page}
-        restartTarget={restartTarget}
-        route={route}
-        state={null}
-      >
-        {children}
-      </ResolvedTryoutSetPage>
-    );
-  }
-
-  if (!isTryoutStateLive(binding.initialState)) {
-    return (
-      <ResolvedTryoutSetPage
-        binding={binding}
-        content={content}
-        finish={null}
-        page={page}
-        restartTarget={restartTarget}
-        route={route}
-        state={binding.initialState}
-      >
-        {children}
-      </ResolvedTryoutSetPage>
-    );
-  }
-
   return (
-    <LiveTryoutSetPage
-      binding={binding}
-      content={content}
-      key={binding.attemptId}
-      page={page}
-      restartTarget={restartTarget}
-      route={route}
-    >
-      {children}
-    </LiveTryoutSetPage>
+    <TryoutContentContext value={{ content }}>
+      <TryoutSetPageContext value={{ page, restartTarget, route }}>
+        {binding !== null && isTryoutStateLive(binding.initialState) ? (
+          <LiveTryoutSetPage binding={binding} key={binding.attemptId}>
+            {children}
+          </LiveTryoutSetPage>
+        ) : (
+          <ResolvedTryoutSetPage
+            binding={binding}
+            finish={null}
+            state={binding?.initialState ?? null}
+          >
+            {children}
+          </ResolvedTryoutSetPage>
+        )}
+      </TryoutSetPageContext>
+    </TryoutContentContext>
   );
 }
 
@@ -114,13 +105,11 @@ export function TryoutSetPageClient({
 function LiveTryoutSetPage({
   binding,
   children,
-  content,
-  page,
-  restartTarget,
-  route,
-}: TryoutSetPageClientProps & {
+}: {
   binding: NonNullable<TryoutSetPageClientProps["binding"]>;
+  children: ReactNode;
 }) {
+  const { page } = useTryoutSetPage();
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const locale = useLocale();
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
@@ -163,11 +152,7 @@ function LiveTryoutSetPage({
   return (
     <ResolvedTryoutSetPage
       binding={binding}
-      content={content}
       finish={finish}
-      page={page}
-      restartTarget={restartTarget}
-      route={route}
       state={finish.shown}
     >
       {children}
@@ -183,17 +168,14 @@ function LiveTryoutSetPage({
 function ResolvedTryoutSetPage({
   binding,
   children,
-  content,
   finish,
-  page,
-  restartTarget,
-  route,
   state,
-}: TryoutSetPageClientProps & {
+}: Pick<TryoutSetPageClientProps, "binding" | "children"> & {
   /** The finish of a live attempt; a page without a live attempt has none. */
   finish: TryoutFinish | null;
   state: SetState;
 }) {
+  const { page, restartTarget, route } = useTryoutSetPage();
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
@@ -240,7 +222,6 @@ function ResolvedTryoutSetPage({
       {isInternalEntry && entrySection ? (
         <TryoutInternalSet
           value={{
-            content,
             entrySection,
             now,
             player: finish && binding ? { finish, mode: binding.mode } : null,
@@ -264,7 +245,6 @@ function TryoutInternalSet({
 }: {
   children: ReactNode;
   value: {
-    content: TryoutRunningContent | null;
     entrySection: SetEntrySection;
     now: number;
     player: { finish: TryoutFinish; mode: PlayerMode } | null;
@@ -280,7 +260,6 @@ function TryoutInternalSet({
 
   return (
     <TryoutSetEntry
-      content={value.content}
       value={{
         ...value.view,
         entrySection: value.entrySection,

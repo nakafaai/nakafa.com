@@ -6,7 +6,10 @@ import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { TryoutAskButton } from "@/components/tryout/review/ask";
-import { TryoutReviewLocked } from "@/components/tryout/review/locked";
+import {
+  readReviewTranslators,
+  TryoutReviewLocked,
+} from "@/components/tryout/review/locked";
 import { projectTryoutReview } from "@/components/tryout/review/model";
 import {
   TryoutReviewQuestionExplanation,
@@ -60,8 +63,8 @@ export async function TryoutReview({
       <TryoutReviewLocked
         access={access}
         attemptId={attemptId}
-        locale={locale}
         runtime={runtime}
+        translators={readReviewTranslators(locale)}
       />
     );
   }

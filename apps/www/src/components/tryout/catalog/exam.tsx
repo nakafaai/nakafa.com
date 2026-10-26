@@ -7,6 +7,7 @@ import { Array as Arr, Tuple } from "effect";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
 import {
+  CatalogActionLabelContext,
   CatalogCard,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
@@ -49,19 +50,20 @@ export function TryoutExamPageClient({
   );
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
-          <CatalogCard
-            action={<TryoutPageLink publicPath={track.publicPath} />}
-            actionLabel={tTryouts("open-set-cta")}
-            key={track.trackKey}
-            title={track.title}
-          >
-            <CatalogCardVisual preload={index === 0} visual={visual} />
-          </CatalogCard>
-        ))}
+    <CatalogActionLabelContext value={tTryouts("open-set-cta")}>
+      <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
+            <CatalogCard
+              action={<TryoutPageLink publicPath={track.publicPath} />}
+              key={track.trackKey}
+              title={track.title}
+            >
+              <CatalogCardVisual preload={index === 0} visual={visual} />
+            </CatalogCard>
+          ))}
+        </div>
       </div>
-    </div>
+    </CatalogActionLabelContext>
   );
 }

@@ -1,13 +1,14 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { type ReactNode, Suspense, useState } from "react";
+import { createContext, type ReactNode, Suspense, use, useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
+import { TryoutContentContext } from "@/components/tryout/player/articles";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import {
   type TryoutFinish,
@@ -58,6 +59,23 @@ interface TryoutSectionPageClientProps {
   setPath: string;
 }
 
+/** The page the section client draws: its section page, its route, and the path of its set. Fixed for one page. */
+const TryoutSectionPageContext = createContext<Pick<
+  TryoutSectionPageClientProps,
+  "page" | "route" | "setPath"
+> | null>(null);
+
+/** Reads the page of the surrounding section client. */
+function useTryoutSectionPage() {
+  const value = use(TryoutSectionPageContext);
+  if (value === null) {
+    throw new Error(
+      "useTryoutSectionPage must be used within TryoutSectionPageClient"
+    );
+  }
+  return value;
+}
+
 /** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSectionPageClient({
   binding,
@@ -67,49 +85,27 @@ export function TryoutSectionPageClient({
   route,
   setPath,
 }: TryoutSectionPageClientProps) {
-  if (!binding) {
-    return (
-      <ResolvedTryoutSectionPage
-        binding={null}
-        content={content}
-        finish={null}
-        page={page}
-        route={route}
-        setPath={setPath}
-        state={null}
-      >
-        {children}
-      </ResolvedTryoutSectionPage>
-    );
-  }
-
-  if (!isTryoutStateLive(binding.initialState)) {
-    return (
-      <ResolvedTryoutSectionPage
-        binding={binding}
-        content={content}
-        finish={null}
-        page={page}
-        route={route}
-        setPath={setPath}
-        state={binding.initialState}
-      >
-        {children}
-      </ResolvedTryoutSectionPage>
-    );
-  }
-
   return (
-    <LiveTryoutSectionPage
-      binding={binding}
-      content={content}
-      key={`${binding.attemptId}:${page.section.sectionKey}`}
-      page={page}
-      route={route}
-      setPath={setPath}
-    >
-      {children}
-    </LiveTryoutSectionPage>
+    <TryoutContentContext value={{ content }}>
+      <TryoutSectionPageContext value={{ page, route, setPath }}>
+        {binding !== null && isTryoutStateLive(binding.initialState) ? (
+          <LiveTryoutSectionPage
+            binding={binding}
+            key={`${binding.attemptId}:${page.section.sectionKey}`}
+          >
+            {children}
+          </LiveTryoutSectionPage>
+        ) : (
+          <ResolvedTryoutSectionPage
+            binding={binding}
+            finish={null}
+            state={binding?.initialState ?? null}
+          >
+            {children}
+          </ResolvedTryoutSectionPage>
+        )}
+      </TryoutSectionPageContext>
+    </TryoutContentContext>
   );
 }
 
@@ -117,13 +113,11 @@ export function TryoutSectionPageClient({
 function LiveTryoutSectionPage({
   binding,
   children,
-  content,
-  page,
-  route,
-  setPath,
-}: TryoutSectionPageClientProps & {
+}: {
   binding: NonNullable<TryoutSectionPageClientProps["binding"]>;
+  children: ReactNode;
 }) {
+  const { page } = useTryoutSectionPage();
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const locale = useLocale();
   const [terminalState, setTerminalState] = useState<
@@ -172,11 +166,7 @@ function LiveTryoutSectionPage({
   return (
     <ResolvedTryoutSectionPage
       binding={binding}
-      content={content}
       finish={finish}
-      page={page}
-      route={route}
-      setPath={setPath}
       state={finish.shown}
     >
       {children}
@@ -193,17 +183,14 @@ function LiveTryoutSectionPage({
 function ResolvedTryoutSectionPage({
   binding,
   children,
-  content,
   finish,
-  page,
-  route,
-  setPath,
   state,
-}: TryoutSectionPageClientProps & {
+}: Pick<TryoutSectionPageClientProps, "binding" | "children"> & {
   /** The finish of a live attempt; a page without a live attempt has none. */
   finish: TryoutFinish | null;
   state: SectionState;
 }) {
+  const { page } = useTryoutSectionPage();
   const attempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const now = useTryoutClock(
@@ -231,11 +218,9 @@ function ResolvedTryoutSectionPage({
       <TryoutPage>
         {locked ? <ShellLock /> : null}
         <TryoutPlayer
-          content={content}
           finish={finish}
-          locked={runtimeState.kind === "pending"}
           mode={binding.mode}
-          runtime={runtimeState.runtime}
+          state={runtimeState}
           title={page.section.title}
         />
       </TryoutPage>
@@ -249,10 +234,7 @@ function ResolvedTryoutSectionPage({
         actionAttempt={actionAttempt}
         activeAttempt={activeAttempt}
         binding={binding}
-        page={page}
-        route={route}
         sectionStatus={sectionStatus}
-        setPath={setPath}
       />
       <TryoutPageBody>
         <TryoutSectionSummary
@@ -275,18 +257,13 @@ function TryoutSectionHeader({
   activeAttempt,
   actionAttempt,
   binding,
-  page,
-  route,
   sectionStatus,
-  setPath,
-}: Pick<
-  TryoutSectionPageClientProps,
-  "binding" | "page" | "route" | "setPath"
-> & {
+}: Pick<TryoutSectionPageClientProps, "binding"> & {
   activeAttempt: NonNullable<SectionState>["attempt"] | null;
   actionAttempt: NonNullable<SectionState>["attempt"] | null;
   sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
 }) {
+  const { page, route, setPath } = useTryoutSectionPage();
   const startDestination = getStartDestination(binding, route);
   const attemptSetAddress: TryoutPageAddress = binding
     ? { attemptId: binding.attemptId, publicPath: page.set.publicPath }
@@ -301,25 +278,24 @@ function TryoutSectionHeader({
     !binding || binding.startPath === getTryoutPublicPath(route);
   return (
     <TryoutSectionPageHeader
-      action={
-        <TryoutSummaryAction
-          value={{
-            activeAttempt,
-            attempt: actionAttempt,
-            completedAction: "return",
-            locale: route.locale,
-            returnAddress,
-            section: page.section,
-            sectionFinished: sectionStatus !== null,
-            set: page.set,
-            startDestination,
-          }}
-        />
-      }
       page={page}
       parents={hasCurrentPath ? "linked" : "unlinked"}
       setPath={returnAddress.publicPath}
-    />
+    >
+      <TryoutSummaryAction
+        value={{
+          activeAttempt,
+          attempt: actionAttempt,
+          completedAction: "return",
+          locale: route.locale,
+          returnAddress,
+          section: page.section,
+          sectionFinished: sectionStatus !== null,
+          set: page.set,
+          startDestination,
+        }}
+      />
+    </TryoutSectionPageHeader>
   );
 }
 

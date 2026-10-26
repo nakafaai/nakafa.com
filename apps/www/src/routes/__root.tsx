@@ -23,6 +23,7 @@ import { ContentPageAnchorProvider } from "@/components/shared/content/anchor";
 import {
   LocalizedError,
   LocalizedNotFound,
+  useReportedError,
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
@@ -145,11 +146,6 @@ function RootNotFound() {
  * locale's providers, inside the document of RootDocument.
  */
 function RootError({ error }: ErrorComponentProps) {
-  return (
-    <LocalizedError
-      error={error}
-      locale={DEFAULT_LOCALE}
-      source="start-root-error"
-    />
-  );
+  useReportedError(error, "start-root-error");
+  return <LocalizedError locale={DEFAULT_LOCALE} />;
 }

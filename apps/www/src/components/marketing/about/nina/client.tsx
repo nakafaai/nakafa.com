@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Option } from "effect";
 import { lazy, Suspense, startTransition, useState } from "react";
 import { NinaInput } from "@/components/ai/input";
+import { HeldPromptContext } from "@/components/marketing/about/nina/held";
 import { useLiveSession } from "@/components/providers/live";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
@@ -60,7 +61,9 @@ function SignedInNinaComposer() {
   return (
     <Suspense fallback={null}>
       {engaged ? (
-        <LiveNinaComposer held={held} />
+        <HeldPromptContext value={{ held }}>
+          <LiveNinaComposer />
+        </HeldPromptContext>
       ) : (
         <NinaInput
           attachments={false}

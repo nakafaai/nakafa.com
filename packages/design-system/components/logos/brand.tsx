@@ -29,10 +29,10 @@ interface BrandLogoProps extends Omit<LogoProps, "name"> {
 /**
  * Renders brand marks as inline SVGs so monochrome logos inherit theme color.
  */
-export function BrandLogo({ className, name, ...props }: BrandLogoProps) {
+export function BrandLogo({ name, ...props }: BrandLogoProps) {
   const Logo = brandLogos[name];
 
-  return <Logo className={className} {...props} />;
+  return <Logo {...props} />;
 }
 
 function AnthropicLogo({ className, ...props }: LogoProps) {

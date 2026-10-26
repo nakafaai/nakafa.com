@@ -2,7 +2,7 @@
 
 import {
   ConvexProvider as ConvexClientProvider,
-  type ConvexReactClient,
+  useConvex,
 } from "convex/react";
 import { Effect, Exit, Function as Fn, Option, Scope } from "effect";
 import {
@@ -84,7 +84,7 @@ function useConvexSessionId() {
 }
 
 /**
- * Hands Convex the session's credentials. It renders before the provider's
+ * Hands the Convex client around it the session's credentials. It renders before the provider's
  * children, so its effect runs before theirs and a known session authenticates
  * the client before any child subscribes to a query, as the first child of
  * `ConvexProviderWithAuth` does. A session that settles on none releases the
@@ -92,12 +92,11 @@ function useConvexSessionId() {
  * the next page load.
  */
 export function ConvexSessionCredentials({
-  client,
   store,
 }: {
-  client: ConvexReactClient;
   store: ConvexAuthStore;
 }) {
+  const client = useConvex();
   const sessionId = useConvexSessionId();
   const session = useAuthSession(Fn.identity);
   const isSignedOut = useAuthSession(hasSettledSignedOut);
@@ -142,11 +141,8 @@ export function ConvexSessionCredentials({
  * cleanup runs after theirs and readers that unmount with the session release
  * their queries before the credentials go.
  */
-export function ConvexSessionRelease({
-  client,
-}: {
-  client: ConvexReactClient;
-}) {
+export function ConvexSessionRelease() {
+  const client = useConvex();
   const sessionId = useConvexSessionId();
 
   useEffect(() => {
@@ -172,20 +168,14 @@ export function ConvexSessionRelease({
  * session store, hydrating with the server's state.
  * https://docs.convex.dev/auth/advanced/custom-auth
  */
-function ConvexAuthProvider({
-  children,
-  client,
-}: {
-  children: ReactNode;
-  client: ConvexReactClient;
-}) {
+function ConvexAuthProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() => createConvexAuthStore());
 
   return (
     <ConvexAuthContext value={store}>
-      <ConvexSessionCredentials client={client} store={store} />
+      <ConvexSessionCredentials store={store} />
       {children}
-      <ConvexSessionRelease client={client} />
+      <ConvexSessionRelease />
     </ConvexAuthContext>
   );
 }
@@ -204,9 +194,9 @@ export function ConvexProvider({
 
   return (
     <AuthSessionProvider>
-      <ConvexAuthProvider client={convex}>
-        <ConvexClientProvider client={convex}>{children}</ConvexClientProvider>
-      </ConvexAuthProvider>
+      <ConvexClientProvider client={convex}>
+        <ConvexAuthProvider>{children}</ConvexAuthProvider>
+      </ConvexClientProvider>
     </AuthSessionProvider>
   );
 }

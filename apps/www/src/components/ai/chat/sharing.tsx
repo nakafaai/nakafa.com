@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation";
+import { ChatRetryContext, useChatRetry } from "@/components/ai/chat/retry";
 import { reportClientException } from "@/lib/analytics/client";
 import { useAnswerRetry } from "@/lib/convex/requery";
 import { useCurrentLocale } from "@/lib/routing/link";
@@ -117,17 +118,20 @@ export function ChatSharing({
           // that both of them make, so this boundary recovers it without a report.
           <ErrorBoundary
             fallbackRender={() => (
-              <ChatShareRetry isPending={waiting} onRetry={retry} />
+              <ChatRetryContext value={{ isPending: waiting, onRetry: retry }}>
+                <ChatShareRetry />
+              </ChatRetryContext>
             )}
             key={attempt}
             report={false}
           >
-            <ChatShareAction
-              chatId={chat._id}
-              isPrivate={isPrivate}
-              onCreate={() => handleUpdateVisibility("public")}
-              onRetry={remount}
-            />
+            <ChatRetryContext value={{ isPending: false, onRetry: remount }}>
+              <ChatShareAction
+                chatId={chat._id}
+                isPrivate={isPrivate}
+                onCreate={() => handleUpdateVisibility("public")}
+              />
+            </ChatRetryContext>
           </ErrorBoundary>
         }
         open={open}
@@ -231,12 +235,10 @@ function ChatShareAction({
   chatId,
   isPrivate,
   onCreate,
-  onRetry,
 }: {
   chatId: ChatView["_id"];
   isPrivate: boolean;
   onCreate: () => void;
-  onRetry: () => void;
 }) {
   const t = useTranslations("Ai");
   const clipboard = useClipboard({ timeout: 500 });
@@ -269,7 +271,7 @@ function ChatShareAction({
     );
   }
   if (QueryResult.isFailure(link)) {
-    return <ChatShareRetry onRetry={onRetry} />;
+    return <ChatShareRetry />;
   }
   const token = QueryResult.isSuccess(link) ? link.value : null;
   /** Copy the link once the server has drawn its token. */
@@ -297,14 +299,9 @@ function ChatShareAction({
  * waits for the server's answer, the button is disabled and shows the spinner of
  * the design system.
  */
-function ChatShareRetry({
-  isPending = false,
-  onRetry,
-}: {
-  isPending?: boolean;
-  onRetry: () => void;
-}) {
+function ChatShareRetry() {
   const t = useTranslations("Ai");
+  const { isPending, onRetry } = useChatRetry();
 
   return (
     <Button

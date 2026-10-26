@@ -8,34 +8,20 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
+import {
+  TryoutTableHeader,
+  useTryoutSetTable,
+} from "@/components/tryout/catalog/table/header";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
-import type {
-  TryoutSetData,
-  TryoutSetSort,
-  TryoutSetStatusFilter,
-} from "@/components/tryout/catalog/table/types";
+import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
 
 /**
  * The frame of the discovery table: its header, its rows, the trigger that loads
  * the next window and the status line. A visitor's and a learner's table render
  * this same frame, so the two variants keep one layout.
  */
-export function TryoutSetFrame({
-  data,
-  filter,
-  onFilter,
-  onSort,
-  sort,
-  title,
-}: {
-  data: TryoutSetData;
-  filter: TryoutSetStatusFilter;
-  onFilter: (filter: TryoutSetStatusFilter) => void;
-  onSort: (sort: TryoutSetSort) => void;
-  sort: TryoutSetSort;
-  title: string;
-}) {
+export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
+  const { filter, sort, title } = useTryoutSetTable();
   const t = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   let status = "";
@@ -77,12 +63,7 @@ export function TryoutSetFrame({
               <col className="w-28" />
               <col className="w-28" />
             </colgroup>
-            <TryoutTableHeader
-              filter={filter}
-              onFilter={onFilter}
-              onSort={onSort}
-              sort={sort}
-            />
+            <TryoutTableHeader />
             <TableBody>
               <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
               {canLoadMore && (

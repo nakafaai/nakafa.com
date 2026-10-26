@@ -32,6 +32,14 @@ import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/rev
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import { Link } from "@/lib/routing/link";
 
+/** Reads the try-out and pricing translators of a locale, which the locked review reads while its preview loads. */
+export function readReviewTranslators(locale: Locale) {
+  return Promise.all([
+    readServerTranslator({ locale, namespace: "Tryouts" }),
+    readServerTranslator({ locale, namespace: "Pricing" }),
+  ]);
+}
+
 /**
  * Loads the leading questions the backend previews to a free learner, with
  * their explanations; the offer stays usable without them.
@@ -70,17 +78,17 @@ const loadPreview = Effect.fn("TryoutReview.loadPreview")(
 export async function TryoutReviewLocked({
   access,
   attemptId,
-  locale,
   runtime,
+  translators,
 }: {
   readonly access: SignedContentAccess;
   readonly attemptId: Id<"tryoutAttempts">;
-  readonly locale: Locale;
   readonly runtime: TryoutSectionRuntime;
+  /** The try-out and pricing translators of the page's locale, read while the preview loads. */
+  readonly translators: ReturnType<typeof readReviewTranslators>;
 }) {
-  const [t, tPricing, preview] = await Promise.all([
-    readServerTranslator({ locale, namespace: "Tryouts" }),
-    readServerTranslator({ locale, namespace: "Pricing" }),
+  const [[t, tPricing], preview] = await Promise.all([
+    translators,
     Effect.runPromise(loadPreview(attemptId, access, runtime)),
   ]);
 
@@ -129,57 +137,38 @@ export async function TryoutReviewLocked({
         className="pointer-events-none absolute inset-0 bg-linear-to-t from-5% from-background via-35% via-background/75 to-80% to-background/0 backdrop-blur-[2px]"
       />
 
-      <TryoutReviewOffer
-        compare={t("paywall-compare")}
-        description={t("paywall-description")}
-        footer={t("paywall-footer")}
-        period={tPricing("pro-period")}
-        title={t("paywall-title", { count: runtime.questions.length })}
-      />
+      {/*
+       * The Pro offer: a bottom sheet with the drawer's anatomy on phones and a
+       * centered dialog card from the medium breakpoint up.
+       */}
+      <CardSection className="relative w-full shadow-lg/5 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:ring-0 md:max-w-md">
+        <CardHeader>
+          <CardTitle>
+            <h2 id="tryout-review-offer">
+              {t("paywall-title", { count: runtime.questions.length })}
+            </h2>
+          </CardTitle>
+          <CardDescription>{t("paywall-description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PricingPrice
+            Price={StaticPrice}
+            period={tPricing("pro-period")}
+            plan="pro"
+          />
+        </CardContent>
+        <CardSectionFooter bottomSheet hint={t("paywall-footer")}>
+          <CardSectionActions share>
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              to="/$locale/pricing"
+            >
+              {t("paywall-compare")}
+            </Link>
+            <TryoutReviewCheckout />
+          </CardSectionActions>
+        </CardSectionFooter>
+      </CardSection>
     </section>
-  );
-}
-
-/**
- * The Pro offer: a bottom sheet with the drawer's anatomy on phones and a
- * centered dialog card from the medium breakpoint up.
- */
-function TryoutReviewOffer({
-  compare,
-  description,
-  footer,
-  period,
-  title,
-}: {
-  readonly compare: string;
-  readonly description: string;
-  /** The sentence on the left of the offer's actions. */
-  readonly footer: string;
-  readonly period: string;
-  readonly title: string;
-}) {
-  return (
-    <CardSection className="relative w-full shadow-lg/5 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:ring-0 md:max-w-md">
-      <CardHeader>
-        <CardTitle>
-          <h2 id="tryout-review-offer">{title}</h2>
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <PricingPrice Price={StaticPrice} period={period} plan="pro" />
-      </CardContent>
-      <CardSectionFooter bottomSheet hint={footer}>
-        <CardSectionActions share>
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            to="/$locale/pricing"
-          >
-            {compare}
-          </Link>
-          <TryoutReviewCheckout />
-        </CardSectionActions>
-      </CardSectionFooter>
-    </CardSection>
   );
 }

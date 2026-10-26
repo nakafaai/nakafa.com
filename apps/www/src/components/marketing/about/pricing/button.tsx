@@ -4,7 +4,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
-import { lazy, Suspense, useTransition } from "react";
+import { createContext, lazy, Suspense, use, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useLiveSession } from "@/components/providers/live";
 import { reportClientException } from "@/lib/analytics/client";
@@ -17,7 +17,24 @@ import { isActiveLocale } from "@/lib/i18n/active";
 /** The emphasis of the Pro action: the page's one primary on the pricing page, secondary elsewhere. */
 export type PricingButtonVariant = "default" | "secondary";
 
-function LoadingButton({ variant }: { variant: PricingButtonVariant }) {
+/** The emphasis of the Pro action around a variant of it. */
+const PricingButtonVariantContext = createContext<PricingButtonVariant | null>(
+  null
+);
+
+/** Reads the emphasis of the Pro action around a variant of it. */
+export function usePricingButtonVariant() {
+  const variant = use(PricingButtonVariantContext);
+  if (variant === null) {
+    throw new Error(
+      "usePricingButtonVariant must be used within PricingButton"
+    );
+  }
+  return variant;
+}
+
+function LoadingButton() {
+  const variant = usePricingButtonVariant();
   const t = useTranslations("Pricing");
 
   return (
@@ -69,7 +86,8 @@ async function startVisitorSignIn(
  * A visitor's Pro action starts Google sign-in. The sign-in code loads on the
  * click, so the page itself carries no Better Auth client.
  */
-function VisitorButton({ variant }: { variant: PricingButtonVariant }) {
+function VisitorButton() {
+  const variant = usePricingButtonVariant();
   const locale = useLocale();
   const t = useTranslations("Pricing");
   const [isPending, startTransition] = useTransition();
@@ -111,26 +129,31 @@ function VisitorButton({ variant }: { variant: PricingButtonVariant }) {
  * mounted, so the first HTML and the hydration both render the visitor's action.
  */
 export function PricingButton({ variant }: { variant: PricingButtonVariant }) {
+  return (
+    <PricingButtonVariantContext value={variant}>
+      <PricingAction />
+    </PricingButtonVariantContext>
+  );
+}
+
+/** The variant of the Pro action that the page's session can take. */
+function PricingAction() {
   const mounted = useMounted();
   const client = useLiveSession((state) => state.client);
   const isSessionPending = useLiveSession((state) => state.isPending);
 
   if (!mounted) {
-    return <LoadingButton variant={variant} />;
+    return <LoadingButton />;
   }
 
   if (Option.isNone(client)) {
     // A signed-in page's session is still loading, so its Pro action waits instead of offering sign-in.
-    return isSessionPending ? (
-      <LoadingButton variant={variant} />
-    ) : (
-      <VisitorButton variant={variant} />
-    );
+    return isSessionPending ? <LoadingButton /> : <VisitorButton />;
   }
 
   return (
-    <Suspense fallback={<LoadingButton variant={variant} />}>
-      <BillingButton client={client.value} variant={variant} />
+    <Suspense fallback={<LoadingButton />}>
+      <BillingButton client={client.value} />
     </Suspense>
   );
 }

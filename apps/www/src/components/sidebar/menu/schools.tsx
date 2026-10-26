@@ -19,23 +19,22 @@ import { schoolOrigin } from "@/lib/routing/school/host";
 
 /** One school of the account menu: its mark and its name, as a link to the school's own address. */
 function SidebarSchoolMenuItem({
-  logo,
-  mascot,
-  name,
-  slug,
+  tenant,
 }: {
-  logo: string | undefined;
-  mascot: typeof Mascot.Type;
-  name: string;
-  slug: TenantSlug;
+  tenant: {
+    logo: string | undefined;
+    mascot: typeof Mascot.Type;
+    name: string;
+    slug: TenantSlug;
+  };
 }) {
   return (
     <DropdownMenuItem
       className="cursor-pointer"
       render={(props) => (
-        <a {...props} href={schoolOrigin(slug).href}>
-          <SchoolMark logo={logo} mascot={mascot} />
-          <span className="truncate">{name}</span>
+        <a {...props} href={schoolOrigin(tenant.slug).href}>
+          <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
+          <span className="truncate">{tenant.name}</span>
         </a>
       )}
     />
@@ -101,13 +100,7 @@ export function SidebarSchoolMenuItems({
           <DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>
         ) : (
           Arr.map(memberships.results, ({ tenant }) => (
-            <SidebarSchoolMenuItem
-              key={tenant.slug}
-              logo={tenant.logo}
-              mascot={tenant.mascot}
-              name={tenant.name}
-              slug={tenant.slug}
-            />
+            <SidebarSchoolMenuItem key={tenant.slug} tenant={tenant} />
           ))
         )}
         {PaginatedQueryResult.isCanLoadMore(memberships) ? (

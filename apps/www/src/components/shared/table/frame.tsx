@@ -30,10 +30,10 @@ export function TableFrame({ children }: { children: ReactNode }) {
  * The page's action that adds the first record sits in the page header.
  */
 export function TableEmpty({
-  act,
   action,
   description,
   title,
+  ...nina
 }: {
   /** What Nina does in the empty state, chosen for the list. */
   act: typeof ActSchema.Type;
@@ -46,7 +46,7 @@ export function TableEmpty({
     <TableFrame>
       <Empty className="md:p-10">
         <EmptyHeader>
-          <EmptyNina act={act} />
+          <EmptyNina {...nina} />
           <EmptyTitle className="text-base">{title}</EmptyTitle>
           <EmptyDescription>{description}</EmptyDescription>
         </EmptyHeader>
