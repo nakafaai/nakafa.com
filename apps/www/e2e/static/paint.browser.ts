@@ -26,7 +26,7 @@ test("a prerendered page paints before it fetches a script, then hydrates", asyn
     )
     .toBe(true);
 
-  const order = Schema.decodeUnknownSync(PaintOrder)(
+  const order = Schema.decodeSync(PaintOrder)(
     await page.evaluate(() => ({
       firstContentfulPaint:
         performance

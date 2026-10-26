@@ -29,7 +29,7 @@ const StaticScripts = Schema.Struct({
 const StaticScriptsJson = Schema.fromJsonString(StaticScripts);
 
 /** A prerendered page whose scripts are not the ones TanStack writes, so the build cannot defer them. */
-export class StaticScriptsUnreadable extends Schema.TaggedError<StaticScriptsUnreadable>()(
+class StaticScriptsUnreadable extends Schema.TaggedError<StaticScriptsUnreadable>()(
   "StaticScriptsUnreadable",
   { reason: Schema.String }
 ) {}
@@ -123,15 +123,15 @@ export function deferStaticScripts(
       new StaticScriptsUnreadable({ reason: "The page has no single body." })
     );
   }
-  const preloads = Arr.dedupeWith(
-    Arr.map(Arr.fromIterable(html.matchAll(MODULE_PRELOAD)), ([tag]) => {
+  const preloads = Arr.map(
+    Arr.fromIterable(html.matchAll(MODULE_PRELOAD)),
+    ([tag]) => {
       const priority = PRELOAD_PRIORITY.exec(tag)?.[1];
       return {
         href: PRELOAD_HREF.exec(tag)?.[1],
         ...(priority === undefined ? {} : { fetchPriority: priority }),
       };
-    }),
-    (first, second) => first.href === second.href
+    }
   );
   return Schema.decodeUnknownResult(StaticScripts)({
     entry: entry[1],
@@ -141,7 +141,14 @@ export function deferStaticScripts(
       (error) => new StaticScriptsUnreadable({ reason: error.message })
     ),
     Result.map((scripts) => {
-      const loader = `<script>${STATIC_SCRIPTS_LOADER}(${Schema.encodeSync(StaticScriptsJson)(scripts)});</script>`;
+      const unique = {
+        entry: scripts.entry,
+        preloads: Arr.dedupeWith(
+          scripts.preloads,
+          (first, second) => first.href === second.href
+        ),
+      };
+      const loader = `<script>${STATIC_SCRIPTS_LOADER}(${Schema.encodeSync(StaticScriptsJson)(unique)});</script>`;
       return html
         .replace(MODULE_PRELOAD, "")
         .replace(entry[0], "")
