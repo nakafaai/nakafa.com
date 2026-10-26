@@ -23,10 +23,11 @@ import {
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
-/** One active member of the school as the members list shows it: who they are, their roles, and how far they have joined. */
+/** One active member of the school as the members list shows it: who they are, their roles, how far they have joined, and whether the caller may remove them. */
 const MemberView = Schema.Struct({
   id: Id("tenantPeople"),
   name: PersonName,
+  removable: Schema.Boolean,
   roles: Schema.Array(BuiltinRole),
   status: MemberStatus,
 });

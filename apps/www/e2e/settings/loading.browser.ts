@@ -153,9 +153,11 @@ const keepsFormattedWords = Effect.fn("NakafaE2E.memoryKeepsFormattedWords")(
 );
 
 /**
- * A task box that the learner clicks while the editor's code loads keeps its
- * check: the saved box takes no change, and the editor shows the same check
- * when it arrives.
+ * A task box is the design system's check box, named by the task's words, in the
+ * saved words and in the editor alike: the browser draws no box of its own. A box
+ * that the learner clicks while the editor's code loads keeps its check, because
+ * the saved box takes no change; the editor shows the same check when it arrives,
+ * and its box checks the task.
  */
 const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
   function* (page: Page, baseURL: string) {
@@ -179,11 +181,11 @@ const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
     yield* Effect.promise(async () => {
       await nameOf(page, MILK).click();
 
-      const box = panelOf(page).getByRole("checkbox");
+      const box = panelOf(page).getByRole("checkbox", { name: MILK });
       await expect(box).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      await expect(box).toHaveAttribute("data-slot", "checkbox");
       await expect(box).not.toBeChecked();
-      // The label wraps the box, so a click on the label is a click on the box.
-      await panelOf(page).locator('[data-type="taskItem"] label').click();
+      await box.click();
       await expect(box).not.toBeChecked();
       await expect(editorOf(page)).toHaveCount(0);
 
@@ -191,7 +193,14 @@ const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
       await expect(editorOf(page)).toContainText(MILK, {
         timeout: readinessTimeoutMilliseconds,
       });
-      await expect(editorOf(page).getByRole("checkbox")).not.toBeChecked();
+      const task = editorOf(page).getByRole("checkbox", { name: MILK });
+      await expect(task).toHaveAttribute("data-slot", "checkbox");
+      await expect(task).not.toBeChecked();
+      await task.click();
+      await expect(task).toBeChecked();
+      await expect(
+        editorOf(page).locator('[data-type="taskItem"]')
+      ).toHaveAttribute("data-checked", "true");
     });
   }
 );

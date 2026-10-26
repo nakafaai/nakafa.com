@@ -91,6 +91,7 @@ type SubmitMessage =
   | "card-invalid"
   | "card-used"
   | "failed"
+  | "sign-in-missing"
   | "sign-in-refused"
   | ReturnType<typeof redeemRefusalKey>;
 
@@ -132,17 +133,22 @@ const passwordSignIn = (
   );
 
 /**
- * Decides one submission of the login form (ADR 0009). With no card code, the form signs the
- * student in with the typed name and password. With a card code, it redeems the card first, and
- * a redeemed card signs the student in. A card that answers `used` may be the retry of a
- * redemption whose reply was lost, so the password sign-in decides: it signs the student in
- * when the password is right, and otherwise the form shows that the card was used. Any other
- * refusal shows its own message, and a sign-in that got no answer shows the failure message.
+ * Decides one submission of the login form (ADR 0009). A form without the username or the
+ * password answers at once, without a request, because every way in needs both. With no card
+ * code, the form signs the student in with the typed name and password. With a card code, it
+ * redeems the card first, and a redeemed card signs the student in. A card that answers `used`
+ * may be the retry of a redemption whose reply was lost, so the password sign-in decides: it
+ * signs the student in when the password is right, and otherwise the form shows that the card
+ * was used. Any other refusal shows its own message, and a sign-in that got no answer shows the
+ * failure message.
  */
 export const submitLogin = Effect.fn("www.tenant.login.submit")(function* (
   values: typeof LoginFormValues.Type,
   ports: SubmitPorts
 ): Effect.fn.Return<SubmitStep, never> {
+  if (values.loginName.trim() === "" || values.password === "") {
+    return "sign-in-missing";
+  }
   const credentials = {
     password: values.password,
     username: values.loginName,

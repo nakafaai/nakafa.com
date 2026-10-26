@@ -303,6 +303,28 @@ test("Beranda fits a 320 px phone without a sideways scroll", async ({
   await context.close();
 });
 
+test("Beranda takes the app's page width on a wide screen, centred beside the sidebar", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 1080, width: 1920 },
+  });
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
+
+  // Every app page keeps max-w-7xl (80rem, 1280 px), and the page's side padding sits inside it.
+  const content = await page.locator("article").first().boundingBox();
+  expect(content?.width).toBe(1280);
+  await context.close();
+});
+
 test("an upcoming room shows as a bar in the owner's schedule, and the bar opens its room", async ({
   baseURL,
   browser,

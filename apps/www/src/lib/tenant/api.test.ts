@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
 import {
+  forwardedBody,
   forwardedRequestHeaders,
   forwardedResponseHeaders,
   schoolApiTarget,
@@ -68,4 +69,40 @@ describe("lib/tenant/api", () => {
     expect(answered.get("retry-after")).toBe("3");
     expect(answered.get("set-cookie")).toBeNull();
   });
+
+  it.effect(
+    "sends a POST's bytes with the media type they came with, and no body on a read",
+    () =>
+      Effect.gen(function* () {
+        const form = "grant_type=client_credentials&client_id=c";
+        const posted = yield* forwardedBody(
+          new Request("https://harapan.nakafa.com/api/v1/token", {
+            body: form,
+            headers: { "content-type": "application/x-www-form-urlencoded" },
+            method: "POST",
+          })
+        );
+        expect(posted).toMatchObject({
+          _tag: "Uint8Array",
+          contentLength: form.length,
+          contentType: "application/x-www-form-urlencoded",
+        });
+        const untyped = yield* forwardedBody(
+          new Request("https://harapan.nakafa.com/mcp", {
+            body: new Uint8Array([123, 125]),
+            method: "POST",
+          })
+        );
+        // Bytes sent without a media type go on as plain bytes.
+        expect(untyped).toMatchObject({
+          _tag: "Uint8Array",
+          contentLength: 2,
+          contentType: "application/octet-stream",
+        });
+        const read = yield* forwardedBody(
+          new Request("https://harapan.nakafa.com/api/v1/periods")
+        );
+        expect(read._tag).toBe("Empty");
+      })
+  );
 });
