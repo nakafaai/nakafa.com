@@ -22,6 +22,7 @@ const checkoutStartedEvent = {
     locale: "en",
     product_count: 1,
     product_id: "product-pro",
+    rail: "polar",
   },
 };
 describe("analytics/events", () => {

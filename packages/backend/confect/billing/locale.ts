@@ -31,3 +31,21 @@ const polarLocaleByAppLocale = {
 export function getPolarCheckoutLocale(locale: ActiveAppLocaleCode) {
   return polarLocaleByAppLocale[locale];
 }
+
+/**
+ * Maps each Nakafa locale to a language of Xendit's hosted checkout, which
+ * speaks Indonesian and English. German readers get English.
+ */
+export const xenditCheckoutLocaleValidator = Schema.Literals(["en", "id"]);
+type XenditCheckoutLocale = typeof xenditCheckoutLocaleValidator.Type;
+
+const xenditLocaleByAppLocale = {
+  de: "en",
+  en: "en",
+  id: "id",
+} satisfies Record<ActiveAppLocaleCode, XenditCheckoutLocale>;
+
+/** Returns the language of Xendit's hosted checkout for one Nakafa locale. */
+export function getXenditCheckoutLocale(locale: ActiveAppLocaleCode) {
+  return xenditLocaleByAppLocale[locale];
+}

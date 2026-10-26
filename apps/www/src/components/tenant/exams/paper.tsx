@@ -72,6 +72,74 @@ interface ExamPageProps {
   readonly question: Question;
 }
 
+/** The props of the row above a page's paper. */
+interface PageRowProps {
+  /** The number of questions in the exam, which decides whether the page may be removed. */
+  readonly count: number;
+  /** The place of the question in the exam, from zero. */
+  readonly index: number;
+  /** Turns the question into another type. */
+  readonly onTemplate: QuestionEditing["setTemplate"];
+  readonly question: Question;
+  /** Whether the server has saved the question, so it takes a move, a type and its actions. */
+  readonly saved: boolean;
+  /** The type the page shows, which follows a change at once. */
+  readonly template: Question["template"];
+}
+
+/**
+ * The row above a page's paper: the grip that moves the page, its number, its type, a mark while it needs a
+ * key, and its actions. A page the server has not saved yet, or a page of a locked exam, shows its number and
+ * its type alone, and the type takes a change only once Convex holds the session.
+ */
+function PageRow({
+  count,
+  index,
+  onTemplate,
+  question,
+  saved,
+  template,
+}: PageRowProps) {
+  const t = useTranslations("Exams");
+  const { exam } = useExam();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const editable = saved && !isLocked(exam);
+  const number = index + 1;
+
+  return (
+    <div className="flex min-h-9 items-center justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-2">
+        {editable ? (
+          <QuestionGrip number={number} questionId={question.id} />
+        ) : (
+          <span aria-hidden className="size-8 shrink-0" />
+        )}
+        <h2 className="shrink-0 font-medium text-sm">
+          {t("question", { number })}
+        </h2>
+        <QuestionType
+          editable={editable && isSettled}
+          onChange={onTemplate}
+          template={template}
+        />
+        {question.key === null && needsKey(question.template) ? (
+          <span className="flex items-center gap-1 text-muted-foreground text-xs">
+            <HugeIcons
+              aria-hidden="true"
+              className="size-3.5 text-primary"
+              icon={Alert02Icon}
+            />
+            {t("page-no-key")}
+          </span>
+        ) : null}
+      </div>
+      {editable ? (
+        <PageActions count={count} index={index} question={question} />
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * One question as a page of the canvas: a row above the paper names the question and holds its
  * actions, and the paper below it is what the student reads, with nothing else on the canvas. The
@@ -85,7 +153,6 @@ interface ExamPageProps {
 export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
-  const frozen = isLocked(exam);
   // Each page reads a boolean for its own choice, so a change of the choice renders only the two pages it moves between.
   const awaiting = useExamSelection((state) =>
     Arr.contains(state.pending, question.id)
@@ -165,36 +232,14 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
       id={`question-${question.id}`}
       ref={page}
     >
-      <div className="flex min-h-9 items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          {saved && !frozen ? (
-            <QuestionGrip number={number} questionId={question.id} />
-          ) : (
-            <span aria-hidden className="size-8 shrink-0" />
-          )}
-          <h2 className="shrink-0 font-medium text-sm">
-            {t("question", { number })}
-          </h2>
-          <QuestionType
-            editable={saved && !frozen && isSettled}
-            onChange={editing.setTemplate}
-            template={editing.displayed.template}
-          />
-          {question.key === null && needsKey(question.template) ? (
-            <span className="flex items-center gap-1 text-muted-foreground text-xs">
-              <HugeIcons
-                aria-hidden="true"
-                className="size-3.5 text-primary"
-                icon={Alert02Icon}
-              />
-              {t("page-no-key")}
-            </span>
-          ) : null}
-        </div>
-        {saved && !frozen ? (
-          <PageActions count={count} index={index} question={question} />
-        ) : null}
-      </div>
+      <PageRow
+        count={count}
+        index={index}
+        onTemplate={editing.setTemplate}
+        question={question}
+        saved={saved}
+        template={editing.displayed.template}
+      />
       {live ? (
         <Suspense fallback={paper}>
           <LivePaper

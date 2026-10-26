@@ -12,7 +12,7 @@ import type {
   ExamCell,
   ExamPair,
 } from "@repo/backend/confect/exams/sittings/response";
-import { Schema } from "effect";
+import { type Array as Arr, Schema } from "effect";
 
 /** A key that marks the given options of the choice `choice` correct. */
 const choiceKey = (first: string, ...rest: string[]): InteractionKey => ({
@@ -140,7 +140,9 @@ describe("exams/key keyFits", () => {
       { source: "source-2", target: "target-1" },
       { source: "source-3", target: "target-2" },
     ] as const;
-    const keyOf = (made: readonly ExamPair[]): InteractionKey => ({
+    const keyOf = (
+      made: Arr.NonEmptyReadonlyArray<ExamPair>
+    ): InteractionKey => ({
       interaction: "match",
       kind: "match",
       pairs: made,
@@ -160,7 +162,9 @@ describe("exams/key keyFits", () => {
       { column: "column-2", statement: "statement-2" },
       { column: "column-2", statement: "statement-3" },
     ] as const;
-    const keyOf = (marked: readonly ExamCell[]): InteractionKey => ({
+    const keyOf = (
+      marked: Arr.NonEmptyReadonlyArray<ExamCell>
+    ): InteractionKey => ({
       answers: marked,
       interaction: "matrix",
       kind: "matrix",

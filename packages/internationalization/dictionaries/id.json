@@ -634,7 +634,8 @@
       },
       "exam": {
         "results": {
-          "released": "Hasil ujian dirilis"
+          "released": "Hasil ujian dirilis",
+          "graded": "Jawaban ujian dinilai"
         }
       },
       "tenant": {

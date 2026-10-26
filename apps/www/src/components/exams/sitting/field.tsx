@@ -5,7 +5,6 @@ import {
 } from "@repo/backend/confect/exams/sittings/response";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { useState } from "react";
 import { useTranslations } from "use-intl";
 import type { Written } from "@/components/exams/sitting/response";
 
@@ -40,7 +39,6 @@ export function SittingField({
   readonly text: string;
 }) {
   const t = useTranslations("Exams");
-  const [typed, setTyped] = useState(text);
   const save = useDebouncedCallback(onType, {
     delay: TYPING_PAUSE_MILLISECONDS,
     flushOnUnmount: true,
@@ -51,17 +49,14 @@ export function SittingField({
     return (
       <Textarea
         aria-labelledby={labelledBy}
+        defaultValue={text}
         disabled={disabled}
         maxLength={ESSAY_RESPONSE_MAX}
         name={entry.id}
         onBlur={() => save.flush()}
-        onChange={(event) => {
-          setTyped(event.currentTarget.value);
-          save(event.currentTarget.value);
-        }}
+        onChange={(event) => save(event.currentTarget.value)}
         placeholder={t("essay-placeholder")}
         rows={ESSAY_ROWS}
-        value={typed}
       />
     );
   }
@@ -70,17 +65,14 @@ export function SittingField({
     <Input
       aria-labelledby={labelledBy}
       autoComplete="off"
+      defaultValue={text}
       disabled={disabled}
       maxLength={TEXT_RESPONSE_MAX}
       name={entry.id}
       onBlur={() => save.flush()}
-      onChange={(event) => {
-        setTyped(event.currentTarget.value);
-        save(event.currentTarget.value);
-      }}
+      onChange={(event) => save(event.currentTarget.value)}
       placeholder={t("short-placeholder")}
       spellCheck={false}
-      value={typed}
     />
   );
 }

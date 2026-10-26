@@ -248,6 +248,20 @@ export const withOptionAdded = (
   );
 
 /**
+ * The parts of a match's side or of a table without the one named `partId`, or the parts as they are while they
+ * hold the fewest a question may (`CHOICE_OPTIONS_MIN`), so a side or a table never falls below it.
+ */
+export const withoutPart = <Part extends Pick<Choice["options"][number], "id">>(
+  parts: Arr.NonEmptyReadonlyArray<Part>,
+  partId: string
+): Arr.NonEmptyReadonlyArray<Part> => {
+  const kept = Arr.filter(parts, (part) => part.id !== partId);
+  return parts.length > CHOICE_OPTIONS_MIN && Arr.isReadonlyArrayNonEmpty(kept)
+    ? kept
+    : parts;
+};
+
+/**
  * The answers with one option taken out of each choice. A choice that holds the fewest options
  * it may take is left as it is. The key that follows the removal is `keyWithoutOption`.
  */
@@ -343,7 +357,8 @@ export const acceptedKey = (
       ),
       Str.isNonEmpty
     ),
-    (first, second) => Str.toLowerCase(first) === Str.toLowerCase(second)
+    (first: string, second: string) =>
+      Str.toLowerCase(first) === Str.toLowerCase(second)
   );
   if (!Arr.isReadonlyArrayNonEmpty(cleaned)) {
     return null;

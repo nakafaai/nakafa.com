@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import { tableAnswers } from "@repo/backend/confect/exams/question";
+import { tableAnswers, textLabel } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option } from "effect";
 import { emptyLabel } from "@/components/tenant/exams/answer";
 import {
@@ -19,12 +19,6 @@ const [table] = answers;
 /** A text entry, which is not a table, so a table edit leaves it as it is. */
 const entry: Interaction = { id: "entry", kind: "textEntry", label: "Entry" };
 
-/** The label of a part that holds `text` as one paragraph. */
-const textOf = (text: string) => ({
-  content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
-  type: "doc" as const,
-});
-
 /** The cells that mark every statement of the new table. */
 const full = [
   { column: "column-1", statement: "statement-1" },
@@ -40,18 +34,18 @@ describe("tableOf and withCellLabel", () => {
 
   it("writes the label of a statement or a column, and leaves other interactions", () => {
     const [labelled, other] = withCellLabel(
-      withCellLabel([table, entry], "statement-1", textOf("Air mendidih")),
+      withCellLabel([table, entry], "statement-1", textLabel("Air mendidih")),
       "column-2",
-      textOf("Keliru")
+      textLabel("Keliru")
     );
     expect(other).toEqual(entry);
     expect(labelled).toMatchObject({
       columns: [
         { id: "column-1" },
-        { id: "column-2", label: textOf("Keliru") },
+        { id: "column-2", label: textLabel("Keliru") },
       ],
       statements: [
-        { id: "statement-1", label: textOf("Air mendidih") },
+        { id: "statement-1", label: textLabel("Air mendidih") },
         { id: "statement-2", label: emptyLabel() },
         { id: "statement-3" },
       ],

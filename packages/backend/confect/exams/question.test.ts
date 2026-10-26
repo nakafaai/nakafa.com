@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  answersFit,
+  essayAnswers,
   needsKey,
+  newChoiceAnswers,
   QuestionTemplate,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
@@ -14,5 +17,12 @@ describe("exams/question takesRubric and needsKey", () => {
     expect(
       Arr.filter(QuestionTemplate.literals, (template) => !needsKey(template))
     ).toEqual(["essay"]);
+  });
+});
+
+describe("exams/question answersFit", () => {
+  it("fits an essay's long text to the essay template, and no choice to it", () => {
+    expect(answersFit("essay", essayAnswers())).toBe(true);
+    expect(answersFit("essay", newChoiceAnswers())).toBe(false);
   });
 });
