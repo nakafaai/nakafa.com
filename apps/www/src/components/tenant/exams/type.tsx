@@ -1,5 +1,4 @@
 import {
-  ArrowDown01Icon,
   CheckmarkSquare02Icon,
   FlowConnectionIcon,
   InputTextIcon,
@@ -8,6 +7,7 @@ import {
   RadioButtonIcon,
   Table02Icon,
   ThumbsUpDownIcon,
+  UnfoldMoreIcon,
 } from "@hugeicons/core-free-icons";
 import { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -93,7 +93,7 @@ export function QuestionType({
       >
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
         <span className="truncate">{name}</span>
-        <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
+        <HugeIcons aria-hidden="true" icon={UnfoldMoreIcon} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
         <DropdownMenuGroup>

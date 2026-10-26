@@ -1,4 +1,4 @@
-import { NoteEditIcon } from "@hugeicons/core-free-icons";
+import { Layers01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -128,7 +128,7 @@ export function ExamPanelButton() {
       type="button"
       variant="ghost"
     >
-      <HugeIcons aria-hidden="true" icon={NoteEditIcon} />
+      <HugeIcons aria-hidden="true" icon={Layers01Icon} />
       {t("teacher-layer")}
     </Button>
   );
