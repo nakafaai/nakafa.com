@@ -15,8 +15,9 @@ import { Schema } from "effect";
 
 /**
  * The messages of a class's channels. Whoever reads the forum reads a channel's
- * messages, newest first. A member of the class, a subject teacher, or an Admin
- * sends a message and edits their own, and a locked class takes no new one.
+ * messages, newest first. A member of the class or a subject teacher sends a
+ * message and edits their own, and a locked class takes no new one. The school's
+ * leaders read the forum and write nothing in it (ADR 0025).
  * Whoever manages the forum hides a message. A channel or a message of another
  * class is refused as a missing object.
  */

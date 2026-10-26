@@ -227,6 +227,40 @@ describe("classroom/forum messages", () => {
   );
 
   it.effect(
+    "lets a school Admin read a channel and refuses the Admin's message, as the school's leaders write nothing in a forum",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "XII-1");
+        yield* fixture.as("student").mutation(send, {
+          ...forum,
+          clientKey: "student-post",
+          slug: nf,
+          text: "Selamat pagi",
+        });
+        const admin = fixture.as("admin");
+        const read = yield* admin.query(page, {
+          ...firstPage,
+          ...forum,
+          slug: nf,
+        });
+        expect(Arr.map(read.page, (message) => message.text)).toEqual([
+          "Selamat pagi",
+        ]);
+        const refused = yield* admin
+          .mutation(send, {
+            ...forum,
+            clientKey: "admin-post",
+            slug: nf,
+            text: "Pengumuman",
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("role"));
+      })
+  );
+
+  it.effect(
     "refuses a channel and a message of another class as missing objects",
     () =>
       Effect.gen(function* () {

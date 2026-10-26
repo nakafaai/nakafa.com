@@ -17,9 +17,9 @@ const classReaders: (typeof RuleRole.Type)[] = ["admin", "principal", "deputy"];
  * Its forum reads follow the class's readers. A topic channel is added by an
  * Admin or by a subject teacher of the class, and a locked class refuses it, so an
  * archived class keeps its channels readable and takes no new one. A member of the
- * class, a subject teacher, or an Admin writes messages; the school's other leaders
- * read them. Whoever manages the forum hides a message, which the journal records
- * without its text.
+ * class or a subject teacher writes messages, and the school's leaders read them
+ * and write none (ADR 0025). Whoever manages the forum hides a message, which the
+ * journal records without its text.
  */
 export const classKind = Kind.make("class", "classes", {
   actions: {
@@ -43,9 +43,8 @@ export const classKind = Kind.make("class", "classes", {
     },
     "forum.post": {
       access: "write",
-      grantedBy: "roles",
+      grantedBy: "relations",
       relations: ["classMember", "subjectTeacher"],
-      roles: ["admin"],
     },
     "forum.read": {
       access: "read",
