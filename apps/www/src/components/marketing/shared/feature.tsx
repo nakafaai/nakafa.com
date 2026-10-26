@@ -9,13 +9,13 @@ import { MarketingSection } from "@/components/marketing/shared/section";
  */
 export function FeatureRow({
   children,
-  id,
+  ...section
 }: {
   children: ReactNode;
   id: string;
 }) {
   return (
-    <MarketingSection id={id}>
+    <MarketingSection {...section}>
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         {children}
       </div>

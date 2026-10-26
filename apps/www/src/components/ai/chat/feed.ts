@@ -74,12 +74,14 @@ export function useLiveChatFeed({
   const chatId = useChat((state) => state.chatId);
   const shareToken = useChat((state) => state.shareToken);
   const chat = useChat((state) => state.chat);
+  const deleted = useChat((state) => state.deleted);
   const draft = useChat((state) => state.draft);
   const openingChat = useAi((state) => state.openingChat);
   const setOpeningChat = useAi((state) => state.setOpeningChat);
   const feed = useUIMessages(
     messagesQuery,
-    chat?.threadId
+    // The messages of a chat deleted elsewhere fail as its conversation does.
+    chat?.threadId && !deleted
       ? { ...readChatArgs(chatId, shareToken), threadId: chat.threadId }
       : "skip",
     { initialNumItems: NINA_MESSAGES_PAGE_SIZE, stream: true }

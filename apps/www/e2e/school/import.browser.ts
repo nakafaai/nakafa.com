@@ -107,13 +107,18 @@ test("the editor imports a Word file into the open exam from its header menu, as
   await dialog.getByRole("button", { name: "Create exam" }).click();
   await page.waitForURL(EDITOR_PATH);
 
-  // The header holds Try as student with the menu of the rarer actions joined to it, in its one row.
+  // The header holds Try as student with the menu of the rarer actions joined to it, in its one row:
+  // one button group, so the two share an edge with no inner corners and one border between them.
   const header = page.locator("header").filter({
     has: page.getByRole("button", { name: "More actions" }),
   });
-  await expect(
-    header.getByRole("link", { name: "Try as student" })
-  ).toBeVisible();
+  const tryAction = header.getByRole("button", { name: "Try as student" });
+  const moreActions = header.getByRole("button", { name: "More actions" });
+  await expect(tryAction).toBeVisible();
+  await expect(tryAction).toHaveCSS("border-top-right-radius", "0px");
+  await expect(tryAction).toHaveCSS("border-bottom-right-radius", "0px");
+  await expect(moreActions).toHaveCSS("border-top-left-radius", "0px");
+  await expect(moreActions).toHaveCSS("border-left-width", "0px");
   const openImport = async () => {
     await header.getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Import" }).click();

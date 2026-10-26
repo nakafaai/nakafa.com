@@ -4,7 +4,7 @@ import { lazy, Suspense } from "react";
 import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**
- * Whether the visitor carries the signed-in hint, read where the loader runs: the
+ * Whether the visitor carries the signed-in hint, read where the route runs: the
  * request's cookies on the server, and the document's cookies in the browser, so a
  * navigation into the try-out pages waits on no server request. The hint cookie is
  * not HttpOnly for this reason.
@@ -22,12 +22,17 @@ const readSignedInHint = createIsomorphicFn()
  * functions, and each Convex leaf islands itself. A learner's running attempt
  * renders its player on the server, which needs the client during that render, so
  * the server decides from the hint cookie and the first HTML and the client agree.
+ *
+ * The hint is route context, read before every navigation. The catalog's first
+ * pages are prerendered, so the answer that their HTML carries is the build's,
+ * which no visitor's cookie decided, and a learner who opens one and presses into
+ * a running attempt needs the client there. A loader would not do: the router
+ * shows a stale loader answer at once and reads it again in the background, after
+ * the attempt has already rendered without the client, while `beforeLoad` runs on
+ * every navigation before the page renders.
  */
 export const Route = createFileRoute("/$locale/_main/try-out")({
-  // The hint changes only with a full document visit, so a navigation between
-  // try-out pages reads it once rather than on every change of page.
-  staleTime: Number.POSITIVE_INFINITY,
-  loader: () => readSignedInHint(),
+  beforeLoad: async () => ({ signedIn: await readSignedInHint() }),
   component: TryoutLayout,
 });
 
@@ -38,17 +43,25 @@ const RouteConvexProvider = lazy(() =>
   }))
 );
 
-/** Mounts the one client that a signed-in learner's try-out pages read. */
+/**
+ * Mounts the one client that a signed-in learner's try-out pages read. The
+ * boundary stands for a visitor too, so when a navigation finds the hint and the
+ * provider's module loads, the router's transition keeps the page that is on
+ * screen instead of showing an empty frame.
+ */
 function TryoutLayout() {
-  const signedIn = Route.useLoaderData();
-  if (!signedIn) {
-    return <Outlet />;
-  }
+  const signedIn = Route.useRouteContext({
+    select: (context) => context.signedIn,
+  });
   return (
     <Suspense fallback={null}>
-      <RouteConvexProvider>
+      {signedIn ? (
+        <RouteConvexProvider>
+          <Outlet />
+        </RouteConvexProvider>
+      ) : (
         <Outlet />
-      </RouteConvexProvider>
+      )}
     </Suspense>
   );
 }

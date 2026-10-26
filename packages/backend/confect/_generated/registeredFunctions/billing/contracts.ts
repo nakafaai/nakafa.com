@@ -8,4 +8,7 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["recordSchoolContract"]: RegisteredConvexFunction.register({ ...definitions["recordSchoolContract"], handler: forward(definitions["recordSchoolContract"].handler) }),
+["recordSchoolPilot"]: RegisteredConvexFunction.register({ ...definitions["recordSchoolPilot"], handler: forward(definitions["recordSchoolPilot"].handler) }),
+["issueContractInvoice"]: RegisteredConvexFunction.register({ ...definitions["issueContractInvoice"], handler: forward(definitions["issueContractInvoice"].handler) }),
+["recordInvoiceTransfer"]: RegisteredConvexFunction.register({ ...definitions["recordInvoiceTransfer"], handler: forward(definitions["recordInvoiceTransfer"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../billing/contracts.spec")["default"]>;

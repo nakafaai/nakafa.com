@@ -158,6 +158,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-placement-limit.description",
     title: "school-refusal-placement-limit.title",
   },
+  SchoolSeatsPaid: {
+    description: "school-refusal-seats-paid.description",
+    title: "school-refusal-seats-paid.title",
+  },
   PromotionState: {
     description: "school-refusal-promotion-state.description",
     title: "school-refusal-promotion-state.title",
@@ -204,6 +208,10 @@ const GRANT_REFUSAL_COPY: Readonly<Record<GrantCode, ToastCopy>> = {
   PERSON_KIND: {
     description: "school-refusal-person-kind.description",
     title: "school-refusal-person-kind.title",
+  },
+  SEAT_LIMIT: {
+    description: "school-refusal-seat-limit.description",
+    title: "school-refusal-seat-limit.title",
   },
   TEMPORARY_ROLE: {
     description: "school-refusal-temporary-role.description",

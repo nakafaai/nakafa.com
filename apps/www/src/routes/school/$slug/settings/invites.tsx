@@ -9,7 +9,7 @@ import { readInvitesFn } from "@/lib/tenant/settings.functions";
 /** The pending invites of the school. */
 export const Route = createFileRoute("/school/$slug/settings/invites")({
   loader: ({ context }) =>
-    context.school._tag === "Member"
+    context.firstHtml && context.school._tag === "Member"
       ? readInvitesFn({ data: { numItems: PAGE_SIZE, slug: context.slug } })
       : undefined,
   component: SchoolInvitesPage,

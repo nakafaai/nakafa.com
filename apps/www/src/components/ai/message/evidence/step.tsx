@@ -32,7 +32,8 @@ export function Step({
         )}
         data-slot="evidence-step"
       >
-        <StepLabel icon={icon}>{label}</StepLabel>
+        <HugeIcons className="mt-0.5 size-4 shrink-0" icon={icon} />
+        <span className="min-w-0">{label}</span>
       </p>
       {children ? <StepDetails>{children}</StepDetails> : null}
     </div>

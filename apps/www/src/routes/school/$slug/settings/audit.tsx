@@ -9,7 +9,7 @@ import { readAuditFn } from "@/lib/tenant/settings.functions";
 /** The audit journal of the school: who changed what, and when. */
 export const Route = createFileRoute("/school/$slug/settings/audit")({
   loader: ({ context }) =>
-    context.school._tag === "Member"
+    context.firstHtml && context.school._tag === "Member"
       ? readAuditFn({ data: { numItems: PAGE_SIZE, slug: context.slug } })
       : undefined,
   component: SchoolAuditPage,

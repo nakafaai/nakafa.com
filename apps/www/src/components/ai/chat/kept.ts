@@ -25,7 +25,8 @@ export function nextAnswer<A, E>(
 
 /**
  * The answer a conversation shows: the server's own, which is `current`, or the
- * kept one while a read of the same chat starts again, which is only shown.
+ * kept one, which is only shown, while a read of the same chat starts again and
+ * while the page leaves a chat whose read failed because it was deleted.
  */
 export function shownAnswer<A, E>(
   answered: QueryResult.QueryResult<A, E>,
@@ -34,9 +35,9 @@ export function shownAnswer<A, E>(
   if (QueryResult.isSuccess(result)) {
     return { current: true, value: result.value };
   }
+  const reading = QueryResult.isLoading(result) && !result.skipped;
   if (
-    QueryResult.isLoading(result) &&
-    !result.skipped &&
+    (reading || QueryResult.isFailure(result)) &&
     QueryResult.isSuccess(answered)
   ) {
     return { current: false, value: answered.value };

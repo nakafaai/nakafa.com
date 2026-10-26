@@ -1,6 +1,10 @@
 import { Effect } from "effect";
 import { reportClientException } from "@/lib/analytics/client";
-import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
+import {
+  EXPECTED_SESSION,
+  KNOWN_ACCOUNT_KEY,
+  KNOWN_SESSION_KEY,
+} from "@/lib/auth/keys";
 import type { AuthSession } from "@/lib/auth/session";
 
 type KnownSessionStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
@@ -45,9 +49,10 @@ export const loadKnownSession = Effect.fn("www.auth.loadKnownSession")(
 
 /**
  * Keeps what a settled session says: its id while signed in, nothing once
- * Better Auth says the browser is signed out. A pending session and a session
- * request that failed say nothing, so what the browser knew stays. A storage
- * write that fails is reported with its cause.
+ * Better Auth says the browser is signed out, the account row the sidebar kept
+ * for it included. A pending session and a session request that failed say
+ * nothing, so what the browser knew stays. A storage write that fails is
+ * reported with its cause.
  */
 export const saveKnownSession = Effect.fn("www.auth.saveKnownSession")(
   function* (session: AuthSession, storage?: KnownSessionStorage) {
@@ -55,11 +60,14 @@ export const saveKnownSession = Effect.fn("www.auth.saveKnownSession")(
       return;
     }
     const { sessionId } = session;
-    yield* withStorage(storage, (target) =>
-      sessionId === null
-        ? target.removeItem(KNOWN_SESSION_KEY)
-        : target.setItem(KNOWN_SESSION_KEY, sessionId)
-    ).pipe(
+    yield* withStorage(storage, (target) => {
+      if (sessionId === null) {
+        target.removeItem(KNOWN_SESSION_KEY);
+        target.removeItem(KNOWN_ACCOUNT_KEY);
+        return;
+      }
+      target.setItem(KNOWN_SESSION_KEY, sessionId);
+    }).pipe(
       Effect.catch((cause) =>
         reportClientException(cause, {
           operation: "save",

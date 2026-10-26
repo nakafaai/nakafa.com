@@ -9,7 +9,9 @@ import {
 import {
   assignRole,
   authorizeOwnerRole,
+  leavesOwner,
   revokeGrant,
+  signedInOwners,
 } from "@repo/backend/confect/access/grant";
 import spec from "@repo/backend/confect/access/grants.spec";
 import {
@@ -51,7 +53,8 @@ const PAGE_LIMIT = 100;
 /**
  * The active grants of the member's school, one page at a time. The index holds
  * active grants only, so a revoked or expired grant is never read. Each row reads
- * the Person who holds the grant once, by ID.
+ * the Person who holds the grant once, by ID, and says whether ending it leaves the
+ * school an Owner who has signed in, so the list offers Revoke only where it can end.
  */
 const list = FunctionImpl.make(
   databaseSchema,
@@ -71,6 +74,7 @@ const list = FunctionImpl.make(
         })
       )
       .pipe(Effect.orDie);
+    const owners = yield* signedInOwners(tenant._id);
     const page = yield* Effect.forEach(
       grants.page,
       (grant) =>
@@ -82,6 +86,7 @@ const list = FunctionImpl.make(
             Effect.map((person) => ({
               id: grant._id,
               person: { id: person._id, name: person.name },
+              revocable: leavesOwner(grant, owners),
               role: grant.role,
               scope: grant.scope,
             }))

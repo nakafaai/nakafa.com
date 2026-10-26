@@ -11,6 +11,7 @@ import { appRoutes } from "@/e2e/support/route";
 import { VISIBLE_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The phone sheet and the desktop rail the guest sidebar opens in. */
 const sidebarViewports = [
@@ -44,9 +45,11 @@ for (const viewport of sidebarViewports) {
           });
           // The panel's inner surface paints on desktop and the sheet's on
           // phones; the desktop wrapper itself takes no room beside the page.
+          // The footer of each account renders, and the root's signed-in hint
+          // shows the visitor's one before the first paint.
           const footer = page
             .locator('[data-sidebar="sidebar"]:visible')
-            .locator('[data-slot="sidebar-footer"]');
+            .locator('[data-slot="sidebar-footer"]:visible');
 
           if (viewport.name === "compact") {
             const sidebarTrigger = page
@@ -95,12 +98,18 @@ for (const viewport of sidebarViewports) {
             name: "Learn more",
           });
           yield* Effect.promise(() => expect(learnMoreButton).toBeVisible());
+          // A hover opens the menu only once React has taken the button over.
+          yield* Effect.promise(() => waitUntilTakenOver(learnMoreButton));
           yield* Effect.promise(() => learnMoreButton.hover());
-          yield* Effect.promise(() =>
-            expect(
-              page.getByRole("menuitem", { exact: true, name: "Usage data" })
-            ).toBeVisible()
-          );
+          const usageData = page.getByRole("menuitem", {
+            exact: true,
+            name: "Usage data",
+          });
+          yield* Effect.promise(() => expect(usageData).toBeVisible());
+          // On a phone the open menu covers the footer below it, so the reader
+          // closes it before reaching for the language menu.
+          yield* Effect.promise(() => page.keyboard.press("Escape"));
+          yield* Effect.promise(() => expect(usageData).toBeHidden());
           yield* Effect.promise(() => expect(loginLink).toBeVisible());
           yield* Effect.promise(() =>
             expect(loginLink).toHaveAttribute(
@@ -292,6 +301,9 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           page.reload({ waitUntil: "domcontentloaded" })
         );
         yield* Effect.promise(() => expect(loginLink).toBeVisible());
+        // The link names the fragment from its own handler, which the reloaded
+        // page has only once React takes the link over.
+        yield* Effect.promise(() => waitUntilTakenOver(loginLink));
         yield* Effect.promise(() => loginLink.dispatchEvent("contextmenu"));
         yield* Effect.promise(() =>
           expect(loginLink).toHaveAttribute("href", exactHref)
@@ -375,6 +387,9 @@ test("guest reaches authentication only when starting a public tryout", async ({
         yield* Effect.promise(() =>
           expect(set).toHaveAttribute("href", setHref)
         );
+        // The row opens its set through its own handler, which the track page
+        // only has once React takes the row over.
+        yield* Effect.promise(() => waitUntilTakenOver(setRow));
         yield* Effect.promise(() => setRow.click());
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new URL(setHref, page.url()).toString(), {
@@ -389,6 +404,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
         yield* Effect.promise(() =>
           expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
         );
+        yield* Effect.promise(() => waitUntilTakenOver(start));
         yield* Effect.promise(() => start.click());
         const authHref = `/en/auth?redirect=${encodeURIComponent(setHref)}`;
         yield* Effect.promise(() =>

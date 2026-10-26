@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Clock, Effect } from "effect";
 import type { ReactElement } from "react";
 import { TenantHome } from "@/components/tenant/home";
 import { showsStudentHome } from "@/components/tenant/home/access";
@@ -11,7 +12,8 @@ import {
 
 /**
  * The home of a school host, rendered inside the school shell. A member's home
- * reads its first screen here, so the tiles it shows are in the first HTML. A
+ * reads its first screen here for the first HTML, so the tiles it shows are in it;
+ * a click reads nothing first, and the tiles read live from Convex. A
  * visitor and an account that is not a member see no home, so nothing is read for
  * them.
  */
@@ -20,6 +22,10 @@ export const Route = createFileRoute("/school/$slug/")({
     const { school, slug } = context;
     if (school._tag !== "Member") {
       return {};
+    }
+    // A click reads no first screen: the tiles read live from Convex, on the device's clock.
+    if (!context.firstHtml) {
+      return { serverNow: Effect.runSync(Clock.currentTimeMillis) };
     }
     const canManage = canManageSchool(school.viewer.can);
     const studentView = showsStudentHome(

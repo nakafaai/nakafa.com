@@ -42,6 +42,12 @@ export const BillingOfferKey = Schema.Literals([
 ]);
 export type BillingOfferKey = typeof BillingOfferKey.Type;
 
+/**
+ * The students a school on the free plan may enroll (K41). A school on the School
+ * plan has no limit and pays per enrolled student (K45).
+ */
+export const SCHOOL_FREE_STUDENTS = 100;
+
 /** The monthly Pro price in each currency, in minor units. The catalog and the pages both read this one fact. */
 export const proMonthlyPrices = { EUR: 899, IDR: 79_000, USD: 899 } as const;
 
