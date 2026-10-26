@@ -1,8 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import {
   followAuthSession,
+  holdSession,
   previewAuthSession,
   readAuthSession,
+  releaseSession,
 } from "@/lib/auth/session";
 
 const signedIn = {
@@ -173,6 +176,29 @@ describe("Following Better Auth's session", () => {
       userId: null,
     });
   });
+
+  it.effect(
+    "keeps the session readers see while the page signs out, and follows again once the sign-out failed",
+    () =>
+      Effect.gen(function* () {
+        const shown = readAuthSession({
+          data: signedIn,
+          error: null,
+          isPending: false,
+        });
+        const signedOut = { data: null, error: null, isPending: false };
+
+        yield* holdSession();
+        expect(followAuthSession(shown, signedOut)).toBe(shown);
+        yield* releaseSession();
+        expect(followAuthSession(shown, signedOut)).toStrictEqual({
+          hasError: false,
+          isPending: false,
+          sessionId: null,
+          userId: null,
+        });
+      })
+  );
 
   it("takes the session the refetch answers with", () => {
     expect(

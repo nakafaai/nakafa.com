@@ -4,7 +4,13 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Clock, Effect } from "effect";
 import { rewriteList } from "@/e2e/support/answer";
-import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
+import {
+  ANSWER_MILLISECONDS,
+  type Changes,
+  live,
+  reloadUntil,
+  saved,
+} from "@/e2e/support/changes";
 import {
   confirmDelete,
   EMPTY,
@@ -176,6 +182,76 @@ test.describe("Memory deleted while its first save is on its way", () => {
         page,
         Effect.fromNullishOr(baseURL).pipe(
           Effect.flatMap((origin) => verifyFirstSave(page, origin))
+        )
+      )
+    );
+  });
+});
+
+/** What the learner writes on in this tab after another tab deleted the memory. */
+const WRITTEN_ON = " in the library";
+
+/**
+ * The learner deletes a memory in another tab while this tab's editor holds it,
+ * then writes on in this tab. The server no longer has the memory, and the page
+ * says so, but nothing the learner wrote is lost: the editor gives their words
+ * back as a new memory, which closing the editor stores.
+ */
+const verifyDeletedElsewhere = Effect.fn("NakafaE2E.verifyDeletedElsewhere")(
+  function* (page: Page, baseURL: string) {
+    const changes = yield* openMemoryPage(page, baseURL);
+
+    yield* startsEmpty(page, changes);
+    yield* writeWorst(page, changes, { text: WORDS, title: TITLE });
+    yield* Effect.promise(async () => {
+      await memoryRow(page, TITLE).getByText(TITLE).click();
+      await opened(page, WORDS);
+
+      const other = await page.context().newPage();
+      await other.goto(MEMORY_PATH);
+      const row = memoryRow(other, TITLE);
+      const remove = row.getByRole("button", { name: "Delete memory" });
+      await expect(row).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      await waitUntilTakenOver(remove);
+      await row.hover();
+      await remove.click();
+      await confirmDelete(other);
+      await expect(row).toHaveCount(0);
+      await other.close();
+
+      await editorOf(page).press("End");
+      await page.keyboard.type(WRITTEN_ON);
+      await expect(page.getByText(MISSING)).toBeVisible({
+        timeout: ANSWER_MILLISECONDS,
+      });
+      await expect(editorOf(page)).toHaveText(`${WORDS}${WRITTEN_ON}`);
+      await expect(titleOf(page)).toHaveValue(TITLE);
+
+      const before = changes.sent;
+      await editorOf(page).press("Escape");
+      await expect(editorOf(page)).toHaveCount(0);
+      await saved(changes, before);
+      await reloadUntil(page, () =>
+        expect(memoryRow(page, `${WORDS}${WRITTEN_ON}`)).toBeVisible({
+          timeout: 3000,
+        })
+      );
+    });
+  }
+);
+
+test.describe("Memory deleted in another tab while its editor is open", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("gives the words the learner wrote back as a new memory", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyDeletedElsewhere(page, origin))
         )
       )
     );

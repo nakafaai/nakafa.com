@@ -1530,6 +1530,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "Obrolan ini sudah dihapus."
+    },
     "image-refused-size": {
       "title": "Gambar tidak ditambahkan.",
       "description": "Pilih gambar dengan ukuran paling besar 2 MB."
