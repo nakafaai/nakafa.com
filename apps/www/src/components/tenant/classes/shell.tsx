@@ -1,8 +1,15 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
+import {
+  Home01Icon,
+  LibraryIcon,
+  MessageMultiple01Icon,
+  Task01Icon,
+} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useState } from "react";
@@ -351,7 +358,10 @@ function ClassBody({
   );
 }
 
-/** The tab bar of a class: its home, its forum, its library, and its tasks, the current one marked as the page. */
+/**
+ * The tab bar of a class: its home, its forum, its library, and its tasks, each with its icon, the
+ * current one marked as the page. On a narrow screen the bar scrolls within itself, never the page.
+ */
 function ClassTabs({
   classSlug,
   tab,
@@ -364,54 +374,68 @@ function ClassTabs({
   const params = { classSlug, slug };
 
   return (
-    <nav className="flex gap-1 border-b">
-      <Link
-        activeOptions={EXACT_ACTIVE_OPTIONS}
-        className={classTab({ active: tab === "home" })}
-        params={params}
-        to="/school/$slug/classes/$classSlug"
+    // The line under the bar stands outside its scroller, so the current tab's underline covers it.
+    <div className="border-b">
+      <nav
+        aria-label={t("tabs-label")}
+        className="scrollbar-hide -mb-px flex gap-1 overflow-x-auto"
       >
-        {t("tabs-home")}
-      </Link>
-      <Link
-        activeOptions={EXACT_ACTIVE_OPTIONS}
-        className={classTab({
-          active: tab === "forum" || tab === "channel" || tab === "discussion",
-        })}
-        params={params}
-        to="/school/$slug/classes/$classSlug/forum"
-      >
-        {t("tabs-forum")}
-      </Link>
-      <Link
-        activeOptions={EXACT_ACTIVE_OPTIONS}
-        className={classTab({ active: tab === "library" })}
-        params={params}
-        to="/school/$slug/classes/$classSlug/library"
-      >
-        {t("tabs-library")}
-      </Link>
-      <Link
-        activeOptions={EXACT_ACTIVE_OPTIONS}
-        className={classTab({ active: tab === "tasks" || tab === "task" })}
-        params={params}
-        to="/school/$slug/classes/$classSlug/tasks"
-      >
-        {t("tabs-tasks")}
-      </Link>
-    </nav>
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={classTab({ active: tab === "home" })}
+          params={params}
+          to="/school/$slug/classes/$classSlug"
+        >
+          <HugeIcons icon={Home01Icon} />
+          {t("tabs-home")}
+        </Link>
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={classTab({
+            active:
+              tab === "forum" || tab === "channel" || tab === "discussion",
+          })}
+          params={params}
+          to="/school/$slug/classes/$classSlug/forum"
+        >
+          <HugeIcons icon={MessageMultiple01Icon} />
+          {t("tabs-forum")}
+        </Link>
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={classTab({ active: tab === "library" })}
+          params={params}
+          to="/school/$slug/classes/$classSlug/library"
+        >
+          <HugeIcons icon={LibraryIcon} />
+          {t("tabs-library")}
+        </Link>
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={classTab({ active: tab === "tasks" || tab === "task" })}
+          params={params}
+          to="/school/$slug/classes/$classSlug/tasks"
+        >
+          <HugeIcons icon={Task01Icon} />
+          {t("tabs-tasks")}
+        </Link>
+      </nav>
+    </div>
   );
 }
 
-/** One tab of a class. The current tab is marked as the page, and its underline marks it too. */
-const classTab = cva("-mb-px border-b-2 px-3 pb-2 font-medium text-sm", {
-  variants: {
-    active: {
-      false: "border-transparent text-muted-foreground hover:text-foreground",
-      true: "border-foreground text-foreground",
+/** One tab of a class, its icon before its name. The current tab is marked as the page, and its underline marks it too. */
+const classTab = cva(
+  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 pb-2 font-medium text-sm",
+  {
+    variants: {
+      active: {
+        false: "border-transparent text-muted-foreground hover:text-foreground",
+        true: "border-foreground text-foreground",
+      },
     },
-  },
-});
+  }
+);
 
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
 function ClassMissing() {
