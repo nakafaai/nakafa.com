@@ -132,8 +132,9 @@ test("no two entries of the settings sidebar draw the same icon, a group and its
   for (const group of ["People", "Integrations", "Security"]) {
     await sidebar.getByRole("button", { name: group }).click();
   }
+  // A group's button is the trigger of its fold, so it keeps the sidebar's own mark, not its slot.
   const entries = sidebar.locator(
-    '[data-slot="sidebar-menu-button"], [data-slot="sidebar-menu-sub-button"]'
+    '[data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]'
   );
   await expect(
     sidebar.getByRole("link", { name: "Audit trail", exact: true })
@@ -143,7 +144,10 @@ test("no two entries of the settings sidebar draw the same icon, a group and its
   const icons = await entries.evaluateAll((nodes) =>
     nodes.map((node) => node.querySelector("svg")?.innerHTML ?? "")
   );
-  expect(icons.length).toBeGreaterThan(10);
+  // The groups' own buttons are among the entries compared, beside every section's link.
+  expect(icons.length).toBeGreaterThan(
+    await sidebar.locator('[data-sidebar="menu-sub-button"]').count()
+  );
   expect(Arr.dedupe(icons)).toEqual(icons);
   await context.close();
 });
