@@ -318,17 +318,11 @@ function MuzzleBlast({ motion }: { motion: ProjectileMotionState }) {
           transparent
         />
       </mesh>
-      <SmokePuffs motion={motion} />
-    </group>
-  );
-}
-
-function SmokePuffs({ motion }: { motion: ProjectileMotionState }) {
-  return (
-    <group>
-      {Arr.map(SMOKE_PUFFS, (puff) => (
-        <SmokePuff index={puff.index} key={puff.id} motion={motion} />
-      ))}
+      <group>
+        {Arr.map(SMOKE_PUFFS, (puff) => (
+          <SmokePuff index={puff.index} key={puff.id} motion={motion} />
+        ))}
+      </group>
     </group>
   );
 }

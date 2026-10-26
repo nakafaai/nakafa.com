@@ -1,6 +1,7 @@
 import { Kind } from "@repo/backend/confect/access/kind";
 import { access } from "@repo/backend/confect/access/kinds";
 import type { Rule, RuleRole } from "@repo/backend/confect/access/schema";
+import { billing } from "@repo/backend/confect/billing/kinds";
 import { classroom } from "@repo/backend/confect/classroom/kinds";
 import { connectors } from "@repo/backend/confect/connectors/kinds";
 import { editor } from "@repo/backend/confect/editor/kinds";
@@ -41,6 +42,7 @@ const extensions = [
   ...exam.extensions,
   ...sitting.extensions,
   ...results.extensions,
+  ...billing.extensions,
 ] as const;
 
 /** Every declaration and extension; each kind's actions, rules, and changes join from these. */

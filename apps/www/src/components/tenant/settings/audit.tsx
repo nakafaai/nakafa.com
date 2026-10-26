@@ -3,13 +3,16 @@ import {
   PaginatedQueryResult,
   QueryResult,
 } from "@confect/react";
-import { UserIcon } from "@hugeicons/core-free-icons";
+import { Download01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
-import { createContext, use } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import { createContext, use, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -59,8 +62,8 @@ const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 const AuditPreloadContext = createContext<AuditPreload | undefined>(undefined);
 
 /**
- * The audit trail as the page's table. The header row searches the changes and filters them
- * by who made them, and shows while the body loads.
+ * The audit trail as the page's table. The header row searches the changes, filters them by
+ * who made them and exports the whole trail, and shows while the body loads.
  */
 export function SchoolAuditSettings({
   preload,
@@ -78,6 +81,7 @@ export function SchoolAuditSettings({
           <>
             <TableSearch placeholder={t("audit-search")} />
             <AuditFilter people={preload?.people} slug={slug} />
+            <AuditExport slug={slug} />
           </>
         }
       >
@@ -141,6 +145,7 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
   const preload = use(AuditPreloadContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const words = useEntryWords();
   const first =
     preload?.entries === undefined
       ? undefined
@@ -172,16 +177,6 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
     );
   }
 
-  /** The name of who made one change: a Person by name, Nakafa staff, or the system. */
-  const actorLabel = (entry: EntryItem) => {
-    if (entry.actor.kind === "person") {
-      return entry.actor.name;
-    }
-    return entry.actor.kind === "operator"
-      ? t("audit-operator")
-      : t("audit-system");
-  };
-
   const columns = entryColumns.columns([
     entryColumns.accessor((entry) => entry.at, {
       cell: (info) => <SchoolDateTime at={info.getValue()} />,
@@ -189,13 +184,13 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
       id: "when",
       sortFn: "basic",
     }),
-    entryColumns.accessor(actorLabel, {
+    entryColumns.accessor(words.actor, {
       filterFn: "oneOf",
       header: t("audit-who"),
       id: "who",
       sortFn: "text",
     }),
-    entryColumns.accessor((entry) => t(`audit-label.${entry.change.type}`), {
+    entryColumns.accessor(words.change, {
       filterFn: "includesString",
       header: t("audit-change"),
       id: "change",
@@ -215,5 +210,105 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
     </>
+  );
+}
+
+/** The words the audit gives an entry: who made the change, and what it changed. */
+function useEntryWords() {
+  const t = useTranslations("SchoolSettings");
+
+  return {
+    actor: (entry: EntryItem) => {
+      if (entry.actor.kind === "person") {
+        return entry.actor.name;
+      }
+      return entry.actor.kind === "operator"
+        ? t("audit-operator")
+        : t("audit-system");
+    },
+    change: (entry: EntryItem) => t(`audit-label.${entry.change.type}`),
+  };
+}
+
+/** Hands the viewer a text as a file of the given name. */
+const saveFile = (name: string, text: string) =>
+  Effect.sync(() => {
+    const url = URL.createObjectURL(
+      new Blob([text], { type: "text/csv;charset=utf-8" })
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+
+/**
+ * Saves the school's whole trail as a CSV file with the columns of the table: the time of each
+ * entry, then the words that `describe` gives it. The reader of the trail loads on the press, and
+ * a failed export says so in a toast, logs its cause and leaves the page as it was.
+ */
+const exportAuditTrail = Effect.fn("tenant.audit.export")(
+  function* (
+    slug: TenantSlug,
+    header: readonly string[],
+    describe: (entry: EntryItem) => readonly string[]
+  ) {
+    const trail = yield* Effect.tryPromise(
+      () => import("@/components/tenant/settings/export")
+    );
+    const entries = yield* trail.readAuditTrail(slug);
+    const text = trail.csvText([
+      header,
+      ...Arr.map(entries, (entry) => [
+        trail.entryTime(entry.at),
+        ...describe(entry),
+      ]),
+    ]);
+    yield* saveFile(yield* trail.auditFileName(slug), text);
+  },
+  Effect.catchCause((cause) =>
+    Effect.andThen(
+      Effect.logError("tenant.audit.export failed", cause),
+      Effect.sync(() => {
+        toast.error(
+          {
+            description: "audit-export-error.description",
+            title: "audit-export-error.title",
+          },
+          { position: "bottom-center" }
+        );
+      })
+    )
+  )
+);
+
+/**
+ * The audit's main action: the school's whole trail as a CSV file that the school can keep or hand
+ * to an inspector. The button waits while the file is made.
+ */
+function AuditExport({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
+  const words = useEntryWords();
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <Button
+      disabled={isPending}
+      onClick={() =>
+        startTransition(() =>
+          Effect.runPromise(
+            exportAuditTrail(
+              slug,
+              [t("audit-when"), t("audit-who"), t("audit-change")],
+              (entry) => [words.actor(entry), words.change(entry)]
+            )
+          )
+        )
+      }
+    >
+      <HugeIcons icon={Download01Icon} />
+      {t("audit-export")}
+    </Button>
   );
 }

@@ -109,6 +109,15 @@
     "signals-empty": "Bisher ist kein Ereignis erfasst.",
     "signal-exit": "Hat die Prüfung verlassen",
     "signal-return": "Ist zur Prüfung zurückgekehrt",
+    "screen-title": "Bildschirm der Person",
+    "screen-none": "Die Person hat noch keine Frage geöffnet.",
+    "results-away": "Prüfung verlassen",
+    "results-student-answers": "Antworten der Person",
+    "results-not-submitted": "Die Person hat die Prüfung noch nicht abgegeben.",
+    "results-away-seconds": "{count, plural, one {Einmal} other {# Mal}} für {seconds} s",
+    "results-away-minutes": "{count, plural, one {Einmal} other {# Mal}} für {minutes} min {seconds} s",
+    "signal-away-seconds": "Hat die Prüfung {seconds} s verlassen",
+    "signal-away-minutes": "Hat die Prüfung {minutes} min {seconds} s verlassen",
     "signal-blur": "Hat das Fenster verlassen",
     "signal-fullscreenExit": "Hat den Vollbildmodus verlassen",
     "signal-copy": "Text kopiert",
@@ -176,6 +185,7 @@
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
     "frozen-note": "Diese Prüfung ist geplant, darum sind ihre Fragen fest.",
     "archived-note": "Diese Schule ist archiviert, daher sind ihre Prüfungen nur lesbar, bis sie wiederhergestellt wird.",
+    "gone-note": "Diese Prüfung wurde gelöscht oder für Sie geschlossen, daher wird hier nichts mehr gespeichert.",
     "room-cancel": "Raum absagen",
     "room-cancel-title": "Diesen Raum absagen?",
     "room-cancel-description": "Schüler können ihn nicht betreten. Die Fragen der Prüfung können sich wieder ändern, sobald kein Raum mehr dafür besteht.",
@@ -231,7 +241,7 @@
     "student-results-title": "Dein Ergebnis",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
-    "student-answer": "Deine Antwort: {letters}",
+    "student-answer": "Deine Antwort: {answer}",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
@@ -333,7 +343,55 @@
     "import-drop": "Lege eine Word- oder PDF-Datei hier ab oder wähle eine aus.",
     "import-remove": "Datei entfernen",
     "presence-editor": "{name} bearbeitet gerade",
-    "presence-more": "{names} bearbeiten gerade"
+    "presence-more": "{names} bearbeiten gerade",
+    "template-choice": "Einfachauswahl",
+    "template-choices": "Mehrfachauswahl",
+    "template-label": "Fragetyp: {type}",
+    "template-truefalse": "Richtig oder falsch",
+    "template-cause": "Ursache und Wirkung",
+    "truefalse-true": "Richtig",
+    "truefalse-false": "Falsch",
+    "cause-related": "Aussage und Begründung sind richtig und hängen zusammen",
+    "cause-unrelated": "Aussage und Begründung sind richtig, hängen aber nicht zusammen",
+    "cause-reason-false": "Die Aussage ist richtig und die Begründung falsch",
+    "cause-statement-false": "Die Aussage ist falsch und die Begründung richtig",
+    "cause-both-false": "Aussage und Begründung sind falsch",
+    "template-short": "Kurzantwort",
+    "short-placeholder": "Antwort eingeben",
+    "short-line": "Antwortzeile",
+    "accepted-answers": "Akzeptierte Antworten",
+    "accepted-of": "Akzeptierte Antwort {index} von Frage {number}",
+    "accepted-remove-of": "Akzeptierte Antwort {index} von Frage {number} entfernen",
+    "accepted-add": "Antwort hinzufügen",
+    "accepted-hint": "Groß- und Kleinschreibung und zusätzliche Leerzeichen zählen nicht, und jede andere Antwort wartet auf deine Bewertung.",
+    "template-essay": "Aufsatz",
+    "essay-placeholder": "Antwort schreiben",
+    "essay-area": "Antwortfeld",
+    "verdict-partial": "Teilweise richtig",
+    "results-points": "Punkte",
+    "grade-of": "Punkte von {name}",
+    "template-match": "Zuordnung",
+    "match-statements": "Aussagen",
+    "match-answers": "Antworten",
+    "statement-of": "Frage {number}, Aussage {name}",
+    "answer-of": "Frage {number}, Antwort {name}",
+    "statement-placeholder": "Aussage",
+    "answer-placeholder": "Antwort",
+    "statement-remove-of": "Aussage {name} von Frage {number} entfernen",
+    "answer-remove-of": "Antwort {name} von Frage {number} entfernen",
+    "statement-add": "Aussage hinzufügen",
+    "match-answer-add": "Antwortmöglichkeit hinzufügen",
+    "statement-number": "Aussage {name}",
+    "pair-of": "Antwort für Aussage {name} von Frage {number}",
+    "pair-choose": "Wählen",
+    "pair-hint": "Jede Antwort gehört zu einer Aussage, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
+    "pair-statement": "Antwort für Aussage {number}",
+    "template-table": "Richtig-oder-falsch-Tabelle",
+    "table-columns": "Spalten",
+    "column-of": "Frage {number}, Spalte {name}",
+    "column-placeholder": "Spalte",
+    "cell-of": "Spalte für Aussage {name} von Frage {number}",
+    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
   },
   "SchoolSettings": {
     "school": "Schule",
@@ -350,6 +408,47 @@
     "clients": "API-Clients",
     "policies": "Richtlinien",
     "audit": "Prüfprotokoll",
+    "billing": "Abrechnung",
+    "billing-free-title": "Kostenlos",
+    "billing-free-description": "Bis zu {limit} Schüler, mit allen School-Funktionen.",
+    "billing-school-title": "School",
+    "billing-school-description": "Jeder Schüler hat Pro bis {date}.",
+    "billing-students": "Schüler",
+    "billing-limit": "Kostenlose Grenze",
+    "billing-paid": "Bezahlte Schüler",
+    "billing-nina": "Nina-Credits diesen Monat",
+    "billing-nina-used": "{used} von {total} genutzt",
+    "billing-upgrade": "Upgraden",
+    "billing-add": "Neue Schüler bezahlen",
+    "billing-free-footer": "Upgrade, um mehr als {limit} Schüler einzuschreiben und jedem Schüler Pro zu geben.",
+    "billing-add-footer": "Neue Schüler werden für den Rest des Zeitraums berechnet.",
+    "billing-free-empty": "Schreibe Schüler ein, um die Schule auf School umzustellen.",
+    "billing-school-footer": "Alle Schüler sind bezahlt.",
+    "billing-dialog-title": "Zeitraum wählen",
+    "billing-dialog-description": "Bezahle pro eingeschriebenem Schüler für die restlichen Tage des Zeitraums.",
+    "billing-dialog-seats": "Bezahle pro eingeschriebenem Schüler. Die Plätze verlängern sich, bis du sie kündigst.",
+    "billing-term-semester": "Dieses Halbjahr",
+    "billing-term-year": "Dieses Schuljahr",
+    "billing-offer-month": "Jeden Monat",
+    "billing-offer-year": "Jedes Jahr",
+    "billing-term-dates": "{start} bis {end}",
+    "billing-quote": "{price} pro Schüler, {total} für {seats} Schüler",
+    "billing-issue": "Rechnung erstellen",
+    "billing-invoices": "Rechnungen",
+    "billing-invoices-description": "Jede Rechnung, die die Schule erhalten hat.",
+    "billing-invoices-footer": "Bezahle eine offene Rechnung vor ihrem Fälligkeitsdatum.",
+    "billing-invoices-empty": "Die Schule hat noch keine Rechnung.",
+    "invoice-number": "Rechnung",
+    "invoice-term": "Zeitraum",
+    "invoice-students": "Schüler",
+    "invoice-total": "Gesamt",
+    "invoice-status": "Status",
+    "invoice-draft": "Entwurf",
+    "invoice-open": "Offen",
+    "invoice-paid": "Bezahlt",
+    "invoice-void": "Storniert",
+    "invoice-pay": "Bezahlen",
+    "invoice-transfer": "Per Überweisung zahlen",
     "manage-group": "Verwaltung",
     "manage-settings": "Einstellungen",
     "address-copy": "Adresse kopieren",
@@ -374,6 +473,9 @@
     "policy-students-footer": "Jede Änderung einer Richtlinie wird im Prüfprotokoll festgehalten.",
     "policy-nina": "Nina für Schüler",
     "policy-nina-description": "Schüler dürfen Nina in dieser Schule um Hilfe bitten.",
+    "policy-nina-credits": "Nina-Credits pro Tag",
+    "policy-nina-credits-description": "So viele Schul-Credits darf ein Schüler pro Tag nutzen.",
+    "policy-nina-credits-value": "{count, number} Credits",
     "policy-threads": "Threads von Schülern",
     "policy-threads-description": "Schüler dürfen in dieser Schule Threads eröffnen.",
     "policy-domains": "E-Mail-Domains",
@@ -492,12 +594,19 @@
     "audit-change": "Änderung",
     "audit-empty": "Noch hat sich nichts geändert.",
     "audit-search": "Änderung suchen",
+    "audit-export": "Exportieren",
     "audit-operator": "Nakafa-Team",
     "audit-system": "System",
     "audit-label": {
       "assignment": {
         "created": "Klassenlehrer zugewiesen",
         "removed": "Klassenlehrer entfernt"
+      },
+      "billing": {
+        "invoice": {
+          "issued": "Rechnung ausgestellt",
+          "paid": "Rechnung bezahlt"
+        }
       },
       "card": {
         "issued": "Anmeldekarte ausgestellt",
@@ -591,7 +700,8 @@
       },
       "exam": {
         "results": {
-          "released": "Prüfungsergebnisse freigegeben"
+          "released": "Prüfungsergebnisse freigegeben",
+          "graded": "Prüfungsantwort bewertet"
         }
       },
       "tenant": {
@@ -1404,6 +1514,8 @@
     "credits-used": "{percent, number} % genutzt",
     "credits-resets": "Erneuert am {date}",
     "credits-left": "{left, number} von {total, number} Credits übrig",
+    "school-credits": "Schul-Credits heute",
+    "school-credits-footer": "Deine Schule gibt dir diese Credits jeden Tag.",
     "plan-free": "Kostenlos",
     "plan-pro": "Pro",
     "name": "Name",
@@ -1917,6 +2029,14 @@
       "title": "Diese Person hat genug Rollen.",
       "description": "Entferne zuerst eine Rolle, bevor du eine weitere gibst."
     },
+    "school-refusal-seat-limit": {
+      "title": "Der kostenlose Plan ist voll.",
+      "description": "Wechsle in der Abrechnung zu School, um weitere Schüler hinzuzufügen."
+    },
+    "school-refusal-seats-paid": {
+      "title": "Alle Schüler sind bezahlt.",
+      "description": "Neue Schüler lassen sich nach der Einschreibung abrechnen."
+    },
     "school-refusal-person-inactive": {
       "title": "Diese Person ist nicht mehr aktiv.",
       "description": "Lade die Person erneut ein, um den Zugang wiederherzustellen."
@@ -2012,6 +2132,13 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "audit-export-error": {
+      "title": "Export fehlgeschlagen.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
+    "school-own-role-ended": {
+      "title": "Deine Rolle ist beendet."
     }
   },
   "Ai": {

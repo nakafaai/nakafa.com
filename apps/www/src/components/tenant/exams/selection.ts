@@ -78,6 +78,27 @@ export const activeQuestion = (
 };
 
 /**
+ * The question the canvas moves to once `removed` leaves the exam, while the teacher is on it: the question
+ * after it, or the one before it when it is the last, as a design tool moves to the next page of a deleted
+ * one. None while the teacher is on another question, which stays, or when it is the only question.
+ */
+export const afterRemoval = (
+  questions: readonly Question[],
+  selected: QuestionId | null,
+  removed: QuestionId
+): Option.Option<QuestionId> =>
+  Option.flatMap(activeQuestion(questions, selected), ({ index, question }) =>
+    question.id === removed
+      ? Option.map(
+          Option.orElse(Arr.get(questions, index + 1), () =>
+            Arr.get(questions, index - 1)
+          ),
+          (neighbour) => neighbour.id
+        )
+      : Option.none()
+  );
+
+/**
  * Creates the selection of one editor: the question the teacher chose, which is none
  * before a choice, the questions still being saved, and the actions that change them.
  * Each provider creates its own, once.

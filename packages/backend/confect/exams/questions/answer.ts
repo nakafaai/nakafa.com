@@ -10,15 +10,16 @@ import {
 } from "@repo/backend/confect/exams/errors";
 import { keyFits } from "@repo/backend/confect/exams/key";
 import {
+  answersFit,
   encodeAnswers,
   encodeKey,
-  isChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
 import { type Array as Arr, Clock, Effect } from "effect";
 
 /**
  * Saves the answers and the key of one question at the revision the editor saw. A
  * revision that is no longer current is refused as `RevisionStale` and writes nothing,
+ * answers that the question's template does not take are refused as `AnswersDoNotFit`,
  * and a key that does not fit the answers is refused as `KeyDoesNotFit`. Otherwise both
  * are written as their JSON text, and the revision rises by one. The whole row must fit
  * one stored document, so a row that reaches the limit is refused as `DocumentTooLarge`
@@ -35,7 +36,7 @@ export const answerQuestion = Effect.fn("exams.question.answer")(function* (
   if (question.revision !== edit.revision) {
     return yield* new RevisionStale({ current: question.revision });
   }
-  if (!isChoiceAnswers(edit.answers)) {
+  if (!answersFit(question.template, edit.answers)) {
     return yield* new AnswersDoNotFit();
   }
   if (edit.key !== null && !keyFits(edit.answers, edit.key)) {

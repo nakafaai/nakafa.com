@@ -28,7 +28,6 @@ export function TryoutQuestionPreview({
   return (
     <TryoutPage>
       <TryoutPageHeader
-        action={null}
         items={[
           {
             label: exam.title,

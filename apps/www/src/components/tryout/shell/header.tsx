@@ -16,11 +16,12 @@ import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
  * name sits beside it; from md the path, the centred name and the action stand apart.
  */
 export function TryoutPageHeader({
-  action,
+  children,
   items,
   title,
 }: {
-  action: ReactNode;
+  /** The page's action, at the end of the header. */
+  children?: ReactNode;
   items: readonly BreadcrumbHeaderItem[];
   title: string;
 }) {
@@ -58,7 +59,7 @@ export function TryoutPageHeader({
       >
         {title}
       </h1>
-      <div className="flex shrink-0 justify-end">{action}</div>
+      <div className="flex shrink-0 justify-end">{children}</div>
     </BreadcrumbHeaderFrame>
   );
 }

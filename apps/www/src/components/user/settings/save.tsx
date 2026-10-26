@@ -25,7 +25,7 @@ export function SettingsSave({ disabled }: { disabled: boolean }) {
  */
 export function SettingsFormFooter({
   form,
-  hint,
+  ...footer
 }: {
   form: AnyFormApi;
   hint: string;
@@ -36,7 +36,7 @@ export function SettingsFormFooter({
   );
 
   return (
-    <CardSectionFooter hint={hint}>
+    <CardSectionFooter {...footer}>
       <SettingsSave disabled={!canSave} />
     </CardSectionFooter>
   );

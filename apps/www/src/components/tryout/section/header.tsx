@@ -10,19 +10,19 @@ import { TryoutPageHeader } from "@/components/tryout/shell/header";
  * path; an attempt kept from an earlier catalog version leaves them unlinked.
  */
 export function TryoutSectionPageHeader({
-  action,
+  children,
   page,
   parents,
   setPath,
 }: {
-  action: ReactNode;
+  /** The page's action, at the end of the header. */
+  children: ReactNode;
   page: TryoutSectionPage;
   parents: "linked" | "unlinked";
   setPath: string;
 }) {
   return (
     <TryoutPageHeader
-      action={action}
       items={[
         {
           label: page.exam.title,
@@ -48,6 +48,8 @@ export function TryoutSectionPageHeader({
         },
       ]}
       title={page.section.title}
-    />
+    >
+      {children}
+    </TryoutPageHeader>
   );
 }

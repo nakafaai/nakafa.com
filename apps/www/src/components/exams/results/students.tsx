@@ -10,6 +10,7 @@ import {
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -26,6 +27,7 @@ import {
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
+import { useResultsSelection } from "@/components/exams/results/selection";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -61,21 +63,72 @@ const stateKeys = {
 const StatusFilter = Schema.Union([Schema.Literal("all"), AttemptState]);
 export type StatusFilter = typeof StatusFilter.Type;
 
-/** One student's row: the name, the state, and the scores of a submitted attempt, with the time it was submitted. */
+/** The seconds of one minute, which a long time away is told in. */
+const SECONDS_IN_MINUTE = 60;
+
+/**
+ * How often a submitted student left the exam and for how long in all (K25), an indication for the
+ * teacher only: empty before the attempt is submitted, and a zero when the student never left.
+ */
+function AwayCell({
+  awaySeconds,
+  exits,
+}: {
+  readonly awaySeconds: number | null;
+  readonly exits: number | null;
+}) {
+  const t = useTranslations("Exams");
+  if (exits === null || awaySeconds === null) {
+    return null;
+  }
+  if (exits === 0) {
+    return "0";
+  }
+  if (awaySeconds < SECONDS_IN_MINUTE) {
+    return t("results-away-seconds", { count: exits, seconds: awaySeconds });
+  }
+  return t("results-away-minutes", {
+    count: exits,
+    minutes: Math.floor(awaySeconds / SECONDS_IN_MINUTE),
+    seconds: awaySeconds % SECONDS_IN_MINUTE,
+  });
+}
+
+/**
+ * One student's row: the name, which opens the student's answers beside the list, the state, and the
+ * scores of a submitted attempt, with the time it was submitted.
+ */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
+  const chosen = useResultsSelection(
+    (state) => state.selected === row.attemptId
+  );
+  const choose = useResultsSelection((state) => state.choose);
 
   return (
-    <TableRow>
-      <TableCell>{row.name}</TableCell>
+    <TableRow data-state={chosen ? "selected" : undefined}>
+      <TableCell>
+        <Button
+          aria-pressed={chosen}
+          className="h-auto px-0"
+          onClick={() => choose(chosen ? null : row.attemptId)}
+          type="button"
+          variant="link"
+        >
+          {row.name}
+        </Button>
+      </TableCell>
       <TableCell>{t(stateKeys[row.state])}</TableCell>
       <TableCell className="tabular-nums">
         {row.points === null ? "" : `${row.points} / ${total}`}
       </TableCell>
       <TableCell className="tabular-nums">{row.answered ?? ""}</TableCell>
       <TableCell className="tabular-nums">{row.pending ?? ""}</TableCell>
+      <TableCell className="tabular-nums">
+        <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
+      </TableCell>
       <TableCell className="tabular-nums">
         {row.submittedAt === null
           ? ""
@@ -146,6 +199,7 @@ function StudentTable({
           <TableHead>{t("results-score")}</TableHead>
           <TableHead>{t("results-answered")}</TableHead>
           <TableHead>{t("results-pending")}</TableHead>
+          <TableHead>{t("results-away")}</TableHead>
           <TableHead>{t("results-finished")}</TableHead>
         </TableRow>
       </TableHeader>
@@ -234,29 +288,20 @@ function StudentRowsSection({
 }) {
   const t = useTranslations("Exams");
   const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
-  // A page that holds no match is not the end of the search while later pages still load, so
-  // the empty state waits for the last page, and the table shows nothing in the meantime.
-  const more =
-    loadMore === null ? null : <Intersection onIntersect={loadMore} />;
-  const empty = filtering ? (
-    <TableEmpty
-      act="reading"
-      description={t("filter-empty")}
-      title={t("results-no-match")}
-    />
-  ) : (
-    <TableEmpty
-      act="reading"
-      description={t("results-empty")}
-      title={t("results-empty-title")}
-    />
-  );
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {rows.length > 0 ? <StudentTable rows={rows} /> : null}
-      {exhausted && rows.length === 0 ? empty : null}
-      {more}
+      {/* A page that holds no match is not the end of the search while later pages still load, so
+          the empty state waits for the last page, and the table shows nothing in the meantime. */}
+      {exhausted && rows.length === 0 ? (
+        <TableEmpty
+          act="reading"
+          description={t(filtering ? "filter-empty" : "results-empty")}
+          title={t(filtering ? "results-no-match" : "results-empty-title")}
+        />
+      ) : null}
+      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
   );
 }

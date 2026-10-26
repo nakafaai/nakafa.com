@@ -27,7 +27,7 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, use } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
@@ -120,8 +120,23 @@ function drawnScale({ max, min, segments }: NumberLineConfig): Interval {
   return { max: rangeMax + padding, min: rangeMin - padding };
 }
 
+/** The scale and the segments of the number line that the surrounding card draws. */
+const NumberLineConfigContext = createContext<NumberLineConfig | null>(null);
+
+/** Reads the configuration of the surrounding number line card. */
+function useNumberLineConfig() {
+  const config = use(NumberLineConfigContext);
+  if (config === null) {
+    throw new Error(
+      "useNumberLineConfig must be used within NumberLineConfigContext"
+    );
+  }
+  return config;
+}
+
 /** Draws one number line's scale, its segments, their labels, and its full screen action. */
-function NumberLineBody({ config }: { config: NumberLineConfig }) {
+function NumberLineBody() {
+  const config = useNumberLineConfig();
   const { segments } = config;
   const scale = drawnScale(config);
 
@@ -257,7 +272,8 @@ function NumberLineBody({ config }: { config: NumberLineConfig }) {
 }
 
 /** The scale and the solution set of a number line, as the readouts of its footer. */
-function NumberLineFacts({ config }: { config: NumberLineConfig }) {
+function NumberLineFacts() {
+  const config = useNumberLineConfig();
   const t = useTranslations("Common");
   const format = useFormatter();
   const locale = useLocale();
@@ -288,23 +304,16 @@ function NumberLineFacts({ config }: { config: NumberLineConfig }) {
 }
 
 /**
- * Draws one number line card under the header its caller builds: its scale, and the readouts
- * of its footer. It holds no client state, so a server card draws it and its math stays on the
- * server.
+ * Draws one number line card under the header its caller composes: its scale,
+ * and the readouts of its footer, from the configuration its context holds.
  */
-function NumberLineFrame({
-  config,
-  header,
-}: {
-  config: NumberLineConfig;
-  header: ReactNode;
-}) {
+function NumberLineFrame({ children }: { children: ReactNode }) {
   return (
     <VisualCard>
-      {header}
-      <NumberLineBody config={config} />
+      {children}
+      <NumberLineBody />
       <VisualCardFooter>
-        <NumberLineFacts config={config} />
+        <NumberLineFacts />
       </VisualCardFooter>
     </VisualCard>
   );
@@ -319,10 +328,11 @@ export function NumberLine({
   title,
 }: NumberLineProps) {
   return (
-    <NumberLineFrame
-      config={{ max, min, segments }}
-      header={<VisualCardHeader description={description} title={title} />}
-    />
+    <NumberLineConfigContext value={{ max, min, segments }}>
+      <NumberLineFrame>
+        <VisualCardHeader description={description} title={title} />
+      </NumberLineFrame>
+    </NumberLineConfigContext>
   );
 }
 
@@ -333,5 +343,9 @@ export function NumberLineCard({
   min,
   segments,
 }: NumberLineCardProps) {
-  return <NumberLineFrame config={{ max, min, segments }} header={header} />;
+  return (
+    <NumberLineConfigContext value={{ max, min, segments }}>
+      <NumberLineFrame>{header}</NumberLineFrame>
+    </NumberLineConfigContext>
+  );
 }
