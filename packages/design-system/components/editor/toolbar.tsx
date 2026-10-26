@@ -1,7 +1,14 @@
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
-import { DocumentBlocks } from "@repo/design-system/components/editor/block";
+import {
+  DocumentLists,
+  RichEditorBlocks,
+  RichEditorLists,
+} from "@repo/design-system/components/editor/block";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
-import { DocumentMarks } from "@repo/design-system/components/editor/format";
+import {
+  DocumentMarks,
+  RichEditorMarks,
+} from "@repo/design-system/components/editor/format";
 import {
   editorBar,
   editorRow,
@@ -10,13 +17,7 @@ import { DocumentInsert } from "@repo/design-system/components/editor/insert";
 import { RichEditorStyle } from "@repo/design-system/components/editor/style";
 import { DocumentTable } from "@repo/design-system/components/editor/table";
 import { ToolHint } from "@repo/design-system/components/editor/tip";
-import {
-  RichEditorBlocks,
-  RichEditorHistory,
-  RichEditorInline,
-  RichEditorLists,
-  RichEditorMarks,
-} from "@repo/design-system/components/editor/tools";
+import { RichEditorHistory } from "@repo/design-system/components/editor/tools";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -200,7 +201,6 @@ interface RichEditorToolbarProps {
   /** The names a reader hears and sees for each control. */
   labels: ComponentProps<typeof RichEditorBlocks>["labels"] &
     ComponentProps<typeof RichEditorHistory>["labels"] &
-    ComponentProps<typeof RichEditorInline>["labels"] &
     ComponentProps<typeof RichEditorLists>["labels"] &
     ComponentProps<typeof RichEditorMarks>["labels"] &
     ComponentProps<typeof RichEditorStyle>["labels"] & {
@@ -211,7 +211,8 @@ interface RichEditorToolbarProps {
 
 /**
  * The formatting controls of the Memory editor, on one line: history, the style of the
- * paragraph, marks, lists, and blocks.
+ * paragraph, the marks with the link, the lists, and the blocks to insert. Each group holds
+ * two buttons at most, a group of toggles, or one menu.
  */
 export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
   return (
@@ -221,7 +222,6 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
         { name: "style", tools: <RichEditorStyle labels={labels} /> },
         { name: "marks", tools: <RichEditorMarks labels={labels} /> },
         { name: "lists", tools: <RichEditorLists labels={labels} /> },
-        { name: "inline", tools: <RichEditorInline labels={labels} /> },
         { name: "blocks", tools: <RichEditorBlocks labels={labels} /> },
       ]}
       more={labels.more}
@@ -233,8 +233,8 @@ interface DocumentToolbarProps {
   /** The editor the controls act on, or none while there is none, so every control waits. */
   editor: DocumentEditorInstance | null;
   /** The names a writer hears and sees for each control of the document toolbar. */
-  labels: ComponentProps<typeof DocumentBlocks>["labels"] &
-    ComponentProps<typeof DocumentInsert>["labels"] &
+  labels: ComponentProps<typeof DocumentInsert>["labels"] &
+    ComponentProps<typeof DocumentLists>["labels"] &
     ComponentProps<typeof DocumentMarks>["labels"] &
     ComponentProps<typeof DocumentTable>["labels"] &
     ComponentProps<typeof RichEditorHistory>["labels"] &
@@ -246,7 +246,8 @@ interface DocumentToolbarProps {
 
 /**
  * The toolbar of an assessment document, on one line in the middle of its bar: history, the style of
- * the paragraph, marks, lists, quote and code block, and tables. It offers only the blocks and marks of the
+ * the paragraph, the marks with the link, the lists, the blocks to insert, and tables. Each group holds
+ * two buttons at most, a group of toggles, or one menu. It offers only the blocks and marks of the
  * contract. It is drawn by its caller, outside the document, and acts on the editor it reads
  * through `useCurrentEditor`.
  */
@@ -259,7 +260,7 @@ export function DocumentToolbar({ editor, labels }: DocumentToolbarProps) {
           { name: "history", tools: <RichEditorHistory labels={labels} /> },
           { name: "style", tools: <RichEditorStyle labels={labels} /> },
           { name: "marks", tools: <DocumentMarks labels={labels} /> },
-          { name: "blocks", tools: <DocumentBlocks labels={labels} /> },
+          { name: "lists", tools: <DocumentLists labels={labels} /> },
           { name: "insert", tools: <DocumentInsert labels={labels} /> },
           { name: "table", tools: <DocumentTable labels={labels} /> },
         ]}
