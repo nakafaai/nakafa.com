@@ -3,8 +3,12 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { QuestionPoints } from "@repo/backend/confect/exams/question";
-import { Verdict } from "@repo/backend/confect/exams/results/schema";
+import {
+  GradePoints,
+  Verdict,
+} from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
@@ -18,14 +22,16 @@ import { Schema } from "effect";
 const ResultAction = Kind.actions(entries, "result");
 
 /**
- * One question of the exam in its order: its number, the option IDs of its choice in their order, and the
- * points that a correct answer to it earns.
+ * One question of the exam in its order: its number, the option IDs of its choice in their order, the
+ * statements and answers of its match in their order, and the points that a correct answer to it earns.
  */
 export const QuestionSummary = Schema.Struct({
   id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
   points: QuestionPoints,
+  sourceIds: Schema.Array(LocalIdSchema),
+  targetIds: Schema.Array(LocalIdSchema),
 });
 
 /**
@@ -54,11 +60,12 @@ export const StudentRow = Schema.Struct({
   submittedAt: Schema.NullOr(Schema.Finite),
 });
 
-/** One student's answer to a question, with its verdict, in the question's list. */
+/** One student's answer to a question, with the points it earned and its verdict, in the question's list. */
 export const AnswerRow = Schema.Struct({
   attemptId: Id("examAttempts"),
   name: PersonName,
-  response: Schema.Array(LocalIdSchema),
+  points: GradePoints,
+  response: ExamResponse,
   verdict: Verdict,
 });
 
@@ -73,6 +80,7 @@ export const QuestionStats = Schema.Struct({
   correct: Schema.Int,
   counted: Schema.Int,
   incorrect: Schema.Int,
+  partial: Schema.Int,
   optionCounts: Schema.Array(
     Schema.Struct({ count: Schema.Int, optionId: LocalIdSchema })
   ),
@@ -81,14 +89,16 @@ export const QuestionStats = Schema.Struct({
 
 /**
  * One question of a student's released result: its number, the option IDs of its choice in their
- * order, the points that a correct answer earns, the option IDs that the student chose, and the verdict.
- * The chosen IDs are empty when the student left the question unanswered.
+ * order, the points that a correct answer earns, the option IDs that the student chose or the text the
+ * student typed, and the verdict. A question the student left unanswered chose no option.
  */
 const StudentAnswer = Schema.Struct({
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
   points: QuestionPoints,
-  response: Schema.Array(LocalIdSchema),
+  response: ExamResponse,
+  sourceIds: Schema.Array(LocalIdSchema),
+  targetIds: Schema.Array(LocalIdSchema),
   verdict: Verdict,
 });
 

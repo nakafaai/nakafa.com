@@ -32,6 +32,8 @@ export default GroupSpec.make().addFunction(
         Schema.Int.check(Schema.isBetween({ maximum: CROWD_MAX, minimum: 0 }))
       ),
       email: Email,
+      /** Whether the seeded exam also holds an essay, which the student writes and the teacher grades. */
+      essay: Schema.optionalKey(Schema.Boolean),
       slug: TenantSlug,
       /** Whether the seed also schedules a room for the next day, which a browser test reads as an upcoming room. */
       upcoming: Schema.optionalKey(Schema.Boolean),

@@ -28,13 +28,15 @@ import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
+  useResultsPaper,
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
+import { GradeField } from "@/components/exams/results/grade";
 import {
   correctShare,
   optionLetter,
-  responseLetters,
+  responseText,
   verdictKeys,
 } from "@/components/exams/results/model";
 import {
@@ -112,25 +114,30 @@ function QuestionPanel({ question }: { readonly question: Question }) {
             ? () => answers.loadMore(ANSWER_PAGE_SIZE)
             : null
         }
-        optionIds={question.optionIds}
+        question={question}
         results={answers.results}
       />
     </>
   );
 }
 
-/** The answers of a question, one student each, with the letters they chose and the verdict. */
+/**
+ * The answers of a question, one student each, with the letters they chose or the text they wrote, the
+ * points each earned, and the verdict. A viewer who grades the sitting gives each answer its points in
+ * its row, as a teacher marks a stack of papers.
+ */
 function AnswerList({
   loadMore,
-  optionIds,
+  question,
   results,
 }: {
   /** Loads the next page, or `null` once the list holds every answer. */
   readonly loadMore: (() => void) | null;
-  readonly optionIds: readonly string[];
+  readonly question: Question;
   readonly results: readonly AnswerRow[];
 }) {
   const t = useTranslations("Exams");
+  const { canGrade } = useResultsPaper();
 
   if (results.length === 0) {
     return (
@@ -148,6 +155,7 @@ function AnswerList({
           <TableRow>
             <TableHead>{t("results-name")}</TableHead>
             <TableHead>{t("results-answers")}</TableHead>
+            <TableHead>{t("results-points")}</TableHead>
             <TableHead>{t("results-status")}</TableHead>
           </TableRow>
         </TableHeader>
@@ -155,8 +163,15 @@ function AnswerList({
           {Arr.map(results, (answer) => (
             <TableRow key={answer.attemptId}>
               <TableCell>{answer.name}</TableCell>
-              <TableCell>
-                {Arr.join(responseLetters(optionIds, answer.response), ", ")}
+              <TableCell className="max-w-96 whitespace-normal">
+                {responseText(question, answer.response)}
+              </TableCell>
+              <TableCell className="tabular-nums">
+                {canGrade ? (
+                  <GradeField answer={answer} question={question} />
+                ) : (
+                  answer.points
+                )}
               </TableCell>
               <TableCell>{t(verdictKeys[answer.verdict])}</TableCell>
             </TableRow>

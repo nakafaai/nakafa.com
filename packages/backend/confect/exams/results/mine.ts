@@ -43,6 +43,8 @@ export const mine = Effect.fn("exams.results.mine")(function* (args: {
             number: index + 1,
             optionIds: summary.optionIds,
             points: summary.points,
+            sourceIds: summary.sourceIds,
+            targetIds: summary.targetIds,
             response: row.response,
             verdict: row.verdict,
           })

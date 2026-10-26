@@ -8,12 +8,15 @@ import {
   PolarUpdateErrorWire,
 } from "@repo/backend/confect/billing/polar/spec";
 import {
+  CheckoutOfferUnavailableWire,
   CheckoutSessionIoErrorWire,
   CheckoutUnavailable,
   checkoutRequestInputValidator,
   InvalidCheckoutSuccessUrl,
   ProAlreadyHeldWire,
+  proCheckoutRequestInputValidator,
   TopupRequiresPro,
+  XenditCheckoutErrorWire,
 } from "@repo/backend/confect/billing/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { SiteConfigError } from "@repo/backend/confect/site/spec";
@@ -24,12 +27,12 @@ const sessionUrlValidator = Schema.Struct({
   url: Schema.String,
 });
 
-/** The learner's billing sessions: a Pro checkout and the customer portal. */
+/** The learner's billing sessions: a Pro checkout, a top-up checkout, and the customer portal. */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicAction({
       name: "generateCheckoutLink",
-      args: () => checkoutRequestInputValidator.fields,
+      args: () => proCheckoutRequestInputValidator.fields,
       returns: () => sessionUrlValidator,
       error: () =>
         Schema.Union([
@@ -38,11 +41,13 @@ export default GroupSpec.make()
           InvalidCheckoutSuccessUrl,
           CheckoutSessionIoErrorWire,
           CheckoutUnavailable,
+          CheckoutOfferUnavailableWire,
           ProAlreadyHeldWire,
           PolarCustomerErrorWire,
           PolarDuplicateEmailErrorWire,
           PolarCheckoutErrorWire,
           PolarUpdateErrorWire,
+          XenditCheckoutErrorWire,
         ]),
     }).middleware(Session)
   )

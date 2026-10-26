@@ -2,6 +2,7 @@ import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   NEW_QUESTION_POINTS,
+  NEW_QUESTION_TEMPLATE,
   newChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
 import { Effect, Function as Fn, Option } from "effect";
@@ -35,13 +36,11 @@ const act = <A, E>(action: Effect.Effect<A, E>) =>
 
 /**
  * A question the server has not saved yet, with its own placeholder IDs: one for each document it
- * owns, and its own ID. It takes the answers, the key, and the points it starts with, and the
- * documents it shows at once.
+ * owns, and its own ID. It takes the answers, the key, the points, and the template it starts with,
+ * and the documents it shows at once.
  */
 const placeholderDraft = (
-  answers: Question["answers"],
-  key: Question["key"],
-  points: Question["points"]
+  question: Pick<Question, "answers" | "key" | "points" | "template">
 ) =>
   Effect.all({
     explanation: placeholderDocumentId,
@@ -51,11 +50,9 @@ const placeholderDraft = (
   }).pipe(
     Effect.map(({ explanation, id, prompt, rubric }) =>
       placeholderQuestion({
-        answers,
+        ...question,
         explanation,
         id,
-        key,
-        points,
         prompt,
         rubric,
       })
@@ -103,7 +100,12 @@ export function useQuestionActions() {
   /** Adds an empty question right after `after`, or at the end when `after` is none. */
   const addQuestion = (after: QuestionId | null) =>
     act(
-      placeholderDraft(newChoiceAnswers(), null, NEW_QUESTION_POINTS).pipe(
+      placeholderDraft({
+        answers: newChoiceAnswers(),
+        key: null,
+        points: NEW_QUESTION_POINTS,
+        template: NEW_QUESTION_TEMPLATE,
+      }).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
             sentAction(() =>
@@ -121,7 +123,7 @@ export function useQuestionActions() {
   /** Copies a question right after itself, and selects the copy once the server saves it. */
   const copyQuestion = (question: Question) =>
     act(
-      placeholderDraft(question.answers, question.key, question.points).pipe(
+      placeholderDraft(question).pipe(
         Effect.flatMap((draft) =>
           showDraft(draft, (shown) =>
             sentAction(() =>

@@ -272,7 +272,7 @@ test("a room cancelled while its dashboard and a student's page are open says so
     signInOwner(proctorContext, school.slug, address("/"))
   );
   const sitting = await Effect.runPromise(
-    seedSitting(school.slug, learner, 0, true)
+    seedSitting(school.slug, learner, 0, "upcoming")
   );
 
   // The proctor opens the dashboard of the room that opens tomorrow.
