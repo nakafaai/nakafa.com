@@ -1,6 +1,8 @@
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import { Input } from "@repo/design-system/components/ui/input";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 
@@ -88,4 +90,20 @@ export function PaperOption({
  */
 export function ControlRoom() {
   return <span aria-hidden className="size-9 shrink-0" />;
+}
+
+/**
+ * The answer line of a short answer, as the student finds it on the paper: an empty field that names
+ * what goes in it. The teacher writes the accepted answers in the layer, never on the paper, so the
+ * line takes no text here.
+ */
+export function PaperLine() {
+  const t = useTranslations("Exams");
+  return (
+    <Input
+      aria-label={t("short-line")}
+      disabled
+      placeholder={t("short-placeholder")}
+    />
+  );
 }

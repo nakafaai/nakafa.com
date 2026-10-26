@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
+  acceptedKey,
   markedKey,
   markedOptions,
   toggledKey,
@@ -175,10 +176,18 @@ export function useQuestionEditing(question: Question) {
     }
   };
 
+  /**
+   * Sets the answers a short answer accepts, which saves at once: the key accepts the texts the teacher
+   * wrote, cleaned as the contract takes them (`acceptedKey`), and a list with no text clears the key.
+   */
+  const setAccepted = (texts: readonly string[]) =>
+    saveAnswers((base) => ({ ...base, key: acceptedKey(base.answers, texts) }));
+
   return {
     displayed: shown ?? question,
     markOption,
     saveAnswers,
+    setAccepted,
     setTemplate,
   };
 }

@@ -13,6 +13,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
   choiceOf,
+  entryOf,
   keyWithoutOption,
   type OptionLabel,
   optionLetter,
@@ -37,7 +38,11 @@ import {
 } from "@/components/tenant/exams/preview";
 import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
 import { activeQuestion } from "@/components/tenant/exams/selection";
-import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
+import {
+  PaperLine,
+  PaperOptions,
+  QuestionPaper,
+} from "@/components/tenant/exams/sheet";
 import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
 
@@ -204,6 +209,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
             live={live}
             notes={{ explanation, rubric }}
             number={number}
+            onAccept={editing.setAccepted}
             onMark={editing.markOption}
             question={question}
             shown={editing.displayed}
@@ -303,6 +309,7 @@ function LivePaper({
           ))}
         </PaperOptions>
       )}
+      {Option.isSome(entryOf(displayed.answers)) ? <PaperLine /> : null}
       {canAddOption ? (
         <div className={chosen ? undefined : "invisible"}>
           <Button

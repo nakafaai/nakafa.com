@@ -19,6 +19,7 @@ import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
 import {
   choiceOf,
+  entryOf,
   type OptionLabel,
   optionLetter,
 } from "@/components/tenant/exams/answer";
@@ -29,6 +30,7 @@ import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import {
   ControlRoom,
   OptionAddRoom,
+  PaperLine,
   PaperOption,
   PaperOptions,
   QuestionPaper,
@@ -246,6 +248,7 @@ export function PaperSketch({
           ))}
         </PaperOptions>
       ) : null}
+      {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
       {addsOption ? <OptionAddRoom /> : null}
     </QuestionPaper>
   );

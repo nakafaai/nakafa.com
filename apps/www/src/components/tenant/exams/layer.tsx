@@ -19,7 +19,9 @@ import { Array as Arr, Function as Fn, Option, Schema } from "effect";
 import { lazy, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
 import {
+  acceptedOf,
   changedOption,
   choiceOf,
   markedOptions,
@@ -203,6 +205,8 @@ interface TeacherLayerProps {
   };
   /** The place of the question in the exam, which names its rich texts for assistive technology. */
   readonly number: number;
+  /** Saves the answers a short answer accepts, which saves at once. */
+  readonly onAccept: (accepted: readonly string[]) => void;
   /** Marks an option as the key of the question, which saves at once. */
   readonly onMark: (optionId: string) => void;
   /** The question the layer belongs to, as the server holds it. */
@@ -213,7 +217,7 @@ interface TeacherLayerProps {
 
 /**
  * The teacher's layer of a question, in the editor's panel beside the canvas: the points, the answer
- * key, the rubric when the question's template takes one (`takesRubric`), and the explanation. The paper on the canvas is what the student reads, so the
+ * key (the marked options, or the accepted answers of a short answer), the rubric when the question's template takes one (`takesRubric`), and the explanation. The paper on the canvas is what the student reads, so the
  * layer stands on its own screen and never on the canvas. Each rich text keeps its height in both
  * states: while its editor is not mounted it is drawn from its document, as the editor draws it. A
  * frozen exam shows its values without changes.
@@ -222,6 +226,7 @@ export function TeacherLayer({
   live,
   notes,
   number,
+  onAccept,
   onMark,
   question,
   shown,
@@ -246,14 +251,23 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
-      <AnswerKey
-        editable={editable}
-        marked={markedOptions(shown.key)}
-        multiple={shown.template === "choices"}
-        number={number}
-        onMark={onMark}
-        options={options}
-      />
+      {shown.template === "short" ? (
+        <AcceptedAnswers
+          accepted={acceptedOf(shown.key)}
+          editable={editable}
+          number={number}
+          onChange={onAccept}
+        />
+      ) : (
+        <AnswerKey
+          editable={editable}
+          marked={markedOptions(shown.key)}
+          multiple={shown.template === "choices"}
+          number={number}
+          onMark={onMark}
+          options={options}
+        />
+      )}
       {takesRubric(shown.template) ? (
         <div className="grid gap-2">
           <FieldTitle>{t("rubric")}</FieldTitle>

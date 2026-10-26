@@ -5,7 +5,7 @@ import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option, pipe, Schema, String as Str } from "effect";
 
 /** The choice interaction, which a single-answer and a complex multiple choice both hold. */
 type Choice = Extract<Interaction, { kind: "choice" }>;
@@ -282,5 +282,83 @@ export const keyWithoutOption = (
   }
   return Arr.map(key, (answer) =>
     isChoiceKey(answer) ? { ...answer, correct: remaining } : answer
+  );
+};
+
+/** The text entry interaction, which a short answer holds. */
+type TextEntry = Extract<Interaction, { kind: "textEntry" }>;
+
+/** Whether an interaction is a text entry. */
+const isTextEntry = (answer: Interaction): answer is TextEntry =>
+  answer.kind === "textEntry";
+
+/** The first text entry of a question's answers, or none when the answers hold no text entry. */
+export const entryOf = (
+  answers: readonly Interaction[]
+): Option.Option<TextEntry> => Arr.findFirst(answers, isTextEntry);
+
+/** The answers a key accepts for a short answer, in the order the teacher wrote them, or none without a key. */
+export const acceptedOf = (
+  key: readonly InteractionKey[] | null
+): readonly string[] =>
+  Option.match(
+    Arr.findFirst(
+      key ?? [],
+      (answer): answer is Extract<InteractionKey, { kind: "textEntry" }> =>
+        answer.kind === "textEntry"
+    ),
+    {
+      onNone: () => [],
+      onSome: (answer) => answer.accepted.acceptedAnswers,
+    }
+  );
+
+/** A run of whitespace of any kind, which an accepted answer writes as one ordinary space. */
+const WHITESPACE_RUN = /\s+/gu;
+
+/** A control or invisible format character, which no accepted answer may hold. */
+const UNTYPABLE = /[\p{Cc}\p{Cf}]/gu;
+
+/**
+ * The key that accepts these texts for each interaction of a short answer, as the contract takes them: each
+ * text in Unicode NFC, without invisible characters, with each run of spaces as one space, and trimmed;
+ * a blank text dropped; and a text that grades the same as an earlier one, whatever its case, dropped.
+ * The key ignores case and extra spaces, as a teacher marks a short answer by hand. A key that accepts
+ * no text is null, since the contract refuses a key with no accepted answer.
+ */
+export const acceptedKey = (
+  answers: Arr.NonEmptyReadonlyArray<Interaction>,
+  texts: readonly string[]
+): Arr.NonEmptyArray<InteractionKey> | null => {
+  const cleaned = Arr.dedupeWith(
+    Arr.filter(
+      Arr.map(texts, (text) =>
+        pipe(
+          text,
+          Str.normalize("NFC"),
+          Str.replaceAll(UNTYPABLE, ""),
+          Str.replaceAll(WHITESPACE_RUN, " "),
+          Str.trim
+        )
+      ),
+      Str.isNonEmpty
+    ),
+    (first, second) => Str.toLowerCase(first) === Str.toLowerCase(second)
+  );
+  if (!Arr.isReadonlyArrayNonEmpty(cleaned)) {
+    return null;
+  }
+  return Arr.map(
+    answers,
+    (answer): InteractionKey => ({
+      accepted: {
+        acceptedAnswers: cleaned,
+        collapseWhitespace: true,
+        ignoreCase: true,
+        kind: "text",
+      },
+      interaction: answer.id,
+      kind: "textEntry",
+    })
   );
 };
