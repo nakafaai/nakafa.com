@@ -61,6 +61,7 @@ describe("access/kind declarations", () => {
       "period.view",
       "grant.manage",
       "integration.manage",
+      "report.open",
       "document.edit",
       "exam.edit",
       "exam.rooms",

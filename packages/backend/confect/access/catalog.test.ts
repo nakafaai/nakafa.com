@@ -83,6 +83,7 @@ describe("access/catalog", () => {
       "connection",
       "class",
       "grade",
+      "report",
       "visit",
       "document",
       "exam",
@@ -220,6 +221,7 @@ describe("access/catalog", () => {
           "sitting.cancel",
           "sitting.close",
           "exam.results.released",
+          "report.locked",
         ],
         Order.String
       )
