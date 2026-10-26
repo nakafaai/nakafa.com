@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /**
  * A link to a page of the app moves the router inside the document: the page
@@ -26,9 +27,12 @@ test("a same-app link moves inside the document and marks the current page", asy
           })
         );
 
+        // A press before React takes the link over loads the next page as a
+        // document, as any link does, so the check presses a hydrated link.
         const curriculum = page
           .locator('a[href="/en/curriculum"]:visible')
           .first();
+        yield* Effect.promise(() => waitUntilTakenOver(curriculum));
         yield* Effect.promise(() => curriculum.click());
         yield* Effect.promise(() => page.waitForURL("**/en/curriculum"));
 
@@ -62,6 +66,7 @@ test("a locale-aware link shows the public spelling of its route", async ({
         const curriculum = page
           .locator('a[href="/id/kurikulum"]:visible')
           .first();
+        yield* Effect.promise(() => waitUntilTakenOver(curriculum));
         yield* Effect.promise(() => curriculum.click());
         yield* Effect.promise(() => page.waitForURL("**/id/kurikulum"));
 

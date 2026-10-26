@@ -57,9 +57,8 @@ type StateFilter = typeof RoomStateFilter.Type;
 export const ROOM_PAGE_SIZE = 20;
 
 /** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
-type ExamRoomsPreload = Pick<
-  Awaited<ReturnType<typeof readExamRoomsFn>>,
-  "rooms" | "summary"
+type ExamRoomsPreload = Partial<
+  Pick<Awaited<ReturnType<typeof readExamRoomsFn>>, "rooms" | "summary">
 >;
 
 /** The first screen of the rooms page, which the page's loader read on the server. */

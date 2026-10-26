@@ -8,6 +8,7 @@ import {
   notFound,
   Outlet,
 } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
@@ -71,6 +72,16 @@ type SchoolVisit = Partial<
  * visit's frame. Hydration after a hard load starts a fresh memo, so the first child
  * navigation after it reads the frame once more.
  */
+/**
+ * Whether a run of the school's loaders draws the first HTML. On the server the Worker draws
+ * it, and each page reads its first screen through its server function, so its rows are in
+ * the HTML. In the browser a click reads nothing before it commits: the page commits at once
+ * and reads its rows live from Convex, so no click waits on a Worker request (ADR 0038 D2).
+ */
+const drawsFirstHtml = createIsomorphicFn()
+  .server(() => true)
+  .client(() => false);
+
 function startVisit() {
   const visit: SchoolVisit = {};
   return { visit };
@@ -110,10 +121,17 @@ export const Route = createFileRoute("/school/$slug")({
     if (visit.school._tag === "Refused") {
       throw notFound();
     }
-    return { legal: visit.legal, school: visit.school, slug: params.slug };
+    return {
+      firstHtml: drawsFirstHtml(),
+      legal: visit.legal,
+      school: visit.school,
+      slug: params.slug,
+    };
   },
+  // The sidebar's classes are read for the first HTML only; after that the shell reads them live.
+  staleTime: Number.POSITIVE_INFINITY,
   loader: ({ context }) =>
-    context.school._tag === "Member"
+    context.firstHtml && context.school._tag === "Member"
       ? readShellClassesFn({ data: { slug: context.slug } })
       : undefined,
   head: ({ match }) => {

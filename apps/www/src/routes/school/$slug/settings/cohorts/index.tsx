@@ -11,7 +11,7 @@ import { readCohortsFn } from "@/lib/tenant/settings.functions";
  */
 export const Route = createFileRoute("/school/$slug/settings/cohorts/")({
   loader: ({ context }) => {
-    if (context.school._tag !== "Member") {
+    if (!context.firstHtml || context.school._tag !== "Member") {
       return;
     }
     const unit = Option.getOrUndefined(

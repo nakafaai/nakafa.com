@@ -9,7 +9,7 @@ import { readClientsFn } from "@/lib/tenant/settings.functions";
 /** The integration clients of the school. */
 export const Route = createFileRoute("/school/$slug/settings/clients")({
   loader: ({ context }) =>
-    context.school._tag === "Member"
+    context.firstHtml && context.school._tag === "Member"
       ? readClientsFn({ data: { numItems: PAGE_SIZE, slug: context.slug } })
       : undefined,
   component: SchoolClientsPage,
