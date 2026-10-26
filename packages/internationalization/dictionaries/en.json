@@ -991,6 +991,8 @@
     "angle": "Angle",
     "increase-angle": "Increase angle",
     "decrease-angle": "Decrease angle",
+    "increase": "Increase",
+    "decrease": "Decrease",
     "number-field": "Number field",
     "share": "Share",
     "contributor": "Contributor",
