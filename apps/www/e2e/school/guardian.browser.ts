@@ -67,6 +67,7 @@ test("an admin links a parent, who signs in with the email code, checks the NISN
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(child.getByText("Siswa Uji")).toBeVisible();
+  await waitUntilTakenOver(child.getByLabel("Child's NISN"));
   await child.getByLabel("Child's NISN").fill("9999999999");
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child.getByRole("alert")).toHaveText(
