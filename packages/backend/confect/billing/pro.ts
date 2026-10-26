@@ -3,6 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import {
   createLearnerCheckout,
   validateCheckoutRequest,
@@ -48,9 +49,10 @@ function offerUnavailable(cause: { readonly message: string }) {
 
 /**
  * Starts the Pro checkout of one offer. A learner who already holds Pro is sent
- * to the plan's management instead. The rail follows the currency the page showed:
- * a Xendit hosted session in Indonesia once the switch names Xendit, and the Polar
- * checkout of monthly and yearly Pro everywhere else.
+ * to the plan's management instead, unless they hold only passes and buy another.
+ * The rail follows the currency the page showed: a Xendit hosted session in
+ * Indonesia once the switch names Xendit, and the Polar checkout of monthly and
+ * yearly Pro everywhere else.
  */
 export const generateCheckoutLink = FunctionImpl.make(
   databaseSchema,
@@ -60,13 +62,17 @@ export const generateCheckoutLink = FunctionImpl.make(
     const { appUser } = yield* requireAuth();
     const { runQuery } = yield* QueryRunner;
     const request = yield* validateCheckoutRequest(args);
-    const holdsPro = yield* runQuery(refs.internal.billing.checkout.holdsPro, {
+    const holding = yield* runQuery(refs.internal.billing.checkout.proHolding, {
       userId: appUser._id,
     }).pipe(
       Effect.mapError(checkoutSessionIoError),
       Effect.catchDefect(flow(checkoutSessionIoError, Effect.fail))
     );
-    if (holdsPro) {
+    // A pass holder may buy another pass, which runs on from the last one; every other Pro is managed where it is billed.
+    if (
+      holding === "plan" ||
+      (holding === "pass" && billingOffer(args.offer).interval !== "pass")
+    ) {
       return yield* new ProAlreadyHeld({
         code: proAlreadyHeldCode,
         message:

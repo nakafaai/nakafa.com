@@ -161,8 +161,7 @@ test("a device the proctor retired says so and offers no Finish, while the attem
   await proctor.getByRole("button", { name: "Acceptance Learner" }).click();
   // An attempt in progress keeps Lock as the panel's main action and Allow a second device in its menu.
   await proctor
-    .getByRole("complementary", { name: "Student session" })
-    .getByRole("button", { exact: true, name: "More actions" })
+    .getByRole("button", { name: "More actions for Acceptance Learner" })
     .click();
   await proctor
     .getByRole("menuitem", { name: "Allow a second device" })

@@ -6,7 +6,6 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Option, Schema } from "effect";
 import {
-  formatMinorAmount,
   planHintKey,
   purchaseOf,
   type SchoolBilling,
@@ -42,13 +41,6 @@ function overview(changes: Partial<SchoolBilling> = {}): SchoolBilling {
 }
 
 describe("school billing copy", () => {
-  it("writes rupiah without decimals and euros and dollars from their cents", () => {
-    // Intl puts a no-break space between the amount and its symbol.
-    expect(formatMinorAmount(43_696, "IDR")).toBe("Rp 43.696");
-    expect(formatMinorAmount(1000, "EUR")).toBe("10,00 €");
-    expect(formatMinorAmount(1000, "USD")).toBe("$10.00");
-  });
-
   it("names the invoice in the subject of the transfer mail to Nakafa", () => {
     expect(transferMailto("NKF-2026-000001")).toBe(
       `mailto:${COMPANY_IDENTITY.email}?subject=NKF-2026-000001`

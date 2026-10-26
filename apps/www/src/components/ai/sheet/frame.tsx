@@ -11,7 +11,7 @@ import { useTranslations } from "use-intl";
 import { readChatArgs } from "@/components/ai/chat/access";
 import { useAi } from "@/components/ai/context";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
-import { Authenticated, Unauthenticated } from "@/components/auth/gate";
+import { Unauthenticated, UnlessSignedOut } from "@/components/auth/gate";
 import { ConvexIsland } from "@/components/providers/island";
 
 const MIN_WIDTH = 384;
@@ -157,7 +157,7 @@ function SheetBody() {
         <ConvexIsland>
           <Suspense fallback={null}>
             <ChatBoundary key={activeChatId} read={read}>
-              <Authenticated>
+              <UnlessSignedOut>
                 {!!activeChatId && (
                   <Suspense fallback={null}>
                     <ClientOnly fallback={null}>
@@ -165,7 +165,7 @@ function SheetBody() {
                     </ClientOnly>
                   </Suspense>
                 )}
-              </Authenticated>
+              </UnlessSignedOut>
               <Unauthenticated>
                 <Suspense fallback={null}>
                   <ClientOnly fallback={null}>

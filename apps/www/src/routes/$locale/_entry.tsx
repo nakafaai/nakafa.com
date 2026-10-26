@@ -1,4 +1,3 @@
-import { captureException } from "@repo/analytics/posthog/capture";
 import {
   createFileRoute,
   type ErrorComponentProps,
@@ -6,7 +5,6 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { IntlProvider } from "use-intl";
 import { EntryShellArtwork } from "@/components/entry/artwork";
 import {
@@ -18,9 +16,11 @@ import {
 import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { Broken } from "@/components/state/broken";
+import { RouteFailure } from "@/components/state/localized";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
+import { readStaticData } from "@/lib/static/data";
 
 /** The messages of the entry pages, which the locale route's messages join. */
 const ENTRY_NAMESPACES = [
@@ -36,12 +36,14 @@ const localeRoute = getRouteApi("/$locale");
 /**
  * The entry frame: one visual shell stays mounted while the sign-in, the error,
  * the onboarding and the school start change. The frame's own messages join the
- * locale route's messages, which the frame does not load again.
+ * locale route's messages, which the frame does not load again. The sign-in page
+ * is prerendered, so the frame reads its messages from the build's static answer.
  */
 export const Route = createFileRoute("/$locale/_entry")({
   loader: ({ params }) =>
-    readRouteMessages({
-      data: { locale: params.locale, namespaces: ENTRY_NAMESPACES },
+    readStaticData(readRouteMessages, {
+      locale: params.locale,
+      namespaces: ENTRY_NAMESPACES,
     }),
   component: EntryLayout,
   errorComponent: EntryError,
@@ -74,28 +76,27 @@ function EntryLayout() {
 function EntryError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
   const messages = readStandaloneMessages(locale);
-  useEffect(() => {
-    captureException(error, { source: "start-entry-error" });
-  }, [error]);
   return (
-    <EntryShell>
-      <EntryShellPanel>
-        <EntryShellHeader>
-          <div className="ms-auto">
-            <ThemePicker variant="ghost" />
-          </div>
-        </EntryShellHeader>
-        <EntryShellBody>
-          <Broken
-            description={messages.Error.description}
-            home={messages.State["home-button"]}
-            homeHref={`/${locale}`}
-            retry={messages.Error.retry}
-            title={messages.Error.title}
-          />
-        </EntryShellBody>
-      </EntryShellPanel>
-      <EntryShellArtwork />
-    </EntryShell>
+    <RouteFailure error={error} source="start-entry-error">
+      <EntryShell>
+        <EntryShellPanel>
+          <EntryShellHeader>
+            <div className="ms-auto">
+              <ThemePicker variant="ghost" />
+            </div>
+          </EntryShellHeader>
+          <EntryShellBody>
+            <Broken
+              description={messages.Error.description}
+              home={messages.State["home-button"]}
+              homeHref={`/${locale}`}
+              retry={messages.Error.retry}
+              title={messages.Error.title}
+            />
+          </EntryShellBody>
+        </EntryShellPanel>
+        <EntryShellArtwork />
+      </EntryShell>
+    </RouteFailure>
   );
 }
