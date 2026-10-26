@@ -1,5 +1,4 @@
 import "@fontsource-variable/inter";
-import "@fontsource/amiri/400.css";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {

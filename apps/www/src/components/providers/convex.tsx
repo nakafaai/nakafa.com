@@ -20,7 +20,9 @@ import {
   type ConvexAuthStore,
   ConvexTokenReadError,
   createConvexAuthStore,
+  hasSettledSignedOut,
   readConvexSessionId,
+  releaseConvexAuth,
 } from "@/lib/auth/convex";
 import { loadKnownSession, saveKnownSession } from "@/lib/auth/known";
 import { readConvexClient } from "@/lib/convex/client";
@@ -85,8 +87,9 @@ function useConvexSessionId() {
  * Hands Convex the session's credentials. It renders before the provider's
  * children, so its effect runs before theirs and a known session authenticates
  * the client before any child subscribes to a query, as the first child of
- * `ConvexProviderWithAuth` does. It also keeps what each settled session says
- * for the next page load.
+ * `ConvexProviderWithAuth` does. A session that settles on none releases the
+ * client's hold on its calls. It also keeps what each settled session says for
+ * the next page load.
  */
 export function ConvexSessionCredentials({
   client,
@@ -97,10 +100,17 @@ export function ConvexSessionCredentials({
 }) {
   const sessionId = useConvexSessionId();
   const session = useAuthSession(Fn.identity);
+  const isSignedOut = useAuthSession(hasSettledSignedOut);
 
   useEffect(() => {
     Effect.runSync(saveKnownSession(session));
   }, [session]);
+
+  useEffect(() => {
+    if (isSignedOut) {
+      releaseConvexAuth(client);
+    }
+  }, [client, isSignedOut]);
 
   useEffect(() => {
     if (sessionId === null) {
