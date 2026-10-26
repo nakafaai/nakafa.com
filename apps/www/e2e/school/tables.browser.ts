@@ -3,8 +3,8 @@ import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** The app's page width, which no table page grows past. */
-const PAGE_WIDTH = 1280;
+/** The column width of a settings section, which its table shares with its cards. */
+const COLUMN_WIDTH = 768;
 /** The page's gutter around the card of a table page. */
 const GUTTER = 16;
 
@@ -30,7 +30,7 @@ for (const viewport of [
   test.describe(`a School table page at ${viewport.width}px`, () => {
     test.use({ viewport });
 
-    test("holds its list in one card that fills the body under the header", async ({
+    test("holds its list in one card at the settings column width that fills the body under the header", async ({
       browser,
       baseURL,
     }) => {
@@ -51,7 +51,7 @@ for (const viewport of [
 
       const placed = await readCard(card);
       expect(placed.sideways).toBe(false);
-      expect(placed.width).toBeLessThanOrEqual(PAGE_WIDTH);
+      expect(placed.width).toBeLessThanOrEqual(COLUMN_WIDTH);
       // A short list still fills the body: the card reaches the gutter above the screen's bottom.
       expect(placed.bottom).toBeGreaterThanOrEqual(
         placed.viewport - GUTTER - 1

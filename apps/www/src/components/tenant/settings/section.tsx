@@ -29,8 +29,9 @@ export function SettingsPage({
 /**
  * One School settings section that lists records: its one header, with the path to the
  * section, then what works on the list and the section's main action at the end, and
- * the list as the whole body, in the one card of a table page (`TablePageBody`). A data
- * table, or the empty state in its place, draws itself in the card.
+ * the list as the whole body, in the one card of a table page (`TablePageBody`) at the
+ * column width of the settings cards. A data table, or the empty state in its place, draws
+ * itself in the card.
  */
 export function SettingsTablePage({
   actions,
@@ -43,7 +44,7 @@ export function SettingsTablePage({
   return (
     <>
       <SchoolSettingsHeader>{actions}</SchoolSettingsHeader>
-      <TablePageBody>{children}</TablePageBody>
+      <TablePageBody width="column">{children}</TablePageBody>
     </>
   );
 }
