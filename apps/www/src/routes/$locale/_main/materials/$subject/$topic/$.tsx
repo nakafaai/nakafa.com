@@ -14,19 +14,20 @@ import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
-import {
-  BreadcrumbHeaderPath,
-  BreadcrumbHeaderSegment,
-} from "@/components/shared/breadcrumb/header";
+import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/frame";
-import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
+  MaterialBreadcrumb,
+  MaterialHeading,
+  MaterialPagination,
+  MaterialPlacementProvider,
+} from "@/components/shared/material/placement";
+import {
   SidebarRightFooter,
-  SidebarRightHeader,
   SidebarRightPanel,
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
@@ -40,7 +41,6 @@ import { ContentViewTracker } from "@/components/tracking/tracker";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
 import {
-  readMaterialNavigation,
   toMaterialHref,
   toMaterialNavigationPage,
 } from "@/lib/content/material/navigation";
@@ -110,15 +110,6 @@ const readMaterial = createServerFn({ method: "GET" })
           messages,
           namespace: "Common",
         });
-        const navigation = readMaterialNavigation(
-          toMaterialNavigationPage({
-            kind: "published",
-            route,
-            siblings: model.siblings,
-          }),
-          null
-        );
-
         return outcome("Found", {
           page: {
             alternates: toHeadAlternates(
@@ -143,7 +134,11 @@ const readMaterial = createServerFn({ method: "GET" })
             },
             locale,
             metadata: published.metadata,
-            pagination: navigation.pagination,
+            navigation: toMaterialNavigationPage({
+              kind: "published",
+              route,
+              siblings: model.siblings,
+            }),
             route: {
               appLocale: route.appLocale,
               authors: route.metadata.authors,
@@ -227,77 +222,83 @@ export const Route = createFileRoute(
 
 function MaterialPage() {
   const page = Route.useLoaderData();
+  const ctx = Route.useSearch({ select: (search) => search.ctx });
   const { metadata, headings, labels, route } = page;
   return (
-    <LayoutMaterial>
-      <ContentViewTracker
-        contentId={page.contentId}
-        enabled
-        locale={page.locale}
-        publicPath={route.publicPath}
-        section="material"
-      />
-      <SidebarRightProvider>
-        <LayoutMaterialContent>
-          <ContentHeader
-            breadcrumb={
-              <BreadcrumbHeaderPath
-                home={HOME_TARGET}
-                homeLabel={labels.home}
-                items={[]}
-                menuLabel={labels.more}
+    <MaterialPlacementProvider
+      ctx={ctx}
+      locale={page.locale}
+      page={page.navigation}
+    >
+      <LayoutMaterial>
+        <ContentViewTracker
+          contentId={page.contentId}
+          enabled
+          locale={page.locale}
+          publicPath={route.publicPath}
+          section="material"
+        />
+        <SidebarRightProvider>
+          <LayoutMaterialContent>
+            <ContentHeader
+              breadcrumb={
+                <BreadcrumbHeaderPath
+                  home={HOME_TARGET}
+                  homeLabel={labels.home}
+                  items={[]}
+                  menuLabel={labels.more}
+                >
+                  <MaterialBreadcrumb title={metadata.title} />
+                </BreadcrumbHeaderPath>
+              }
+            >
+              <OpenContent
+                content={page.content}
+                copySourceUrl={page.copySourceUrl}
+                slug={route.href}
+                sourceUrl={page.sourceUrl}
               >
-                <BreadcrumbHeaderSegment item={{ label: metadata.title }} />
-              </BreadcrumbHeaderPath>
+                <AiMenuItem contextTitle={metadata.title} />
+              </OpenContent>
+            </ContentHeader>
+            <ContentTitle title={metadata.title} />
+            <ContentDates
+              {...(metadata.dateModified === undefined
+                ? {}
+                : { dateModified: metadata.dateModified })}
+              datePublished={metadata.datePublished}
+            />
+            <LayoutContent>
+              {headings.length === 0 ? <ComingSoon /> : page.body}
+            </LayoutContent>
+            <MaterialPagination />
+            <FooterContent>
+              <DeferredComments slug={route.contentKey} />
+            </FooterContent>
+            <SheetEntry contextTitle={metadata.title} />
+          </LayoutMaterialContent>
+          <SidebarRightPanel
+            footer={
+              <SidebarRightFooter>
+                <CommentsButton />
+                <ReportButton />
+                {page.sourceUrl ? (
+                  <GithubButton githubUrl={page.sourceUrl} />
+                ) : null}
+                <ShareButton />
+              </SidebarRightFooter>
+            }
+            header={
+              <MaterialHeading
+                description={page.headMetadata.description}
+                title={metadata.title}
+              />
             }
           >
-            <OpenContent
-              content={page.content}
-              copySourceUrl={page.copySourceUrl}
-              slug={route.href}
-              sourceUrl={page.sourceUrl}
-            >
-              <AiMenuItem contextTitle={metadata.title} />
-            </OpenContent>
-          </ContentHeader>
-          <ContentTitle title={metadata.title} />
-          <ContentDates
-            {...(metadata.dateModified === undefined
-              ? {}
-              : { dateModified: metadata.dateModified })}
-            datePublished={metadata.datePublished}
-          />
-          <LayoutContent>
-            {headings.length === 0 ? <ComingSoon /> : page.body}
-          </LayoutContent>
-          <PaginationContent pagination={page.pagination} prefetchNext />
-          <FooterContent>
-            <DeferredComments slug={route.contentKey} />
-          </FooterContent>
-          <SheetEntry contextTitle={metadata.title} />
-        </LayoutMaterialContent>
-        <SidebarRightPanel
-          footer={
-            <SidebarRightFooter>
-              <CommentsButton />
-              <ReportButton />
-              {page.sourceUrl ? (
-                <GithubButton githubUrl={page.sourceUrl} />
-              ) : null}
-              <ShareButton />
-            </SidebarRightFooter>
-          }
-          header={
-            <SidebarRightHeader
-              description={page.headMetadata.description}
-              publicPath={route.publicPath}
-              title={metadata.title}
-            />
-          }
-        >
-          <SidebarTree data={headings} title={labels.onThisPage} />
-        </SidebarRightPanel>
-      </SidebarRightProvider>
-    </LayoutMaterial>
+            <SidebarTree data={headings} title={labels.onThisPage} />
+          </SidebarRightPanel>
+        </SidebarRightProvider>
+      </LayoutMaterial>
+    </MaterialPlacementProvider>
   );
 }
