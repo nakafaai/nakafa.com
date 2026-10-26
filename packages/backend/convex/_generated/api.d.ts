@@ -14069,6 +14069,109 @@ export declare const internal: {
       >;
     };
   };
+  integrations: {
+    reads: {
+      cohorts: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              grade: number;
+              id: string;
+              name: string;
+              periodId: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      people: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          status: "active" | "suspended" | "removed";
+        },
+        | {
+            data: Array<{
+              account: "claimed" | "unclaimed";
+              id: string;
+              name: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      periods: FunctionReference<
+        "query",
+        "internal",
+        { clientId: Id<"integrationClients"> },
+        | {
+            data: Array<{
+              end: string;
+              id: string;
+              name: string;
+              start: string;
+              status: string;
+              unitId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      placements: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              cohortId: string;
+              periodId: string;
+              personId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+    };
+    tokens: {
+      check: FunctionReference<
+        "mutation",
+        "internal",
+        { resource: "api" | "mcp"; token: string },
+        | { clientId: Id<"integrationClients">; outcome: "allowed" }
+        | { outcome: "unauthorized" }
+        | { outcome: "limited"; retryAfter: number }
+      >;
+      issue: FunctionReference<
+        "mutation",
+        "internal",
+        { clientId: string; resource?: string; secret: string },
+        | { expiresIn: number; outcome: "issued"; token: string }
+        | { error: "invalid_client" | "invalid_target"; outcome: "refused" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+  };
   nina: {
     brief: {
       read: FunctionReference<
