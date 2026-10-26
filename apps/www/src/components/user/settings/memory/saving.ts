@@ -22,8 +22,9 @@ const LONGEST = Duration.seconds(3);
  * a moment after they stop writing, and at once when the editor closes. A save
  * that fails tells the learner and is tried again with the next change. When
  * the editor is closed by then, it opens again with what they wrote. A save
- * that finds the memory gone closes the editor. A stored memory the learner
- * emptied keeps the words the server holds when the editor closes.
+ * that finds the memory gone closes the editor and opens what the learner wrote
+ * again as a new memory. A stored memory the learner emptied keeps the words
+ * the server holds when the editor closes.
  *
  * `restored` is the words of a save that failed, when the editor opens again
  * with them, and `starting` is the words the editor opens with. `change` takes
@@ -50,6 +51,7 @@ export function useAutosave(
     hide,
     leave: () => leave(session),
     remove,
+    renew: (draft: MemoryDraft) => reopen(session, draft, null),
     // The editor holds the memory it opened, which follows what it saved.
     reopen: (draft: MemoryDraft) => reopen(session, draft, latest().target),
     unhide,

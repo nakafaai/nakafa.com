@@ -89,6 +89,12 @@ interface AiActions {
    */
   endSession: () => void;
   /**
+   * Stops showing the chat `chatId` in the sheet, because it is being deleted
+   * or was deleted elsewhere. Answers whether the sheet showed it, so a refused
+   * delete can show it again. The sheet keeps any other chat.
+   */
+  forgetChat: (chatId: NonNullable<AiState["activeChatId"]>) => boolean;
+  /**
    * Forgets these uploads once the server gave their places back: the holds of
    * them, wherever they are held, and their place among the refused uploads. A
    * hold is found by its upload, not by its file, so a file that got a new hold
@@ -123,6 +129,11 @@ interface AiActions {
   readUploads: (
     fileIds: readonly string[]
   ) => readonly (typeof AiUploadIdSchema.Type)[];
+  /**
+   * Shows the chat `chatId` in the sheet again after the server refused to
+   * delete it, unless the learner opened another chat there since.
+   */
+  recallChat: (chatId: NonNullable<AiState["activeChatId"]>) => void;
   /**
    * Moves the holds of these uploads to the refused uploads, because the server
    * refused them: no send takes a refused upload again, and its place stays

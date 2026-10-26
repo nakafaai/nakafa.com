@@ -17,7 +17,7 @@ import {
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { isTakenOver } from "@/e2e/support/window";
+import { isTakenOver, waitUntilTakenOver } from "@/e2e/support/window";
 
 const WRITTEN = "Prefers worked examples before the formula";
 const REWRITTEN = "Prefers a short summary before the examples";
@@ -107,6 +107,8 @@ const editMemory = Effect.fn("NakafaE2E.editMemory")(function* (
 
     // A press on the memory opens it. A title written in place is stored like
     // the words, and Enter moves on to the text.
+    // The reload before it drew the row on the server; it opens once React has it.
+    await waitUntilTakenOver(memoryRow(page, WRITTEN).getByText(WRITTEN));
     await memoryRow(page, WRITTEN).getByText(WRITTEN).click();
     await opened(page, WRITTEN);
     await expect(title).toHaveValue("");
@@ -131,6 +133,7 @@ const editMemory = Effect.fn("NakafaE2E.editMemory")(function* (
 
     // The row's own action opens it too, with the title and the words it kept.
     await row.hover();
+    await waitUntilTakenOver(row.getByRole("button", { name: "Edit memory" }));
     await row.getByRole("button", { name: "Edit memory" }).click();
     await opened(page, REWRITTEN);
     await expect(title).toHaveValue(NAMED);

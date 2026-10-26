@@ -1,6 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
-import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
@@ -30,6 +29,7 @@ import {
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { SITTING_REFUSALS } from "@repo/backend/confect/exams/sittings/refusal";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import {
   DeviceId,
   Minutes,
@@ -287,7 +287,7 @@ export default GroupSpec.make()
       args: () => ({
         deviceId: DeviceId,
         questionId: Id("examQuestions"),
-        response: Schema.Array(LocalIdSchema),
+        response: ExamResponse,
         sittingId: Id("examSittings"),
         slug: TenantSlug,
         version: Version,

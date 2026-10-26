@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import standalone from "@repo/internationalization/dictionaries/standalone/en.json" with {
+  type: "json",
+};
 
 /**
  * A sitemap id whose partition the release never published. No file of the build
@@ -14,5 +17,5 @@ test("a sitemap page past the last partition answers the static not-found page",
 
   expect(response.status()).toBe(404);
   expect(response.headers()["x-robots-tag"]).toBe("noindex");
-  expect(await response.text()).toContain("Page not found");
+  expect(await response.text()).toContain(standalone.NotFound.description);
 });

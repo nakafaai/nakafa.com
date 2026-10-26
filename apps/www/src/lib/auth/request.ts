@@ -106,13 +106,13 @@ export const requestWithDeadline = Effect.fn("www.auth.requestWithDeadline")(
 );
 
 /**
- * Reads the session, and reads it again on the shared schedule when the server
- * answers with an error status or an attempt misses its deadline. The request
- * is a read, so repeating it is safe, and an outage of the server must not look
- * like a visitor who is signed out: a first read that fails leaves Better Auth
- * without a session, and nothing asks again until the learner returns to the
- * tab. After the last attempt the refused answer goes to the caller as it came,
- * so Better Auth reports it as it did before.
+ * Reads the session, and reads it again on the shared schedule when the request
+ * gets no answer, the server answers with an error status, or an attempt misses
+ * its deadline. The request is a read, so repeating it is safe, and a network
+ * that drops one request must not keep the page from its session: Better Auth
+ * asks again only when the learner returns to the tab or the network returns.
+ * After the last attempt the refused answer goes to the caller as it came, and
+ * a request that got no answer fails as it did, so Better Auth reports either.
  */
 export const readSession = Effect.fn("www.auth.readSession")(function* (
   send: typeof fetch,
@@ -123,6 +123,7 @@ export const readSession = Effect.fn("www.auth.readSession")(function* (
     Response,
     SessionReadFailure | RetryableNetworkAttempt<SessionReadFailure>
   > = sendAttempt(send, input, init).pipe(
+    Effect.mapError((failure) => new RetryableNetworkAttempt({ failure })),
     Effect.filterOrFail(
       (response) => response.status < 500,
       (response) =>

@@ -11,6 +11,7 @@ import { useTranslations } from "use-intl";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
 import { deleteOnPress } from "@/components/ai/chat/press";
 import { useChatStore } from "@/components/ai/chat/store";
+import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 import { ownChatsTarget } from "@/lib/profile/href";
 
@@ -37,6 +38,8 @@ export function ChatDeletion({
   const leaving = useChatStore((state) => state.leaving);
   const leave = useChatStore((state) => state.leave);
   const stay = useChatStore((state) => state.stay);
+  const forgetChat = useAi((state) => state.forgetChat);
+  const recallChat = useAi((state) => state.recallChat);
   const convex = useConvex();
   /** Leave the current route and delete the owned chat. */
   const handleDelete = () => {
@@ -55,7 +58,9 @@ export function ChatDeletion({
         convex,
         deleteChat,
         deleted: () => navigate({ ...ownChatsTarget(username), replace: true }),
+        forget: () => forgetChat(chat._id),
         leave,
+        recall: () => recallChat(chat._id),
         refused: () => {
           stay();
           toast.error({

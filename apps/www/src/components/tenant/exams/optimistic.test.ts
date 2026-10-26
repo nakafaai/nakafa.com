@@ -4,6 +4,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/question";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -26,6 +27,7 @@ import {
   removeUpdate,
   renamedExam,
   renameUpdate,
+  templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 
 const examId = Schema.decodeUnknownSync(Id("exams"))("exam-1");
@@ -33,28 +35,16 @@ const slug = Schema.decodeSync(TenantSlug)("sekolah");
 const questionId = Schema.decodeUnknownSync(Id("examQuestions"));
 const promptId = Schema.decodeUnknownSync(Id("editorDocuments"));
 
-/** One single-answer choice with two empty options, which a new question holds. */
-const choice: Interaction = {
-  id: "choice",
-  kind: "choice",
-  label: "Answer",
-  maxChoices: 1,
-  minChoices: 1,
-  options: [
-    {
-      id: "option-1",
-      label: { content: [{ type: "paragraph" }], type: "doc" },
-    },
-    {
-      id: "option-2",
-      label: { content: [{ type: "paragraph" }], type: "doc" },
-    },
-  ],
-  shuffle: false,
-};
+/** One single-answer choice of two options, as the server builds a question's choice. */
+const [choice] = choiceAnswers([textLabel("A"), textLabel("B")]);
 
 /** The answers of every question in these tests. */
 const answers: [Interaction] = [choice];
+
+/** A key that marks the second option of the choice correct. */
+const key: [InteractionKey] = [
+  { correct: ["option-2"], interaction: "choice", kind: "choice" },
+];
 
 /** A question of the exam with no key, at the given revision. */
 const question = (id: string, revision = 0): Question => ({
@@ -127,9 +117,6 @@ describe("removedQuestion", () => {
 
 describe("answeredQuestion", () => {
   it("saves the answers and the key of one question at its next revision", () => {
-    const key: [InteractionKey] = [
-      { correct: ["option-2"], interaction: "choice", kind: "choice" },
-    ];
     const answered = answeredQuestion(viewOf([first, second]), second.id, {
       answers,
       key,
@@ -187,9 +174,6 @@ describe("the optimistic updates", () => {
   it("save a question's answer in the store", () => {
     const view = viewOf([first]);
     const { localStore, setQuery } = storeHolding(Option.some(view));
-    const key: [InteractionKey] = [
-      { correct: ["option-2"], interaction: "choice", kind: "choice" },
-    ];
 
     answerUpdate(localStore, {
       answers,
@@ -206,6 +190,46 @@ describe("the optimistic updates", () => {
       Option.some({
         ...view,
         questions: [{ ...first, key, revision: first.revision + 1 }],
+      })
+    );
+  });
+
+  it("show a question as true or false with the labels it is given and no key, and keep the others", () => {
+    const view = viewOf([{ ...first, key }, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    templateUpdate(localStore, {
+      examId,
+      labels: ["Benar", "Salah"],
+      questionId: first.id,
+      revision: first.revision,
+      slug,
+      template: "truefalse",
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some({
+        ...view,
+        questions: [
+          {
+            ...first,
+            answers: [
+              {
+                ...choice,
+                options: [
+                  { id: "option-1", label: textLabel("Benar") },
+                  { id: "option-2", label: textLabel("Salah") },
+                ],
+              },
+            ],
+            key: null,
+            revision: first.revision + 1,
+            template: "truefalse",
+          },
+          second,
+        ],
       })
     );
   });
@@ -232,6 +256,7 @@ describe("placeholderQuestion", () => {
       points: 3,
       prompt: promptId("draft-prompt"),
       rubric: promptId("draft-rubric"),
+      template: "choice",
     });
 
     expect(draft).toEqual({
