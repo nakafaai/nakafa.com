@@ -7,8 +7,8 @@ import {
 import { entries, type kinds } from "@repo/backend/confect/access/catalog";
 import { decide, type Placement } from "@repo/backend/confect/access/decision";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import type { ClientPrincipal } from "@repo/backend/confect/access/principal";
 import { Kind } from "@repo/backend/confect/access/kind";
+import type { ClientPrincipal } from "@repo/backend/confect/access/principal";
 import type { Rule } from "@repo/backend/confect/access/schema";
 import {
   JournalEntry,

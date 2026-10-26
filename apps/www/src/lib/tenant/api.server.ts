@@ -27,35 +27,39 @@ const NOT_ALLOWED = () => new Response(null, { status: 405 });
  * This is a framework seam (a server route), because the Worker is the only process that
  * receives the school host's request.
  */
-const forward = Effect.fn("www.tenant.api.forward")(function* (request: Request) {
-  const siteUrl = yield* CONVEX_SITE_URL;
-  const target = schoolApiTarget(request, siteUrl);
-  if (Option.isNone(target)) {
-    return NOT_FOUND();
-  }
-  const { method } = request;
-  if (!isForwardedMethod(method)) {
-    return NOT_ALLOWED();
-  }
-  const body =
-    method === "POST"
-      ? HttpBody.uint8Array(
-          new Uint8Array(yield* Effect.promise(() => request.arrayBuffer()))
-        )
-      : HttpBody.empty;
-  const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
-  const answer = yield* client.execute(
-    HttpClientRequest.make(method)(
-      target.value,
-      { body, headers: forwardedRequestHeaders(request.headers) }
-    )
-  );
-  const bytes = yield* answer.arrayBuffer;
-  return new Response(bytes, {
-    headers: forwardedResponseHeaders(answer.headers),
-    status: answer.status,
-  });
-}, Effect.scoped, Effect.provide(FetchClient));
+const forward = Effect.fn("www.tenant.api.forward")(
+  function* (request: Request) {
+    const siteUrl = yield* CONVEX_SITE_URL;
+    const target = schoolApiTarget(request, siteUrl);
+    if (Option.isNone(target)) {
+      return NOT_FOUND();
+    }
+    const { method } = request;
+    if (!isForwardedMethod(method)) {
+      return NOT_ALLOWED();
+    }
+    const body =
+      method === "POST"
+        ? HttpBody.uint8Array(
+            new Uint8Array(yield* Effect.promise(() => request.arrayBuffer()))
+          )
+        : HttpBody.empty;
+    const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
+    const answer = yield* client.execute(
+      HttpClientRequest.make(method)(target.value, {
+        body,
+        headers: forwardedRequestHeaders(request.headers),
+      })
+    );
+    const bytes = yield* answer.arrayBuffer;
+    return new Response(bytes, {
+      headers: forwardedResponseHeaders(answer.headers),
+      status: answer.status,
+    });
+  },
+  Effect.scoped,
+  Effect.provide(FetchClient)
+);
 
 /** Answers one school API or MCP request of a school host, or not found on any other host. */
 export function forwardSchoolApiRequest(request: Request): Promise<Response> {

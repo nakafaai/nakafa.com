@@ -78,7 +78,10 @@ export const integrationTokenValidator = Schema.Struct({
 });
 
 /** Why the token endpoint refused a request, as the OAuth error code it answers. */
-export const TokenRefusal = Schema.Literals(["invalid_client", "invalid_target"]);
+export const TokenRefusal = Schema.Literals([
+  "invalid_client",
+  "invalid_target",
+]);
 
 /** What the internal issue answers: the token once, or the refusal. */
 export const TokenIssue = Schema.Union([
@@ -92,7 +95,13 @@ export const TokenIssue = Schema.Union([
 
 /** What the internal check of a bearer token answers. */
 export const TokenCheck = Schema.Union([
-  Schema.Struct({ clientId: Id("integrationClients"), outcome: Schema.Literal("allowed") }),
+  Schema.Struct({
+    clientId: Id("integrationClients"),
+    outcome: Schema.Literal("allowed"),
+  }),
   Schema.Struct({ outcome: Schema.Literal("unauthorized") }),
-  Schema.Struct({ outcome: Schema.Literal("limited"), retryAfter: Schema.Finite }),
+  Schema.Struct({
+    outcome: Schema.Literal("limited"),
+    retryAfter: Schema.Finite,
+  }),
 ]);

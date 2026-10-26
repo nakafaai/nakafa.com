@@ -9,14 +9,20 @@ import {
 const SITE = "https://example.convex.site";
 
 /** A request to a host with headers, as the Worker receives it. */
-const requestTo = (host: string, path: string, headers: Record<string, string> = {}) =>
-  new Request(`https://${host}${path}`, { headers: { host, ...headers } });
+const requestTo = (
+  host: string,
+  path: string,
+  headers: Record<string, string> = {}
+) => new Request(`https://${host}${path}`, { headers: { host, ...headers } });
 
 describe("lib/tenant/api", () => {
   it("forwards a school host's API path, with its query, to the school API of the Convex site", () => {
     expect(
       Option.map(
-        schoolApiTarget(requestTo("harapan.nakafa.com", "/api/v1/cohorts?period=p1"), SITE),
+        schoolApiTarget(
+          requestTo("harapan.nakafa.com", "/api/v1/cohorts?period=p1"),
+          SITE
+        ),
         (url) => url.href
       )
     ).toEqual(Option.some(`${SITE}/api/school/v1/cohorts?period=p1`));
@@ -24,16 +30,23 @@ describe("lib/tenant/api", () => {
 
   it("forwards a school host's MCP path to the school MCP server, and no other path", () => {
     expect(
-      Option.map(schoolApiTarget(requestTo("harapan.nakafa.com", "/mcp"), SITE), (url) => url.href)
+      Option.map(
+        schoolApiTarget(requestTo("harapan.nakafa.com", "/mcp"), SITE),
+        (url) => url.href
+      )
     ).toEqual(Option.some(`${SITE}/api/school/mcp`));
     expect(
-      Option.isNone(schoolApiTarget(requestTo("harapan.nakafa.com", "/mcpx"), SITE))
+      Option.isNone(
+        schoolApiTarget(requestTo("harapan.nakafa.com", "/mcpx"), SITE)
+      )
     ).toBe(true);
   });
 
   it("forwards nothing from a host that names no school", () => {
     expect(
-      Option.isNone(schoolApiTarget(requestTo("nakafa.com", "/api/v1/periods"), SITE))
+      Option.isNone(
+        schoolApiTarget(requestTo("nakafa.com", "/api/v1/periods"), SITE)
+      )
     ).toBe(true);
   });
 

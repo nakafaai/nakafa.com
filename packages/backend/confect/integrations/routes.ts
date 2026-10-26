@@ -55,7 +55,8 @@ const oauthHandlers = HttpApiBuilder.group(
           return yield* answer.error === "invalid_client"
             ? new OAuthClientError({
                 error: "invalid_client",
-                error_description: "The client is unknown or its secret is wrong.",
+                error_description:
+                  "The client is unknown or its secret is wrong.",
               })
             : new OAuthError({
                 error: "invalid_target",

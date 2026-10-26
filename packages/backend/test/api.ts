@@ -1,6 +1,6 @@
 import refs from "@repo/backend/confect/_generated/refs";
-import type { ClientActions } from "@repo/backend/confect/integrations/schema";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
+import type { ClientActions } from "@repo/backend/confect/integrations/schema";
 import { nf } from "@repo/backend/test/classroom";
 import type { tenancyFixture } from "@repo/backend/test/tenancy";
 import type { Effect } from "effect";

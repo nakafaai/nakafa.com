@@ -118,7 +118,10 @@ const PageQuery = {
 
 /** One page of a read: its rows and the cursor of the next page, or null on the last page. */
 const pageOf = <S extends Schema.Top>(item: S) =>
-  Schema.Struct({ data: Schema.Array(item), next: Schema.NullOr(Schema.String) });
+  Schema.Struct({
+    data: Schema.Array(item),
+    next: Schema.NullOr(Schema.String),
+  });
 
 /** One period of the school. */
 export const ApiPeriod = Schema.Struct({
@@ -180,7 +183,9 @@ export class RosterGroup extends HttpApiGroup.make("roster")
       error: ROSTER_ERRORS,
       query: {
         ...PageQuery,
-        status: Schema.optional(Schema.Literals(["active", "suspended", "removed"])),
+        status: Schema.optional(
+          Schema.Literals(["active", "suspended", "removed"])
+        ),
       },
       success: pageOf(ApiPerson),
     }),

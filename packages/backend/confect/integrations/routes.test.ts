@@ -4,8 +4,8 @@ import {
   SCHOOL_API_PATH,
   SchoolApi,
 } from "@repo/backend/confect/integrations/api";
-import { cohort, period } from "@repo/backend/test/classroom";
 import { createClient, type Fixture, issue } from "@repo/backend/test/api";
+import { cohort, period } from "@repo/backend/test/classroom";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { encodePrettyJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
@@ -45,8 +45,7 @@ const postToken = (fixture: Fixture, form: Record<string, string>) =>
 const read = (fixture: Fixture, path: string, token?: string) =>
   Effect.promise(() =>
     fixture.fetch(`${SCHOOL_API_PATH}${path}`, {
-      headers:
-        token === undefined ? {} : { authorization: `Bearer ${token}` },
+      headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
     })
   );
 
@@ -87,14 +86,20 @@ describe("school API over HTTP", () => {
           fixture,
           `/cohorts?period=${term.id}&limit=1`,
           issued.access_token
-        ).pipe(Effect.flatMap(json), Effect.flatMap(Schema.decodeUnknownEffect(Page)));
+        ).pipe(
+          Effect.flatMap(json),
+          Effect.flatMap(Schema.decodeUnknownEffect(Page))
+        );
         expect(first.data).toHaveLength(1);
         expect(first.next).not.toBeNull();
         const second = yield* read(
           fixture,
           `/cohorts?period=${term.id}&limit=1&cursor=${encodeURIComponent(first.next ?? "")}`,
           issued.access_token
-        ).pipe(Effect.flatMap(json), Effect.flatMap(Schema.decodeUnknownEffect(Page)));
+        ).pipe(
+          Effect.flatMap(json),
+          Effect.flatMap(Schema.decodeUnknownEffect(Page))
+        );
         expect(second.data).toHaveLength(1);
         expect(second.data).not.toEqual(first.data);
         for (const path of [
@@ -102,27 +107,36 @@ describe("school API over HTTP", () => {
           "/people?status=suspended",
           `/placements?period=${term.id}`,
         ]) {
-          expect((yield* read(fixture, path, issued.access_token)).status).toBe(200);
+          expect((yield* read(fixture, path, issued.access_token)).status).toBe(
+            200
+          );
         }
       })
   );
 
-  it.effect("answers a client past its request limit 429 with the seconds to wait", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const client = yield* createClient(fixture);
-      const issued = yield* issue(fixture, client);
-      const token = issued.outcome === "issued" ? issued.token : "";
-      for (const _ of Arr.makeBy(600, (index) => index)) {
-        yield* fixture.internal.mutation(refs.internal.integrations.tokens.check, {
-          resource: "api",
-          token,
+  it.effect(
+    "answers a client past its request limit 429 with the seconds to wait",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const client = yield* createClient(fixture);
+        const issued = yield* issue(fixture, client);
+        const token = issued.outcome === "issued" ? issued.token : "";
+        for (const _ of Arr.makeBy(600, (index) => index)) {
+          yield* fixture.internal.mutation(
+            refs.internal.integrations.tokens.check,
+            {
+              resource: "api",
+              token,
+            }
+          );
+        }
+        const limited = yield* read(fixture, "/periods", token);
+        expect(limited.status).toBe(429);
+        expect(yield* json(limited)).toMatchObject({
+          _tag: "SchoolApiRateLimited",
         });
-      }
-      const limited = yield* read(fixture, "/periods", token);
-      expect(limited.status).toBe(429);
-      expect(yield* json(limited)).toMatchObject({ _tag: "SchoolApiRateLimited" });
-    })
+      })
   );
 
   it.effect(
@@ -139,7 +153,9 @@ describe("school API over HTTP", () => {
           grant_type: "password",
         });
         expect(grant.status).toBe(400);
-        expect(yield* json(grant)).toMatchObject({ error: "unsupported_grant_type" });
+        expect(yield* json(grant)).toMatchObject({
+          error: "unsupported_grant_type",
+        });
         const wrong = yield* postToken(fixture, {
           client_id: client.id,
           client_secret: "wrong",
@@ -159,23 +175,26 @@ describe("school API over HTTP", () => {
           client_secret: client.secret,
           grant_type: "client_credentials",
         }).pipe(Effect.flatMap(json));
-        const { access_token: token } = yield* Schema.decodeUnknownEffect(
-          IssuedToken
-        )(issued);
+        const { access_token: token } =
+          yield* Schema.decodeUnknownEffect(IssuedToken)(issued);
         expect((yield* read(fixture, "/people", token)).status).toBe(403);
       })
   );
 
-  it.effect("serves the OpenAPI document without a token, the same as the committed contract", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const served = yield* read(fixture, "/openapi.json");
-      expect(served.status).toBe(200);
-      const document = OpenApi.fromApi(SchoolApi);
-      expect(yield* json(served)).toEqual(document);
-      yield* Effect.promise(() =>
-        expect(`${encodePrettyJsonText(document)}\n`).toMatchFileSnapshot("./openapi.json")
-      );
-    })
+  it.effect(
+    "serves the OpenAPI document without a token, the same as the committed contract",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const served = yield* read(fixture, "/openapi.json");
+        expect(served.status).toBe(200);
+        const document = OpenApi.fromApi(SchoolApi);
+        expect(yield* json(served)).toEqual(document);
+        yield* Effect.promise(() =>
+          expect(`${encodePrettyJsonText(document)}\n`).toMatchFileSnapshot(
+            "./openapi.json"
+          )
+        );
+      })
   );
 });

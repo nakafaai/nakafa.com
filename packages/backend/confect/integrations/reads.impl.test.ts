@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { cohort, nf, period } from "@repo/backend/test/classroom";
 import { createClient } from "@repo/backend/test/api";
+import { cohort, nf, period } from "@repo/backend/test/classroom";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -38,7 +38,9 @@ describe("integrations/reads", () => {
           period: term.id,
         });
         expect(cohorts).toMatchObject({
-          data: [{ grade: x1.grade, id: x1.id, name: "X-1", periodId: term.id }],
+          data: [
+            { grade: x1.grade, id: x1.id, name: "X-1", periodId: term.id },
+          ],
           outcome: "page",
         });
         const people = yield* fixture.internal.query(reads.people, {
@@ -51,7 +53,9 @@ describe("integrations/reads", () => {
         const rows = people.outcome === "page" ? people.data : [];
         expect(Arr.map(rows, (row) => row.name)).toContain("Student");
         expect(rows[0]).not.toHaveProperty("email");
-        expect(Arr.every(rows, (row) => row.name !== "Nakafa Staff")).toBe(true);
+        expect(Arr.every(rows, (row) => row.name !== "Nakafa Staff")).toBe(
+          true
+        );
         const placements = yield* fixture.internal.query(reads.placements, {
           clientId: client.id,
           cursor: null,
@@ -72,19 +76,21 @@ describe("integrations/reads", () => {
       })
   );
 
-  it.effect("pages people by an opaque cursor, clamped to one hundred rows", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const client = yield* createClient(fixture);
-      const first = yield* fixture.internal.query(reads.people, {
-        clientId: client.id,
-        cursor: null,
-        numItems: 0,
-        status: "active",
-      });
-      expect(first.outcome === "page" ? first.data : []).toHaveLength(1);
-      expect(first.outcome === "page" ? first.next : null).not.toBeNull();
-    })
+  it.effect(
+    "pages people by an opaque cursor, clamped to one hundred rows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const client = yield* createClient(fixture);
+        const first = yield* fixture.internal.query(reads.people, {
+          clientId: client.id,
+          cursor: null,
+          numItems: 0,
+          status: "active",
+        });
+        expect(first.outcome === "page" ? first.data : []).toHaveLength(1);
+        expect(first.outcome === "page" ? first.next : null).not.toBeNull();
+      })
   );
 
   it.effect(
@@ -115,10 +121,14 @@ describe("integrations/reads", () => {
         expect(
           yield* fixture.internal.query(reads.periods, { clientId: none.id })
         ).toEqual(forbidden);
-        const sma = yield* createClient(fixture, ["period.view", "cohort.view"], {
-          kind: "unit",
-          unitId: fixture.units.sma,
-        });
+        const sma = yield* createClient(
+          fixture,
+          ["period.view", "cohort.view"],
+          {
+            kind: "unit",
+            unitId: fixture.units.sma,
+          }
+        );
         expect(
           yield* fixture.internal.query(reads.periods, { clientId: sma.id })
         ).toEqual({ data: [], next: null, outcome: "page" });

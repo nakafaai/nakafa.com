@@ -34,10 +34,18 @@ const LIMITS = {
     period: MINUTE,
     rate: 600,
   },
-  schoolApiToken: { capacity: 20, kind: "token bucket", period: MINUTE, rate: 20 },
+  schoolApiToken: {
+    capacity: 20,
+    kind: "token bucket",
+    period: MINUTE,
+    rate: 20,
+  },
 } as const;
 
 const limits = new RateLimiter(components.agentRateLimiter, LIMITS);
+
+/** The slash a resource indicator may end its path with. */
+const TRAILING_SLASH = /\/$/;
 
 /** The paths of a school host that a resource indicator may name, and the resource each names. */
 const RESOURCE_PATHS: Readonly<Record<string, typeof TokenResource.Type>> = {
@@ -64,7 +72,9 @@ export const resourceOf = (
         Arr.head(Str.split(".")(url.hostname)).pipe(Option.contains(slug))
     ),
     Option.flatMap((url) =>
-      Option.fromUndefinedOr(RESOURCE_PATHS[Str.replace(/\/$/, "")(url.pathname)])
+      Option.fromUndefinedOr(
+        RESOURCE_PATHS[Str.replace(TRAILING_SLASH, "")(url.pathname)]
+      )
     )
   );
 };
@@ -84,7 +94,8 @@ export const endClientTokens = Effect.fn("integrations.token.end")(function* (
   const writer = yield* DatabaseWriter;
   yield* Effect.forEach(
     tokens,
-    (token) => writer.table("integrationTokens").delete(token._id).pipe(Effect.orDie),
+    (token) =>
+      writer.table("integrationTokens").delete(token._id).pipe(Effect.orDie),
     { discard: true }
   );
 });
@@ -125,10 +136,12 @@ export const issueAccessToken = Effect.fn("integrations.token.issue")(
       limits.limit(ctx, "schoolApiToken", { key: clientId })
     ).pipe(Effect.orDie);
     if (
-      !quota.ok ||
-      !(yield* matchesToken(input.secret, client.value.secretHash).pipe(
-        Effect.orDie
-      ))
+      !(
+        quota.ok &&
+        (yield* matchesToken(input.secret, client.value.secretHash).pipe(
+          Effect.orDie
+        ))
+      )
     ) {
       return invalidClient;
     }
@@ -231,7 +244,8 @@ export const sweepTokens = Effect.fn("integrations.token.sweep")(function* () {
   const writer = yield* DatabaseWriter;
   yield* Effect.forEach(
     expired,
-    (token) => writer.table("integrationTokens").delete(token._id).pipe(Effect.orDie),
+    (token) =>
+      writer.table("integrationTokens").delete(token._id).pipe(Effect.orDie),
     { discard: true }
   );
   return null;

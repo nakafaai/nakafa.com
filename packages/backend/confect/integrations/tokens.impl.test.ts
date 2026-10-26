@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TOKEN_SECONDS } from "@repo/backend/confect/integrations/api";
-import { nf } from "@repo/backend/test/classroom";
 import { createClient, issue } from "@repo/backend/test/api";
+import { nf } from "@repo/backend/test/classroom";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect } from "effect";
 
@@ -27,11 +27,15 @@ describe("integrations/tokens issue", () => {
         const fixture = yield* tenancyFixture;
         const client = yield* createClient(fixture);
         const issued = yield* issue(fixture, client);
-        expect(issued).toMatchObject({ expiresIn: TOKEN_SECONDS, outcome: "issued" });
+        expect(issued).toMatchObject({
+          expiresIn: TOKEN_SECONDS,
+          outcome: "issued",
+        });
         const [row] = yield* fixture.run(tokenRows);
         expect(row).toMatchObject({
           clientId: client.id,
-          expiresAt: TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS)),
+          expiresAt:
+            TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS)),
           resource: "api",
         });
         expect(row?.tokenHash).not.toBe(
@@ -40,10 +44,9 @@ describe("integrations/tokens issue", () => {
         expect(
           yield* issue(fixture, client, "https://nf.nakafa.com/mcp")
         ).toMatchObject({ outcome: "issued" });
-        expect(Arr.map(yield* fixture.run(tokenRows), (token) => token.resource)).toEqual([
-          "api",
-          "mcp",
-        ]);
+        expect(
+          Arr.map(yield* fixture.run(tokenRows), (token) => token.resource)
+        ).toEqual(["api", "mcp"]);
       })
   );
 
@@ -54,10 +57,12 @@ describe("integrations/tokens issue", () => {
         const fixture = yield* tenancyFixture;
         const client = yield* createClient(fixture);
         const refused = { error: "invalid_client", outcome: "refused" };
-        expect(yield* issue(fixture, { ...client, secret: "wrong" })).toEqual(refused);
-        expect(yield* issue(fixture, { id: "not-an-id", secret: client.secret })).toEqual(
+        expect(yield* issue(fixture, { ...client, secret: "wrong" })).toEqual(
           refused
         );
+        expect(
+          yield* issue(fixture, { id: "not-an-id", secret: client.secret })
+        ).toEqual(refused);
         yield* fixture
           .as("admin")
           .mutation(refs.public.integrations.clients.revoke, {
@@ -68,25 +73,27 @@ describe("integrations/tokens issue", () => {
       })
   );
 
-  it.effect("refuses a resource that is not the API or MCP of the client's school", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const client = yield* createClient(fixture);
-      for (const resource of [
-        "https://other.nakafa.com/api/v1",
-        "https://nf.nakafa.com/settings",
-        "http://nf.nakafa.com/api/v1",
-        "not a url",
-      ]) {
-        expect(yield* issue(fixture, client, resource)).toEqual({
-          error: "invalid_target",
-          outcome: "refused",
-        });
-      }
-      expect(
-        yield* issue(fixture, client, "https://nf.nakafa.com/api/v1/")
-      ).toMatchObject({ outcome: "issued" });
-    })
+  it.effect(
+    "refuses a resource that is not the API or MCP of the client's school",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const client = yield* createClient(fixture);
+        for (const resource of [
+          "https://other.nakafa.com/api/v1",
+          "https://nf.nakafa.com/settings",
+          "http://nf.nakafa.com/api/v1",
+          "not a url",
+        ]) {
+          expect(yield* issue(fixture, client, resource)).toEqual({
+            error: "invalid_target",
+            outcome: "refused",
+          });
+        }
+        expect(
+          yield* issue(fixture, client, "https://nf.nakafa.com/api/v1/")
+        ).toMatchObject({ outcome: "issued" });
+      })
   );
 
   it.effect("stops a client that asks for too many tokens", () =>
@@ -121,7 +128,10 @@ describe("integrations/tokens check", () => {
           yield* fixture.internal.mutation(check, { resource: "mcp", token })
         ).toEqual(unauthorized);
         expect(
-          yield* fixture.internal.mutation(check, { resource: "api", token: "nope" })
+          yield* fixture.internal.mutation(check, {
+            resource: "api",
+            token: "nope",
+          })
         ).toEqual(unauthorized);
         vi.setSystemTime(
           TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS))
@@ -184,7 +194,9 @@ describe("integrations/tokens check", () => {
       const fixture = yield* tenancyFixture;
       const client = yield* createClient(fixture);
       yield* issue(fixture, client);
-      vi.setSystemTime(TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS)));
+      vi.setSystemTime(
+        TENANCY_NOW + Duration.toMillis(Duration.seconds(TOKEN_SECONDS))
+      );
       yield* issue(fixture, client);
       expect(yield* fixture.internal.mutation(sweep, {})).toBeNull();
       expect(yield* fixture.run(tokenRows)).toHaveLength(1);

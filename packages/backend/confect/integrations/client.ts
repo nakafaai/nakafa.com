@@ -12,13 +12,13 @@ import type {
   ClientActions,
   IntegrationName,
 } from "@repo/backend/confect/integrations/schema";
+import { endClientTokens } from "@repo/backend/confect/integrations/token";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   tenantAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { endClientTokens } from "@repo/backend/confect/integrations/token";
 import { issueToken } from "@repo/utilities/token";
 import { Array as Arr, Clock, Effect, Struct } from "effect";
 

@@ -1,8 +1,4 @@
 import type { GenericId } from "@confect/core";
-import type {
-  IntegrationClientsDoc,
-  TenantsDoc,
-} from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   QueryCtx,
@@ -14,18 +10,9 @@ import {
   periodAuthority,
   tenantAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import {
-  UNIT_LIMIT,
-  UnitStatus,
-} from "@repo/backend/confect/tenancy/schema";
+import { UNIT_LIMIT, UnitStatus } from "@repo/backend/confect/tenancy/schema";
 import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Option } from "effect";
-
-/** A client and its school, the principal that every read decides for. */
-export type ClientRead = {
-  readonly client: IntegrationClientsDoc;
-  readonly tenant: TenantsDoc;
-};
 
 /** The answer of a read that the client's action list does not open. */
 export const FORBIDDEN: { readonly outcome: "forbidden" } = {
@@ -45,9 +32,11 @@ export const clientRead = Effect.fn("integrations.reads.client")(function* (
     .table("tenants")
     .get(client.tenantId)
     .pipe(Effect.orDie);
-  const read: ClientRead = { client, tenant };
-  return read;
+  return { client, tenant };
 });
+
+/** A client and its school, the principal that every read decides for. */
+export type ClientRead = Effect.Success<ReturnType<typeof clientRead>>;
 
 /** Whether the client's own action list names an action. The rule and the scope are decided per row. */
 export const lists = (read: ClientRead, action: typeof Action.Type) =>
@@ -69,7 +58,11 @@ export const pageOptions = (
 export const pageOr = <A, E>(
   answer:
     | typeof FORBIDDEN
-    | { readonly data: A; readonly next: string | null; readonly outcome: "page" },
+    | {
+        readonly data: A;
+        readonly next: string | null;
+        readonly outcome: "page";
+      },
   refusal: () => E
 ) =>
   answer.outcome === "page"
@@ -77,8 +70,10 @@ export const pageOr = <A, E>(
     : Effect.fail(refusal());
 
 /** The cursor of the next page, or null on the last one. */
-export const nextOf = (page: { readonly continueCursor: string; readonly isDone: boolean }) =>
-  page.isDone ? null : page.continueCursor;
+export const nextOf = (page: {
+  readonly continueCursor: string;
+  readonly isDone: boolean;
+}) => (page.isDone ? null : page.continueCursor);
 
 /** The periods of the client's school that its scope covers, newest first in each unit. */
 export const periodsFor = Effect.fn("integrations.reads.periods")(function* (
@@ -100,7 +95,11 @@ export const periodsFor = Effect.fn("integrations.reads.periods")(function* (
     yield* Effect.forEach(units, (unit) =>
       reader
         .table("tenantPeriods")
-        .index("by_unitId_and_start", (query) => query.eq("unitId", unit._id), "desc")
+        .index(
+          "by_unitId_and_start",
+          (query) => query.eq("unitId", unit._id),
+          "desc"
+        )
         .take(PAGE_LIMIT)
         .pipe(Effect.orDie)
     )
@@ -116,7 +115,9 @@ export const periodFor = Effect.fn("integrations.reads.period")(function* (
   periodId: string
 ) {
   const ctx = yield* QueryCtx;
-  const id = Option.fromNullishOr(ctx.db.normalizeId("tenantPeriods", periodId));
+  const id = Option.fromNullishOr(
+    ctx.db.normalizeId("tenantPeriods", periodId)
+  );
   if (Option.isNone(id)) {
     return Option.none();
   }

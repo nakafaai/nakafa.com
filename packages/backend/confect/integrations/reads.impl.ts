@@ -96,7 +96,7 @@ const people = FunctionImpl.make(
     status,
   }) {
     const read = yield* clientRead(clientId);
-    if (!lists(read, "person.view") || !(yield* readsPeople(read))) {
+    if (!(lists(read, "person.view") && (yield* readsPeople(read)))) {
       return FORBIDDEN;
     }
     const result = yield* (yield* DatabaseReader)

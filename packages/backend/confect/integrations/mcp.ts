@@ -33,10 +33,12 @@ const BEARER_PREFIX = "Bearer ";
 
 /** The bearer token of a request, or none when it sends no bearer Authorization header. */
 const bearerOf = (request: Request) =>
-  Option.flatMap(Option.fromNullOr(request.headers.get("authorization")), (value) =>
-    Str.startsWith(BEARER_PREFIX)(value)
-      ? Option.some(value.slice(BEARER_PREFIX.length))
-      : Option.none()
+  Option.flatMap(
+    Option.fromNullOr(request.headers.get("authorization")),
+    (value) =>
+      Str.startsWith(BEARER_PREFIX)(value)
+        ? Option.some(value.slice(BEARER_PREFIX.length))
+        : Option.none()
   );
 
 /** A refused bearer token: 401 with the challenge an MCP client reads (RFC 6750). */
@@ -140,4 +142,8 @@ function withEngineAccept(request: Request): Request {
 }
 
 /** The school MCP route at its Convex path; a school host forwards its `/mcp` path here. */
-export const schoolMcpRoutes = HttpRouter.add("*", SCHOOL_MCP_PATH, handleSchoolMcp);
+export const schoolMcpRoutes = HttpRouter.add(
+  "*",
+  SCHOOL_MCP_PATH,
+  handleSchoolMcp
+);

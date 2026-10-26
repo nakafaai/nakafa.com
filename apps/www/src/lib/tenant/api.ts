@@ -10,10 +10,7 @@ import {
   String as Str,
   Tuple,
 } from "effect";
-import {
-  readRequestHostname,
-  readSchoolSlug,
-} from "@/lib/routing/school/host";
+import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 
 /**
  * The paths a school host serves for integrations (ADR 0026, ADR 0029), each with the Convex

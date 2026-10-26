@@ -9,8 +9,12 @@ import spec from "@repo/backend/confect/integrations/tokens.spec";
 import { Layer } from "effect";
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(FunctionImpl.make(databaseSchema, spec, "issue", issueAccessToken)),
-  Layer.provide(FunctionImpl.make(databaseSchema, spec, "check", checkAccessToken)),
+  Layer.provide(
+    FunctionImpl.make(databaseSchema, spec, "issue", issueAccessToken)
+  ),
+  Layer.provide(
+    FunctionImpl.make(databaseSchema, spec, "check", checkAccessToken)
+  ),
   Layer.provide(FunctionImpl.make(databaseSchema, spec, "sweep", sweepTokens)),
   GroupImpl.finalize
 );

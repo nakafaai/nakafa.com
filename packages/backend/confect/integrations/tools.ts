@@ -54,7 +54,8 @@ const Cursor = Schema.NullOr(Schema.String)
   .pipe(Schema.withDecodingDefaultType(Effect.succeed(null)))
   .annotate({
     default: null,
-    description: "The `next` cursor of the previous page; leave it out for the first page.",
+    description:
+      "The `next` cursor of the previous page; leave it out for the first page.",
   });
 
 /** The input of a paged read of one period. */
@@ -70,7 +71,10 @@ const PeoplePage = Schema.Struct({
   cursor: Cursor,
   status: PersonStatus.pipe(
     Schema.withDecodingDefaultType(Effect.succeed("active"))
-  ).annotate({ default: "active", description: "The status of the people to list." }),
+  ).annotate({
+    default: "active",
+    description: "The status of the people to list.",
+  }),
 });
 
 /** The input of a read that takes nothing. */
@@ -79,7 +83,8 @@ const NoInput = Schema.Struct({});
 /** The tool error of a read that the client's action list or scope does not open. */
 const forbidden = new NakafaAgentInputError({
   cause: "The client's action list or scope does not open this read.",
-  message: "Ask the school's Admin to open this read to the integration client.",
+  message:
+    "Ask the school's Admin to open this read to the integration client.",
 });
 
 /** One read-only tool definition from its text and its contracts. */
@@ -123,7 +128,11 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
       handle: (input: unknown) =>
         run(
           Effect.gen(function* () {
-            yield* decodeAgentInput(NoInput, input, "This tool takes no input.");
+            yield* decodeAgentInput(
+              NoInput,
+              input,
+              "This tool takes no input."
+            );
             const { runQuery } = yield* QueryRunner;
             const answer = yield* runQuery(reads.periods, { clientId }).pipe(
               Effect.orDie
@@ -132,7 +141,8 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
           })
         ),
       tool: yield* readOnlyTool({
-        description: "List the periods (semesters or school years) of the school.",
+        description:
+          "List the periods (semesters or school years) of the school.",
         input: NoInput,
         name: "school_list_periods",
         output: mcpToolOutputSchema(pageOf(ApiPeriod)),
@@ -160,7 +170,8 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
           })
         ),
       tool: yield* readOnlyTool({
-        description: "List the class groups (rombel) of one period, a page at a time.",
+        description:
+          "List the class groups (rombel) of one period, a page at a time.",
         input: PeriodPage,
         name: "school_list_cohorts",
         output: mcpToolOutputSchema(pageOf(ApiCohort)),
