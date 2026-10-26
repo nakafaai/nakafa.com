@@ -1,9 +1,8 @@
 import type { CDPSession, Page } from "@playwright/test";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
-/** The names the browser gives the parts of a search field that it draws itself. */
+/** The name the browser gives the placeholder part of a field that it draws itself. */
 const PLACEHOLDER = "-webkit-input-placeholder";
-const CLEAR_BUTTON = "-webkit-search-cancel-button";
 
 /** What the browser lays out for one part of a field. */
 const PartSchema = Schema.Struct({
@@ -63,14 +62,11 @@ const measurePart = Effect.fn("NakafaE2E.measurePart")(function* (
 });
 
 /**
- * Reads what a search field gives its placeholder, from the shadow tree that
- * the browser draws the field from and that a script of the page cannot reach:
- * the room of the placeholder's own box, how far its text runs past that room
- * (zero when the whole text shows), and the width of the clear button, which is
- * zero while the button is hidden. The width of the field less its padding says
- * none of this, because the clear button keeps a slot of the field's room until
- * it is hidden. `selector` names one search field. The read waits for the
- * fonts first, so the text is laid out in the face the learner sees.
+ * Reads what a field gives its placeholder, from the shadow tree that the
+ * browser draws the field from and that a script of the page cannot reach: the
+ * room of the placeholder's own box, and how far its text runs past that room
+ * (zero when the whole text shows). `selector` names one field. The read waits
+ * for the fonts first, so the text is laid out in the face the learner sees.
  */
 export const readPlaceholder = Effect.fn("NakafaE2E.readPlaceholder")(
   function* (page: Page, selector: string) {
@@ -123,15 +119,7 @@ export const readPlaceholder = Effect.fn("NakafaE2E.readPlaceholder")(
             PLACEHOLDER,
             selector
           );
-          const clear = yield* measurePart(
-            session,
-            shadow,
-            CLEAR_BUTTON,
-            selector
-          );
-
           return {
-            clear: clear.client,
             overflow: Math.max(0, placeholder.scroll - placeholder.client),
             room: placeholder.client,
           };

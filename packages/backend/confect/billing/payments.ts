@@ -1,10 +1,15 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import type { billingPaymentValidator } from "@repo/backend/confect/billing/schema";
-import { Effect, Option, Schema } from "effect";
+import { findAccount } from "@repo/backend/confect/billing/accounts";
+import {
+  BillingRail,
+  type billingPaymentValidator,
+} from "@repo/backend/confect/billing/schema";
+import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 
 type BillingPaymentInput = typeof billingPaymentValidator.Type;
 
@@ -72,3 +77,49 @@ export const recordPayment = Effect.fn("billing.payments.record")(function* (
     paymentId: existing.value._id,
   } satisfies PaymentRecorded;
 });
+
+/** The most payments the settings list: the newest of a learner's personal accounts. */
+const RECENT_PAYMENT_LIMIT = 12;
+
+/**
+ * The newest payments a learner made on their personal accounts that went
+ * through, newest first: what each paid for, how much in which currency, when,
+ * and through which rail. The settings list them as the learner's receipts.
+ */
+export const readRecentPayments = Effect.fn("billing.payments.readRecent")(
+  function* (userId: Docs["users"]["_id"]) {
+    const reader = yield* DatabaseReader;
+    const accounts = yield* Effect.forEach(BillingRail.literals, (rail) =>
+      findAccount({ kind: "personal", userId }, rail)
+    );
+    const payments = yield* Effect.forEach(Arr.getSomes(accounts), (account) =>
+      reader
+        .table("billingPayments")
+        .index(
+          "by_accountId_and_paidAt",
+          (query) => query.eq("accountId", account._id),
+          "desc"
+        )
+        .take(RECENT_PAYMENT_LIMIT)
+        .pipe(Effect.orDie)
+    );
+    const succeeded = Arr.filter(
+      Arr.flatten(payments),
+      (payment) => payment.status === "succeeded"
+    );
+    const newest = Arr.sort(
+      succeeded,
+      Order.mapInput(
+        Order.flip(Order.Number),
+        (payment: (typeof succeeded)[number]) => payment.paidAt
+      )
+    );
+    return Arr.map(Arr.take(newest, RECENT_PAYMENT_LIMIT), (payment) => ({
+      amount: payment.amount,
+      currency: payment.currency,
+      kind: payment.kind,
+      paidAt: payment.paidAt,
+      rail: payment.rail,
+    }));
+  }
+);

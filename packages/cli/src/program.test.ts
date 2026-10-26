@@ -6,6 +6,7 @@ import {
   FileSystem,
   Layer,
   Path,
+  PlatformError,
   Ref,
   Schema,
   Sink,
@@ -37,8 +38,24 @@ const decodeJson = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Json)
 );
 
+/** The refusal of a configuration directory that the user may not write. */
+const readOnly = (method: string, path: string) =>
+  Effect.fail(
+    PlatformError.systemError({
+      _tag: "PermissionDenied",
+      method,
+      module: "FileSystem",
+      pathOrDescriptor: path,
+    })
+  );
+
 const cliPlatformLayer = Layer.mergeAll(
-  FileSystem.layerNoop({}),
+  // The CLI writes no file in these tests: storing or removing a school sign-in fails as it
+  // does in a read-only configuration directory.
+  FileSystem.layerNoop({
+    makeDirectory: (path) => readOnly("makeDirectory", path),
+    remove: (path) => readOnly("remove", path),
+  }),
   Path.layer,
   Layer.succeed(
     Terminal.Terminal,
@@ -386,5 +403,36 @@ describe("Nakafa CLI execution", () => {
         code: "INVOCATION_ERROR",
       });
     })
+  );
+
+  it.effect(
+    "reports a school command it cannot finish on stderr with the API exit code",
+    () =>
+      Effect.gen(function* () {
+        const client = makeClient((request) =>
+          new URL(request.url).pathname === "/api/v1/device"
+            ? Response.json({
+                device_code: "device",
+                expires_in: 600,
+                interval: 0,
+                user_code: "BCDF-GHJK",
+                verification_uri: "https://harapan.nakafa.com/settings/clients",
+              })
+            : Response.json({
+                access_token: "token",
+                expires_in: 3600,
+                token_type: "Bearer",
+              })
+        );
+        for (const [argv, code] of [
+          [["school", "login", "harapan.nakafa.com"], "CREDENTIALS_UNWRITABLE"],
+          [["school", "logout"], "CREDENTIALS_UNWRITABLE"],
+          [["school", "periods"], "NOT_SIGNED_IN"],
+        ] as const) {
+          const result = yield* execute(argv, client);
+          expect(result.exitCode).toBe(3);
+          expect(yield* decodeJson(result.stderr)).toMatchObject({ code });
+        }
+      })
   );
 });

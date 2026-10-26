@@ -9,14 +9,18 @@ import {
   GradeNotPlaced,
   GradeReleased,
 } from "@repo/backend/confect/records/errors";
-import { GradeView } from "@repo/backend/confect/records/grade";
-import { GradeValue } from "@repo/backend/confect/records/scheme";
+import { GradeLine, GradeView } from "@repo/backend/confect/records/grade";
+import {
+  GradeValue,
+  GradingScheme,
+} from "@repo/backend/confect/records/scheme";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /**
- * The final grades of a class. A subject teacher of the class enters a draft for a
- * student placed in its cohort, releases it, and lists the class's grades. A
+ * The final grades of a class. A subject teacher of the class reads its gradebook,
+ * each placed student with their grade, enters a draft for a student placed in its
+ * cohort, and releases it; `scheme` is the scheme the next entry is judged by. A
  * student reads only their own released grade, through `mine`.
  */
 export default GroupSpec.make()
@@ -45,9 +49,17 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
-      name: "list",
+      name: "sheet",
       args: () => ({ classId: Id("classes"), slug: TenantSlug }),
-      item: () => GradeView,
+      item: () => GradeLine,
+      error: () => AccessDenied,
+    }).middleware(ClassAccess, { action: "grade.list", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "scheme",
+      args: () => ({ classId: Id("classes"), slug: TenantSlug }),
+      returns: () => GradingScheme,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "grade.list", arg: "classId" })
   )

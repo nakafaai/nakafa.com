@@ -14,11 +14,9 @@ import {
 const mocks = vi.hoisted(() => ({
   read: vi.fn(),
   report: vi.fn(),
-  server: { url: "/_serverFn/placement" },
 }));
-vi.mock("@/lib/static/data", () => ({ readStaticData: mocks.read }));
 vi.mock("@/lib/content/material/placement.functions", () => ({
-  readMaterialPlacement: mocks.server,
+  readMaterialPlacement: mocks.read,
 }));
 vi.mock("@/lib/analytics/client", () => ({
   reportClientException: mocks.report,
@@ -59,13 +57,15 @@ describe("lesson placement in the browser", () => {
       yield* startMaterialPlacement(store, { ctx: HINT, locale: "en", page });
 
       expect(store.getState().placement).toStrictEqual(Option.some(placement));
-      expect(mocks.read).toHaveBeenCalledExactlyOnceWith(mocks.server, {
-        contentKey: page.route.contentKey,
-        ctx: HINT,
-        locale: "en",
-        materialKey: page.route.materialKey,
-        parentPath: page.route.parentPath,
-        publicPath: page.route.publicPath,
+      expect(mocks.read).toHaveBeenCalledExactlyOnceWith({
+        data: {
+          contentKey: page.route.contentKey,
+          ctx: HINT,
+          locale: "en",
+          materialKey: page.route.materialKey,
+          parentPath: page.route.parentPath,
+          publicPath: page.route.publicPath,
+        },
       });
     })
   );

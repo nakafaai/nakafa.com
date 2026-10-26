@@ -8,6 +8,10 @@ import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOver } from "@/e2e/support/window";
 
+/** The addresses of the account section and the Memory section of settings. */
+const SETTINGS_URL = /\/en\/user\/settings$/;
+const MEMORY_URL = /\/en\/user\/settings\/memory$/;
+
 /** The first row of the settings sidebar, which leads out of settings. */
 const BACK = app.Auth["back-to-nakafa"];
 
@@ -35,7 +39,7 @@ test("the settings sidebar leads back to the page the learner came from, and Esc
           })
           .toBe(true);
         await edit.click();
-        await expect(page).toHaveURL(/\/en\/user\/settings$/);
+        await expect(page).toHaveURL(SETTINGS_URL);
 
         const back = page.getByRole("link", { exact: true, name: BACK });
         await expect(back).toBeVisible();
@@ -43,7 +47,7 @@ test("the settings sidebar leads back to the page the learner came from, and Esc
         await page
           .getByRole("link", { exact: true, name: app.Auth.memory })
           .click();
-        await expect(page).toHaveURL(/\/en\/user\/settings\/memory$/);
+        await expect(page).toHaveURL(MEMORY_URL);
         await back.click();
         await expect(page).toHaveURL(new RegExp(`${profile}$`));
 
