@@ -176,6 +176,8 @@ describe("access/catalog", () => {
           "cohort.restored",
           "assignment.created",
           "assignment.removed",
+          "billing.invoice.issued",
+          "billing.invoice.paid",
           "promotion.applied",
           "promotion.approved",
           "promotion.cancelled",
@@ -293,6 +295,8 @@ describe("access/catalog", () => {
       "exam.edit",
       "exam.rooms",
       "exam.view",
+      "billing.manage",
+      "billing.view",
     ]);
   });
 
