@@ -5,12 +5,21 @@ import {
   Unlink01Icon,
   UserRemove01Icon,
 } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
+import type { LinkStatus } from "@repo/backend/confect/guardians/schema";
+import type { StatusTone } from "@/components/shared/table/tone";
 
-/** The icon of each state of a guardian link, wherever the state shows: lists, filters, and the open link. */
-export const LINK_STATUS_ICONS = {
-  expired: TimeQuarterPassIcon,
-  pending: Clock01Icon,
-  revoked: Unlink01Icon,
-  verified: CheckmarkBadge01Icon,
-  withdrawn: UserRemove01Icon,
-};
+/**
+ * The look of each state of a guardian link, wherever the state shows (lists, filters, and the open
+ * link): its own icon, and the tone of its badge.
+ */
+export const LINK_STATUS_LOOKS = {
+  expired: { icon: TimeQuarterPassIcon, tone: "warning" },
+  pending: { icon: Clock01Icon, tone: "info" },
+  revoked: { icon: Unlink01Icon, tone: "neutral" },
+  verified: { icon: CheckmarkBadge01Icon, tone: "success" },
+  withdrawn: { icon: UserRemove01Icon, tone: "neutral" },
+} as const satisfies Record<
+  typeof LinkStatus.Type,
+  { icon: IconSvgElement; tone: typeof StatusTone.Type }
+>;
