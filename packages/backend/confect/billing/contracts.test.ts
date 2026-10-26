@@ -439,7 +439,7 @@ describe("billing/contracts", () => {
               )
             )
           ),
-          Schema.Number
+          Schema.Finite
         );
         expect(sessions).toBe(1);
       }).pipe(

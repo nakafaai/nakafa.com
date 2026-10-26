@@ -12,7 +12,7 @@ import {
   refundCredits,
   reserveCredits,
 } from "@repo/backend/confect/nina/credits/ledger";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
 import { insertTopUpPack, runInMutation } from "@repo/backend/test/billing";
 import {
   CREDITS_NOW,
@@ -107,12 +107,14 @@ describe("Nina credit transactions", () => {
           if (operation === "state") {
             // The credit state reads the reset periods; the school pool's reads before it stay real.
             const query = ctx.db.query.bind(ctx.db);
-            vi.spyOn(ctx.db, "query").mockImplementation((table) => {
-              if (table === "creditResetPeriods") {
-                throw new Error("private state detail");
+            vi.spyOn(ctx.db, "query").mockImplementation(
+              <Table extends TableNames>(table: Table) => {
+                if (table === "creditResetPeriods") {
+                  throw new Error("private state detail");
+                }
+                return query(table);
               }
-              return query(table);
-            });
+            );
           }
           if (operation === "quota") {
             vi.spyOn(ctx, "runMutation").mockRejectedValueOnce(

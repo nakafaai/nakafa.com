@@ -89,9 +89,8 @@ export const runningSchoolGrants = Effect.fn("billing.school.runningGrants")(
       )
       .take(SCHOOL_GRANT_LIMIT)
       .pipe(Effect.orDie);
-    return Arr.flatMap(grants, (grant) =>
-      grant.product === "school" ? [grant] : []
-    );
+    // Only School grants name a school, so this narrows the grant type and drops nothing.
+    return Arr.filter(grants, (grant) => grant.product === "school");
   }
 );
 

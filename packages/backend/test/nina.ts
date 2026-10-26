@@ -222,12 +222,11 @@ async function queueTurn(
       },
     })
   );
+  // The raw writer takes a mutable list, and the hold's draws are read-only.
+  const { lots, ...hold } = reservation;
   const turnId = await ctx.db.insert("ninaTurns", {
-    ...reservation,
-    // The raw writer takes a mutable list, and the hold's draws are read-only.
-    ...(reservation.lots === undefined
-      ? {}
-      : { lots: Arr.copy(reservation.lots) }),
+    ...hold,
+    ...(lots === undefined ? {} : { lots: Arr.copy(lots) }),
     phase: "active",
     threadId,
     chatId,
