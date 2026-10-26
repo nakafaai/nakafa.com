@@ -9,7 +9,6 @@ import {
   Calendar03Icon,
   CalendarCheckIn01Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -33,6 +32,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
@@ -55,12 +55,15 @@ import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import type { readPeriodsFn } from "@/lib/tenant/settings.functions";
 
-/** The icon of each period status in the Filter menu: a planned calendar, a running one, and an archive. */
-const PERIOD_STATUS_ICONS = {
-  active: CalendarCheckIn01Icon,
-  archived: Archive02Icon,
-  planned: Calendar03Icon,
-} as const satisfies Record<typeof PeriodStatus.Type, IconSvgElement>;
+/**
+ * The look of each period status, in its table cell and in the Filter menu: a planned calendar, a
+ * running one, and an archive, each in its tone.
+ */
+const PERIOD_STATUS_LOOKS = {
+  active: { icon: CalendarCheckIn01Icon, tone: "success" },
+  archived: { icon: Archive02Icon, tone: "neutral" },
+  planned: { icon: Calendar03Icon, tone: "info" },
+} as const satisfies Record<typeof PeriodStatus.Type, StatusLook>;
 
 const SOURCE = "components/tenant/settings/periods";
 
@@ -159,7 +162,7 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
                 {
                   column: "status",
                   options: Arr.map(PeriodStatus.literals, (status) => ({
-                    icon: PERIOD_STATUS_ICONS[status],
+                    icon: PERIOD_STATUS_LOOKS[status].icon,
                     label: t(`period-${status}`),
                     value: status,
                   })),
@@ -254,7 +257,13 @@ function SchoolPeriodTable({
       sortFn: "text",
     }),
     periodColumns.accessor((period) => period.status, {
-      cell: (info) => t(`period-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={PERIOD_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`period-${info.getValue()}`)}
+          tone={PERIOD_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("period-status"),

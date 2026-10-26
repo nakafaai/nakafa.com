@@ -27,6 +27,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -40,6 +41,7 @@ import {
   SchoolCohortMenu,
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort/menu";
+import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import { createCohortChange } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -440,7 +442,13 @@ function SchoolCohortTable({
       sortFn: "alphanumeric",
     }),
     cohortColumns.accessor((cohort) => cohort.status, {
-      cell: (info) => t(`cohort-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={COHORT_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`cohort-${info.getValue()}`)}
+          tone={COHORT_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("cohort-status"),

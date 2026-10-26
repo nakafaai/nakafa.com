@@ -43,13 +43,14 @@ import {
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
   type ChildItem,
   withdrawChange,
 } from "@/components/tenant/guardian/change";
-import { LINK_STATUS_ICONS } from "@/components/tenant/guardian/status";
+import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -122,10 +123,11 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
     }),
     childColumns.accessor((child) => child.status, {
       cell: (info) => (
-        <span className="flex items-center gap-2">
-          <HugeIcons icon={LINK_STATUS_ICONS[info.getValue()]} />
-          {t(`status-${info.getValue()}`)}
-        </span>
+        <TableStatus
+          icon={LINK_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`status-${info.getValue()}`)}
+          tone={LINK_STATUS_LOOKS[info.getValue()].tone}
+        />
       ),
       enableSorting: false,
       header: t("status"),

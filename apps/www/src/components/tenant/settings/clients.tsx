@@ -12,7 +12,6 @@ import {
   Plug01Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -37,6 +36,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
@@ -56,11 +56,14 @@ import {
   usePaginatedPreloaded,
 } from "@/lib/data/paginated";
 
-/** The icon of each client status in the Filter menu: a plugged-in client, and an unlinked one. */
-const CLIENT_STATUS_ICONS = {
-  active: Plug01Icon,
-  revoked: Unlink01Icon,
-} as const satisfies Record<typeof IntegrationStatus.Type, IconSvgElement>;
+/**
+ * The look of each client status, in its table cell and in the Filter menu: a plugged-in client,
+ * and an unlinked one, each in its tone.
+ */
+const CLIENT_STATUS_LOOKS = {
+  active: { icon: Plug01Icon, tone: "success" },
+  revoked: { icon: Unlink01Icon, tone: "neutral" },
+} as const satisfies Record<typeof IntegrationStatus.Type, StatusLook>;
 
 const SOURCE = "components/tenant/settings/clients";
 
@@ -123,7 +126,7 @@ export function SchoolClientsSettings({
                 {
                   column: "status",
                   options: Arr.map(IntegrationStatus.literals, (status) => ({
-                    icon: CLIENT_STATUS_ICONS[status],
+                    icon: CLIENT_STATUS_LOOKS[status].icon,
                     label: t(`client-${status}`),
                     value: status,
                   })),
@@ -220,7 +223,13 @@ function SchoolClientTable({
       sortFn: "text",
     }),
     clientColumns.accessor((client) => client.status, {
-      cell: (info) => t(`client-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={CLIENT_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`client-${info.getValue()}`)}
+          tone={CLIENT_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("client-status"),

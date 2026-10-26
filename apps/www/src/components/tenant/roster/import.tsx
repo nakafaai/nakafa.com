@@ -29,6 +29,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
@@ -56,17 +57,21 @@ import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * The icon of each status in the import's Filter menu, one per status: the two ages of a student
- * who imports, and the problem that keeps each other row out.
+ * The look of each status, in the preview's status cell and in its Filter menu, one icon per
+ * status: the two ages of a student who imports, and the problem that keeps each other row out,
+ * which reads as a danger.
  */
-const ROSTER_STATUS_ICONS = {
-  adult: UserCheck01Icon,
-  birth: CalendarRemove01Icon,
-  cohort: UserMultiple02Icon,
-  name: UserQuestion01Icon,
-  nisn: IdentityCardIcon,
-  under: UserLock01Icon,
-} as const;
+const ROSTER_STATUS_LOOKS = {
+  adult: { icon: UserCheck01Icon, tone: "success" },
+  birth: { icon: CalendarRemove01Icon, tone: "danger" },
+  cohort: { icon: UserMultiple02Icon, tone: "danger" },
+  name: { icon: UserQuestion01Icon, tone: "danger" },
+  nisn: { icon: IdentityCardIcon, tone: "danger" },
+  under: { icon: UserLock01Icon, tone: "info" },
+} as const satisfies Record<
+  typeof RowProblem.Type | "adult" | "under",
+  StatusLook
+>;
 
 const SOURCE = "components/tenant/roster/import";
 
@@ -303,7 +308,7 @@ function RosterImportOfPeriod({
                   options: Arr.map(
                     ["under", "adult", ...RowProblem.literals] as const,
                     (status) => ({
-                      icon: ROSTER_STATUS_ICONS[status],
+                      icon: ROSTER_STATUS_LOOKS[status].icon,
                       label: t(`status-${status}`),
                       value: status,
                     })
@@ -433,7 +438,13 @@ function usePreviewColumns() {
       { header: t("cohort"), id: "cohort", sortFn: "text" }
     ),
     rowColumns.accessor(statusOf, {
-      cell: (info) => t(`status-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={ROSTER_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`status-${info.getValue()}`)}
+          tone={ROSTER_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("status"),
