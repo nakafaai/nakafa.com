@@ -1,5 +1,3 @@
-import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
 import {
   formatTrigRatioMath,
   QUADRANT_NUMERALS,
@@ -13,7 +11,13 @@ import {
 } from "@repo/design-system/components/three/controls";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@repo/design-system/components/ui/number";
 import {
   VisualCard,
   VisualCardBody,
@@ -39,15 +43,7 @@ import {
   use,
   useState,
 } from "react";
-import {
-  Button,
-  Group,
-  I18nProvider,
-  Input,
-  Label,
-  NumberField,
-} from "react-aria-components";
-import { useFormatter, useLocale, useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
 const UnitCircleStage = lazy(() =>
@@ -126,14 +122,10 @@ function useUnitCircle() {
 
 /** The visual card that holds a unit circle's header, its controls, and its values. */
 function UnitCircleFrame({ children }: { children: ReactNode }) {
-  const locale = useLocale();
-
   return (
     <VisualCard>
       {children}
-      <I18nProvider locale={locale}>
-        <Content />
-      </I18nProvider>
+      <Content />
     </VisualCard>
   );
 }
@@ -205,44 +197,23 @@ function Content() {
       <VisualCardToolbar>
         <div className="mx-auto w-full max-w-md">
           <NumberField
-            decrementAriaLabel={t("decrease-angle")}
-            incrementAriaLabel={t("increase-angle")}
-            onChange={(value) => {
-              if (Number.isFinite(value)) {
+            onValueChange={(value) => {
+              if (value !== null) {
                 setAngleOverride(value);
                 onAngleChange?.(value);
               }
             }}
             value={angleValue}
           >
-            {/* biome-ignore lint/a11y/noLabelWithoutControl: React Aria connects this Label to the NumberField input through context. */}
-            <Label className="sr-only">{t("angle")}</Label>
-            <Group className={stepperVariants()}>
-              <Button
-                className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-e bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                slot="decrement"
-              >
-                <HugeIcons
-                  aria-hidden="true"
-                  className="size-4"
-                  icon={MinusSignIcon}
-                />
-              </Button>
-              <Input
-                aria-roledescription={t("number-field")}
-                className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums"
+            <NumberFieldGroup>
+              <NumberFieldDecrement aria-label={t("decrease-angle")} />
+              <NumberFieldInput
+                aria-label={t("angle")}
+                className="font-mono"
+                placeholder={`${UNIT_CIRCLE_DEFAULT_ANGLE}`}
               />
-              <Button
-                className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-s bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                slot="increment"
-              >
-                <HugeIcons
-                  aria-hidden="true"
-                  className="size-4"
-                  icon={PlusSignIcon}
-                />
-              </Button>
-            </Group>
+              <NumberFieldIncrement aria-label={t("increase-angle")} />
+            </NumberFieldGroup>
           </NumberField>
         </div>
       </VisualCardToolbar>
