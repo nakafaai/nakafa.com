@@ -252,13 +252,23 @@ export const tenancyFixture = Effect.gen(function* () {
     t.mutation(inMutation((ctx) => seedSchools(ctx, TENANCY_NOW)))
   );
   return Struct.assign(seeded, {
-    /** Seeds one more account with this Better Auth email, verified or not, and a client signed in as it. */
-    account: (suffix: string, email: string, emailVerified: boolean) =>
+    /**
+     * Seeds one more account with this Better Auth email, verified or not, and a
+     * client signed in as it. A hosted domain seeds a Google account of it too,
+     * null a personal one.
+     */
+    account: (
+      suffix: string,
+      email: string,
+      emailVerified: boolean,
+      hostedDomain?: string | null
+    ) =>
       Effect.promise(async () => {
         const account = await t.mutation((ctx) =>
           seedAuthenticatedUser(ctx, {
             email,
             emailVerified,
+            ...(hostedDomain === undefined ? {} : { hostedDomain }),
             now: TENANCY_NOW,
             suffix,
           })

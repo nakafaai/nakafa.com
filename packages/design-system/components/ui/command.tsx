@@ -167,7 +167,10 @@ function CommandInput({
   className,
   showClear = true,
   ...props
-}: React.ComponentProps<typeof AutocompleteInput>) {
+}: React.ComponentProps<typeof AutocompleteInput> & {
+  /** What the box shows while empty, which says what to search for. */
+  placeholder: string;
+}) {
   return (
     <div className="px-2.5 py-1.5" data-slot="command-input-wrapper">
       <AutocompleteInput

@@ -92,6 +92,26 @@ describe("redeemRefusalKey", () => {
 });
 
 describe("submitLogin", () => {
+  it.effect.each([
+    ["an empty username", { loginName: "" }],
+    ["a username of spaces", { loginName: "   " }],
+    ["an empty password", { password: "" }],
+    [
+      "an empty password beside a card code",
+      { code: "ABCDE-FGHJK", password: "" },
+    ],
+  ] as const)(
+    "answers that the username and password are missing for %s, without a request",
+    ([, missing]) =>
+      Effect.gen(function* () {
+        const { ports, requests } = portsOf(redeemed, true);
+        expect(
+          yield* submitLogin({ ...valuesWith(""), ...missing }, ports)
+        ).toBe("sign-in-missing");
+        expect(requests).toEqual({ redeems: 0, signIns: 0 });
+      })
+  );
+
   it.effect(
     "signs the student in with the password when no card code is typed",
     () =>

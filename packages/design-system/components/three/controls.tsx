@@ -1,7 +1,7 @@
 "use client";
 
-import { GridIcon, GridOffIcon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
+import { GridIcon } from "@hugeicons/core-free-icons";
+import { DropdownMenuCheckboxItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import {
@@ -59,11 +59,12 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
 }
 
 /**
- * The actions of a coordinate scene's visual card: the grid, then the actions
- * every scene has (play, the first view back, and full screen). The coordinate
- * store owns the grid, and the visual card owns play, the view and where the
- * card is shown. A static stand-in of the scene passes `inert`, so its controls
- * take no focus while the scene is not mounted.
+ * The actions of a coordinate scene's visual card: the actions every scene has
+ * (play, full screen, and the first view back in its menu), with the grid in the
+ * same menu, checked while the scene shows it. The coordinate store owns the
+ * grid, and the visual card owns play, the view and where the card is shown. A
+ * static stand-in of the scene passes `inert`, so its controls take no focus
+ * while the scene is not mounted.
  */
 export function CoordinateControls({ inert = false }: { inert?: boolean }) {
   const t = useTranslations("Common");
@@ -72,15 +73,14 @@ export function CoordinateControls({ inert = false }: { inert?: boolean }) {
 
   return (
     <VisualCardSceneActions inert={inert}>
-      <Button
-        aria-pressed={showGrid}
-        onClick={toggleGrid}
-        size="icon"
-        variant="secondary"
+      <DropdownMenuCheckboxItem
+        checked={showGrid}
+        closeOnClick
+        onCheckedChange={toggleGrid}
       >
-        <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
-        <span className="sr-only">{t("grid")}</span>
-      </Button>
+        <HugeIcons icon={GridIcon} />
+        {t("grid")}
+      </DropdownMenuCheckboxItem>
     </VisualCardSceneActions>
   );
 }

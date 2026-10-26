@@ -1,7 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import { School01Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Schema } from "effect";
-import { scopeNameOf, scopeNames } from "@/components/tenant/settings/scope";
+import { Array as Arr, Schema } from "effect";
+import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 
 const smp = Schema.decodeUnknownSync(Id("tenantUnits"))("unit-smp");
 const sma = Schema.decodeUnknownSync(Id("tenantUnits"))("unit-sma");
@@ -26,13 +27,20 @@ describe("components/tenant/settings/scope", () => {
     ).toBe("");
   });
 
-  it("lists the school's name first, then each unit's once", () => {
-    expect(
-      scopeNames("Sekolah Nakafa", [
-        { name: "SMP Nakafa" },
-        { name: "SMA Nakafa" },
-        { name: "SMP Nakafa" },
-      ])
-    ).toEqual(["Sekolah Nakafa", "SMP Nakafa", "SMA Nakafa"]);
+  it("lists the school first with its icon, then each unit once with an icon of its own", () => {
+    const options = scopeOptions("Sekolah Nakafa", [
+      { name: "SMP Nakafa" },
+      { name: "SMA Nakafa" },
+      { name: "SMP Nakafa" },
+      { name: "Sekolah Nakafa" },
+    ]);
+
+    expect(Arr.map(options, ({ value }) => value)).toEqual([
+      "Sekolah Nakafa",
+      "SMP Nakafa",
+      "SMA Nakafa",
+    ]);
+    expect(options[0]?.icon).toBe(School01Icon);
+    expect(Arr.dedupe(Arr.map(options, ({ icon }) => icon))).toHaveLength(3);
   });
 });

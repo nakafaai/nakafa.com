@@ -13,6 +13,7 @@ import type { userDataValidator } from "@repo/backend/confect/lib/validators/use
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import { photoOf } from "@repo/backend/confect/users/picture";
+import { profileAccess } from "@repo/backend/confect/users/profile";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, HashMap, Layer, Option, Struct } from "effect";
 
@@ -115,20 +116,27 @@ const getCommentReplies = FunctionImpl.make(
   })
 );
 
-/** Reads one page of an author's comments, newest first, with whether the viewer liked each. */
+/**
+ * Reads one page of an author's comments, newest first, with whether the viewer liked each,
+ * for whoever opens the author's profile (`profileAccess`); anyone else gets the empty page
+ * of an author without comments.
+ */
 const getCommentsByUserId = FunctionImpl.make(
   databaseSchema,
   spec,
   "getCommentsByUserId",
   Effect.fn("comments.queries.getCommentsByUserId")(function* (args) {
+    const viewer = yield* getOptionalAppUserForRead();
+    const viewerId = viewer?.appUser._id ?? null;
+    if (!(yield* profileAccess(args.userId, viewerId)).opens) {
+      return { continueCursor: "", isDone: true, page: [] };
+    }
     const database = yield* DatabaseReader;
     const comments = yield* database
       .table("comments")
       .index("by_userId", (q) => q.eq("userId", args.userId), "desc")
       .paginate(args.paginationOpts)
       .pipe(Effect.orDie);
-    const viewer = yield* getOptionalAppUserForRead();
-    const viewerId = viewer?.appUser._id ?? null;
     return {
       ...comments,
       page: yield* Effect.forEach(comments.page, (comment) =>

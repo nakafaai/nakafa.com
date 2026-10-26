@@ -1,8 +1,11 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
-import { DateTime } from "effect";
+import {
+  getCalendarDayKey,
+  parseCalendarDayKey,
+} from "@repo/design-system/lib/calendar/day-key";
+import { DateTime, Option } from "effect";
 
 /** Builds a local calendar date in the runtime zone; the month is one based. */
 function localDate(
@@ -34,5 +37,28 @@ describe("calendar day key", () => {
 
     expect(getCalendarDayKey(morning)).toBe("2026-11-15");
     expect(getCalendarDayKey(evening)).toBe(getCalendarDayKey(morning));
+  });
+});
+
+describe("parsing a calendar day key", () => {
+  it("reads the local start of the day that the key names", () => {
+    const day = parseCalendarDayKey("2026-10-27");
+
+    expect(Option.map(day, getCalendarDayKey)).toEqual(
+      Option.some("2026-10-27")
+    );
+    expect(Option.map(day, (date) => date.getHours())).toEqual(Option.some(0));
+  });
+
+  it("refuses text that is not a day key", () => {
+    expect(parseCalendarDayKey("")).toEqual(Option.none());
+    expect(parseCalendarDayKey("27/10/2026")).toEqual(Option.none());
+    expect(parseCalendarDayKey("2026-10-27T08:00")).toEqual(Option.none());
+  });
+
+  it("refuses a day that the calendar does not have", () => {
+    expect(parseCalendarDayKey("2026-02-30")).toEqual(Option.none());
+    expect(parseCalendarDayKey("2026-13-01")).toEqual(Option.none());
+    expect(parseCalendarDayKey("2026-00-10")).toEqual(Option.none());
   });
 });
