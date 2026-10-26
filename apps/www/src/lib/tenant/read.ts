@@ -220,11 +220,8 @@ const readOutsiderFrame = Effect.fn("www.tenant.read.outsiderFrame")(function* (
 export const readBrowserSchoolFrame = Effect.fn(
   "www.tenant.readBrowserSchoolFrame"
 )(function* (slug: TenantSlug, locale: Locale) {
-  const { cookie, origin } = yield* Effect.sync(() => ({
-    cookie: document.cookie,
-    origin: window.location.origin,
-  }));
-  const token = yield* readBrowserSessionToken(origin, cookie).pipe(
+  const origin = yield* Effect.sync(() => window.location.origin);
+  const token = yield* readBrowserSessionToken(origin).pipe(
     Effect.mapError((cause) => new SchoolReadFailed({ cause }))
   );
   return yield* readSchoolFrame({

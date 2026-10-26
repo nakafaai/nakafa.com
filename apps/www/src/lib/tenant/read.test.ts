@@ -413,9 +413,8 @@ describe("readBrowserSchoolFrame", () => {
     })
   );
 
-  /** The browser of these tests: a school host's address and its document cookie. */
-  function stubBrowser(cookie: string) {
-    vi.stubGlobal("document", { cookie });
+  /** The browser of these tests: a school host's address. */
+  function stubBrowser() {
     vi.stubGlobal("window", {
       location: { origin: "https://harapan.nakafa.com" },
     });
@@ -431,16 +430,17 @@ describe("readBrowserSchoolFrame", () => {
   });
 
   it.effect(
-    "reads a visitor's frame without asking for a token when the browser holds no sign-in hint",
+    "reads a visitor's frame when the token route finds no session",
     () =>
       Effect.gen(function* () {
-        stubBrowser("theme=dark");
+        stubBrowser();
+        fetcher.mockResolvedValueOnce(new Response(null, { status: 401 }));
         const read = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
           Effect.provide(reads({ profile: Effect.succeedSome(PROFILE) })),
           Effect.provideService(FetchHttpClient.Fetch, fetcher)
         );
         expect(read._tag).toBe("Visitor");
-        expect(fetcher).not.toHaveBeenCalled();
+        expect(fetcher).toHaveBeenCalledOnce();
       })
   );
 
@@ -448,7 +448,7 @@ describe("readBrowserSchoolFrame", () => {
     "reads a member's frame with the token from the school host's own token route",
     () =>
       Effect.gen(function* () {
-        stubBrowser("theme=dark; nakafa-signed-in=1");
+        stubBrowser();
         fetcher.mockResolvedValueOnce(Response.json({ token: "token-ayu" }));
         const read = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
           Effect.provide(memberReads),
@@ -467,7 +467,7 @@ describe("readBrowserSchoolFrame", () => {
     "fails the frame when the token route refuses, so an outage never reads as a visitor",
     () =>
       Effect.gen(function* () {
-        stubBrowser("nakafa-signed-in=1");
+        stubBrowser();
         fetcher.mockResolvedValueOnce(new Response(null, { status: 403 }));
         const failure = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
           Effect.provide(memberReads),

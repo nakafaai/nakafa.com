@@ -6,7 +6,6 @@ import {
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Schema } from "effect";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
-import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**
  * The Better Auth route that issues the Convex token, at the helper's default
@@ -100,16 +99,13 @@ export const requestSessionToken = Effect.fn("www.auth.requestSessionToken")(
 
 /**
  * Reads the Convex token in the browser, for a page that renders only there. The
- * session cookie is not readable in the browser, so the signed-in hint decides:
- * without it no request is sent and the token is `undefined`. The browser sends
- * the session cookie itself to the token route of the page's own host.
+ * session cookie is not readable in the browser, so the token route of the page's
+ * own host decides: the browser sends the session cookie itself, and the route
+ * answers `undefined` for a visitor with no session.
  */
 export const readBrowserSessionToken = Effect.fn(
   "www.auth.readBrowserSessionToken"
-)(function* (origin: string, cookie: string) {
-  if (!hasSignedInHint(cookie)) {
-    return;
-  }
+)(function* (origin: string) {
   return yield* requestSessionToken(
     HttpClientRequest.get(new URL(TOKEN_PATH, origin))
   );
