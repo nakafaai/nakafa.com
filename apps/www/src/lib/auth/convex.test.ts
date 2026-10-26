@@ -1,12 +1,23 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ConvexReactClient } from "convex/react";
-import { Deferred, Effect, Exit, Option, Scope } from "effect";
+import {
+  Deferred,
+  Effect,
+  Exit,
+  Fiber,
+  Option,
+  Queue,
+  Scope,
+  Stream,
+} from "effect";
+import { TestClock } from "effect/testing";
 import {
   authenticateConvex,
   ConvexAuthConfirmation,
   ConvexTokenReadError,
   createConvexAuthStore,
   hasSettledSignedOut,
+  pageReturns,
   readConvexAuth,
   readConvexSessionId,
   releaseConvexAuth,
@@ -39,25 +50,39 @@ function makeClient() {
   return { setAuth: vi.fn<ConvexReactClient["setAuth"]>() };
 }
 
+/** A token read that failed, and whether asking again may answer otherwise. */
+function failedRead(retryable: boolean) {
+  return Effect.fail(
+    new ConvexTokenReadError({ detail: "No token.", retryable })
+  );
+}
+
 /** Authenticates one session in a fresh scope and returns its handles. */
 const startSession = Effect.fnUntraced(function* (
   readToken: Effect.Effect<string, ConvexTokenReadError> = Effect.succeed(
     "token-1"
-  )
+  ),
+  returns: Stream.Stream<unknown> = Stream.empty
 ) {
   const client = makeClient();
   const store = createConvexAuthStore();
   const scope = yield* Scope.make();
   yield* Scope.provide(
-    authenticateConvex({ client, readToken, sessionId: "session-1", store }),
+    authenticateConvex({
+      client,
+      readToken,
+      returns,
+      sessionId: "session-1",
+      store,
+    }),
     scope
   );
   return { client, scope, store };
 });
 
 /** Returns the token fetcher and status callback of one setAuth call. */
-function readBinding(client: ReturnType<typeof makeClient>) {
-  const call = client.setAuth.mock.calls[0];
+function readBinding(client: ReturnType<typeof makeClient>, index = 0) {
+  const call = client.setAuth.mock.calls[index];
   if (call === undefined) {
     return expect.unreachable("setAuth was not called");
   }
@@ -116,7 +141,7 @@ describe("Convex authentication", () => {
     [
       signedIn("session-1"),
       answer("session-1", false),
-      { isAuthenticated: false, isLoading: false },
+      { isAuthenticated: false, isLoading: true },
     ],
   ])(
     "derives what readers see from the session and Convex's answer",
@@ -184,9 +209,7 @@ describe("Convex authentication", () => {
         const read = vi
           .fn<() => Effect.Effect<string, ConvexTokenReadError>>()
           .mockReturnValueOnce(Effect.succeed("token-1"))
-          .mockReturnValueOnce(
-            Effect.fail(new ConvexTokenReadError({ detail: "No token." }))
-          )
+          .mockReturnValueOnce(failedRead(false))
           .mockReturnValueOnce(Effect.succeed("token-2"));
         const { client } = yield* startSession(Effect.suspend(read));
         const { fetchToken } = readBinding(client);
@@ -258,11 +281,7 @@ describe("Convex authentication", () => {
         const read = vi
           .fn<() => Effect.Effect<string, ConvexTokenReadError>>()
           .mockReturnValueOnce(
-            Deferred.await(release).pipe(
-              Effect.andThen(
-                Effect.fail(new ConvexTokenReadError({ detail: "No token." }))
-              )
-            )
+            Deferred.await(release).pipe(Effect.andThen(failedRead(false)))
           )
           .mockReturnValueOnce(Effect.succeed("token-2"));
         const { client } = yield* startSession(Effect.suspend(read));
@@ -285,5 +304,117 @@ describe("Convex authentication", () => {
         ).toBe("token-2");
         expect(read).toHaveBeenCalledTimes(2);
       })
+  );
+  it.effect(
+    "reads again on the network schedule while a read fails on its way",
+    () =>
+      Effect.gen(function* () {
+        const read = vi
+          .fn<() => Effect.Effect<string, ConvexTokenReadError>>()
+          .mockReturnValueOnce(failedRead(true))
+          .mockReturnValueOnce(failedRead(true))
+          .mockReturnValueOnce(Effect.succeed("token-1"));
+        const { client } = yield* startSession(Effect.suspend(read));
+        const { fetchToken } = readBinding(client);
+        const request = fetchToken({ forceRefreshToken: false });
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("500 millis");
+        yield* TestClock.adjust("1 second");
+
+        expect(yield* Effect.promise(() => request)).toBe("token-1");
+        expect(read).toHaveBeenCalledTimes(3);
+      })
+  );
+
+  it.effect(
+    "answers none after two more reads fail on their way, and asks a refusal once",
+    () =>
+      Effect.gen(function* () {
+        const read = vi.fn(() => failedRead(true));
+        const { client } = yield* startSession(Effect.suspend(read));
+        const { fetchToken } = readBinding(client);
+        const request = fetchToken({ forceRefreshToken: false });
+        yield* Effect.yieldNow;
+        yield* TestClock.adjust("1500 millis");
+
+        expect(yield* Effect.promise(() => request)).toBeNull();
+        expect(read).toHaveBeenCalledTimes(3);
+
+        const refused = vi.fn(() => failedRead(false));
+        const second = yield* startSession(Effect.suspend(refused));
+        const answer = readBinding(second.client).fetchToken({
+          forceRefreshToken: false,
+        });
+
+        expect(yield* Effect.promise(() => answer)).toBeNull();
+        expect(refused).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "hands a refused session to Convex again when the reader comes back",
+    () =>
+      Effect.gen(function* () {
+        const returns = yield* Queue.unbounded<void>();
+        const { client, store } = yield* startSession(
+          Effect.succeed("token-1"),
+          Stream.fromQueue(returns)
+        );
+        const comeBack = Effect.gen(function* () {
+          yield* Queue.offer(returns, undefined);
+          yield* Effect.yieldNow;
+          yield* Effect.yieldNow;
+        });
+
+        yield* comeBack;
+        expect(client.setAuth).toHaveBeenCalledOnce();
+
+        readBinding(client).onChange(false);
+        yield* comeBack;
+        expect(client.setAuth).toHaveBeenCalledTimes(2);
+
+        readBinding(client, 1).onChange(true);
+        yield* comeBack;
+        expect(client.setAuth).toHaveBeenCalledTimes(2);
+        expect(store.getState().confirmation).toStrictEqual(
+          answer("session-1", true)
+        );
+      }).pipe(Effect.scoped)
+  );
+
+  it.effect(
+    "hears the reader come back when the tab shows again or the network returns",
+    () =>
+      Effect.gen(function* () {
+        const visibility = vi.spyOn(document, "visibilityState", "get");
+        const listened = vi.spyOn(window, "addEventListener");
+        const heard = yield* pageReturns.pipe(
+          Stream.take(2),
+          Stream.runCollect,
+          Effect.forkScoped
+        );
+        // The stream hears the page once it has added its listeners.
+        yield* Effect.promise(() =>
+          vi.waitFor(() => {
+            expect(listened).toHaveBeenCalledWith(
+              "online",
+              expect.any(Function)
+            );
+          })
+        );
+
+        visibility.mockReturnValue("hidden");
+        document.dispatchEvent(new Event("visibilitychange"));
+        window.dispatchEvent(new Event("online"));
+        visibility.mockReturnValue("visible");
+        document.dispatchEvent(new Event("visibilitychange"));
+
+        expect(yield* Fiber.join(heard)).toStrictEqual([
+          "online",
+          "visibilitychange",
+        ]);
+        visibility.mockRestore();
+        listened.mockRestore();
+      }).pipe(Effect.scoped)
   );
 });

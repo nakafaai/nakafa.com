@@ -195,6 +195,7 @@ function ReaderTranscript({
     canWrite: false,
     chat: view.chat,
     chatId,
+    deleted: false,
     draft: null,
     isLoading: false,
     isPending: false,

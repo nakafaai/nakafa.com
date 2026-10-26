@@ -305,6 +305,7 @@ export const assignGrantChange: OptimisticUpdate<
   const draft: Grant = {
     id: Schema.decodeUnknownSync(Id("tenantGrants"))(draftText()),
     person: { id: person.value.id, name: person.value.name },
+    revocable: true,
     role: { key: role, kind: "builtin" },
     scope,
   };

@@ -1,5 +1,6 @@
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import {
   createSchool,
   grantStudent,
@@ -10,7 +11,7 @@ import {
 } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-/** The Owner option of the Role filter, whose name ends with its count. */
+/** The Owner value of the Filter menu's Role group. */
 const OWNER_OPTION = /^Owner/;
 
 /** Adds one cohort of grade 7 to the active period, from the cohorts page. */
@@ -69,6 +70,22 @@ test("an admin opens the profile and the periods of a school", async ({
   await expect(
     page.getByRole("cell", { exact: true, name: "School opened" })
   ).toBeVisible();
+  // Export, the trail's main action, hands over the whole trail as a CSV file.
+  const download = page.waitForEvent("download");
+  await page.locator("header").getByRole("button", { name: "Export" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(
+    new RegExp(`^audit-${school.slug}-\\d{4}-\\d{2}-\\d{2}\\.csv$`)
+  );
+  const csv = await Effect.runPromise(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Effect.promise(() => file.path());
+      return yield* fs.readFileString(path);
+    }).pipe(Effect.provide(nodeServicesLayer))
+  );
+  expect(csv).toContain("When,Who,Change\r\n");
+  expect(csv).toContain(",School opened\r\n");
   await page
     .getByRole("navigation", { name: "breadcrumb" })
     .getByRole("link", { name: "Home" })
@@ -251,25 +268,73 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
     ownerGrant.getByRole("cell", { name: "Owner", exact: true })
   ).toBeVisible();
 
-  // A role chosen in the Role filter stays in its menu while the search hides every
-  // row, so it can be unchosen, and the grant shows again once both are cleared.
-  // The column's sort button is named Role too; the filter is the one that opens a menu.
-  const roleFilter = page
-    .getByRole("button", { name: "Role", exact: true })
-    .and(page.locator('[aria-haspopup="menu"]'));
-  await roleFilter.click();
-  await page.getByRole("menuitemcheckbox", { name: OWNER_OPTION }).click();
+  // The page is header and body: the header row holds the search box and the one Filter
+  // menu before the page's actions, and the table fills the body from edge to edge.
+  const search = header.getByRole("textbox", { name: "Find a person" });
+  await expect(search).toBeVisible();
+  const table = page.locator('[data-slot="table-container"]');
+  const [headerBox, tableBox] = await Promise.all([
+    header.boundingBox(),
+    table.boundingBox(),
+  ]);
+  expect(
+    Math.abs((headerBox?.width ?? 0) - (tableBox?.width ?? 0))
+  ).toBeLessThanOrEqual(1);
+  await expect(
+    ownerGrant.getByRole("button", { name: "More actions" })
+  ).toBeVisible();
+
+  // A role chosen in the Filter menu stays in its menu while the search hides every
+  // row, so it can be unchosen, and the grant shows again once both are cleared. Each
+  // value of the menu carries its icon.
+  const filter = header.getByRole("button", { name: "Filter" });
+  await filter.click();
+  const owner = page.getByRole("menuitemcheckbox", { name: OWNER_OPTION });
+  await expect(owner.locator("svg").first()).toBeVisible();
+  await owner.click();
   await page.keyboard.press("Escape");
-  await page.getByRole("textbox", { name: "Find a person" }).fill("Zygmunt");
+  await search.fill("Zygmunt");
   await expect(ownerGrant).toHaveCount(0);
-  await roleFilter.click();
-  const chosen = page.getByRole("menuitemcheckbox", { name: OWNER_OPTION });
-  await expect(chosen).toBeChecked();
-  await chosen.click();
-  await expect(chosen).not.toBeChecked();
+  await filter.click();
+  await expect(owner).toBeChecked();
+  await owner.click();
+  await expect(owner).not.toBeChecked();
   await page.keyboard.press("Escape");
-  await page.getByRole("textbox", { name: "Find a person" }).fill("");
+  await search.fill("");
   await expect(ownerGrant).toHaveCount(1);
+  await context.close();
+});
+
+test("on a phone a table page keeps one header row: the search opens from its button, and nothing scrolls sideways", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 844, width: 320 },
+  });
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/settings/roles"));
+  const header = page.locator('[data-slot="page-header"]');
+  await expect(header.getByRole("button", { name: "Give role" })).toBeVisible();
+  await expect(header).toHaveCSS("height", "64px");
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+
+  await waitUntilTakenOver(
+    header.getByRole("button", { name: "Find a person" })
+  );
+  await header.getByRole("button", { name: "Find a person" }).click();
+  await page.getByRole("textbox", { name: "Find a person" }).fill("Zygmunt");
+  await expect(
+    page.getByRole("row").filter({ hasText: "Acceptance Owner" })
+  ).toHaveCount(0);
   await context.close();
 });
 
@@ -294,3 +359,74 @@ test("an admin sees that no login card is issued yet on Student accounts, and th
   await expect(page.getByText("No login card issued yet.")).toBeVisible();
   await context.close();
 });
+
+for (const width of [390, 1440]) {
+  test(`an admin who revokes their own Admin role leaves the settings for the school's home, with one sentence, at ${width}`, async ({
+    browser,
+    baseURL,
+  }) => {
+    const school = await Effect.runPromise(createSchool());
+    const address = (path: string) =>
+      hostAddress(baseURL, `${school.slug}.localhost`, path);
+    const viewport = { height: 900, width };
+
+    // The Owner gives an invited learner the Admin role.
+    const learnerContext = await browser.newContext({ viewport });
+    await Effect.runPromise(
+      inviteLearner({
+        address: `admin-${width}-${school.slug}@acceptance.example.test`,
+        baseURL: address("/"),
+        context: learnerContext,
+        slug: school.slug,
+      })
+    );
+    const ownerContext = await browser.newContext({ viewport });
+    await Effect.runPromise(
+      signInOwner(ownerContext, school.slug, address("/"))
+    );
+    const owner = await ownerContext.newPage();
+    await owner.goto(address("/settings/roles"));
+    const give = owner
+      .locator("header")
+      .getByRole("button", { name: "Give role" });
+    await waitUntilTakenOver(give);
+    await give.click();
+    const dialog = owner.getByRole("dialog", { name: "Give a role" });
+    await dialog.getByRole("combobox", { name: "Person" }).click();
+    await owner.getByRole("option", { name: "Acceptance Learner" }).click();
+    await dialog.getByRole("combobox", { name: "Role" }).click();
+    await owner.getByRole("option", { exact: true, name: "Admin" }).click();
+    await dialog.getByRole("button", { name: "Give role" }).click();
+    await expect(
+      owner
+        .getByRole("row")
+        .filter({ hasText: "Acceptance Learner" })
+        .getByRole("cell", { exact: true, name: "Admin" })
+    ).toBeVisible();
+    await ownerContext.close();
+
+    // The Admin revokes the role that opens the settings: the page leaves for the school's
+    // home before the role ends, so the settings never turn into the refused page.
+    const admin = await learnerContext.newPage();
+    await admin.goto(address("/settings/roles"));
+    const row = admin
+      .getByRole("row")
+      .filter({ hasText: "Acceptance Learner" })
+      .filter({ has: admin.getByRole("cell", { exact: true, name: "Admin" }) });
+    const more = row.getByRole("button", { name: "More actions" });
+    await waitUntilTakenOver(more);
+    await more.click();
+    await admin.getByRole("menuitem", { name: "Revoke" }).click();
+    await admin
+      .getByRole("dialog", { name: "Revoke this role?" })
+      .getByRole("button", { name: "Revoke" })
+      .click();
+
+    await expect(admin).toHaveURL(address("/"));
+    await expect(admin.getByText("Your role has ended.")).toBeVisible();
+    await expect(
+      admin.getByText("Your access to this school has changed.")
+    ).toHaveCount(0);
+    await learnerContext.close();
+  });
+}

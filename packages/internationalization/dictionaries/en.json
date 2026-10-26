@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Filter",
     "no-results": "No results.",
     "reset": "Reset"
   },
@@ -225,9 +226,7 @@
     "release-title": "Release the results to students?",
     "release-description": "Each student sees their own score and answers once you release them.",
     "release-action": "Release results",
-    "release-footer": "Students see their results after you release them.",
-    "release-wait-footer": "The exam author or the Admin releases the results once the sitting closes.",
-    "released-footer": "Students can see their results.",
+    "released": "Released",
     "student-results-title": "Your result",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
@@ -247,9 +246,9 @@
     "schedule-keys": "Mark the correct answer of every question first.",
     "schedule-past": "The start has passed. Choose a later time.",
     "rooms-title": "Rooms",
+    "edit-action": "Edit exam",
     "rooms-empty": "No rooms yet",
     "rooms-empty-description": "Each room appears here once the exam is scheduled.",
-    "rooms-empty-action": "Open the exam",
     "rooms-filter-empty": "No room is in this state",
     "rooms-filter-empty-description": "Choose another state to see the other rooms.",
     "rooms-unavailable": "You cannot view the rooms of this exam.",
@@ -292,6 +291,19 @@
     "fullscreen": "Full screen",
     "fullscreen-exit": "Exit full screen",
     "zoom": "Zoom",
+    "zoom-options": "Zoom options",
+    "zoom-fit": "Fit",
+    "zoom-fill": "Fill",
+    "page-of": "Question {current} of {total}, go to a question",
+    "page-jump": "Go to question, 1 to {total}",
+    "open-question": "Open question {number}",
+    "select-question": "Select question {number}",
+    "select-all": "Select all",
+    "grid-duplicate": "Duplicate",
+    "grid-delete": "Delete",
+    "selected-count": "{count} selected",
+    "remove-many-title": "{count, plural, one {Remove # question?} other {Remove # questions?}}",
+    "remove-many-description": "The questions and their answers leave this exam.",
     "student-retry": "This sitting could not load, so try again in a moment.",
     "student-opens-at": "This sitting opens {time}.",
     "student-scheduled-footer": "The token field opens with the sitting.",
@@ -521,13 +533,13 @@
     "client-secret-title": "New secret",
     "client-secret-description": "Copy it now, because it will not be shown again.",
     "audit-description": "Who changed what in this school, and when.",
-    "audit-footer": "Policy values are not copied into the trail.",
     "audit-view": "View trail",
     "audit-when": "When",
     "audit-who": "Who",
     "audit-change": "Change",
     "audit-empty": "Nothing has changed yet.",
     "audit-search": "Find a change",
+    "audit-export": "Export",
     "audit-operator": "Nakafa staff",
     "audit-system": "System",
     "audit-label": {
@@ -787,7 +799,6 @@
     "no-unit-description": "Periods and cohorts belong to an active unit. Restore or add one first.",
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
-    "members-empty-action": "Open invitations",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
     "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
     "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
@@ -1579,6 +1590,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "This chat was deleted."
+    },
     "image-refused-size": {
       "title": "The image was not added.",
       "description": "Choose an image of at most 2 MB."
@@ -2047,6 +2061,13 @@
     "import-encrypted": {
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
+    },
+    "audit-export-error": {
+      "title": "We could not export the trail.",
+      "description": "Check your connection, then try again."
+    },
+    "school-own-role-ended": {
+      "title": "Your role has ended."
     }
   },
   "Ai": {

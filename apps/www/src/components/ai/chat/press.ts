@@ -19,8 +19,15 @@ interface ChatDeletion {
    * so the page moves on.
    */
   deleted: () => void;
+  /**
+   * Stops showing the chat in Nina's sheet at the press, and answers whether the
+   * sheet showed it, so a delete that did not happen shows it there again.
+   */
+  forget: () => boolean;
   /** Stops reading the chat at the press, because the server is about to delete it. */
   leave: () => void;
+  /** Shows the chat in Nina's sheet again, because the delete did not happen. */
+  recall: () => void;
   /** Runs when the delete did not happen, so the chat shows again. */
   refused: () => void;
   /**
@@ -33,16 +40,19 @@ interface ChatDeletion {
 /**
  * Runs one press of Delete. The press closes the confirmation and leaves the
  * chat before the socket is awaited, so the page stops reading the chat at
- * once, and a second press finds the chat leaving. The delete starts when the
- * socket is connected. A delete that no socket carries, or that the server
- * refuses, runs `refused`.
+ * once, and a second press finds the chat leaving. Nina's sheet lets the chat
+ * go at the press too, because its read would fail once the server deletes it.
+ * The delete starts when the socket is connected. A delete that no socket
+ * carries, or that the server refuses, shows the chat in the sheet again when
+ * the sheet showed it, and runs `refused`.
  */
 export const deleteOnPress = Effect.fn("www.chat.deleteOnPress")(function* (
   deletion: ChatDeletion
 ) {
-  yield* Effect.sync(() => {
+  const shown = yield* Effect.sync(() => {
     deletion.close();
     deletion.leave();
+    return deletion.forget();
   });
   yield* requireConvexOnline(deletion.convex).pipe(
     Effect.andThen(
@@ -66,7 +76,13 @@ export const deleteOnPress = Effect.fn("www.chat.deleteOnPress")(function* (
             deletion.deleted();
           }
         }),
-      onFailure: () => Effect.sync(deletion.refused),
+      onFailure: () =>
+        Effect.sync(() => {
+          if (shown) {
+            deletion.recall();
+          }
+          deletion.refused();
+        }),
     })
   );
 });

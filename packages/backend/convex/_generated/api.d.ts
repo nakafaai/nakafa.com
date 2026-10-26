@@ -66,6 +66,7 @@ export declare const api: {
           page: Array<{
             id: Id<"tenantGrants">;
             person: { id: Id<"tenantPeople">; name: string };
+            revocable: boolean;
             role: {
               key:
                 | "owner"
