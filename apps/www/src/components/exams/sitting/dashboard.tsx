@@ -15,14 +15,13 @@ import { SittingHeader } from "@/components/exams/sitting/header";
 import { SittingPanel } from "@/components/exams/sitting/panel";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
-import { SittingToolbar } from "@/components/exams/sitting/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
- * The proctor's dashboard of one sitting: the page's header with the room and the token, the
- * filter row, the seats of the students, and the panel of the selected student beside them. A principal or a deputy sees the seats
+ * The proctor's dashboard of one sitting: the page's header with the room, the token and the
+ * seats' Filter menu, the seats of the students, and the panel of the selected student beside them. A principal or a deputy sees the seats
  * and takes no action, because only a proctor may act (ADR 0013). The page of attempts is
  * read once, the first page, and the proctor's own changes show at once.
  */
@@ -69,7 +68,6 @@ export function SittingDashboard({
         <SittingHeader examId={examId} />
         <div className="flex min-w-0 flex-1">
           <div className="grid min-w-0 flex-1 content-start gap-4 p-4 md:p-6">
-            <SittingToolbar />
             <SittingSeats />
           </div>
           <SittingPanel />
