@@ -90,6 +90,7 @@
   "SchoolGuardians": {
     "sign-in-action": "Als Elternteil anmelden",
     "email-label": "E-Mail der Eltern",
+    "email-placeholder": "eltern@beispiel.de",
     "email-description": "Nutze die E-Mail, die die Schule hinterlegt hat.",
     "email-invalid": "Gib eine gültige E-Mail-Adresse ein.",
     "send-code": "Code senden",
@@ -131,6 +132,7 @@
     "links-search": "Schüler suchen",
     "student": "Schüler",
     "guardian-name": "Name der Eltern",
+    "guardian-name-placeholder": "Vollständiger Name des Elternteils",
     "status": "Status",
     "status-pending": "Ausstehend",
     "status-verified": "Bestätigt",

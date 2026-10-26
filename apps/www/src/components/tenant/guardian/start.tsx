@@ -125,6 +125,7 @@ export function GuardianLinkStartDialog({
           <Input
             id={`${id}-name`}
             onChange={(event) => setName(event.target.value)}
+            placeholder={t("guardian-name-placeholder")}
             value={name}
           />
         </Field>
@@ -135,6 +136,7 @@ export function GuardianLinkStartDialog({
             id={`${id}-email`}
             inputMode="email"
             onChange={(event) => setEmail(event.target.value)}
+            placeholder={t("email-placeholder")}
             type="email"
             value={email}
           />

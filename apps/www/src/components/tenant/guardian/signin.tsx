@@ -142,6 +142,7 @@ function GuardianSignInForm() {
               id={`${id}-email`}
               inputMode="email"
               onChange={(event) => setEmail(event.target.value)}
+              placeholder={t("email-placeholder")}
               type="email"
               value={email}
             />
@@ -156,6 +157,7 @@ function GuardianSignInForm() {
               inputMode="numeric"
               maxLength={7}
               onChange={(event) => setCode(event.target.value)}
+              placeholder="123456"
               value={code}
             />
             <FieldDescription>
