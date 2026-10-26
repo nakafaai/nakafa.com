@@ -6,8 +6,12 @@ import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Crypto, Effect, Schema } from "effect";
 import { Base64Url, Hex } from "effect/encoding";
 
-/** The most seats one seed call seats, as the seed function takes them. */
-const SEATS_PER_CALL = 50;
+/**
+ * The seats one seed call seats: half of what the seed function takes, so a call stays well
+ * inside the local backend's five-second limit on a busy machine. Each seat writes two Better
+ * Auth rows, the app profile, a Person and a grant.
+ */
+const SEATS_PER_CALL = 25;
 
 /** How many seed calls run at once: each is a Convex CLI process of its own. */
 const SEED_CONCURRENCY = 4;
