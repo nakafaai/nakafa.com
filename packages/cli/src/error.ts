@@ -70,3 +70,13 @@ export function makeInvocationError(error: CliError.CliError) {
         : error.message,
   });
 }
+
+/**
+ * A school command the server refused or could not finish: the OAuth error of a sign-in,
+ * the API error of a read, or a missing or expired sign-in, with its code and a sentence
+ * that says what to do next.
+ */
+export class SchoolError extends Schema.TaggedError<SchoolError>()(
+  "SchoolError",
+  { code: Schema.String, message: Schema.String }
+) {}
