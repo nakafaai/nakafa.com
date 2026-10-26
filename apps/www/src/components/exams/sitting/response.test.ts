@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Option, Schema } from "effect";
-import { choiceOf, toggleOption } from "@/components/exams/sitting/response";
+import {
+  choiceOf,
+  entryOf,
+  toggleOption,
+} from "@/components/exams/sitting/response";
 
 const decodeInteraction = Schema.decodeUnknownSync(InteractionSchema);
 
@@ -77,5 +81,22 @@ describe("toggleOption", () => {
     expect(
       toggleOption(["option-1", "option-2"], "option-1", false, 2)
     ).toEqual(["option-2"]);
+  });
+
+describe("entryOf", () => {
+  /** A short answer's text entry, which a student types into. */
+  const entry = decodeInteraction({
+    id: "entry",
+    kind: "textEntry",
+    label: "Answer",
+  });
+
+  it("finds the text entry of a question that holds only it", () => {
+    expect(entryOf([entry])).toEqual(Option.some(entry));
+  });
+
+  it("finds no text entry in a choice, or in a question of two interactions", () => {
+    expect(entryOf([choice(1)])).toEqual(Option.none());
+    expect(entryOf([entry, choice(1)])).toEqual(Option.none());
   });
 });

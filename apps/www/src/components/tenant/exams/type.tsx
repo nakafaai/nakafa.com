@@ -2,6 +2,7 @@ import {
   ArrowDown01Icon,
   CheckmarkSquare02Icon,
   FlowConnectionIcon,
+  InputTextIcon,
   RadioButtonIcon,
   ThumbsUpDownIcon,
 } from "@hugeicons/core-free-icons";
@@ -21,12 +22,14 @@ import { useTranslations } from "use-intl";
 
 /**
  * The icon each template shows by: a radio for one answer, a check box for several, a thumb up and
- * down for true or false, and a flow from a statement to its reason for cause and effect.
+ * down for true or false, a flow from a statement to its reason for cause and effect, and a text
+ * field for a short answer.
  */
 const TEMPLATE_ICON = {
   cause: FlowConnectionIcon,
   choice: RadioButtonIcon,
   choices: CheckmarkSquare02Icon,
+  short: InputTextIcon,
   truefalse: ThumbsUpDownIcon,
 } satisfies Record<QuestionTemplate, typeof RadioButtonIcon>;
 
@@ -35,6 +38,7 @@ const TEMPLATE_NAME = {
   cause: "template-cause",
   choice: "template-choice",
   choices: "template-choices",
+  short: "template-short",
   truefalse: "template-truefalse",
 } as const satisfies Record<QuestionTemplate, string>;
 

@@ -332,7 +332,15 @@
     "cause-unrelated": "Aussage und Begründung sind richtig, hängen aber nicht zusammen",
     "cause-reason-false": "Die Aussage ist richtig und die Begründung falsch",
     "cause-statement-false": "Die Aussage ist falsch und die Begründung richtig",
-    "cause-both-false": "Aussage und Begründung sind falsch"
+    "cause-both-false": "Aussage und Begründung sind falsch",
+    "template-short": "Kurzantwort",
+    "short-placeholder": "Antwort eingeben",
+    "short-line": "Antwortzeile",
+    "accepted-answers": "Akzeptierte Antworten",
+    "accepted-of": "Akzeptierte Antwort {index} von Frage {number}",
+    "accepted-remove-of": "Akzeptierte Antwort {index} von Frage {number} entfernen",
+    "accepted-add": "Antwort hinzufügen",
+    "accepted-hint": "Groß- und Kleinschreibung und zusätzliche Leerzeichen zählen nicht, und jede andere Antwort wartet auf deine Bewertung."
   },
   "SchoolSettings": {
     "school": "Schule",

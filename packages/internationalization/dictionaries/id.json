@@ -332,7 +332,15 @@
     "cause-unrelated": "Pernyataan dan alasan benar tetapi tidak berhubungan",
     "cause-reason-false": "Pernyataan benar dan alasan salah",
     "cause-statement-false": "Pernyataan salah dan alasan benar",
-    "cause-both-false": "Pernyataan dan alasan salah"
+    "cause-both-false": "Pernyataan dan alasan salah",
+    "template-short": "Isian singkat",
+    "short-placeholder": "Ketik jawabanmu",
+    "short-line": "Kolom jawaban",
+    "accepted-answers": "Jawaban yang diterima",
+    "accepted-of": "Jawaban diterima {index} soal {number}",
+    "accepted-remove-of": "Hapus jawaban diterima {index} soal {number}",
+    "accepted-add": "Tambah jawaban",
+    "accepted-hint": "Huruf besar dan spasi berlebih tidak dihitung, dan jawaban lain menunggu kamu nilai."
   },
   "SchoolSettings": {
     "school": "Sekolah",

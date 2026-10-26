@@ -332,7 +332,15 @@
     "cause-unrelated": "The statement and the reason are true but not related",
     "cause-reason-false": "The statement is true and the reason is false",
     "cause-statement-false": "The statement is false and the reason is true",
-    "cause-both-false": "The statement and the reason are false"
+    "cause-both-false": "The statement and the reason are false",
+    "template-short": "Short answer",
+    "short-placeholder": "Type your answer",
+    "short-line": "Answer line",
+    "accepted-answers": "Accepted answers",
+    "accepted-of": "Accepted answer {index} of question {number}",
+    "accepted-remove-of": "Remove accepted answer {index} of question {number}",
+    "accepted-add": "Add answer",
+    "accepted-hint": "Case and extra spaces do not count, and any other answer waits for you to mark."
   },
   "SchoolSettings": {
     "school": "School",
