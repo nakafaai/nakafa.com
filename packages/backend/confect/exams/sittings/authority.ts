@@ -11,12 +11,10 @@ import {
   SittingAccess,
   type SittingWithExam,
 } from "@repo/backend/confect/exams/sittings/access";
+import { cohortSittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
 import { sittingKind } from "@repo/backend/confect/exams/sittings/kinds";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
-import {
-  cohortLocked,
-  scopePlace,
-} from "@repo/backend/confect/tenancy/authority";
+import { scopePlace } from "@repo/backend/confect/tenancy/authority";
 import { Effect, Option } from "effect";
 
 /**
@@ -57,32 +55,6 @@ const loadSitting = Effect.fn("exams.sittings.authority.load")(function* (
 });
 
 /**
- * Whether the cohort of a cohort sitting is locked: its own archive, its period's, or its
- * unit's locks the sitting too. A unit sitting holds no cohort, so no cohort locks it.
- */
-const cohortLockedOf = Effect.fn("exams.sittings.authority.cohort")(function* (
-  row: Pick<ExamSittingsDoc, "cohortId">
-) {
-  if (row.cohortId === null) {
-    return false;
-  }
-  const reader = yield* DatabaseReader;
-  const cohort = yield* reader
-    .table("tenantCohorts")
-    .get(row.cohortId)
-    .pipe(Effect.orDie);
-  const period = yield* reader
-    .table("tenantPeriods")
-    .get(cohort.periodId)
-    .pipe(Effect.orDie);
-  const unit = yield* reader
-    .table("tenantUnits")
-    .get(cohort.unitId)
-    .pipe(Effect.orDie);
-  return cohortLocked(cohort, period, unit);
-});
-
-/**
  * A sitting sits in its unit, so an archived unit locks it, and a closed sitting is
  * locked as well (ADR 0012, decision 3). A cohort sitting sits in its cohort too, so an
  * archived cohort or period locks it.
@@ -90,7 +62,7 @@ const cohortLockedOf = Effect.fn("exams.sittings.authority.cohort")(function* (
 export const sittingAuthority = Authority.make(sittingKind, loadSitting, {
   place: (row) =>
     Effect.all({
-      cohort: cohortLockedOf(row),
+      cohort: cohortSittingLocked(row),
       placement: scopePlace({ kind: "unit", unitId: row.unitId }),
     }).pipe(
       Effect.map(({ cohort, placement }) => ({

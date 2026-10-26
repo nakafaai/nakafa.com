@@ -1,5 +1,9 @@
+import type { OptimisticLocalStore } from "@confect/react";
+import { Id } from "@repo/backend/confect/_generated/id";
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { PaperView } from "@repo/backend/confect/exams/sittings/contract";
-import { Array as Arr } from "effect";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** The paper of a student's open attempt, as the server reads it. */
 export type PaperValue = typeof PaperView.Type;
@@ -43,4 +47,37 @@ export function setPaperFlag(
  */
 export function nextVersionOf(question: PaperQuestion) {
   return (question.version ?? 0) + 1;
+}
+
+/** The key of one student's paper: the device that holds the attempt, and its sitting. */
+const PaperKey = Schema.Struct({
+  deviceId: Schema.String,
+  sittingId: Id("examSittings"),
+  slug: TenantSlug,
+});
+
+/**
+ * Replaces the paper that the local store holds for one student with `change` of it, when the store holds
+ * it, so an answer or a flag shows at once and Convex rolls it back when the server refuses the call.
+ */
+export function changePaper(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  key: typeof PaperKey.Type,
+  change: (paper: PaperValue) => PaperValue
+) {
+  const args = {
+    deviceId: key.deviceId,
+    sittingId: key.sittingId,
+    slug: key.slug,
+  };
+  const current = Option.getOrUndefined(
+    localStore.getQuery(exams.sittings.paper, args)
+  );
+  if (current !== undefined) {
+    localStore.setQuery(
+      exams.sittings.paper,
+      args,
+      Option.some(change(current))
+    );
+  }
 }
