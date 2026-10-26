@@ -119,7 +119,8 @@ describe("load command", () => {
         mocks.open.mockReturnValue("the connection");
         mocks.issue.mockReturnValue(Effect.succeed("jwt"));
         expect(load.connect("session-1")).toBe("the connection");
-        const [address, token] = mocks.open.mock.calls[0] ?? [];
+        const address: string = mocks.open.mock.calls[0]?.[0];
+        const token: Effect.Effect<string> = mocks.open.mock.calls[0]?.[1];
         expect(address).toBe(runtime.query);
         expect(yield* token).toBe("jwt");
         expect(mocks.issue).toHaveBeenCalledWith(
