@@ -17,6 +17,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";
+import { ProOfferDialog } from "@/components/billing/offers";
 import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import { getProPricingDisplay } from "@/components/marketing/about/pricing/display";
 import { PricingYearly } from "@/components/marketing/about/pricing/price";
@@ -55,8 +56,8 @@ function Benefit({ icon, text }: { icon: typeof Tick01Icon; text: string }) {
  * The plan card of a free viewer, one card with one header: the Pro offer names
  * the card, its price in the viewer's currency and its benefits fill the body, and
  * the footer says the viewer is on Free beside the Upgrade action, which starts
- * checkout here, not on the pricing page. The checkout offers monthly and yearly,
- * and the learner picks there.
+ * checkout here, not on the pricing page. Where the currency sells more than one
+ * offer, the payment method dialog asks which first.
  */
 export function UpgradePlanCard() {
   const billing = useBillingNavigation();
@@ -119,6 +120,12 @@ export function UpgradePlanCard() {
           </Button>
         </CardSectionActions>
       </CardSectionFooter>
+      <ProOfferDialog
+        choose={billing.chooseOffer}
+        dismiss={billing.dismissChoice}
+        isPending={billing.isPending}
+        offers={billing.choice?.offers ?? null}
+      />
     </CardSection>
   );
 }

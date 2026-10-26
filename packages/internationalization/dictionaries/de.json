@@ -1374,6 +1374,9 @@
     "plan-pro-past-due-footer": "Aktualisiere deine Zahlungsmethode.",
     "plan-granted-description": "Pro ist auf diesem Konto aktiv.",
     "plan-granted-footer": "Nakafa rechnet ihn nicht ab.",
+    "plan-pass-description": "Dein Pro-Pass läuft bis {date}.",
+    "plan-pass-footer": "Ein weiterer Pass beginnt, wenn dieser endet.",
+    "plan-pass-extend": "Pro verlängern",
     "period-start": "Zeitraum beginnt",
     "renews-on": "Verlängert sich am",
     "ends-on": "Endet am",
@@ -2240,7 +2243,14 @@
     "pro-feature-2": "{credits, number} Credits jeden Monat, um Nina zu fragen",
     "pro-feature-3": "Vollständige Lösungswege für alle Probetests, auch für frühere Versuche",
     "pro-feature-5": "Vorrangige Hilfe, wenn du Anleitung brauchst",
-    "pro-cta": "Pro holen"
+    "pro-cta": "Pro holen",
+    "offer-title": "Zahlungsart wählen",
+    "offer-description": "Das Monatsabo verlängert sich selbst, ein Pass wird einmal bezahlt.",
+    "offer-monthly": "Monatlich",
+    "offer-monthly-method": "Verlängert sich jeden Monat mit E-Wallet oder Karte.",
+    "offer-pass": "{months, plural, one {Pass für # Monat} other {Pass für # Monate}}",
+    "offer-pass-method": "Einmal bezahlt mit QRIS, Banküberweisung oder E-Wallet.",
+    "offer-continue": "Weiter"
   },
   "PricingPage": {
     "metadata-title": "Nakafa Preise: Kostenlos und Pro",

@@ -1374,6 +1374,9 @@
     "plan-pro-past-due-footer": "Perbarui metode pembayaranmu.",
     "plan-granted-description": "Pro aktif di akun ini.",
     "plan-granted-footer": "Nakafa tidak menagihnya.",
+    "plan-pass-description": "Pass Pro kamu berlaku sampai {date}.",
+    "plan-pass-footer": "Pass berikutnya mulai saat pass ini berakhir.",
+    "plan-pass-extend": "Perpanjang Pro",
     "period-start": "Periode mulai",
     "renews-on": "Diperpanjang pada",
     "ends-on": "Berakhir pada",
@@ -2240,7 +2243,14 @@
     "pro-feature-2": "{credits, number} kredit setiap bulan untuk tanya Nina",
     "pro-feature-3": "Pembahasan lengkap semua try out, termasuk percobaan sebelumnya",
     "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
-    "pro-cta": "Ambil Pro"
+    "pro-cta": "Ambil Pro",
+    "offer-title": "Pilih cara bayar",
+    "offer-description": "Paket bulanan diperpanjang otomatis, dan pass dibayar sekali.",
+    "offer-monthly": "Bulanan",
+    "offer-monthly-method": "Diperpanjang tiap bulan dengan e-wallet atau kartu.",
+    "offer-pass": "Pass {months} bulan",
+    "offer-pass-method": "Dibayar sekali dengan QRIS, transfer bank, atau e-wallet.",
+    "offer-continue": "Lanjut"
   },
   "PricingPage": {
     "metadata-title": "Harga Nakafa: Gratis dan Pro",

@@ -7,7 +7,10 @@ import {
   billingOffer,
   billingOfferPrice,
 } from "@repo/backend/confect/billing/catalog";
-import { scheduleProjection } from "@repo/backend/confect/billing/grants";
+import {
+  latestPersonalGrant,
+  scheduleProjection,
+} from "@repo/backend/confect/billing/grants";
 import { recordPayment } from "@repo/backend/confect/billing/payments";
 import {
   BillingRowMissing,
@@ -64,7 +67,8 @@ const readXenditAccount = Effect.fn("billing.xendit.session.readAccount")(
 
 /**
  * Records a paid pass once, and gives its owner Pro for the offer's months from
- * the moment Nakafa learns of the payment. Xendit names the payment once a pay
+ * the moment Nakafa learns of the payment, or from the end of the Pro they still
+ * hold. Xendit names the payment once a pay
  * session completes; the session ID stands in when it does not.
  */
 const applyPassPaid = Effect.fn("billing.xendit.session.passPaid")(function* (
@@ -101,15 +105,20 @@ const applyPassPaid = Effect.fn("billing.xendit.session.passPaid")(function* (
   ) {
     return;
   }
+  // A pass bought while Pro still runs starts where that Pro ends, so the learner loses no day of either.
+  const start = Option.match(
+    yield* latestPersonalGrant(account.owner.userId, now),
+    { onNone: () => now, onSome: (grant) => Math.max(now, grant.validTo) }
+  );
   yield* (yield* DatabaseWriter)
     .table("billingGrants")
     .insert({
       product: "pro",
       userId: account.owner.userId,
       source: { kind: "pass", paymentId: recorded.paymentId },
-      validFrom: now,
+      validFrom: start,
       validTo: DateTime.toEpochMillis(
-        DateTime.add(DateTime.makeUnsafe(now), { months: offer.months })
+        DateTime.add(DateTime.makeUnsafe(start), { months: offer.months })
       ),
     })
     .pipe(Effect.orDie);

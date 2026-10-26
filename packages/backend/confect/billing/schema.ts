@@ -86,10 +86,15 @@ export const billingSubscriptionSummaryValidator = Schema.Struct({
   rail: BillingRail,
 });
 
-/** What the billing settings show for a viewer: the plan, the subscription that bills it, and the Nina credits. */
+/** What Pro a learner holds: none, only passes, which another pass extends, or a plan billed elsewhere. */
+export const ProHolding = Schema.Literals(["none", "pass", "plan"]);
+
+/** What the billing settings show for a viewer: the plan, the subscription that bills it, the passes, and the Nina credits. */
 export const billingOverviewValidator = Schema.Struct({
   plan: userPlanValidator,
   subscription: Schema.NullOr(billingSubscriptionSummaryValidator),
+  /** The Pro passes a viewer holds while only passes give them Pro: the moment the last of them ends, which another pass extends. */
+  pass: Schema.NullOr(Schema.Struct({ endsAt: Schema.Finite })),
   credits: Schema.Struct({
     /** The credits the plan grants each reset period. */
     allowance: Schema.Finite,

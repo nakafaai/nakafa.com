@@ -46,6 +46,7 @@ describe("billing/queries overview", () => {
           lots: { balance: 0, expiresAt: null },
           resetAt: NEXT_DAY,
         },
+        pass: null,
         plan: "free",
         subscription: null,
       });
@@ -76,6 +77,7 @@ describe("billing/queries overview", () => {
           lots: { balance: 0, expiresAt: null },
           resetAt: NEXT_MONTH,
         },
+        pass: null,
         plan: "pro",
         subscription: {
           cancelAtPeriodEnd: false,
@@ -191,6 +193,91 @@ describe("billing/queries overview", () => {
         balance: 1600,
         expiresAt: NEXT_MONTH,
       });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("billing/queries proOffers", () => {
+  it("sells the monthly plan alone in rupiah on Polar, and the passes beside it once Xendit takes Indonesia", async () => {
+    const t = createConvexTestWithBetterAuth();
+    try {
+      expect(
+        await t.query(api.billing.queries.proOffers, { currency: "IDR" })
+      ).toEqual([
+        { amount: 79_000, currency: "IDR", months: 1, offer: "pro.monthly" },
+      ]);
+      vi.stubEnv("BILLING_INDONESIA_RAIL", "xendit");
+      vi.stubEnv("XENDIT_API_KEY", "test-secret");
+      expect(
+        await t.query(api.billing.queries.proOffers, { currency: "IDR" })
+      ).toEqual([
+        { amount: 79_000, currency: "IDR", months: 1, offer: "pro.monthly" },
+        { amount: 79_000, currency: "IDR", months: 1, offer: "pro.pass.1" },
+        { amount: 229_000, currency: "IDR", months: 3, offer: "pro.pass.3" },
+        { amount: 790_000, currency: "IDR", months: 12, offer: "pro.pass.12" },
+      ]);
+      expect(
+        await t.query(api.billing.queries.proOffers, { currency: "USD" })
+      ).toEqual([
+        { amount: 899, currency: "USD", months: 1, offer: "pro.monthly" },
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
+describe("billing/queries overview pass", () => {
+  it("shows a viewer who holds only a pass the moment it ends, and nothing once a contract gives Pro beside it", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    try {
+      const { authed, t, user } = await signIn("pro");
+      await t.mutation(async (ctx) => {
+        const accountId = await ctx.db.insert("billingAccounts", {
+          owner: { kind: "personal", userId: user.userId },
+          rail: "xendit",
+          country: "ID",
+          currency: "IDR",
+          providerCustomerId: null,
+        });
+        const paymentId = await ctx.db.insert("billingPayments", {
+          kind: "pass",
+          accountId,
+          status: "succeeded",
+          amount: 79_000,
+          currency: "IDR",
+          rail: "xendit",
+          providerPaymentId: "py-overview-pass",
+          providerUpdatedAt: NOW,
+          method: "session",
+          paidAt: NOW,
+        });
+        await ctx.db.insert("billingGrants", {
+          product: "pro",
+          userId: user.userId,
+          source: { kind: "pass", paymentId },
+          validFrom: NOW,
+          validTo: NEXT_MONTH,
+        });
+      });
+      expect(
+        (await authed.query(api.billing.queries.overview, {})).pass
+      ).toEqual({ endsAt: NEXT_MONTH });
+      await t.mutation((ctx) =>
+        ctx.db.insert("billingGrants", {
+          product: "pro",
+          userId: user.userId,
+          source: { kind: "contract", contractId: "contract-overview" },
+          validFrom: NOW,
+          validTo: NEXT_MONTH,
+        })
+      );
+      expect(
+        (await authed.query(api.billing.queries.overview, {})).pass
+      ).toBeNull();
     } finally {
       vi.useRealTimers();
     }

@@ -1,9 +1,11 @@
+import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import type {
   BillingRail,
   billingOverviewValidator,
   billingSubscriptionSummaryValidator,
 } from "@repo/backend/confect/billing/schema";
 import { Number as Num } from "effect";
+import { getProMonthlyPricingFor } from "@/lib/pricing/monthly";
 
 /** What the billing settings show for a viewer. */
 export type BillingOverview = typeof billingOverviewValidator.Type;
@@ -15,8 +17,9 @@ export type BillingSubscription =
 /**
  * The state of the plan card for one overview. A subscription on the account
  * decides the card, so a past-due subscription keeps its billing portal in reach.
- * Without one, the plan the grants project decides: Free shows the upgrade, and
- * Pro that no subscription on this account bills is granted from elsewhere.
+ * Without one, passes show when they alone give Pro, so another one extends them;
+ * otherwise the plan the grants project decides: Free shows the upgrade, and Pro
+ * that no subscription on this account bills is granted from elsewhere.
  * `ending` means the subscription stops with its paid period, because it cancels
  * there or is already canceled. Nothing decodes this state, so its type is the
  * union that this function returns.
@@ -31,6 +34,9 @@ export function planStateOf(overview: BillingOverview) {
         subscription.cancelAtPeriodEnd || subscription.status === "canceled",
       pastDue: subscription.status === "pastDue",
     } as const;
+  }
+  if (overview.pass !== null) {
+    return { kind: "pass", endsAt: overview.pass.endsAt } as const;
   }
   if (overview.plan === "pro") {
     return { kind: "granted" } as const;
@@ -84,6 +90,15 @@ export function formatBillingDate(moment: number, locale: string) {
 /** A count of credits in the digits of one locale. */
 export function formatCount(count: number, locale: string) {
   return new Intl.NumberFormat(locale).format(count);
+}
+
+/**
+ * An amount in a currency's minor units (rupiah, cents) as the pages write that
+ * currency, with the formatter the prices use, so an invoice reads like the price.
+ */
+export function formatMinorAmount(amount: number, currency: BillingCurrency) {
+  const pricing = getProMonthlyPricingFor(currency);
+  return pricing.formatter.format(amount / 10 ** pricing.price.fractionDigits);
 }
 
 /**

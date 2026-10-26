@@ -105,6 +105,41 @@ describe("billing/xendit/session", () => {
     );
   });
 
+  it("starts a pass bought while Pro still runs where that Pro ends", async () => {
+    const t = createBillingTestConvex();
+    const runningEnd = Date.UTC(2099, 0, 31);
+    const grants = await t.run(async (ctx) => {
+      const { userId } = await seedCheckout(ctx, "pro.pass.1");
+      await ctx.db.insert("billingGrants", {
+        product: "pro",
+        userId,
+        source: { kind: "contract", contractId: "contract-running" },
+        validFrom: 0,
+        validTo: runningEnd,
+      });
+      await runInMutation(
+        ctx,
+        processXenditEvent(
+          sessionDelivery("payment_session.completed", "PAY", "py_extend")
+        )
+      );
+      return await ctx.db
+        .query("billingGrants")
+        .withIndex("by_userId_and_validTo", (query) =>
+          query.eq("userId", userId)
+        )
+        .collect();
+    });
+    expect(grants).toMatchObject([
+      { validTo: runningEnd },
+      {
+        source: { kind: "pass" },
+        validFrom: runningEnd,
+        validTo: Date.UTC(2099, 1, 28),
+      },
+    ]);
+  });
+
   it("records a paid top-up with the session as its payment, and grants no Pro for it", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {

@@ -1,10 +1,16 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { readBillingOverview } from "@repo/backend/confect/billing/overview";
 import spec from "@repo/backend/confect/billing/queries.spec";
+import {
+  checkoutCountryFor,
+  routeOffer,
+} from "@repo/backend/confect/billing/route";
+import { ProCheckoutOffer } from "@repo/backend/confect/billing/spec";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { Clock, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
 
 /** The viewer's plan, subscription, and Nina credits, read at the moment of the query. */
 const overview = FunctionImpl.make(
@@ -18,8 +24,40 @@ const overview = FunctionImpl.make(
   })
 );
 
+/**
+ * The Pro offers sold in `currency`, each at its price on the rail that sells it
+ * there, in catalog order. An offer no rail sells there is left out, so Polar's
+ * Indonesia sells only the monthly plan, and Xendit's adds the passes.
+ */
+const proOffers = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "proOffers",
+  Effect.fn("billing.queries.proOffers")(function* ({ currency }) {
+    const offers = yield* Effect.forEach(ProCheckoutOffer.literals, (offer) =>
+      routeOffer(checkoutCountryFor(currency), offer).pipe(
+        Effect.map((route) =>
+          Option.some({
+            offer,
+            amount: route.amount,
+            currency: route.currency,
+            months: billingOffer(offer).months,
+          })
+        ),
+        Effect.catchTags({
+          ConfigError: () => Effect.succeed(Option.none()),
+          OfferUnavailable: () => Effect.succeed(Option.none()),
+          XenditNotConfigured: () => Effect.succeed(Option.none()),
+        })
+      )
+    );
+    return Arr.getSomes(offers);
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(overview),
+  Layer.provide(proOffers),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

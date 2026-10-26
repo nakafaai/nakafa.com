@@ -1,4 +1,4 @@
-import { Settings01Icon } from "@hugeicons/core-free-icons";
+import { Diamond02Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Match } from "effect";
 import { useLocale, useTranslations } from "use-intl";
+import { ProOfferDialog } from "@/components/billing/offers";
 import {
   CardSection,
   CardSectionActions,
@@ -40,6 +41,7 @@ export function UserSettingsPlan({ overview }: { overview: BillingOverview }) {
     Match.discriminatorsExhaustive("kind")({
       free: () => <UpgradePlanCard />,
       granted: () => <GrantedPlanCard />,
+      pass: ({ endsAt }) => <PassPlanCard endsAt={endsAt} />,
       subscribed: (state) => <SubscribedPlanCard state={state} />,
     })
   );
@@ -57,6 +59,60 @@ function GrantedPlanCard() {
         <CardDescription>{t("plan-granted-description")}</CardDescription>
       </CardHeader>
       <CardSectionFooter hint={t("plan-granted-footer")} />
+    </CardSection>
+  );
+}
+
+/**
+ * Pro that passes give: the day the last of them ends, and the action that buys
+ * another pass, which starts where this one ends. No portal manages a pass, since
+ * nothing renews it.
+ */
+function PassPlanCard({ endsAt }: { endsAt: number }) {
+  const billing = useBillingNavigation();
+  const locale = useLocale();
+  const t = useTranslations("Auth");
+  const tPricing = useTranslations("Pricing");
+
+  const handleExtend = () => {
+    if (!isActiveLocale(locale)) {
+      return;
+    }
+
+    billing.openCheckout({
+      locale,
+      passesOnly: true,
+      source: "settings-pass",
+    });
+  };
+
+  return (
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{tPricing("pro-title")}</CardTitle>
+        <CardDescription>
+          {t("plan-pass-description", {
+            date: formatBillingDate(endsAt, locale),
+          })}
+        </CardDescription>
+      </CardHeader>
+      <CardSectionFooter hint={t("plan-pass-footer")}>
+        <CardSectionActions>
+          <Button
+            disabled={billing.isPending || !isActiveLocale(locale)}
+            onClick={handleExtend}
+          >
+            <Spinner icon={Diamond02Icon} isLoading={billing.isPending} />
+            {t("plan-pass-extend")}
+          </Button>
+        </CardSectionActions>
+      </CardSectionFooter>
+      <ProOfferDialog
+        choose={billing.chooseOffer}
+        dismiss={billing.dismissChoice}
+        isPending={billing.isPending}
+        offers={billing.choice?.offers ?? null}
+      />
     </CardSection>
   );
 }

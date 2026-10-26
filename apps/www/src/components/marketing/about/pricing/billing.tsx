@@ -8,6 +8,7 @@ import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { Effect } from "effect";
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { ProOfferDialog } from "@/components/billing/offers";
 import type { PricingButtonVariant } from "@/components/marketing/about/pricing/button";
 import { reportClientException } from "@/lib/analytics/client";
 import {
@@ -110,14 +111,22 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
   const isWaiting = isIdentityPending || !billingReady;
 
   return (
-    <Button
-      className="w-full"
-      disabled={isPending || isWaiting || !isActiveLocale(locale)}
-      onClick={handleBilling}
-      variant={variant}
-    >
-      <Spinner icon={Diamond02Icon} isLoading={isPending || isWaiting} />
-      {t("pro-cta")}
-    </Button>
+    <>
+      <Button
+        className="w-full"
+        disabled={isPending || isWaiting || !isActiveLocale(locale)}
+        onClick={handleBilling}
+        variant={variant}
+      >
+        <Spinner icon={Diamond02Icon} isLoading={isPending || isWaiting} />
+        {t("pro-cta")}
+      </Button>
+      <ProOfferDialog
+        choose={billing.chooseOffer}
+        dismiss={billing.dismissChoice}
+        isPending={billing.isPending}
+        offers={billing.choice?.offers ?? null}
+      />
+    </>
   );
 }

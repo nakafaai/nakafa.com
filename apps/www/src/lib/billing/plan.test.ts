@@ -4,6 +4,7 @@ import {
   type BillingSubscription,
   formatBillingDate,
   formatCount,
+  formatMinorAmount,
   planStateOf,
   providerNameOf,
   subscribedDescriptionKey,
@@ -27,6 +28,7 @@ const FREE: BillingOverview = {
     resetAt: Date.UTC(2026, 9, 26),
   },
   plan: "free",
+  pass: null,
   subscription: null,
 };
 
@@ -91,6 +93,22 @@ describe("billing/plan", () => {
     expect(subscribedDescriptionKey({ ending: true, pastDue: true })).toBe(
       "plan-pro-past-due-description"
     );
+  });
+
+  it("shows the end of the passes that alone give Pro, so another pass extends them", () => {
+    expect(
+      planStateOf({
+        ...FREE,
+        pass: { endsAt: Date.UTC(2026, 10, 26) },
+        plan: "pro",
+      })
+    ).toEqual({ endsAt: Date.UTC(2026, 10, 26), kind: "pass" });
+  });
+
+  it("writes an amount in minor units the way the prices write its currency", () => {
+    expect(formatMinorAmount(43_696, "IDR")).toBe("Rp 43.696");
+    expect(formatMinorAmount(1000, "EUR")).toBe("10,00 €");
+    expect(formatMinorAmount(1000, "USD")).toBe("$10.00");
   });
 
   it("names the payment provider of each rail", () => {

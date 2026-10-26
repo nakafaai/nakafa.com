@@ -1,6 +1,8 @@
 import type { Docs, UsersDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { findAccount } from "@repo/backend/confect/billing/accounts";
+import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
+import { proHoldingOf } from "@repo/backend/confect/billing/holding";
 import type {
   BillingRail,
   billingOverviewValidator,
@@ -84,9 +86,25 @@ function summaryOf(
   };
 }
 
+/** The end of the passes a viewer holds while only passes give them Pro, or nothing otherwise. */
+const readPass = Effect.fn("billing.overview.readPass")(function* (
+  userId: Docs["users"]["_id"],
+  now: number
+) {
+  if ((yield* proHoldingOf(userId, now)) !== "pass") {
+    return null;
+  }
+  return Option.getOrNull(
+    Option.map(yield* latestPersonalGrant(userId, now), (grant) => ({
+      endsAt: grant.validTo,
+    }))
+  );
+});
+
 /**
  * The billing overview of one viewer at `now`: the plan the grants project, the
- * subscription that bills it, the Nina credits of the current reset period with
+ * subscription that bills it, the end of the passes that give it instead, the
+ * Nina credits of the current reset period with
  * the moment the balance refills next, and the top-up packs still running with
  * the moment the first of them ends. Every read is an index read.
  */
@@ -104,6 +122,7 @@ export const readBillingOverview = Effect.fn("billing.overview.read")(
         onNone: () => null,
         onSome: ({ rail, subscription }) => summaryOf(rail, subscription),
       }),
+      pass: yield* readPass(user._id, now),
       credits: {
         allowance: getPlanCreditConfig(user.plan).amount,
         balance: credits.credits,

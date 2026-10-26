@@ -224,6 +224,70 @@ describe("billing/xendit/checkout", () => {
   );
 
   it.effect(
+    "lets a pass holder buy another pass, and sends them to their plan for the monthly one",
+    () =>
+      Effect.gen(function* () {
+        const { authed, t, user } = yield* setup();
+        yield* Effect.promise(() =>
+          t.run(async (ctx) => {
+            const accountId = await ctx.db.insert("billingAccounts", {
+              owner: { kind: "personal", userId: user.userId },
+              rail: "xendit",
+              country: "ID",
+              currency: "IDR",
+              providerCustomerId: "cust-1",
+            });
+            const paymentId = await ctx.db.insert("billingPayments", {
+              kind: "pass",
+              accountId,
+              status: "succeeded",
+              amount: 79_000,
+              currency: "IDR",
+              rail: "xendit",
+              providerPaymentId: "py-pass",
+              providerUpdatedAt: NOW,
+              method: "session",
+              paidAt: NOW,
+            });
+            await ctx.db.insert("billingGrants", {
+              product: "pro",
+              userId: user.userId,
+              source: { kind: "pass", paymentId },
+              validFrom: NOW,
+              validTo: FAR_FUTURE,
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            authed.action(route.generateCheckoutLink, request)
+          ).rejects.toHaveProperty("data", {
+            _tag: "ProAlreadyHeld",
+            code: "BILLING_PRO_ALREADY_HELD",
+            message:
+              "This account already holds Pro. Manage the plan in the customer portal.",
+          })
+        );
+        vi.mocked(createSession).mockReturnValue(
+          Effect.succeed(
+            openedSession({
+              payment_link_url: "https://dev.xen.to/pass-3",
+              recurring_plan_id: null,
+              session_type: "PAY",
+            })
+          )
+        );
+        const pass = yield* Effect.promise(() =>
+          authed.action(route.generateCheckoutLink, {
+            ...request,
+            offer: "pro.pass.3",
+          })
+        );
+        expect(pass).toEqual({ url: "https://dev.xen.to/pass-3" });
+      })
+  );
+
+  it.effect(
     "opens a pass as a pay session with the learner's stored Xendit customer",
     () =>
       Effect.gen(function* () {
