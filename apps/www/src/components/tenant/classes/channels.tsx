@@ -16,7 +16,7 @@ import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -74,7 +74,11 @@ export function ChannelList({
 
   return (
     <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {failed ? (
+        <div className="p-4">
+          <DataFailure onRetry={reloadPage} />
+        </div>
+      ) : null}
       {pagination._tag === "LoadingFirstPage" ||
       (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
         <ChannelTable channels={pagination.results} saving={saving} />
@@ -110,25 +114,23 @@ function ChannelTable({
   }
 
   return (
-    <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("channels-title")}</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("channels-title")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Arr.map(channels, (channel) => (
+          <ChannelRow channel={channel} key={channel.id} />
+        ))}
+        {Arr.map(saving, (name) => (
+          <TableRow className="h-12" key={`saving-${name}`}>
+            <TableCell className="text-muted-foreground">{name}</TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(channels, (channel) => (
-            <ChannelRow channel={channel} key={channel.id} />
-          ))}
-          {Arr.map(saving, (name) => (
-            <TableRow key={`saving-${name}`}>
-              <TableCell className="text-muted-foreground">{name}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -143,7 +145,7 @@ function ChannelRow({ channel }: { channel: Channel }) {
   const label = channelLabel(channel, t("general-channel"));
 
   return (
-    <TableRow>
+    <TableRow className="h-12">
       <TableCell className="font-medium" dir="auto">
         <TargetLink
           className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"

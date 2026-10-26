@@ -1,15 +1,8 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
-import {
-  Home01Icon,
-  LibraryIcon,
-  MessageMultiple01Icon,
-  Task01Icon,
-} from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
@@ -41,18 +34,16 @@ import {
   ClassScopeContext,
   useClassScope,
 } from "@/components/tenant/classes/scope";
+import { ClassTabs } from "@/components/tenant/classes/tabs";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
 import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import type { ClassView } from "@/components/tenant/classes/view";
-import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import { Link } from "@/lib/routing/link";
-import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import type {
   readClassDiscussionFn,
   readClassForumFn,
@@ -347,14 +338,14 @@ function ClassBody({
   }
   if (view._tag === "library") {
     return (
-      <ClassScroll>
+      <ClassScroll table>
         <LibraryList teacher={Arr.contains(klass.can, "library.manage")} />
       </ClassScroll>
     );
   }
   if (view._tag === "tasks") {
     return (
-      <ClassScroll>
+      <ClassScroll table>
         <TaskList teacher={Arr.contains(klass.can, "task.manage")} />
       </ClassScroll>
     );
@@ -370,7 +361,7 @@ function ClassBody({
     );
   }
   return (
-    <ClassScroll>
+    <ClassScroll table>
       <ChannelList
         drafts={drafts}
         first={Option.fromUndefinedOr(preload?.channels)}
@@ -379,94 +370,31 @@ function ClassBody({
   );
 }
 
-/** A body that scrolls within itself under the tabs, as wide as the page, so the header and the tabs stay. */
-function ClassScroll({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="flex w-full flex-col gap-6 px-4 py-6">{children}</div>
-    </div>
-  );
-}
-
 /**
- * The toolbar row of a class under its header, one height on every view: its home, its forum, its
- * library, and its tasks, each with its icon, the current one marked as the page. On a narrow
- * screen the row scrolls within itself, never the page.
+ * A body that scrolls within itself under the tabs, as wide as the page, so the header and the
+ * tabs stay. A table is the whole body and runs from edge to edge, as every School table page's
+ * does; other content keeps the page's margin.
  */
-function ClassTabs({
-  classSlug,
-  tab,
+function ClassScroll({
+  children,
+  table = false,
 }: {
-  classSlug: string;
-  tab: (typeof ClassView.Type)["_tag"];
+  children: ReactNode;
+  table?: boolean;
 }) {
-  const t = useTranslations("Classroom");
-  const { slug } = useTenant();
-  const params = { classSlug, slug };
-
   return (
-    // The line under the bar stands outside its scroller, so the current tab's underline covers it.
-    <div className="shrink-0 border-b">
-      <nav
-        aria-label={t("tabs-label")}
-        className="scrollbar-hide -mb-px flex h-12 gap-1 overflow-x-auto px-1"
-      >
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "home" })}
-          params={params}
-          to="/school/$slug/classes/$classSlug"
-        >
-          <HugeIcons icon={Home01Icon} />
-          {t("tabs-home")}
-        </Link>
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({
-            active:
-              tab === "forum" || tab === "channel" || tab === "discussion",
-          })}
-          params={params}
-          to="/school/$slug/classes/$classSlug/forum"
-        >
-          <HugeIcons icon={MessageMultiple01Icon} />
-          {t("tabs-forum")}
-        </Link>
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "library" })}
-          params={params}
-          to="/school/$slug/classes/$classSlug/library"
-        >
-          <HugeIcons icon={LibraryIcon} />
-          {t("tabs-library")}
-        </Link>
-        <Link
-          activeOptions={EXACT_ACTIVE_OPTIONS}
-          className={classTab({ active: tab === "tasks" || tab === "task" })}
-          params={params}
-          to="/school/$slug/classes/$classSlug/tasks"
-        >
-          <HugeIcons icon={Task01Icon} />
-          {t("tabs-tasks")}
-        </Link>
-      </nav>
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div className={classBody({ table })}>{children}</div>
     </div>
   );
 }
 
-/** One tab of a class, its icon before its name. The current tab is marked as the page, and its underline marks it too. */
-const classTab = cva(
-  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 font-medium text-sm [&_svg]:size-4",
-  {
-    variants: {
-      active: {
-        false: "border-transparent text-muted-foreground hover:text-foreground",
-        true: "border-foreground text-foreground",
-      },
-    },
-  }
-);
+/** The content of a scrolling body: a table from edge to edge, or other content within the page's margin. */
+const classBody = cva("flex w-full flex-1 flex-col", {
+  variants: {
+    table: { false: "gap-6 px-4 py-6", true: "" },
+  },
+});
 
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
 function ClassMissing() {

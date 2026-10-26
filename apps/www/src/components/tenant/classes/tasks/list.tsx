@@ -14,7 +14,7 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -49,7 +49,11 @@ export function TaskList({ teacher }: { teacher: boolean }) {
     throw pagination.error;
   }
   if (PaginatedQueryResult.isFailure(pagination)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return (
+      <div className="p-4">
+        <DataFailure onRetry={reloadPage} />
+      </div>
+    );
   }
   if (pagination._tag === "LoadingFirstPage") {
     return null;
@@ -66,22 +70,20 @@ export function TaskList({ teacher }: { teacher: boolean }) {
 
   return (
     <>
-      <TableFrame>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("task-title")}</TableHead>
-              <TableHead>{t("task-deadline")}</TableHead>
-              <TableHead>{t("task-status")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(pagination.results, (task) => (
-              <TaskRow key={task.id} task={task} teacher={teacher} />
-            ))}
-          </TableBody>
-        </Table>
-      </TableFrame>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("task-title")}</TableHead>
+            <TableHead>{t("task-deadline")}</TableHead>
+            <TableHead>{t("task-status")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Arr.map(pagination.results, (task) => (
+            <TaskRow key={task.id} task={task} teacher={teacher} />
+          ))}
+        </TableBody>
+      </Table>
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(TASK_PAGE_SIZE)} />
       ) : null}
@@ -95,7 +97,7 @@ function TaskRow({ task, teacher }: { task: ClassTask; teacher: boolean }) {
   const { classSlug, slug } = useClassScope();
 
   return (
-    <TableRow>
+    <TableRow className="h-12">
       <TableCell className="font-medium" dir="auto">
         <TargetLink
           className="wrap-anywhere underline-offset-4 hover:underline"

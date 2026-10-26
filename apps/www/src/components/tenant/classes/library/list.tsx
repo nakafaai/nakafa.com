@@ -19,7 +19,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
 import {
   forumCall,
   runForumCall,
@@ -86,7 +86,11 @@ export function LibraryList({ teacher }: { teacher: boolean }) {
     throw pagination.error;
   }
   if (PaginatedQueryResult.isFailure(pagination)) {
-    return <DataFailure onRetry={reloadPage} />;
+    return (
+      <div className="p-4">
+        <DataFailure onRetry={reloadPage} />
+      </div>
+    );
   }
   if (pagination._tag === "LoadingFirstPage") {
     return null;
@@ -103,34 +107,32 @@ export function LibraryList({ teacher }: { teacher: boolean }) {
 
   return (
     <>
-      <TableFrame>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("library-title")}</TableHead>
-              <TableHead className="hidden sm:table-cell">
-                {t("library-added-by")}
-              </TableHead>
-              <TableHead className="hidden md:table-cell">
-                {t("library-added")}
-              </TableHead>
-              {teacher ? <TableHead className="w-12" /> : null}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(pending, (upload) => (
-              <UploadRow
-                key={upload.clientKey}
-                teacher={teacher}
-                upload={upload}
-              />
-            ))}
-            {Arr.map(items, (item) => (
-              <ItemRow item={item} key={item.id} teacher={teacher} />
-            ))}
-          </TableBody>
-        </Table>
-      </TableFrame>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("library-title")}</TableHead>
+            <TableHead className="hidden sm:table-cell">
+              {t("library-added-by")}
+            </TableHead>
+            <TableHead className="hidden md:table-cell">
+              {t("library-added")}
+            </TableHead>
+            {teacher ? <TableHead className="w-12" /> : null}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Arr.map(pending, (upload) => (
+            <UploadRow
+              key={upload.clientKey}
+              teacher={teacher}
+              upload={upload}
+            />
+          ))}
+          {Arr.map(items, (item) => (
+            <ItemRow item={item} key={item.id} teacher={teacher} />
+          ))}
+        </TableBody>
+      </Table>
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection
           onIntersect={() => pagination.loadMore(LIBRARY_PAGE_SIZE)}
@@ -148,7 +150,7 @@ function ItemRow({ item, teacher }: { item: LibraryItem; teacher: boolean }) {
   const remove = useMutation(classroom.library.remove);
 
   return (
-    <TableRow>
+    <TableRow className="h-12">
       <TableCell className="font-medium">
         <span className="flex min-w-0 items-center gap-2">
           <HugeIcons
@@ -220,7 +222,7 @@ function UploadRow({
   const format = useFormatter();
 
   return (
-    <TableRow>
+    <TableRow className="h-12">
       <TableCell className="font-medium">
         <span className="flex min-w-0 items-center gap-2">
           <HugeIcons
