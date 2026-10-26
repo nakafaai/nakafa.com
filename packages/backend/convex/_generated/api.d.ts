@@ -422,6 +422,8 @@ export declare const api: {
             | "forum.post"
             | "forum.read"
             | "post.publish"
+            | "task.manage"
+            | "task.submit"
             | "grade.enter"
             | "grade.list"
           >;
@@ -501,6 +503,10 @@ export declare const api: {
             } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
             mine: boolean;
             text: string | null;
           }
@@ -526,6 +532,10 @@ export declare const api: {
             } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
             mine: boolean;
             text: string | null;
           }
@@ -562,6 +572,10 @@ export declare const api: {
               } | null;
               editedAt: number | null;
               id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
               mine: boolean;
               text: string | null;
             }>;
@@ -576,6 +590,9 @@ export declare const api: {
             channelId: Id<"classroomChannels">;
             classId: Id<"classes">;
             clientKey: string;
+            mentions: Array<
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+            >;
             slug: string;
             text: string;
           },
@@ -592,9 +609,21 @@ export declare const api: {
             } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
             mine: boolean;
             text: string | null;
           }
+        >;
+      };
+      people: {
+        list: FunctionReference<
+          "query",
+          "public",
+          { classId: Id<"classes">; slug: string },
+          Array<{ id: Id<"tenantPeople">; name: string }>
         >;
       };
       reads: {
@@ -652,6 +681,10 @@ export declare const api: {
               } | null;
               editedAt: number | null;
               id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
               mine: boolean;
               text: string | null;
             };
@@ -664,6 +697,9 @@ export declare const api: {
             channelId: Id<"classroomChannels">;
             classId: Id<"classes">;
             clientKey: string;
+            mentions: Array<
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+            >;
             slug: string;
             text: string;
             title: string;
@@ -691,6 +727,10 @@ export declare const api: {
               } | null;
               editedAt: number | null;
               id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
               mine: boolean;
               text: string | null;
             };
@@ -728,6 +768,10 @@ export declare const api: {
               } | null;
               editedAt: number | null;
               id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
               mine: boolean;
               text: string | null;
             }>;
@@ -741,6 +785,9 @@ export declare const api: {
           {
             classId: Id<"classes">;
             clientKey: string;
+            mentions: Array<
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+            >;
             number: number;
             slug: string;
             text: string;
@@ -758,6 +805,10 @@ export declare const api: {
             } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
             mine: boolean;
             text: string | null;
           }
@@ -843,6 +894,188 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
         null
+      >;
+    };
+    tasks: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            deadline: number;
+            handedIn: number;
+            id: Id<"classroomTasks">;
+            latePolicy: "accept" | "close";
+            mine: {
+              late: boolean;
+              score: number | null;
+              updatedAt: number;
+            } | null;
+            points: number;
+            slug: string;
+            text: string;
+            title: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      publish: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          deadline: number;
+          latePolicy: "accept" | "close";
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
+      reschedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          deadline: number;
+          slug: string;
+          task: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
+      score: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          points: number;
+          slug: string;
+          submissionId: Id<"classroomSubmissions">;
+        },
+        {
+          id: Id<"classroomSubmissions">;
+          late: boolean;
+          person: { id: Id<"tenantPeople">; name: string };
+          score: number | null;
+          text: string;
+          updatedAt: number;
+        }
+      >;
+      submissions: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+          task: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"classroomSubmissions">;
+            late: boolean;
+            person: { id: Id<"tenantPeople">; name: string };
+            score: number | null;
+            text: string;
+            updatedAt: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      submit: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string; text: string },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
       >;
     };
     teachers: {
@@ -5837,6 +6070,8 @@ export declare const api: {
             | "forum.post"
             | "forum.read"
             | "post.publish"
+            | "task.manage"
+            | "task.submit"
             | "grade.release"
             | "grade.view"
             | "visit.end"
@@ -5932,6 +6167,8 @@ export declare const api: {
               | "forum.post"
               | "forum.read"
               | "post.publish"
+              | "task.manage"
+              | "task.submit"
               | "grade.release"
               | "grade.view"
               | "visit.end"
@@ -6038,6 +6275,11 @@ export declare const api: {
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }
               | { post: Id<"classroomPosts">; type: "announcement.posted" }
+              | { task: Id<"classroomTasks">; type: "assignment.published" }
+              | {
+                  task: Id<"classroomTasks">;
+                  type: "assignment.deadlineChanged";
+                }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
@@ -6762,8 +7004,21 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            changeType: "person.invited";
+            changeType:
+              | "person.invited"
+              | "forum.mentioned"
+              | "announcement.posted"
+              | "assignment.published";
             createdAt: number;
+            detail: {
+              actor: string;
+              channelId: Id<"classroomChannels"> | null;
+              className: string;
+              classSlug: string;
+              discussion: number | null;
+              messageId: Id<"classroomMessages"> | null;
+              task: string | null;
+            } | null;
             id: Id<"notifications">;
             readAt?: number;
             subject:
@@ -6802,8 +7057,21 @@ export declare const api: {
         "public",
         { notificationId: Id<"notifications"> },
         {
-          changeType: "person.invited";
+          changeType:
+            | "person.invited"
+            | "forum.mentioned"
+            | "announcement.posted"
+            | "assignment.published";
           createdAt: number;
+          detail: {
+            actor: string;
+            channelId: Id<"classroomChannels"> | null;
+            className: string;
+            classSlug: string;
+            discussion: number | null;
+            messageId: Id<"classroomMessages"> | null;
+            task: string | null;
+          } | null;
           id: Id<"notifications">;
           readAt?: number;
           subject:
@@ -6835,6 +7103,20 @@ export declare const api: {
         }
       >;
       readAll: FunctionReference<"mutation", "public", {}, null>;
+    };
+    push: {
+      subscribe: FunctionReference<
+        "mutation",
+        "public",
+        { auth: string; endpoint: string; p256dh: string },
+        null
+      >;
+      unsubscribe: FunctionReference<
+        "mutation",
+        "public",
+        { endpoint: string },
+        null
+      >;
     };
   };
   onboarding: {
@@ -13879,6 +14161,61 @@ export declare const internal: {
         >;
       };
     };
+    notice: {
+      delivery: {
+        render: FunctionReference<
+          "action",
+          "internal",
+          {
+            classUrl: string;
+            locale: "en" | "id" | "de";
+            privacyPolicyUrl: string;
+            termsOfServiceUrl: string;
+          },
+          { html: string; subject: string; text: string }
+        >;
+      };
+      internal: {
+        enqueue: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
+            html: string;
+            postId: Id<"classroomPosts">;
+            subject: string;
+            text: string;
+          },
+          null
+        >;
+        readInput: FunctionReference<
+          "query",
+          "internal",
+          {
+            postId: Id<"classroomPosts">;
+            recipients: Array<Id<"tenantPeople">>;
+          },
+          {
+            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
+            input: {
+              classUrl: string;
+              locale: "en" | "id" | "de";
+              privacyPolicyUrl: string;
+              termsOfServiceUrl: string;
+            };
+          } | null
+        >;
+        send: FunctionReference<
+          "action",
+          "internal",
+          {
+            postId: Id<"classroomPosts">;
+            recipients: Array<Id<"tenantPeople">>;
+          },
+          null
+        >;
+      };
+    };
     retention: {
       cleanupRetainedEmailData: FunctionReference<
         "mutation",
@@ -15095,6 +15432,44 @@ export declare const internal: {
         null
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    deliver: {
+      forget: FunctionReference<
+        "mutation",
+        "internal",
+        { endpoint: string },
+        null
+      >;
+      notice: FunctionReference<
+        "query",
+        "internal",
+        { notificationId: Id<"notifications"> },
+        {
+          payload: string;
+          targets: Array<{ auth: string; endpoint: string; p256dh: string }>;
+        } | null
+      >;
+      send: FunctionReference<
+        "action",
+        "internal",
+        { notificationId: Id<"notifications"> },
+        null
+      >;
+    };
+    fanout: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          phase: "students" | "teachers";
+          source:
+            | { _tag: "mention"; messageId: Id<"classroomMessages"> }
+            | { _tag: "post"; postId: Id<"classroomPosts"> }
+            | { _tag: "task"; taskId: Id<"classroomTasks"> };
+        },
+        null
+      >;
     };
     purge: {
       run: FunctionReference<

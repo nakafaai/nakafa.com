@@ -127,14 +127,25 @@ export function useMentionPicker(
     return false;
   };
 
+  // The list stands at the caret's column and above the field's top edge, so it never covers a
+  // line the member is writing, whichever line the caret is on.
   const anchor =
     open && field.current !== null
       ? {
           contextElement: field.current,
-          getBoundingClientRect: () =>
-            field.current === null
-              ? new DOMRect()
-              : caretRect(field.current, typed.value.start),
+          getBoundingClientRect: () => {
+            if (field.current === null) {
+              return new DOMRect();
+            }
+            const caret = caretRect(field.current, typed.value.start);
+            const box = field.current.getBoundingClientRect();
+            return new DOMRect(
+              caret.x,
+              box.top,
+              caret.width,
+              caret.bottom - box.top
+            );
+          },
         }
       : null;
 
