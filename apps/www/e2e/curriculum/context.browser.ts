@@ -1,18 +1,28 @@
-import { expect, test, type WebSocketRoute } from "@playwright/test";
-import { Effect, MutableList } from "effect";
+import { expect, type Request, test } from "@playwright/test";
+import { Deferred, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { SERVER_FUNCTION_HEADER } from "@/e2e/support/requests";
 
 const MATERIAL_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
 const MATERIAL_CONTEXT =
   "merdeka~class-11-mathematics-function-composition-inverse-function";
 const CONTEXTUAL_MATERIAL_HREF = `${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`;
-const CONVEX_SOCKET_PATTERN = /\/api\/[^/]+\/sync/;
 const MATERIAL_TITLE_PATTERN = /^Function Concept\b/;
 
-/** Proves the rendered sidebar keeps verified placement without polluting SEO. */
+/** Whether a request is the lesson's read of the placement that its address names. */
+const isPlacementRead = (request: Request) =>
+  request.headers()[SERVER_FUNCTION_HEADER] === "true" &&
+  decodeURIComponent(request.url()).includes(MATERIAL_CONTEXT);
+
+/**
+ * Proves the lesson keeps its verified curriculum placement without polluting
+ * SEO. The static lesson is readable before the placement arrives, the browser
+ * asks for it once, and the lesson's own link then carries it while the title
+ * and the first section stay where they were.
+ */
 test("material sidebar preserves verified curriculum context", async ({
   baseURL,
   browser,
@@ -29,32 +39,26 @@ test("material sidebar preserves verified curriculum context", async ({
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
-          const connectSockets = MutableList.make<() => void>();
-          let contextSubscriptions = 0;
+          const reads = MutableList.make<string>();
+          const released = yield* Deferred.make<void>();
+          const services = yield* Effect.context<never>();
+          // The placement waits until the lesson has been read, as it would on
+          // a slow connection, so nothing it changes can move the lesson first.
           yield* Effect.promise(() =>
-            page.routeWebSocket(CONVEX_SOCKET_PATTERN, (socket) => {
-              const buffered =
-                MutableList.make<Parameters<WebSocketRoute["send"]>[0]>();
-              socket.onMessage((message) =>
-                MutableList.append(buffered, message)
-              );
-              MutableList.append(connectSockets, () => {
-                const server = socket.connectToServer();
-                const forward = (
-                  message: Parameters<WebSocketRoute["send"]>[0]
-                ) => {
-                  const text = message.toString();
-                  contextSubscriptions +=
-                    text.split('"udfPath":"contentRelease/program:context"')
-                      .length - 1;
-                  server.send(message);
-                };
-                for (const message of MutableList.toArray(buffered)) {
-                  forward(message);
+            page.route(
+              (url) => url.pathname.startsWith("/_serverFn/"),
+              (route) => {
+                if (!isPlacementRead(route.request())) {
+                  return route.continue();
                 }
-                socket.onMessage(forward);
-              });
-            })
+                MutableList.append(reads, route.request().url());
+                return Effect.runPromiseWith(services)(
+                  Deferred.await(released).pipe(
+                    Effect.andThen(() => Effect.promise(() => route.continue()))
+                  )
+                );
+              }
+            )
           );
           yield* withObservedPageErrors(
             page,
@@ -67,7 +71,7 @@ test("material sidebar preserves verified curriculum context", async ({
               );
               yield* Effect.sync(() => expect(response?.status()).toBe(200));
 
-              // The full lesson must be readable before any realtime response.
+              // The full lesson must be readable before its placement arrives.
               const title = page.getByRole("heading", { level: 1 });
               const opening = page.getByRole("heading", { level: 2 }).first();
               yield* Effect.promise(() => expect(title).toBeVisible());
@@ -92,13 +96,9 @@ test("material sidebar preserves verified curriculum context", async ({
                 opening.boundingBox()
               );
               yield* Effect.promise(() =>
-                expect.poll(() => connectSockets.length).toBeGreaterThan(0)
+                expect.poll(() => reads.length).toBeGreaterThan(0)
               );
-              yield* Effect.sync(() => {
-                for (const connect of MutableList.toArray(connectSockets)) {
-                  connect();
-                }
-              });
+              yield* Deferred.succeed(released, undefined);
 
               const canonical = page.locator('link[rel="canonical"]');
               yield* Effect.promise(() => expect(canonical).toHaveCount(1));
@@ -113,10 +113,19 @@ test("material sidebar preserves verified curriculum context", async ({
                 .locator("aside")
                 .getByRole("link", { name: MATERIAL_TITLE_PATTERN });
               yield* Effect.promise(() => expect(header).toHaveCount(1));
+              // The router writes the hint's tilde as %7E, which decodes to the same hint.
               yield* Effect.promise(() =>
-                expect(header).toHaveAttribute("href", CONTEXTUAL_MATERIAL_HREF)
+                expect
+                  .poll(async () => {
+                    const target = new URL(
+                      (await header.getAttribute("href")) ?? "",
+                      page.url()
+                    );
+                    return [target.pathname, target.searchParams.get("ctx")];
+                  })
+                  .toStrictEqual([MATERIAL_PATH, MATERIAL_CONTEXT])
               );
-              yield* Effect.sync(() => expect(contextSubscriptions).toBe(1));
+              yield* Effect.sync(() => expect(reads.length).toBe(1));
               const titleAfter = yield* Effect.promise(() =>
                 title.boundingBox()
               );
