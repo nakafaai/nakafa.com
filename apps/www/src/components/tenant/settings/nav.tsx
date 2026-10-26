@@ -21,7 +21,7 @@ import {
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar-submenu";
 import { Array as Arr } from "effect";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
@@ -48,7 +48,7 @@ const groupIcons: Record<
  * groups fold open into their sections, as shadcn's sidebar draws a menu with
  * submenus. The group that holds the current section opens, also when the current
  * section moves into it, as after the settings root sends the viewer to its first
- * section, or a link opens a section of another group. A school host
+ * section, or a link opens a section of another group; a group never closes by itself. A school host
  * has no locale in its paths, so the links are school links, as in the
  * school's own navigation.
  */
@@ -73,14 +73,24 @@ function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
   const isSectionActive = (section: (typeof group.sections)[number]) =>
     section.target.to === leafPath;
   const holdsCurrent = Arr.some(group.sections, isSectionActive);
+  const [open, setOpen] = useState(holdsCurrent);
+  const [heldCurrent, setHeldCurrent] = useState(holdsCurrent);
 
-  // A new key starts the group again from its default when the current section
-  // moves in or out of it, and leaves a group the viewer folded alone otherwise.
+  // The group opens when the current section moves into it. It never closes by itself
+  // when the current section moves out, so the groups under the pointer stay in place;
+  // only the viewer folds a group.
+  if (holdsCurrent !== heldCurrent) {
+    setHeldCurrent(holdsCurrent);
+    if (holdsCurrent) {
+      setOpen(true);
+    }
+  }
+
   return (
     <Collapsible
       className="group/collapsible"
-      defaultOpen={holdsCurrent}
-      key={String(holdsCurrent)}
+      onOpenChange={setOpen}
+      open={open}
       render={<SidebarMenuItem />}
     >
       <CollapsibleTrigger render={<SidebarMenuButton tooltip={label} />}>
