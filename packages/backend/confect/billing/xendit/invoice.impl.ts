@@ -36,7 +36,8 @@ const open = FunctionImpl.make(
         return null;
       }
       const session = yield* createSession(invoiceSessionRequest(invoice));
-      if (session.payment_link_url === null) {
+      const url = session.payment_link_url ?? null;
+      if (url === null) {
         return yield* logFailure({
           message: `Session ${session.payment_session_id} has no payment link.`,
         });
@@ -47,7 +48,7 @@ const open = FunctionImpl.make(
         invoiceId,
         offer,
         sessionId: session.payment_session_id,
-        url: session.payment_link_url,
+        url,
       }).pipe(Effect.orDie);
       return null;
     },

@@ -26,10 +26,8 @@ const steps = internal.billing.xendit.invoice;
 function openedSession(paymentLink: string | null) {
   return {
     expires_at: DateTime.makeUnsafe(DUE),
-    payment_id: null,
     payment_link_url: paymentLink,
     payment_session_id: "ps-invoice-1",
-    payment_token_id: null,
     recurring_plan_id: null,
     reference_id: "NKF-2026-000001",
     session_type: "PAY" as const,
