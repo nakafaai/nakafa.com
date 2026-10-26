@@ -112,8 +112,9 @@ export function EditorToggles({ tools }: { tools: readonly EditorTool[] }) {
     <ToggleGroup
       size="sm"
       type="multiple"
-      value={Arr.filterMap(tools, (tool) =>
-        tool.active === true ? Option.some(tool.name) : Option.none()
+      value={Arr.map(
+        Arr.filter(tools, (tool) => tool.active === true),
+        (tool) => tool.name
       )}
     >
       {Arr.map(tools, (tool) => (
