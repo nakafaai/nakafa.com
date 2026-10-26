@@ -64,10 +64,7 @@ function TryoutCountryPage() {
           }}
         />
         <LayoutContent>
-          <TryoutCountryPageClient
-            actionLabel={route.actionLabel}
-            page={{ exams: route.exams }}
-          />
+          <TryoutCountryPageClient page={{ exams: route.exams }} />
         </LayoutContent>
         <FooterContent>
           <RefContent githubUrl={route.sourceUrl} />

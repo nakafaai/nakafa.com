@@ -164,7 +164,17 @@ export function VelocitySpeedLab({
               enableZoom
               fov={VELOCITY_SPEED_CAMERA.fov}
             />
-            <VelocitySpeedScene motion={motion} />
+            <group>
+              <CameraBounds exclude>
+                <Road />
+              </CameraBounds>
+              <group>
+                <DistanceGuide motion={motion} />
+                <DisplacementGuide motion={motion} />
+              </group>
+              <RouteCones motion={motion} />
+              <AnimatedCar motion={motion} />
+            </group>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>
@@ -186,19 +196,6 @@ export function VelocitySpeedLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function VelocitySpeedScene({ motion }: { motion: VelocitySpeedState }) {
-  return (
-    <group>
-      <CameraBounds exclude>
-        <Road />
-      </CameraBounds>
-      <MotionGuides motion={motion} />
-      <RouteCones motion={motion} />
-      <AnimatedCar motion={motion} />
-    </group>
   );
 }
 
@@ -244,15 +241,6 @@ function Road() {
           />
         </mesh>
       ))}
-    </group>
-  );
-}
-
-function MotionGuides({ motion }: { motion: VelocitySpeedState }) {
-  return (
-    <group>
-      <DistanceGuide motion={motion} />
-      <DisplacementGuide motion={motion} />
     </group>
   );
 }

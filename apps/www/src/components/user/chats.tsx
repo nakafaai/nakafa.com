@@ -20,11 +20,12 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option, pipe, String as Str } from "effect";
-import { type ComponentProps, useState } from "react";
+import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
+import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";
 import { SignedInIsland } from "@/components/providers/island";
 import { formatShortAge } from "@/components/user/age";
@@ -52,47 +53,60 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
  * found, so the list needs no viewer check. Only the owner holds a client on this
  * page, so the list mounts once the page has one, and no visitor reads it.
  */
-export function UserChats(props: ComponentProps<typeof LiveUserChats>) {
-  return (
-    <SignedInIsland
-      fallback={
-        <StaticUserChats
-          first={props.first}
-          now={props.now}
-          profile={props.profile}
-        />
-      }
-    >
-      <LiveUserChats {...props} />
-    </SignedInIsland>
-  );
-}
-
-/**
- * The loader's first page as the rows of the profile, before the client arrives.
- * The rows hold their final size, with a frame where each menu will be, and mount
- * no client. A failed first read shows nothing, because no page is known.
- */
-function StaticUserChats({
+export function UserChats({
   first,
-  now: serverNow,
+  now,
   profile,
 }: {
   first: Option.Option<ChatFirstPage>;
   now: number;
   profile: PublicProfile;
 }) {
+  return (
+    <UserChatsContext value={{ first, now, profile }}>
+      <SignedInIsland fallback={<StaticUserChats />}>
+        <LiveUserChats />
+      </SignedInIsland>
+    </UserChatsContext>
+  );
+}
+
+/** The owner whose chats the list shows, as the author of every row, the loader's first page, and the time it read it. */
+const UserChatsContext = createContext<{
+  first: Option.Option<ChatFirstPage>;
+  now: number;
+  profile: PublicProfile;
+} | null>(null);
+
+/** Reads the chats list around a variant or a row. */
+function useUserChats() {
+  const value = use(UserChatsContext);
+  if (value === null) {
+    throw new Error("useUserChats must be used within UserChats");
+  }
+  return value;
+}
+
+/** The age clock of the rows, and whether they are live, so only a live row mounts its menu. */
+const ChatRowsContext = createContext<{
+  clock: StoreApi<AgeClock>;
+  live: boolean;
+} | null>(null);
+
+/**
+ * The loader's first page as the rows of the profile, before the client arrives.
+ * The rows hold their final size, with a frame where each menu will be, and mount
+ * no client. A failed first read shows nothing, because no page is known.
+ */
+function StaticUserChats() {
+  const { first, now: serverNow } = useUserChats();
   const clock = useAgeClock(serverNow);
   return Option.match(first, {
     onNone: () => null,
     onSome: (page) => (
-      <ChatRows
-        chats={page.page}
-        clock={clock}
-        live={false}
-        loadMore={undefined}
-        profile={profile}
-      />
+      <ChatRowsContext value={{ clock, live: false }}>
+        <ChatRows chats={page.page} loadMore={undefined} />
+      </ChatRowsContext>
     ),
   });
 }
@@ -103,15 +117,8 @@ function StaticUserChats({
  * takes its place once the session settles. The next page loads as the end of the
  * list comes into view.
  */
-function LiveUserChats({
-  first,
-  now: serverNow,
-  profile,
-}: {
-  first: Option.Option<ChatFirstPage>;
-  now: number;
-  profile: PublicProfile;
-}) {
+function LiveUserChats() {
+  const { first, now: serverNow } = useUserChats();
   // The list subscribes once Convex has settled the session, as the sidebar's list does.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
@@ -129,13 +136,9 @@ function LiveUserChats({
     return null;
   }
   return (
-    <ChatRows
-      chats={results}
-      clock={clock}
-      live
-      loadMore={loadMore}
-      profile={profile}
-    />
+    <ChatRowsContext value={{ clock, live: true }}>
+      <ChatRows chats={results} loadMore={loadMore} />
+    </ChatRowsContext>
   );
 }
 
@@ -146,16 +149,10 @@ function LiveUserChats({
  */
 function ChatRows({
   chats,
-  clock,
-  live,
   loadMore,
-  profile,
 }: {
   chats: readonly ChatView[];
-  clock: StoreApi<AgeClock>;
-  live: boolean;
   loadMore: (() => void) | undefined;
-  profile: PublicProfile;
 }) {
   const t = useTranslations("Common");
   if (chats.length === 0) {
@@ -164,13 +161,7 @@ function ChatRows({
   return (
     <div className="flex flex-col">
       {Arr.map(chats, (chat) => (
-        <ChatRow
-          chat={chat}
-          clock={clock}
-          key={chat._id}
-          live={live}
-          profile={profile}
-        />
+        <ChatRow chat={chat} key={chat._id} />
       ))}
       {loadMore ? (
         <Intersection key={chats.length} onIntersect={loadMore} />
@@ -185,17 +176,13 @@ function ChatRows({
  * the whole title, which holds at most 80 characters. The title is the row's
  * link, and the whole row opens the chat.
  */
-function ChatRow({
-  chat,
-  clock,
-  live,
-  profile,
-}: {
-  chat: ChatView;
-  clock: StoreApi<AgeClock>;
-  live: boolean;
-  profile: PublicProfile;
-}) {
+function ChatRow({ chat }: { chat: ChatView }) {
+  const { profile } = useUserChats();
+  const rows = use(ChatRowsContext);
+  if (rows === null) {
+    throw new Error("ChatRow must be used within ChatRowsContext");
+  }
+  const { clock, live } = rows;
   const tAi = useTranslations("Ai");
   const locale = useCurrentLocale();
   const now = useAgeNow(clock);
@@ -244,14 +231,19 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
   const t = useTranslations("Common");
   const tAi = useTranslations("Ai");
   const deleteChat = useDeleteChatMutation();
+  const forgetChat = useAi((state) => state.forgetChat);
+  const recallChat = useAi((state) => state.recallChat);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   /**
    * Delete this chat through the optimistic list mutation, once the learner
-   * confirms in the dialog. The dialog closes first, as the row leaves the list.
+   * confirms in the dialog. The dialog closes first, as the row leaves the list,
+   * and Nina's sheet lets the chat go with it. A delete that fails puts the chat
+   * back in the sheet when the sheet showed it.
    */
   function handleDelete() {
     setConfirmDelete(false);
+    const shown = forgetChat(chat._id);
     Effect.runFork(
       Effect.asVoid(
         Effect.tryPromise(() =>
@@ -268,6 +260,9 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
+                  if (shown) {
+                    recallChat(chat._id);
+                  }
                   toast.error({
                     description: "action-error.description",
                     title: "action-error.title",

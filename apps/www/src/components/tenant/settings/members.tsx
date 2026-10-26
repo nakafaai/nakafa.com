@@ -3,11 +3,11 @@ import {
   PaginatedQueryResult,
   useMutation,
 } from "@confect/react";
+import { UserCircleIcon, UserRemove01Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { createContext, startTransition, use } from "react";
@@ -19,16 +19,21 @@ import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFilter,
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
+import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
 import {
   type PreloadedPage,
   usePaginatedPreloaded,
 } from "@/lib/data/paginated";
-import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/settings/members";
 
@@ -55,10 +60,9 @@ const MembersFirstPageContext = createContext<MembersFirstPage | undefined>(
 );
 
 /**
- * Every active member of the school in a data table: its name, how far it has joined,
- * and its roles as badges. A member who is not invited has a row menu that removes it.
- * The table filters by name and by status, and loads more rows as its end comes into
- * view. Invitations are sent on the invitations page.
+ * Every active member of the school as the page's table: its name, how far it has joined,
+ * and its roles. The header row searches the names, filters by status, and holds Invite,
+ * the page's main action. The list loads more rows as its end comes into view.
  */
 export function SchoolMembersSettings({
   first,
@@ -67,14 +71,38 @@ export function SchoolMembersSettings({
   first: MembersFirstPage | undefined;
   slug: TenantSlug;
 }) {
+  const t = useTranslations("SchoolSettings");
+
   return (
-    <SettingsPage>
-      <ReadBoundary>
-        <MembersFirstPageContext value={first}>
-          <SchoolMembersBody slug={slug} />
-        </MembersFirstPageContext>
-      </ReadBoundary>
-    </SettingsPage>
+    <TableFiltersProvider>
+      <SettingsTablePage
+        actions={
+          <>
+            <TableSearch placeholder={t("members-search")} />
+            <TableFilter
+              facets={[
+                {
+                  column: "status",
+                  icon: UserCircleIcon,
+                  options: Arr.map(MemberStatus.literals, (status) => ({
+                    label: t(`member-status-label.${status}`),
+                    value: status,
+                  })),
+                  title: t("member-status"),
+                },
+              ]}
+            />
+            <SchoolInviteAction slug={slug} />
+          </>
+        }
+      >
+        <ReadBoundary>
+          <MembersFirstPageContext value={first}>
+            <SchoolMembersBody slug={slug} />
+          </MembersFirstPageContext>
+        </ReadBoundary>
+      </SettingsTablePage>
+    </TableFiltersProvider>
   );
 }
 
@@ -119,15 +147,6 @@ function SchoolMemberTable({
     return (
       <TableEmpty
         act="waving"
-        action={
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ slug }}
-            to="/school/$slug/settings/invites"
-          >
-            {t("members-empty-action")}
-          </Link>
-        }
         description={t("members-empty-description")}
         title={t("members-empty")}
       />
@@ -173,18 +192,8 @@ function SchoolMemberTable({
     <DataTable
       columns={columns}
       data={members}
-      facets={[
-        {
-          column: "status",
-          options: Arr.map(MemberStatus.literals, (status) => ({
-            label: t(`member-status-label.${status}`),
-            value: status,
-          })),
-          title: t("member-status"),
-        },
-      ]}
       rowId={(member) => member.id}
-      search={{ column: "name", placeholder: t("members-search") }}
+      search="name"
     />
   );
 }
@@ -211,6 +220,7 @@ function SchoolMemberMenu({
       action={t("member-remove")}
       confirm={t("member-remove-confirm")}
       description={t("member-remove-description")}
+      icon={UserRemove01Icon}
       onConfirm={() =>
         startTransition(() =>
           saveSchool(() => remove({ personId: member.id, slug }), SOURCE)

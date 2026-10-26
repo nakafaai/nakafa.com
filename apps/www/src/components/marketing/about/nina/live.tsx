@@ -1,4 +1,3 @@
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
@@ -6,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useChatAdmission } from "@/components/ai/chat/admission";
 import { NinaInput } from "@/components/ai/input";
 import { NinaPromptTurn } from "@/components/marketing/about/nina/composer";
+import { useHeldPrompt } from "@/components/marketing/about/nina/held";
 import { useLiveSession } from "@/components/providers/live";
 import { useCurrentLocale } from "@/lib/routing/link";
 
@@ -14,24 +14,21 @@ import { useCurrentLocale } from "@/lib/routing/link";
  * own island mounts the page's one Convex client around the admission code. A send
  * the learner pressed before this code loaded is admitted once it mounts.
  */
-export function LiveNinaComposer({
-  held,
-}: {
-  held: PromptInputMessage | null;
-}) {
+export function LiveNinaComposer() {
   const client = useLiveSession((state) => state.client);
   if (Option.isNone(client)) {
     return null;
   }
   return (
     <ConvexProvider client={client.value}>
-      <LiveNinaAdmission held={held} />
+      <LiveNinaAdmission />
     </ConvexProvider>
   );
 }
 
 /** Sends the composer's prompt through admission, then opens the new chat. */
-function LiveNinaAdmission({ held }: { held: PromptInputMessage | null }) {
+function LiveNinaAdmission() {
+  const held = useHeldPrompt();
   const locale = useCurrentLocale();
   const navigate = useNavigate();
   const { disabled, prompt, submit } = useChatAdmission({

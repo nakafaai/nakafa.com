@@ -71,18 +71,10 @@ export function DnaDoubleHelix({
 
   return (
     <group>
-      <BiologyLine
-        color={backboneColor}
-        lineWidth={lineWidth}
-        points={firstStrand}
-      />
-      <BiologyLine
-        color={backboneColor}
-        lineWidth={lineWidth}
-        points={secondStrand}
-      />
+      <Line color={backboneColor} lineWidth={lineWidth} points={firstStrand} />
+      <Line color={backboneColor} lineWidth={lineWidth} points={secondStrand} />
       {Arr.map(basePairs, (basePair) => (
-        <BiologyLine
+        <Line
           color={pairColor}
           key={basePair.id}
           lineWidth={pairLineWidth}
@@ -140,13 +132,9 @@ export function RnaSingleStrand({
 
   return (
     <group>
-      <BiologyLine
-        color={backboneColor}
-        lineWidth={lineWidth}
-        points={backbone}
-      />
+      <Line color={backboneColor} lineWidth={lineWidth} points={backbone} />
       {Arr.map(baseTicks, (baseTick) => (
-        <BiologyLine
+        <Line
           color={baseColor}
           key={baseTick.id}
           lineWidth={Math.max(1, lineWidth - 1)}
@@ -160,21 +148,6 @@ export function RnaSingleStrand({
       />
     </group>
   );
-}
-
-/**
- * Draws a curved-looking path from stable points without custom geometry.
- */
-export function BiologyLine({
-  color,
-  lineWidth = 2,
-  points,
-}: {
-  color: string;
-  lineWidth?: number;
-  points: readonly BiologyScenePoint[];
-}) {
-  return <Line color={color} lineWidth={lineWidth} points={points} />;
 }
 
 /**

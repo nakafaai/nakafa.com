@@ -142,10 +142,7 @@ function HostedMemoryEditor({ host }: { host: HTMLElement }) {
   return (
     <>
       {open || slot
-        ? createPortal(
-            <MemoryDocument key={session} memory={memory} open={open} />,
-            host
-          )
+        ? createPortal(<MemoryDocument key={session} memory={memory} />, host)
         : null}
       {wide ? (
         <MemoryEditorPanel

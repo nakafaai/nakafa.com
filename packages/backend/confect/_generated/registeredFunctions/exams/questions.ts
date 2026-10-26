@@ -13,4 +13,5 @@ export default {
 ["move"]: RegisteredConvexFunction.register({ ...definitions["move"], handler: forward(definitions["move"].handler) }),
 ["points"]: RegisteredConvexFunction.register({ ...definitions["points"], handler: forward(definitions["points"].handler) }),
 ["answer"]: RegisteredConvexFunction.register({ ...definitions["answer"], handler: forward(definitions["answer"].handler) }),
+["template"]: RegisteredConvexFunction.register({ ...definitions["template"], handler: forward(definitions["template"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../exams/questions.spec")["default"]>;

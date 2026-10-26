@@ -131,7 +131,10 @@ export function UniformCircularMotionLab({
               shadow-normalBias={0.02}
             />
             <CircularMotionCamera />
-            <CircularMotionScene motion={motion} />
+            <group>
+              <CircularTrack />
+              <CircularCar motion={motion} />
+            </group>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>
@@ -187,19 +190,6 @@ function CircularMotionCamera() {
       fov={43}
       framing="content"
     />
-  );
-}
-
-function CircularMotionScene({
-  motion,
-}: {
-  motion: UniformCircularMotionState;
-}) {
-  return (
-    <group>
-      <CircularTrack />
-      <CircularCar motion={motion} />
-    </group>
   );
 }
 

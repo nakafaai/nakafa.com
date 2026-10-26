@@ -238,9 +238,9 @@ const linkItemVariants = cva(
 );
 
 /** One footer link of the app, at a route target that the app chose. */
-function FooterLink({ target, label }: { target: LinkTarget; label: string }) {
+function FooterLink({ label, ...link }: { target: LinkTarget; label: string }) {
   return (
-    <TargetLink className={linkItemVariants()} target={target}>
+    <TargetLink className={linkItemVariants()} {...link}>
       {label}
     </TargetLink>
   );
@@ -250,7 +250,7 @@ function FooterLink({ target, label }: { target: LinkTarget; label: string }) {
 function FooterPageLink({
   label,
   preload,
-  publicPath,
+  ...link
 }: {
   label: string;
   preload?: LinkPreload | undefined;
@@ -259,7 +259,7 @@ function FooterPageLink({
   return (
     <PublicPathLink
       className={linkItemVariants()}
-      publicPath={publicPath}
+      {...link}
       {...(preload === undefined ? {} : { preload })}
     >
       {label}

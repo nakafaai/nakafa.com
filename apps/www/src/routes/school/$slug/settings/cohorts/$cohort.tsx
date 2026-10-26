@@ -1,9 +1,11 @@
+import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
 import type { ReactElement } from "react";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { SchoolCohortSettings } from "@/components/tenant/settings/cohort";
 import { PAGE_SIZE as COHORT_MEMBER_PAGE_SIZE } from "@/components/tenant/settings/cohort/members";
+import { readOnce } from "@/lib/convex/read";
 import { readCohortId } from "@/lib/tenant/params";
 import { readCohortFn } from "@/lib/tenant/settings.functions";
 
@@ -19,6 +21,18 @@ export const Route = createFileRoute("/school/$slug/settings/cohorts/$cohort")({
   loader: ({ context }) => {
     if (context.school._tag !== "Member") {
       return;
+    }
+    // After a press the cohort's detail reads once from Convex; its members then read live.
+    if (!context.firstHtml) {
+      return Effect.runPromise(
+        readOnce(tenancy.cohorts.get, {
+          cohortId: context.cohortId,
+          slug: context.slug,
+        }).pipe(
+          Effect.map((detail) => ({ detail })),
+          Effect.orElseSucceed(() => undefined)
+        )
+      );
     }
     return readCohortFn({
       data: {

@@ -88,13 +88,8 @@ function SavedWords({ markdown }: { markdown: string }) {
  * cannot load, so nothing moves when the editor arrives. `open` is false while a
  * closing editor is still on the page, and such an editor takes no focus.
  */
-export function MemoryDocument({
-  memory,
-  open,
-}: {
-  memory: Memory | null;
-  open: boolean;
-}) {
+export function MemoryDocument({ memory }: { memory: Memory | null }) {
+  const open = useMemoryPage((state) => state.open);
   const t = useTranslations("Memory");
   const labels = useTranslations("Editor");
   const common = useTranslations("Common");
@@ -113,7 +108,6 @@ export function MemoryDocument({
   const confirmed = useRef(false);
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
-  const savedWords = <SavedWords markdown={starting.text} />;
   // A confirmed delete hands the focus to the neighbour's row. A cancelled
   // question returns it to where it was, as the dialog does on its own.
   const focusAfterQuestion = () =>
@@ -172,8 +166,8 @@ export function MemoryDocument({
       <div className={editorFrame()} ref={body}>
         <Suspense
           fallback={
-            <ErrorBoundary fallback={savedWords}>
-              <Suspense fallback={savedWords}>
+            <ErrorBoundary fallback={<SavedWords markdown={starting.text} />}>
+              <Suspense fallback={<SavedWords markdown={starting.text} />}>
                 <Preview
                   markdown={starting.text}
                   placeholder={t("placeholder")}
