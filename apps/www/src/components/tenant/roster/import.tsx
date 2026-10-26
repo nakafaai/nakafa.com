@@ -1,12 +1,15 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import {
-  Alert02Icon,
+  CalendarRemove01Icon,
   Cancel01Icon,
   Download01Icon,
-  FilterHorizontalIcon,
+  IdentityCardIcon,
   Upload01Icon,
-  UserGroupIcon,
+  UserCheck01Icon,
+  UserLock01Icon,
+  UserMultiple02Icon,
+  UserQuestion01Icon,
 } from "@hugeicons/core-free-icons";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -51,6 +54,19 @@ import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { UnitId } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { reportClientException } from "@/lib/analytics/client";
+
+/**
+ * The icon of each status in the import's Filter menu, one per status: the two ages of a student
+ * who imports, and the problem that keeps each other row out.
+ */
+const ROSTER_STATUS_ICONS = {
+  adult: UserCheck01Icon,
+  birth: CalendarRemove01Icon,
+  cohort: UserMultiple02Icon,
+  name: UserQuestion01Icon,
+  nisn: IdentityCardIcon,
+  under: UserLock01Icon,
+} as const;
 
 const SOURCE = "components/tenant/roster/import";
 
@@ -284,14 +300,10 @@ function RosterImportOfPeriod({
               facets={[
                 {
                   column: "status",
-                  icon: FilterHorizontalIcon,
                   options: Arr.map(
                     ["under", "adult", ...RowProblem.literals] as const,
                     (status) => ({
-                      icon:
-                        status === "under" || status === "adult"
-                          ? UserGroupIcon
-                          : Alert02Icon,
+                      icon: ROSTER_STATUS_ICONS[status],
                       label: t(`status-${status}`),
                       value: status,
                     })
