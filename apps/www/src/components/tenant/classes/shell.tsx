@@ -12,7 +12,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -245,13 +245,14 @@ function ResolvedClass({
   return (
     <DraftsContext value={drafts}>
       <LibraryUploadsScope>
-        <SchoolHeader items={path} title={klass.name}>
-          <ForumAction klass={klass} view={view} />
-        </SchoolHeader>
-        <LayoutContent className="flex w-full flex-col gap-6 py-6">
+        {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
+        <div className="flex h-svh min-h-0 flex-col">
+          <SchoolHeader items={path} title={klass.name}>
+            <ForumAction klass={klass} view={view} />
+          </SchoolHeader>
           <ClassTabs classSlug={classSlug} tab={view._tag} />
           <ClassBody found={found} klass={klass} view={view} />
-        </LayoutContent>
+        </div>
       </LibraryUploadsScope>
     </DraftsContext>
   );
@@ -291,7 +292,11 @@ function ForumAction({
   return null;
 }
 
-/** The body of the view: the class's announcements, its channel list, one channel, one discussion beside its channel, its library, its tasks, or one task. */
+/**
+ * The body of the view under the tabs, as wide as the page: one channel, or one discussion beside
+ * its channel, fills it as a chat does, and the class's announcements, its channel list, its
+ * library, its tasks, or one task scroll within it.
+ */
 function ClassBody({
   found,
   klass,
@@ -334,33 +339,59 @@ function ClassBody({
     });
   }
   if (view._tag === "home") {
-    return <ClassHome />;
+    return (
+      <ClassScroll>
+        <ClassHome />
+      </ClassScroll>
+    );
   }
   if (view._tag === "library") {
-    return <LibraryList teacher={Arr.contains(klass.can, "library.manage")} />;
+    return (
+      <ClassScroll>
+        <LibraryList teacher={Arr.contains(klass.can, "library.manage")} />
+      </ClassScroll>
+    );
   }
   if (view._tag === "tasks") {
-    return <TaskList teacher={Arr.contains(klass.can, "task.manage")} />;
+    return (
+      <ClassScroll>
+        <TaskList teacher={Arr.contains(klass.can, "task.manage")} />
+      </ClassScroll>
+    );
   }
   if (view._tag === "task") {
     return (
-      <TaskPage
-        task={view.task}
-        teacher={Arr.contains(klass.can, "task.manage")}
-      />
+      <ClassScroll>
+        <TaskPage
+          task={view.task}
+          teacher={Arr.contains(klass.can, "task.manage")}
+        />
+      </ClassScroll>
     );
   }
   return (
-    <ChannelList
-      drafts={drafts}
-      first={Option.fromUndefinedOr(preload?.channels)}
-    />
+    <ClassScroll>
+      <ChannelList
+        drafts={drafts}
+        first={Option.fromUndefinedOr(preload?.channels)}
+      />
+    </ClassScroll>
+  );
+}
+
+/** A body that scrolls within itself under the tabs, as wide as the page, so the header and the tabs stay. */
+function ClassScroll({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="flex w-full flex-col gap-6 px-4 py-6">{children}</div>
+    </div>
   );
 }
 
 /**
- * The tab bar of a class: its home, its forum, its library, and its tasks, each with its icon, the
- * current one marked as the page. On a narrow screen the bar scrolls within itself, never the page.
+ * The toolbar row of a class under its header, one height on every view: its home, its forum, its
+ * library, and its tasks, each with its icon, the current one marked as the page. On a narrow
+ * screen the row scrolls within itself, never the page.
  */
 function ClassTabs({
   classSlug,
@@ -375,10 +406,10 @@ function ClassTabs({
 
   return (
     // The line under the bar stands outside its scroller, so the current tab's underline covers it.
-    <div className="border-b">
+    <div className="shrink-0 border-b">
       <nav
         aria-label={t("tabs-label")}
-        className="scrollbar-hide -mb-px flex gap-1 overflow-x-auto"
+        className="scrollbar-hide -mb-px flex h-12 gap-1 overflow-x-auto px-1"
       >
         <Link
           activeOptions={EXACT_ACTIVE_OPTIONS}
@@ -426,7 +457,7 @@ function ClassTabs({
 
 /** One tab of a class, its icon before its name. The current tab is marked as the page, and its underline marks it too. */
 const classTab = cva(
-  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 pb-2 font-medium text-sm",
+  "inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 font-medium text-sm",
   {
     variants: {
       active: {

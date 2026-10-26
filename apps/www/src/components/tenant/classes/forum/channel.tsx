@@ -21,10 +21,10 @@ import { usePaginatedPreloaded } from "@/lib/data/paginated";
 export const MESSAGE_PAGE_SIZE = 30;
 
 /**
- * One channel of a class: its messages, oldest at the top and the newest at the bottom, and the
- * composer under them for a member of the class or a subject teacher. The school's leaders read the
- * channel and write in none, so they see a sentence that says who writes there in place of the
- * composer.
+ * One channel of a class as a chat: its messages fill the room it is given, oldest at the top and
+ * the newest at the bottom, and the composer is its footer, for a member of the class or a subject
+ * teacher. The school's leaders read the channel and write in none, so they see a sentence that
+ * says who writes there in place of the composer.
  */
 export function ForumChannel({
   canManage,
@@ -54,15 +54,17 @@ export function ForumChannel({
         slug,
       }}
     >
-      <div className="flex h-[70dvh] min-h-96 w-full min-w-0 flex-col gap-3">
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
         <ChannelMessages jump={jump} key={channelId} />
-        {canPost ? (
-          <ForumComposer />
-        ) : (
-          <p className="text-center text-muted-foreground text-sm">
-            {t("read-only")}
-          </p>
-        )}
+        <footer className="shrink-0 px-4 pt-2 pb-4">
+          {canPost ? (
+            <ForumComposer />
+          ) : (
+            <p className="text-center text-muted-foreground text-sm">
+              {t("read-only")}
+            </p>
+          )}
+        </footer>
       </div>
     </ChannelScopeContext>
   );
@@ -104,7 +106,11 @@ function ChannelMessages({
     PaginatedQueryResult.isFailure(pagination) ||
     QueryResult.isFailure(read)
   ) {
-    return <DataFailure onRetry={reloadPage} />;
+    return (
+      <div className="flex-1 p-4">
+        <DataFailure onRetry={reloadPage} />
+      </div>
+    );
   }
   if (pagination._tag === "LoadingFirstPage" || !QueryResult.isSuccess(read)) {
     return <div className="flex-1" />;

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -88,6 +88,26 @@ for (const viewport of [
     // The channel stays beside the discussion from tablet width and under its sheet on a phone,
     // and it counts the reply; closing the discussion leaves the channel where it was.
     await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
+    if (viewport.width >= 768) {
+      // The handle between the channel and the discussion resizes them.
+      const panel = page.locator("[data-slot=discussion]");
+      const narrow = Option.getOrThrow(
+        Option.fromNullOr(await panel.boundingBox())
+      );
+      const handle = Option.getOrThrow(
+        Option.fromNullOr(
+          await page.locator("[data-slot=resizable-handle]").boundingBox()
+        )
+      );
+      const middle = handle.y + handle.height / 2;
+      await page.mouse.move(handle.x + handle.width / 2, middle);
+      await page.mouse.down();
+      await page.mouse.move(handle.x - 200, middle, { steps: 8 });
+      await page.mouse.up();
+      await expect
+        .poll(async () => (await panel.boundingBox())?.width ?? 0)
+        .toBeGreaterThan(narrow.width + 150);
+    }
     await page.getByRole("link", { name: CLOSE }).click();
     await page.waitForURL(CHANNEL_PATH);
     await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);

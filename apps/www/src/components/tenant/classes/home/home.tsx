@@ -56,7 +56,7 @@ export function ClassHome() {
 
   return (
     <>
-      <ItemGroup aria-label={t("posts")} className="mx-auto max-w-3xl">
+      <ItemGroup aria-label={t("posts")}>
         {Arr.map(pagination.results, (post) => (
           <PostRow key={post.clientKey} post={post} />
         ))}

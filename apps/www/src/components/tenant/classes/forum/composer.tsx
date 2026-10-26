@@ -148,7 +148,7 @@ export function ForumComposer() {
         <InputGroupTextarea
           {...picker.fieldProps}
           aria-label={placeholder}
-          className="max-h-[min(12rem,35dvh)] min-h-12 px-3 py-3"
+          className="max-h-[min(12rem,35dvh)] min-h-11 py-3 ps-4"
           dir="auto"
           onChange={(event) => {
             setText(event.target.value);
@@ -172,10 +172,8 @@ export function ForumComposer() {
           ref={field}
           value={text}
         />
-        <InputGroupAddon
-          align="block-end"
-          className="justify-end group-has-[>[data-slot=input-group-control]]/input-group:pb-3"
-        >
+        {/* The send button stands at the end of the field's last line, as the field grows. */}
+        <InputGroupAddon align="inline-end" className="self-end pb-1.5">
           <InputGroupButton
             aria-label={t("send-message")}
             className="rounded-full"
