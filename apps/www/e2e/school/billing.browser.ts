@@ -82,10 +82,15 @@ test("an owner upgrades a free school by invoice, and the school shows School on
 
   const invoice = page.getByRole("cell", { name: INVOICE_NUMBER });
   await expect(invoice).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Pay by transfer" })
-  ).toHaveAttribute("href", MAILTO_LINK);
   await picture(page, "invoice");
+  await page.getByRole("button", { name: "More actions" }).click();
+  await expect(
+    page.getByRole("menuitem", { name: "Pay by transfer" })
+  ).toHaveAttribute("href", MAILTO_LINK);
+  await page.screenshot({
+    path: test.info().outputPath("billing-invoice-menu-1440.png"),
+  });
+  await page.keyboard.press("Escape");
 
   const number = (await invoice.textContent()) ?? "";
   await Effect.runPromise(recordTransfer(number, `BCA-${school.slug}`));

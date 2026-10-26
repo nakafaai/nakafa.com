@@ -1,5 +1,10 @@
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
-import { Invoice01Icon } from "@hugeicons/core-free-icons";
+import {
+  CreditCardIcon,
+  Invoice01Icon,
+  Mail01Icon,
+  MoreHorizontalIcon,
+} from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -9,6 +14,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Radio,
@@ -390,9 +401,10 @@ function SchoolInvoicesCard({ billing: overview }: { billing: SchoolBilling }) {
 }
 
 /**
- * How an open invoice is paid: on its hosted payment page while it holds one, or by
- * bank transfer to Nakafa, which an operator records. A paid or void invoice needs
- * nothing, and an invoice still being issued has no number to quote yet.
+ * How an open invoice is paid, behind the row's menu: on its hosted payment page
+ * while it holds one, or by bank transfer to Nakafa, which an operator records. A
+ * paid or void invoice needs nothing, and an invoice still being issued has no
+ * number to quote yet.
  */
 function SchoolInvoiceAction({
   invoice,
@@ -400,29 +412,43 @@ function SchoolInvoiceAction({
   invoice: SchoolBilling["invoices"][number];
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
 
   if (invoice.status !== "open" || invoice.number === "") {
     return null;
   }
-  if (invoice.paymentLink !== null) {
-    return (
-      <Button
-        nativeButton={false}
-        render={<a href={invoice.paymentLink} rel="noopener" target="_blank" />}
-        size="sm"
-      >
-        {t("invoice-pay")}
-      </Button>
-    );
-  }
   return (
-    <Button
-      nativeButton={false}
-      render={<a href={transferMailto(invoice.number)} />}
-      size="sm"
-      variant="outline"
-    >
-      {t("invoice-transfer")}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label={common("more-actions")}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-48">
+        {invoice.paymentLink === null ? (
+          <DropdownMenuItem
+            render={<a href={transferMailto(invoice.number)} />}
+          >
+            <HugeIcons icon={Mail01Icon} />
+            {t("invoice-transfer")}
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            render={
+              <a href={invoice.paymentLink} rel="noopener" target="_blank" />
+            }
+          >
+            <HugeIcons icon={CreditCardIcon} />
+            {t("invoice-pay")}
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
