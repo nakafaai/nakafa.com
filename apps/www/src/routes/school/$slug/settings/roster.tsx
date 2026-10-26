@@ -8,6 +8,5 @@ export const Route = createFileRoute("/school/$slug/settings/roster")({
 });
 
 function SchoolRosterPage(): ReactElement {
-  const { slug } = Route.useRouteContext();
-  return <RosterImportSettings slug={slug} />;
+  return <RosterImportSettings />;
 }

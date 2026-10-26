@@ -17,7 +17,6 @@ export const Route = createFileRoute("/school/$slug/orang-tua")({
 });
 
 function SchoolGuardianPage(): ReactElement {
-  const { slug } = Route.useRouteContext();
   const first = Route.useLoaderData();
-  return <GuardianHome first={first} slug={slug} />;
+  return <GuardianHome first={first} />;
 }
