@@ -113,7 +113,6 @@ export function MemoryDocument({
   const confirmed = useRef(false);
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
-  const savedWords = <SavedWords markdown={starting.text} />;
   // A confirmed delete hands the focus to the neighbour's row. A cancelled
   // question returns it to where it was, as the dialog does on its own.
   const focusAfterQuestion = () =>
@@ -172,8 +171,8 @@ export function MemoryDocument({
       <div className={editorFrame()} ref={body}>
         <Suspense
           fallback={
-            <ErrorBoundary fallback={savedWords}>
-              <Suspense fallback={savedWords}>
+            <ErrorBoundary fallback={<SavedWords markdown={starting.text} />}>
+              <Suspense fallback={<SavedWords markdown={starting.text} />}>
                 <Preview
                   markdown={starting.text}
                   placeholder={t("placeholder")}

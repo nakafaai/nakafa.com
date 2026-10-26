@@ -177,23 +177,26 @@ function PaperChoice({
   letter: string;
   withControls: boolean;
 }) {
-  const option = (
-    <PaperOption letter={letter}>
-      <OptionSketch label={label} />
-    </PaperOption>
-  );
-
   if (!withControls) {
-    return option;
+    return <ChoiceText label={label} letter={letter} />;
   }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-      {option}
+      <ChoiceText label={label} letter={letter} />
       <div aria-hidden className="flex items-center gap-1">
         <ControlRoom />
       </div>
     </div>
+  );
+}
+
+/** The letter and the drawn text of one option. */
+function ChoiceText({ label, letter }: { label: OptionLabel; letter: string }) {
+  return (
+    <PaperOption letter={letter}>
+      <OptionSketch label={label} />
+    </PaperOption>
   );
 }
 

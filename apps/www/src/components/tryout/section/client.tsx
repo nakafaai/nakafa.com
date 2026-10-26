@@ -212,10 +212,7 @@ function ResolvedTryoutSectionPage({
   );
 
   const currentAttempt = attempt;
-  const lock =
-    binding?.initialState.attempt.status === "in-progress" ? (
-      <ShellLock />
-    ) : null;
+  const locked = binding?.initialState.attempt.status === "in-progress";
   const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
@@ -225,14 +222,14 @@ function ResolvedTryoutSectionPage({
   const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
   const hasActiveSection = currentAttempt?.section?.status === "in-progress";
   if (hasActiveSection && runtimeState.kind === "none") {
-    return lock;
+    return locked ? <ShellLock /> : null;
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
   if (finish && binding && isTryoutRuntimeRunning(runtimeState)) {
     return (
       <TryoutPage>
-        {lock}
+        {locked ? <ShellLock /> : null}
         <TryoutPlayer
           content={content}
           finish={finish}
@@ -247,7 +244,7 @@ function ResolvedTryoutSectionPage({
 
   return (
     <TryoutPage>
-      {lock}
+      {locked ? <ShellLock /> : null}
       <TryoutSectionHeader
         actionAttempt={actionAttempt}
         activeAttempt={activeAttempt}

@@ -187,32 +187,34 @@ export function StudentsTable({
   ) {
     throw students.error;
   }
-  const filters = (
-    <StudentFilters
-      onSearch={setSearch}
-      onStatus={setStatus}
-      search={search}
-      status={status}
-    />
-  );
-  if (PaginatedQueryResult.isLoadingFirstPage(students)) {
-    return status !== "all" || search.trim() !== "" ? filters : null;
+  const filtering = status !== "all" || search.trim() !== "";
+  const loading = PaginatedQueryResult.isLoadingFirstPage(students);
+  // An unfiltered list shows nothing until its first page, and a filtered one keeps its filters.
+  if (loading && !filtering) {
+    return null;
   }
   return (
     <>
-      {filters}
-      <StudentRowsSection
-        exhausted={PaginatedQueryResult.isExhausted(students)}
-        failed={PaginatedQueryResult.isFailure(students)}
-        filtering={status !== "all" || search.trim() !== ""}
-        loadMore={
-          PaginatedQueryResult.isCanLoadMore(students)
-            ? () => students.loadMore(STUDENT_PAGE_SIZE)
-            : null
-        }
-        rows={students.results}
+      <StudentFilters
+        onSearch={setSearch}
+        onStatus={setStatus}
         search={search}
+        status={status}
       />
+      {loading ? null : (
+        <StudentRowsSection
+          exhausted={PaginatedQueryResult.isExhausted(students)}
+          failed={PaginatedQueryResult.isFailure(students)}
+          filtering={filtering}
+          loadMore={
+            PaginatedQueryResult.isCanLoadMore(students)
+              ? () => students.loadMore(STUDENT_PAGE_SIZE)
+              : null
+          }
+          rows={students.results}
+          search={search}
+        />
+      )}
     </>
   );
 }
@@ -241,29 +243,20 @@ function StudentRowsSection({
 }) {
   const t = useTranslations("Exams");
   const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
-  // A page that holds no match is not the end of the search while later pages still load, so
-  // the empty state waits for the last page, and the table shows nothing in the meantime.
-  const more =
-    loadMore === null ? null : <Intersection onIntersect={loadMore} />;
-  const empty = filtering ? (
-    <TableEmpty
-      act="reading"
-      description={t("filter-empty")}
-      title={t("results-no-match")}
-    />
-  ) : (
-    <TableEmpty
-      act="reading"
-      description={t("results-empty")}
-      title={t("results-empty-title")}
-    />
-  );
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {rows.length > 0 ? <StudentTable rows={rows} /> : null}
-      {exhausted && rows.length === 0 ? empty : null}
-      {more}
+      {/* A page that holds no match is not the end of the search while later pages still load, so
+          the empty state waits for the last page, and the table shows nothing in the meantime. */}
+      {exhausted && rows.length === 0 ? (
+        <TableEmpty
+          act="reading"
+          description={t(filtering ? "filter-empty" : "results-empty")}
+          title={t(filtering ? "results-no-match" : "results-empty-title")}
+        />
+      ) : null}
+      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
   );
 }

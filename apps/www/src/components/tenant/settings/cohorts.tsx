@@ -27,14 +27,7 @@ import {
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useId,
-  useState,
-  useTransition,
-} from "react";
+import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
@@ -87,6 +80,22 @@ type CohortsPreload = Pick<
 const CohortsPreloadContext = createContext<CohortsPreload | undefined>(
   undefined
 );
+
+/** The unit whose cohorts the tab shows, the school's units, and the choice of another one. */
+const CohortsUnitContext = createContext<{
+  onChoose: (unitId: UnitId) => void;
+  unitId: UnitId;
+  units: readonly { readonly id: UnitId; readonly name: string }[];
+} | null>(null);
+
+/** Reads the unit of the cohorts tab. */
+function useCohortsUnit() {
+  const value = use(CohortsUnitContext);
+  if (value === null) {
+    throw new Error("useCohortsUnit must be used within SchoolCohortsContent");
+  }
+  return value;
+}
 
 /**
  * Renders the cohorts of the school's unit, which belong to the unit's active period: the unit
@@ -141,12 +150,11 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
     );
   }
   return (
-    <SchoolCohortsOfUnit
-      onChoose={setChosenUnit}
-      slug={slug}
-      unitId={unit.id}
-      units={units}
-    />
+    <CohortsUnitContext
+      value={{ onChoose: setChosenUnit, unitId: unit.id, units }}
+    >
+      <SchoolCohortsOfUnit slug={slug} />
+    </CohortsUnitContext>
   );
 }
 
@@ -155,48 +163,37 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
  * state, which links to the periods, and no add action, because a cohort belongs to a period.
  * A failed read of the active period shows its own sentence and Try again.
  */
-function SchoolCohortsOfUnit({
-  onChoose,
-  slug,
-  unitId,
-  units,
-}: {
-  onChoose: (unitId: UnitId) => void;
-  slug: TenantSlug;
-  unitId: UnitId;
-  units: readonly { readonly id: UnitId; readonly name: string }[];
-}) {
-  const choice =
-    units.length > 1 ? (
-      <SchoolUnitChoice onChoose={onChoose} unitId={unitId} units={units} />
-    ) : null;
+function SchoolCohortsOfUnit({ slug }: { slug: TenantSlug }) {
+  const { unitId } = useCohortsUnit();
 
   return (
     <ReadBoundary
       fallback={(failure) => (
         <SettingsPage>
-          {choice}
+          <CohortsUnitChoice />
           {failure}
         </SettingsPage>
       )}
       read={{ args: { slug, unitId }, ref: tenancy.cohorts.activePeriod }}
     >
-      <SchoolCohortsOfPeriod choice={choice} slug={slug} unitId={unitId} />
+      <SchoolCohortsOfPeriod slug={slug} />
     </ReadBoundary>
   );
 }
 
+/** The choice of the unit above the cohorts, shown only to a school with more than one unit. */
+function CohortsUnitChoice() {
+  const { onChoose, unitId, units } = useCohortsUnit();
+
+  return units.length > 1 ? (
+    <SchoolUnitChoice onChoose={onChoose} unitId={unitId} units={units} />
+  ) : null;
+}
+
 /** The table of the unit's active period, or the state of a unit that has none, once the period is read. */
-function SchoolCohortsOfPeriod({
-  choice,
-  slug,
-  unitId,
-}: {
-  choice: ReactNode;
-  slug: TenantSlug;
-  unitId: UnitId;
-}) {
+function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
+  const { unitId } = useCohortsUnit();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const preload = use(CohortsPreloadContext);
   const active = usePreloadedQueryResult(
@@ -208,7 +205,7 @@ function SchoolCohortsOfPeriod({
     if (isDenied(active.error)) {
       return (
         <SettingsPage>
-          {choice}
+          <CohortsUnitChoice />
           <TableEmpty
             act="pointing"
             description={t("cohorts-unavailable-description")}
@@ -222,12 +219,16 @@ function SchoolCohortsOfPeriod({
   const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
 
   if (periodId === undefined) {
-    return <SettingsPage>{choice}</SettingsPage>;
+    return (
+      <SettingsPage>
+        <CohortsUnitChoice />
+      </SettingsPage>
+    );
   }
   if (periodId === null) {
     return (
       <SettingsPage>
-        {choice}
+        <CohortsUnitChoice />
         <TableEmpty
           act="pointing"
           action={
@@ -247,7 +248,7 @@ function SchoolCohortsOfPeriod({
   }
   return (
     <SettingsPage actions={<SchoolCohortAdd periodId={periodId} slug={slug} />}>
-      {choice}
+      <CohortsUnitChoice />
       <ReadBoundary
         read={{ args: { periodId, slug }, ref: tenancy.cohorts.list }}
       >

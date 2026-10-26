@@ -291,25 +291,23 @@ function RoomsTable({
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
-  const failure = PaginatedQueryResult.isFailure(pagination) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
-  const loadMoreTrigger = PaginatedQueryResult.isCanLoadMore(pagination) ? (
-    <Intersection onIntersect={() => pagination.loadMore(ROOM_PAGE_SIZE)} />
-  ) : null;
+  const failed = PaginatedQueryResult.isFailure(pagination);
+  const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
+    ? () => pagination.loadMore(ROOM_PAGE_SIZE)
+    : null;
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failure !== null) {
-      return failure;
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
     }
     if (pagination._tag !== "Exhausted") {
-      return loadMoreTrigger;
+      return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
     }
     return <RoomsEmpty examId={examId} filter={filter} />;
   }
 
   return (
     <>
-      {failure}
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <TableFrame>
         <Table>
           <TableHeader>
@@ -329,7 +327,7 @@ function RoomsTable({
           </TableBody>
         </Table>
       </TableFrame>
-      {loadMoreTrigger}
+      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
   );
 }
