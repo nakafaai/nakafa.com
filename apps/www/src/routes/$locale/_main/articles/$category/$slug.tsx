@@ -130,7 +130,6 @@ const readArticle = createServerFn({ method: "GET" })
             labels: {
               articles: tCommon("articles"),
               home: tCommon("home"),
-              more: tCommon("more"),
               onThisPage: tCommon("on-this-page"),
             },
             locale,
@@ -258,7 +257,6 @@ function ArticlePage() {
                       target: articleCategoryTarget(article.category),
                     },
                   ]}
-                  menuLabel={labels.more}
                 />
               }
             >

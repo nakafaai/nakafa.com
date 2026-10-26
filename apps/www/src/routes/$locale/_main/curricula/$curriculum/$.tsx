@@ -138,7 +138,6 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
           image: getCurriculumRouteSocialImage(locale, program.key, route),
           labels: {
             home: homeLabel,
-            more: tCommon("more"),
             routeAction: tLearningPrograms("curriculum-route-action"),
             selector: tLearningPrograms("kind.school-curriculum"),
             subject: subjectLabel,
@@ -227,7 +226,6 @@ function CurriculumRoutePage() {
               home: HOME_TARGET,
               homeLabel: labels.home,
               items: [{ label: labels.subject }],
-              menuLabel: labels.more,
               title: route.title,
             }}
           />
@@ -236,7 +234,6 @@ function CurriculumRoutePage() {
             ancestors={page.ancestors}
             currentRoute={route}
             homeLabel={labels.home}
-            menuLabel={labels.more}
             subjectLabel={labels.subject}
           />
         )}

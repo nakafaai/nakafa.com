@@ -79,7 +79,7 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
       })),
       description: tLearningPrograms("curriculum-index-metadata-description"),
       image: getCurriculumIndexSocialImage(locale, indexHref),
-      labels: { home: tCommon("home"), more: tCommon("more") },
+      labels: { home: tCommon("home") },
       locale,
       metadataTitle: tLearningPrograms("curriculum-index-metadata-title"),
       sourceUrl: catalog.sourceRevision
@@ -150,7 +150,6 @@ function CurriculumIndexPage() {
             home: HOME_TARGET,
             homeLabel: page.labels.home,
             items: [{ label: page.title }],
-            menuLabel: page.labels.more,
             title: page.title,
           }}
         />

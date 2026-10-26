@@ -70,7 +70,6 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
 
 /** The school questionnaire, framed as the learner questionnaire is. */
 function SchoolNewPage() {
-  const { legal } = Route.useLoaderData();
   return (
     <>
       <EntryShellHeader>
@@ -79,7 +78,7 @@ function SchoolNewPage() {
         </div>
       </EntryShellHeader>
       <EntryShellBody>
-        <SchoolStart legal={legal}>
+        <SchoolStart>
           <Nina act="waving" label="" size={88} whole />
         </SchoolStart>
       </EntryShellBody>
