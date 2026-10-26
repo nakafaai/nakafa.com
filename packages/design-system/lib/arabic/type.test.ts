@@ -47,15 +47,15 @@ describe("typing into a field", () => {
 
   it("tells the page with an input event that bubbles", () => {
     const field = fieldWith("", 0, 0);
-    const typed: string[] = [];
+    const typed = vi.fn<(value: string) => void>();
     document.body.addEventListener("input", (event) => {
       if (event.target instanceof HTMLTextAreaElement) {
-        typed.push(event.target.value);
+        typed(event.target.value);
       }
     });
 
     typeIntoField(field, "ب");
 
-    expect(typed).toEqual(["ب"]);
+    expect(typed.mock.calls).toEqual([["ب"]]);
   });
 });
