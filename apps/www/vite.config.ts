@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
 import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
 import babel from "@rolldown/plugin-babel";
@@ -121,8 +121,10 @@ const readPreviewHeaders: Plugin = {
     order: "pre",
     handler: (server) => {
       const file = join(
-        server.config.root,
-        server.config.environments.client.build.outDir,
+        resolve(
+          server.config.root,
+          server.config.environments.client.build.outDir
+        ),
         "_headers"
       );
       if (existsSync(file)) {
