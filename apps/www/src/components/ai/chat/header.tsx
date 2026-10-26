@@ -22,7 +22,12 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@repo/design-system/components/ui/input-group";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
 import {
   Tooltip,
@@ -106,29 +111,6 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
       <ChatHeader
         actions={
           <>
-            {isEditing ? (
-              <>
-                <Button
-                  aria-label={tCommon("cancel")}
-                  onClick={closeEditor}
-                  size="icon"
-                  variant="outline"
-                >
-                  <HugeIcons icon={Cancel01Icon} />
-                  <span className="sr-only">{tCommon("cancel")}</span>
-                </Button>
-                <Button
-                  aria-label={t("confirm")}
-                  onClick={handleSave}
-                  size="icon"
-                  variant="outline"
-                >
-                  <HugeIcons icon={Tick01Icon} />
-                  <span className="sr-only">{t("confirm")}</span>
-                </Button>
-              </>
-            ) : null}
-
             <DropdownMenu onOpenChange={onMenuOpenChange}>
               <DropdownMenuTrigger
                 render={
@@ -183,20 +165,41 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
           </>
         }
       >
+        {/* The rename's two answers sit inside its box, so the header keeps
+            its two buttons while the learner edits the title. */}
         <Activity mode={isEditing ? "visible" : "hidden"}>
-          <Input
-            className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
-            maxLength={MAX_TITLE_LENGTH}
-            onChange={(e) => setChatTitle(e.target.value)}
-            onKeyDown={(e) =>
-              handleTitleKeyDown(e.nativeEvent, {
-                close: closeEditor,
-                save: handleSave,
-              })
-            }
-            ref={inputRef}
-            value={chatTitle}
-          />
+          <InputGroup>
+            <InputGroupInput
+              aria-label={t("rename-chat")}
+              maxLength={MAX_TITLE_LENGTH}
+              onChange={(e) => setChatTitle(e.target.value)}
+              onKeyDown={(e) =>
+                handleTitleKeyDown(e.nativeEvent, {
+                  close: closeEditor,
+                  save: handleSave,
+                })
+              }
+              placeholder={t("chat-title-placeholder")}
+              ref={inputRef}
+              value={chatTitle}
+            />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                aria-label={tCommon("cancel")}
+                onClick={closeEditor}
+                size="icon-xs"
+              >
+                <HugeIcons icon={Cancel01Icon} />
+              </InputGroupButton>
+              <InputGroupButton
+                aria-label={t("confirm")}
+                onClick={handleSave}
+                size="icon-xs"
+              >
+                <HugeIcons icon={Tick01Icon} />
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
         </Activity>
         <Activity mode={isEditing ? "hidden" : "visible"}>
           <h1

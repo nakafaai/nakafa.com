@@ -2303,6 +2303,7 @@
     "search-chats": "Chats durchsuchen...",
     "search-older": "Ältere Chats durchsuchen",
     "rename-chat": "Chat umbenennen",
+    "chat-title-placeholder": "Benenne diesen Chat",
     "delete-chat": "Chat löschen",
     "delete-chat-description": "Dieser Chat kann nach dem Löschen nicht wiederhergestellt werden.",
     "confirm": "Bestätigen",

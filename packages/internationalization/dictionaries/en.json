@@ -2303,6 +2303,7 @@
     "search-chats": "Search your chats...",
     "search-older": "Search older chats",
     "rename-chat": "Rename chat",
+    "chat-title-placeholder": "Name this chat",
     "delete-chat": "Delete chat",
     "delete-chat-description": "This chat cannot be recovered once it is deleted.",
     "confirm": "Confirm",
