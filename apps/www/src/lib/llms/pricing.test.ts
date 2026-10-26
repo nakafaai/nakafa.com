@@ -51,7 +51,9 @@ describe("pricing Markdown", () => {
         `- ${getPlanCreditConfig("pro").amount.toLocaleString("en-US")} credits every month to ask Nina`
       );
       expect(text).toContain("## Frequently asked");
-      expect(text).toContain("One answer uses 5 credits.");
+      expect(text).toContain(
+        "Nina uses 5 credits for each answer to your question."
+      );
       expect(text).toContain(
         `Current price and checkout: ${BASE_URL}/en/pricing`
       );

@@ -2,9 +2,10 @@ import { Schema } from "effect";
 
 /**
  * The messages that the one-sentence rule covers: each card description, card
- * footer sentence, dialog description and empty-state description. A message is
- * listed by the component that renders it, and its key is the dotted path of its
- * dictionary entry, such as `Memory.empty-description`. In id, en and de each
+ * footer sentence, dialog description, empty-state description, failure message
+ * and answer of a question list. A message is listed by the component that
+ * renders it, and its key is the dotted path of its dictionary entry, such as
+ * `Memory.empty-description` or `Ai.failures.unknown`. In id, en and de each
  * listed message is one concise sentence, and a question ends with a question
  * mark. Titles, headings and metadata are not listed. `sentences.test.ts` checks
  * every key in every locale.
@@ -13,6 +14,16 @@ export const SentenceKeySchema = Schema.Literals([
   "Ai.chat-failed-description",
   "Ai.chat-unavailable",
   "Ai.delete-chat-description",
+  "Ai.failures.content-blocked",
+  "Ai.failures.input-too-large",
+  "Ai.failures.interrupted",
+  "Ai.failures.provider-busy",
+  "Ai.failures.provider-unavailable",
+  "Ai.failures.request-rejected",
+  "Ai.failures.response-limit",
+  "Ai.failures.response-timeout",
+  "Ai.failures.service-configuration",
+  "Ai.failures.unknown",
   "Ai.new-chat-description",
   "Ai.private-description",
   "Ai.public-description",
@@ -40,7 +51,9 @@ export const SentenceKeySchema = Schema.Literals([
   "Auth.curriculum-footer",
   "Auth.delete-account-description",
   "Auth.delete-account-dialog-description",
+  "Auth.delete-account-error",
   "Auth.delete-account-footer",
+  "Auth.delete-account-session-expired",
   "Auth.memory-description",
   "Auth.name-description",
   "Auth.name-footer",
@@ -76,12 +89,33 @@ export const SentenceKeySchema = Schema.Literals([
   "Exams.student-results-footer",
   "Exams.student-results-released",
   "Exams.try-note",
+  "Landing.faq-account-answer",
+  "Landing.faq-accuracy-answer",
+  "Landing.faq-credits-answer",
+  "Landing.faq-data-answer",
+  "Landing.faq-empty-answer",
+  "Landing.faq-languages-answer",
+  "Landing.faq-memory-answer",
+  "Landing.faq-nina-answer",
+  "Landing.faq-phone-answer",
+  "Landing.faq-subjects-answer",
+  "Landing.school-lead",
   "Memory.clear-description",
   "Memory.delete-description",
   "Memory.empty-description",
   "Memory.footer",
   "NotFound.description",
   "Posts.delete-description",
+  "PricingPage.a10",
+  "PricingPage.a11",
+  "PricingPage.a12",
+  "PricingPage.a13",
+  "PricingPage.a14",
+  "PricingPage.a15",
+  "PricingPage.a16",
+  "PricingPage.a17",
+  "PricingPage.a6",
+  "PricingPage.a9",
   "School.quiet-staff",
   "School.sittings-empty",
   "SchoolEntry.outsider-description",
@@ -92,6 +126,8 @@ export const SentenceKeySchema = Schema.Literals([
   "SchoolSettings.members-empty-description",
   "SchoolSettings.student-add-description",
   "SchoolSettings.student-add-footer",
+  "Toast.failure-context.description",
+  "Toast.failure-request-conflict.description",
   "Tryouts.complete-part-description",
   "Tryouts.free-dialog-description",
   "Tryouts.free-entry-dialog-description",
