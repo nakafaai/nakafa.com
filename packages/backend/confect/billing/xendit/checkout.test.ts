@@ -308,21 +308,21 @@ describe("billing/xendit/checkout", () => {
   );
 
   it.effect.each([
-    [
-      "a Xendit failure",
-      Effect.fail(
+    {
+      answer: Effect.fail(
         new XenditRequestFailed({
           errorCode: "INVALID_PAYMENT_CHANNEL",
           message: "No channel is active.",
           status: 400,
         })
       ),
-    ],
-    [
-      "a session without a payment link",
-      Effect.succeed(openedSession({ payment_link_url: null })),
-    ],
-  ])("reports %s as the public checkout failure", ([_name, answer]) =>
+      name: "a Xendit failure",
+    },
+    {
+      answer: Effect.succeed(openedSession({ payment_link_url: null })),
+      name: "a session without a payment link",
+    },
+  ])("reports $name as the public checkout failure", ({ answer }) =>
     Effect.gen(function* () {
       const { authed, t } = yield* setup();
       vi.mocked(createSession).mockReturnValue(answer);
