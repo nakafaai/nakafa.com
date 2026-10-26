@@ -6,6 +6,7 @@ import { Array as Arr } from "effect";
 import {
   type ComponentProps,
   useEffect,
+  useEffectEvent,
   useId,
   useLayoutEffect,
   useRef,
@@ -79,6 +80,9 @@ export function useChatAdmission({
     shownNow.current = shown;
   });
   const viewerId = gate.viewerId;
+  // A send pressed before the viewer is known waits for the viewer, so no
+  // composer is disabled before the learner acts and no early send is lost.
+  const [waiting, setWaiting] = useState<PromptInputMessage | null>(null);
   // The prompt stays until the admission is refused, or until the surface that
   // shows it hides or ends, so the composer waits for the chat it opens.
   const busy = admitting || prompt !== null;
@@ -97,9 +101,29 @@ export function useChatAdmission({
     };
   }, [viewerId]);
 
+  const admitWaiting = useEffectEvent((message: PromptInputMessage) =>
+    submit(message)
+  );
+
+  // The waiting send is admitted, or sent to sign-in, once the viewer is known.
+  useEffect(() => {
+    if (waiting === null || gate.pending) {
+      return;
+    }
+    setWaiting(null);
+    admitWaiting(waiting);
+  }, [gate.pending, waiting]);
+
   function submit(message: PromptInputMessage) {
     const query = message.text?.trim();
-    if (!query || busy || !gate.admit()) {
+    if (!query || busy) {
+      return false;
+    }
+    if (gate.pending) {
+      setWaiting(message);
+      return false;
+    }
+    if (!gate.admit()) {
       return false;
     }
     const draft = { ...message, text: query };
@@ -166,5 +190,5 @@ export function useChatAdmission({
       });
   }
 
-  return { disabled: busy || gate.pending, prompt, promptId, submit };
+  return { disabled: busy || waiting !== null, prompt, promptId, submit };
 }

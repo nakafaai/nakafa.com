@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { type Browser, expect, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
+import { CHAT_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import { NINA_SECTION } from "@/e2e/support/selector";
@@ -13,18 +14,17 @@ const SESSION_DELAY = Duration.seconds(2);
 const DIMMED = "nakafaComposerDimmed";
 
 /**
- * A signed-in learner's home composer looks the same while the page's session
- * loads: it never turns disabled and back, so the learner sees no flicker, and
- * its text box takes typing the whole time.
+ * Opens one page as a signed-in learner whose session answers late, and proves
+ * that its composer never turned disabled and back while the session loaded:
+ * the learner sees no flicker, and the text box takes typing the whole time.
  */
-test("a signed-in learner's home composer never dims while the session loads", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  const origin = baseURL ?? "";
-  await Effect.runPromise(
-    withBrowserContext(
+const expectSteadyComposer = Effect.fn("NakafaE2E.expectSteadyComposer")(
+  function* (
+    browser: Browser,
+    origin: string,
+    page: { readonly path: string; readonly scope: string }
+  ) {
+    yield* withBrowserContext(
       browser,
       { baseURL: origin, serviceWorkers: "block" },
       (context) =>
@@ -50,20 +50,46 @@ test("a signed-in learner's home composer never dims while the session loads", a
               });
             }, DIMMED)
           );
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* Effect.promise(() => page.goto(HOME));
-          const composer = page
-            .locator(NINA_SECTION)
+          const tab = yield* Effect.promise(() => context.newPage());
+          yield* Effect.promise(() => tab.goto(page.path));
+          const composer = tab
+            .locator(page.scope)
             .getByRole("textbox", { name: "Ask Nina anything..." });
           yield* Effect.promise(() => composer.scrollIntoViewIfNeeded());
           yield* Effect.sleep(Duration.times(SESSION_DELAY, 2));
           yield* Effect.promise(async () => {
             await expect(composer).toBeEnabled();
             expect(
-              await page.evaluate((mark) => Reflect.get(window, mark), DIMMED)
+              await tab.evaluate((mark) => Reflect.get(window, mark), DIMMED)
             ).not.toBe(true);
           });
         })
-    )
+    );
+  }
+);
+
+test("a signed-in learner's home composer never dims while the session loads", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    expectSteadyComposer(browser, baseURL ?? "", {
+      path: HOME,
+      scope: NINA_SECTION,
+    })
+  );
+});
+
+test("a signed-in learner's new-chat composer never dims while the session loads", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    expectSteadyComposer(browser, baseURL ?? "", {
+      path: CHAT_PATH,
+      scope: "main",
+    })
   );
 });
