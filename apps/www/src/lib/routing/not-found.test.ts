@@ -4,7 +4,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   notFoundPageOf,
-  readNotFoundContext,
   readNotFoundPageLocale,
   withContentLanguage,
 } from "@/lib/routing/not-found";
@@ -30,24 +29,6 @@ describe("notFoundPageOf", () => {
         "de"
       )
     ).toStrictEqual({ locale: "de", school: true });
-  });
-});
-
-describe("readNotFoundContext", () => {
-  it("reads the not-found page that the server context names", () => {
-    expect(
-      readNotFoundContext({ notFound: { locale: "en", school: true } })
-    ).toStrictEqual(Option.some({ locale: "en", school: true }));
-  });
-
-  it("answers none for a request that the router answers, and in the browser", () => {
-    expect(Option.isNone(readNotFoundContext({}))).toBe(true);
-    expect(Option.isNone(readNotFoundContext(undefined))).toBe(true);
-    expect(
-      Option.isNone(
-        readNotFoundContext({ notFound: { locale: "zz", school: false } })
-      )
-    ).toBe(true);
   });
 });
 

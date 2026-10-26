@@ -31,7 +31,6 @@ import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
   NotFoundPageData,
-  readNotFoundContext,
   readNotFoundPageLocale,
 } from "@/lib/routing/not-found";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
@@ -46,9 +45,8 @@ export const Route = createRootRoute({
    * not-found match as the server sent it.
    */
   beforeLoad: ({ serverContext }) => {
-    const page = readNotFoundContext(serverContext);
-    if (Option.isSome(page)) {
-      throw notFound({ data: page.value });
+    if (serverContext?.notFound !== undefined) {
+      throw notFound({ data: serverContext.notFound });
     }
   },
   /**

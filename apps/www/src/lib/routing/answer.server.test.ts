@@ -2,7 +2,8 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect, Option } from "effect";
-import { answerRequest, type RouterHandler } from "@/lib/routing/answer.server";
+import { answerRequest } from "@/lib/routing/answer.server";
+import type { RouterHandler } from "@/lib/routing/routed.server";
 
 /** A failure that one of the readers of the server entry reports. */
 class ReaderFailure extends Data.TaggedError("ReaderFailure") {}
@@ -448,27 +449,6 @@ describe("locale redirects", () => {
 });
 
 describe("failures", () => {
-  it.effect("reports a router failure with Start's error response", () =>
-    Effect.gen(function* () {
-      const handle = vi.fn<RouterHandler>(() =>
-        Promise.reject(new Error("router failed"))
-      );
-
-      const response = yield* answer(
-        "/en/search",
-        { accept: "text/html" },
-        handle
-      );
-
-      expect(response.status).toBe(500);
-      expect(yield* Effect.promise(() => response.text())).toBe("Start error");
-      expect(reporting.report).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.any(Request)
-      );
-    })
-  );
-
   it.effect("fails when a removed address cannot be read", () =>
     Effect.gen(function* () {
       retired.read.mockReturnValue(Effect.fail(new ReaderFailure()));

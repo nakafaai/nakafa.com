@@ -18,13 +18,6 @@ export const NotFoundPageData = Schema.Struct({
 /** The not-found page of one answer, as `NotFoundPageData` declares it. */
 export type NotFoundPage = typeof NotFoundPageData.Type;
 
-/**
- * The context that the server entry gives the router with a request it answers
- * not found. The router reads it as its server context, which the browser never
- * has, so a visitor's own headers cannot ask for it.
- */
-const NotFoundContext = Schema.Struct({ notFound: NotFoundPageData });
-
 /** The locale of the not-found page, as its not-found error names it, or none for any other error. */
 export function readNotFoundPageLocale(error: unknown): Option.Option<Locale> {
   if (!isNotFound(error)) {
@@ -48,16 +41,6 @@ export function notFoundPageOf(request: Request, locale: Locale): NotFoundPage {
       Option.flatMap(readRequestHostname(request.headers), readSchoolSlug)
     ),
   };
-}
-
-/** The not-found page that the router's server context names, or none for a request that it answers. */
-export function readNotFoundContext(
-  context: unknown
-): Option.Option<NotFoundPage> {
-  return Option.map(
-    Schema.decodeUnknownOption(NotFoundContext)(context),
-    (named) => named.notFound
-  );
 }
 
 /** The response with the language that the not-found page of a locale names. */

@@ -1,14 +1,8 @@
-import { reportUncaughtRequestError } from "@repo/analytics/server-reporting";
 import type { Locale } from "@repo/internationalization/src/locale";
-import { handleStartError } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readProfileGate } from "@/lib/profile/gate";
-import {
-  type NotFoundPage,
-  notFoundPageOf,
-  withContentLanguage,
-} from "@/lib/routing/not-found";
+import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 import {
@@ -22,25 +16,14 @@ import {
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
 import { isBareRoutePath, isRenderedRoutePath } from "@/lib/routing/rendered";
+import {
+  answerRouted,
+  type RouterHandler,
+  UncaughtRequestError,
+} from "@/lib/routing/routed.server";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
-
-/**
- * The router's answer to one request, which may fail with the error Start throws.
- * A request that the server answers not found names its not-found page, which
- * the router reads from its server context.
- */
-export type RouterHandler = (
-  request: Request,
-  notFound: Option.Option<NotFoundPage>
-) => Promise<Response>;
-
-/** An error that escaped a decision of the server entry, kept with its original cause. */
-export class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
-  "UncaughtRequestError",
-  { cause: Schema.Unknown }
-) {}
 
 /** Names a failure of a decision as the entry's uncaught error, and keeps an error that already is one. */
 function toUncaughtRequestError(cause: unknown) {
@@ -48,28 +31,6 @@ function toUncaughtRequestError(cause: unknown) {
     ? cause
     : new UncaughtRequestError({ cause });
 }
-
-/**
- * Routes one request to the router. A failure that escapes the router is
- * reported here and answered with Start's error response, so the router's answer
- * handles its own failures before the response leaves the decision chain.
- */
-const answerRouted = Effect.fn("www.routing.answer.routed")(function* (
-  request: Request,
-  route: RouterHandler,
-  notFound: Option.Option<NotFoundPage> = Option.none()
-) {
-  return yield* Effect.tryPromise({
-    try: () => route(request, notFound),
-    catch: (cause) => new UncaughtRequestError({ cause }),
-  }).pipe(
-    Effect.catchTag("UncaughtRequestError", (error) =>
-      reportUncaughtRequestError(error.cause, request).pipe(
-        Effect.as(handleStartError(error.cause))
-      )
-    )
-  );
-});
 
 /**
  * Answers the app's own not-found page at the visitor's address, in the locale
