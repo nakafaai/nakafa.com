@@ -15,7 +15,7 @@ export const Route = createFileRoute("/school/$slug/exams/")({
     }
   },
   loader: ({ context }) => {
-    if (context.school._tag !== "Member") {
+    if (!context.firstHtml || context.school._tag !== "Member") {
       return;
     }
     return readExamListFn({
