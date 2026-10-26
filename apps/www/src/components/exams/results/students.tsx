@@ -1,5 +1,12 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
+import {
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  HourglassIcon,
+  SquareLock01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -25,7 +32,11 @@ import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
-import { useTableFilters } from "@/components/shared/table/toolbar";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import {
+  TableChoice,
+  useTableFilters,
+} from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
@@ -49,6 +60,20 @@ const stateKeys = {
   "state-closing" | "state-in-progress" | "state-locked" | "state-submitted"
 >;
 
+/**
+ * The look of each attempt state, in its table cell and in the Filter menu: a running clock, the
+ * sand of a closing sitting, a lock, and a check once submitted, each in its tone.
+ */
+const STATE_LOOKS = {
+  closing: { icon: HourglassIcon, tone: "warning" },
+  inProgress: { icon: Clock01Icon, tone: "info" },
+  locked: { icon: SquareLock01Icon, tone: "danger" },
+  submitted: { icon: CheckmarkCircle02Icon, tone: "success" },
+} as const satisfies Record<
+  (typeof StudentRowSchema.Type)["state"],
+  StatusLook
+>;
+
 /** The status that the list shows: every attempt, or only the attempts in one state. */
 const StatusFilter = Schema.Union([Schema.Literal("all"), AttemptState]);
 export type StatusFilter = typeof StatusFilter.Type;
@@ -69,7 +94,7 @@ function AwayCell({
 }) {
   const t = useTranslations("Exams");
   if (exits === null || awaySeconds === null) {
-    return null;
+    return <NotYet />;
   }
   if (exits === 0) {
     return "0";
@@ -84,9 +109,16 @@ function AwayCell({
   });
 }
 
+/** A value the attempt does not have yet, in muted words instead of a blank cell. */
+function NotYet() {
+  const t = useTranslations("Exams");
+  return <span className="text-muted-foreground">{t("results-not-yet")}</span>;
+}
+
 /**
  * One student's row: the name, which opens the student's answers beside the list, the state, and the
- * scores of a submitted attempt, with the time it was submitted.
+ * scores of a submitted attempt, with the time it was submitted. Counts and scores sit to the right
+ * in figures of one width, so the eye runs down each column, and a value not there yet says so.
  */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
@@ -111,28 +143,70 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           {row.name}
         </Button>
       </TableCell>
-      <TableCell>{t(stateKeys[row.state])}</TableCell>
-      <TableCell className="tabular-nums">
-        {row.points === null ? "" : `${row.points} / ${total}`}
+      <TableCell>
+        <TableStatus
+          icon={STATE_LOOKS[row.state].icon}
+          label={t(stateKeys[row.state])}
+          tone={STATE_LOOKS[row.state].tone}
+        />
       </TableCell>
-      <TableCell className="tabular-nums">{row.answered ?? ""}</TableCell>
-      <TableCell className="tabular-nums">{row.pending ?? ""}</TableCell>
-      <TableCell className="tabular-nums">
+      <TableCell className="text-right tabular-nums">
+        {row.points === null ? <NotYet /> : `${row.points} / ${total}`}
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
+        {row.answered ?? <NotYet />}
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
+        {row.pending ?? <NotYet />}
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
         <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
       </TableCell>
       <TableCell className="tabular-nums">
-        {row.submittedAt === null
-          ? ""
-          : format.dateTime(
-              DateTime.toDateUtc(DateTime.makeUnsafe(row.submittedAt)),
-              {
-                dateStyle: "medium",
-                timeStyle: "short",
-                timeZone,
-              }
-            )}
+        {row.submittedAt === null ? (
+          <NotYet />
+        ) : (
+          format.dateTime(
+            DateTime.toDateUtc(DateTime.makeUnsafe(row.submittedAt)),
+            {
+              dateStyle: "medium",
+              timeStyle: "short",
+              timeZone,
+            }
+          )
+        )}
       </TableCell>
     </TableRow>
+  );
+}
+
+/**
+ * The students' Filter menu, in the results page's header row: every attempt, or only the attempts in one
+ * state, which the server reads. Each value carries the icon of its state.
+ */
+export function StudentStatusFilter({
+  onChange,
+  value,
+}: {
+  readonly onChange: (status: StatusFilter) => void;
+  readonly value: StatusFilter;
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <TableChoice
+      onChange={onChange}
+      options={[
+        { icon: UserGroupIcon, label: t("filter-all"), value: "all" },
+        ...Arr.map(AttemptState.literals, (state) => ({
+          icon: STATE_LOOKS[state].icon,
+          label: t(stateKeys[state]),
+          value: state,
+        })),
+      ]}
+      title={t("filter-label")}
+      value={value}
+    />
   );
 }
 
@@ -149,12 +223,18 @@ function StudentTable({
       <TableHeader>
         <TableRow>
           <TableHead>{t("results-name")}</TableHead>
-          <TableHead>{t("results-status")}</TableHead>
-          <TableHead>{t("results-score")}</TableHead>
-          <TableHead>{t("results-answered")}</TableHead>
-          <TableHead>{t("results-pending")}</TableHead>
-          <TableHead>{t("results-away")}</TableHead>
-          <TableHead>{t("results-finished")}</TableHead>
+          <TableHead className="w-40">{t("results-status")}</TableHead>
+          <TableHead className="w-28 text-right">
+            {t("results-score")}
+          </TableHead>
+          <TableHead className="w-28 text-right">
+            {t("results-answered")}
+          </TableHead>
+          <TableHead className="w-28 text-right">
+            {t("results-pending")}
+          </TableHead>
+          <TableHead className="w-36 text-right">{t("results-away")}</TableHead>
+          <TableHead className="w-44">{t("results-finished")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

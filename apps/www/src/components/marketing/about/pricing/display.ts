@@ -33,34 +33,17 @@ export function currencySymbol(formatter: Intl.NumberFormat) {
 }
 
 /**
- * The free and pro prices of one currency, animated and static, with their
- * formatting. The page renders every currency, so no request country selects one.
+ * The free and pro prices of one currency, as its locale writes them. The page
+ * renders every currency, so no request country selects one.
  *
- * References:
- * - https://polar.sh/docs/features/products#multiple-payment-currencies
- * - https://number-flow.barvian.me/
+ * Reference: https://polar.sh/docs/features/products#multiple-payment-currencies
  */
 export function getProPricingDisplay(currency: PricingCurrency) {
-  const { format, formatter, price } = getProMonthlyPricingFor(currency);
+  const { formatter, price } = getProMonthlyPricingFor(currency);
 
   return {
-    free: {
-      format,
-      locales: price.locale,
-      text: formatter.format(0),
-      value: 0,
-    },
-    pro: {
-      format,
-      locales: price.locale,
-      text: formatter.format(price.amount),
-      value: price.amount,
-    },
-    proYearly: {
-      format,
-      locales: price.locale,
-      text: formatter.format(price.yearlyAmount),
-      value: price.yearlyAmount,
-    },
+    free: { text: formatter.format(0) },
+    pro: { text: formatter.format(price.amount) },
+    proYearly: { text: formatter.format(price.yearlyAmount) },
   };
 }

@@ -16,7 +16,7 @@ import { paragraphVariants } from "@repo/design-system/lib/paragraph";
 import { DOMSerializer, Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { useCallback, useDeferredValue, useMemo } from "react";
+import { type ReactNode, useCallback, useDeferredValue, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import {
   choiceOf,
@@ -183,38 +183,28 @@ function OptionSketch({ label }: { label: OptionLabel }) {
 }
 
 /**
- * One option of a paper drawn without editors: its letter and its text. A page with controls keeps
- * the room of the one control an option has beside its text, the remove control, as the editor's page does.
+ * One option of a paper drawn without editors: the letter and the text the caller composes. A page with
+ * controls keeps the room of the one control an option has beside its text, the remove control, as the
+ * editor's page does.
  */
 function PaperChoice({
-  label,
-  letter,
+  children,
   withControls,
 }: {
-  label: OptionLabel;
-  letter: string;
+  children: ReactNode;
   withControls: boolean;
 }) {
   if (!withControls) {
-    return <ChoiceText label={label} letter={letter} />;
+    return children;
   }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-      <ChoiceText label={label} letter={letter} />
+      {children}
       <div aria-hidden className="flex items-center gap-1">
         <ControlRoom />
       </div>
     </div>
-  );
-}
-
-/** The letter and the drawn text of one option. */
-function ChoiceText({ label, letter }: { label: OptionLabel; letter: string }) {
-  return (
-    <PaperOption letter={letter}>
-      <OptionSketch label={label} />
-    </PaperOption>
   );
 }
 
@@ -241,12 +231,11 @@ function PartSketch({
     <div className="grid content-start gap-2">
       <p className="font-medium text-muted-foreground text-sm">{heading}</p>
       {Arr.map(parts, (part, index) => (
-        <PaperChoice
-          key={part.id}
-          label={part.label}
-          letter={letterOf(index)}
-          withControls={withControls}
-        />
+        <PaperChoice key={part.id} withControls={withControls}>
+          <PaperOption letter={letterOf(index)}>
+            <OptionSketch label={part.label} />
+          </PaperOption>
+        </PaperChoice>
       ))}
       {withControls && adds && !locked && parts.length < CHOICE_OPTIONS_MAX ? (
         <OptionAddRoom />
@@ -259,22 +248,17 @@ function PartSketch({
 const statementNumber = (index: number) => String(index + 1);
 
 /**
- * The paper of one question drawn without editors: its prompt and its options as the student reads
- * them. The page draws it when its editors are not mounted, and the thumbnails draw it small, so a
- * page and its thumbnail look alike. The prompt keeps its room even before its document is known, so
- * the paper takes the height it takes once its editor mounts. A page passes `withControls`, which keeps
- * the room of its option controls and of the action that adds an option, so the paper is as wide and as
- * tall as it is when the editor mounts.
+ * The answers of one question drawn without editors, as the student reads them, below the prompt that
+ * the caller draws on the same paper (`PreviewProse`). The page draws them when its editors are not
+ * mounted, and the thumbnails draw them small, so a page and its thumbnail look alike. A page passes
+ * `withControls`, which keeps the room of its option controls and of the action that adds an option, so
+ * the paper is as wide and as tall as it is when the editor mounts.
  */
 export function PaperSketch({
-  doc,
   question,
-  selected = false,
   withControls = false,
 }: {
-  doc: Option.Option<Node>;
   question: Question;
-  selected?: boolean;
   withControls?: boolean;
 }) {
   const t = useTranslations("Exams");
@@ -291,17 +275,15 @@ export function PaperSketch({
     );
 
   return (
-    <QuestionPaper selected={selected}>
-      <PreviewProse article doc={doc} size="page" />
+    <>
       {Option.isSome(choice) ? (
         <PaperOptions>
           {Arr.map(choice.value.options, (option, index) => (
-            <PaperChoice
-              key={option.id}
-              label={option.label}
-              letter={optionLetter(index)}
-              withControls={withControls}
-            />
+            <PaperChoice key={option.id} withControls={withControls}>
+              <PaperOption letter={optionLetter(index)}>
+                <OptionSketch label={option.label} />
+              </PaperOption>
+            </PaperChoice>
           ))}
         </PaperOptions>
       ) : null}
@@ -350,7 +332,7 @@ export function PaperSketch({
       {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
       {question.template === "essay" ? <PaperLine essay /> : null}
       {addsOption ? <OptionAddRoom /> : null}
-    </QuestionPaper>
+    </>
   );
 }
 
@@ -385,7 +367,10 @@ export function QuestionPreview({
         className="pointer-events-none w-4/1 origin-top-left scale-25 p-4"
         inert
       >
-        <PaperSketch doc={doc} question={question} />
+        <QuestionPaper>
+          <PreviewProse article doc={doc} size="page" />
+          <PaperSketch question={question} />
+        </QuestionPaper>
       </div>
     </div>
   );

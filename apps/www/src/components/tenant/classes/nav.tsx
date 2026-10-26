@@ -1,16 +1,18 @@
 import { QueryResult } from "@confect/react";
 import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { withMarks } from "@/components/tenant/classes/marks";
 import { ClassesPreloadContext } from "@/components/tenant/classes/preload";
 import type { TenantValue } from "@/components/tenant/context";
 import { useTenant } from "@/components/tenant/context";
@@ -34,7 +36,9 @@ export function TenantClassesGroup() {
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <TenantSidebarGroup label={t("classes")}>{failure}</TenantSidebarGroup>
+        <TenantSidebarGroup icon={UserMultiple02Icon} label={t("classes")}>
+          {failure}
+        </TenantSidebarGroup>
       )}
       read={{ args: { slug }, ref: classroom.classes.mine }}
     >
@@ -59,9 +63,14 @@ function TenantClassesRows() {
   }
 
   return (
-    <TenantSidebarGroup label={t("classes")}>
-      {Arr.map(rows, (klass) => (
-        <TenantClassItem key={klass.id} name={klass.name} slug={klass.slug} />
+    <TenantSidebarGroup icon={UserMultiple02Icon} label={t("classes")}>
+      {Arr.map(withMarks(rows), (klass) => (
+        <TenantClassItem
+          key={klass.id}
+          mascot={klass.mascot}
+          name={klass.name}
+          slug={klass.slug}
+        />
       ))}
     </TenantSidebarGroup>
   );
@@ -82,10 +91,19 @@ function useClassesQuery(slug: TenantValue["slug"]) {
 }
 
 /**
- * One class of the school sidebar, linking to the class page on the school host. Its
- * entry is the current page on the class page and on its tabs.
+ * One class of the school sidebar, linking to the class page on the school host, marked
+ * with its animal as the school switcher marks a school. Its entry is the current page on
+ * the class page and on its tabs.
  */
-function TenantClassItem({ name, slug }: { name: string; slug: string }) {
+function TenantClassItem({
+  mascot,
+  name,
+  slug,
+}: {
+  mascot: typeof Mascot.Type;
+  name: string;
+  slug: string;
+}) {
   const { slug: schoolSlug } = useTenant();
   const matchRoute = useMatchRoute();
   const params = { classSlug: slug, slug: schoolSlug };
@@ -103,7 +121,7 @@ function TenantClassItem({ name, slug }: { name: string; slug: string }) {
         render={<Link params={params} to="/school/$slug/classes/$classSlug" />}
         tooltip={name}
       >
-        <HugeIcons icon={UserMultiple02Icon} />
+        <PersonAvatar className="size-5" mascot={mascot} />
         <span className="truncate" dir="auto">
           {name}
         </span>

@@ -1,7 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Record as Rec } from "effect";
-import { strToU8, zipSync } from "fflate";
+import { strFromU8, strToU8, zipSync } from "fflate";
+import { MathTypeUnread } from "@/components/tenant/exams/import/mathtype/errors";
 import { readWord } from "@/components/tenant/exams/import/word";
+
+/** The MathType reader, which has its own tests: here an object's bytes say how it reads. */
+const reader = vi.hoisted(() => ({ mathTypeEquation: vi.fn() }));
+vi.mock("@/components/tenant/exams/import/mathtype/equation", () => reader);
+
+/** The path of the MathType reader, which the Word read loads only for a document that needs it. */
+const READER = "@/components/tenant/exams/import/mathtype/equation";
 
 /** The namespaces a Word main part declares. */
 const NAMESPACES =
@@ -138,5 +146,55 @@ describe("readWord pictures", () => {
         );
         expect(read).toMatchObject({ lines: ["[image]"], pictures: [] });
       })
+  );
+});
+
+/** A Word document with three MathType objects: one the reader reads, one it cannot, one with no file. */
+const mathTypeDocument = () =>
+  docx({
+    "[Content_Types].xml": typesOf(DOCUMENT_TYPE),
+    "word/_rels/document.xml.rels":
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId3" Target="embeddings/oleObject1.bin"/><Relationship Id="rId4" Target="embeddings/oleObject2.bin"/><Relationship Id="rId5" Target="embeddings/oleObject3.bin"/></Relationships>',
+    "word/document.xml": `<?xml version="1.0"?><w:document ${NAMESPACES}><w:body><w:p><w:r><w:t xml:space="preserve">Hasil dari </w:t></w:r><w:r><w:object><v:shape/><o:OLEObject ProgID="Equation.DSMT4" r:id="rId3"/></w:object></w:r><w:r><w:t xml:space="preserve"> adalah </w:t></w:r><w:r><w:object><o:OLEObject ProgID="Equation.DSMT4" r:id="rId4"/></w:object></w:r></w:p><w:p><w:r><w:object><o:OLEObject ProgID="Equation.3" r:id="rId5"/></w:object></w:r></w:p></w:body></w:document>`,
+    "word/embeddings/oleObject1.bin": "square",
+    "word/embeddings/oleObject2.bin": "long division",
+  });
+
+describe("readWord MathType", () => {
+  it.effect(
+    "writes each MathType equation the reader reads as LaTeX, and counts the ones that keep their picture",
+    () =>
+      Effect.gen(function* () {
+        reader.mathTypeEquation.mockImplementation((ole: Uint8Array) =>
+          strFromU8(ole) === "square"
+            ? Effect.succeed("x^{2}")
+            : Effect.fail(new MathTypeUnread({ reason: "unsupported" }))
+        );
+        const read = yield* readWord(mathTypeDocument());
+        expect(read.lines).toEqual([
+          "Hasil dari \\(x^{2}\\) adalah [equation image]",
+          "[equation image]",
+        ]);
+        expect(read.mathType).toBe(2);
+      })
+  );
+
+  it.effect("keeps every MathType picture when the reader does not load", () =>
+    Effect.gen(function* () {
+      vi.resetModules();
+      vi.doMock(READER, () => {
+        throw new Error("The reader's chunk is gone.");
+      });
+      const fresh = yield* Effect.promise(
+        () => import("@/components/tenant/exams/import/word")
+      );
+      const read = yield* fresh.readWord(mathTypeDocument());
+      vi.doMock(READER, () => reader);
+      expect(read.lines).toEqual([
+        "Hasil dari [equation image] adalah [equation image]",
+        "[equation image]",
+      ]);
+      expect(read.mathType).toBe(3);
+    })
   );
 });

@@ -137,6 +137,13 @@ test("an admin previews a Dapodik file, imports its students into the active per
   await expect(
     page.getByRole("row").filter({ hasText: "NISN is not 10 digits" })
   ).toHaveCount(1);
+  // Each status is a badge with the status's own icon, as every School table draws a state.
+  for (const status of ["Under 18", "18 or older", "NISN is not 10 digits"]) {
+    const badge = page
+      .locator('[data-slot="badge"]')
+      .filter({ hasText: status });
+    await expect(badge.locator("svg")).toHaveCount(1);
+  }
   // The preview reads only the name, NISN, birth date and class group: the NIK never shows.
   await expect(page.getByText("3201000000000001")).toHaveCount(0);
 
