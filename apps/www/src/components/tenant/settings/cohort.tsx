@@ -2,10 +2,12 @@ import { QueryResult } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { cn } from "cn";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { contentWidthVariants } from "@/components/shared/content/width";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -15,7 +17,7 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { SchoolCohortMembers } from "@/components/tenant/settings/cohort/members";
-import { SchoolHomeroomAction } from "@/components/tenant/settings/homeroom";
+import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
 import { SchoolPlacementAdd } from "@/components/tenant/settings/placement";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -40,8 +42,9 @@ const CohortPreloadContext = createContext<CohortPreload | undefined>(
 );
 
 /**
- * One cohort's page: its path and name in the school's one header, with the page's action
- * that places a student at its end, then the homeroom teacher and the students of the cohort.
+ * One cohort's page: its path and name in the school's one header, with the search of its
+ * students and the page's action that places a student at its end, then the homeroom teacher's
+ * card and the students of the cohort, both in the settings column.
  * An archived cohort keeps what it holds to read, and offers no action that changes it.
  */
 export function SchoolCohortSettings({
@@ -86,7 +89,7 @@ function CohortFailure({ children }: { children: ReactNode }) {
         ]}
         title={t(section.labelKey)}
       />
-      <div className="flex w-full min-w-0 flex-1 flex-col">{children}</div>
+      <TablePageBody width="column">{children}</TablePageBody>
     </>
   );
 }
@@ -115,7 +118,7 @@ function CohortUnavailable() {
         ]}
         title={t(section.labelKey)}
       />
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody width="column">
         <TableEmpty
           act="pointing"
           action={
@@ -129,7 +132,7 @@ function CohortUnavailable() {
           description={t("cohort-unavailable-description")}
           title={t("cohort-unavailable")}
         />
-      </div>
+      </TablePageBody>
     </>
   );
 }
@@ -183,12 +186,19 @@ function SchoolCohortPage({
         title={detail.name}
       >
         <TableSearch placeholder={t("cohort-members-search")} />
-        <SchoolHomeroomAction cohort={detail} slug={slug} />
         {isArchived ? null : (
           <SchoolPlacementAdd cohortId={cohortId} slug={slug} />
         )}
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <div
+        className={cn(
+          contentWidthVariants({ width: "column" }),
+          "w-full px-4 pt-4"
+        )}
+      >
+        <SchoolHomeroomCard cohort={detail} slug={slug} />
+      </div>
+      <TablePageBody width="column">
         <ReadBoundary>
           <SchoolCohortMembers
             cohortId={cohortId}
@@ -199,7 +209,7 @@ function SchoolCohortPage({
             slug={slug}
           />
         </ReadBoundary>
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }

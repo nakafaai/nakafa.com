@@ -117,6 +117,9 @@ export function SchoolAuditSettings({
             <SchoolAuditBody slug={slug} />
           </AuditPreloadContext>
         </ReadBoundary>
+        <p className="mt-auto border-t px-4 py-3 text-muted-foreground text-sm">
+          {t("audit-footer")}
+        </p>
       </SettingsTablePage>
     </TableFiltersProvider>
   );

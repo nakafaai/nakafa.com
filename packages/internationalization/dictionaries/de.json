@@ -683,6 +683,7 @@
     "client-secret-title": "Neues Geheimnis",
     "client-secret-description": "Kopiere es jetzt, denn es wird nicht noch einmal angezeigt.",
     "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
+    "audit-footer": "Werte von Richtlinien werden nicht ins Protokoll übernommen.",
     "audit-view": "Protokoll ansehen",
     "audit-when": "Wann",
     "audit-who": "Wer",
