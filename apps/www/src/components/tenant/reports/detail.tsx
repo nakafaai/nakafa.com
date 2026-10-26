@@ -64,25 +64,26 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
     Arr.findFirst(lines, (candidate) => candidate.student.id === id)
   );
 
-  return Option.match(line, {
-    onNone: () => null,
-    onSome: (found) => (
-      <>
-        <PaneHeader
-          description={t(`state-${found.report?.state ?? "none"}`)}
-          title={found.student.name}
-        />
-        {found.report === null ? (
-          <PaneBody>
-            <p className="text-muted-foreground text-sm">{t("report-empty")}</p>
-          </PaneBody>
-        ) : (
-          <ReportDetailBody reportId={found.report.id} />
-        )}
-        <ReportDetailFooter line={found} />
-      </>
-    ),
-  });
+  if (Option.isNone(line)) {
+    return null;
+  }
+  const found = line.value;
+  return (
+    <>
+      <PaneHeader
+        description={t(`state-${found.report?.state ?? "none"}`)}
+        title={found.student.name}
+      />
+      {found.report === null ? (
+        <PaneBody>
+          <p className="text-muted-foreground text-sm">{t("report-empty")}</p>
+        </PaneBody>
+      ) : (
+        <ReportDetailBody reportId={found.report.id} />
+      )}
+      <ReportDetailFooter line={found} />
+    </>
+  );
 }
 
 /** The body of a started report: its state and dates, the note, and the subjects it copies. */
