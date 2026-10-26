@@ -178,7 +178,8 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
         returnUrl: input.successUrl,
       })
     );
-    if (session.payment_link_url === null) {
+    const url = session.payment_link_url ?? null;
+    if (url === null) {
       return yield* xenditCheckoutFailure({
         message: `Session ${session.payment_session_id} has no payment link.`,
       });
@@ -199,13 +200,13 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
       offer: input.offer,
       session: {
         sessionId: session.payment_session_id,
-        url: session.payment_link_url,
+        url,
         expiresAt: DateTime.toEpochMillis(session.expires_at),
-        planId: session.recurring_plan_id,
+        planId: session.recurring_plan_id ?? null,
       },
       userId: input.appUserId,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));
-    return { url: session.payment_link_url };
+    return { url };
   },
   Effect.scoped,
   Effect.catchTags({
