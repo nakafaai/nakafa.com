@@ -11675,7 +11675,7 @@ export declare const internal: {
             };
             userId: Id<"users">;
           },
-          { kind: "admitted" } | { kind: "unavailable" }
+          null
         >;
         prepare: FunctionReference<
           "mutation",
@@ -11684,16 +11684,14 @@ export declare const internal: {
             offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
             userId: Id<"users">;
           },
-          | {
-              accountId: Id<"billingAccounts">;
-              authId: string;
-              email: string;
-              kind: "open";
-              name: string;
-              openUrl: string | null;
-              providerCustomerId: string | null;
-            }
-          | { kind: "unavailable" }
+          {
+            accountId: Id<"billingAccounts">;
+            authId: string;
+            email: string;
+            name: string;
+            openUrl: string | null;
+            providerCustomerId: string | null;
+          }
         >;
       };
     };
