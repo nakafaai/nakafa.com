@@ -46,23 +46,20 @@ export function LocalizedNotFound({
   );
 }
 
-/**
- * The error state of one locale, with a retry and a way home. It reports the
- * error once under its source, and reads the standalone dictionary.
- */
-export function LocalizedError({
-  error,
-  locale,
-  source,
-}: {
-  readonly error: unknown;
-  readonly locale: Locale;
-  readonly source: string;
-}) {
-  const messages = readStandaloneMessages(locale);
+/** Reports the failure that a route's error component caught, once, under its source. */
+export function useReportedError(error: unknown, source: string) {
   useEffect(() => {
     captureException(error, { source });
   }, [error, source]);
+}
+
+/**
+ * The error state of one locale, with a retry and a way home. It reads the
+ * standalone dictionary; the error component that renders it reports the error
+ * with `useReportedError`.
+ */
+export function LocalizedError({ locale }: { readonly locale: Locale }) {
+  const messages = readStandaloneMessages(locale);
   return (
     <Stage>
       <Broken
