@@ -7,6 +7,7 @@ import {
   createExamEditing,
   type ExamEditing,
 } from "@/components/tenant/exams/editing";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import { createExamLive, type ExamLive } from "@/components/tenant/exams/live";
 import type { ExamView } from "@/components/tenant/exams/optimistic";
 import {
@@ -14,36 +15,52 @@ import {
   createExamSelection,
   type ExamSelection,
 } from "@/components/tenant/exams/selection";
+import {
+  createEditorView,
+  type EditorView,
+} from "@/components/tenant/exams/view";
 import { createExamZoom, type ExamZoom } from "@/components/tenant/exams/zoom";
 
-/** The exam the editor shows and the school it belongs to. */
-const ExamValue = Schema.Struct({ exam: ExamViewSchema, slug: TenantSlug });
+/**
+ * The exam the editor shows and the school it belongs to. An exam deleted, or closed to the teacher, while its
+ * editor is open is `gone`: the editor keeps the last exam it read on screen, locked, and says so.
+ */
+const ExamValue = Schema.Struct({
+  exam: ExamViewSchema,
+  gone: Schema.Boolean,
+  slug: TenantSlug,
+});
 
 type SelectionStore = ReturnType<typeof createExamSelection>;
 type LiveStore = ReturnType<typeof createExamLive>;
 type EditingStore = StoreApi<ExamEditing>;
 type ZoomStore = ReturnType<typeof createExamZoom>;
+type ViewStore = ReturnType<typeof createEditorView>;
 
 const ExamContext = createContext<typeof ExamValue.Type | null>(null);
 const SelectionContext = createContext<SelectionStore | null>(null);
 const LiveContext = createContext<LiveStore | null>(null);
 const EditingContext = createContext<EditingStore | null>(null);
 const ZoomContext = createContext<ZoomStore | null>(null);
+const ViewContext = createContext<ViewStore | null>(null);
 
 /**
  * Gives the editor the exam it shows, as Convex answers, the question the teacher chose,
- * the prompts the canvas holds open, the editor the toolbar acts on, and the zoom of the
- * pages. The stores are created once for this provider, and the exam is what the query
+ * the prompts the canvas holds open, the editor the toolbar acts on, the zoom of the
+ * pages, and whether the canvas or the grid shows. The stores are created once for this provider, and the exam is what the query
  * returned, so the pages and the toolbar read one copy of each.
  */
 export function ExamProvider({
   children,
   exam,
+  gone,
   prompt,
   slug,
 }: {
   children: ReactNode;
   exam: ExamView;
+  /** Whether the exam was deleted, or closed to the teacher, after the editor read it. */
+  gone: boolean;
   /** The first question's prompt as the loader read it, which the live prompts start from. */
   prompt: Parameters<typeof createExamLive>[0];
   slug: TenantSlug;
@@ -52,13 +69,16 @@ export function ExamProvider({
   const [live] = useState(() => createExamLive(prompt));
   const [editing] = useState(() => createExamEditing());
   const [zoom] = useState(createExamZoom);
+  const [view] = useState(createEditorView);
 
   return (
-    <ExamContext value={{ exam, slug }}>
+    <ExamContext value={{ exam, gone, slug }}>
       <SelectionContext value={selection}>
         <LiveContext value={live}>
           <EditingContext value={editing}>
-            <ZoomContext value={zoom}>{children}</ZoomContext>
+            <ZoomContext value={zoom}>
+              <ViewContext value={view}>{children}</ViewContext>
+            </ZoomContext>
           </EditingContext>
         </LiveContext>
       </SelectionContext>
@@ -75,6 +95,15 @@ export function useExam() {
   }
 
   return value;
+}
+
+/**
+ * Whether the editor takes no change: its exam is locked (`isLocked`), or it is gone. A text whose editor is open
+ * takes the lock in place, so the words on screen stay there.
+ */
+export function useExamLocked() {
+  const { exam, gone } = useExam();
+  return gone || isLocked(exam);
 }
 
 /** Reads one selected slice of the teacher's selection. */
@@ -130,6 +159,17 @@ export function useExamZoom<T>(selector: (state: ExamZoom) => T) {
 
   if (store === null) {
     throw new Error("useExamZoom must be used within ExamProvider");
+  }
+
+  return useStore(store, selector);
+}
+
+/** Reads one selected slice of how the editor shows its questions: the canvas of pages, or the grid. */
+export function useEditorView<T>(selector: (state: EditorView) => T) {
+  const store = use(ViewContext);
+
+  if (store === null) {
+    throw new Error("useEditorView must be used within ExamProvider");
   }
 
   return useStore(store, selector);

@@ -92,6 +92,22 @@ describe("renderHeadersFile", () => {
     );
   });
 
+  it("writes each detached header as an indented line that starts with an exclamation mark", () => {
+    const file = renderHeadersFile([
+      {
+        detach: ["Content-Security-Policy", "Link"],
+        headers: [{ key: "Cache-Control", value: "immutable" }],
+        path: "/assets/*",
+      },
+    ]);
+
+    expect(file).toStrictEqual(
+      Result.succeed(
+        "/assets/*\n  Cache-Control: immutable\n  ! Content-Security-Policy\n  ! Link\n"
+      )
+    );
+  });
+
   it("fails rather than write a line over the static asset limit", () => {
     const failed = renderHeadersFile([
       {

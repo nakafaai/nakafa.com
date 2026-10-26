@@ -57,6 +57,8 @@ import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
 import creditLots from "./tables/creditLots";
+import creditPoolDays from "./tables/creditPoolDays";
+import creditPools from "./tables/creditPools";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
@@ -69,6 +71,7 @@ import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
 import examQuestions from "./tables/examQuestions";
 import examResults from "./tables/examResults";
+import examScreens from "./tables/examScreens";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
@@ -195,6 +198,8 @@ export default $defineSchema({
   contentSnapshots: $Table.tableDefinition(contentSnapshots),
   contentState: $Table.tableDefinition(contentState),
   creditLots: $Table.tableDefinition(creditLots),
+  creditPoolDays: $Table.tableDefinition(creditPoolDays),
+  creditPools: $Table.tableDefinition(creditPools),
   creditResetPeriods: $Table.tableDefinition(creditResetPeriods),
   creditTransactions: $Table.tableDefinition(creditTransactions),
   curriculumRoutes: $Table.tableDefinition(curriculumRoutes),
@@ -207,6 +212,7 @@ export default $defineSchema({
   examAttempts: $Table.tableDefinition(examAttempts),
   examQuestions: $Table.tableDefinition(examQuestions),
   examResults: $Table.tableDefinition(examResults),
+  examScreens: $Table.tableDefinition(examScreens),
   examSignals: $Table.tableDefinition(examSignals),
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),

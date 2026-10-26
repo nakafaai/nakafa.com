@@ -5,7 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { IntlProvider } from "use-intl";
-import { LocalizedError } from "@/components/state/localized";
+import { LocalizedError, useReportedError } from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 
 /**
@@ -13,12 +13,9 @@ import { readRouteMessages } from "@/lib/i18n/messages.functions";
  * route do not carry. They join the shell's messages, so no screen loses one.
  */
 const APP_NAMESPACES = [
-  "Comments",
   "Connectors",
   "Editor",
   "Memory",
-  "Posts",
-  "Pricing",
   "Subject",
   "Videos",
   "Weather",
@@ -68,7 +65,6 @@ function AppLayout() {
  */
 function AppError({ error }: ErrorComponentProps) {
   const { locale } = Route.useParams();
-  return (
-    <LocalizedError error={error} locale={locale} source="app-route-error" />
-  );
+  useReportedError(error, "app-route-error");
+  return <LocalizedError locale={locale} />;
 }

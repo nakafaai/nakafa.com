@@ -57,6 +57,8 @@ export type ContentSectionsDoc = Document.Document<typeof schemaDefinition, "con
 export type ContentSnapshotsDoc = Document.Document<typeof schemaDefinition, "contentSnapshots">;
 export type ContentStateDoc = Document.Document<typeof schemaDefinition, "contentState">;
 export type CreditLotsDoc = Document.Document<typeof schemaDefinition, "creditLots">;
+export type CreditPoolDaysDoc = Document.Document<typeof schemaDefinition, "creditPoolDays">;
+export type CreditPoolsDoc = Document.Document<typeof schemaDefinition, "creditPools">;
 export type CreditResetPeriodsDoc = Document.Document<typeof schemaDefinition, "creditResetPeriods">;
 export type CreditTransactionsDoc = Document.Document<typeof schemaDefinition, "creditTransactions">;
 export type CurriculumRoutesDoc = Document.Document<typeof schemaDefinition, "curriculumRoutes">;
@@ -69,6 +71,7 @@ export type ExamAssetsDoc = Document.Document<typeof schemaDefinition, "examAsse
 export type ExamAttemptsDoc = Document.Document<typeof schemaDefinition, "examAttempts">;
 export type ExamQuestionsDoc = Document.Document<typeof schemaDefinition, "examQuestions">;
 export type ExamResultsDoc = Document.Document<typeof schemaDefinition, "examResults">;
+export type ExamScreensDoc = Document.Document<typeof schemaDefinition, "examScreens">;
 export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSignals">;
 export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
@@ -195,6 +198,8 @@ export interface Docs {
   contentSnapshots: ContentSnapshotsDoc;
   contentState: ContentStateDoc;
   creditLots: CreditLotsDoc;
+  creditPoolDays: CreditPoolDaysDoc;
+  creditPools: CreditPoolsDoc;
   creditResetPeriods: CreditResetPeriodsDoc;
   creditTransactions: CreditTransactionsDoc;
   curriculumRoutes: CurriculumRoutesDoc;
@@ -207,6 +212,7 @@ export interface Docs {
   examAttempts: ExamAttemptsDoc;
   examQuestions: ExamQuestionsDoc;
   examResults: ExamResultsDoc;
+  examScreens: ExamScreensDoc;
   examSignals: ExamSignalsDoc;
   examSittings: ExamSittingsDoc;
   exams: ExamsDoc;

@@ -1,14 +1,24 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
+import { matchesAnswerKey } from "@nakafa/aksara-contracts/question/answer";
 import type { QuestionPoints } from "@repo/backend/confect/exams/question";
 import type { Verdict } from "@repo/backend/confect/exams/results/schema";
+import {
+  chosenOptions,
+  type ExamResponse,
+  isAnswered,
+  isTextResponse,
+  madePairs,
+  markedCells,
+} from "@repo/backend/confect/exams/sittings/response";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import type {
   Outcome,
   ResponseSpec,
   Selection,
 } from "@repo/backend/confect/response/model";
-import { Array as Arr, Option, Result } from "effect";
+import { Array as Arr, Option, Result, Schema } from "effect";
 
 /** A choice interaction, which a single-answer or a multiple-choice question holds. */
 type Choice = Extract<Interaction, { readonly kind: "choice" }>;
@@ -90,27 +100,215 @@ const VERDICT_OF_STATUS = {
   pending: "pending",
 } satisfies Record<Outcome["status"], Verdict>;
 
+/** A text entry interaction, which a short answer question holds. */
+type TextEntry = Extract<Interaction, { readonly kind: "textEntry" }>;
+
+/** The key of one text entry: the texts it accepts, and how they are compared. */
+type TextEntryKey = Extract<InteractionKey, { readonly kind: "textEntry" }>;
+
 /**
- * Scores one saved response against its question's key with the try-outs' evaluation (`evaluate`, ADR
- * 0031, section 9). An unanswered question, and a response that names no option of its choice, are
- * `incorrect`, as the sitting closes them. A question that holds another shape, a question without a
- * key, or a key with no answer for its choice is `pending`, so a person judges it instead of the server
+ * The language a text key is compared in. A text key compares normalized text and reads no
+ * language, unlike a number key, so every delivery language grades it the same.
+ */
+const TEXT_KEY_LANGUAGE = Schema.decodeSync(DeliveryLanguageSchema)("id");
+
+/**
+ * The text entry that a question answers: its one interaction, when that is a text entry. A
+ * question of any other shape has none.
+ */
+const answeredEntry = (
+  interactions: readonly Interaction[]
+): Option.Option<TextEntry> =>
+  interactions.length === 1
+    ? Arr.findFirst(
+        interactions,
+        (interaction): interaction is TextEntry =>
+          interaction.kind === "textEntry"
+      )
+    : Option.none();
+
+/** A match interaction, which a matching question holds. */
+type MatchInteraction = Extract<Interaction, { readonly kind: "match" }>;
+
+/** The key of one match: the pairs that are correct. */
+type MatchKey = Extract<InteractionKey, { readonly kind: "match" }>;
+
+/** The match that a question answers: its one interaction, when that is a match. */
+const answeredMatch = (
+  interactions: readonly Interaction[]
+): Option.Option<MatchInteraction> =>
+  interactions.length === 1
+    ? Arr.findFirst(
+        interactions,
+        (interaction): interaction is MatchInteraction =>
+          interaction.kind === "match"
+      )
+    : Option.none();
+
+/**
+ * Scores the pairs of a match against its key, all or nothing as a choice is: the response is `correct`
+ * when it makes exactly the key's pairs, and `incorrect` when it misses or changes any of them. A key
+ * with no pairs for the match leaves it `pending`.
+ */
+const scorePairs = (
+  match: MatchInteraction,
+  key: readonly InteractionKey[],
+  response: ExamResponse
+): Verdict =>
+  Option.match(
+    Arr.findFirst(
+      key,
+      (item): item is MatchKey =>
+        item.kind === "match" && item.interaction === match.id
+    ),
+    {
+      onNone: () => "pending",
+      onSome: ({ pairs }) => {
+        const made = madePairs(response);
+        return made.length === pairs.length &&
+          Arr.every(pairs, (pair) =>
+            Arr.some(
+              made,
+              (mine) =>
+                mine.source === pair.source && mine.target === pair.target
+            )
+          )
+          ? "correct"
+          : "incorrect";
+      },
+    }
+  );
+
+/** A table interaction, which a true or false table holds. */
+type TableInteraction = Extract<Interaction, { readonly kind: "matrix" }>;
+
+/** The key of one table: the column of each statement. */
+type TableKey = Extract<InteractionKey, { readonly kind: "matrix" }>;
+
+/** The table that a question answers: its one interaction, when that is a table. */
+const answeredTable = (
+  interactions: readonly Interaction[]
+): Option.Option<TableInteraction> =>
+  interactions.length === 1
+    ? Arr.findFirst(
+        interactions,
+        (interaction): interaction is TableInteraction =>
+          interaction.kind === "matrix"
+      )
+    : Option.none();
+
+/**
+ * Scores the cells of a table against its key, all or nothing as a choice is: the response is `correct`
+ * when it marks every statement with the key's column, and `incorrect` when it leaves or marks any
+ * statement otherwise. A key with no cells for the table leaves it `pending`.
+ */
+const scoreCells = (
+  table: TableInteraction,
+  key: readonly InteractionKey[],
+  response: ExamResponse
+): Verdict =>
+  Option.match(
+    Arr.findFirst(
+      key,
+      (item): item is TableKey =>
+        item.kind === "matrix" && item.interaction === table.id
+    ),
+    {
+      onNone: () => "pending",
+      onSome: ({ answers }) => {
+        const marked = markedCells(response);
+        return marked.length === answers.length &&
+          Arr.every(answers, (cell) =>
+            Arr.some(
+              marked,
+              (mine) =>
+                mine.statement === cell.statement && mine.column === cell.column
+            )
+          )
+          ? "correct"
+          : "incorrect";
+      },
+    }
+  );
+
+/** Whether a question is an essay: its one interaction is a long text, which the teacher scores (K6). */
+const isEssay = (interactions: readonly Interaction[]) =>
+  interactions.length === 1 &&
+  Arr.every(interactions, (interaction) => interaction.kind === "extendedText");
+
+/**
+ * Scores one typed response against its text entry's key (K7). A key with no accepted answers for the
+ * entry leaves it `pending`. A blank response is `incorrect`, as an unanswered question, a text that one
+ * accepted answer matches after the contract's normalization (`matchesAnswerKey`) is `correct`, and any
+ * other text is `pending`, so the teacher judges it.
+ */
+const scoreText = (
+  entry: TextEntry,
+  key: readonly InteractionKey[],
+  response: ExamResponse
+): Verdict =>
+  Option.match(
+    Arr.findFirst(
+      key,
+      (item): item is TextEntryKey =>
+        item.kind === "textEntry" && item.interaction === entry.id
+    ),
+    {
+      onNone: () => "pending",
+      onSome: ({ accepted }) => {
+        if (!(isTextResponse(response) && isAnswered(response))) {
+          return "incorrect";
+        }
+        return matchesAnswerKey(accepted, response.text, TEXT_KEY_LANGUAGE)
+          ? "correct"
+          : "pending";
+      },
+    }
+  );
+
+/**
+ * Scores one saved response against its question's key. An essay is the teacher's to score by its
+ * rubric, so a written essay is `pending` and a blank one `incorrect`, as an unanswered question. A
+ * choice is scored with the try-outs'
+ * evaluation (`evaluate`, ADR 0031, section 9): an unanswered question, and a response that names no
+ * option of its choice, are `incorrect`, as the sitting closes them. A text entry is scored by its
+ * accepted answers (`scoreText`), a match by its pairs (`scorePairs`), and a table by its cells
+ * (`scoreCells`). A question that holds another shape, a question without a key, or a
+ * key with no answer for its interaction is `pending`, so a person judges it instead of the server
  * (ADR 0031, section 4).
  */
 export function scoreResponse(
   interactions: readonly Interaction[],
   key: readonly InteractionKey[] | null,
-  response: readonly string[]
+  response: ExamResponse
 ): Verdict {
+  if (isEssay(interactions)) {
+    return isAnswered(response) ? "pending" : "incorrect";
+  }
+  if (key === null) {
+    return "pending";
+  }
+  const entry = answeredEntry(interactions);
+  if (Option.isSome(entry)) {
+    return scoreText(entry.value, key, response);
+  }
+  const match = answeredMatch(interactions);
+  if (Option.isSome(match)) {
+    return scorePairs(match.value, key, response);
+  }
+  const table = answeredTable(interactions);
+  if (Option.isSome(table)) {
+    return scoreCells(table.value, key, response);
+  }
   const choice = answeredChoice(interactions);
-  if (Option.isNone(choice) || key === null) {
+  if (Option.isNone(choice)) {
     return "pending";
   }
   const answer = choiceKeyOf(key, choice.value.id);
   if (Option.isNone(answer)) {
     return "pending";
   }
-  return Option.match(selectionOf(choice.value, response), {
+  return Option.match(selectionOf(choice.value, chosenOptions(response)), {
     onNone: () => "incorrect",
     onSome: (selection) =>
       Result.match(evaluate(specOf(choice.value, answer.value), selection), {

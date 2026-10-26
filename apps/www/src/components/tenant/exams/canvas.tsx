@@ -8,15 +8,16 @@ import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { useQuestionReorder } from "@/components/tenant/exams/drag";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import { pageAt } from "@/components/tenant/exams/pages";
 import { ExamPage } from "@/components/tenant/exams/paper";
 import {
+  useEditorView,
   useExam,
+  useExamLocked,
   useExamSelectionStore,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
-import { ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
+import { drawnZoom, ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
 
 /**
  * The distance, in pixels from the top of the canvas, at which a page counts as the one in view:
@@ -33,6 +34,59 @@ const HAND_EVENTS = ["keydown", "pointerdown", "touchstart", "wheel"] as const;
 /** The events that put the teacher's hand in a page: a press on it, or the focus moving into it. */
 const PAGE_EVENTS = ["focusin", "pointerdown"] as const;
 
+/** The side padding of the column of pages from the medium width up, as `md:px-6` draws it on each side. */
+const COLUMN_PADDING = 48;
+
+/**
+ * Measures the width the pages may fill in the canvas while Fill is chosen, into the zoom's store, which
+ * the canvas and the footer's percentage read. A canvas that fits or takes a chosen zoom measures nothing.
+ * It follows the canvas as the panel is resized.
+ */
+function useFillWidth(
+  canvas: RefObject<HTMLElement | null>,
+  measuring: boolean
+) {
+  const measure = useExamZoom((zoom) => zoom.measure);
+  useEffect(() => {
+    const root = canvas.current;
+    if (!measuring || root === null) {
+      return;
+    }
+    const observer = new ResizeObserver(() =>
+      measure(root.clientWidth - COLUMN_PADDING)
+    );
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [canvas, measure, measuring]);
+}
+
+/**
+ * Brings the question the teacher opened from the grid into view once the canvas shows again, and holds
+ * it as the one the teacher is on, as the footer's strip does.
+ */
+function useReveal(canvas: RefObject<HTMLElement | null>) {
+  const reveal = useEditorView((view) => view.reveal);
+  const settle = useEditorView((view) => view.settle);
+  const selection = useExamSelectionStore();
+  useEffect(() => {
+    const root = canvas.current;
+    if (reveal === null || root === null) {
+      return;
+    }
+    const page = document.getElementById(`question-${reveal}`);
+    if (page !== null) {
+      root.scrollTo({
+        top:
+          root.scrollTop +
+          page.getBoundingClientRect().top -
+          root.getBoundingClientRect().top,
+      });
+    }
+    selection.getState().pin(reveal);
+    settle();
+  }, [canvas, reveal, selection, settle]);
+}
+
 /**
  * The canvas of the exam: every question as a page, stacked in order with one gap between them,
  * on a muted ground that scrolls. Each page is its paper at the chosen zoom, and an add button as
@@ -47,23 +101,26 @@ export function ExamCanvas({
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
-  const frozen = isLocked(exam);
+  const frozen = useExamLocked();
   // The canvas reads the selection from its store when it runs, so a change of the choice draws no page.
   const selection = useExamSelectionStore();
   const actions = useQuestionActions();
   // A stable move keeps the listeners of the reorder attached across the renders of the canvas.
   const moveQuestion = useCallbackRef(actions.moveQuestion);
-  const percent = useExamZoom((zoom) => zoom.percent);
+  const zoomed = useExamZoom(drawnZoom);
+  const filling = useExamZoom((zoom) => zoom.mode === "fill");
   // The chosen zoom applies from the medium width up, where the footer shows its slider. A phone
   // keeps the default, since it pinches to zoom and has no slider to undo a stored zoom.
   const wide = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
-  const drawnZoom = wide ? percent : ZOOM_DEFAULT;
+  useFillWidth(canvas, wide && filling);
+  const drawnPercent = wide ? zoomed : ZOOM_DEFAULT;
+  useReveal(canvas);
   useQuestionReorder({
     canvas,
     moveQuestion,
     questions: exam.questions,
     requestFocus: selection.getState().requestFocus,
-    zoom: drawnZoom / 100,
+    zoom: drawnPercent / 100,
   });
 
   /** Chooses the page of an element the teacher pressed or focused, as a design tool chooses the page in hand. */
@@ -160,7 +217,7 @@ export function ExamCanvas({
     >
       <div
         className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-6"
-        style={{ zoom: drawnZoom / 100 }}
+        style={{ zoom: drawnPercent / 100 }}
       >
         {Arr.map(exam.questions, (question, index) => (
           <ExamPage

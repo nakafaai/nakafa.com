@@ -4,6 +4,7 @@ import {
   entryRefusalMessage,
   failureGroupCopyOf,
   isFinalRefusal,
+  isRetiredDevice,
   refusalCopyOf,
   sittingFailureMessage,
 } from "@/components/exams/sitting/entry";
@@ -108,6 +109,14 @@ describe("isFinalRefusal", () => {
     expect(isFinalRefusal({ _tag: "SittingClosed" })).toBe(false);
     expect(isFinalRefusal({ _tag: "AccessDenied" })).toBe(false);
     expect(isFinalRefusal(new Error("network"))).toBe(false);
+  });
+});
+
+describe("isRetiredDevice", () => {
+  it("holds for a device the proctor retired, and for no other refusal or error", () => {
+    expect(isRetiredDevice({ _tag: "DeviceRetired" })).toBe(true);
+    expect(isRetiredDevice({ _tag: "SecondDevice" })).toBe(false);
+    expect(isRetiredDevice(new Error("network"))).toBe(false);
   });
 });
 

@@ -1,5 +1,3 @@
-import { hasDistinctIds } from "@nakafa/aksara-contracts/assessment/identity";
-import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type {
   ExamQuestionsDoc,
   ExamSittingsDoc,
@@ -10,54 +8,23 @@ import {
   ResponseDoesNotFit,
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
+import { fitsQuestion } from "@repo/backend/confect/exams/sittings/fit";
 import { sittingGate } from "@repo/backend/confect/exams/sittings/gate";
 import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
+import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { Array as Arr, Effect, Option } from "effect";
-
-/** The one kind of interaction that a student's response answers. */
-type Choice = Extract<Interaction, { readonly kind: "choice" }>;
+import { Effect, Option } from "effect";
 
 /**
- * The choice of a question that holds exactly one interaction, and that interaction is a
- * choice. A question of another shape takes no response, so none fits it.
- */
-const oneChoice = (
-  interactions: readonly Interaction[]
-): Option.Option<Choice> =>
-  interactions.length === 1
-    ? Arr.findFirst(
-        interactions,
-        (interaction): interaction is Choice => interaction.kind === "choice"
-      )
-    : Option.none();
-
-/**
- * Whether a response fits the choice: each option is one of its options, no option repeats,
- * and the count is within its minimum and maximum (ADR 0013).
- */
-const fitsChoice = (choice: Choice, response: readonly string[]) =>
-  hasDistinctIds(response) &&
-  response.length >= choice.minChoices &&
-  response.length <= choice.maxChoices &&
-  Arr.every(response, (id) =>
-    Arr.some(choice.options, (option) => option.id === id)
-  );
-
-/**
- * The response as the question takes it: the caller's response when it fits the question's
- * one choice, and `ResponseDoesNotFit` for any other. A question of another shape takes no
- * response, so no response fits it.
+ * The response as the question takes it: the caller's response when it fits the question's one
+ * interaction (`fitsQuestion`), and `ResponseDoesNotFit` for any other.
  */
 const fittingResponse = Effect.fn("exams.sittings.answer.fit")(function* (
   question: ExamQuestionsDoc,
-  response: readonly string[]
+  response: ExamResponse
 ) {
   const interactions = yield* questionAnswers(question.answers);
-  const fits = Option.exists(oneChoice(interactions), (choice) =>
-    fitsChoice(choice, response)
-  );
-  if (!fits) {
+  if (!fitsQuestion(interactions, response)) {
     return yield* new ResponseDoesNotFit();
   }
   return response;
@@ -73,7 +40,7 @@ const fittingResponse = Effect.fn("exams.sittings.answer.fit")(function* (
 export const answer = Effect.fn("exams.sittings.answer")(function* (args: {
   deviceId: string;
   questionId: ExamQuestionsDoc["_id"];
-  response: readonly string[];
+  response: ExamResponse;
   sittingId: ExamSittingsDoc["_id"];
   version: Version;
 }) {

@@ -44,6 +44,7 @@ export class GrantRejected extends Schema.TaggedError<GrantRejected>()(
       "PERSON_KIND",
       "TEMPORARY_ROLE",
       "LAST_OWNER",
+      "SEAT_LIMIT",
     ]),
     message: Schema.String,
   }

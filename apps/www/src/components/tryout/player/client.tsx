@@ -17,13 +17,13 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerModeToggle } from "@/components/player/navigator/toggle";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerUnanswered } from "@/components/player/unanswered";
-import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutArticles } from "@/components/tryout/player/articles";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
+import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /**
@@ -32,23 +32,24 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
  * bodies wait for the signed content.
  */
 export function TryoutPlayer({
-  content,
   finish,
-  locked,
   mode,
-  runtime,
+  state,
   title,
 }: {
-  /** The signed questions of the section, rendered on the server. */
-  content: TryoutRunningContent | null;
   finish: TryoutFinish;
-  /** Answers and finishing are closed because time ran out. */
-  locked: boolean;
   /** The view the server resolved. */
   mode: PlayerMode;
-  runtime: TryoutSectionRuntime;
+  /** The running section, pending once its time ran out. */
+  state: Extract<
+    TryoutRuntimeState<TryoutSectionRuntime>,
+    { kind: "active" | "pending" }
+  >;
   title: string;
 }) {
+  const { runtime } = state;
+  // Answers and finishing are closed because time ran out.
+  const locked = state.kind === "pending";
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const answer = useTryoutResponseSubmit();
@@ -104,7 +105,7 @@ export function TryoutPlayer({
         }
       >
         <Suspense fallback={null}>
-          <TryoutArticles content={content} locked={locked} runtime={runtime} />
+          <TryoutArticles locked={locked} runtime={runtime} />
         </Suspense>
       </PlayerMain>
       <PlayerFooter>

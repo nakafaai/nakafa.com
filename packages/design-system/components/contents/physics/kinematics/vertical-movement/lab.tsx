@@ -123,7 +123,10 @@ export function VerticalMovementLab({
               enableZoom
               fov={42}
             />
-            <VerticalMotionScene motion={motion} />
+            <VerticalMotionScene>
+              <VerticalTrail motion={motion} />
+              <AnimatedBall motion={motion} />
+            </VerticalMotionScene>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>
@@ -170,7 +173,8 @@ export function VerticalMovementLab({
   );
 }
 
-function VerticalMotionScene({ motion }: { motion: MotionState }) {
+/** Draws the ground of the vertical motion scene under the trail and the ball it holds. */
+function VerticalMotionScene({ children }: { children: ReactNode }) {
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
@@ -180,8 +184,7 @@ function VerticalMotionScene({ motion }: { motion: MotionState }) {
           roughness={0.8}
         />
       </mesh>
-      <VerticalTrail motion={motion} />
-      <AnimatedBall motion={motion} />
+      {children}
     </group>
   );
 }

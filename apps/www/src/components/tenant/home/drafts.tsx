@@ -1,4 +1,3 @@
-import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
@@ -35,7 +34,7 @@ export function DraftsCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader icon={PencilEdit02Icon} title={t("tile-drafts")} />
+      <Dashboard.CellHeader title={t("tile-drafts")} />
       <Dashboard.List>
         {Arr.map(drafts, (draft) => (
           <DraftRow
@@ -71,7 +70,6 @@ function DraftRow({
 
   return (
     <Dashboard.Row
-      icon={PencilEdit02Icon}
       render={
         saving ? undefined : (
           <TargetLink

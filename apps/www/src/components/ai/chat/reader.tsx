@@ -16,6 +16,7 @@ import {
   readerView,
   withOlderPage,
 } from "@/components/ai/chat/reading";
+import { ChatRetryContext } from "@/components/ai/chat/recovery";
 import { createChatStore } from "@/components/ai/chat/store";
 import { turnOf, turnsByOrder } from "@/components/ai/chat/turns";
 import { AiChat } from "@/components/ai/chat/view";
@@ -60,23 +61,27 @@ export function ReaderChatPage({
   }
   // A new attempt remounts the read, which runs it again.
   return (
-    <ReaderLoad
-      chatId={chatId}
-      key={`${chatId}\n${shareToken}\n${attempt}`}
-      onRetry={() => setAttempt((count) => count + 1)}
-      shareToken={shareToken}
-    />
+    <ChatRetryContext
+      value={{
+        isPending: false,
+        onRetry: () => setAttempt((count) => count + 1),
+      }}
+    >
+      <ReaderLoad
+        chatId={chatId}
+        key={`${chatId}\n${shareToken}\n${attempt}`}
+        shareToken={shareToken}
+      />
+    </ChatRetryContext>
   );
 }
 
 /** Reads the chat for this mount, and shows what the read answers. */
 function ReaderLoad({
   chatId,
-  onRetry,
   shareToken,
 }: {
   chatId: Id<"chats">;
-  onRetry: () => void;
   shareToken: string;
 }) {
   const [answer, setAnswer] = useState<
@@ -110,7 +115,7 @@ function ReaderLoad({
     return <ChatHeader />;
   }
   if (Result.isFailure(answer.value)) {
-    return <ReaderFailure onRetry={onRetry} />;
+    return <ReaderFailure />;
   }
   const read = answer.value.success;
   if (read.status === "unavailable") {
@@ -118,7 +123,7 @@ function ReaderLoad({
   }
   const initial = readerView(read);
   if (Result.isFailure(initial)) {
-    return <ReaderFailure onRetry={onRetry} />;
+    return <ReaderFailure />;
   }
   return (
     <ReaderTranscript
@@ -195,6 +200,7 @@ function ReaderTranscript({
     canWrite: false,
     chat: view.chat,
     chatId,
+    deleted: false,
     draft: null,
     isLoading: false,
     isPending: false,
@@ -257,10 +263,10 @@ function ReaderUnavailable() {
 }
 
 /** The card of a read that failed for a reason other than access, with a retry. */
-function ReaderFailure({ onRetry }: { onRetry: () => void }) {
+function ReaderFailure() {
   return (
     <Suspense fallback={null}>
-      <ChatFailure kind="retry" onRetry={onRetry} />
+      <ChatFailure kind="retry" />
     </Suspense>
   );
 }

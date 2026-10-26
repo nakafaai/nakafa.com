@@ -9,7 +9,9 @@ import {
 import {
   encodeAnswers,
   newChoiceAnswers,
+  shortAnswers,
 } from "@repo/backend/confect/exams/question";
+import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {
@@ -37,7 +39,7 @@ const answerAs = (
   args: {
     deviceId: string;
     questionId: QuestionId;
-    response: readonly string[];
+    response: ExamResponse;
     sittingId: GenericId.GenericId<"examSittings">;
     version: number;
   }
@@ -239,6 +241,42 @@ describe("exams/sittings answer", () => {
           sittingId,
           version: 1,
         });
+      })
+  );
+
+  it.effect(
+    "saves the text a student types in a short answer, blank text included, and refuses options there",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { question, sittingId } = yield* enteredSitting(fixture);
+        yield* setInteractions(fixture, question, shortAnswers());
+        yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: { text: "Jakarta" },
+          sittingId,
+          version: 1,
+        });
+        yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: { text: "" },
+          sittingId,
+          version: 2,
+        });
+        const { questions } = yield* fixture
+          .as("student")
+          .query(paper, { deviceId: deviceOf(1), sittingId, slug: nf });
+        expect(questions[0].response).toEqual({ text: "" });
+        const options = yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: ["option-1"],
+          sittingId,
+          version: 3,
+        }).pipe(Effect.flip);
+        expect(options).toMatchObject({ _tag: "ResponseDoesNotFit" });
       })
   );
 

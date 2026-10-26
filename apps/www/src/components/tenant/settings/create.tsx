@@ -24,6 +24,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { useViewerQuery } from "@/components/tenant/context";
 import {
   languageItems,
@@ -255,6 +256,7 @@ function SchoolUnitCreateForm({
             <SelectContent>
               {Arr.map(languageItems, (item) => (
                 <SelectItem key={item.value} value={item.value}>
+                  <CountryFlagIcon countryCode={item.countryCode} />
                   {item.label}
                 </SelectItem>
               ))}

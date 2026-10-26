@@ -149,15 +149,16 @@ export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
  * sitting opens now and closes an hour later, and the learner gets a student grant in the
  * school's first active unit. A `crowd` seats that many extra students with attempts in
  * progress first, so the learner's own attempt lands on a later dashboard page. `upcoming` also
- * schedules a room of the same exam for the next day, which the owner's home lists as upcoming. Each call
- * seeds a new exam and sitting.
+ * schedules a room of the same exam for the next day, which the owner's home lists as upcoming, and
+ * `essay` adds an essay that the student writes and the teacher grades. Each call seeds a new exam and
+ * sitting.
  */
 export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
   function* (
     slug: string,
     learnerAddress: string,
     crowd = 0,
-    upcoming = false
+    extra?: "essay" | "upcoming"
   ) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
@@ -170,7 +171,7 @@ export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
       learnerAddress,
       output,
       String(crowd),
-      ...(upcoming ? ["upcoming"] : [])
+      ...(extra === undefined ? [] : [extra])
     );
     return yield* fs
       .readFileString(output)
@@ -228,6 +229,17 @@ export const seedForum = Effect.fn("NakafaE2E.seedForum")(
   Effect.scoped,
   Effect.provide(nodeServicesLayer)
 );
+
+/**
+ * Records the bank transfer of a school invoice in the running local acceptance runtime,
+ * as an operator does once the money arrives, so the school's billing shows it paid.
+ */
+export const recordTransfer = Effect.fn("NakafaE2E.recordTransfer")(function* (
+  number: string,
+  reference: string
+) {
+  yield* runAcceptanceCommand("transfer", number, reference);
+});
 
 /** The address of a path on a host under the same server as the test's base address. */
 export function hostAddress(

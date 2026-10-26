@@ -186,6 +186,7 @@ describe("subscriptionsScreenHandler", () => {
         allowance: 10,
         balance: 10,
         lots: { balance: 0, expiresAt: null },
+        pool: null,
         resetAt: 1_792_000_000_000,
       },
       plan: "free",

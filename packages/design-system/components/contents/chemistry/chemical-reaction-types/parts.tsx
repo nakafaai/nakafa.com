@@ -9,7 +9,7 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, use } from "react";
 import { DoubleSide } from "three";
 
 const BEAKER_RADIUS = 0.36;
@@ -69,88 +69,69 @@ export function Beaker({ children }: { children: ReactNode }) {
   );
 }
 
+/** The element that a group of particles shows: its color, its symbol, and its radius. */
+export const ParticleElementContext = createContext<{
+  color: string;
+  label: string;
+  radius: number;
+} | null>(null);
+
 export function ParticleCluster({
   color,
   label,
-  labelColor,
-  labelOutlineColor,
   points,
   radius,
 }: {
   color: string;
   label: string;
-  labelColor: string;
-  labelOutlineColor: string;
   points: readonly ChemicalReactionTypeScenePoint[];
   radius: number;
 }) {
   return (
-    <group>
-      {Arr.map(points, (point) => (
-        <Particle
-          color={color}
-          key={Arr.join(Arr.map(point, String), ",")}
-          label={label}
-          labelColor={labelColor}
-          labelOutlineColor={labelOutlineColor}
-          position={point}
-          radius={radius}
-        />
-      ))}
-    </group>
+    <ParticleElementContext value={{ color, label, radius }}>
+      <group>
+        {Arr.map(points, (point) => (
+          <Particle
+            key={Arr.join(Arr.map(point, String), ",")}
+            position={point}
+          />
+        ))}
+      </group>
+    </ParticleElementContext>
   );
 }
 
 export function DiatomicMolecule({
   color,
   label,
-  labelColor,
-  labelOutlineColor,
   position,
 }: {
   color: string;
   label: string;
-  labelColor: string;
-  labelOutlineColor: string;
   position: ChemicalReactionTypeScenePoint;
 }) {
   return (
-    <group position={position}>
-      <Particle
-        color={color}
-        label={label}
-        labelColor={labelColor}
-        labelOutlineColor={labelOutlineColor}
-        position={[-0.07, 0, 0]}
-        radius={0.1}
-      />
-      <Particle
-        color={color}
-        label={label}
-        labelColor={labelColor}
-        labelOutlineColor={labelOutlineColor}
-        position={[0.07, 0, 0]}
-        radius={0.1}
-      />
-    </group>
+    <ParticleElementContext value={{ color, label, radius: 0.1 }}>
+      <group position={position}>
+        <Particle position={[-0.07, 0, 0]} />
+        <Particle position={[0.07, 0, 0]} />
+      </group>
+    </ParticleElementContext>
   );
 }
 
+/** Draws one particle of the element its context names at a position. */
 export function Particle({
-  color,
-  label,
-  labelColor,
-  labelOutlineColor,
   position,
-  radius,
 }: {
-  color: string;
-  label: string;
-  labelColor: string;
-  labelOutlineColor: string;
   position: ChemicalReactionTypeScenePoint;
-  radius: number;
 }) {
+  const { colors } = useChemicalReactionTypeScene();
+  const element = use(ParticleElementContext);
+  if (element === null) {
+    throw new Error("Particle must be used within ParticleElementContext");
+  }
+  const { color, label, radius } = element;
   return (
     <group position={position}>
       <mesh castShadow>
@@ -159,9 +140,9 @@ export function Particle({
       </mesh>
       {label && (
         <ChemistryParticleLabel
-          color={labelColor}
+          color={colors.sphereText}
           fontSize={getThreeParticleLabelFontSize(radius)}
-          outlineColor={labelOutlineColor}
+          outlineColor={colors.sphereTextOutline}
           outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
           position={getChemistryParticleLabelPosition(
             radius,

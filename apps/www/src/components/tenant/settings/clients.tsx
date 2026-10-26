@@ -4,7 +4,13 @@ import {
   QueryResult,
   useMutation,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  Key01Icon,
+  MoreHorizontalIcon,
+  Plug01Icon,
+  School01Icon,
+} from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -29,14 +35,19 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFilter,
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { scopeNameOf } from "@/components/tenant/settings/scope";
+import { scopeNameOf, scopeNames } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
 import {
   type PreloadedPage,
   usePaginatedPreloaded,
@@ -83,33 +94,63 @@ export function SchoolClientsSettings({
     undefined
   );
   const [isCreating, setIsCreating] = useState(false);
+  const viewer = useViewerQuery();
 
   return (
-    <SettingsPage
-      actions={
-        <Button onClick={() => setIsCreating(true)} type="button">
-          {t("client-add")}
-        </Button>
-      }
-    >
-      <ReadBoundary>
-        <ClientsFirstPageContext value={first}>
-          <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
-        </ClientsFirstPageContext>
-      </ReadBoundary>
-      <SchoolClientCreateDialog
-        onIssued={setIssuedSecret}
-        open={isCreating}
-        setOpen={setIsCreating}
-        slug={slug}
-      />
-      <SchoolSecretDialog
-        description={t("client-secret-description")}
-        onClose={() => setIssuedSecret(undefined)}
-        secret={issuedSecret}
-        title={t("client-secret-title")}
-      />
-    </SettingsPage>
+    <TableFiltersProvider>
+      <SettingsTablePage
+        actions={
+          <>
+            <TableSearch placeholder={t("clients-search")} />
+            <TableFilter
+              facets={[
+                {
+                  column: "scope",
+                  icon: School01Icon,
+                  options: Arr.map(
+                    QueryResult.isSuccess(viewer)
+                      ? scopeNames(viewer.value.tenant.name, viewer.value.units)
+                      : [],
+                    (name) => ({ label: name, value: name })
+                  ),
+                  title: t("client-scope"),
+                },
+                {
+                  column: "status",
+                  icon: Plug01Icon,
+                  options: Arr.map(IntegrationStatus.literals, (status) => ({
+                    label: t(`client-${status}`),
+                    value: status,
+                  })),
+                  title: t("client-status"),
+                },
+              ]}
+            />
+            <Button onClick={() => setIsCreating(true)} type="button">
+              {t("client-add")}
+            </Button>
+          </>
+        }
+      >
+        <ReadBoundary>
+          <ClientsFirstPageContext value={first}>
+            <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+          </ClientsFirstPageContext>
+        </ReadBoundary>
+        <SchoolClientCreateDialog
+          onIssued={setIssuedSecret}
+          open={isCreating}
+          setOpen={setIsCreating}
+          slug={slug}
+        />
+        <SchoolSecretDialog
+          description={t("client-secret-description")}
+          onClose={() => setIssuedSecret(undefined)}
+          secret={issuedSecret}
+          title={t("client-secret-title")}
+        />
+      </SettingsTablePage>
+    </TableFiltersProvider>
   );
 }
 
@@ -199,31 +240,8 @@ function SchoolClientTable({
       <DataTable
         columns={columns}
         data={pagination.results}
-        facets={[
-          {
-            column: "scope",
-            options: Arr.map(
-              Arr.dedupe(
-                Arr.filter(
-                  Arr.map(pagination.results, scopeName),
-                  (name) => name !== ""
-                )
-              ),
-              (name) => ({ label: name, value: name })
-            ),
-            title: t("client-scope"),
-          },
-          {
-            column: "status",
-            options: Arr.map(IntegrationStatus.literals, (status) => ({
-              label: t(`client-${status}`),
-              value: status,
-            })),
-            title: t("client-status"),
-          },
-        ]}
         rowId={(client) => client.id}
-        search={{ column: "name", placeholder: t("clients-search") }}
+        search="name"
       />
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -282,6 +300,7 @@ function SchoolClientMenu({
               )
             }
           >
+            <HugeIcons icon={Key01Icon} />
             {t("client-rotate")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -289,6 +308,7 @@ function SchoolClientMenu({
             onClick={() => setIsRevoking(true)}
             variant="destructive"
           >
+            <HugeIcons icon={Delete02Icon} />
             {t("client-revoke")}
           </DropdownMenuItem>
         </DropdownMenuContent>

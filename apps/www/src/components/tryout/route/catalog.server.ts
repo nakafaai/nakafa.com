@@ -209,7 +209,6 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       )
     );
     return {
-      actionLabel: tTryouts("open-exam-cta"),
       countryOptions: buildTryoutCountryOptions(hub.countries),
       countryPath,
       exams,

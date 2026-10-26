@@ -1,4 +1,8 @@
-import { UnfoldMoreIcon } from "@hugeicons/core-free-icons";
+import {
+  ArrowTurnBackwardIcon,
+  Home01Icon,
+  UnfoldMoreIcon,
+} from "@hugeicons/core-free-icons";
 import type {
   TenantProfile,
   ViewerAccount,
@@ -179,6 +183,7 @@ function TenantSwitcher() {
                   params={{ slug: tenant.slug }}
                   to="/school/$slug"
                 >
+                  <HugeIcons icon={Home01Icon} />
                   {t("home")}
                 </Link>
               }
@@ -186,6 +191,7 @@ function TenantSwitcher() {
             <DropdownMenuItem
               render={
                 <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+                  <HugeIcons icon={ArrowTurnBackwardIcon} />
                   {t("back-to-learning")}
                 </a>
               }

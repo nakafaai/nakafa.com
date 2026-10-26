@@ -1,43 +1,39 @@
-import {
-  Dashboard,
-  type DashboardTone,
-} from "@repo/design-system/components/ui/dashboard";
-import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import type { ComponentProps } from "react";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { useTenant } from "@/components/tenant/context";
 import type { CellSpan } from "@/components/tenant/home/cells";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
 
 /**
- * One number of the strip at the top of a staff home, as a cell that links to the exams list, where the rooms, results
+ * One number of the row at the top of a staff home, as a card that links to the exams list, where the rooms, results
  * and drafts it counts live. Its number is a count, which the caller builds, and its span is one of the four shares
- * of the strip. Its icon and tone are the ones of the cell that lists what it counts, so the two read as one.
+ * of the row. Its title names what it counts in plain words, as the card that lists those things does. On a phone two
+ * numbers share a row, and an odd last number takes the row alone.
  */
 export function MetricCell({
   count,
-  icon,
+  pair,
   period,
   span,
   title,
-  tone,
 }: {
   count: string;
-  icon: ComponentProps<typeof HugeIcons>["icon"];
+  /** Whether the card shares a phone's row with the next number. */
+  pair: boolean;
   period: string;
   span: CellSpan;
   title: string;
-  tone: typeof DashboardTone.Type;
 }) {
   const { slug } = useTenant();
 
   return (
     <Dashboard.Cell
       narrow={span.narrow}
+      pair={pair}
       render={<TargetLink target={schoolExamsTarget(slug)} />}
       wide={span.wide}
     >
-      <Dashboard.CellHeader icon={icon} title={title} tone={tone} />
+      <Dashboard.CellHeader title={title} />
       <Dashboard.Value>{count}</Dashboard.Value>
       <Dashboard.Period>{period}</Dashboard.Period>
     </Dashboard.Cell>
