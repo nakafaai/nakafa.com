@@ -110,7 +110,11 @@ describe("guardians/family children and confirm", () => {
         yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
         for (const nisn of ["9999999999", "not a nisn", "1111111111"]) {
           expect(
-            yield* guardian.mutation(confirm, { linkId: link.id, nisn, slug: nf })
+            yield* guardian.mutation(confirm, {
+              linkId: link.id,
+              nisn,
+              slug: nf,
+            })
           ).toBe("refused");
         }
         expect((yield* linkRow(fixture, link.id)).mismatches).toBe(3);
@@ -124,7 +128,10 @@ describe("guardians/family children and confirm", () => {
         const listed = yield* fixture
           .as("counselor")
           .query(refs.public.guardians.links.list, { ...firstPage, slug: nf });
-        expect(listed.page[0]).toMatchObject({ mismatches: 3, status: "pending" });
+        expect(listed.page[0]).toMatchObject({
+          mismatches: 3,
+          status: "pending",
+        });
       })
   );
 
@@ -135,12 +142,20 @@ describe("guardians/family children and confirm", () => {
         const fixture = yield* tenancyFixture;
         const { guardian, link } = yield* linked(fixture);
         expect(
-          yield* guardian.mutation(confirm, { linkId: link.id, nisn: NISN, slug: nf })
+          yield* guardian.mutation(confirm, {
+            linkId: link.id,
+            nisn: NISN,
+            slug: nf,
+          })
         ).toBe("refused");
         yield* setRoster(fixture, { nisn: NISN, underAgeLimit: true });
         vi.setSystemTime(TENANCY_NOW + Duration.toMillis(LINK_TERM));
         expect(
-          yield* guardian.mutation(confirm, { linkId: link.id, nisn: NISN, slug: nf })
+          yield* guardian.mutation(confirm, {
+            linkId: link.id,
+            nisn: NISN,
+            slug: nf,
+          })
         ).toBe("refused");
         expect((yield* linkRow(fixture, link.id)).mismatches).toBe(0);
       })
@@ -159,9 +174,9 @@ describe("guardians/family children and confirm", () => {
           )
         ).toMatchObject(denied("role"));
       }
-      expect(yield* fixture.as("student").query(children, { slug: nf })).toEqual(
-        []
-      );
+      expect(
+        yield* fixture.as("student").query(children, { slug: nf })
+      ).toEqual([]);
     })
   );
 });
@@ -208,44 +223,51 @@ describe("guardians/family withdraw", () => {
       })
   );
 
-  it.effect("ends a pending link without a ledger row, since no consent stood", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { guardian, link } = yield* linked(fixture);
-      const ended = yield* guardian.mutation(withdraw, {
-        linkId: link.id,
-        slug: nf,
-      });
-      expect(ended.status).toBe("withdrawn");
-      expect(yield* fixture.run(ledger)).toEqual([]);
-    })
+  it.effect(
+    "ends a pending link without a ledger row, since no consent stood",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { guardian, link } = yield* linked(fixture);
+        const ended = yield* guardian.mutation(withdraw, {
+          linkId: link.id,
+          slug: nf,
+        });
+        expect(ended.status).toBe("withdrawn");
+        expect(yield* fixture.run(ledger)).toEqual([]);
+      })
   );
 
-  it.effect("fails a verified link that has lost its consent row as a defect", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { guardian, link } = yield* linked(fixture);
-      yield* fixture
-        .as("counselor")
-        .mutation(refs.public.guardians.links.verify, { linkId: link.id, slug: nf });
-      yield* fixture.run(
-        Effect.gen(function* () {
-          const writer = yield* DatabaseWriter;
-          const rows = yield* (yield* DatabaseReader)
-            .table("guardianConsents")
-            .index("by_linkId", (query) => query.eq("linkId", link.id))
-            .take(5);
-          yield* Effect.forEach(rows, (row) =>
-            writer.table("guardianConsents").delete(row._id)
-          );
-        })
-      );
-      const exit = yield* Effect.exit(
-        guardian.mutation(withdraw, { linkId: link.id, slug: nf })
-      );
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(defectOf(exit)).toContain("no consent row");
-    })
+  it.effect(
+    "fails a verified link that has lost its consent row as a defect",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { guardian, link } = yield* linked(fixture);
+        yield* fixture
+          .as("counselor")
+          .mutation(refs.public.guardians.links.verify, {
+            linkId: link.id,
+            slug: nf,
+          });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            const rows = yield* (yield* DatabaseReader)
+              .table("guardianConsents")
+              .index("by_linkId", (query) => query.eq("linkId", link.id))
+              .take(5);
+            yield* Effect.forEach(rows, (row) =>
+              writer.table("guardianConsents").delete(row._id)
+            );
+          })
+        );
+        const exit = yield* Effect.exit(
+          guardian.mutation(withdraw, { linkId: link.id, slug: nf })
+        );
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(defectOf(exit)).toContain("no consent row");
+      })
   );
 });
 
@@ -269,6 +291,15 @@ describe("guardians/family grades", () => {
             personId: fixture.people.student.personId,
             slug: nf,
           });
+        yield* fixture.as("admin").mutation(refs.public.records.schemes.store, {
+          bands: [
+            { label: "Cukup", minimum: 60 },
+            { label: "Baik", minimum: 80 },
+          ],
+          effectiveFrom: 1,
+          kktp: 75,
+          slug: nf,
+        });
         const enter = refs.public.records.grades.enter;
         const released = yield* fixture.as("teacher").mutation(enter, {
           classId: fisika.id,
@@ -289,14 +320,22 @@ describe("guardians/family grades", () => {
             slug: nf,
           });
         expect(
-          yield* Effect.flip(guardian.query(grades, { linkId: link.id, slug: nf }))
+          yield* Effect.flip(
+            guardian.query(grades, { linkId: link.id, slug: nf })
+          )
         ).toMatchObject(denied("role"));
         yield* fixture
           .as("counselor")
-          .mutation(refs.public.guardians.links.verify, { linkId: link.id, slug: nf });
-        expect(yield* guardian.query(grades, { linkId: link.id, slug: nf })).toEqual([
+          .mutation(refs.public.guardians.links.verify, {
+            linkId: link.id,
+            slug: nf,
+          });
+        expect(
+          yield* guardian.query(grades, { linkId: link.id, slug: nf })
+        ).toEqual([
           {
-            className: "Fisika",
+            band: "Baik",
+            className: "Fisika X-1",
             id: released.id,
             kktp: "reached",
             value: 82,

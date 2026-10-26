@@ -94,6 +94,37 @@ const codeOf = Effect.fn("guardians.codes.of")(function* (
 });
 
 /**
+ * Draws a new code for one address at one school and stores its keyed hash, which
+ * replaces the code that stood, so the old one matches nothing. It answers the
+ * plain code once, for the email or the acceptance seed, and the row's ID.
+ */
+export const storeCode = Effect.fn("guardians.codes.store")(function* (
+  tenantId: GenericId.GenericId<"tenants">,
+  email: typeof Email.Type
+) {
+  const now = yield* Clock.currentTimeMillis;
+  const code = yield* drawGuardianCode();
+  const row = {
+    codeHash: yield* hashGuardianCode(tenantId, email, code),
+    email,
+    expiresAt: now + Duration.toMillis(CODE_TERM),
+    tenantId,
+    tries: 0,
+  };
+  const writer = yield* DatabaseWriter;
+  const existing = yield* codeOf(tenantId, email);
+  const codeId = yield* Option.match(existing, {
+    onNone: () => writer.table("guardianCodes").insert(row),
+    onSome: (stored) =>
+      writer
+        .table("guardianCodes")
+        .replace(stored._id, row)
+        .pipe(Effect.as(stored._id)),
+  }).pipe(Effect.orDie);
+  return { code, codeId };
+});
+
+/**
  * Sends one sign-in code to an address that holds a live link at the school, and
  * answers the same whether or not it does, so the answer never tells a visitor
  * which addresses a school links (ADR 0034). A new code replaces the old one,
@@ -123,24 +154,7 @@ export const sendCode = Effect.fn("guardians.codes.send")(function* (input: {
   if (links.length === 0) {
     return answer;
   }
-  const code = yield* drawGuardianCode();
-  const row = {
-    codeHash: yield* hashGuardianCode(tenant.value._id, input.email, code),
-    email: input.email,
-    expiresAt,
-    tenantId: tenant.value._id,
-    tries: 0,
-  };
-  const writer = yield* DatabaseWriter;
-  const existing = yield* codeOf(tenant.value._id, input.email);
-  const codeId = yield* Option.match(existing, {
-    onNone: () => writer.table("guardianCodes").insert(row),
-    onSome: (stored) =>
-      writer
-        .table("guardianCodes")
-        .replace(stored._id, row)
-        .pipe(Effect.as(stored._id)),
-  }).pipe(Effect.orDie);
+  const { code, codeId } = yield* storeCode(tenant.value._id, input.email);
   yield* sendMail(yield* MutationCtx, {
     ...guardianCodeEmail({ code, locale: input.locale }),
     from: EMAIL_FROM,

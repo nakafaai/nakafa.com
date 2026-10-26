@@ -86,6 +86,62 @@
     "outsider-hint": "Jika admin mengundang alamat ini, undangan mungkin butuh waktu untuk muncul. Periksa lagi, atau minta admin mengirimnya ulang. Jika undangan dikirim ke alamat lain, masuk dengan alamat itu.",
     "outsider-check-again": "Periksa lagi"
   },
+  "SchoolGuardians": {
+    "sign-in-action": "Masuk sebagai orang tua",
+    "email-label": "Email orang tua",
+    "email-description": "Gunakan email yang didaftarkan sekolah.",
+    "email-invalid": "Tulis alamat email yang benar.",
+    "send-code": "Kirim kode",
+    "code-label": "Kode masuk",
+    "code-description": "Jika sekolah menautkan {email}, kode enam angka dikirim ke sana.",
+    "code-invalid": "Tulis enam angka dari email.",
+    "code-refused": "Kode salah atau sudah kedaluwarsa.",
+    "sign-in": "Masuk",
+    "resend-code": "Kirim ulang kode",
+    "failed": "Tidak dapat terhubung. Coba lagi.",
+    "home-title": "Anak saya",
+    "home-empty": "Belum ada anak yang ditautkan.",
+    "home-empty-description": "Minta sekolah menautkan email Anda ke data anak.",
+    "child-pending": "Tautan menunggu pemeriksaan.",
+    "child-verified": "Tautan terverifikasi.",
+    "child-expired": "Tautan sudah kedaluwarsa.",
+    "child-revoked": "Sekolah mengakhiri tautan ini.",
+    "child-withdrawn": "Anda menarik persetujuan.",
+    "child-staff-check": "Sekolah akan memeriksa tautan ini.",
+    "child-ended-hint": "Hubungi sekolah untuk menautkan lagi.",
+    "nisn-label": "NISN anak",
+    "nisn-hint": "Masukkan NISN anak untuk memastikan tautan ini.",
+    "nisn-refused": "Data tidak cocok, periksa lagi atau hubungi sekolah.",
+    "nisn-submit": "Periksa",
+    "withdraw": "Tarik persetujuan",
+    "withdraw-hint": "Anda dapat menarik persetujuan kapan saja.",
+    "withdraw-title": "Tarik persetujuan?",
+    "withdraw-description": "Anda tidak akan melihat nilai anak lagi sampai sekolah menautkan ulang.",
+    "grades-empty": "Belum ada nilai yang dirilis.",
+    "grade-class": "Kelas",
+    "grade-value": "Nilai",
+    "grade-note": "Keterangan",
+    "kktp-reached": "Tuntas",
+    "kktp-notReached": "Belum tuntas",
+    "link-add": "Tautkan orang tua",
+    "link-add-description": "Orang tua meminta kode masuk sendiri di halaman orang tua sekolah.",
+    "links-empty": "Belum ada orang tua yang ditautkan.",
+    "links-empty-description": "Tautkan email orang tua ke siswa agar mereka dapat masuk.",
+    "links-search": "Cari siswa",
+    "student": "Siswa",
+    "guardian-name": "Nama orang tua",
+    "status": "Status",
+    "status-pending": "Menunggu",
+    "status-verified": "Terverifikasi",
+    "status-expired": "Kedaluwarsa",
+    "status-revoked": "Diakhiri",
+    "status-withdrawn": "Ditarik",
+    "status-mismatch": "Data tidak cocok",
+    "link-verify": "Verifikasi manual",
+    "link-revoke": "Akhiri tautan",
+    "link-revoke-title": "Akhiri tautan ini?",
+    "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi."
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Ganti token",
@@ -618,7 +674,16 @@
         "declined": "Kunjungan ditolak",
         "ended": "Kunjungan selesai"
       },
-      "unknown": "Perubahan lain"
+      "unknown": "Perubahan lain",
+      "guardian": {
+        "started": "Orang tua ditautkan",
+        "linked": "Tautan orang tua terverifikasi",
+        "withdrawn": "Persetujuan orang tua ditarik",
+        "revoked": "Tautan orang tua diakhiri"
+      },
+      "roster": {
+        "set": "Data siswa diperbarui"
+      }
     },
     "role-description": {
       "owner": "Dapat melakukan semua hal di sekolah ini.",
@@ -741,7 +806,8 @@
     "members-empty-action": "Buka undangan",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
     "policy-domains-invalid": "Periksa domain ini: {domains}. Tulis satu domain di setiap baris.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
+    "guardians": "Orang tua"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1998,6 +2064,14 @@
     "import-encrypted": {
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "Tautan ini tidak menunggu pemeriksaan.",
+      "description": "Muat ulang daftar untuk melihat statusnya sekarang."
+    },
+    "school-refusal-guardian-link": {
+      "title": "Tautan tidak dapat dibuat.",
+      "description": "Pilih siswa aktif yang belum ditautkan ke email ini."
     }
   },
   "Ai": {

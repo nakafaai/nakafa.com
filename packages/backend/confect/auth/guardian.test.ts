@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { components } from "@repo/backend/confect/_generated/components";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { GUARDIAN_SIGN_IN_PATH } from "@repo/backend/confect/auth/guardian";
 import {
   asStaffSchool,
   type Fixture,
   IBU,
   knownCode,
+  signInGuardian,
   startLink,
 } from "@repo/backend/test/guardians";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -53,7 +56,9 @@ describe("auth/guardian code sign-in", () => {
       expect(response.headers.get("set-cookie") ?? "").toMatch(
         SESSION_COOKIE_PATTERN
       );
-      expect(yield* Effect.promise(() => response.json())).toEqual({ ok: true });
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        ok: true,
+      });
     })
   );
 
@@ -78,6 +83,35 @@ describe("auth/guardian code sign-in", () => {
           "localhost:3000"
         );
         expect(main.status).toBe(404);
+      })
+  );
+
+  it.effect(
+    "fails as a server error when the guardian's account is gone, never as a wrong code",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        yield* startLink(fixture);
+        const account = yield* signInGuardian(fixture);
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const ctx = yield* MutationCtx;
+            yield* Effect.promise(() =>
+              ctx.runMutation(components.betterAuth.adapter.deleteOne, {
+                input: {
+                  model: "user",
+                  where: [
+                    { field: "_id", operator: "eq", value: account.authUserId },
+                  ],
+                },
+              })
+            );
+          })
+        );
+        yield* knownCode(fixture, "654321");
+        const response = yield* post(fixture, { code: "654321", email: IBU });
+        expect(response.status).toBe(500);
       })
   );
 });

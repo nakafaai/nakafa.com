@@ -9,7 +9,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const { get, set } = refs.public.roster.entries;
 
@@ -40,11 +40,10 @@ describe("roster/entries", () => {
           underAgeLimit: true,
         });
         const row = yield* fixture.run(storedRow);
-        expect(JSON.stringify(row)).not.toContain(NISN);
-        expect(row).toMatchObject({
-          _tag: "Some",
-          value: { nisn: { blind: expect.any(String) } },
-        });
+        const nisn = Option.getOrUndefined(row)?.nisn;
+        expect(nisn?.blind).toEqual(expect.any(String));
+        expect(nisn?.blind).not.toContain(NISN);
+        expect(nisn?.sealed).toBeInstanceOf(ArrayBuffer);
         const entry = Arr.last(yield* fixture.run(journal));
         expect(entry).toMatchObject({
           _tag: "Some",
@@ -78,7 +77,7 @@ describe("roster/entries", () => {
       const fixture = yield* tenancyFixture;
       yield* asStaffSchool(fixture);
       expect(
-        yield* fixture.as("principal").query(get, {
+        yield* fixture.as("admin").query(get, {
           personId: fixture.people.student.personId,
           slug: nf,
         })

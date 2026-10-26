@@ -1,14 +1,21 @@
 import type { GenericId } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { CODE_TERM } from "@repo/backend/confect/guardians/schema";
 import { hashGuardianCode } from "@repo/backend/confect/identity/secret";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { nf } from "@repo/backend/test/classroom";
-import { grantRole, type tenancyFixture } from "@repo/backend/test/tenancy";
-import { Clock, Duration, Effect, Schema } from "effect";
+import {
+  grantRole,
+  TENANCY_NOW,
+  type tenancyFixture,
+} from "@repo/backend/test/tenancy";
+import { Duration, Effect, Schema } from "effect";
 
 /** The fixture `tenancyFixture` seeds, which the guardian tests extend. */
 export type Fixture = Effect.Success<typeof tenancyFixture>;
@@ -28,12 +35,9 @@ export const asStaffSchool = Effect.fn("test.guardians.school")(function* (
 ) {
   yield* fixture.run(createTenantKey(fixture.tenants.nf));
   yield* fixture.run(
-    grantRole(
-      fixture.tenants.nf,
-      fixture.people.counselor.personId,
-      "staff",
-      { kind: "tenant" }
-    )
+    grantRole(fixture.tenants.nf, fixture.people.counselor.personId, "staff", {
+      kind: "tenant",
+    })
   );
 });
 
@@ -58,25 +62,24 @@ export const setRoster = (
   });
 
 /**
- * Stores a code that the test knows as the live code of an address, as `send` would,
- * so a test redeems it without reading a mail.
+ * Stores a code that the test knows as the live code of an address, as `send` would at
+ * `issuedAt`, so a test redeems it without reading a mail.
  */
 export const knownCode = Effect.fn("test.guardians.knownCode")(function* (
   fixture: Fixture,
   code: string,
   email: typeof Email.Type = IBU,
-  tries = 0
+  issuedAt = TENANCY_NOW
 ) {
   const codeHash = yield* hashGuardianCode(fixture.tenants.nf, email, code);
-  const now = yield* Clock.currentTimeMillis;
   yield* fixture.run(
     Effect.flatMap(DatabaseWriter, (writer) =>
       writer.table("guardianCodes").insert({
         codeHash,
         email,
-        expiresAt: now + Duration.toMillis(CODE_TERM),
+        expiresAt: issuedAt + Duration.toMillis(CODE_TERM),
         tenantId: fixture.tenants.nf,
-        tries,
+        tries: 0,
       })
     )
   );
@@ -109,7 +112,7 @@ export const linkRow = (
   linkId: GenericId.GenericId<"guardianLinks">
 ) =>
   fixture.run(
-    Effect.flatMap(DatabaseWriter, (writer) =>
-      writer.table("guardianLinks").get(linkId).pipe(Effect.orDie)
+    Effect.flatMap(DatabaseReader, (reader) =>
+      reader.table("guardianLinks").get(linkId).pipe(Effect.orDie)
     )
   );

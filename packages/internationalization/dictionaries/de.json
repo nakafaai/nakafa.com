@@ -86,6 +86,62 @@
     "outsider-hint": "Wenn ein Admin diese Adresse eingeladen hat, kann die Einladung einen Moment brauchen. Prüfe erneut, oder bitte einen Admin, sie noch einmal zu senden. Wurde die Einladung an eine andere Adresse geschickt, melde dich mit dieser an.",
     "outsider-check-again": "Erneut prüfen"
   },
+  "SchoolGuardians": {
+    "sign-in-action": "Als Elternteil anmelden",
+    "email-label": "E-Mail der Eltern",
+    "email-description": "Nutze die E-Mail, die die Schule hinterlegt hat.",
+    "email-invalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "send-code": "Code senden",
+    "code-label": "Anmeldecode",
+    "code-description": "Wenn die Schule {email} verknüpft hat, wurde dorthin ein sechsstelliger Code gesendet.",
+    "code-invalid": "Gib die sechs Ziffern aus der E-Mail ein.",
+    "code-refused": "Der Code ist falsch oder abgelaufen.",
+    "sign-in": "Anmelden",
+    "resend-code": "Code erneut senden",
+    "failed": "Keine Verbindung. Versuche es noch einmal.",
+    "home-title": "Meine Kinder",
+    "home-empty": "Noch kein Kind verknüpft.",
+    "home-empty-description": "Bitte die Schule, deine E-Mail mit deinem Kind zu verknüpfen.",
+    "child-pending": "Die Verknüpfung wartet auf eine Prüfung.",
+    "child-verified": "Die Verknüpfung ist bestätigt.",
+    "child-expired": "Die Verknüpfung ist abgelaufen.",
+    "child-revoked": "Die Schule hat diese Verknüpfung beendet.",
+    "child-withdrawn": "Du hast die Einwilligung widerrufen.",
+    "child-staff-check": "Die Schule prüft diese Verknüpfung.",
+    "child-ended-hint": "Wende dich an die Schule, um neu zu verknüpfen.",
+    "nisn-label": "NISN des Kindes",
+    "nisn-hint": "Gib die NISN deines Kindes ein, um die Verknüpfung zu bestätigen.",
+    "nisn-refused": "Die Angaben stimmen nicht, prüfe sie oder wende dich an die Schule.",
+    "nisn-submit": "Prüfen",
+    "withdraw": "Einwilligung widerrufen",
+    "withdraw-hint": "Du kannst die Einwilligung jederzeit widerrufen.",
+    "withdraw-title": "Einwilligung widerrufen?",
+    "withdraw-description": "Du siehst die Noten deines Kindes erst wieder, wenn die Schule neu verknüpft.",
+    "grades-empty": "Noch keine Note freigegeben.",
+    "grade-class": "Klasse",
+    "grade-value": "Note",
+    "grade-note": "Hinweis",
+    "kktp-reached": "Erreicht",
+    "kktp-notReached": "Nicht erreicht",
+    "link-add": "Eltern verknüpfen",
+    "link-add-description": "Die Eltern fordern den Anmeldecode selbst auf der Elternseite der Schule an.",
+    "links-empty": "Noch keine Eltern verknüpft.",
+    "links-empty-description": "Verknüpfe die E-Mail der Eltern mit einem Kind, damit sie sich anmelden können.",
+    "links-search": "Schüler suchen",
+    "student": "Schüler",
+    "guardian-name": "Name der Eltern",
+    "status": "Status",
+    "status-pending": "Ausstehend",
+    "status-verified": "Bestätigt",
+    "status-expired": "Abgelaufen",
+    "status-revoked": "Beendet",
+    "status-withdrawn": "Widerrufen",
+    "status-mismatch": "Angaben stimmen nicht",
+    "link-verify": "Von Hand bestätigen",
+    "link-revoke": "Verknüpfung beenden",
+    "link-revoke-title": "Diese Verknüpfung beenden?",
+    "link-revoke-description": "Die Eltern sehen die Daten des Kindes nicht mehr."
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Token ändern",
@@ -618,7 +674,16 @@
         "declined": "Besuch abgelehnt",
         "ended": "Besuch beendet"
       },
-      "unknown": "Andere Änderung"
+      "unknown": "Andere Änderung",
+      "guardian": {
+        "started": "Eltern verknüpft",
+        "linked": "Elternverknüpfung bestätigt",
+        "withdrawn": "Einwilligung der Eltern widerrufen",
+        "revoked": "Elternverknüpfung beendet"
+      },
+      "roster": {
+        "set": "Schülerdaten aktualisiert"
+      }
     },
     "role-description": {
       "owner": "Kann alles in dieser Schule tun.",
@@ -741,7 +806,8 @@
     "members-empty-action": "Einladungen öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
     "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
-    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
+    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
+    "guardians": "Eltern"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1998,6 +2064,14 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "Diese Verknüpfung wartet auf keine Prüfung.",
+      "description": "Lade die Liste neu, um den aktuellen Status zu sehen."
+    },
+    "school-refusal-guardian-link": {
+      "title": "Die Verknüpfung ließ sich nicht anlegen.",
+      "description": "Wähle ein aktives Kind, das noch nicht mit dieser E-Mail verknüpft ist."
     }
   },
   "Ai": {

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { LINK_TERM } from "@repo/backend/confect/guardians/schema";
+import { Email } from "@repo/backend/confect/tenancy/schema";
 import { denied, firstPage, nf } from "@repo/backend/test/classroom";
 import {
   asStaffSchool,
@@ -15,10 +16,10 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Duration, Effect, Schema } from "effect";
 
 const { list, revoke, verify } = refs.public.guardians.links;
+const AYAH = Schema.decodeSync(Email)("ayah@example.com");
 
 /** The ledger rows of the school, oldest first. */
 const ledger = Effect.flatMap(DatabaseReader, (reader) =>
@@ -90,7 +91,10 @@ describe("guardians/links", () => {
           studentId: fixture.people.teacher.personId,
         })
       );
-      expect(refused).toMatchObject({ _tag: "LinkRefused", code: "NOT_STUDENT" });
+      expect(refused).toMatchObject({
+        _tag: "LinkRefused",
+        code: "NOT_STUDENT",
+      });
       const suspended = yield* Effect.flip(
         fixture.as("admin").mutation(refs.public.guardians.links.start, {
           email: IBU,
@@ -114,7 +118,7 @@ describe("guardians/links", () => {
           expect(
             yield* Effect.flip(
               fixture.as(account).mutation(refs.public.guardians.links.start, {
-                email: Schema.decodeSync(Email)("ayah@example.com"),
+                email: AYAH,
                 guardianName: "Ayah",
                 slug: nf,
                 studentId: fixture.people.student.personId,
@@ -167,7 +171,7 @@ describe("guardians/links", () => {
             studentPersonId: fixture.people.student.personId,
           }),
         ]);
-        expect(Object.keys(rows[0] ?? {})).not.toContain("email");
+        expect(rows[0]).not.toHaveProperty("email");
         const entry = Arr.last(yield* fixture.run(journal));
         expect(entry).toMatchObject({
           _tag: "Some",
@@ -188,21 +192,25 @@ describe("guardians/links", () => {
       })
   );
 
-  it.effect("refuses to check a link past its term, which reads as expired", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* asStaffSchool(fixture);
-      const link = yield* startLink(fixture);
-      vi.setSystemTime(TENANCY_NOW + Duration.toMillis(LINK_TERM) + 1);
-      const refused = yield* Effect.flip(
-        fixture.as("counselor").mutation(verify, { linkId: link.id, slug: nf })
-      );
-      expect(refused).toMatchObject({ _tag: "LinkClosed" });
-      const listed = yield* fixture
-        .as("counselor")
-        .query(list, { ...firstPage, slug: nf });
-      expect(listed.page[0]?.status).toBe("expired");
-    })
+  it.effect(
+    "refuses to check a link past its term, which reads as expired",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        const link = yield* startLink(fixture);
+        vi.setSystemTime(TENANCY_NOW + Duration.toMillis(LINK_TERM) + 1);
+        const refused = yield* Effect.flip(
+          fixture
+            .as("counselor")
+            .mutation(verify, { linkId: link.id, slug: nf })
+        );
+        expect(refused).toMatchObject({ _tag: "LinkClosed" });
+        const listed = yield* fixture
+          .as("counselor")
+          .query(list, { ...firstPage, slug: nf });
+        expect(listed.page[0]?.status).toBe("expired");
+      })
   );
 
   it.effect(
