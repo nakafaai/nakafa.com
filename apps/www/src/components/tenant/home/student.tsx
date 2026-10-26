@@ -1,5 +1,4 @@
 import { QueryResult } from "@confect/react";
-import { Certificate01Icon, Clock01Icon } from "@hugeicons/core-free-icons";
 import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -23,7 +22,7 @@ import {
 } from "@/components/tenant/home/schedule";
 import { studentShown } from "@/components/tenant/home/shown";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { schoolDayTimeText } from "@/components/tenant/settings/clock";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolSittingTarget } from "@/lib/routing/school/target";
@@ -166,7 +165,7 @@ function SittingStatus({ sitting }: { sitting: Sitting }) {
       ? t("answers-saved")
       : t("sitting-open-now");
   }
-  return schoolDateTimeText({
+  return schoolDayTimeText({
     at: sitting.opensAt,
     locale,
     timeZone: sitting.timeZone,
@@ -187,11 +186,7 @@ function NowCell({ sitting, span }: { sitting: Sitting; span: CellSpan }) {
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader
-        icon={Clock01Icon}
-        title={t("tile-now")}
-        tone="success"
-      />
+      <Dashboard.CellHeader title={t("tile-now")} />
       <Dashboard.Value>{left}</Dashboard.Value>
       <Dashboard.Period>
         {open
@@ -201,7 +196,6 @@ function NowCell({ sitting, span }: { sitting: Sitting; span: CellSpan }) {
       <Dashboard.List>
         <Dashboard.Row
           detail={sitting.room}
-          icon={Clock01Icon}
           render={
             <TargetLink
               target={schoolSittingTarget(tenant.slug, sitting.id)}
@@ -209,7 +203,6 @@ function NowCell({ sitting, span }: { sitting: Sitting; span: CellSpan }) {
             />
           }
           title={sitting.examTitle}
-          tone="success"
           trailing={open ? undefined : <SittingStatus sitting={sitting} />}
         />
       </Dashboard.List>
@@ -234,11 +227,7 @@ function StudentResultsCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader
-        icon={Certificate01Icon}
-        title={t("tile-results")}
-        tone="info"
-      />
+      <Dashboard.CellHeader title={t("tile-results")} />
       <Dashboard.List>
         {Arr.map(sittings, (sitting) => (
           <StudentResultRow key={sitting.id} sitting={sitting} />
@@ -262,7 +251,6 @@ function StudentResultRow({ sitting }: { sitting: Sitting }) {
   return (
     <Dashboard.Row
       detail={sitting.room}
-      icon={Certificate01Icon}
       render={
         <TargetLink
           target={schoolSittingTarget(tenant.slug, sitting.id)}
@@ -270,7 +258,6 @@ function StudentResultRow({ sitting }: { sitting: Sitting }) {
         />
       }
       title={sitting.examTitle}
-      tone="info"
       trailing={
         sitting.score === null
           ? t("answers-saved")
@@ -283,12 +270,13 @@ function StudentResultRow({ sitting }: { sitting: Sitting }) {
   );
 }
 
-/** The quiet state of a student who has no sitting and no result yet. */
+/** The quiet state of a student who has no sitting and no result yet: the schedule's card, titled as the schedule is. */
 function QuietCell({ span }: { span: CellSpan }) {
   const t = useTranslations("School");
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.CellHeader title={t("tile-schedule")} />
       <Dashboard.Empty act="searching">{t("sittings-empty")}</Dashboard.Empty>
     </Dashboard.Cell>
   );

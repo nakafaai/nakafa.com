@@ -7,6 +7,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HOME_DRAFT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
+import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Option } from "effect";
 
 /** One exam with its questions in order, as the editor reads it. */
@@ -138,6 +139,36 @@ export const removeUpdate: OptimisticUpdate<typeof exams.questions.remove> = (
     removedQuestion(view, args.questionId)
   );
 
+/**
+ * The exam with one question in another template: its answers and key converted as the server converts
+ * them (`asTemplate`), and its revision one higher, as the server raises it.
+ */
+const templatedQuestion = (
+  view: ExamView,
+  questionId: QuestionId,
+  template: Question["template"]
+): ExamView => ({
+  ...view,
+  questions: Arr.map(view.questions, (question) =>
+    question.id === questionId
+      ? {
+          ...question,
+          ...asTemplate(template, question.answers, question.key),
+          revision: question.revision + 1,
+          template,
+        }
+      : question
+  ),
+});
+
+/** Shows a question in its new template in the store while the server converts it. */
+export const templateUpdate: OptimisticUpdate<
+  typeof exams.questions.template
+> = (localStore, args) =>
+  changeExam(localStore, examQuery(args), (view) =>
+    templatedQuestion(view, args.questionId, args.template)
+  );
+
 /** Shows a saved answer of a question in the store while the server saves it. */
 export const answerUpdate: OptimisticUpdate<typeof exams.questions.answer> = (
   localStore,
@@ -148,15 +179,12 @@ export const answerUpdate: OptimisticUpdate<typeof exams.questions.answer> = (
   );
 
 /**
- * A question that the server has not saved yet, with the answers, the key, the points, and the
- * documents it shows at once. Its revision is zero, as the server starts every new question.
+ * A question that the server has not saved yet, with the answers, the key, the points, the template,
+ * and the documents it shows at once. Its revision is zero, as the server starts every new question.
  */
 export const placeholderQuestion = (
-  input: Pick<
-    Question,
-    "answers" | "explanation" | "id" | "key" | "points" | "prompt" | "rubric"
-  >
-): Question => ({ ...input, revision: 0, template: "choice" });
+  input: Omit<Question, "revision">
+): Question => ({ ...input, revision: 0 });
 
 /**
  * The exam with one question's points changed. The server keeps the points it is given, so the

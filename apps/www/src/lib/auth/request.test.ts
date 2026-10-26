@@ -223,6 +223,38 @@ describe("readSession", () => {
       })
   );
 
+  it.effect("reads again after a request that got no answer", () =>
+    Effect.gen(function* () {
+      fetcher
+        .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+        .mockResolvedValueOnce(new Response("session"));
+      const fiber = yield* Effect.forkChild(readSession(fetcher, AUTH_URL));
+
+      yield* TestClock.adjust("500 millis");
+      const response = yield* Fiber.join(fiber);
+
+      expect(response.status).toBe(200);
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "fails as the request did when no attempt of the shared schedule got an answer",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockRejectedValue(new TypeError("Failed to fetch"));
+        const fiber = yield* Effect.forkChild(
+          readSession(fetcher, AUTH_URL).pipe(Effect.flip)
+        );
+
+        yield* TestClock.adjust("500 millis");
+        yield* TestClock.adjust("1 second");
+
+        expect(yield* Fiber.join(fiber)).toBeInstanceOf(AuthRequestFailed);
+        expect(fetcher).toHaveBeenCalledTimes(3);
+      })
+  );
+
   it.effect("reads again when an attempt misses its deadline", () =>
     Effect.gen(function* () {
       fetcher

@@ -1,5 +1,5 @@
 import { useMutation } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { MoreHorizontalIcon, Move01Icon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -188,6 +188,7 @@ export function SchoolPlacementMove({
         />
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem onClick={() => setIsMoving(true)}>
+            <HugeIcons icon={Move01Icon} />
             {t("placement-move")}
           </DropdownMenuItem>
         </DropdownMenuContent>

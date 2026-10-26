@@ -16,6 +16,7 @@ import {
 } from "@repo/backend/confect/exams/errors";
 import {
   QuestionPoints,
+  QuestionTemplate,
   QuestionView,
 } from "@repo/backend/confect/exams/question";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
@@ -31,7 +32,8 @@ const QuestionOrder = Schema.Struct({
 /**
  * The questions of an exam. A Teacher or an Admin whose grant covers the exam adds,
  * copies, removes, moves, and answers its questions, and every one of them names its
- * exam, so a question of another exam is refused as a missing object.
+ * exam, so a question of another exam is refused as a missing object. A question
+ * takes another template (K23) at the revision its editor saw.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -125,6 +127,26 @@ export default GroupSpec.make()
           DocumentTooLarge,
           ExamFrozen,
           KeyDoesNotFit,
+          RevisionStale,
+        ]),
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "template",
+      args: () => ({
+        examId: Id("exams"),
+        questionId: Id("examQuestions"),
+        revision: Schema.Natural,
+        slug: TenantSlug,
+        template: QuestionTemplate,
+      }),
+      returns: () => QuestionView,
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          DocumentTooLarge,
+          ExamFrozen,
           RevisionStale,
         ]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })

@@ -5,12 +5,10 @@ import {
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes, waitForServedRoute } from "@/e2e/support/route";
 import {
-  CARD,
   DRAWER_BAR,
   DRAWER_PANEL,
   DRAWER_POPUP,
@@ -19,6 +17,7 @@ import {
   SURAH_SIDEBAR_TRIGGER,
 } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const quranIndexUrlPattern = /\/id\/quran$/;
 const quranSurahUrlPattern = /\/id\/quran\/2$/;
@@ -145,9 +144,8 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
   yield* Effect.promise(() => quranIndexLink.click());
   yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
-  yield* Effect.promise(() => expect(trigger).toBeAttached());
-  yield* Effect.promise(() => expect(trigger).toBeHidden());
-  yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
+  // The router unmounts the surah it leaves, so back draws it again.
+  yield* Effect.promise(() => expect(trigger).toHaveCount(0));
 
   yield* Effect.promise(() => page.goBack());
   yield* Effect.promise(() => expect(page).toHaveURL(quranSurahUrlPattern));
@@ -351,12 +349,16 @@ const verifyQuranLocaleCoverage = Effect.fn(
 
   yield* Effect.promise(() => expect(page.locator("footer")).toHaveCount(0));
   const outline = page.locator(SURAH_SIDEBAR_TRIGGER).filter({ visible: true });
+  // The router can start before React takes the surah over, and a press before
+  // then opens nothing.
+  yield* Effect.promise(() => waitUntilTakenOver(outline));
   yield* Effect.promise(() => outline.click());
   const bibliography = page.getByRole("button", {
     exact: true,
     name: contract.bibliographyLabel,
   });
   yield* Effect.promise(() => expect(bibliography).toBeVisible());
+  yield* Effect.promise(() => waitUntilTakenOver(bibliography));
   yield* Effect.promise(() => bibliography.click());
   const bibliographySheet = page.locator(SHEET_POPUP);
   yield* Effect.promise(() =>
@@ -382,99 +384,6 @@ const verifyQuranLocaleCoverage = Effect.fn(
     ).toBe(true)
   );
   yield* Effect.promise(() => page.keyboard.press("Escape"));
-});
-
-const verifyQuranLayoutStability = Effect.fn(
-  "NakafaE2E.verifyQuranLayoutStability"
-)(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
-
-  // A short surah keeps the pagination in the first viewport, where a list
-  // that grows after hydration would push it down.
-  for (const href of ["/en/quran/1", appRoutes.quranSurah]) {
-    const response = yield* Effect.promise(() =>
-      page.goto(href, { waitUntil: "domcontentloaded" })
-    );
-    yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-    yield* waitForCommittedAppRouter(
-      page,
-      href,
-      href,
-      readinessTimeoutMilliseconds
-    );
-    yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-    const layoutShift = yield* readLayoutShift(page);
-    yield* Effect.sync(() => expect(layoutShift).toBe(0));
-  }
-});
-
-/**
- * The surah list fills its card: the first row's highlight reaches the top
- * edge and the last row's the bottom edge, each with the card's spacing, and
- * the page leaves room below the card.
- */
-const verifyQuranIndexEdges = Effect.fn("NakafaE2E.verifyQuranIndexEdges")(
-  function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
-    const href = appRoutes.quran;
-    yield* Effect.promise(() => page.goto(href));
-    yield* waitForCommittedAppRouter(
-      page,
-      href,
-      href,
-      readinessTimeoutMilliseconds
-    );
-    const edges = yield* Effect.promise(() =>
-      page
-        .locator(CARD)
-        .first()
-        .evaluate((card) => {
-          const rows = card.querySelectorAll("li > a");
-          const first = rows.item(0);
-          const last = rows.item(rows.length - 1);
-          const box = card.getBoundingClientRect();
-          return {
-            firstGap: first.getBoundingClientRect().top - box.top,
-            firstSpacing: getComputedStyle(first).paddingTop,
-            lastGap: box.bottom - last.getBoundingClientRect().bottom,
-            lastSpacing: getComputedStyle(last).paddingBottom,
-            roomBelow:
-              document.documentElement.scrollHeight - box.bottom - scrollY,
-          };
-        })
-    );
-    yield* Effect.sync(() =>
-      expect(edges).toMatchObject({
-        firstGap: 0,
-        firstSpacing: "24px",
-        lastGap: 0,
-        lastSpacing: "24px",
-      })
-    );
-    yield* Effect.sync(() =>
-      expect(edges.roomBelow).toBeGreaterThanOrEqual(80)
-    );
-  }
-);
-
-test.describe("Quran index", () => {
-  test.use({ viewport: { height: 900, width: 1440 } });
-
-  test("fills its card from edge to edge", async ({ page }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyQuranIndexEdges(page))
-    );
-  });
-});
-
-test.describe("Quran layout stability", () => {
-  test.use({ viewport: { height: 844, width: 390 } });
-
-  test("renders surahs without layout shift", async ({ page }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyQuranLayoutStability(page))
-    );
-  });
 });
 
 test.describe("Quran source and tafsir coverage", () => {

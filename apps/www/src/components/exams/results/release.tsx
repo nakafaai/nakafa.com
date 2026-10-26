@@ -1,7 +1,8 @@
 import { useMutation } from "@confect/react";
+import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
-import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Clock, Effect, Option } from "effect";
 import { useState } from "react";
@@ -9,11 +10,6 @@ import { useTranslations } from "use-intl";
 import { useResultsScope } from "@/components/exams/results/context";
 import { runSittingCall } from "@/components/exams/sitting/actions";
 import { ConfirmActions } from "@/components/exams/sitting/dialogs";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 
 /** The milliseconds on the device clock, for the optimistic guess that the server settles. */
 const nowMillis = () => Effect.runSync(Clock.currentTimeMillis);
@@ -39,11 +35,11 @@ function useReleaseResults() {
 }
 
 /**
- * The card that releases a closed sitting's results to its students, with the one primary action of
- * the page. A viewer who may not release them, or a sitting that is not closed yet, sees the card without
- * the action. The release asks first, because students see their answers once it is done.
+ * Release results, the results page's main action, in its header row: it opens the confirmation, and the
+ * release shows at once. Once the results are released the button says so and stays still, and while the
+ * viewer may not release them yet it is left out.
  */
-export function ReleaseCard({
+export function ReleaseAction({
   canRelease,
   releasedAt,
 }: {
@@ -57,38 +53,20 @@ export function ReleaseCard({
 
   if (releasedAt !== null) {
     return (
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("results-title")}</CardTitle>
-        </CardHeader>
-        <CardSectionFooter hint={t("released-footer")} />
-      </CardSection>
+      <Button disabled type="button" variant="outline">
+        <HugeIcons icon={CheckmarkCircle02Icon} />
+        {t("released")}
+      </Button>
     );
   }
   if (!canRelease) {
-    return (
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("results-title")}</CardTitle>
-        </CardHeader>
-        <CardSectionFooter hint={t("release-wait-footer")} />
-      </CardSection>
-    );
+    return null;
   }
   return (
     <>
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("results-title")}</CardTitle>
-        </CardHeader>
-        <CardSectionFooter hint={t("release-footer")}>
-          <CardSectionActions>
-            <Button onClick={() => setOpen(true)} type="button">
-              {t("release-action")}
-            </Button>
-          </CardSectionActions>
-        </CardSectionFooter>
-      </CardSection>
+      <Button onClick={() => setOpen(true)} type="button">
+        {t("release-action")}
+      </Button>
       <ResponsiveDialog
         description={t("release-description")}
         footer={
