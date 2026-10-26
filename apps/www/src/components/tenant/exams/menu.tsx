@@ -20,7 +20,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { DeleteExam } from "@/components/tenant/exams/delete";
@@ -41,16 +40,23 @@ export function ExamMenu() {
   const common = useTranslations("Common");
   const { exam, slug } = useExam();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
+  // The link renders through Button, so it carries the button slot that ButtonGroup joins on:
+  // a bare link styled as a button kept its own corners and border, and the pair read as two buttons.
   const tryAsStudent = (
-    <Link
+    <Button
       aria-label={t("try-action")}
-      className={buttonVariants({ variant: "outline" })}
-      params={{ exam: exam.id, slug }}
-      to="/school/$slug/exams/$exam/try"
+      nativeButton={false}
+      render={
+        <Link
+          params={{ exam: exam.id, slug }}
+          to="/school/$slug/exams/$exam/try"
+        />
+      }
+      variant="outline"
     >
       <HugeIcons aria-hidden="true" icon={ViewIcon} />
       <span className="max-sm:sr-only">{t("try-action")}</span>
-    </Link>
+    </Button>
   );
 
   if (isLocked(exam)) {

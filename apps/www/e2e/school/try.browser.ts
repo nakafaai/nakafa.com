@@ -77,7 +77,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   ).toContainText(PROMPT, { timeout: readinessTimeoutMilliseconds });
 
   // The try action sits beside Schedule in the editor's header, and opens the try.
-  await trying.getByRole("link", { name: "Try as student" }).click();
+  await trying.getByRole("button", { name: "Try as student" }).click();
   await trying.waitForURL(TRY_PATH);
   const sentOnEntering = changes.sent;
   await expect(trying.getByRole("heading", { name: "Question 1" })).toBeVisible(
