@@ -556,6 +556,7 @@
     "invoice-pay": "Pay",
     "invoice-transfer": "Pay by transfer",
     "manage-group": "Management",
+    "back-to-school": "Back to {school}",
     "manage-settings": "Settings",
     "address-copy": "Copy address",
     "address-footer": "Copy it to share with your school.",
@@ -1662,6 +1663,7 @@
     "contribute": "Contribute"
   },
   "Auth": {
+    "back-to-nakafa": "Back to Nakafa",
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
     "sign-in-title": "Sign in to Nakafa",

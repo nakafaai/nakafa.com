@@ -1,11 +1,9 @@
-import { LinkSquare02Icon } from "@hugeicons/core-free-icons";
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSubContent,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -58,7 +56,6 @@ export function OpenInSubmenuContent() {
               <a href={item.href} rel="noopener noreferrer" target="_blank">
                 <BrandLogo name={item.logo} />
                 {item.title}
-                <HugeIcons className="ms-auto" icon={LinkSquare02Icon} />
               </a>
             }
           />

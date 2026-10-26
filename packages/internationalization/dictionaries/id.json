@@ -556,6 +556,7 @@
     "invoice-pay": "Bayar",
     "invoice-transfer": "Bayar lewat transfer",
     "manage-group": "Pengelolaan",
+    "back-to-school": "Kembali ke {school}",
     "manage-settings": "Pengaturan",
     "address-copy": "Salin alamat",
     "address-footer": "Salin untuk dibagikan ke sekolahmu.",
@@ -1662,6 +1663,7 @@
     "contribute": "Berkontribusi"
   },
   "Auth": {
+    "back-to-nakafa": "Kembali ke Nakafa",
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
     "sign-in-title": "Masuk ke Nakafa",

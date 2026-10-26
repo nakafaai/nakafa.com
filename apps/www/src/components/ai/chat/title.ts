@@ -20,6 +20,9 @@ export function useChatRename(chat: ChatView) {
   // Set by the rename item. The chat's menu then hands the focus to the box when it closes.
   const [menuReturnsToBox, setMenuReturnsToBox] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // The box with its Cancel and Confirm, which leave the page with it, so a press
+  // on either counts as focus the closing box drops.
+  const boxRef = useRef<HTMLFieldSetElement>(null);
   const moreActions = useRef<HTMLButtonElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   // The number of the latest save sent. A refusal of an older save brings nothing
@@ -61,7 +64,7 @@ export function useChatRename(chat: ChatView) {
 
   /** Closes the box and returns the focus to the control that opened it, or to the title. */
   const closeEditor = () => {
-    const box = inputRef.current;
+    const box = boxRef.current;
     setFocusStep({
       focus: () =>
         returnFocusAfterClose(box, moreActions.current, titleRef.current),
@@ -129,6 +132,7 @@ export function useChatRename(chat: ChatView) {
   };
 
   return {
+    boxRef,
     chatTitle,
     closeEditor,
     handleEdit,
