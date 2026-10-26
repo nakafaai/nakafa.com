@@ -1,7 +1,9 @@
 import { QueryResult, useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
+  DEFAULT_NINA_DAILY_CREDITS,
   EMAIL_DOMAIN_LIMIT,
+  NinaDailyCredits,
   type Policy,
   TenantPolicies,
 } from "@repo/backend/confect/tenancy/policy";
@@ -21,9 +23,17 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option, Order, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -39,6 +49,9 @@ import { SettingsPage } from "@/components/tenant/settings/section";
 import { SchoolTrailAction } from "@/components/tenant/settings/trail";
 
 const SOURCE = "components/tenant/settings/policies";
+
+/** The daily caps a school picks from: half an answer at the cap up to ten answers. */
+const NINA_DAILY_CREDIT_CHOICES = [25, 50, 100, 200, 500];
 
 /** The policies of the school as the settings page reads them. */
 type SchoolPolicies = typeof TenantPolicies.Type;
@@ -110,6 +123,10 @@ function SchoolStudentsPolicy({
             slug={slug}
             title="policy-nina"
           />
+          <SchoolNinaCreditsPolicy
+            current={policies.ninaDailyCredits ?? DEFAULT_NINA_DAILY_CREDITS}
+            slug={slug}
+          />
           <SchoolSwitchPolicy
             buildPolicy={(value) => ({ key: "studentThreads", value })}
             checked={policies.studentThreads}
@@ -169,6 +186,78 @@ function SchoolSwitchPolicy({
           );
         }}
       />
+    </Field>
+  );
+}
+
+/**
+ * Renders the Nina credits one student may use from the school's pool a day as a
+ * row of the students' card, chosen from a few steps of one answer's cap, and
+ * saves each choice at once. A cap set elsewhere stays among the choices.
+ */
+function SchoolNinaCreditsPolicy({
+  current,
+  slug,
+}: {
+  current: number;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const setPolicy = useMutation(
+    tenancy.settings.setPolicy
+  ).withOptimisticUpdate(setPolicyChange);
+  const id = useId();
+  const items = Arr.map(
+    Arr.sort(Arr.dedupe([...NINA_DAILY_CREDIT_CHOICES, current]), Order.Number),
+    (count) => ({
+      label: t("policy-nina-credits-value", { count }),
+      value: String(count),
+    })
+  );
+
+  return (
+    <Field orientation="horizontal">
+      <FieldContent>
+        <FieldLabel htmlFor={id}>{t("policy-nina-credits")}</FieldLabel>
+        <FieldDescription>
+          {t("policy-nina-credits-description")}
+        </FieldDescription>
+      </FieldContent>
+      <Select
+        items={items}
+        onValueChange={(value) => {
+          const chosen = Schema.decodeUnknownOption(
+            Schema.FiniteFromString.pipe(Schema.decodeTo(NinaDailyCredits))
+          )(value);
+          if (Option.isNone(chosen)) {
+            return;
+          }
+          startTransition(() =>
+            saveSchool(
+              () =>
+                setPolicy({
+                  policy: { key: "ninaDailyCredits", value: chosen.value },
+                  slug,
+                }),
+              SOURCE
+            )
+          );
+        }}
+        value={String(current)}
+      >
+        <SelectTrigger className="w-40" id={id}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {Arr.map(items, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </Field>
   );
 }

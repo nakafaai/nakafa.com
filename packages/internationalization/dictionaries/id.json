@@ -337,6 +337,47 @@
     "clients": "Klien API",
     "policies": "Kebijakan",
     "audit": "Jejak audit",
+    "billing": "Tagihan",
+    "billing-free-title": "Gratis",
+    "billing-free-description": "Sampai {limit} siswa, dengan semua fitur School.",
+    "billing-school-title": "School",
+    "billing-school-description": "Setiap siswa punya Pro sampai {date}.",
+    "billing-students": "Siswa",
+    "billing-limit": "Batas gratis",
+    "billing-paid": "Siswa dibayar",
+    "billing-nina": "Kredit Nina bulan ini",
+    "billing-nina-used": "{used} dari {total} terpakai",
+    "billing-upgrade": "Upgrade",
+    "billing-add": "Bayar siswa baru",
+    "billing-free-footer": "Upgrade untuk mendaftarkan lebih dari {limit} siswa dan memberi setiap siswa Pro.",
+    "billing-add-footer": "Siswa baru ditagih untuk sisa periode.",
+    "billing-free-empty": "Daftarkan siswa untuk meng-upgrade sekolah ke School.",
+    "billing-school-footer": "Semua siswa sudah dibayar.",
+    "billing-dialog-title": "Pilih periode",
+    "billing-dialog-description": "Bayar per siswa terdaftar untuk sisa hari periode.",
+    "billing-dialog-seats": "Bayar per siswa terdaftar. Kursi diperpanjang sampai kamu membatalkannya.",
+    "billing-term-semester": "Semester ini",
+    "billing-term-year": "Tahun ajaran ini",
+    "billing-offer-month": "Setiap bulan",
+    "billing-offer-year": "Setiap tahun",
+    "billing-term-dates": "{start} sampai {end}",
+    "billing-quote": "{price} per siswa, {total} untuk {seats} siswa",
+    "billing-issue": "Buat invoice",
+    "billing-invoices": "Invoice",
+    "billing-invoices-description": "Semua invoice yang diterbitkan untuk sekolah.",
+    "billing-invoices-footer": "Bayar invoice terbuka sebelum jatuh tempo.",
+    "billing-invoices-empty": "Sekolah belum punya invoice.",
+    "invoice-number": "Invoice",
+    "invoice-term": "Periode",
+    "invoice-students": "Siswa",
+    "invoice-total": "Total",
+    "invoice-status": "Status",
+    "invoice-draft": "Draf",
+    "invoice-open": "Terbuka",
+    "invoice-paid": "Lunas",
+    "invoice-void": "Batal",
+    "invoice-pay": "Bayar",
+    "invoice-transfer": "Bayar lewat transfer",
     "manage-group": "Pengelolaan",
     "manage-settings": "Pengaturan",
     "address-copy": "Salin alamat",
@@ -361,6 +402,9 @@
     "policy-students-footer": "Setiap perubahan kebijakan tercatat di jejak audit.",
     "policy-nina": "Nina untuk siswa",
     "policy-nina-description": "Siswa boleh meminta bantuan Nina di sekolah ini.",
+    "policy-nina-credits": "Kredit Nina per hari",
+    "policy-nina-credits-description": "Kredit sekolah yang boleh dipakai satu siswa setiap hari.",
+    "policy-nina-credits-value": "{count, number} kredit",
     "policy-threads": "Thread siswa",
     "policy-threads-description": "Siswa boleh membuka thread di sekolah ini.",
     "policy-domains": "Domain email",
@@ -486,6 +530,12 @@
       "assignment": {
         "created": "Wali kelas ditetapkan",
         "removed": "Wali kelas dilepas"
+      },
+      "billing": {
+        "invoice": {
+          "issued": "Tagihan diterbitkan",
+          "paid": "Tagihan dibayar"
+        }
       },
       "card": {
         "issued": "Kartu masuk diterbitkan",
@@ -1393,6 +1443,8 @@
     "credits-used": "{percent, number}% terpakai",
     "credits-resets": "Reset {date}",
     "credits-left": "Sisa {left, number} dari {total, number} kredit",
+    "school-credits": "Kredit sekolah hari ini",
+    "school-credits-footer": "Sekolahmu memberimu kredit ini setiap hari.",
     "plan-free": "Free",
     "plan-pro": "Pro",
     "name": "Nama",
@@ -1902,6 +1954,14 @@
     "school-refusal-grant-limit": {
       "title": "Orang ini sudah punya cukup peran.",
       "description": "Hapus satu peran sebelum memberi peran lain."
+    },
+    "school-refusal-seat-limit": {
+      "title": "Paket gratis sudah penuh.",
+      "description": "Upgrade ke School di tagihan untuk menambah siswa."
+    },
+    "school-refusal-seats-paid": {
+      "title": "Semua siswa sudah dibayar.",
+      "description": "Siswa baru bisa ditagih setelah terdaftar."
     },
     "school-refusal-person-inactive": {
       "title": "Orang ini sudah tidak aktif.",

@@ -337,6 +337,47 @@
     "clients": "API-Clients",
     "policies": "Richtlinien",
     "audit": "Prüfprotokoll",
+    "billing": "Abrechnung",
+    "billing-free-title": "Kostenlos",
+    "billing-free-description": "Bis zu {limit} Schüler, mit allen School-Funktionen.",
+    "billing-school-title": "School",
+    "billing-school-description": "Jeder Schüler hat Pro bis {date}.",
+    "billing-students": "Schüler",
+    "billing-limit": "Kostenlose Grenze",
+    "billing-paid": "Bezahlte Schüler",
+    "billing-nina": "Nina-Credits diesen Monat",
+    "billing-nina-used": "{used} von {total} genutzt",
+    "billing-upgrade": "Upgraden",
+    "billing-add": "Neue Schüler bezahlen",
+    "billing-free-footer": "Upgrade, um mehr als {limit} Schüler einzuschreiben und jedem Schüler Pro zu geben.",
+    "billing-add-footer": "Neue Schüler werden für den Rest des Zeitraums berechnet.",
+    "billing-free-empty": "Schreibe Schüler ein, um die Schule auf School umzustellen.",
+    "billing-school-footer": "Alle Schüler sind bezahlt.",
+    "billing-dialog-title": "Zeitraum wählen",
+    "billing-dialog-description": "Bezahle pro eingeschriebenem Schüler für die restlichen Tage des Zeitraums.",
+    "billing-dialog-seats": "Bezahle pro eingeschriebenem Schüler. Die Plätze verlängern sich, bis du sie kündigst.",
+    "billing-term-semester": "Dieses Halbjahr",
+    "billing-term-year": "Dieses Schuljahr",
+    "billing-offer-month": "Jeden Monat",
+    "billing-offer-year": "Jedes Jahr",
+    "billing-term-dates": "{start} bis {end}",
+    "billing-quote": "{price} pro Schüler, {total} für {seats} Schüler",
+    "billing-issue": "Rechnung erstellen",
+    "billing-invoices": "Rechnungen",
+    "billing-invoices-description": "Jede Rechnung, die die Schule erhalten hat.",
+    "billing-invoices-footer": "Bezahle eine offene Rechnung vor ihrem Fälligkeitsdatum.",
+    "billing-invoices-empty": "Die Schule hat noch keine Rechnung.",
+    "invoice-number": "Rechnung",
+    "invoice-term": "Zeitraum",
+    "invoice-students": "Schüler",
+    "invoice-total": "Gesamt",
+    "invoice-status": "Status",
+    "invoice-draft": "Entwurf",
+    "invoice-open": "Offen",
+    "invoice-paid": "Bezahlt",
+    "invoice-void": "Storniert",
+    "invoice-pay": "Bezahlen",
+    "invoice-transfer": "Per Überweisung zahlen",
     "manage-group": "Verwaltung",
     "manage-settings": "Einstellungen",
     "address-copy": "Adresse kopieren",
@@ -361,6 +402,9 @@
     "policy-students-footer": "Jede Änderung einer Richtlinie wird im Prüfprotokoll festgehalten.",
     "policy-nina": "Nina für Schüler",
     "policy-nina-description": "Schüler dürfen Nina in dieser Schule um Hilfe bitten.",
+    "policy-nina-credits": "Nina-Credits pro Tag",
+    "policy-nina-credits-description": "So viele Schul-Credits darf ein Schüler pro Tag nutzen.",
+    "policy-nina-credits-value": "{count, number} Credits",
     "policy-threads": "Threads von Schülern",
     "policy-threads-description": "Schüler dürfen in dieser Schule Threads eröffnen.",
     "policy-domains": "E-Mail-Domains",
@@ -486,6 +530,12 @@
       "assignment": {
         "created": "Klassenlehrer zugewiesen",
         "removed": "Klassenlehrer entfernt"
+      },
+      "billing": {
+        "invoice": {
+          "issued": "Rechnung ausgestellt",
+          "paid": "Rechnung bezahlt"
+        }
       },
       "card": {
         "issued": "Anmeldekarte ausgestellt",
@@ -1393,6 +1443,8 @@
     "credits-used": "{percent, number} % genutzt",
     "credits-resets": "Erneuert am {date}",
     "credits-left": "{left, number} von {total, number} Credits übrig",
+    "school-credits": "Schul-Credits heute",
+    "school-credits-footer": "Deine Schule gibt dir diese Credits jeden Tag.",
     "plan-free": "Kostenlos",
     "plan-pro": "Pro",
     "name": "Name",
@@ -1902,6 +1954,14 @@
     "school-refusal-grant-limit": {
       "title": "Diese Person hat genug Rollen.",
       "description": "Entferne zuerst eine Rolle, bevor du eine weitere gibst."
+    },
+    "school-refusal-seat-limit": {
+      "title": "Der kostenlose Plan ist voll.",
+      "description": "Wechsle in der Abrechnung zu School, um weitere Schüler hinzuzufügen."
+    },
+    "school-refusal-seats-paid": {
+      "title": "Alle Schüler sind bezahlt.",
+      "description": "Neue Schüler können abgerechnet werden, sobald sie eingeschrieben sind."
     },
     "school-refusal-person-inactive": {
       "title": "Diese Person ist nicht mehr aktiv.",

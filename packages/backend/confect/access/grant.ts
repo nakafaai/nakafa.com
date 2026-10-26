@@ -22,6 +22,7 @@ import {
   type GrantTerm,
   OwnerRole,
 } from "@repo/backend/confect/access/schema";
+import { ensureStudentSeat } from "@repo/backend/confect/billing/seats";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
@@ -117,6 +118,13 @@ export const writeGrant = Effect.fn("access.grant.write")(function* (
       code: "GRANT_LIMIT",
       message: "This school has too many owners.",
     });
+  }
+  // A Person who already studies in the school takes no new seat in another unit.
+  if (
+    role === "student" &&
+    !Arr.some(grants, (grant) => grant.role.key === "student")
+  ) {
+    yield* ensureStudentSeat(person.tenantId);
   }
   const grantId = yield* (yield* DatabaseWriter)
     .table("tenantGrants")

@@ -4,6 +4,7 @@ import {
   readIndonesiaRail,
   routeOffer,
   XenditNotConfigured,
+  xenditTakesIndonesia,
 } from "@repo/backend/confect/billing/route";
 import { ConfigProvider, Effect } from "effect";
 
@@ -130,5 +131,24 @@ describe("billing/route", () => {
         environment({ BILLING_INDONESIA_RAIL: "mayar" })
       )
     )
+  );
+
+  it.effect.each([
+    { env: { BILLING_INDONESIA_RAIL: "xendit", ...xenditKeys }, takes: true },
+    { env: { BILLING_INDONESIA_RAIL: "xendit" }, takes: false },
+    { env: { BILLING_INDONESIA_RAIL: "polar", ...xenditKeys }, takes: false },
+    {
+      env: { BILLING_INDONESIA_RAIL: "midtrans", ...xenditKeys },
+      takes: false,
+    },
+    { env: {}, takes: false },
+  ])(
+    "lets Xendit take Indonesia only when the switch names it and the key is set: $env",
+    ({ env, takes }) =>
+      Effect.gen(function* () {
+        expect(yield* xenditTakesIndonesia()).toBe(takes);
+      }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, environment(env))
+      )
   );
 });

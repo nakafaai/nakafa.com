@@ -200,6 +200,17 @@ export const seedCard = Effect.fn("NakafaE2E.seedCard")(
   Effect.provide(nodeServicesLayer)
 );
 
+/**
+ * Records the bank transfer of a school invoice in the running local acceptance runtime,
+ * as an operator does once the money arrives, so the school's billing shows it paid.
+ */
+export const recordTransfer = Effect.fn("NakafaE2E.recordTransfer")(function* (
+  number: string,
+  reference: string
+) {
+  yield* runAcceptanceCommand("transfer", number, reference);
+});
+
 /** The address of a path on a host under the same server as the test's base address. */
 export function hostAddress(
   baseURL: string | undefined,
