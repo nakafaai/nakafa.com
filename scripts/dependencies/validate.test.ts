@@ -71,6 +71,7 @@ function validInput(): PolicyInput {
     path,
   }));
   return {
+    lock: "",
     manifests,
     rootManifest: {
       devEngines: { runtime: { version: "24.22.1" } },
@@ -134,6 +135,29 @@ function withoutDependency(input: PolicyInput, dependency: string) {
 describe("dependency policy validation", () => {
   it("accepts every reviewed dependency cohort", () => {
     assert.deepStrictEqual(validateDependencyPolicy(validInput()), []);
+  });
+
+  it("refuses a lock that resolves a retired package", () => {
+    const peerOnly = `{
+  "packages": {
+    "convex-helpers": ["convex-helpers@0.1.129", "", { "peerDependencies": { "hono": "^4.0.5" }, "optionalPeers": ["hono"] }, "sha512-a"],
+  }
+}`;
+    const resolved = `{
+  "packages": {
+    "hono": ["hono@4.13.13", "", {}, "sha512-b"],
+  }
+}`;
+    assert.deepStrictEqual(
+      validateDependencyPolicy({ ...validInput(), lock: peerOnly }),
+      []
+    );
+    assert.deepStrictEqual(
+      validateDependencyPolicy({ ...validInput(), lock: resolved }),
+      [
+        "bun.lock resolves the retired package hono; the Confect router with Effect HttpApi (ADR 0029) replaces it.",
+      ]
+    );
   });
 
   it("finds declarations in every dependency group", () => {
