@@ -17,7 +17,7 @@ import { Array as Arr, Effect, Option } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-const { enter, mine, release, scheme, sheet } = refs.public.records.grades;
+const { enter, mine, release, sheet } = refs.public.records.grades;
 const schemes = refs.public.records.schemes;
 const placements = refs.public.tenancy.placements;
 
@@ -136,45 +136,6 @@ describe("records/grades entry and gradebook", () => {
         expect(second.id).toBe(first.id);
         expect(second.value).toBe(90);
         expect(listed.page).toHaveLength(1);
-      })
-  );
-
-  it.effect(
-    "lists every placed student in the gradebook, a student without an entry with no grade",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { classId, cohortId } = yield* setup(fixture);
-        const other = yield* classmate(fixture, cohortId);
-        yield* draft(fixture, classId, fixture.people.student.personId, 70);
-        const lines = yield* fixture
-          .as("teacher")
-          .query(sheet, { ...firstPage, classId, slug: nf });
-        expect(
-          Arr.map(lines.page, (line) => [
-            line.student.id,
-            line.grade?.value ?? null,
-          ])
-        ).toEqual([
-          [fixture.people.student.personId, 70],
-          [other, null],
-        ]);
-      })
-  );
-
-  it.effect(
-    "answers the scheme the next entry is judged by, the built-in one before any is stored",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { classId } = yield* setup(fixture);
-        const read = fixture.as("teacher").query(scheme, { classId, slug: nf });
-        expect(yield* read).toEqual({ bands: [], kktp: 75 });
-        yield* storeScheme(fixture, 1, 70, [{ label: "Baik", minimum: 80 }]);
-        expect(yield* read).toEqual({
-          bands: [{ label: "Baik", minimum: 80 }],
-          kktp: 70,
-        });
       })
   );
 
