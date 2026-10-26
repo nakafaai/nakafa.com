@@ -66,6 +66,7 @@
   },
   "SchoolEntry": {
     "card-code-label": "Card code",
+    "card-hint": "No Google address? Sign in with the school username and card your admin gave you.",
     "card-code-placeholder": "First sign-in or a new card",
     "card-expired": "This card has expired. Ask your teacher or admin for a new card.",
     "card-invalid": "The username or card code is not right.",
@@ -73,7 +74,7 @@
     "card-used": "This card was already used. Ask your teacher or admin for a new card.",
     "failed": "Signing in failed. Try again.",
     "outsider-card": "Sign in with a card",
-    "outsider-description": "You are signed in as {account}, which has no invite here yet.",
+    "outsider-description": "You are signed in as {account}, which has no invite here yet, so ask an admin to send one or sign in with the address it went to.",
     "outsider-switch": "Switch account",
     "outsider-title": "Not a member of {school}",
     "password-label": "Password",
@@ -84,7 +85,7 @@
     "submit": "Sign in",
     "username-action": "Sign in with a username",
     "username-label": "School username",
-    "outsider-check-again": "Check again"
+    "outsider-check-again": "Check again for my invite"
   },
   "SchoolGuardians": {
     "sign-in-action": "Sign in as a parent",

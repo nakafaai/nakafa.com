@@ -93,6 +93,9 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
       className="flex w-full max-w-sm flex-col gap-6"
       onSubmit={handleSubmit}
     >
+      <p className="text-center text-muted-foreground text-sm">
+        {t("card-hint")}
+      </p>
       <FieldGroup className="gap-4">
         <Field>
           <FieldLabel htmlFor={`${id}-username`}>
