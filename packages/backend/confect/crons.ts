@@ -16,6 +16,7 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
+const GUARDIAN_CODE_SWEEP_INTERVAL_HOURS = 1;
 const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
@@ -274,6 +275,15 @@ export default CronJobs.make()
       "sweep inbox runs",
       Duration.minutes(INBOX_SWEEP_INTERVAL_MINUTES),
       internal.notifications.consume.sweep,
+      {}
+    )
+  )
+  .add(
+    /** Deletes guardian sign-in codes that expired unused (ADR 0034). */
+    CronJob.make(
+      "delete expired guardian codes",
+      Duration.hours(GUARDIAN_CODE_SWEEP_INTERVAL_HOURS),
+      internal.guardians.codes.sweep,
       {}
     )
   );

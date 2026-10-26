@@ -5429,6 +5429,143 @@ export declare const api: {
       >;
     };
   };
+  guardians: {
+    codes: {
+      send: FunctionReference<
+        "mutation",
+        "public",
+        {
+          deviceId: string;
+          email: string;
+          locale: "en" | "id" | "de";
+          slug: string;
+        },
+        { expiresAt: number }
+      >;
+    };
+    family: {
+      children: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          linkId: Id<"guardianLinks">;
+          staffCheck: boolean;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
+        }>
+      >;
+      confirm: FunctionReference<
+        "mutation",
+        "public",
+        { linkId: Id<"guardianLinks">; nisn: string; slug: string },
+        "verified" | "refused"
+      >;
+      grades: FunctionReference<
+        "query",
+        "public",
+        { linkId: Id<"guardianLinks">; slug: string },
+        Array<{
+          band?: string;
+          className: string;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          value: number;
+        }>
+      >;
+      withdraw: FunctionReference<
+        "mutation",
+        "public",
+        { linkId: Id<"guardianLinks">; slug: string },
+        {
+          linkId: Id<"guardianLinks">;
+          staffCheck: boolean;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
+        }
+      >;
+    };
+    links: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            email: string;
+            expiresAt: number;
+            guardian: { id: Id<"tenantPeople">; name: string };
+            id: Id<"guardianLinks">;
+            mismatches: number;
+            status:
+              "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+            student: { id: Id<"tenantPeople">; name: string };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      revoke: FunctionReference<
+        "mutation",
+        "public",
+        { linkId: Id<"guardianLinks">; slug: string },
+        {
+          email: string;
+          expiresAt: number;
+          guardian: { id: Id<"tenantPeople">; name: string };
+          id: Id<"guardianLinks">;
+          mismatches: number;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
+        }
+      >;
+      start: FunctionReference<
+        "mutation",
+        "public",
+        {
+          email: string;
+          guardianName: string;
+          slug: string;
+          studentId: Id<"tenantPeople">;
+        },
+        {
+          email: string;
+          expiresAt: number;
+          guardian: { id: Id<"tenantPeople">; name: string };
+          id: Id<"guardianLinks">;
+          mismatches: number;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
+        }
+      >;
+      verify: FunctionReference<
+        "mutation",
+        "public",
+        { linkId: Id<"guardianLinks">; slug: string },
+        {
+          email: string;
+          expiresAt: number;
+          guardian: { id: Id<"tenantPeople">; name: string };
+          id: Id<"guardianLinks">;
+          mismatches: number;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
+        }
+      >;
+    };
+  };
   identity: {
     cards: {
       enroll: FunctionReference<
@@ -5569,6 +5706,12 @@ export declare const api: {
             | "sitting.view"
             | "result.release"
             | "result.view"
+            | "guardian.child"
+            | "guardian.confirm"
+            | "guardian.revoke"
+            | "guardian.verify"
+            | "guardian.view"
+            | "guardian.withdraw"
             | "invite.view"
             | "person.manage"
             | "person.view"
@@ -5596,6 +5739,10 @@ export declare const api: {
             | "exam.edit"
             | "exam.rooms"
             | "exam.view"
+            | "guardian.link"
+            | "guardian.list"
+            | "roster.manage"
+            | "roster.view"
           >;
           name: string;
           scope:
@@ -5663,6 +5810,12 @@ export declare const api: {
               | "sitting.view"
               | "result.release"
               | "result.view"
+              | "guardian.child"
+              | "guardian.confirm"
+              | "guardian.revoke"
+              | "guardian.verify"
+              | "guardian.view"
+              | "guardian.withdraw"
               | "invite.view"
               | "person.manage"
               | "person.view"
@@ -5690,6 +5843,10 @@ export declare const api: {
               | "exam.edit"
               | "exam.rooms"
               | "exam.view"
+              | "guardian.link"
+              | "guardian.list"
+              | "roster.manage"
+              | "roster.view"
             >;
             createdAt: number;
             id: Id<"integrationClients">;
@@ -5837,7 +5994,7 @@ export declare const api: {
                   type: "person.invited";
                 }
               | {
-                  method: "card" | "invite" | "operator" | "founder";
+                  method: "card" | "code" | "invite" | "operator" | "founder";
                   type: "person.claimed";
                 }
               | { type: "person.released" }
@@ -5890,6 +6047,7 @@ export declare const api: {
                 }
               | { type: "person.reactivated" }
               | { type: "person.suspended" }
+              | { type: "roster.set" }
               | { type: "promotion.applied" }
               | { type: "promotion.approved" }
               | { type: "promotion.cancelled" }
@@ -6010,6 +6168,7 @@ export declare const api: {
               | { id: Id<"exams">; kind: "exam" }
               | { id: Id<"examSittings">; kind: "sitting" }
               | { id: Id<"examSittings">; kind: "result" }
+              | { id: Id<"guardianLinks">; kind: "guardianLink" }
               | { kind: string };
             subjectName: string | null;
           }>;
@@ -6501,6 +6660,7 @@ export declare const api: {
               | { id: Id<"exams">; kind: "exam" }
               | { id: Id<"examSittings">; kind: "sitting" }
               | { id: Id<"examSittings">; kind: "result" }
+              | { id: Id<"guardianLinks">; kind: "guardianLink" }
               | { kind: string };
             tenant: {
               kind: "school" | "foundation";
@@ -6541,6 +6701,7 @@ export declare const api: {
             | { id: Id<"exams">; kind: "exam" }
             | { id: Id<"examSittings">; kind: "sitting" }
             | { id: Id<"examSittings">; kind: "result" }
+            | { id: Id<"guardianLinks">; kind: "guardianLink" }
             | { kind: string };
           tenant: {
             kind: "school" | "foundation";
@@ -7124,6 +7285,35 @@ export declare const api: {
           effectiveFrom: number;
           id: Id<"gradingSchemes">;
           kktp: number;
+        }
+      >;
+    };
+  };
+  roster: {
+    entries: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        {
+          hasNisn: boolean;
+          personId: Id<"tenantPeople">;
+          underAgeLimit?: boolean;
+        }
+      >;
+      set: FunctionReference<
+        "mutation",
+        "public",
+        {
+          nisn?: string;
+          personId: Id<"tenantPeople">;
+          slug: string;
+          underAgeLimit: boolean;
+        },
+        {
+          hasNisn: boolean;
+          personId: Id<"tenantPeople">;
+          underAgeLimit?: boolean;
         }
       >;
     };
@@ -13746,6 +13936,17 @@ export declare const internal: {
           null
         >;
       };
+    };
+  };
+  guardians: {
+    codes: {
+      redeem: FunctionReference<
+        "mutation",
+        "internal",
+        { code: string; email: string; slug: string },
+        { authId: string; outcome: "signedIn" } | { outcome: "refused" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
   };
   identity: {
