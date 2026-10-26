@@ -16,12 +16,21 @@ const XenditInterval = Schema.Literals(["DAY", "WEEK", "MONTH"]);
 
 const positiveInt = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
-/** The schedule of a subscription session. `anchor_date` is an ISO date-time. */
+/**
+ * The schedule of a subscription session. `anchor_date` is an ISO date-time whose
+ * day of the month is at most 28. A failed charge is retried every
+ * `retry_interval_count` `retry_interval`s, `total_retry` times, and the attempts
+ * `failed_attempt_notifications` names tell the buyer it failed.
+ */
 const XenditSubscriptionSchedule = Schema.Struct({
   anchor_date: Schema.String,
   interval: XenditInterval,
   interval_count: positiveInt,
   total_recurrence: Schema.optionalKey(positiveInt),
+  retry_interval: Schema.optionalKey(XenditInterval),
+  retry_interval_count: Schema.optionalKey(positiveInt),
+  total_retry: Schema.optionalKey(positiveInt),
+  failed_attempt_notifications: Schema.optionalKey(Schema.Array(positiveInt)),
 });
 
 /**
@@ -60,6 +69,8 @@ export const XenditSessionRequest = Schema.Struct({
       failed_cycle_action: Schema.optionalKey(
         Schema.Literals(["RESUME", "STOP"])
       ),
+      /** Charges the first cycle as soon as the buyer links a channel, before `anchor_date`. */
+      immediate_payment: Schema.optionalKey(Schema.Boolean),
     })
   ),
 }).check(Schema.makeFilter(amountFitsSessionType));
@@ -75,6 +86,7 @@ export const XenditSessionResponse = Schema.Struct({
   recurring_plan_id: Schema.NullOr(Schema.String),
   payment_id: Schema.NullOr(Schema.String),
   payment_token_id: Schema.NullOr(Schema.String),
+  expires_at: Schema.DateTimeUtcFromString,
 });
 export type XenditSessionResponse = typeof XenditSessionResponse.Type;
 

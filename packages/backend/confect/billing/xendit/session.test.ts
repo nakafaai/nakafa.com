@@ -26,8 +26,10 @@ async function seedCheckout(
     offer,
     rail: "xendit",
     sessionId: "ps_1",
+    url: "https://checkout-staging.xendit.co/sessions/ps_1",
     status: "open",
     openedAt: 0,
+    expiresAt: 1_800_000,
   });
   return { accountId, checkoutId, subscriptionId, userId };
 }
@@ -188,8 +190,10 @@ describe("billing/xendit/session", () => {
         offer: "pro.monthly",
         rail: "xendit",
         sessionId: "ps_9",
+        url: "https://checkout-staging.xendit.co/sessions/ps_9",
         status: "open",
         openedAt: 0,
+        expiresAt: 1_800_000,
       });
       const outcome = await runInMutation(
         ctx,

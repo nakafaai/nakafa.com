@@ -141,6 +141,7 @@ describe("billing/checkout internal steps", () => {
         customer_ip_available: false,
         locale: "en" as const,
         product_count: 1,
+        rail: "polar" as const,
         product_id: "product_1",
       },
     };
@@ -176,6 +177,7 @@ describe("billing/checkout internal steps", () => {
             customer_ip_available: false,
             locale: "en" as const,
             product_count: 1,
+            rail: "polar" as const,
             product_id: "product_1",
           },
         },
