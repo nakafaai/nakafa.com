@@ -2,14 +2,15 @@ import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import type { AcceptanceModeError } from "@repo/backend/scripts/content/acceptance/mode";
 import { Effect, FileSystem } from "effect";
 
 const mocks = vi.hoisted(() => {
-  let entry: Effect.Effect<unknown, unknown> | undefined;
+  let entry: Effect.Effect<unknown, AcceptanceModeError> | undefined;
   return {
     command: vi.fn(),
     getEntry: () => entry,
-    runMain: vi.fn((program: Effect.Effect<unknown, unknown>) => {
+    runMain: vi.fn((program: Effect.Effect<unknown, AcceptanceModeError>) => {
       entry = program;
     }),
   };
@@ -20,6 +21,9 @@ vi.mock("@effect/platform-node/NodeRuntime", () => ({
 vi.mock("@repo/backend/scripts/load/command", () => ({
   runLoadCommand: mocks.command,
 }));
+
+/** The slash that ends a folder's address, which a real path does not end with. */
+const TRAILING_SLASH = /\/$/u;
 
 describe("the load test command", () => {
   afterEach(() => {
@@ -66,7 +70,7 @@ describe("the load test command", () => {
       const [root, args] = mocks.command.mock.calls[0] ?? [];
       expect(root).toBe(
         fileURLToPath(new URL("../../../..", import.meta.url)).replace(
-          /\/$/u,
+          TRAILING_SLASH,
           ""
         )
       );

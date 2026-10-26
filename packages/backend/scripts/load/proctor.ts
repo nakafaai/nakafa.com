@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { timed } from "@repo/backend/scripts/load/recorder";
 import type { Seating } from "@repo/backend/scripts/load/student";
@@ -20,7 +21,7 @@ const PAGE_SIZE = 100;
  * One proctor of a run: the room it watches, `open`, which opens its browser's connection for
  * as long as its scope lasts, and `done`, which completes once every student has finished.
  */
-export interface ProctorInput {
+interface ProctorInput {
   readonly done: Deferred.Deferred<void>;
   readonly open: Effect.Effect<Wire, never, Scope.Scope>;
   readonly seating: Omit<typeof Seating.Type, "token">;
@@ -37,8 +38,8 @@ export const runProctor = Effect.fn("load.proctor")(function* (
 ) {
   const { sittingId, slug } = input.seating;
   const wire = yield* input.open;
-  const seats = yield* Queue.unbounded<string>();
-  const seen = MutableHashSet.empty<string>();
+  const seats = yield* Queue.unbounded<Id<"examAttempts">>();
+  const seen = MutableHashSet.empty<Id<"examAttempts">>();
   const page = yield* watch(
     wire,
     sittings.dashboard,

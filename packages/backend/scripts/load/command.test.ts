@@ -1,13 +1,18 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import type { AcceptanceModeError } from "@repo/backend/scripts/content/acceptance/mode";
 import { runLoadCommand } from "@repo/backend/scripts/load/command";
-import type { LoadInput } from "@repo/backend/scripts/load/run";
 import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
-import { Effect, FileSystem, Option } from "effect";
+import type { LoadInput } from "@repo/backend/scripts/load/run";
+import { sessionCookie } from "@repo/backend/scripts/load/token";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Effect, FileSystem, Layer } from "effect";
 
 const mocks = vi.hoisted(() => ({
   capture: vi.fn(),
   convex: vi.fn(),
+  issue: vi.fn(),
+  open: vi.fn(),
   lease: vi.fn(),
   owner: vi.fn(),
   run: vi.fn(),
@@ -44,6 +49,16 @@ vi.mock("@repo/backend/scripts/load/logs", () => ({
   captureLogs: mocks.capture,
 }));
 vi.mock("@repo/backend/scripts/load/run", () => ({ runLoad: mocks.run }));
+vi.mock("@repo/backend/scripts/load/token", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@repo/backend/scripts/load/token")
+  >()),
+  issueToken: mocks.issue,
+}));
+vi.mock("@repo/backend/scripts/load/wire", () => ({ openWire: mocks.open }));
+
+/** The services the command reads: the platform, and the HTTP client the backend start asks with. */
+const services = Layer.merge(nodeServicesLayer, FetchClient);
 
 const runtime = {
   backend: "/backend",
@@ -62,12 +77,12 @@ describe("load command", () => {
       expect(failure.message).toContain(
         "load <report-file> [students] [minutes]"
       );
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(services))
   );
 
   it.effect("refuses to run before a runtime is prepared", () =>
     Effect.gen(function* () {
-      mocks.lease.mockReturnValue(Effect.succeed(Option.none()));
+      mocks.lease.mockReturnValue(Effect.succeedNone);
       const failure = yield* Effect.flip(
         runLoadCommand("/root", ["report.json"])
       );
@@ -75,7 +90,7 @@ describe("load command", () => {
         "Run bun run acceptance:prepare before a load test."
       );
       expect(mocks.run).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(services))
   );
 
   it.effect(
@@ -84,7 +99,7 @@ describe("load command", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const directory = yield* fs.makeTempDirectoryScoped();
-        mocks.lease.mockReturnValue(Effect.succeed(Option.some(runtime)));
+        mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
         mocks.run.mockReturnValue(Effect.void);
         mocks.convex.mockReturnValue(Effect.succeed("printed"));
         mocks.capture.mockReturnValue(Effect.void);
@@ -94,14 +109,23 @@ describe("load command", () => {
         );
         yield* runLoadCommand("/root", ["report.json", "300", "10"]);
         const [input] = mocks.run.mock.calls[0] ?? [];
-        const load: LoadInput<unknown> = input;
+        const load: LoadInput<AcceptanceModeError, never> = input;
         expect(load.output).toBe("report.json");
         expect(load.plan).toEqual({
           ...BLUEPRINT_PLAN,
           minutes: 10,
           students: 300,
         });
-        expect(load.runtime).toBe(runtime);
+        mocks.open.mockReturnValue("the connection");
+        mocks.issue.mockReturnValue(Effect.succeed("jwt"));
+        expect(load.connect("session-1")).toBe("the connection");
+        const [address, token] = mocks.open.mock.calls[0] ?? [];
+        expect(address).toBe(runtime.query);
+        expect(yield* token).toBe("jwt");
+        expect(mocks.issue).toHaveBeenCalledWith(
+          runtime.site,
+          yield* sessionCookie("session-1")
+        );
         expect(yield* load.school(directory)).toBe("acc-1");
         expect(mocks.school).toHaveBeenCalledWith(
           "/root",
@@ -123,17 +147,17 @@ describe("load command", () => {
         );
         yield* load.capture("functions.jsonl");
         expect(mocks.capture).toHaveBeenCalledWith(runtime, "functions.jsonl");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(services))
   );
 
   it.effect(
     "runs the blueprint's own plan when the command names no size",
     () =>
       Effect.gen(function* () {
-        mocks.lease.mockReturnValue(Effect.succeed(Option.some(runtime)));
+        mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
         mocks.run.mockReturnValue(Effect.void);
         yield* runLoadCommand("/root", ["report.json"]);
         expect(mocks.run.mock.calls[0]?.[0].plan).toEqual(BLUEPRINT_PLAN);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(services))
   );
 });

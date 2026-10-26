@@ -9,7 +9,7 @@ import {
 } from "effect";
 
 /** The options a load test student chose in one choice question. */
-export const Choice = Schema.Array(Schema.String);
+const Choice = Schema.Array(Schema.String);
 
 /**
  * One answer whose write the server acknowledged to the student: the attempt, the question, the

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  spreadByName,
-  spreadOf,
   percentile,
   type Sample,
+  spreadByName,
+  spreadOf,
 } from "@repo/backend/scripts/load/stats";
 import { Array as Arr } from "effect";
 

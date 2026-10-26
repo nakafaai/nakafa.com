@@ -58,7 +58,7 @@ export const seedLoad = Effect.fn("exams.seed.load")(function* (args: {
   // Each question goes after the one before it, so the exam holds them in their numbered order.
   yield* Effect.reduce(
     Arr.makeBy(args.questions, (index) => index + 1),
-    Arr.empty<ExamQuestionsDoc["_id"]>(),
+    () => Arr.empty<ExamQuestionsDoc["_id"]>(),
     (placed, number) =>
       seedQuestion(
         { _id: examId, questions: placed, scope, tenantId: tenant._id },

@@ -10,8 +10,8 @@ import {
   MutableList,
   Option,
   Schema,
-  Stream,
   String as Str,
+  Stream,
 } from "effect";
 import { ChildProcess } from "effect/process";
 
@@ -52,7 +52,7 @@ const decodeCompletion = Schema.decodeUnknownOption(
  * (a cached answer apart, since it runs nothing), the documents each read, and one sample for each
  * write conflict that Convex retried, named by the function and the table it conflicted on.
  */
-export const ServerRun = Schema.Struct({
+const ServerRun = Schema.Struct({
   conflicts: Schema.Array(Sample),
   reads: Schema.Array(Sample),
   timings: Schema.Array(Sample),

@@ -1,5 +1,6 @@
-import refs from "@repo/backend/confect/_generated/refs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { PaperView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Step, StudentScript } from "@repo/backend/scripts/load/plan";
 import { Recorder, timed } from "@repo/backend/scripts/load/recorder";
@@ -22,10 +23,9 @@ const sittings = refs.public.exams.sittings;
 const { look } = refs.public.exams.screens;
 
 /** A student whose entry the sitting refused, with the reason it gave. */
-export class EntryRefused extends Schema.TaggedError<EntryRefused>()(
-  "EntryRefused",
-  { reason: Schema.String }
-) {}
+class EntryRefused extends Schema.TaggedError<EntryRefused>()("EntryRefused", {
+  reason: Schema.String,
+}) {}
 
 /** Where one student sits: the school, the room's sitting, and the room's token. */
 export const Seating = Schema.Struct({
@@ -44,19 +44,11 @@ type Versions = MutableHashMap.MutableHashMap<string, number>;
  * One student of a run: the script it follows, its seat, and `open`, which opens one
  * browser tab's connection for as long as its scope lasts. `start` is when the run began.
  */
-export interface StudentInput {
+interface StudentInput {
   readonly open: Effect.Effect<Wire, never, Scope.Scope>;
   readonly script: StudentScript;
   readonly seating: typeof Seating.Type;
   readonly start: number;
-}
-
-/** One open tab of the player: its connection, its device, its attempt, and the paper's questions. */
-interface Tab {
-  readonly attempt: string;
-  readonly deviceId: string;
-  readonly questions: readonly (typeof Id.Type)[];
-  readonly wire: Wire;
 }
 
 /** Waits until the clock reads `at`, or not at all once it has passed. */
@@ -66,26 +58,19 @@ const sleepUntil = Effect.fn("load.student.sleep")(function* (at: number) {
 });
 
 /** Keeps the newest version of each question that the paper says the server saved. */
-const keepSaved =
-  (versions: Versions) =>
-  (paper: {
-    readonly questions: readonly {
-      readonly id: string;
-      readonly version: number | null;
-    }[];
-  }) => {
-    for (const question of paper.questions) {
-      const seen = Option.getOrElse(
-        MutableHashMap.get(versions, question.id),
-        () => 0
-      );
-      MutableHashMap.set(
-        versions,
-        question.id,
-        Math.max(seen, question.version ?? 0)
-      );
-    }
-  };
+const keepSaved = (versions: Versions) => (paper: typeof PaperView.Type) => {
+  for (const question of paper.questions) {
+    const seen = Option.getOrElse(
+      MutableHashMap.get(versions, question.id),
+      () => 0
+    );
+    MutableHashMap.set(
+      versions,
+      question.id,
+      Math.max(seen, question.version ?? 0)
+    );
+  }
+};
 
 /**
  * Opens one tab of the player as a student's browser does: the connection, the student's view of
@@ -125,8 +110,11 @@ const openTab = Effect.fn("load.student.tab")(function* (
     deviceId,
     questions: Arr.map(paper.questions, (question) => question.id),
     wire,
-  } satisfies Tab;
+  };
 });
+
+/** One open tab of the player: its connection, its device, its attempt, and the paper's questions. */
+type Tab = Effect.Success<ReturnType<typeof openTab>>;
 
 /**
  * Saves one answer with its version, as the player sends it, and records the answer as
@@ -135,11 +123,7 @@ const openTab = Effect.fn("load.student.tab")(function* (
 const write = Effect.fn("load.student.write")(function* (
   input: StudentInput,
   tab: Tab,
-  answer: {
-    readonly question: string;
-    readonly response: readonly string[];
-    readonly version: number;
-  }
+  answer: Effect.Success<ReturnType<typeof choose>>
 ) {
   const recorder = yield* Recorder;
   const { sittingId, slug } = input.seating;
@@ -162,7 +146,7 @@ const write = Effect.fn("load.student.write")(function* (
 /** Chooses an option for a question and numbers it one above the newest version this student has seen. */
 const choose = Effect.fn("load.student.choose")(function* (
   versions: Versions,
-  question: string
+  question: Id<"examQuestions">
 ) {
   const option = yield* Random.nextIntBetween(1, OPTIONS);
   // The paper numbers every question as it arrives, before the student answers any.

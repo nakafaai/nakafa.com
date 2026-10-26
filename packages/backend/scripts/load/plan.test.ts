@@ -4,14 +4,14 @@ import {
   LoadPlan,
   scriptOf,
 } from "@repo/backend/scripts/load/plan";
-import { Array as Arr, Effect, Random, Schema } from "effect";
+import { Array as Arr, Effect, Order, Random, Schema } from "effect";
 
 /** A small plan of the blueprint's shape, which a test reads in full. */
 const small = LoadPlan.make({ ...BLUEPRINT_PLAN, questions: 8, rooms: 3 });
 
 describe("load plan", () => {
   it("holds the blueprint's parameters of the load test", () => {
-    expect(Schema.decodeUnknownSync(LoadPlan)(BLUEPRINT_PLAN)).toMatchObject({
+    expect(Schema.decodeSync(LoadPlan)(BLUEPRINT_PLAN)).toMatchObject({
       disconnectShare: 0.05,
       proctors: 2,
       questions: 40,
@@ -20,7 +20,7 @@ describe("load plan", () => {
       students: 3000,
     });
     expect(() =>
-      Schema.decodeUnknownSync(LoadPlan)({ ...BLUEPRINT_PLAN, students: 0 })
+      Schema.decodeSync(LoadPlan)({ ...BLUEPRINT_PLAN, students: 0 })
     ).toThrow();
   });
 
@@ -32,7 +32,7 @@ describe("load plan", () => {
         const script = yield* scriptOf(plan, 4);
         const slot = (plan.minutes * 60_000) / plan.questions;
         const ats = Arr.map(script.steps, (step) => step.at);
-        expect(ats).toEqual(Arr.sort(ats, (a, b) => (a < b ? -1 : 1)));
+        expect(ats).toEqual(Arr.sort(ats, Order.Number));
         expect(
           Arr.dedupe(Arr.map(script.steps, (step) => step.question))
         ).toHaveLength(plan.questions);

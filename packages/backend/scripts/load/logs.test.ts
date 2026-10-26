@@ -1,7 +1,15 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { captureLogs, readServerRun } from "@repo/backend/scripts/load/logs";
-import { Effect, FileSystem, MutableList, Schema, Sink, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  MutableList,
+  Schema,
+  Sink,
+  Stream,
+} from "effect";
 import { type ChildProcess, ChildProcessSpawner } from "effect/process";
 
 const encodeLine = Schema.encodeUnknownSync(
@@ -26,27 +34,30 @@ describe("load logs", () => {
     "reads each execution's timing, reads and conflict, named by its kind, component and function",
     () =>
       Effect.gen(function* () {
-        const text = [
-          completion({}),
-          completion({ error: "Uncaught Error: refused" }),
-          completion({
-            cachedResult: true,
-            error: null,
-            identifier: "exams/sittings.js:paper",
-            udfType: "Query",
-          }),
-          completion({
-            componentPath: "betterAuth",
-            identifier: "session.js:live",
-            occInfo: { tableName: "session" },
-            udfType: "Query",
-          }),
-          completion({ occInfo: {} }),
-          encodeLine({ kind: "Progress", logLines: ["working"] }),
-          encodeLine({ identifier: "broken", kind: "Completion" }),
-          "not json",
-          "",
-        ].join("\n");
+        const text = Arr.join(
+          [
+            completion({}),
+            completion({ error: "Uncaught Error: refused" }),
+            completion({
+              cachedResult: true,
+              error: null,
+              identifier: "exams/sittings.js:paper",
+              udfType: "Query",
+            }),
+            completion({
+              componentPath: "betterAuth",
+              identifier: "session.js:live",
+              occInfo: { tableName: "session" },
+              udfType: "Query",
+            }),
+            completion({ occInfo: {} }),
+            encodeLine({ kind: "Progress", logLines: ["working"] }),
+            encodeLine({ identifier: "broken", kind: "Completion" }),
+            "not json",
+            "",
+          ],
+          "\n"
+        );
         const fs = yield* FileSystem.FileSystem;
         const directory = yield* fs.makeTempDirectoryScoped();
         yield* fs.writeFileString(`${directory}/functions.jsonl`, text);

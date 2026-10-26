@@ -13,7 +13,7 @@ const SEATS_PER_CALL = 50;
 const SEED_CONCURRENCY = 4;
 
 /** One room of the run as the load seed opened it, with its token. */
-export const Room = Schema.Struct({
+const Room = Schema.Struct({
   id: Id("examSittings"),
   room: Schema.String,
   token: Schema.String,
@@ -23,13 +23,6 @@ export const Room = Schema.Struct({
 const Seeded = Schema.fromJsonString(
   Schema.Struct({ examId: Id("exams"), sittings: Schema.Array(Room) })
 );
-
-/** One seated account of the run: the room it sits or watches, by its index, and its session token. */
-export const SeatedAccount = Schema.Struct({
-  room: Schema.Int,
-  token: Schema.String,
-});
-export type SeatedAccount = typeof SeatedAccount.Type;
 
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 

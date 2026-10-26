@@ -3,11 +3,18 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { StudentScript } from "@repo/backend/scripts/load/plan";
 import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
 import { runStudent } from "@repo/backend/scripts/load/student";
-import { fakeServer } from "@repo/backend/test/load";
-import { Array as Arr, Clock, Effect, MutableHashMap, Schema } from "effect";
+import { fakeServer, idOf } from "@repo/backend/test/load";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  MutableHashMap,
+  Option,
+  Schema,
+} from "effect";
 
 const seating = {
-  sittingId: "s1",
+  sittingId: idOf("examSittings", "s1"),
   slug: Schema.decodeSync(TenantSlug)("sekolah"),
   token: "K7Q4XM",
 };
@@ -30,7 +37,7 @@ const script = (fields: Partial<StudentScript> = {}): StudentScript => ({
 
 /** The names of the calls the server took, in order. */
 const names = (server: ReturnType<typeof fakeServer>) =>
-  Arr.map(server.calls, (call) => call.name);
+  Arr.map(server.calls(), (call) => call.name);
 
 /** Runs one student against the server from now, and returns what the recorder holds. */
 const run = (
@@ -70,7 +77,7 @@ describe("load student", () => {
           "exams/sittings:answer",
           "exams/sittings:finish",
         ]);
-        expect(server.calls[0]?.args).toMatchObject({
+        expect(server.calls()[0]?.args).toMatchObject({
           sittingId: "s1",
           slug: "sekolah",
           token: "K7Q4XM",
@@ -141,7 +148,9 @@ describe("load student", () => {
         expect(
           Arr.some(result.samples, (sample) => sample.name === "sync:reconnect")
         ).toBe(true);
-        expect(names(server).at(-1)).toBe("exams/sittings:finish");
+        expect(Arr.last(names(server))).toEqual(
+          Option.some("exams/sittings:finish")
+        );
       })
   );
 
@@ -182,14 +191,14 @@ describe("load student", () => {
         );
         expect(result.exit._tag).toBe("Success");
         const signal = Arr.findFirst(
-          server.calls,
+          server.calls(),
           (call) => call.name === "exams/sittings:signal"
         );
         expect(signal._tag === "Some" && signal.value.args.kind).toBe(
           "secondTab"
         );
         const enters = Arr.filter(
-          server.calls,
+          server.calls(),
           (call) => call.name === "exams/sittings:enter"
         );
         expect(enters[1]?.args.deviceId).toBe(enters[0]?.args.deviceId);
@@ -233,7 +242,9 @@ describe("load student", () => {
       const server = fakeServer();
       const result = yield* run(server, script({ secondTab: true, steps: [] }));
       expect(result.exit._tag).toBe("Success");
-      expect(names(server).at(-1)).toBe("exams/sittings:finish");
+      expect(Arr.last(names(server))).toEqual(
+        Option.some("exams/sittings:finish")
+      );
     })
   );
 });

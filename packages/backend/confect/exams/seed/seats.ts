@@ -15,8 +15,8 @@ import {
   tenantOf,
 } from "@repo/backend/confect/acceptance/lookup";
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
-import type { Seat, SeatKind } from "@repo/backend/confect/exams/seed/contract";
 import { assignRole } from "@repo/backend/confect/access/grant";
+import type { Seat, SeatKind } from "@repo/backend/confect/exams/seed/contract";
 import { loginAddress } from "@repo/backend/confect/identity/address";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { Clock, Effect } from "effect";

@@ -45,6 +45,7 @@ export const openWire = Effect.fn("load.wire.open")(function* (
   address: string,
   token: Effect.Effect<string>
 ) {
+  const context = yield* Effect.context<never>();
   return yield* Effect.acquireRelease(
     Effect.sync(() => {
       const client = new ConvexClient(address, {
@@ -52,7 +53,7 @@ export const openWire = Effect.fn("load.wire.open")(function* (
         unsavedChangesWarning: false,
       });
       // Convex owns the callback that asks for a token, so the token's effect runs here.
-      client.setAuth(() => Effect.runPromise(token));
+      client.setAuth(() => Effect.runPromiseWith(context)(token));
       return client satisfies Wire;
     }),
     (client) => Effect.promise(() => client.close())
@@ -88,7 +89,10 @@ export const watch = Effect.fn("load.wire.watch")(function* <
   args: Ref.Args<Ref_>,
   onValue: (value: Ref.Returns<Ref_>) => void
 ) {
-  const first = yield* Deferred.make<Ref.Returns<Ref_>, unknown>();
+  const first = yield* Deferred.make<
+    Ref.Returns<Ref_>,
+    Ref.Error<Ref_> | WireFailed
+  >();
   const encoded = argsOf(Ref.encodeArgsSync(ref, args));
   yield* Effect.acquireRelease(
     Effect.sync(() =>

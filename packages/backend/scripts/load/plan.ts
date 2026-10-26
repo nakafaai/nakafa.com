@@ -54,7 +54,7 @@ export const Step = Schema.Struct({
 export type Step = typeof Step.Type;
 
 /** A student's one cut: after which step the connection drops, and for how long. */
-export const Cut = Schema.Struct({
+const Cut = Schema.Struct({
   afterStep: Schema.Int,
   lasts: Schema.Finite,
 });

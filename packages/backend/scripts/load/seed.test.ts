@@ -1,8 +1,8 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import { LoadPlan, BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
+import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
 import { seedRun } from "@repo/backend/scripts/load/seed";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Schema } from "effect";
 
 /** The arguments of one seats call, as the Convex CLI receives them. */
 const SeatsArgs = Schema.fromJsonString(
@@ -18,6 +18,12 @@ const SeatsArgs = Schema.fromJsonString(
     slug: Schema.String,
   })
 );
+
+/** One call of the Convex CLI that the seed made, with the values it keeps secret. */
+const Call = Schema.Struct({
+  args: Schema.Array(Schema.String),
+  sensitive: Schema.Array(Schema.String),
+});
 
 const encodeJson = Schema.encodeUnknownSync(
   Schema.fromJsonString(Schema.Unknown)
@@ -35,13 +41,10 @@ describe("load seed", () => {
     "seeds the exam, then seats the students and two proctors a room in calls of fifty, keeping every token secret",
     () =>
       Effect.gen(function* () {
-        const calls: {
-          args: readonly string[];
-          sensitive: readonly string[];
-        }[] = [];
+        const calls = MutableList.make<typeof Call.Type>();
         const seeded = yield* seedRun(
           (_operation, args, sensitive = []) => {
-            calls.push({ args, sensitive });
+            MutableList.append(calls, { args, sensitive });
             return Effect.succeed(
               args[1] === "exams/seed:load"
                 ? encodeJson({
@@ -57,11 +60,15 @@ describe("load seed", () => {
           plan,
           "sekolah"
         );
-        expect(calls[0]?.args.slice(0, 2)).toEqual(["run", "exams/seed:load"]);
-        expect(calls[0]?.args[2]).toBe(
+        const made = MutableList.toArray(calls);
+        expect(Arr.take(made[0]?.args ?? [], 2)).toEqual([
+          "run",
+          "exams/seed:load",
+        ]);
+        expect(made[0]?.args[2]).toBe(
           encodeJson({ questions: 40, rooms: 2, slug: "sekolah" })
         );
-        const batches = Arr.map(Arr.drop(calls, 1), (call) =>
+        const batches = Arr.map(Arr.drop(made, 1), (call) =>
           Schema.decodeSync(SeatsArgs)(call.args[2] ?? "")
         );
         expect(
@@ -73,9 +80,9 @@ describe("load seed", () => {
           ["proctor", 4],
         ]);
         expect(
-          Arr.every(Arr.drop(calls, 1), (call, index) =>
+          Arr.every(Arr.drop(made, 1), (call, index) =>
             Arr.every(batches[index]?.seats ?? [], (seat) =>
-              call.sensitive.includes(seat.token)
+              Arr.contains(call.sensitive, seat.token)
             )
           )
         ).toBe(true);

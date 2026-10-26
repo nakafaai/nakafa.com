@@ -1,6 +1,5 @@
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
-import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { audit, StoredAnswer } from "@repo/backend/scripts/load/ledger";
 import { readServerRun } from "@repo/backend/scripts/load/logs";
 import { type LoadPlan, scriptOf } from "@repo/backend/scripts/load/plan";
@@ -14,8 +13,7 @@ import {
 import { seedRun } from "@repo/backend/scripts/load/seed";
 import { spreadByName } from "@repo/backend/scripts/load/stats";
 import { runStudent } from "@repo/backend/scripts/load/student";
-import { issueToken, sessionCookie } from "@repo/backend/scripts/load/token";
-import { openWire } from "@repo/backend/scripts/load/wire";
+import type { Wire } from "@repo/backend/scripts/load/wire";
 import {
   Array as Arr,
   Clock,
@@ -25,7 +23,6 @@ import {
   Fiber,
   FileSystem,
   HashSet,
-  Schedule,
   Schema,
   type Scope,
 } from "effect";
@@ -45,39 +42,22 @@ const LAG_PROBE = Duration.seconds(1);
 /** The most answer rows the audit reads: every answer of the largest run the plan allows, and more. */
 const STORED_LIMIT = "1000000";
 
-/** A token request that the busy local backend refused is asked again a few times, as a browser would. */
-const TOKEN_RETRY = {
-  schedule: Schedule.exponential(Duration.millis(200)),
-  times: 5,
-};
-
 /**
- * What a run needs from the acceptance runtime: the runtime, the Convex CLI that reaches it,
- * `school`, which opens a school with its Owner signed in, keeping its files in the directory
- * it is given, and returns the school's slug, and `capture`, which streams the function log
- * into a file for the scope.
+ * What a run needs from the acceptance runtime: the Convex CLI that reaches it; `school`, which
+ * opens a school with its Owner signed in, keeping its files in the directory it is given, and
+ * returns the school's slug; `capture`, which streams the function log into a file for the
+ * scope; and `connect`, which opens one browser's connection for a seat's session token.
  */
-export interface LoadInput<E> {
-  readonly capture: (path: string) => Effect.Effect<void, E, Scope.Scope>;
+export interface LoadInput<E, R> {
+  readonly capture: (path: string) => Effect.Effect<void, E, R | Scope.Scope>;
+  readonly connect: (
+    sessionToken: string
+  ) => Effect.Effect<Wire, never, Scope.Scope>;
   readonly output: string;
   readonly plan: LoadPlan;
-  readonly run: RunConvex<E, never>;
-  readonly runtime: Pick<LocalRuntime, "query" | "site">;
-  readonly school: (directory: string) => Effect.Effect<string, E>;
+  readonly run: RunConvex<E, R>;
+  readonly school: (directory: string) => Effect.Effect<string, E, R>;
 }
-
-/** Opens one browser's connection for a session token: its signed cookie asks for every Convex token. */
-const openerFor = (runtime: Pick<LocalRuntime, "query" | "site">) =>
-  Effect.fn("load.run.opener")(function* (token: string) {
-    const cookie = yield* sessionCookie(token);
-    return openWire(
-      runtime.query,
-      issueToken(runtime.site, cookie).pipe(
-        Effect.retry(TOKEN_RETRY),
-        Effect.orDie
-      )
-    );
-  });
 
 /**
  * Runs one load test against the running local backend (K26): seeds a school with its exam, its
@@ -85,8 +65,8 @@ const openerFor = (runtime: Pick<LocalRuntime, "query" | "site">) =>
  * while the backend's function log streams to a file; then audits the stored answers against
  * every acknowledgement and writes the report as JSON beside its Markdown table.
  */
-export const runLoad = Effect.fn("load.run")(function* <E>(
-  input: LoadInput<E>
+export const runLoad = Effect.fn("load.run")(function* <E, R>(
+  input: LoadInput<E, R>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const recorder = yield* Recorder;
@@ -101,7 +81,6 @@ export const runLoad = Effect.fn("load.run")(function* <E>(
     Arr.makeBy(input.plan.students, (index) => index),
     (index) => scriptOf(input.plan, index)
   );
-  const open = openerFor(input.runtime);
   const roomOf = (index: number) =>
     Effect.fromOption(Arr.get(seeded.rooms, index)).pipe(Effect.orDie);
   const logPath = `${directory}/functions.jsonl`;
@@ -125,7 +104,7 @@ export const runLoad = Effect.fn("load.run")(function* <E>(
         const room = yield* roomOf(proctor.room);
         return yield* runProctor({
           done,
-          open: yield* open(proctor.token),
+          open: input.connect(proctor.token),
           seating: { sittingId: room.id, slug },
         });
       }),
@@ -139,7 +118,7 @@ export const runLoad = Effect.fn("load.run")(function* <E>(
       yield* timed(
         "run:student",
         runStudent({
-          open: yield* open(student.token),
+          open: input.connect(student.token),
           script,
           seating: { sittingId: room.id, slug, token: room.token },
           start,

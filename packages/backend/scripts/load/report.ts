@@ -8,7 +8,7 @@ import { Array as Arr, Option, Order, pipe, Record, Schema } from "effect";
  * an answer write as the student waits for it, a start and a finish of an attempt, and the resync
  * of the answers a cut-off student kept once the connection is back.
  */
-export const TARGETS = {
+const TARGETS = {
   answer: 150,
   enter: 300,
   finish: 300,
