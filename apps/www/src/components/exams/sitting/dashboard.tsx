@@ -1,5 +1,5 @@
-import type { GenericId, Ref } from "@confect/core";
-import { QueryResult } from "@confect/react";
+import type { GenericId } from "@confect/core";
+import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -20,7 +20,6 @@ import { createSittingStore } from "@/components/exams/sitting/store";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -31,12 +30,10 @@ import { Link } from "@/lib/routing/link";
  */
 export function SittingDashboard({
   examId,
-  preload,
   sittingId,
   slug,
 }: {
   readonly examId: GenericId.GenericId<"exams">;
-  readonly preload: Ref.Returns<typeof exams.sittings.dashboard> | undefined;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
@@ -44,10 +41,9 @@ export function SittingDashboard({
   const [store] = useState(createSittingStore);
   // The dashboard needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const state = usePreloadedQueryResult(
+  const state = useQuery(
     exams.sittings.dashboard,
-    isSettled ? dashboardArgs({ sittingId, slug }, null) : "skip",
-    preload
+    isSettled ? dashboardArgs({ sittingId, slug }, null) : "skip"
   );
 
   if (QueryResult.isFailure(state)) {

@@ -1,20 +1,15 @@
 import { monospace } from "@repo/design-system/lib/monospace";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { cn } from "cn";
-import { Schema } from "effect";
 import { IntlProvider } from "use-intl";
 import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
 import { AppShell } from "@/components/sidebar/shell";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
-import { runServerEffect } from "@/lib/server/fn";
+import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
-
-const ShellInput = Schema.Struct({ locale: Schema.String });
 
 /**
  * The messages of the student shell and of the learn pages that the locale route
@@ -31,15 +26,6 @@ const MAIN_NAMESPACES = [
   "Tryouts",
 ] as const;
 
-/** The navigation of the shell, read on the server for every learn page. */
-const readShellNavigation = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(ShellInput))
-  .handler(async ({ data }) => {
-    const locale = getLocaleOrThrow(data.locale);
-    const { readMarketingShell } = await import("@/lib/marketing/shell.server");
-    return runServerEffect(readMarketingShell(locale));
-  });
-
 const localeRoute = getRouteApi("/$locale");
 
 /**
@@ -54,7 +40,7 @@ export const Route = createFileRoute("/$locale/_main")({
         locale: params.locale,
         namespaces: MAIN_NAMESPACES,
       }),
-      readStaticData(readShellNavigation, { locale: params.locale }),
+      readStaticData(readMarketingShellFn, { locale: params.locale }),
     ]);
     return { ...shell, messages };
   },

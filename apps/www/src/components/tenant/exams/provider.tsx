@@ -54,19 +54,16 @@ export function ExamProvider({
   children,
   exam,
   gone,
-  prompt,
   slug,
 }: {
   children: ReactNode;
   exam: ExamView;
   /** Whether the exam was deleted, or closed to the teacher, after the editor read it. */
   gone: boolean;
-  /** The first question's prompt as the loader read it, which the live prompts start from. */
-  prompt: Parameters<typeof createExamLive>[0];
   slug: TenantSlug;
 }) {
   const [selection] = useState(createExamSelection);
-  const [live] = useState(() => createExamLive(prompt));
+  const [live] = useState(createExamLive);
   const [editing] = useState(() => createExamEditing());
   const [zoom] = useState(createExamZoom);
   const [view] = useState(createEditorView);

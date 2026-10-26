@@ -3,6 +3,7 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -19,7 +20,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
-import { createContext, use, useId, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -46,21 +47,11 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import type { readPeriodsFn } from "@/lib/tenant/settings.functions";
 
 const SOURCE = "components/tenant/settings/periods";
 
 /** How many periods one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first screen of the periods tab: the first page of the periods of the unit the tab opens, and that unit. */
-type PeriodsPreload = Pick<
-  Awaited<ReturnType<typeof readPeriodsFn>>,
-  "page" | "unitId"
->;
-
-/** The ID of one unit of the school. */
+const PAGE_SIZE = 25;
 
 /** One period as the periods list shows it. */
 type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
@@ -71,32 +62,19 @@ const periodColumns = createColumnHelper<
   PeriodItem
 >();
 
-/** The first screen of the periods tab, which the page's loader read on the server. */
-const PeriodsPreloadContext = createContext<PeriodsPreload | undefined>(
-  undefined
-);
-
 /**
  * Renders the periods of the school's unit as the page's table, with their row menus. The
  * header row holds the unit choice when the school has more than one unit, the search, the
  * status filter, and Add period once a unit is known.
  */
-export function SchoolPeriodsSettings({
-  preload,
-  slug,
-}: {
-  preload: PeriodsPreload | undefined;
-  slug: TenantSlug;
-}) {
+export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
   return (
     <TableFiltersProvider>
       <ReadBoundary
         fallback={(failure) => <SettingsTablePage>{failure}</SettingsTablePage>}
         read={{ args: { slug }, ref: tenancy.viewer.get }}
       >
-        <PeriodsPreloadContext value={preload}>
-          <SchoolPeriodsContent slug={slug} />
-        </PeriodsPreloadContext>
+        <SchoolPeriodsContent slug={slug} />
       </ReadBoundary>
     </TableFiltersProvider>
   );
@@ -107,7 +85,6 @@ export function SchoolPeriodsSettings({
  * A school with no active unit says so and links to the units, because a period belongs to a unit.
  */
 function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
-  const preload = use(PeriodsPreloadContext);
   const t = useTranslations("SchoolSettings");
   const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
@@ -166,11 +143,7 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
       ) : (
         <>
           <ReadBoundary>
-            <SchoolPeriodTable
-              first={unit.id === preload?.unitId ? preload.page : undefined}
-              slug={slug}
-              unitId={unit.id}
-            />
+            <SchoolPeriodTable slug={slug} unitId={unit.id} />
           </ReadBoundary>
           <SchoolPeriodAddDialog
             open={isAdding}
@@ -191,21 +164,18 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
  * rows arrive.
  */
 function SchoolPeriodTable({
-  first,
   slug,
   unitId,
 }: {
-  first: PeriodsPreload["page"] | undefined;
   slug: TenantSlug;
   unitId: UnitId;
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     tenancy.periods.list,
     isSettled ? { slug, unitId } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

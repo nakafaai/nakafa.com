@@ -1,4 +1,4 @@
-import { QueryResult } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -27,8 +27,6 @@ import {
 import { ExamToolbar } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readExamEditorFn } from "@/lib/tenant/exams.functions";
 
 /**
  * The editor of one exam, as a design tool lays out its document: a header with the title and the
@@ -40,20 +38,16 @@ import type { readExamEditorFn } from "@/lib/tenant/exams.functions";
  */
 export function ExamEditor({
   examId,
-  preload,
   slug,
 }: {
   examId: Id<"exams">;
-  /** The exam and its first question's prompt as the loader read them, which the first paint draws. */
-  preload: Awaited<ReturnType<typeof readExamEditorFn>> | undefined;
   slug: TenantSlug;
 }) {
   // The exam needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const result = usePreloadedQueryResult(
+  const result = useQuery(
     exams.exams.open,
-    isSettled ? { examId, slug } : "skip",
-    preload?.exam
+    isSettled ? { examId, slug } : "skip"
   );
   // An exam deleted, or closed to the teacher, after the editor read it keeps its workspace on screen, locked.
   const kept = useLastValue(result);
@@ -66,7 +60,6 @@ export function ExamEditor({
     <ExamProvider
       exam={kept.value}
       gone={QueryResult.isFailure(result)}
-      prompt={preload?.prompt}
       slug={slug}
     >
       <ExamWorkspace />

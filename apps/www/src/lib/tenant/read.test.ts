@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -11,14 +11,19 @@ import {
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Layer, Option, Result, Schema } from "effect";
+import { FetchHttpClient } from "effect/http";
 import { readSchoolSignInTitle } from "@/lib/tenant/copy";
 import type { SchoolViewer } from "@/lib/tenant/frame";
 import {
+  readBrowserSchoolFrame,
   readSchoolFrame,
   SchoolReadFailed,
   SchoolReads,
   SchoolReadsLive,
 } from "@/lib/tenant/read";
+
+/** One fetch double for the whole file: the browser's request to the token route. */
+const fetcher = vi.fn<typeof fetch>();
 
 /** The Convex answer of every query the live reads make, chosen by each test. */
 const queryMock = vi.hoisted(() => vi.fn());
@@ -387,5 +392,90 @@ describe("SchoolReadsLive", () => {
       const failure = yield* reads.account("token").pipe(Effect.flip);
       expect(failure._tag).toBe("SchoolReadFailed");
     })
+  );
+});
+
+describe("readBrowserSchoolFrame", () => {
+  /** The tokens that the viewer read was asked with. */
+  let tokens: readonly string[] = [];
+
+  /** A school read set that records the token of the viewer read and answers a member. */
+  const memberReads = Layer.succeed(
+    SchoolReads,
+    SchoolReads.of({
+      account: () => Effect.die("account not expected"),
+      profile: () => Effect.die("profile not expected"),
+      viewer: (_slug, token) =>
+        Effect.sync(() => {
+          tokens = [...tokens, token];
+          return Result.succeed<SchoolViewer>(VIEWER);
+        }),
+    })
+  );
+
+  /** The browser of these tests: a school host's address and its document cookie. */
+  function stubBrowser(cookie: string) {
+    vi.stubGlobal("document", { cookie });
+    vi.stubGlobal("window", {
+      location: { origin: "https://harapan.nakafa.com" },
+    });
+  }
+
+  beforeEach(() => {
+    fetcher.mockReset();
+    tokens = [];
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.effect(
+    "reads a visitor's frame without asking for a token when the browser holds no sign-in hint",
+    () =>
+      Effect.gen(function* () {
+        stubBrowser("theme=dark");
+        const read = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
+          Effect.provide(reads({ profile: Effect.succeedSome(PROFILE) })),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+        expect(read._tag).toBe("Visitor");
+        expect(fetcher).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "reads a member's frame with the token from the school host's own token route",
+    () =>
+      Effect.gen(function* () {
+        stubBrowser("theme=dark; nakafa-signed-in=1");
+        fetcher.mockResolvedValueOnce(Response.json({ token: "token-ayu" }));
+        const read = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
+          Effect.provide(memberReads),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+        expect(read._tag).toBe("Member");
+        expect(tokens).toStrictEqual(["token-ayu"]);
+        const [address] = fetcher.mock.calls[0] ?? [];
+        expect(String(address)).toBe(
+          "https://harapan.nakafa.com/api/auth/convex/token"
+        );
+      })
+  );
+
+  it.effect(
+    "fails the frame when the token route refuses, so an outage never reads as a visitor",
+    () =>
+      Effect.gen(function* () {
+        stubBrowser("nakafa-signed-in=1");
+        fetcher.mockResolvedValueOnce(new Response(null, { status: 403 }));
+        const failure = yield* readBrowserSchoolFrame(SLUG, "en").pipe(
+          Effect.provide(memberReads),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher),
+          Effect.flip
+        );
+        expect(failure).toBeInstanceOf(SchoolReadFailed);
+        expect(tokens).toStrictEqual([]);
+      })
   );
 });

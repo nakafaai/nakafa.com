@@ -1,7 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { OpenedDocument } from "@repo/backend/confect/editor/view";
-import { encodeJsonText } from "@repo/utilities/json";
 import { HashMap, Option, Schema } from "effect";
 import { createExamLive } from "@/components/tenant/exams/live";
 import { assessmentSchema } from "@/lib/editor/assessment";
@@ -50,40 +48,5 @@ describe("tenant/exams/live createExamLive", () => {
     const other = createExamLive();
     one.getState().show(first, paragraph("Berapa"));
     expect(HashMap.size(other.getState().docs)).toBe(0);
-  });
-
-  /** A prompt as the editor's loader reads it: a snapshot of `content` and no steps after it. */
-  const loaded = (content: string) => ({
-    documentId: first,
-    opened: Schema.decodeSync(OpenedDocument)({
-      client: null,
-      snapshot: { content, version: 0 },
-      steps: [],
-    }),
-  });
-
-  it("starts from the prompt the loader read, until the prompt's editor holds its own", () => {
-    const live = createExamLive(
-      loaded(encodeJsonText(paragraph("Berapa hasil 2 + 3?").toJSON()))
-    );
-    expect(
-      Option.map(
-        HashMap.get(live.getState().docs, first),
-        (doc) => doc.textContent
-      )
-    ).toEqual(Option.some("Berapa hasil 2 + 3?"));
-
-    const held = paragraph("Berapa hasil 3 + 4?");
-    live.getState().show(first, held);
-    expect(
-      Option.getOrUndefined(HashMap.get(live.getState().docs, first))
-    ).toBe(held);
-  });
-
-  it("starts from nothing when the loaded prompt does not fit the schema", () => {
-    const live = createExamLive(
-      loaded(encodeJsonText({ content: [{ type: "unknown" }], type: "doc" }))
-    );
-    expect(HashMap.size(live.getState().docs)).toBe(0);
   });
 });

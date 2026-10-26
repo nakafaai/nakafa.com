@@ -11,7 +11,7 @@ import { TenantRefused } from "@/components/tenant/refused";
 /** The viewer's view of the school, as the school layout reads it. */
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
-/** The school sections whose layouts check the viewer's grant on the server. */
+/** The school sections whose layouts check the viewer's grant before the page commits. */
 type TenantSectionName = "exams" | "settings";
 
 /** The grant that each section's layout checks, so a change made while the page is open answers the same way. */

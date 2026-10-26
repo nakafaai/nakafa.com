@@ -44,7 +44,12 @@ import { tableOf } from "@/components/tenant/exams/table";
 import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
-import { PREVIEW_CLIENT } from "@/lib/tenant/exams";
+
+/**
+ * The session name the editor reads a prompt under to draw it without an editor. It never writes, so the
+ * server holds no record of it, and the read answers the document alone.
+ */
+const PREVIEW_CLIENT = "preview";
 
 /**
  * A rich text of a question as a document to draw: the one its editor holds when the question is

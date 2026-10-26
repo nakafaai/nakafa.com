@@ -13,7 +13,7 @@ import {
   TenantEntryActions,
   TenantEntryBack,
 } from "@/components/tenant/username";
-import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
+import type { AuthLegalLinks } from "@/lib/auth/legal";
 
 /**
  * The entry surface of a school for a visitor who is signed out. It reuses the

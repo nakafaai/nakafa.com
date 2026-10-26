@@ -3,6 +3,7 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import {
   Delete02Icon,
@@ -26,8 +27,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
-import { createContext, use, useState, useTransition } from "react";
+import { Array as Arr } from "effect";
+import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -48,20 +49,11 @@ import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeNames } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/clients";
 
 /** How many clients one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first page of the list, which its loader read on the server. */
-type ClientsFirstPage = PreloadedPage<
-  PaginatedQueryItem<typeof integrations.clients.list>
->;
+const PAGE_SIZE = 25;
 
 /** One integration client as the clients list shows it. */
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
@@ -72,23 +64,12 @@ const clientColumns = createColumnHelper<
   ClientItem
 >();
 
-/** The first page of the clients, which the page's loader read on the server. */
-const ClientsFirstPageContext = createContext<ClientsFirstPage | undefined>(
-  undefined
-);
-
 /**
  * Renders the integration clients of the school, each with the part of the school it
  * covers, in a data table with Create client in the header. A client is created, rotated
  * (which issues a new secret that is shown once), or revoked.
  */
-export function SchoolClientsSettings({
-  first,
-  slug,
-}: {
-  first: ClientsFirstPage | undefined;
-  slug: TenantSlug;
-}) {
+export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
     undefined
@@ -133,9 +114,7 @@ export function SchoolClientsSettings({
         }
       >
         <ReadBoundary>
-          <ClientsFirstPageContext value={first}>
-            <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
-          </ClientsFirstPageContext>
+          <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
         </ReadBoundary>
         <SchoolClientCreateDialog
           onIssued={setIssuedSecret}
@@ -167,14 +146,12 @@ function SchoolClientTable({
   onIssued: (secret: string) => void;
   slug: TenantSlug;
 }) {
-  const first = use(ClientsFirstPageContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     integrations.clients.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
   const viewer = useViewerQuery();
 

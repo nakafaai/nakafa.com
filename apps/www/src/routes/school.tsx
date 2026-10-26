@@ -3,18 +3,32 @@ import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { textDirection } from "@repo/internationalization/src/direction";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Effect } from "effect";
 import type { ReactElement } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
-import { readSchoolRootFn } from "@/lib/tenant/root.functions";
+import { readSchoolRoot } from "@/lib/tenant/root";
 
 /**
- * The providers of every school page: the school messages of the request's locale
- * with the request instant and the locale time zone, the design system and the
- * toaster. A school address names no locale, so the server negotiates it once here,
- * and the school layout and its boundaries below read the same messages.
+ * Every school document is private: it is never cached, it is not indexed, and
+ * its page depends on the visitor's cookie and language.
+ */
+const SCHOOL_HEADERS = {
+  "cache-control": "private, no-store",
+  "x-robots-tag": "noindex",
+  vary: "Accept-Language, Cookie",
+};
+
+/**
+ * The providers of every school page: the school messages of the visitor's locale
+ * with the browser's instant and the locale time zone, the design system and the
+ * toaster. A school renders only in the browser (ADR 0038 D2): the server sends the
+ * root document with these headers, and the browser negotiates the locale once here,
+ * so the school layout and its boundaries below read the same messages.
  */
 export const Route = createFileRoute("/school")({
-  loader: () => readSchoolRootFn(),
+  ssr: false,
+  headers: () => SCHOOL_HEADERS,
+  loader: () => Effect.runPromise(readSchoolRoot()),
   component: SchoolRoot,
 });
 

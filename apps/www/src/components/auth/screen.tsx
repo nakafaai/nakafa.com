@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody } from "@/components/entry/shell";
-import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
+import type { AuthLegalLinks } from "@/lib/auth/legal";
 
 /**
  * The sign-in body of the main site and of a school host. The page passes its

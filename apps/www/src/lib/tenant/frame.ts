@@ -77,13 +77,6 @@ export function canManageSchool(can: readonly string[]): boolean {
   return Arr.contains(can, "tenant.manage");
 }
 
-/** The unit that a settings page opens first: the school's first active unit, or none when no unit is active. */
-export function firstActiveUnitOf<Unit extends { readonly status: string }>(
-  units: readonly Unit[]
-) {
-  return Arr.findFirst(units, (unit) => unit.status === "active");
-}
-
 /** The first role the viewer holds in the school, or none when the viewer holds no grant. */
 export function roleOf(
   grants: SchoolViewer["grants"]

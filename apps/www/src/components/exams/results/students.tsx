@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   CheckmarkCircle02Icon,
   Clock01Icon,
@@ -20,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { Array as Arr, DateTime, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   useResultsPaper,
@@ -37,16 +36,9 @@ import {
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
-export const STUDENT_PAGE_SIZE = 50;
-
-/** The first page of the students of one sitting, which its loader read on the server. */
-type StudentsFirstPage = Pick<
-  Ref.Returns<typeof exams.results.results.byStudent>,
-  "isDone" | "page"
->;
+const STUDENT_PAGE_SIZE = 50;
 
 /** The copy key of each state of an attempt. */
 const stateKeys = {
@@ -219,10 +211,8 @@ function StudentTable({
  * search that matches no loaded row keeps reading the next page until one matches or the list ends.
  */
 export function StudentsTable({
-  first,
   status,
 }: {
-  first: StudentsFirstPage | undefined;
   /** The state the header's Filter menu chose, which the server reads. */
   status: StatusFilter;
 }) {
@@ -231,12 +221,10 @@ export function StudentsTable({
   const search = useTableFilters((state) => state.search);
   const scope =
     status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
-  // The loader's first page is the page of every student, so a filtered list waits for its own first page.
-  const students = usePaginatedPreloaded(
+  const students = usePaginatedQuery(
     exams.results.results.byStudent,
     settled ? scope : "skip",
-    { initialNumItems: STUDENT_PAGE_SIZE },
-    status === "all" ? Option.fromUndefinedOr(first) : Option.none()
+    { initialNumItems: STUDENT_PAGE_SIZE }
   );
 
   if (

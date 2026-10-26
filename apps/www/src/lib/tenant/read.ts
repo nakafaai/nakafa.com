@@ -14,6 +14,7 @@ import {
 } from "effect";
 import { homeAccess } from "@/components/tenant/home/access";
 import { greetingOf } from "@/components/tenant/home/greeting";
+import { readBrowserSessionToken } from "@/lib/auth/token";
 import { httpLayer } from "@/lib/convex/http";
 import { readSchoolSignInTitle } from "@/lib/tenant/copy";
 import {
@@ -208,4 +209,27 @@ const readOutsiderFrame = Effect.fn("www.tenant.read.outsiderFrame")(function* (
     profile: profile.value,
   };
   return outsider;
+});
+
+/**
+ * Decides a school page in the browser, where every school page renders (ADR 0038
+ * D2): the session's Convex token from the token route of the school's own host,
+ * then the same decision as `readSchoolFrame`. A failed token read fails the
+ * decision, so an outage never looks like a signed-out visitor.
+ */
+export const readBrowserSchoolFrame = Effect.fn(
+  "www.tenant.readBrowserSchoolFrame"
+)(function* (slug: TenantSlug, locale: Locale) {
+  const { cookie, origin } = yield* Effect.sync(() => ({
+    cookie: document.cookie,
+    origin: window.location.origin,
+  }));
+  const token = yield* readBrowserSessionToken(origin, cookie).pipe(
+    Effect.mapError((cause) => new SchoolReadFailed({ cause }))
+  );
+  return yield* readSchoolFrame({
+    locale,
+    slug,
+    token: Option.fromUndefinedOr(token),
+  });
 });

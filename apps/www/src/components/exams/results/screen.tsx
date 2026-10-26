@@ -1,9 +1,9 @@
 import type { GenericId } from "@confect/core";
-import { QueryResult } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
-import { createContext, type ReactNode, use, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
@@ -27,19 +27,7 @@ import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
-import type { readResultsFn } from "@/lib/tenant/exams.functions";
-
-/** The first screen of the results, which the results page's loader read on the server. */
-type ResultsPreload = Partial<
-  Pick<Awaited<ReturnType<typeof readResultsFn>>, "overview" | "students">
->;
-
-/** The first screen of the results, which the page's loader read on the server. */
-const ResultsPreloadContext = createContext<ResultsPreload | undefined>(
-  undefined
-);
 
 /**
  * The results of one sitting for its teacher: the students' list as the page's body, and in its one
@@ -50,12 +38,10 @@ const ResultsPreloadContext = createContext<ResultsPreload | undefined>(
  */
 export function SittingResults({
   examId,
-  preload,
   sittingId,
   slug,
 }: {
   readonly examId: GenericId.GenericId<"exams">;
-  readonly preload: ResultsPreload | undefined;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
@@ -71,9 +57,7 @@ export function SittingResults({
       )}
       read={{ args: scope, ref: exams.results.results.overview }}
     >
-      <ResultsPreloadContext value={preload}>
-        <SittingResultsContent examId={examId} scope={scope} />
-      </ResultsPreloadContext>
+      <SittingResultsContent examId={examId} scope={scope} />
     </ReadBoundary>
   );
 }
@@ -89,12 +73,10 @@ function SittingResultsContent({
     readonly slug: TenantSlug;
   };
 }) {
-  const preload = use(ResultsPreloadContext);
   const settled = useSessionSettled();
-  const overview = usePreloadedQueryResult(
+  const overview = useQuery(
     exams.results.results.overview,
-    settled ? scope : "skip",
-    preload?.overview
+    settled ? scope : "skip"
   );
   const timeZone = QueryResult.isSuccess(overview)
     ? overview.value.sitting.timeZone
@@ -150,7 +132,7 @@ function SittingResultsContent({
             </ResultsHeader>
             <div className="flex min-h-0 w-full min-w-0 flex-1">
               <div className="flex min-w-0 flex-1 flex-col">
-                <StudentsTable first={preload?.students} status={status} />
+                <StudentsTable status={status} />
               </div>
               <StudentAnswersPanel />
             </div>
