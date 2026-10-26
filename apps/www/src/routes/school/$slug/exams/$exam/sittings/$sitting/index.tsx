@@ -22,7 +22,7 @@ export const Route = createFileRoute(
     return { examId: examId.value, sittingId: sittingId.value };
   },
   loader: ({ context }) => {
-    if (!context.firstHtml || context.school._tag !== "Member") {
+    if (context.school._tag !== "Member") {
       return;
     }
     return readSittingDashboardFn({
