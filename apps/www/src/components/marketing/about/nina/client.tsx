@@ -51,16 +51,6 @@ function NinaComposerInput() {
       Deferred.doneUnsafe(sessionKnown, Effect.void);
     }
   }, [isSessionPending, sessionKnown]);
-  // A held send follows the session as the render that knows it reads it, and
-  // a composer that leaves meanwhile drops it.
-  const follow = useRef<(() => void) | null>(followSession);
-  useLayoutEffect(() => {
-    follow.current = followSession;
-    return () => {
-      follow.current = null;
-    };
-  });
-
   /** Loads the live composer for a signed-in session, or asks a visitor to sign in. */
   function followSession() {
     if (isSignedIn) {
@@ -70,6 +60,16 @@ function NinaComposerInput() {
     setHeld(null);
     navigate(authNavigation.readTarget());
   }
+
+  // A held send follows the session as the render that knows it reads it, and
+  // a composer that leaves meanwhile drops it.
+  const follow = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    follow.current = followSession;
+    return () => {
+      follow.current = null;
+    };
+  });
 
   /** Holds a send pressed while the session loads, until the session is known. */
   function hold(message: PromptInputMessage) {
