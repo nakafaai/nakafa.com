@@ -30,7 +30,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { getRouteApi } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -55,8 +55,8 @@ import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
 import type { ReportLine } from "@/components/tenant/reports/change";
+import { checkAddress } from "@/components/tenant/reports/check";
 import {
-  checkAddress,
   ReportLineDetail,
   ReportNoteDialog,
   useReportActions,
@@ -242,14 +242,10 @@ function CohortReportsBody() {
 function ReportLineMenu({ line }: { line: ReportLine }) {
   const t = useTranslations("SchoolReports");
   const common = useTranslations("Common");
-  const locale = useLocale();
-  const actions = useReportActions();
   const [isWriting, setIsWriting] = useState(false);
-  const { report } = line;
   const menu = menuOf(line);
-  if (
-    !(menu.write || menu.complete || menu.reopen || menu.approve || menu.open)
-  ) {
+
+  if (!Rec.some(menu, (shown) => shown)) {
     return null;
   }
 
@@ -274,43 +270,67 @@ function ReportLineMenu({ line }: { line: ReportLine }) {
               {t("write")}
             </DropdownMenuItem>
           ) : null}
-          {menu.complete && report !== null ? (
-            <DropdownMenuItem onClick={() => actions.complete(report.id)}>
-              <HugeIcons icon={SentIcon} />
-              {t("complete")}
-            </DropdownMenuItem>
-          ) : null}
-          {menu.reopen && report !== null ? (
-            <DropdownMenuItem onClick={() => actions.reopen(report.id)}>
-              <HugeIcons icon={ArrowTurnBackwardIcon} />
-              {t("reopen")}
-            </DropdownMenuItem>
-          ) : null}
-          {menu.approve && report !== null ? (
-            <DropdownMenuItem onClick={() => actions.approve(report.id)}>
-              <HugeIcons icon={CheckmarkCircle02Icon} />
-              {t("approve")}
-            </DropdownMenuItem>
-          ) : null}
-          {menu.open && report !== null && report.hash !== null ? (
-            <DropdownMenuItem
-              render={
-                <a
-                  href={checkAddress(locale, report.hash)}
-                  rel="noopener"
-                  target="_blank"
-                >
-                  <HugeIcons icon={CheckmarkBadge01Icon} />
-                  {t("open-check")}
-                </a>
-              }
-            />
-          ) : null}
+          {line.report === null ? null : (
+            <ReportStateItems menu={menu} report={line.report} />
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       {menu.write ? (
         <ReportNoteDialog line={line} open={isWriting} setOpen={setIsWriting} />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The row menu's items on a report that exists: hand in a draft, take back or approve a
+ * handed-in report, and open the check page of a locked one.
+ */
+function ReportStateItems({
+  menu,
+  report,
+}: {
+  menu: ReturnType<typeof menuOf>;
+  report: NonNullable<ReportLine["report"]>;
+}) {
+  const t = useTranslations("SchoolReports");
+  const locale = useLocale();
+  const actions = useReportActions();
+
+  return (
+    <>
+      {menu.complete ? (
+        <DropdownMenuItem onClick={() => actions.complete(report.id)}>
+          <HugeIcons icon={SentIcon} />
+          {t("complete")}
+        </DropdownMenuItem>
+      ) : null}
+      {menu.reopen ? (
+        <DropdownMenuItem onClick={() => actions.reopen(report.id)}>
+          <HugeIcons icon={ArrowTurnBackwardIcon} />
+          {t("reopen")}
+        </DropdownMenuItem>
+      ) : null}
+      {menu.approve ? (
+        <DropdownMenuItem onClick={() => actions.approve(report.id)}>
+          <HugeIcons icon={CheckmarkCircle02Icon} />
+          {t("approve")}
+        </DropdownMenuItem>
+      ) : null}
+      {menu.open && report.hash !== null ? (
+        <DropdownMenuItem
+          render={
+            <a
+              href={checkAddress(locale, report.hash)}
+              rel="noopener"
+              target="_blank"
+            >
+              <HugeIcons icon={CheckmarkBadge01Icon} />
+              {t("open-check")}
+            </a>
+          }
+        />
+      ) : null}
+    </>
   );
 }

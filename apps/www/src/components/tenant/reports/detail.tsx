@@ -23,9 +23,8 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { SITE_ORIGIN } from "@repo/seo/origin";
 import { getRouteApi } from "@tanstack/react-router";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
@@ -44,6 +43,7 @@ import {
   stateChange,
   writeChange,
 } from "@/components/tenant/reports/change";
+import { checkAddress } from "@/components/tenant/reports/check";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
@@ -51,10 +51,6 @@ const SOURCE = "components/tenant/reports/detail";
 
 /** The route of one class group's report cards, whose context holds the class group's ID. */
 const cohortRoute = getRouteApi("/school/$slug/reports/$cohortId");
-
-/** The public check page of a locked report, on the main site, in the viewer's language. */
-export const checkAddress = (locale: string, hash: string) =>
-  new URL(`/${locale}/verify/${hash}`, SITE_ORIGIN).href;
 
 /**
  * Hands a report in, takes it back, or approves it, each shown at once on the list and
@@ -191,15 +187,10 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
  */
 function ReportDetailFooter({ line }: { line: ReportLine }) {
   const t = useTranslations("SchoolReports");
-  const locale = useLocale();
-  const actions = useReportActions();
   const [isWriting, setIsWriting] = useState(false);
   const menu = menuOf(line);
-  const { report } = line;
 
-  if (
-    !(menu.write || menu.complete || menu.reopen || menu.approve || menu.open)
-  ) {
+  if (!Rec.some(menu, (shown) => shown)) {
     return null;
   }
 
@@ -215,7 +206,34 @@ function ReportDetailFooter({ line }: { line: ReportLine }) {
           {t("write")}
         </Button>
       ) : null}
-      {menu.reopen && report !== null ? (
+      {line.report === null ? null : (
+        <ReportStateButtons menu={menu} report={line.report} />
+      )}
+      {menu.write ? (
+        <ReportNoteDialog line={line} open={isWriting} setOpen={setIsWriting} />
+      ) : null}
+    </PaneFooter>
+  );
+}
+
+/**
+ * The actions on a report that exists: hand in a draft, take back or approve a handed-in
+ * report, and open the check page and the PDF of a locked one.
+ */
+function ReportStateButtons({
+  menu,
+  report,
+}: {
+  menu: ReturnType<typeof menuOf>;
+  report: NonNullable<ReportLine["report"]>;
+}) {
+  const t = useTranslations("SchoolReports");
+  const locale = useLocale();
+  const actions = useReportActions();
+
+  return (
+    <>
+      {menu.reopen ? (
         <Button
           onClick={() => actions.reopen(report.id)}
           type="button"
@@ -225,19 +243,19 @@ function ReportDetailFooter({ line }: { line: ReportLine }) {
           {t("reopen")}
         </Button>
       ) : null}
-      {menu.complete && report !== null ? (
+      {menu.complete ? (
         <Button onClick={() => actions.complete(report.id)} type="button">
           <HugeIcons icon={SentIcon} />
           {t("complete")}
         </Button>
       ) : null}
-      {menu.approve && report !== null ? (
+      {menu.approve ? (
         <Button onClick={() => actions.approve(report.id)} type="button">
           <HugeIcons icon={CheckmarkCircle02Icon} />
           {t("approve")}
         </Button>
       ) : null}
-      {menu.open && report !== null && report.hash !== null ? (
+      {menu.open && report.hash !== null ? (
         <Button
           render={
             <a
@@ -252,13 +270,8 @@ function ReportDetailFooter({ line }: { line: ReportLine }) {
           variant="outline"
         />
       ) : null}
-      {menu.open && report !== null ? (
-        <ReportFileButton reportId={report.id} />
-      ) : null}
-      {menu.write ? (
-        <ReportNoteDialog line={line} open={isWriting} setOpen={setIsWriting} />
-      ) : null}
-    </PaneFooter>
+      {menu.open ? <ReportFileButton reportId={report.id} /> : null}
+    </>
   );
 }
 
