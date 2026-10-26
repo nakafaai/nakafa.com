@@ -43,6 +43,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
@@ -105,7 +106,7 @@ function SchoolBillingBody({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
-      <SchoolPlanCard billing={overview.value} slug={slug} />
+      <SchoolPlanCard billing={overview.value} />
       <SchoolInvoicesCard billing={overview.value} />
     </>
   );
@@ -116,13 +117,7 @@ function SchoolBillingBody({ slug }: { slug: TenantSlug }) {
  * its grant ends, with its students, and the action that pays for the students not
  * paid for yet when there are any.
  */
-function SchoolPlanCard({
-  billing: overview,
-  slug,
-}: {
-  billing: SchoolBilling;
-  slug: TenantSlug;
-}) {
+function SchoolPlanCard({ billing: overview }: { billing: SchoolBilling }) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
   const [isChoosing, setIsChoosing] = useState(false);
@@ -187,7 +182,6 @@ function SchoolPlanCard({
           billing={overview}
           open={isChoosing}
           setOpen={setIsChoosing}
-          slug={slug}
         />
       ) : null}
     </CardSection>
@@ -204,13 +198,12 @@ function SchoolTermDialog({
   billing: overview,
   open,
   setOpen,
-  slug,
 }: {
   billing: SchoolBilling;
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const locale = useLocale();

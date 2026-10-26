@@ -31,7 +31,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { gradeItems } from "@/components/tenant/settings/choices";
@@ -110,7 +110,7 @@ export function SchoolCohortsSettings({
           )}
           read={{ args: { slug }, ref: tenancy.viewer.get }}
         >
-          <SchoolCohortsContent slug={slug} />
+          <SchoolCohortsContent />
         </ReadBoundary>
       </CohortsPreloadContext>
     </TableFiltersProvider>
@@ -118,7 +118,7 @@ export function SchoolCohortsSettings({
 }
 
 /** The cohorts of the school's active unit, once the viewer's units are in. */
-function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
+function SchoolCohortsContent() {
   const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
 
@@ -148,7 +148,7 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
     <CohortsUnitContext
       value={{ onChoose: setChosenUnit, unitId: unit.id, units }}
     >
-      <SchoolCohortsOfUnit slug={slug} />
+      <SchoolCohortsOfUnit />
     </CohortsUnitContext>
   );
 }
@@ -158,7 +158,8 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
  * state, which links to the periods, and no add action, because a cohort belongs to a period.
  * A failed read of the active period shows its own sentence and Try again.
  */
-function SchoolCohortsOfUnit({ slug }: { slug: TenantSlug }) {
+function SchoolCohortsOfUnit() {
+  const { slug } = useTenant();
   const { unitId } = useCohortsUnit();
 
   return (

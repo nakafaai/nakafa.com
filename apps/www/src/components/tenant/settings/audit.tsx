@@ -25,6 +25,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -67,10 +68,8 @@ const AuditPreloadContext = createContext<AuditPreload | undefined>(undefined);
  */
 export function SchoolAuditSettings({
   preload,
-  slug,
 }: {
   preload: AuditPreload | undefined;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
 
@@ -80,14 +79,14 @@ export function SchoolAuditSettings({
         actions={
           <>
             <TableSearch placeholder={t("audit-search")} />
-            <AuditFilter people={preload?.people} slug={slug} />
-            <AuditExport slug={slug} />
+            <AuditFilter people={preload?.people} />
+            <AuditExport />
           </>
         }
       >
         <ReadBoundary>
           <AuditPreloadContext value={preload}>
-            <SchoolAuditBody slug={slug} />
+            <SchoolAuditBody />
           </AuditPreloadContext>
         </ReadBoundary>
       </SettingsTablePage>
@@ -102,11 +101,10 @@ export function SchoolAuditSettings({
  */
 function AuditFilter({
   people: preloaded,
-  slug,
 }: {
   people: AuditPreload["people"] | undefined;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const people = usePreloadedQueryResult(
     journal.audit.actors,
@@ -141,7 +139,8 @@ function AuditFilter({
  * view. The rows hold no policy value and no secret, so the page shows none. The body waits for the first page, and an empty school shows the empty
  * state alone.
  */
-function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
+function SchoolAuditBody() {
+  const { slug } = useTenant();
   const preload = use(AuditPreloadContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -287,7 +286,8 @@ const exportAuditTrail = Effect.fn("tenant.audit.export")(
  * The audit's main action: the school's whole trail as a CSV file that the school can keep or hand
  * to an inspector. The button waits while the file is made.
  */
-function AuditExport({ slug }: { slug: TenantSlug }) {
+function AuditExport() {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const words = useEntryWords();
   const [isPending, startTransition] = useTransition();

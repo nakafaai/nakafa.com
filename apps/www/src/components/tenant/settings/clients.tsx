@@ -13,7 +13,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -40,7 +39,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
@@ -77,6 +76,20 @@ const ClientsFirstPageContext = createContext<ClientsFirstPage | undefined>(
   undefined
 );
 
+/** Shows a secret the server issued once, which the page's secret dialog holds. */
+const SecretIssueContext = createContext<((secret: string) => void) | null>(
+  null
+);
+
+/** Reads what shows an issued secret. It throws outside the clients page, which always provides it. */
+function useIssueSecret() {
+  const issue = use(SecretIssueContext);
+  if (issue === null) {
+    throw new Error("useIssueSecret must be used within SchoolClientsSettings");
+  }
+  return issue;
+}
+
 /**
  * Renders the integration clients of the school, each with the part of the school it
  * covers, in a data table with Create client in the header. A client is created, rotated
@@ -84,10 +97,8 @@ const ClientsFirstPageContext = createContext<ClientsFirstPage | undefined>(
  */
 export function SchoolClientsSettings({
   first,
-  slug,
 }: {
   first: ClientsFirstPage | undefined;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
@@ -134,14 +145,15 @@ export function SchoolClientsSettings({
       >
         <ReadBoundary>
           <ClientsFirstPageContext value={first}>
-            <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+            <SecretIssueContext value={setIssuedSecret}>
+              <SchoolClientTable />
+            </SecretIssueContext>
           </ClientsFirstPageContext>
         </ReadBoundary>
         <SchoolClientCreateDialog
           onIssued={setIssuedSecret}
           open={isCreating}
           setOpen={setIsCreating}
-          slug={slug}
         />
         <SchoolSecretDialog
           description={t("client-secret-description")}
@@ -160,13 +172,8 @@ export function SchoolClientsSettings({
  * the school has no client. The table waits for its first page, so no empty state shows
  * before the rows arrive.
  */
-function SchoolClientTable({
-  onIssued,
-  slug,
-}: {
-  onIssued: (secret: string) => void;
-  slug: TenantSlug;
-}) {
+function SchoolClientTable() {
+  const { slug } = useTenant();
   const first = use(ClientsFirstPageContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -224,11 +231,7 @@ function SchoolClientTable({
     clientColumns.display({
       cell: (info) =>
         info.row.original.status === "active" ? (
-          <SchoolClientMenu
-            client={info.row.original}
-            onIssued={onIssued}
-            slug={slug}
-          />
+          <SchoolClientMenu client={info.row.original} />
         ) : null,
       id: "actions",
     }),
@@ -255,15 +258,9 @@ function SchoolClientTable({
  * answers once, and revoking asks first behind a confirmation. The rotate item is disabled
  * while its request runs. A revoked client has no menu, so its cell stays empty.
  */
-function SchoolClientMenu({
-  client,
-  onIssued,
-  slug,
-}: {
-  client: ClientItem;
-  onIssued: (secret: string) => void;
-  slug: TenantSlug;
-}) {
+function SchoolClientMenu({ client }: { client: ClientItem }) {
+  const { slug } = useTenant();
+  const issueSecret = useIssueSecret();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const rotate = useMutation(integrations.clients.rotate);
@@ -295,7 +292,7 @@ function SchoolClientMenu({
                 saveSchool(
                   () => rotate({ clientId: client.id, slug }),
                   SOURCE,
-                  (issued) => onIssued(issued.secret)
+                  (issued) => issueSecret(issued.secret)
                 )
               )
             }
