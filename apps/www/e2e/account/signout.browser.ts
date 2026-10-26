@@ -157,7 +157,7 @@ const signsOutOfAChat = Effect.fn("NakafaE2E.signsOutOfAChat")(function* (
     await page.route(
       (url) => url.pathname === "/en",
       async (route) => {
-        await Effect.runPromise(Effect.sleep("3 seconds"));
+        await page.waitForTimeout(3000);
         await route.continue();
       }
     );
