@@ -3,6 +3,9 @@ import { expect, test } from "@playwright/test";
 /** The window list of the CSS properties the page registered. */
 const REGISTERED = "nakafaRegisteredProperties";
 
+/** A price's text holds digits. */
+const DIGIT = /\d/;
+
 /** The prefix of the CSS properties that an animated number registers. */
 const NUMBER_FLOW = "--_number-flow";
 
@@ -31,7 +34,7 @@ test("the home draws its prices as text and loads no animated number", async ({
   const price = pricing.locator('[data-pricing-price-slot="pro"]');
   // The visitor's currency is the branch that shows.
   await expect(
-    price.locator("span:visible").filter({ hasText: /\d/ }).first()
+    price.locator("span:visible").filter({ hasText: DIGIT }).first()
   ).toBeVisible();
   await expect(pricing.locator("number-flow-react")).toHaveCount(0);
 
