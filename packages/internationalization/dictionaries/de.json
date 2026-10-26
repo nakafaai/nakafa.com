@@ -480,6 +480,7 @@
     "audit-change": "Änderung",
     "audit-empty": "Noch hat sich nichts geändert.",
     "audit-search": "Änderung suchen",
+    "audit-export": "Exportieren",
     "audit-operator": "Nakafa-Team",
     "audit-system": "System",
     "audit-label": {
@@ -1997,6 +1998,10 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "audit-export-error": {
+      "title": "Das Protokoll konnte nicht exportiert werden.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
     }
   },
   "Ai": {

@@ -480,6 +480,7 @@
     "audit-change": "Change",
     "audit-empty": "Nothing has changed yet.",
     "audit-search": "Find a change",
+    "audit-export": "Export",
     "audit-operator": "Nakafa staff",
     "audit-system": "System",
     "audit-label": {
@@ -1997,6 +1998,10 @@
     "import-encrypted": {
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
+    },
+    "audit-export-error": {
+      "title": "We could not export the trail.",
+      "description": "Check your connection, then try again."
     }
   },
   "Ai": {
