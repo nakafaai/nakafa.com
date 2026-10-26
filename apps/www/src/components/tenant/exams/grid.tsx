@@ -3,11 +3,11 @@ import {
   Copy01Icon,
   Delete02Icon,
 } from "@hugeicons/core-free-icons";
+import { useHotkeys } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useHotkeys } from "@mantine/hooks";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { type KeyboardEvent, useRef, useState } from "react";
