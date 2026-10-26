@@ -1,21 +1,9 @@
 import { StudentIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
-import {
-  COHORT_GRADE_MAX,
-  COHORT_GRADE_MIN,
-  CohortStatus,
-} from "@repo/backend/confect/tenancy/cohort";
+import { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { TableFilter } from "@/components/shared/table/toolbar";
-
-/** The school years a cohort may hold, as the grade choices of its dialog and of its filter. */
-export const gradeItems = Arr.makeBy(
-  COHORT_GRADE_MAX - COHORT_GRADE_MIN + 1,
-  (index) => {
-    const grade = String(COHORT_GRADE_MIN + index);
-    return { label: grade, value: grade };
-  }
-);
+import { gradeItems } from "@/components/tenant/settings/choices";
 
 /** The cohorts' Filter menu, in the header row of the cohorts page: by school year and by status. */
 export function CohortFilter() {

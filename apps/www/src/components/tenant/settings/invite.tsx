@@ -34,7 +34,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useViewerQuery } from "@/components/tenant/context";
-import { roleIcon } from "@/components/tenant/role";
+import { roleIcon } from "@/components/tenant/roles";
 import { addMemberChange } from "@/components/tenant/settings/accounts";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save";
