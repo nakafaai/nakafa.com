@@ -4,7 +4,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -167,13 +167,35 @@ function ClassPage({
     ],
   });
   const canGrade = Arr.contains(klass.can, "grade.list");
-  const gradesPath = [classItem, { label: t("tabs-grades") }];
-  const path =
-    tab === "home"
-      ? [{ label: klass.name }]
-      : tab === "grades"
-        ? gradesPath
-        : forumPath;
+  const path = Match.value(tab).pipe(
+    Match.when("home", () => [{ label: klass.name }]),
+    Match.when("grades", () => [classItem, { label: t("tabs-grades") }]),
+    Match.orElse(() => forumPath)
+  );
+
+  const body = Match.value(tab).pipe(
+    Match.when("grades", () => (
+      <ClassGradebook classId={klass.id} slug={slug} />
+    )),
+    Match.orElse(() =>
+      Option.isSome(shown) ? (
+        <ForumChannel
+          canManage={canManageForum}
+          canPost={Arr.contains(klass.can, "forum.post")}
+          channelId={shown.value}
+          classId={klass.id}
+          slug={slug}
+        />
+      ) : (
+        <ChannelList
+          classId={klass.id}
+          drafts={drafts}
+          first={Option.fromUndefinedOr(preload?.channels)}
+          slug={slug}
+        />
+      )
+    )
+  );
 
   return (
     <>
@@ -184,24 +206,7 @@ function ClassPage({
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
-        {tab === "grades" ? (
-          <ClassGradebook classId={klass.id} slug={slug} />
-        ) : Option.isSome(shown) ? (
-          <ForumChannel
-            canManage={canManageForum}
-            canPost={Arr.contains(klass.can, "forum.post")}
-            channelId={shown.value}
-            classId={klass.id}
-            slug={slug}
-          />
-        ) : (
-          <ChannelList
-            classId={klass.id}
-            drafts={drafts}
-            first={Option.fromUndefinedOr(preload?.channels)}
-            slug={slug}
-          />
-        )}
+        {body}
       </LayoutContent>
     </>
   );
