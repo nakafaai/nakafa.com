@@ -6,12 +6,14 @@ import {
 } from "@repo/backend/confect/integrations/api";
 import {
   Array as Arr,
+  Effect,
   Option,
   Record as Rec,
   Schema,
   String as Str,
   Tuple,
 } from "effect";
+import { HttpBody } from "effect/http";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 
 /**
@@ -76,6 +78,24 @@ export function schoolApiTarget(
       )
   );
 }
+
+/**
+ * The body of a forwarded request: a POST's bytes, sent as they came with the media type
+ * they came with, or none. Effect's client sends a body's own media type as the request's
+ * `content-type`, so the forwarded header alone would be replaced by
+ * `application/octet-stream`, and the token endpoint would refuse a form.
+ */
+export const forwardedBody = (request: Request) =>
+  request.method === "POST"
+    ? Effect.map(
+        Effect.promise(() => request.arrayBuffer()),
+        (bytes) =>
+          HttpBody.uint8Array(
+            new Uint8Array(bytes),
+            request.headers.get("content-type") ?? undefined
+          )
+      )
+    : Effect.succeed(HttpBody.empty);
 
 /** The headers of a forwarded request: the ones the API reads, and never a cookie. */
 export function forwardedRequestHeaders(headers: Headers) {
