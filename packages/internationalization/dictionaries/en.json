@@ -251,7 +251,6 @@
     "edit-action": "Edit exam",
     "rooms-empty": "No rooms yet",
     "rooms-empty-description": "Each room appears here once the exam is scheduled.",
-    "rooms-empty-action": "Open the exam",
     "rooms-filter-empty": "No room is in this state",
     "rooms-filter-empty-description": "Choose another state to see the other rooms.",
     "rooms-unavailable": "You cannot view the rooms of this exam.",
