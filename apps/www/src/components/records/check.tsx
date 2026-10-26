@@ -19,7 +19,7 @@ export function ReportCheck({ answer }: { answer: CheckAnswer }) {
   if (answer.outcome === "unknown") {
     return (
       <EntryShellBody>
-        <Nina act="searching" size={96} />
+        <Nina act="searching" label="" size={96} whole />
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="font-semibold text-xl">{t("unknown")}</h1>
           <p className="text-muted-foreground">{t("unknown-description")}</p>
@@ -29,7 +29,7 @@ export function ReportCheck({ answer }: { answer: CheckAnswer }) {
   }
   return (
     <EntryShellBody>
-      <Nina act="waving" size={96} />
+      <Nina act="waving" label="" size={96} whole />
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="font-semibold text-xl">{t("locked")}</h1>
         <p className="text-muted-foreground">{t("locked-description")}</p>

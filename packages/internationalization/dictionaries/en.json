@@ -509,6 +509,9 @@
       "scheme": {
         "stored": "Grading scheme version added"
       },
+      "report": {
+        "locked": "Report card locked"
+      },
       "cohort": {
         "created": "Cohort added",
         "renamed": "Cohort renamed",

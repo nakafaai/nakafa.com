@@ -509,6 +509,9 @@
       "scheme": {
         "stored": "Notenschema-Version hinzugefügt"
       },
+      "report": {
+        "locked": "Zeugnis gesperrt"
+      },
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",

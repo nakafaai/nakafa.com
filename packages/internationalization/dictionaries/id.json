@@ -509,6 +509,9 @@
       "scheme": {
         "stored": "Versi skema nilai ditambahkan"
       },
+      "report": {
+        "locked": "Rapor dikunci"
+      },
       "cohort": {
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",

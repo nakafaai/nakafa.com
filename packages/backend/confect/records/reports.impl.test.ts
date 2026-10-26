@@ -1,7 +1,10 @@
 import type { GenericId } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   classOf,
   cohort,
@@ -17,7 +20,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Exit, Struct } from "effect";
 
 /** A report hash: 64 lowercase hex digits. */
 const HASH = /^[0-9a-f]{64}$/;
@@ -28,6 +31,7 @@ const WEB_ADDRESS = /^https?:\/\//;
 const reports = refs.public.records.reports;
 const grades = refs.public.records.grades;
 const checks = refs.public.records.checks;
+const prints = refs.internal.records.prints;
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
@@ -248,6 +252,81 @@ describe("records/reports", () => {
           })
         ).toEqual({ outcome: "unknown" });
       })
+  );
+
+  it.effect(
+    "puts the cohort's released grades on a report in the order of the class names, each judged by its own scheme, and no grade of another cohort's class",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { cohortId, student } = yield* setup(fixture);
+        yield* fixture.as("admin").mutation(refs.public.records.schemes.store, {
+          bands: [{ label: "Baik", minimum: 80 }],
+          effectiveFrom: TENANCY_NOW,
+          kktp: 75,
+          slug: nf,
+        });
+        const biologi = yield* classOf(fixture, cohortId, "Biologi");
+        yield* teach(fixture, biologi.id, fixture.people.teacher.personId);
+        const grade = yield* fixture.as("teacher").mutation(grades.enter, {
+          classId: biologi.id,
+          personId: student,
+          slug: nf,
+          value: 90,
+        });
+        yield* fixture
+          .as("teacher")
+          .mutation(grades.release, { gradeId: grade.id, slug: nf });
+        const { periodId } = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantCohorts").get(cohortId).pipe(Effect.orDie)
+          )
+        );
+        const x2 = yield* cohort(fixture, periodId, "X-2");
+        const kimia = yield* classOf(fixture, x2.id, "Kimia");
+        // A grade the student kept from a class of the cohort they left.
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const released = yield* (yield* DatabaseReader)
+              .table("classGrades")
+              .get(grade.id)
+              .pipe(Effect.orDie);
+            yield* (yield* DatabaseWriter)
+              .table("classGrades")
+              .insert(
+                Struct.assign(Struct.omit(released, ["_creationTime", "_id"]), {
+                  classId: kimia.id,
+                })
+              )
+              .pipe(Effect.orDie);
+          })
+        );
+        const draft = yield* writeNote(fixture, cohortId, student, "Rajin.");
+        const detail = yield* fixture
+          .as("teacher")
+          .query(reports.get, { reportId: draft.id, slug: nf });
+        expect(detail.subjects).toEqual([
+          {
+            band: "Baik",
+            className: "Biologi X-1",
+            kktp: "reached",
+            value: 90,
+          },
+          { className: "Fisika X-1", kktp: "reached", value: 82 },
+        ]);
+      })
+  );
+
+  it.effect("draws no print of a report that is not approved", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { cohortId, student } = yield* setup(fixture);
+      const draft = yield* writeNote(fixture, cohortId, student, "Rajin.");
+      const exit = yield* Effect.exit(
+        fixture.internal.query(prints.printable, { reportId: draft.id })
+      );
+      expect(Exit.hasDies(exit)).toBe(true);
+    })
   );
 
   it.effect(

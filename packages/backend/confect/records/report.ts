@@ -9,7 +9,7 @@ import { Schema } from "effect";
  * they hand it in, `approved` while its PDF is drawn after the principal's approval,
  * and `locked` once the PDF and its hash are stored (ADR 0033, S4 and S5).
  */
-export const ReportState = Schema.Literals([
+const ReportState = Schema.Literals([
   "draft",
   "completed",
   "approved",
