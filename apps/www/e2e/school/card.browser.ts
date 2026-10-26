@@ -108,10 +108,12 @@ test("a signed-in learner who is not a member of an existing school sees the out
 
   expect(response?.status()).toBe(200);
   await expect(
-    page.getByRole("heading", { name: "Not a member" })
+    page.getByRole("heading", { name: `Not a member of ${school.name}` })
   ).toBeVisible();
   await expect(
-    page.getByText(`Acceptance Learner is not a member of ${school.name}.`)
+    page.getByText(
+      "You are signed in as Acceptance Learner, which has no invite here yet."
+    )
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Switch account" })

@@ -73,10 +73,9 @@
     "card-used": "Kartu ini sudah dipakai. Minta kartu baru ke guru atau admin.",
     "failed": "Gagal masuk. Coba lagi.",
     "outsider-card": "Masuk dengan kartu",
-    "outsider-description": "{account} bukan anggota {school}.",
-    "outsider-card-hint": "Alamat tanpa Google? Tanyakan kepada admin sekolah cara kamu masuk.",
+    "outsider-description": "Kamu masuk sebagai {account}, yang belum punya undangan di sini.",
     "outsider-switch": "Ganti akun",
-    "outsider-title": "Bukan anggota",
+    "outsider-title": "Bukan anggota {school}",
     "password-label": "Kata sandi",
     "password-too-long": "Kata sandi terlalu panjang.",
     "password-too-short": "Kata sandi terlalu pendek.",
@@ -85,7 +84,6 @@
     "submit": "Masuk",
     "username-action": "Masuk dengan username",
     "username-label": "Username sekolah",
-    "outsider-hint": "Jika admin mengundang alamat ini, undangan mungkin butuh waktu untuk muncul. Periksa lagi, atau minta admin mengirimnya ulang. Jika undangan dikirim ke alamat lain, masuk dengan alamat itu.",
     "outsider-check-again": "Periksa lagi"
   },
   "SchoolGuardians": {

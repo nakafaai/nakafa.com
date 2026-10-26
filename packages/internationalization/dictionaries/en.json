@@ -73,10 +73,9 @@
     "card-used": "This card was already used. Ask your teacher or admin for a new card.",
     "failed": "Signing in failed. Try again.",
     "outsider-card": "Sign in with a card",
-    "outsider-description": "{account} is not a member of {school}.",
-    "outsider-card-hint": "Not a Google address? Ask your school's admin how you sign in.",
+    "outsider-description": "You are signed in as {account}, which has no invite here yet.",
     "outsider-switch": "Switch account",
-    "outsider-title": "Not a member",
+    "outsider-title": "Not a member of {school}",
     "password-label": "Password",
     "password-too-long": "The password is too long.",
     "password-too-short": "The password is too short.",
@@ -85,7 +84,6 @@
     "submit": "Sign in",
     "username-action": "Sign in with a username",
     "username-label": "School username",
-    "outsider-hint": "If an admin invited this address, the invite can take a moment to appear. Check again, or ask an admin to send it again. If the invite went to another address, sign in with that one.",
     "outsider-check-again": "Check again"
   },
   "SchoolGuardians": {
