@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
+  claimAfterHostedDomain,
   claimAfterInvite,
   claimAfterVerification,
 } from "@repo/backend/confect/tenancy/claims";
@@ -83,6 +84,44 @@ describe("tenancy/claims after verification", () => {
       );
       expect(yield* fixture.run(claimJobs)).toEqual([]);
     })
+  );
+});
+
+describe("tenancy/claims after a hosted domain", () => {
+  const domain = "harapan.example.test";
+
+  it.effect(
+    "schedules the claim when a Google sign-in brings a new hosted domain and an invite waits for the address",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const account = yield* fixture.account("guru", address, true);
+        yield* fixture.run(invitePerson(fixture.tenants.nf, address));
+        yield* fixture.run(
+          claimAfterHostedDomain(account.authUserId, domain, null)
+        );
+        expect(yield* fixture.run(claimJobs)).toEqual([
+          [{ cursor: null, userId: account.userId }],
+        ]);
+      })
+  );
+
+  it.effect(
+    "schedules nothing for a sign-in without a hosted domain, with the domain the account held, or for an account Nakafa does not hold",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const account = yield* fixture.account("guru", address, true);
+        yield* fixture.run(invitePerson(fixture.tenants.nf, address));
+        yield* fixture.run(
+          Effect.all([
+            claimAfterHostedDomain(account.authUserId, null, undefined),
+            claimAfterHostedDomain(account.authUserId, domain, domain),
+            claimAfterHostedDomain("unknown-auth-user", domain, undefined),
+          ])
+        );
+        expect(yield* fixture.run(claimJobs)).toEqual([]);
+      })
   );
 });
 

@@ -364,7 +364,7 @@
     "policy-threads": "Thread siswa",
     "policy-threads-description": "Siswa boleh membuka thread di sekolah ini.",
     "policy-domains": "Domain email",
-    "policy-domains-description": "Hanya alamat pada domain ini yang boleh bergabung dengan sekolah ini.",
+    "policy-domains-description": "Hanya akun Google Workspace pada domain ini yang boleh bergabung dengan sekolah ini.",
     "policy-domains-placeholder": "sekolah.sch.id",
     "policy-domains-footer": "Daftar kosong menerima setiap alamat.",
     "save": "Simpan",

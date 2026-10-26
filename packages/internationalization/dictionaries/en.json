@@ -364,7 +364,7 @@
     "policy-threads": "Student threads",
     "policy-threads-description": "Students may open threads in this school.",
     "policy-domains": "Email domains",
-    "policy-domains-description": "Only addresses on these domains may join this school.",
+    "policy-domains-description": "Only Google Workspace accounts on these domains may join this school.",
     "policy-domains-placeholder": "sekolah.sch.id",
     "policy-domains-footer": "An empty list admits every address.",
     "save": "Save",

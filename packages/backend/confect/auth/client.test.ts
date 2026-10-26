@@ -21,14 +21,18 @@ const INVITE_TERM_MS = Duration.toMillis(INVITE_TERM);
 const claimRun = Ref.getFunctionReference(refs.internal.tenancy.claims.run);
 const claimName = getFunctionName(claimRun);
 
-/** A pending invite for this address, in a tenant with one Person nobody has claimed. */
-async function seedInvite(ctx: MutationCtx, email: string) {
+/** A pending invite for this address, in a tenant with one Person nobody has claimed and these email domains. */
+async function seedInvite(
+  ctx: MutationCtx,
+  email: string,
+  emailDomains: readonly string[] = []
+) {
   const tenantId = await ctx.db.insert("tenants", {
     country: "ID",
     currency: "IDR",
     kind: "school",
     name: "Sekolah Harapan",
-    policies: { emailDomains: [], nina: false, studentThreads: false },
+    policies: { emailDomains: [...emailDomains], nina: false, studentThreads: false },
     slug: "harapan",
     status: "active",
   });
@@ -389,6 +393,29 @@ describe("auth/client", () => {
       test.query((ctx) => ctx.db.get("tenantPeople", personId))
     ).resolves.toMatchObject({
       account: { method: "invite", state: "claimed", userId: user._id },
+    });
+  });
+  it("lets a Google Workspace sign-in of the school's email domain claim its invite, and no personal Google sign-in", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const email = "guru@harapan.example.test";
+    const { personId } = await test.mutation((ctx) =>
+      seedInvite(ctx, email, ["harapan.example.test"])
+    );
+    const person = () =>
+      test.query((ctx) => ctx.db.get("tenantPeople", personId));
+    await signInWithGoogle(test, "guru", NOW, { email });
+    await test.finishAllScheduledFunctions(vi.runAllTimers);
+    await expect(person()).resolves.toMatchObject({
+      account: { state: "unclaimed" },
+    });
+    vi.setSystemTime(NOW + 1000);
+    await signInWithGoogle(test, "guru", NOW + 1000, {
+      email,
+      hd: "harapan.example.test",
+    });
+    await test.finishAllScheduledFunctions(vi.runAllTimers);
+    await expect(person()).resolves.toMatchObject({
+      account: { method: "invite", state: "claimed" },
     });
   });
   it("claims nothing for a sign-up that no invite waits for", async () => {

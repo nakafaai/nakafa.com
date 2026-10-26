@@ -55,6 +55,7 @@ export const tables = {
     password: v.optional(v.union(v.null(), v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
+    hostedDomain: v.optional(v.union(v.null(), v.string())),
   })
     .index("accountId", ["accountId"])
     .index("accountId_providerId", ["accountId", "providerId"])

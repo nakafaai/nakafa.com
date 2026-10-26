@@ -71,6 +71,15 @@ connection.
   hooks, so one rule covers every path. The one place outside the table that
   could hold the tokens, the account cookie, is off, because Better Auth turns
   it on only when no database is configured.
+- The same hooks keep one claim of the ID token before they drop it: the
+  hosted domain (`hd`), which only a Google Workspace account carries. A write
+  that carries an ID token stores its hosted domain on the account as
+  `hostedDomain`, lowercase, or null for a token without one, as a personal
+  Google account's token is; a write without one, such as a token refresh,
+  leaves it as it is. The token comes from Google's token endpoint during the
+  sign-in that writes it, so its payload is read without its signature, as
+  Better Auth reads the profile in it. The School Sign-In section says what
+  reads it.
 - `/get-access-token`, `/account-info` and `/refresh-token`, the routes that
   read or refresh a stored token (`confect/auth/routes.ts`), answer 404 like the
   retired credential routes, and the API reference leaves them out. Better Auth
@@ -164,13 +173,23 @@ username, the login card, and the parent code are served on the school host
 only, each at its own address (ADR 0026).
 
 - **Google.** Google sign-in covers a school's Workspace account and belajar.id
-  accounts. When the school has set allowed email domains, the sign-in checks the
-  hosted domain claim (`hd`) against them, and an empty list restricts nothing
-  (ADR 0011). A school account is matched by its Google issuer and subject, never
-  by its email address. The one exception is an invite claim (ADR 0011), which
-  matches the verified email of an account to the address of an invite once, to
-  bind a Person. Google sign-in is live today. The school host, the domain
-  check, and the belajar.id match are planned.
+  accounts. When the school has set allowed email domains, the invite claim
+  checks the hosted domain claim (`hd`) of the account's Google sign-ins against
+  them, and an empty list restricts nothing (ADR 0011). The claim admits an
+  account only when it holds a Google account and the latest sign-in of each
+  Google account it holds stored one of the domains (Provider tokens, above).
+  A personal Google account made on a school address, a Google account that has
+  not signed in since the hosted domain is kept, and an account that never
+  signed in with Google leave the invite pending. A Google sign-in that stores a
+  new hosted domain asks for the claim again, because Google signs a new learner
+  up by writing the user before the account, so the claim that the new user
+  asks for can run before the domain is stored. A school account is matched by
+  its Google issuer and subject, never by its email address. The one exception
+  is an invite claim (ADR 0011), which matches the verified email of an account
+  to the address of an invite once, to bind a Person. Google sign-in, on the main site and from the school host's
+  login page, and the domain check are live. The belajar.id match is planned:
+  it needs the hosted domain and address forms that belajar.id accounts carry,
+  measured on a pilot school's accounts.
 - **Username.** A school issues a username that is unique within the school. It
   is stored in the school's login table and maps to a Better Auth username that
   is unique within the cell, because each cell holds its own Better Auth rows
