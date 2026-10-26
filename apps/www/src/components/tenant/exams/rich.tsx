@@ -15,6 +15,7 @@ import { Array as Arr, Record as Rec } from "effect";
 import {
   type ComponentProps,
   createContext,
+  type ReactNode,
   use,
   useEffect,
   useMemo,
@@ -43,8 +44,23 @@ interface ExamDocumentWiring {
 }
 
 /** The wiring of the rich text below, which its owner provides. */
-export const ExamDocumentWiringContext =
-  createContext<ExamDocumentWiring | null>(null);
+const ExamDocumentWiringContext = createContext<ExamDocumentWiring | null>(
+  null
+);
+
+/** Gives the rich text its owner composes the owner's wiring. */
+export function ExamDocumentWiringProvider({
+  children,
+  extensions,
+  onChange,
+  onEditor,
+}: ExamDocumentWiring & { readonly children: ReactNode }) {
+  return (
+    <ExamDocumentWiringContext value={{ extensions, onChange, onEditor }}>
+      {children}
+    </ExamDocumentWiringContext>
+  );
+}
 
 /** Reads the wiring of the rich text. It throws outside an owner, which always provides it. */
 function useDocumentWiring() {
@@ -72,7 +88,7 @@ interface ExamDocumentProps {
  * the pictures and formulas of its document, and it makes its editor the one the toolbar acts on
  * when the editor takes focus. A picture pasted or dropped into the text waits for its alt text in
  * the exam's queue, which inserts it into this editor. The editor gives its place up when it is
- * removed. Its owner, a question's text or an option row, wires it through `ExamDocumentWiringContext`.
+ * removed. Its owner, a question's text or an option row, wires it through `ExamDocumentWiringProvider`.
  */
 export function ExamDocument({
   label,

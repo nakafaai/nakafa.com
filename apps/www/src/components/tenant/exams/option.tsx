@@ -18,7 +18,7 @@ import {
   optionEditOf,
 } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
-import { ExamDocumentWiringContext } from "@/components/tenant/exams/rich";
+import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
 import { ControlRoom } from "@/components/tenant/exams/sheet";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { makeQuietSaver } from "@/lib/save/quiet";
@@ -167,35 +167,33 @@ export function OptionRow({
 
   return (
     <div className="group/option grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-      <ExamDocumentWiringContext
-        value={{
-          extensions: OPTION_EXTENSIONS,
-          onChange: (transaction) => {
-            const current = editor.current;
-            if (current === null) {
-              return;
-            }
-            const edit = optionEditOf({
-              docChanged: transaction.docChanged,
-              json: current.getJSON(),
-            });
-            if (Option.isNone(edit)) {
-              return;
-            }
-            Effect.runFork(saver.touch(edit.value));
-          },
-          onEditor: (next) => {
-            editor.current = next;
-            next.commands.setContent(
-              Node.fromJSON(assessmentSchema, label).toJSON(),
-              { emitUpdate: false }
-            );
-            next.setEditable(!locked, false);
-          },
+      <ExamDocumentWiringProvider
+        extensions={OPTION_EXTENSIONS}
+        onChange={(transaction) => {
+          const current = editor.current;
+          if (current === null) {
+            return;
+          }
+          const edit = optionEditOf({
+            docChanged: transaction.docChanged,
+            json: current.getJSON(),
+          });
+          if (Option.isNone(edit)) {
+            return;
+          }
+          Effect.runFork(saver.touch(edit.value));
+        }}
+        onEditor={(next) => {
+          editor.current = next;
+          next.commands.setContent(
+            Node.fromJSON(assessmentSchema, label).toJSON(),
+            { emitUpdate: false }
+          );
+          next.setEditable(!locked, false);
         }}
       >
         <Fragment key={editorRound}>{children}</Fragment>
-      </ExamDocumentWiringContext>
+      </ExamDocumentWiringProvider>
       <div className="flex items-center gap-1">
         {onRemove === null ? (
           <ControlRoom />

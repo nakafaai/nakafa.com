@@ -23,7 +23,7 @@ import { type StoreApi, useStore } from "zustand";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
-import { ExamDocumentWiringContext } from "@/components/tenant/exams/rich";
+import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
 import {
   createPromptSync,
   type PromptSync,
@@ -286,10 +286,12 @@ export function ExamText({ children, documentId }: ExamTextProps) {
   };
 
   return (
-    <ExamDocumentWiringContext
-      value={{ extensions, onChange: change, onEditor: open }}
+    <ExamDocumentWiringProvider
+      extensions={extensions}
+      onChange={change}
+      onEditor={open}
     >
       {children}
-    </ExamDocumentWiringContext>
+    </ExamDocumentWiringProvider>
   );
 }
