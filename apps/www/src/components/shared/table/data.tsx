@@ -36,7 +36,8 @@ const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };
 
 /**
  * A data table as the whole body of its page, as shadcn builds the table on TanStack Table: every row at full width,
- * from edge to edge. The page's header row filters it: its search box keeps the rows whose `search` column holds the
+ * from edge to edge of the page's card (`TablePageBody`), and a table taller than the card scrolls inside it with its
+ * column heads in view. The page's header row filters it: its search box keeps the rows whose `search` column holds the
  * text, and its Filter menu keeps the rows whose columns hold a chosen value (`TableFiltersProvider`). A sortable
  * column sorts from its head. Every row has the height of a row with its three-dot menu, so rows with and
  * without one keep one rhythm. A filter that leaves no row shows Nina searching in the table's place.
@@ -76,7 +77,7 @@ export function DataTable<TData extends RowData>({
   const rows = table.getRowModel().rows;
 
   return (
-    <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
+    <Table containerClassName="min-h-0 flex-1 content-start overflow-auto [&_[data-slot=table-cell]]:whitespace-nowrap [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-card">
       <TableHeader>
         {Arr.map(table.getHeaderGroups(), (group) => (
           <TableRow key={group.id}>

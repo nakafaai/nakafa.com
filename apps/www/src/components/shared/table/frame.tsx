@@ -25,6 +25,29 @@ export function TableFrame({ children }: { children: ReactNode }) {
 }
 
 /**
+ * The body of a page whose body is one list, under the page's header: the page's gutter, bounded to the
+ * app's page width, and one card that fills the rest of the page's height, drawn as the try-out catalog
+ * draws its lists. The data table fills the card, its rows divided and running the card's width, and so
+ * does the empty state in its place; a table taller than the card scrolls inside it with its column heads
+ * in view.
+ */
+export function TablePageBody({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col p-4"
+      data-slot="table-page-body"
+    >
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm"
+        data-slot="table-card"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/**
  * The body of a list that holds no record yet: what the list will hold, in one
  * sentence, with Nina doing what fits the list, in the middle of the body in place of
  * column heads over nothing. The page's action that adds the first record sits in the
