@@ -419,6 +419,7 @@ export declare const api: {
             | "class.manage"
             | "class.view"
             | "forum.manage"
+            | "forum.post"
             | "forum.read"
             | "grade.enter"
             | "grade.list"
@@ -470,6 +471,93 @@ export declare const api: {
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
+          }
+        >;
+      };
+      messages: {
+        edit: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            messageId: Id<"classroomMessages">;
+            slug: string;
+            text: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            createdAt: number;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mine: boolean;
+            text: string | null;
+          }
+        >;
+        hide: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            messageId: Id<"classroomMessages">;
+            slug: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            createdAt: number;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mine: boolean;
+            text: string | null;
+          }
+        >;
+        page: FunctionReference<
+          "query",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              author: { id: Id<"tenantPeople">; name: string };
+              createdAt: number;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mine: boolean;
+              text: string | null;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        send: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            clientKey: string;
+            slug: string;
+            text: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            createdAt: number;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mine: boolean;
+            text: string | null;
           }
         >;
       };
@@ -5457,6 +5545,7 @@ export declare const api: {
             | "class.manage"
             | "class.view"
             | "forum.manage"
+            | "forum.post"
             | "forum.read"
             | "grade.release"
             | "grade.view"
@@ -5550,6 +5639,7 @@ export declare const api: {
               | "class.manage"
               | "class.view"
               | "forum.manage"
+              | "forum.post"
               | "forum.read"
               | "grade.release"
               | "grade.view"
@@ -5655,6 +5745,7 @@ export declare const api: {
               | { type: "class.archived" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
+              | { message: Id<"classroomMessages">; type: "message.hidden" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
