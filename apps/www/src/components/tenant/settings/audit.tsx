@@ -244,50 +244,68 @@ const saveFile = (name: string, text: string) =>
   });
 
 /**
+ * Saves the school's whole trail as a CSV file with the columns of the table: the time of each
+ * entry, then the words that `describe` gives it. The reader of the trail loads on the press, and
+ * a failed export says so in a toast, logs its cause and leaves the page as it was.
+ */
+const exportAuditTrail = Effect.fn("tenant.audit.export")(
+  function* (
+    slug: TenantSlug,
+    header: readonly string[],
+    describe: (entry: EntryItem) => readonly string[]
+  ) {
+    const trail = yield* Effect.tryPromise(
+      () => import("@/components/tenant/settings/export")
+    );
+    const entries = yield* trail.readAuditTrail(slug);
+    const text = trail.csvText([
+      header,
+      ...Arr.map(entries, (entry) => [
+        trail.entryTime(entry.at),
+        ...describe(entry),
+      ]),
+    ]);
+    yield* saveFile(yield* trail.auditFileName(slug), text);
+  },
+  Effect.catchCause((cause) =>
+    Effect.andThen(
+      Effect.logError("tenant.audit.export failed", cause),
+      Effect.sync(() => {
+        toast.error(
+          {
+            description: "audit-export-error.description",
+            title: "audit-export-error.title",
+          },
+          { position: "bottom-center" }
+        );
+      })
+    )
+  )
+);
+
+/**
  * The audit's main action: the school's whole trail as a CSV file that the school can keep or hand
- * to an inspector, with the columns of the table. The reader loads on the press, and a failed
- * export says so and leaves the page as it was.
+ * to an inspector. The button waits while the file is made.
  */
 function AuditExport({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const words = useEntryWords();
   const [isPending, startTransition] = useTransition();
 
-  const exportTrail = Effect.gen(function* () {
-    const trail = yield* Effect.tryPromise(
-      () => import("@/components/tenant/settings/export")
-    );
-    const entries = yield* trail.readAuditTrail(slug);
-    const text = trail.csvText([
-      [t("audit-when"), t("audit-who"), t("audit-change")],
-      ...Arr.map(entries, (entry) => [
-        trail.entryTime(entry.at),
-        words.actor(entry),
-        words.change(entry),
-      ]),
-    ]);
-    yield* saveFile(yield* trail.auditFileName(slug), text);
-  }).pipe(
-    Effect.catchCause((cause) =>
-      Effect.andThen(
-        Effect.logError("tenant.audit.export failed", cause),
-        Effect.sync(() => {
-          toast.error(
-            {
-              description: "audit-export-error.description",
-              title: "audit-export-error.title",
-            },
-            { position: "bottom-center" }
-          );
-        })
-      )
-    )
-  );
-
   return (
     <Button
       disabled={isPending}
-      onClick={() => startTransition(() => Effect.runPromise(exportTrail))}
+      onClick={() =>
+        startTransition(() =>
+          Effect.runPromise(
+            exportAuditTrail(
+              slug,
+              [t("audit-when"), t("audit-who"), t("audit-change")],
+              (entry) => [words.actor(entry), words.change(entry)]
+            )
+          )
+        )
+      }
     >
       <HugeIcons icon={Download01Icon} />
       {t("audit-export")}
