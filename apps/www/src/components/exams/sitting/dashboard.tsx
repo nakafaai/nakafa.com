@@ -3,7 +3,7 @@ import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { dashboardArgs } from "@/components/exams/sitting/change";
@@ -60,7 +60,9 @@ export function SittingDashboard({
     return isDenied(state.error) ? (
       <SittingRefusal examId={examId} message={t("sitting-unavailable")} />
     ) : (
-      <SittingDashboardRetry error={state.error} />
+      <SittingDashboardRetry>
+        <SittingRetry error={state.error} />
+      </SittingDashboardRetry>
     );
   }
   if (!QueryResult.isSuccess(state)) {
@@ -133,13 +135,13 @@ function SittingRefusal({
   );
 }
 
-/** The page when the dashboard could not be read for a reason a reload may fix: the header, why, and the retry. */
-function SittingDashboardRetry({ error }: { readonly error: unknown }) {
+/** The page when the dashboard could not be read for a reason a reload may fix: the header, then why and the retry. */
+function SittingDashboardRetry({ children }: { readonly children: ReactNode }) {
   return (
     <>
       <SchoolHeader items={[]} />
       <div className="grid justify-items-start gap-4 p-4 text-sm md:p-6">
-        <SittingRetry error={error} />
+        {children}
       </div>
     </>
   );

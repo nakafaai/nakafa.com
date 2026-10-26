@@ -1,12 +1,5 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
-import {
-  CheckmarkCircle02Icon,
-  Clock01Icon,
-  HourglassIcon,
-  SquareLock01Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -32,10 +25,7 @@ import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
-import {
-  TableChoice,
-  useTableFilters,
-} from "@/components/shared/table/toolbar";
+import { useTableFilters } from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
@@ -143,43 +133,6 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
             )}
       </TableCell>
     </TableRow>
-  );
-}
-
-/**
- * The students' Filter menu, in the results page's header row: every attempt, or only the attempts in one
- * state, which the server reads. Each value carries the icon of its state.
- */
-export function StudentStatusFilter({
-  onChange,
-  value,
-}: {
-  readonly onChange: (status: StatusFilter) => void;
-  readonly value: StatusFilter;
-}) {
-  const t = useTranslations("Exams");
-
-  return (
-    <TableChoice
-      onChange={onChange}
-      options={[
-        { icon: UserGroupIcon, label: t("filter-all"), value: "all" },
-        {
-          icon: Clock01Icon,
-          label: t(stateKeys.inProgress),
-          value: "inProgress",
-        },
-        { icon: HourglassIcon, label: t(stateKeys.closing), value: "closing" },
-        { icon: SquareLock01Icon, label: t(stateKeys.locked), value: "locked" },
-        {
-          icon: CheckmarkCircle02Icon,
-          label: t(stateKeys.submitted),
-          value: "submitted",
-        },
-      ]}
-      title={t("filter-label")}
-      value={value}
-    />
   );
 }
 
