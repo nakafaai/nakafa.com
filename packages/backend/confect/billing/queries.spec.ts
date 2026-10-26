@@ -14,7 +14,7 @@ import { Schema } from "effect";
  * it there: Polar's monthly plan alone, or Xendit's monthly plan and passes once
  * Xendit takes Indonesia.
  */
-export const ProOffers = Schema.Array(
+const ProOffers = Schema.Array(
   Schema.Struct({
     offer: ProCheckoutOffer,
     amount: Schema.Int,
@@ -26,7 +26,7 @@ export const ProOffers = Schema.Array(
 );
 
 /** One payment a learner made, as the settings list it among their receipts. */
-export const RecentPayment = Schema.Struct({
+const RecentPayment = Schema.Struct({
   amount: Schema.Int,
   currency: BillingCurrency,
   kind: Schema.Literals(["cycle", "pass", "invoice", "credits"]),

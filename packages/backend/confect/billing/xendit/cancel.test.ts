@@ -5,7 +5,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Duration, Effect, Fiber, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Fiber, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 
@@ -122,6 +122,8 @@ describe("billing/xendit/cancel", () => {
     "turns the plan off, and asks again before it reports a plan Xendit keeps on",
     () =>
       Effect.gen(function* () {
+        // Effect's own clock paces the retries; the mocked fetch answers on the real event loop.
+        vi.useRealTimers();
         fetcher.mockResolvedValueOnce(answer(404, { error_code: "NOT_FOUND" }));
         expect(
           yield* deactivateCanceledPlan("repl_gone").pipe(
@@ -135,7 +137,12 @@ describe("billing/xendit/cancel", () => {
           Effect.flip,
           Effect.forkChild
         );
-        yield* TestClock.adjust(Duration.minutes(5));
+        yield* Effect.forEach(Arr.range(1, 8), () =>
+          Effect.yieldNow.pipe(
+            Effect.repeat({ times: 20 }),
+            Effect.andThen(TestClock.adjust(Duration.minutes(1)))
+          )
+        );
         const error = yield* Fiber.join(waiting);
         expect(error._tag).toBe("XenditDeactivateError");
         expect(fetcher).toHaveBeenCalledTimes(5);

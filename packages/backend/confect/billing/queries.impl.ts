@@ -58,9 +58,9 @@ const proOffers = FunctionImpl.make(
           })
         ),
         Effect.catchTags({
-          ConfigError: () => Effect.succeed(Option.none()),
-          OfferUnavailable: () => Effect.succeed(Option.none()),
-          XenditNotConfigured: () => Effect.succeed(Option.none()),
+          ConfigError: () => Effect.succeedNone,
+          OfferUnavailable: () => Effect.succeedNone,
+          XenditNotConfigured: () => Effect.succeedNone,
         })
       )
     );

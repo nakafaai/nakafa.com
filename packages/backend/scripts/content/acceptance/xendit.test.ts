@@ -11,6 +11,7 @@ import {
   Exit,
   FileSystem,
   MutableList,
+  Option,
   Schema,
 } from "effect";
 
@@ -60,9 +61,9 @@ const recordCommands = Effect.fn("acceptance.xendit.test.record")(function* (
 /** The function path and the event type of each recorded Convex CLI call. */
 const callsOf = (specs: MutableList.MutableList<CommandSpec>) =>
   Effect.forEach(MutableList.toArray(specs), (spec) =>
-    Schema.decodeEffect(Called)(Arr.lastNonEmpty(spec.args)).pipe(
-      Effect.map(({ type }) => [spec.args[2], type ?? null] as const)
-    )
+    Schema.decodeEffect(Called)(
+      Option.getOrElse(Arr.last(spec.args), () => "{}")
+    ).pipe(Effect.map(({ type }) => [spec.args[2], type ?? null] as const))
   );
 
 describe("acceptance xendit", () => {

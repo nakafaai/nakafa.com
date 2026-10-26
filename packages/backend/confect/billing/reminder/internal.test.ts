@@ -203,16 +203,15 @@ describe("billing/reminder", () => {
         const grantId = yield* fixture.run(grantPass(owner, PASS_END));
         const send = vi.spyOn(resend, "sendEmail");
         yield* fixture.internal.action(deliver, { grantId, locale: "en" });
-        const sent = send.mock.calls[0]?.[1];
-        expect(sent?.subject).toBe(
-          `Your Pro pass ends on ${new Intl.DateTimeFormat("en", {
+        expect(send.mock.calls[0]?.[1]).toMatchObject({
+          html: expect.stringContaining(
+            "http://localhost:3000/en/user/settings/subscriptions"
+          ),
+          subject: `Your Pro pass ends on ${new Intl.DateTimeFormat("en", {
             dateStyle: "long",
             timeZone: "Asia/Jakarta",
-          }).format(PASS_END)}`
-        );
-        expect(sent?.html).toContain(
-          "http://localhost:3000/en/user/settings/subscriptions"
-        );
+          }).format(PASS_END)}`,
+        });
         yield* fixture.run(grantPass(owner, PASS_END + 1000));
         yield* fixture.internal.action(deliver, { grantId, locale: "en" });
         expect(send).toHaveBeenCalledOnce();

@@ -33,7 +33,7 @@ const readReminded = Effect.fn("billing.reminder.readReminded")(function* (
     );
   if (
     Option.isNone(grant) ||
-    grant.value.userId === undefined ||
+    grant.value.product !== "pro" ||
     grant.value.source.kind !== "pass"
   ) {
     return Option.none();

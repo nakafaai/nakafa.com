@@ -105,12 +105,13 @@ export const readRecentPayments = Effect.fn("billing.payments.readRecent")(
     );
     return Arr.map(
       Arr.take(
-        Arr.sort(
+        Arr.sortWith(
           Arr.filter(
             Arr.flatten(payments),
             (payment) => payment.status === "succeeded"
           ),
-          Order.mapInput(Order.flip(Order.Number), (payment) => payment.paidAt)
+          (payment) => payment.paidAt,
+          Order.flip(Order.Number)
         ),
         RECENT_PAYMENT_LIMIT
       ),

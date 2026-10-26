@@ -9,7 +9,7 @@ import {
   seedXenditSubscription,
   xenditDelivery,
 } from "@repo/backend/test/billing";
-import { DateTime, Exit } from "effect";
+import { Array as Arr, DateTime, Exit } from "effect";
 
 /** Opens one Xendit checkout for a fresh Xendit payer, as checkout does before the buyer pays. */
 async function seedCheckout(
@@ -131,7 +131,10 @@ describe("billing/xendit/session", () => {
             query.eq("userId", userId)
           )
           .collect(),
-        jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+        jobs: Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
+          (job) => job.name.startsWith("billing/reminder/")
+        ),
       };
     });
     // The reminder goes out three days before the new pass ends, in the language of its checkout.

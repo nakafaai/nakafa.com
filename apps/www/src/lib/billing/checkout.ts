@@ -30,16 +30,17 @@ const CHECKOUT_FAILURE_COPY = {
 /** One Pro offer the payment method dialog lists, as the offers read answers it. */
 export type ProOffer = Ref.Returns<typeof billing.queries.proOffers>[number];
 
-/** The offers a learner chooses between while the payment method dialog is open, and where the request came from. */
-type ProChoice = BillingSource & {
-  readonly locale: ActiveAppLocaleCode;
-  readonly offers: Arr.NonEmptyReadonlyArray<ProOffer>;
-};
-
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
   const [isPending, startTransition] = useTransition();
-  const [choice, setChoice] = useState<ProChoice | null>(null);
+  // The offers the payment method dialog lists while it is open, and where the request came from.
+  const [choice, setChoice] = useState<
+    | (BillingSource & {
+        readonly locale: ActiveAppLocaleCode;
+        readonly offers: Arr.NonEmptyReadonlyArray<ProOffer>;
+      })
+    | null
+  >(null);
   const convex = useConvex();
   const createCheckout = useAction(billing.sessions.generateCheckoutLink);
   const createTopupCheckout = useAction(
