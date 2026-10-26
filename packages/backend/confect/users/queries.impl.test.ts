@@ -100,7 +100,7 @@ describe("users/queries", () => {
     expect(await check(other, "admin")).toBe("notAllowed");
   });
 
-  it("shows the public profile of a username to anyone, and nothing for a name nobody holds", async () => {
+  it("shows a profile to the account that holds it, and nothing to anyone else or for a name nobody holds", async () => {
     const t = createConvexTestWithBetterAuth();
     const holder = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
@@ -131,7 +131,13 @@ describe("users/queries", () => {
       name: "Nabil Fatih",
       username: "nabilfatih",
     };
-    expect(await profileOf(t, "nabilfatih")).toStrictEqual(expected);
+    const owner = t.withIdentity({
+      sessionId: holder.sessionId,
+      subject: holder.authUserId,
+    });
+    expect(await profileOf(owner, "nabilfatih")).toStrictEqual(expected);
+    // A visitor and another account get the answer of a name nobody holds (K15).
+    expect(await profileOf(t, "nabilfatih")).toBeNull();
     expect(
       await profileOf(
         t.withIdentity({
@@ -140,8 +146,8 @@ describe("users/queries", () => {
         }),
         "nabilfatih"
       )
-    ).toStrictEqual(expected);
-    expect(await profileOf(t, "nobodyholdsthis")).toBeNull();
+    ).toBeNull();
+    expect(await profileOf(owner, "nobodyholdsthis")).toBeNull();
   });
 
   it("hides the photo of an account that shows its animal, and an empty bio", async () => {
@@ -161,9 +167,14 @@ describe("users/queries", () => {
     });
 
     expect(
-      await t.query(getProfileByUsername, {
-        username: "sitiaminah",
-      })
+      await t
+        .withIdentity({
+          sessionId: holder.sessionId,
+          subject: holder.authUserId,
+        })
+        .query(getProfileByUsername, {
+          username: "sitiaminah",
+        })
     ).toStrictEqual({
       _id: holder.userId,
       mascot: MASCOT_CODE,

@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { requireAuth } from "@repo/backend/confect/auth/session";
+import { requireAuth, Session } from "@repo/backend/confect/auth/session";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { inspectUsername } from "@repo/backend/confect/users/availability";
 import {
@@ -41,16 +41,19 @@ const getUserByAuthId = FunctionImpl.make(
 );
 
 /**
- * The public profile of the account that holds a username, or null when no
- * account holds it. Anyone may read it, signed in or not.
+ * The profile of the account that holds a username, for that account only (K15,
+ * ADR 0009, Who Opens A Profile). Every other caller, signed in or not, gets null,
+ * the same answer as for a username nobody holds, so the query never tells whether
+ * a username exists.
  */
 const getProfileByUsername = FunctionImpl.make(
   databaseSchema,
   spec,
   "getProfileByUsername",
   Effect.fn("users.queries.getProfileByUsername")(function* (args) {
+    const { appUser } = yield* Session;
     const user = yield* getAppUserByUsername(args.username);
-    if (user === null) {
+    if (user === null || appUser === null || appUser._id !== user._id) {
       return null;
     }
     // The index matched this exact name, so the account holds the name asked for.

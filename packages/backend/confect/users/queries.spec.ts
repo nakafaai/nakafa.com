@@ -7,9 +7,8 @@ import { UsernameCheck } from "@repo/backend/confect/users/username";
 import { Schema, Struct } from "effect";
 
 /**
- * The public face of a profile, which anyone may read at its address. It holds
- * only what every profile shows: never the email, the auth id, the plan, or the
- * settings of the account.
+ * The face of a profile as its page shows it. It holds only what every profile
+ * shows: never the email, the auth id, the plan, or the settings of the account.
  */
 const publicProfileValidator = Schema.Struct({
   ...Struct.pick(usersTable.Doc.fields, ["_id", "bio", "mascot", "name"]),
@@ -53,5 +52,5 @@ export default GroupSpec.make()
         username: Schema.String,
       }),
       returns: () => Schema.NullOr(publicProfileValidator),
-    })
+    }).middleware(Session)
   );
