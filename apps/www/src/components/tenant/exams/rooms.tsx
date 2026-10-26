@@ -300,7 +300,7 @@ function RoomsTable({
       return <DataFailure onRetry={reloadPage} />;
     }
     if (pagination._tag !== "Exhausted") {
-      return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
+      return <RoomsMore loadMore={loadMore} />;
     }
     return <RoomsEmpty examId={examId} filter={filter} />;
   }
@@ -327,9 +327,14 @@ function RoomsTable({
           </TableBody>
         </Table>
       </TableFrame>
-      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
+      <RoomsMore loadMore={loadMore} />
     </>
   );
+}
+
+/** The sentinel that reads the next page of rooms as it comes into view, while the list has more. */
+function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
+  return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
 }
 
 /**
