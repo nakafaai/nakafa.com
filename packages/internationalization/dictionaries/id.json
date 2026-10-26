@@ -795,6 +795,7 @@
     "student": "Siswa",
     "value": "Nilai",
     "value-label": "Nilai {name}",
+    "value-placeholder": "0-100",
     "note": "Hasil",
     "state": "Status",
     "state-none": "Belum diisi",
@@ -2566,6 +2567,7 @@
   "SchoolGuardians": {
     "sign-in-action": "Masuk sebagai orang tua",
     "email-label": "Email orang tua",
+    "email-placeholder": "orangtua@contoh.com",
     "email-description": "Gunakan email yang didaftarkan sekolah.",
     "email-invalid": "Tulis alamat email yang benar.",
     "send-code": "Kirim kode",
@@ -2607,6 +2609,7 @@
     "links-search": "Cari siswa",
     "student": "Siswa",
     "guardian-name": "Nama orang tua",
+    "guardian-name-placeholder": "Nama lengkap orang tua",
     "status": "Status",
     "status-pending": "Menunggu",
     "status-verified": "Terverifikasi",

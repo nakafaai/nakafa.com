@@ -795,6 +795,7 @@
     "student": "Student",
     "value": "Grade",
     "value-label": "Grade of {name}",
+    "value-placeholder": "0-100",
     "note": "Result",
     "state": "Status",
     "state-none": "Not entered",
@@ -2566,6 +2567,7 @@
   "SchoolGuardians": {
     "sign-in-action": "Sign in as a parent",
     "email-label": "Parent email",
+    "email-placeholder": "parent@example.com",
     "email-description": "Use the email the school registered.",
     "email-invalid": "Enter a valid email address.",
     "send-code": "Send code",
@@ -2607,6 +2609,7 @@
     "links-search": "Search students",
     "student": "Student",
     "guardian-name": "Parent's name",
+    "guardian-name-placeholder": "The parent's full name",
     "status": "Status",
     "status-pending": "Pending",
     "status-verified": "Verified",

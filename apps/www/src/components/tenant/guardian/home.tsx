@@ -220,6 +220,7 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
             inputMode="numeric"
             maxLength={10}
             onChange={(event) => setNisn(event.target.value)}
+            placeholder="0012345678"
             value={nisn}
           />
           {refused ? (

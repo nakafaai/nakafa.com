@@ -8,6 +8,11 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@repo/design-system/components/ui/resizable";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -74,20 +79,38 @@ export function useHasPanes() {
   return use(PanesContext) !== null;
 }
 
-/** The two panes as the whole body of a page: the list, then the open row beside it. */
+/**
+ * The two panes as the whole body of a page, from under its header to the bottom of the
+ * screen: the list, then the open row beside it, each scrolling on its own, and the handle
+ * between them that resizes both, as the exam editor does. The group keeps its sizes while
+ * rows open and close. Below tablet width the handle and the second pane step aside, so the
+ * list takes the row and the open row shows in a sheet. A page whose header is taller than
+ * the school header's 4rem sets `--panes-offset` to its height.
+ */
 export function Panes({ children }: { children: ReactNode }) {
-  return <div className="flex min-h-0 w-full min-w-0 flex-1">{children}</div>;
+  return (
+    <ResizablePanelGroup
+      className="max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden! h-[calc(100svh-var(--panes-offset,4rem))] min-h-0"
+      orientation="horizontal"
+    >
+      {children}
+    </ResizablePanelGroup>
+  );
 }
 
 /** The first pane: the page's list, which takes the width the open row leaves. */
 export function PanesList({ children }: { children: ReactNode }) {
-  return <div className="flex min-w-0 flex-1 flex-col">{children}</div>;
+  return (
+    <ResizablePanel className="flex min-w-0 flex-col" id="list" minSize="40%">
+      {children}
+    </ResizablePanel>
+  );
 }
 
 /**
- * The second pane: the open row's detail beside the list from tablet width, where it
- * says what it will show while no row is open, and a sheet from the bottom on a phone,
- * which closes the row as it closes. The detail draws in one place at a time.
+ * The second pane: the handle, then the open row's detail beside the list from tablet
+ * width, where it says what it will show while no row is open, and a sheet from the bottom
+ * on a phone, which closes the row as it closes. The detail draws in one place at a time.
  */
 export function PanesDetail({
   children,
@@ -107,20 +130,23 @@ export function PanesDetail({
 
   return (
     <>
-      <aside
-        aria-label={label}
-        className="sticky top-16 hidden h-[calc(100svh-4rem)] w-80 shrink-0 flex-col self-start border-l bg-background md:flex lg:w-96"
-      >
-        {wide && isOpen ? (
-          <PaneModeContext value="aside">{children}</PaneModeContext>
-        ) : (
-          <Empty className="flex-1">
-            <EmptyHeader>
-              <EmptyDescription>{empty}</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
-      </aside>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize="35%" id="detail" maxSize="55%" minSize="25%">
+        <aside
+          aria-label={label}
+          className="flex h-full flex-col bg-background"
+        >
+          {wide && isOpen ? (
+            <PaneModeContext value="aside">{children}</PaneModeContext>
+          ) : (
+            <Empty className="flex-1">
+              <EmptyHeader>
+                <EmptyDescription>{empty}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </aside>
+      </ResizablePanel>
       <Sheet
         onOpenChange={(next) => {
           if (!next) {
