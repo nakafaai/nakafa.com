@@ -27,7 +27,7 @@ import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
-import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { generateText, Output, type UserContent } from "ai";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
