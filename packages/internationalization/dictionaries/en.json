@@ -527,7 +527,8 @@
       "integration": {
         "created": "Client created",
         "rotated": "Secret rotated",
-        "revoked": "Client revoked"
+        "revoked": "Client revoked",
+        "authorized": "Device connected"
       },
       "invite": {
         "expired": "Invite expired",
@@ -741,7 +742,12 @@
     "members-empty-action": "Open invitations",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
     "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
-    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
+    "policy-domains-limit": "Use up to {limit} different domains, each on its own line.",
+    "device-title": "Connect a device",
+    "device-description": "Type the code the Nakafa CLI shows. The device then reads the school as {name}.",
+    "device-code": "Device code",
+    "device-authorize": "Connect",
+    "device-deny": "Turn away"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1998,6 +2004,16 @@
     "import-encrypted": {
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
+    },
+    "school-device-authorized": {
+      "title": "The device is connected."
+    },
+    "school-device-denied": {
+      "title": "The device was turned away."
+    },
+    "school-refusal-device-unknown": {
+      "title": "No device has this code.",
+      "description": "Check the code on the device."
     }
   },
   "Ai": {

@@ -1,5 +1,7 @@
 import {
   SCHOOL_API_PATH,
+  SCHOOL_HOST_API_PATH,
+  SCHOOL_HOST_MCP_PATH,
   SCHOOL_MCP_PATH,
 } from "@repo/backend/confect/integrations/api";
 import {
@@ -17,8 +19,8 @@ import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
  * path it forwards to: the REST API under `/api/v1`, and the MCP server at `/mcp`.
  */
 const FORWARDS = [
-  { convex: SCHOOL_API_PATH, host: "/api/v1" },
-  { convex: SCHOOL_MCP_PATH, host: "/mcp" },
+  { convex: SCHOOL_API_PATH, host: SCHOOL_HOST_API_PATH },
+  { convex: SCHOOL_MCP_PATH, host: SCHOOL_HOST_MCP_PATH },
 ];
 
 /** The methods a forward sends on: the reads, the token request and the MCP posts, and a preflight. */

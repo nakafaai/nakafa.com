@@ -1,12 +1,17 @@
 import type { GenericId } from "@confect/core";
 import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "@repo/backend/confect/_generated/components";
+import type { IntegrationClientsDoc } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { TOKEN_SECONDS } from "@repo/backend/confect/integrations/api";
+import {
+  SCHOOL_HOST_API_PATH,
+  SCHOOL_HOST_MCP_PATH,
+  TOKEN_SECONDS,
+} from "@repo/backend/confect/integrations/api";
 import type {
   TokenCheck,
   TokenIssue,
@@ -49,8 +54,8 @@ const TRAILING_SLASH = /\/$/;
 
 /** The paths of a school host that a resource indicator may name, and the resource each names. */
 const RESOURCE_PATHS: Readonly<Record<string, typeof TokenResource.Type>> = {
-  "/api/v1": "api",
-  "/mcp": "mcp",
+  [SCHOOL_HOST_API_PATH]: "api",
+  [SCHOOL_HOST_MCP_PATH]: "mcp",
 };
 
 /**
@@ -98,6 +103,30 @@ export const endClientTokens = Effect.fn("integrations.token.end")(function* (
       writer.table("integrationTokens").delete(token._id).pipe(Effect.orDie),
     { discard: true }
   );
+});
+
+/**
+ * Draws a new access token of one client for one resource, stores its digest with its
+ * lifetime, and answers the token, which is shown once.
+ */
+export const storeToken = Effect.fn("integrations.token.store")(function* (
+  client: Pick<IntegrationClientsDoc, "_id" | "tenantId">,
+  resource: typeof TokenResource.Type,
+  seconds: number
+) {
+  const { hash, token } = yield* issueToken().pipe(Effect.orDie);
+  const now = yield* Clock.currentTimeMillis;
+  yield* (yield* DatabaseWriter)
+    .table("integrationTokens")
+    .insert({
+      clientId: client._id,
+      expiresAt: now + Duration.toMillis(Duration.seconds(seconds)),
+      resource,
+      tenantId: client.tenantId,
+      tokenHash: hash,
+    })
+    .pipe(Effect.orDie);
+  return token;
 });
 
 /**
@@ -157,18 +186,11 @@ export const issueAccessToken = Effect.fn("integrations.token.issue")(
       };
       return refused;
     }
-    const { hash, token } = yield* issueToken().pipe(Effect.orDie);
-    const now = yield* Clock.currentTimeMillis;
-    yield* (yield* DatabaseWriter)
-      .table("integrationTokens")
-      .insert({
-        clientId,
-        expiresAt: now + Duration.toMillis(Duration.seconds(TOKEN_SECONDS)),
-        resource: resource.value,
-        tenantId: client.value.tenantId,
-        tokenHash: hash,
-      })
-      .pipe(Effect.orDie);
+    const token = yield* storeToken(
+      client.value,
+      resource.value,
+      TOKEN_SECONDS
+    );
     const issued: typeof TokenIssue.Type = {
       expiresIn: TOKEN_SECONDS,
       outcome: "issued",

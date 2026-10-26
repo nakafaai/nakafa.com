@@ -527,7 +527,8 @@
       "integration": {
         "created": "Client angelegt",
         "rotated": "Geheimnis erneuert",
-        "revoked": "Client gesperrt"
+        "revoked": "Client gesperrt",
+        "authorized": "Gerät verbunden"
       },
       "invite": {
         "expired": "Einladung abgelaufen",
@@ -741,7 +742,12 @@
     "members-empty-action": "Einladungen öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
     "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
-    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
+    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
+    "device-title": "Gerät verbinden",
+    "device-description": "Gib den Code ein, den die Nakafa CLI zeigt. Das Gerät liest die Schule dann als {name}.",
+    "device-code": "Gerätecode",
+    "device-authorize": "Verbinden",
+    "device-deny": "Ablehnen"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1998,6 +2004,16 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "school-device-authorized": {
+      "title": "Das Gerät ist verbunden."
+    },
+    "school-device-denied": {
+      "title": "Das Gerät wurde abgelehnt."
+    },
+    "school-refusal-device-unknown": {
+      "title": "Kein Gerät mit diesem Code.",
+      "description": "Prüfe den Code auf dem Gerät."
     }
   },
   "Ai": {

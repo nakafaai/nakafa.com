@@ -189,6 +189,7 @@ describe("access/catalog", () => {
           "integration.created",
           "integration.rotated",
           "integration.revoked",
+          "integration.authorized",
           "connection.connected",
           "connection.disconnected",
           "connection.reconnect",

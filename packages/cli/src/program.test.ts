@@ -387,4 +387,35 @@ describe("Nakafa CLI execution", () => {
       });
     })
   );
+
+  it.effect(
+    "reports a school command it cannot finish on stderr with the API exit code",
+    () =>
+      Effect.gen(function* () {
+        const client = makeClient((request) =>
+          new URL(request.url).pathname === "/api/v1/device"
+            ? Response.json({
+                device_code: "device",
+                expires_in: 600,
+                interval: 0,
+                user_code: "BCDF-GHJK",
+                verification_uri: "https://harapan.nakafa.com/settings/clients",
+              })
+            : Response.json({
+                access_token: "token",
+                expires_in: 3600,
+                token_type: "Bearer",
+              })
+        );
+        for (const [argv, code] of [
+          [["school", "login", "harapan.nakafa.com"], "CREDENTIALS_UNWRITABLE"],
+          [["school", "logout"], "CREDENTIALS_UNWRITABLE"],
+          [["school", "periods"], "NOT_SIGNED_IN"],
+        ] as const) {
+          const result = yield* execute(argv, client);
+          expect(result.exitCode).toBe(3);
+          expect(yield* decodeJson(result.stderr)).toMatchObject({ code });
+        }
+      })
+  );
 });

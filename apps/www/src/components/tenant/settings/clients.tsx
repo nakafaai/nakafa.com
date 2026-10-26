@@ -32,6 +32,7 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
+import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
@@ -254,6 +255,7 @@ function SchoolClientMenu({
   );
   const [isPending, startTransition] = useTransition();
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   return (
     <div className="flex justify-end">
@@ -283,6 +285,9 @@ function SchoolClientMenu({
             }
           >
             {t("client-rotate")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setIsConnecting(true)}>
+            {t("device-title")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -324,6 +329,12 @@ function SchoolClientMenu({
         open={isRevoking}
         setOpen={setIsRevoking}
         title={t("client-revoke-title")}
+      />
+      <SchoolDeviceDialog
+        client={client}
+        open={isConnecting}
+        setOpen={setIsConnecting}
+        slug={slug}
       />
     </div>
   );
