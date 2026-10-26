@@ -44,6 +44,21 @@ describe("exams/results/stats", () => {
     });
   });
 
+  it("counts a typed answer as answered and a blank one as not, and neither chooses an option", () => {
+    const answers: ScoredAnswer[] = [
+      { response: { text: "Jakarta" }, verdict: "correct" },
+      { response: { text: "Batavia" }, verdict: "pending" },
+      { response: { text: "  " }, verdict: "incorrect" },
+    ];
+    expect(tallyAnswers(answers, [])).toEqual({
+      answered: 2,
+      correct: 1,
+      incorrect: 1,
+      optionCounts: [],
+      pending: 1,
+    });
+  });
+
   it("tallies an empty list of answers as nothing answered and every option at zero", () => {
     expect(tallyAnswers([], options)).toEqual({
       answered: 0,

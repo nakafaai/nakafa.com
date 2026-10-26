@@ -34,7 +34,7 @@ import {
 import {
   correctShare,
   optionLetter,
-  responseLetters,
+  responseText,
   verdictKeys,
 } from "@/components/exams/results/model";
 import {
@@ -156,7 +156,7 @@ function AnswerList({
             <TableRow key={answer.attemptId}>
               <TableCell>{answer.name}</TableCell>
               <TableCell>
-                {Arr.join(responseLetters(optionIds, answer.response), ", ")}
+                {responseText(optionIds, answer.response)}
               </TableCell>
               <TableCell>{t(verdictKeys[answer.verdict])}</TableCell>
             </TableRow>

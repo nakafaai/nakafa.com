@@ -5,16 +5,23 @@ import { Array as Arr } from "effect";
 
 /**
  * Whether one answer fits one interaction. A choice takes an answer of its own kind,
- * whose correct options are options of that choice, and at most `maxChoices` of them.
- * Any other kind of interaction fits no answer, because a question takes only choices.
+ * whose correct options are options of that choice, and at most `maxChoices` of them,
+ * and a text entry takes accepted answers of its own kind. Any other kind of interaction
+ * fits no answer, because a question takes only choices and text entries.
  */
-const answerFits = (interaction: Interaction, answer: InteractionKey) =>
-  interaction.kind === "choice" &&
-  answer.kind === "choice" &&
-  answer.correct.length <= interaction.maxChoices &&
-  Arr.every(answer.correct, (id) =>
-    Arr.some(interaction.options, (option) => option.id === id)
+const answerFits = (interaction: Interaction, answer: InteractionKey) => {
+  if (interaction.kind === "textEntry") {
+    return answer.kind === "textEntry";
+  }
+  return (
+    interaction.kind === "choice" &&
+    answer.kind === "choice" &&
+    answer.correct.length <= interaction.maxChoices &&
+    Arr.every(answer.correct, (id) =>
+      Arr.some(interaction.options, (option) => option.id === id)
+    )
   );
+};
 
 /**
  * Whether an answer key fits the interactions of its question. Each interaction has

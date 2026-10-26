@@ -3,7 +3,7 @@ import { Array as Arr } from "effect";
 import {
   correctShare,
   optionLetter,
-  responseLetters,
+  responseText,
   verdictKeys,
 } from "@/components/exams/results/model";
 
@@ -20,13 +20,11 @@ describe("components/exams/results model", () => {
     expect(Arr.map([0, 1, 3], optionLetter)).toEqual(["A", "B", "D"]);
   });
 
-  it("lists the letters of the chosen options in the order of the choice", () => {
+  it("shows the letters of the chosen options in the order of the choice, or the typed text without its spaces", () => {
     const optionIds = ["option-1", "option-2", "option-3"];
-    expect(responseLetters(optionIds, ["option-3", "option-1"])).toEqual([
-      "A",
-      "C",
-    ]);
-    expect(responseLetters(optionIds, [])).toEqual([]);
+    expect(responseText(optionIds, ["option-3", "option-1"])).toBe("A, C");
+    expect(responseText(optionIds, [])).toBe("");
+    expect(responseText([], { text: "  Jakarta " })).toBe("Jakarta");
   });
 
   it("gives the share of answered questions that are correct, rounded to a whole percentage", () => {

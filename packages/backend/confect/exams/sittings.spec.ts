@@ -1,6 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
-import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
@@ -41,6 +40,7 @@ import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /**
  * The proctored sittings of school exams. A student enters with a token, signals, and
@@ -287,7 +287,7 @@ export default GroupSpec.make()
       args: () => ({
         deviceId: DeviceId,
         questionId: Id("examQuestions"),
-        response: Schema.Array(LocalIdSchema),
+        response: ExamResponse,
         sittingId: Id("examSittings"),
         slug: TenantSlug,
         version: Version,

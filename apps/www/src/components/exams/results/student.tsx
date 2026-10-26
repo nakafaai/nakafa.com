@@ -2,6 +2,7 @@ import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentResult } from "@repo/backend/confect/exams/results/contract";
+import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
   CardContent,
@@ -11,27 +12,30 @@ import {
 import { Array as Arr, Number as Num } from "effect";
 import { useTranslations } from "use-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
-import { responseLetters, verdictKeys } from "@/components/exams/results/model";
+import { responseText, verdictKeys } from "@/components/exams/results/model";
 import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
-/** The letters of the options that a student chose, or a line that says the question was left unanswered. */
+/**
+ * The letters of the options that a student chose or the text the student typed, or a line that says
+ * the question was left unanswered.
+ */
 function AnswerLine({
   optionIds,
   response,
 }: {
   readonly optionIds: readonly string[];
-  readonly response: readonly string[];
+  readonly response: ExamResponse;
 }) {
   const t = useTranslations("Exams");
-  const letters = responseLetters(optionIds, response);
-  if (letters.length === 0) {
+  const shown = responseText(optionIds, response);
+  if (shown === "") {
     return t("student-no-answer");
   }
-  return t("student-answer", { letters: Arr.join(letters, ", ") });
+  return t("student-answer", { answer: shown });
 }
 
 /** One question of the student's result: its number and verdict, with the answer that the student chose beneath. */

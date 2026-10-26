@@ -35,6 +35,7 @@ import { cancelPending } from "@repo/backend/confect/exams/sittings/timers";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Array as Arr, Effect, Option, Schema } from "effect";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /** The question that a learner answers or flags, in the sitting the attempt belongs to. */
 const AnswerTarget = Schema.Struct({
@@ -210,7 +211,7 @@ export const heldSection = Effect.fn("exams.sittings.gate.held")(function* (
 /** Saves one answer, replacing the row of its question, with the version that the gate admitted. */
 const storeAnswer = Effect.fn("exams.sittings.gate.answer.store")(function* (
   live: Answering,
-  response: readonly string[],
+  response: ExamResponse,
   now: number,
   version: Version
 ) {
@@ -266,7 +267,7 @@ export const sittingGate = make<
   SectionTarget,
   Answering,
   Sectioned,
-  readonly string[],
+  ExamResponse,
   QuestionNotInExam | SittingLocked,
   DatabaseReader | DatabaseWriter | Scheduler
 >({

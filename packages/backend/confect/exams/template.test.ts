@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
   newChoiceAnswers,
+  shortAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
 import { asTemplate } from "@repo/backend/confect/exams/template";
@@ -68,5 +69,17 @@ describe("exams/template asTemplate", () => {
       matrix,
     ]);
     expect(converted.key).toBeNull();
+  });
+
+  it("turns any question into one text entry with no key, and a short answer back into a new choice", () => {
+    const key = [
+      { correct: ["option-1"], interaction: "choice", kind: "choice" },
+    ] as const;
+    const short = asTemplate("short", newChoiceAnswers(), key, []);
+    expect(short).toEqual({ answers: shortAnswers(), key: null });
+    expect(asTemplate("choice", short.answers, null, [])).toEqual({
+      answers: newChoiceAnswers(),
+      key: null,
+    });
   });
 });

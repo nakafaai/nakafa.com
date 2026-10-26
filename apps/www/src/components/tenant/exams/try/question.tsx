@@ -1,11 +1,17 @@
 import { QueryResult, useQuery } from "@confect/react";
 import editors from "@repo/backend/confect/_generated/refs/editor";
+import {
+  chosenOptions,
+  NO_RESPONSE,
+  typedText,
+} from "@repo/backend/confect/exams/sittings/response";
 import { ClientOnly } from "@tanstack/react-router";
 import { Option } from "effect";
 import { lazy, Suspense, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import { choiceOf } from "@/components/exams/sitting/response";
+import { SittingField } from "@/components/exams/sitting/field";
+import { choiceOf, entryOf } from "@/components/exams/sitting/response";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
 
@@ -45,6 +51,7 @@ export function ExamTryQuestion({
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
   const choice = choiceOf(question.answers);
+  const entry = entryOf(question.answers);
 
   return (
     <section aria-labelledby={titleId} className="grid gap-6">
@@ -63,7 +70,15 @@ export function ExamTryQuestion({
           choice={choice.value}
           labelledBy={titleId}
           onChoose={(next) => choose(question.id, next)}
-          response={response ?? []}
+          response={chosenOptions(response ?? NO_RESPONSE)}
+        />
+      ) : null}
+      {Option.isSome(entry) ? (
+        <SittingField
+          entry={entry.value}
+          labelledBy={titleId}
+          onType={(text) => choose(question.id, { text })}
+          text={typedText(response ?? NO_RESPONSE)}
         />
       ) : null}
     </section>

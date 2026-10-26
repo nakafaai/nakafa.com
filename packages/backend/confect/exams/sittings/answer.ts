@@ -11,26 +11,16 @@ import {
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { sittingGate } from "@repo/backend/confect/exams/sittings/gate";
+import {
+  type ExamResponse,
+  isTextResponse,
+} from "@repo/backend/confect/exams/sittings/response";
 import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Match, Option } from "effect";
 
-/** The one kind of interaction that a student's response answers. */
+/** A choice, whose response is the options the student chose. */
 type Choice = Extract<Interaction, { readonly kind: "choice" }>;
-
-/**
- * The choice of a question that holds exactly one interaction, and that interaction is a
- * choice. A question of another shape takes no response, so none fits it.
- */
-const oneChoice = (
-  interactions: readonly Interaction[]
-): Option.Option<Choice> =>
-  interactions.length === 1
-    ? Arr.findFirst(
-        interactions,
-        (interaction): interaction is Choice => interaction.kind === "choice"
-      )
-    : Option.none();
 
 /**
  * Whether a response fits the choice: each option is one of its options, no option repeats,
@@ -45,19 +35,38 @@ const fitsChoice = (choice: Choice, response: readonly string[]) =>
   );
 
 /**
- * The response as the question takes it: the caller's response when it fits the question's
- * one choice, and `ResponseDoesNotFit` for any other. A question of another shape takes no
- * response, so no response fits it.
+ * Whether a response fits the one interaction of a question: a choice takes the options it holds
+ * (`fitsChoice`), and a text entry takes typed text, blank text included, which leaves it unanswered.
+ * A question of any other shape, or of more than one interaction, takes no response.
+ */
+const fitsQuestion = (
+  interactions: readonly Interaction[],
+  response: ExamResponse
+) => {
+  if (interactions.length !== 1) {
+    return false;
+  }
+  return Arr.some(interactions, (interaction) =>
+    Match.value(interaction).pipe(
+      Match.when({ kind: "choice" }, (choice) =>
+        isTextResponse(response) ? false : fitsChoice(choice, response)
+      ),
+      Match.when({ kind: "textEntry" }, () => isTextResponse(response)),
+      Match.orElse(() => false)
+    )
+  );
+};
+
+/**
+ * The response as the question takes it: the caller's response when it fits the question's one
+ * interaction (`fitsQuestion`), and `ResponseDoesNotFit` for any other.
  */
 const fittingResponse = Effect.fn("exams.sittings.answer.fit")(function* (
   question: ExamQuestionsDoc,
-  response: readonly string[]
+  response: ExamResponse
 ) {
   const interactions = yield* questionAnswers(question.answers);
-  const fits = Option.exists(oneChoice(interactions), (choice) =>
-    fitsChoice(choice, response)
-  );
-  if (!fits) {
+  if (!fitsQuestion(interactions, response)) {
     return yield* new ResponseDoesNotFit();
   }
   return response;
@@ -73,7 +82,7 @@ const fittingResponse = Effect.fn("exams.sittings.answer.fit")(function* (
 export const answer = Effect.fn("exams.sittings.answer")(function* (args: {
   deviceId: string;
   questionId: ExamQuestionsDoc["_id"];
-  response: readonly string[];
+  response: ExamResponse;
   sittingId: ExamSittingsDoc["_id"];
   version: Version;
 }) {

@@ -27,6 +27,20 @@ const keyOf = (
   interaction = "choice"
 ): InteractionKey[] => [{ correct, interaction, kind: "choice" }];
 
+/** The key of the text entry `text`, accepting these texts in any case and spacing. */
+const accepting = (...acceptedAnswers: [string, ...string[]]): InteractionKey[] => [
+  {
+    accepted: {
+      acceptedAnswers,
+      collapseWhitespace: true,
+      ignoreCase: true,
+      kind: "text",
+    },
+    interaction: "text",
+    kind: "textEntry",
+  },
+];
+
 describe("exams/results/score", () => {
   it("scores a single-answer choice correct when its one option is the correct option", () => {
     expect(scoreResponse(single, keyOf(["option-2"]), ["option-2"])).toBe(
@@ -80,9 +94,39 @@ describe("exams/results/score", () => {
     ).toBe("pending");
   });
 
-  it("leaves a text answer pending, since a person judges it", () => {
-    expect(scoreResponse([text], keyOf(["option-2"]), ["option-2"])).toBe(
+  it("leaves a text answer pending when its key accepts no text for it", () => {
+    expect(scoreResponse([text], keyOf(["option-2"]), { text: "Paris" })).toBe(
       "pending"
+    );
+  });
+
+  it("scores a short answer correct when it matches an accepted answer after normalization, whatever its case and spaces", () => {
+    expect(scoreResponse([text], accepting("Jakarta"), { text: "  jakarta " })).toBe(
+      "correct"
+    );
+    expect(
+      scoreResponse([text], accepting("Daerah Khusus", "DKI"), {
+        text: "daerah   khusus",
+      })
+    ).toBe("correct");
+  });
+
+  it("leaves a short answer that matches no accepted answer pending, so the teacher judges it", () => {
+    expect(scoreResponse([text], accepting("Jakarta"), { text: "Batavia" })).toBe(
+      "pending"
+    );
+  });
+
+  it("scores a blank short answer incorrect, as an unanswered question", () => {
+    expect(scoreResponse([text], accepting("Jakarta"), { text: "   " })).toBe(
+      "incorrect"
+    );
+    expect(scoreResponse([text], accepting("Jakarta"), [])).toBe("incorrect");
+  });
+
+  it("scores a choice that a text response answers incorrect, as it chooses no option", () => {
+    expect(scoreResponse(single, keyOf(["option-2"]), { text: "B" })).toBe(
+      "incorrect"
     );
   });
 

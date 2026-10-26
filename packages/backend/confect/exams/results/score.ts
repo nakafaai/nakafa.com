@@ -1,14 +1,22 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
+import { matchesAnswerKey } from "@nakafa/aksara-contracts/question/answer";
 import type { QuestionPoints } from "@repo/backend/confect/exams/question";
 import type { Verdict } from "@repo/backend/confect/exams/results/schema";
+import {
+  chosenOptions,
+  type ExamResponse,
+  isAnswered,
+  isTextResponse,
+} from "@repo/backend/confect/exams/sittings/response";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import type {
   Outcome,
   ResponseSpec,
   Selection,
 } from "@repo/backend/confect/response/model";
-import { Array as Arr, Option, Result } from "effect";
+import { Array as Arr, Option, Result, Schema } from "effect";
 
 /** A choice interaction, which a single-answer or a multiple-choice question holds. */
 type Choice = Extract<Interaction, { readonly kind: "choice" }>;
@@ -90,27 +98,92 @@ const VERDICT_OF_STATUS = {
   pending: "pending",
 } satisfies Record<Outcome["status"], Verdict>;
 
+/** A text entry interaction, which a short answer question holds. */
+type TextEntry = Extract<Interaction, { readonly kind: "textEntry" }>;
+
+/** The key of one text entry: the texts it accepts, and how they are compared. */
+type TextEntryKey = Extract<InteractionKey, { readonly kind: "textEntry" }>;
+
 /**
- * Scores one saved response against its question's key with the try-outs' evaluation (`evaluate`, ADR
- * 0031, section 9). An unanswered question, and a response that names no option of its choice, are
- * `incorrect`, as the sitting closes them. A question that holds another shape, a question without a
- * key, or a key with no answer for its choice is `pending`, so a person judges it instead of the server
+ * The language a text key is compared in. A text key compares normalized text and reads no
+ * language, unlike a number key, so every delivery language grades it the same.
+ */
+const TEXT_KEY_LANGUAGE = Schema.decodeSync(DeliveryLanguageSchema)("id");
+
+/**
+ * The text entry that a question answers: its one interaction, when that is a text entry. A
+ * question of any other shape has none.
+ */
+const answeredEntry = (
+  interactions: readonly Interaction[]
+): Option.Option<TextEntry> =>
+  interactions.length === 1
+    ? Arr.findFirst(
+        interactions,
+        (interaction): interaction is TextEntry =>
+          interaction.kind === "textEntry"
+      )
+    : Option.none();
+
+/**
+ * Scores one typed response against its text entry's key (K7). A key with no accepted answers for the
+ * entry leaves it `pending`. A blank response is `incorrect`, as an unanswered question, a text that one
+ * accepted answer matches after the contract's normalization (`matchesAnswerKey`) is `correct`, and any
+ * other text is `pending`, so the teacher judges it.
+ */
+const scoreText = (
+  entry: TextEntry,
+  key: readonly InteractionKey[],
+  response: ExamResponse
+): Verdict =>
+  Option.match(
+    Arr.findFirst(
+      key,
+      (item): item is TextEntryKey =>
+        item.kind === "textEntry" && item.interaction === entry.id
+    ),
+    {
+      onNone: () => "pending",
+      onSome: ({ accepted }) => {
+        if (!(isTextResponse(response) && isAnswered(response))) {
+          return "incorrect";
+        }
+        return matchesAnswerKey(accepted, response.text, TEXT_KEY_LANGUAGE)
+          ? "correct"
+          : "pending";
+      },
+    }
+  );
+
+/**
+ * Scores one saved response against its question's key. A choice is scored with the try-outs'
+ * evaluation (`evaluate`, ADR 0031, section 9): an unanswered question, and a response that names no
+ * option of its choice, are `incorrect`, as the sitting closes them. A text entry is scored by its
+ * accepted answers (`scoreText`). A question that holds another shape, a question without a key, or a
+ * key with no answer for its interaction is `pending`, so a person judges it instead of the server
  * (ADR 0031, section 4).
  */
 export function scoreResponse(
   interactions: readonly Interaction[],
   key: readonly InteractionKey[] | null,
-  response: readonly string[]
+  response: ExamResponse
 ): Verdict {
+  if (key === null) {
+    return "pending";
+  }
+  const entry = answeredEntry(interactions);
+  if (Option.isSome(entry)) {
+    return scoreText(entry.value, key, response);
+  }
   const choice = answeredChoice(interactions);
-  if (Option.isNone(choice) || key === null) {
+  if (Option.isNone(choice)) {
     return "pending";
   }
   const answer = choiceKeyOf(key, choice.value.id);
   if (Option.isNone(answer)) {
     return "pending";
   }
-  return Option.match(selectionOf(choice.value, response), {
+  return Option.match(selectionOf(choice.value, chosenOptions(response)), {
     onNone: () => "incorrect",
     onSome: (selection) =>
       Result.match(evaluate(specOf(choice.value, answer.value), selection), {

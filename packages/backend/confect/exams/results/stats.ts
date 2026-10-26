@@ -3,6 +3,10 @@ import type {
   examResultValidator,
   Verdict,
 } from "@repo/backend/confect/exams/results/schema";
+import {
+  chosenOptions,
+  isAnswered,
+} from "@repo/backend/confect/exams/sittings/response";
 import { Array as Arr } from "effect";
 
 /** The option IDs of a question's choices, in the order the choices list them. */
@@ -13,7 +17,7 @@ export const optionIdsOf = (interactions: readonly Interaction[]): string[] =>
       : []
   );
 
-/** One scored answer as a tally reads it: the options that it chose, and its verdict. */
+/** One scored answer as a tally reads it: the options it chose or the text it typed, and its verdict. */
 export type ScoredAnswer = Pick<
   typeof examResultValidator.Type,
   "response" | "verdict"
@@ -32,12 +36,13 @@ export const tallyAnswers = (
   answers: readonly ScoredAnswer[],
   optionIds: readonly string[]
 ) => ({
-  answered: Arr.filter(answers, (answer) => answer.response.length > 0).length,
+  answered: Arr.filter(answers, (answer) => isAnswered(answer.response))
+    .length,
   correct: countVerdict(answers, "correct"),
   incorrect: countVerdict(answers, "incorrect"),
   optionCounts: Arr.map(optionIds, (optionId) => ({
     count: Arr.filter(answers, (answer) =>
-      Arr.contains(answer.response, optionId)
+      Arr.contains(chosenOptions(answer.response), optionId)
     ).length,
     optionId,
   })),

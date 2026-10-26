@@ -1,4 +1,3 @@
-import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import {
   Array as Arr,
@@ -10,6 +9,7 @@ import {
 } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import { isFinalRefusal } from "@/components/exams/sitting/entry";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /**
  * The browser's kept state of a sitting attempt, which holds the answers until the server holds them. Flags are
@@ -22,13 +22,13 @@ import { isFinalRefusal } from "@/components/exams/sitting/entry";
  */
 
 /**
- * One answer that the browser keeps until the server confirms it: the response the student chose, the version
+ * One answer that the browser keeps until the server confirms it: the response the student chose or typed, the version
  * the answer was numbered with, and the device time it was chosen at, which names the answer when the server
  * confirms it.
  */
 const KeptAnswer = Schema.Struct({
   answeredAt: Schema.Finite,
-  response: Schema.Array(LocalIdSchema),
+  response: ExamResponse,
   version: Version,
 });
 type KeptAnswer = typeof KeptAnswer.Type;

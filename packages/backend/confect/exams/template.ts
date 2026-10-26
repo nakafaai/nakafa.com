@@ -4,13 +4,16 @@ import { keyFits } from "@repo/backend/confect/exams/key";
 import {
   choiceLimit,
   fixedOptions,
+  newChoiceAnswers,
   type QuestionTemplate,
+  shortAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option } from "effect";
 
 /**
- * A question's interactions and key as another template takes them. A template that fixes its
+ * A question's interactions and key as another template takes them. A short answer takes one text
+ * entry and no key, and a choice template turns a short answer into a new choice first. A template that fixes its
  * options (`fixedOptions`) gives each choice those options, labelled with `labels` in order and
  * numbered from one, and clears the key, because no option the teacher marked is one of them. Any
  * other template keeps each choice's options and gives it the template's bounds (`choiceLimit`),
@@ -23,9 +26,19 @@ export const asTemplate = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
   key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   labels: readonly string[]
-) => {
+): {
+  readonly answers: Arr.NonEmptyReadonlyArray<Interaction>;
+  readonly key: Arr.NonEmptyReadonlyArray<InteractionKey> | null;
+} => {
+  if (template === "short") {
+    return { answers: shortAnswers(), key: null };
+  }
   const fixed = Option.isSome(fixedOptions(template));
-  const converted = Arr.map(answers, (answer): Interaction => {
+  // A short answer holds no choice, so a choice template starts it from a new choice.
+  const choices = Arr.some(answers, (answer) => answer.kind === "choice")
+    ? answers
+    : newChoiceAnswers();
+  const converted = Arr.map(choices, (answer): Interaction => {
     if (answer.kind !== "choice") {
       return answer;
     }

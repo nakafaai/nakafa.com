@@ -8,6 +8,7 @@ import { attemptResults } from "@repo/backend/confect/exams/results/rows";
 import type { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Struct } from "effect";
+import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 
 /** The most students that one page of the students' list holds. A larger request is clamped to it. */
 const STUDENT_PAGE_SIZE = 100;
@@ -35,7 +36,7 @@ const studentRow = Effect.fn("exams.results.students.row")(function* (
   const rows = yield* attemptResults(attempt.sitting, attempt.person);
   return {
     ...base,
-    answered: Arr.filter(rows, (row) => row.response.length > 0).length,
+    answered: Arr.filter(rows, (row) => isAnswered(row.response)).length,
     pending: Arr.filter(rows, (row) => row.verdict === "pending").length,
     points: Num.sumAll(Arr.map(rows, (row) => row.points)),
   };
