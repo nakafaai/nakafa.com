@@ -36,7 +36,8 @@ import {
 } from "@/components/shared/table/toolbar";
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { RoleBadge, roleIcon } from "@/components/tenant/role";
+import { RoleBadge } from "@/components/tenant/role";
+import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolGrantTable } from "@/components/tenant/settings/roles/grants";
 import { scopeNames } from "@/components/tenant/settings/scope";
