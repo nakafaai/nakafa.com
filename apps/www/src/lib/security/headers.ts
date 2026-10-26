@@ -78,6 +78,8 @@ export function readWwwHeaderOrigins(): WwwHeaderOrigins {
 }
 
 const HeaderRuleSchema = Schema.Struct({
+  /** The names of headers that a broader rule attaches and these addresses must not carry. */
+  detach: Schema.optionalKey(Schema.Array(Schema.String)),
   headers: Schema.Array(WwwHeaderSchema),
   path: Schema.String,
 });
@@ -87,13 +89,15 @@ export type HeaderRule = typeof HeaderRuleSchema.Type;
 
 /**
  * Writes the rules as the `_headers` file. Each header is an indented line under
- * its address pattern, the form that the static assets read. A line over the
- * platform limit fails, so no header is dropped silently.
+ * its address pattern, the form that the static assets read, and each detached
+ * header is an indented line that starts with `! `. A line over the platform
+ * limit fails, so no header is dropped silently.
  */
 export function renderHeadersFile(rules: readonly HeaderRule[]) {
-  const lines = Arr.flatMap(rules, ({ path, headers }) => [
+  const lines = Arr.flatMap(rules, ({ detach = [], path, headers }) => [
     path,
     ...Arr.map(headers, ({ key, value }) => `  ${key}: ${value}`),
+    ...Arr.map(detach, (key) => `  ! ${key}`),
   ]);
   const tooLong = Arr.findFirst(
     lines,

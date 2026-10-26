@@ -11,6 +11,7 @@ import { Clock, Effect, Schema } from "effect";
 import { reportClientException } from "@/lib/analytics/client";
 import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent/storage";
 import { readAuthClient } from "@/lib/auth/client";
+import { holdSession, releaseSession } from "@/lib/auth/session";
 
 const accountSignOutFailedCode = "ACCOUNT_SIGN_OUT_FAILED";
 const accountStorageKeyPrefix = "nakafa-";
@@ -129,21 +130,28 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
   yield* clearAccountBrowserIdentity(cleanup);
 });
 
-/** Clears account-scoped browser identity after the auth session ends. */
+/**
+ * Signs the account out, then clears account-scoped browser identity. Every
+ * caller leaves by loading another document once it succeeds, so the page's
+ * readers keep the session they see until then (`holdSession`). A sign-out that
+ * fails lets them follow Better Auth again.
+ */
 export const signOutAccountBrowserIdentity = Effect.fn(
   "www.auth.signOutAccountBrowserIdentity"
 )(function* (
   request: SignOutRequest = async () => await readAuthClient().signOut()
 ) {
+  yield* holdSession();
   const result = yield* Effect.tryPromise({
     try: request,
     catch: () =>
       new AccountSignOutFailed({
         code: accountSignOutFailedCode,
       }),
-  });
+  }).pipe(Effect.tapError(() => releaseSession()));
 
   if (result.error) {
+    yield* releaseSession();
     return yield* new AccountSignOutFailed({
       code: accountSignOutFailedCode,
     });

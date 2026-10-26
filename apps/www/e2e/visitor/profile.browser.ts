@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, MutableList } from "effect";
+import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
@@ -36,7 +37,19 @@ test("a visitor's profile opens no socket, sends no session read, loads more pos
       page,
       Effect.gen(function* () {
         const { learner } = yield* openChatPage(page, origin);
+        // One post more than the loader's first page, so the scroll has a page to read.
+        yield* Effect.forEach(
+          Arr.range(1, POST_PAGE_SIZE + 1),
+          (index) => learner.writePost(`Post ${index}`),
+          { discard: true }
+        );
         yield* Effect.promise(() => page.context().clearCookies());
+        // The learner's own pages opened a socket and read the session; only
+        // what the visitor's profile does from here on counts.
+        yield* Effect.sync(() => {
+          MutableList.clear(sockets);
+          MutableList.clear(sessionReads);
+        });
         yield* Effect.promise(() =>
           page.goto(`/en/@${learner.username}`, { waitUntil: "load" })
         );

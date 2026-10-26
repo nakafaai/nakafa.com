@@ -56,10 +56,57 @@ test("the owner's Beranda shows the page's one action, the quiet state, and the 
     page.getByRole("link", { name: "Invite a teacher" })
   ).toHaveAttribute("href", SETUP_INVITES_HREF);
   // A setup row has no other text, so its arrow shows without a hover.
-  // The row's icon comes first and its arrow last, so the arrow is the last icon of the link.
+  // The row's only icon is its arrow at its end.
   await expect(
     page.getByRole("link", { name: "Invite a teacher" }).locator("svg").last()
   ).toHaveCSS("opacity", "1");
+  await context.close();
+});
+
+test("the owner's Beranda is a plain greeting over separate cards, each titled in plain words", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
+
+  // The header row holds the greeting and the action, with no picture beside the greeting: every icon in it is the
+  // size of an icon.
+  const header = page.locator('[data-slot="page-header"]');
+  const widths = await header
+    .locator("svg")
+    .evaluateAll((icons) =>
+      icons.map((icon) => icon.getBoundingClientRect().width)
+    );
+  expect(Math.max(...widths)).toBeLessThanOrEqual(24);
+
+  // Each concern is a card of its own, with the page's gap between cards.
+  const cards = page.locator('[data-slot="dashboard-cell"]');
+  await expect(cards.first()).toBeVisible();
+  expect(await cards.count()).toBeGreaterThan(1);
+  await expect(cards.first()).not.toHaveCSS("border-radius", "0px");
+  await expect(page.locator('[data-slot="dashboard"]')).toHaveCSS(
+    "row-gap",
+    "16px"
+  );
+
+  // A number's card names what it counts in words, with no icon beside the title.
+  const live = cards.filter({ hasText: "Live now" });
+  await expect(live).toHaveCount(1);
+  await expect(live.locator("svg")).toHaveCount(0);
+  // The quiet state is the schedule's card, titled as the schedule is.
+  await expect(
+    cards.filter({ hasText: QUIET_STAFF }).getByRole("heading", {
+      name: "Schedule",
+    })
+  ).toBeVisible();
   await context.close();
 });
 

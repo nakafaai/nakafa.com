@@ -9,7 +9,7 @@ import { readStudentsFn } from "@/lib/tenant/settings.functions";
 /** The login cards of the school's people. */
 export const Route = createFileRoute("/school/$slug/settings/students")({
   loader: ({ context }) =>
-    context.school._tag === "Member"
+    context.firstHtml && context.school._tag === "Member"
       ? readStudentsFn({ data: { numItems: PAGE_SIZE, slug: context.slug } })
       : undefined,
   component: SchoolStudentsPage,

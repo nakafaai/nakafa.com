@@ -7,7 +7,12 @@ import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { compactViewport, touchViewport } from "@/e2e/support/viewport";
+import {
+  compactViewport,
+  desktopViewport,
+  touchViewport,
+} from "@/e2e/support/viewport";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The destructive card that holds the account deletion, the only one on the page. */
 const deletionCard = (page: Page) =>
@@ -174,5 +179,120 @@ test.describe("the account deletion card on a standard phone", () => {
     await runOnPage(page, baseURL, (origin) =>
       verifyActionWithIconAtDefaultText(page, origin)
     );
+  });
+});
+
+/** Better Auth's delete route, which the dialog calls once the server prepared the account. */
+const DELETE_USER = "**/api/auth/delete-user*";
+
+/**
+ * Records, until the page leaves, whether the deletion card left the page. The
+ * page leaves by loading another document, which takes nothing off the page.
+ */
+async function watchDeletionCard(page: Page) {
+  const record = { left: false };
+  await page.exposeBinding("nakafaDeletionCardLeft", () => {
+    record.left = true;
+  });
+  await page.evaluate(() => {
+    const card = document.querySelector(
+      '[data-slot="card"][data-variant="destructive"]'
+    );
+    new MutationObserver(() => {
+      const left = Reflect.get(window, "nakafaDeletionCardLeft");
+      if (card !== null && !card.isConnected && typeof left === "function") {
+        left();
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  });
+  return record;
+}
+
+/** Opens the deletion dialog and confirms the deletion in it. */
+const confirmDeletion = (page: Page) =>
+  Effect.promise(async () => {
+    await waitUntilTakenOver(deleteAction(page));
+    await deleteAction(page).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { exact: true, name: app.Auth["delete-account"] })
+      .click();
+  });
+
+/**
+ * Better Auth refuses the deletion after the server prepared the account, so
+ * the server takes the preparation back. The account reads as gone in between,
+ * and the page stays as it is: the dialog says why, and the profile and its
+ * deletion card never leave the page.
+ */
+const verifyRefusedDeletion = Effect.fn("NakafaE2E.verifyRefusedDeletion")(
+  function* (page: Page, origin: string) {
+    yield* openSettings(page, origin);
+    yield* Effect.promise(() =>
+      page.route(DELETE_USER, (route) =>
+        route.fulfill({
+          json: {
+            code: "ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE",
+            message: "Refused by the test.",
+          },
+          status: 503,
+        })
+      )
+    );
+    const card = yield* Effect.promise(() => watchDeletionCard(page));
+    yield* confirmDeletion(page);
+    yield* Effect.promise(async () => {
+      await expect(
+        page.getByRole("dialog").getByText(app.Auth["delete-account-error"])
+      ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      await expect(deletionCard(page)).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`${appRoutes.settings}$`));
+      expect(card.left).toBe(false);
+    });
+  }
+);
+
+/** How long a finished deletion may take to reach the home page: it prepares, deletes and checks on the server. */
+const DELETION_MILLISECONDS = 60_000;
+
+/**
+ * The deletion goes through: the account reads as gone before the page leaves
+ * for the home page, and the profile stays on the page until it does.
+ */
+const verifyDeletion = Effect.fn("NakafaE2E.verifyDeletion")(function* (
+  page: Page,
+  origin: string
+) {
+  yield* openSettings(page, origin);
+  const card = yield* Effect.promise(() => watchDeletionCard(page));
+  yield* confirmDeletion(page);
+  yield* Effect.promise(async () => {
+    await page.waitForURL((url) => url.pathname === "/en", {
+      timeout: DELETION_MILLISECONDS,
+      waitUntil: "load",
+    });
+    expect(card.left).toBe(false);
+  });
+});
+
+test.describe("the account deletion flow on a desktop", () => {
+  test.use({
+    viewport: { height: desktopViewport.height, width: desktopViewport.width },
+  });
+
+  test("keeps the page and says why when the deletion is refused after the account was prepared", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      verifyRefusedDeletion(page, origin)
+    );
+  });
+
+  test("keeps the profile on the page until a finished deletion leaves for home", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) => verifyDeletion(page, origin));
   });
 });

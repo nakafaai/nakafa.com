@@ -17,6 +17,24 @@ const UnavailableChatSchema = Schema.Union([
   ChatAccessError,
 ]);
 
+/**
+ * Whether a read failed because the learner's own chat is gone. The server
+ * finds no chat the viewer may read, and the chat it answered before named its
+ * owner, which the server does in the owner's chat alone. A chat can stop being
+ * the owner's only by being deleted, in another tab or on another device, so the
+ * page moves on instead of showing the chat as one the viewer may not read.
+ */
+export function isDeletedOwnChat(
+  error: unknown,
+  ownerBefore: Id<"users"> | undefined
+) {
+  return (
+    ownerBefore !== undefined &&
+    Schema.is(ChatAccessError)(error) &&
+    error.code === "CHAT_NOT_FOUND"
+  );
+}
+
 /** The card a chat that could not be read shows: its access, or Nakafa's own failure. */
 type ChatFailureKind = "access" | "retry";
 
