@@ -87,7 +87,7 @@ const readClassroom = Effect.fn("connectors.google.classroom.read")(function* (
 const decoded =
   <S extends Schema.Top>(answer: S) =>
   (text: string) =>
-    Schema.decodeUnknownEffect(Schema.fromJsonString(answer))(text).pipe(
+    Schema.decodeEffect(Schema.fromJsonString(answer))(text).pipe(
       Effect.mapError(() => new GoogleFailed({ reason: "invalid" }))
     );
 

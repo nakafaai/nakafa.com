@@ -13,7 +13,7 @@ import { Base64Url } from "effect/encoding";
 import {
   HttpClient,
   HttpClientRequest,
-  HttpClientResponse,
+  type HttpClientResponse,
 } from "effect/http";
 
 /** Google's authorization, token, and revocation endpoints, from its OpenID configuration. */
@@ -137,7 +137,7 @@ const tokenAnswer = Effect.fn("connectors.google.tokenAnswer")(function* (
   );
   if (response.status < 200 || response.status >= 300) {
     const revoked = Option.exists(
-      Schema.decodeUnknownOption(TokenRefusal)(text),
+      Schema.decodeOption(TokenRefusal)(text),
       (refusal) => refusal.error === "invalid_grant"
     );
     return yield* new GoogleFailed({
