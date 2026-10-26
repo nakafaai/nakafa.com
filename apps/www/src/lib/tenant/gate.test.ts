@@ -46,6 +46,12 @@ describe("readSchoolTreeGate", () => {
     ).toStrictEqual(Option.some("en"));
   });
 
+  it("answers a school tree page under a locale in the locale that its path names", () => {
+    expect(
+      readSchoolTreeGate(requestTo("/de/school/harapan", "nakafa.test"))
+    ).toStrictEqual(Option.some("de"));
+  });
+
   it("answers a school tree page of a request without a host header", () => {
     expect(readSchoolTreeGate(requestTo("/school/harapan"))).toStrictEqual(
       Option.some("en")

@@ -3,7 +3,7 @@ import {
   PaginatedQueryResult,
   useMutation,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { MoreHorizontalIcon, Refresh01Icon } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -34,6 +34,10 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   addStudentChange,
@@ -44,7 +48,7 @@ import {
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import {
   type PreloadedPage,
@@ -90,30 +94,35 @@ export function SchoolStudentsSettings({
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
 
   return (
-    <SettingsPage
-      actions={
-        <Button onClick={() => setIsAdding(true)} type="button">
-          {t("student-add")}
-        </Button>
-      }
-    >
-      <ReadBoundary>
-        <StudentsFirstPageContext value={first}>
-          <SchoolLoginsBody onIssued={setIssued} slug={slug} />
-        </StudentsFirstPageContext>
-      </ReadBoundary>
-      <SchoolStudentDialog
-        onAdded={setIssued}
-        open={isAdding}
-        setOpen={setIsAdding}
-        slug={slug}
-      />
-      <SchoolCardDialog
-        card={issued}
-        onClose={() => setIssued(undefined)}
-        slug={slug}
-      />
-    </SettingsPage>
+    <TableFiltersProvider>
+      <SettingsTablePage
+        actions={
+          <>
+            <TableSearch placeholder={t("logins-search")} />
+            <Button onClick={() => setIsAdding(true)} type="button">
+              {t("student-add")}
+            </Button>
+          </>
+        }
+      >
+        <ReadBoundary>
+          <StudentsFirstPageContext value={first}>
+            <SchoolLoginsBody onIssued={setIssued} slug={slug} />
+          </StudentsFirstPageContext>
+        </ReadBoundary>
+        <SchoolStudentDialog
+          onAdded={setIssued}
+          open={isAdding}
+          setOpen={setIsAdding}
+          slug={slug}
+        />
+        <SchoolCardDialog
+          card={issued}
+          onClose={() => setIssued(undefined)}
+          slug={slug}
+        />
+      </SettingsTablePage>
+    </TableFiltersProvider>
   );
 }
 
@@ -216,7 +225,7 @@ function SchoolLoginTable({
       columns={columns}
       data={logins}
       rowId={(login) => login.loginName}
-      search={{ column: "login", placeholder: t("logins-search") }}
+      search="login"
     />
   );
 }
@@ -268,6 +277,7 @@ function SchoolLoginMenu({
               )
             }
           >
+            <HugeIcons icon={Refresh01Icon} />
             {t("card-reissue")}
           </DropdownMenuItem>
         </DropdownMenuContent>

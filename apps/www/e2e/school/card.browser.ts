@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { createSchool, hostAddress, seedCard } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -91,7 +92,19 @@ test("a signed-in learner who is not a member of an existing school sees the out
   await Effect.runPromise(signInLearner(context, schoolHome));
   const page = await context.newPage();
 
-  const response = await page.goto(schoolHome);
+  const response = await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.promise(async () => {
+        const answer = await page.goto(schoolHome);
+        // React takes over the page that the server sent, with no hydration error.
+        await waitUntilTakenOver(
+          page.getByRole("button", { name: "Switch account" })
+        );
+        return answer;
+      })
+    )
+  );
 
   expect(response?.status()).toBe(200);
   await expect(
