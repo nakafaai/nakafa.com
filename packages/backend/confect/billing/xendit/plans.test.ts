@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
+  createPlan,
   deactivatePlan,
   ensurePlanInactive,
   getPlan,
@@ -61,6 +62,45 @@ describe("billing/xendit/plans", () => {
       expect(String(url)).toBe("https://api.xendit.co/recurring/plans/repl_1");
       expect(new Headers(init?.headers).get("api-version")).toBe("2026-01-01");
     })
+  );
+
+  it.effect(
+    "opens a recurring plan with a POST of the plan, and sends nothing that breaks the contract",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValue(ok({ ...PLAN_BODY, status: "ACTIVE" }));
+        const body = {
+          amount: 79_000,
+          currency: "IDR",
+          customer_id: "cust-1",
+          failed_cycle_action: "STOP",
+          immediate_payment: false,
+          payment_tokens: [{ payment_token_id: "pt-1", rank: 1 }],
+          reference_id: "subscription-1",
+          schedule: {
+            anchor_date: "2026-11-26T12:00:00.000+07:00",
+            interval: "MONTH",
+            interval_count: 1,
+          },
+        } as const;
+        const plan = yield* createPlan(body).pipe(
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+        const [url, init] = fetcher.mock.calls[0] ?? [];
+        expect(plan.status).toBe("ACTIVE");
+        expect(init?.method).toBe("POST");
+        expect(String(url)).toBe("https://api.xendit.co/recurring/plans");
+        expect(new Headers(init?.headers).get("api-version")).toBe(
+          "2026-01-01"
+        );
+        fetcher.mockClear();
+        const refused = yield* createPlan({ ...body, amount: 0 }).pipe(
+          Effect.provideService(FetchHttpClient.Fetch, fetcher),
+          Effect.flip
+        );
+        expect(refused).toMatchObject({ errorCode: "REQUEST_NOT_ENCODABLE" });
+        expect(fetcher).not.toHaveBeenCalled();
+      })
   );
 
   it.effect(

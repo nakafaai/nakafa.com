@@ -76,7 +76,24 @@
                     "type": "string"
                   },
                   "client_secret": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "device_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "grant_type": {
                     "type": "string"
@@ -94,8 +111,97 @@
                 },
                 "required": [
                   "client_id",
-                  "client_secret",
                   "grant_type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/school/v1/device": {
+      "post": {
+        "tags": [
+          "oauth"
+        ],
+        "operationId": "oauth.device",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "device_code": {
+                      "type": "string"
+                    },
+                    "expires_in": {
+                      "type": "number"
+                    },
+                    "interval": {
+                      "type": "number"
+                    },
+                    "user_code": {
+                      "type": "string"
+                    },
+                    "verification_uri": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "device_code",
+                    "expires_in",
+                    "interval",
+                    "user_code",
+                    "verification_uri"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "OAuthError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "OAuthClientError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client_id": {
+                    "type": "string"
+                  },
+                  "school": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "client_id",
+                  "school"
                 ],
                 "additionalProperties": false
               }
@@ -779,9 +885,13 @@
           "error": {
             "type": "string",
             "enum": [
+              "access_denied",
+              "authorization_pending",
+              "expired_token",
               "invalid_client",
               "invalid_request",
               "invalid_target",
+              "slow_down",
               "unsupported_grant_type"
             ]
           },
