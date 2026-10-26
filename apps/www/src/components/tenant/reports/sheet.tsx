@@ -10,7 +10,6 @@ import {
   CheckmarkCircle02Icon,
   CircleIcon,
   Edit02Icon,
-  FilterHorizontalIcon,
   Loading03Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
@@ -141,7 +140,6 @@ function CohortReportsHeader() {
         facets={[
           {
             column: "status",
-            icon: FilterHorizontalIcon,
             options: Arr.map(
               ["none", "draft", "completed", "approved", "locked"] as const,
               (state) => ({
