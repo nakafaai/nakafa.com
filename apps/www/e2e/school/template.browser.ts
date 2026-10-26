@@ -364,3 +364,84 @@ test("a teacher turns a question into matching, pairs every statement in the key
   await expect(first).toContainText("B");
   await context.close();
 });
+
+test("a teacher turns a question into a true or false table, marks every statement in the key, and the student marks each one", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("Tabel");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
+  await expect(prompt).toBeEditable({ timeout: readinessTimeoutMilliseconds });
+  await prompt.click();
+  await page.keyboard.type("Tentukan benar atau salah setiap pernyataan.");
+
+  // The table gives three statements and the columns True and False, in the teacher's language.
+  await page
+    .getByRole("button", { name: "Question type: Multiple choice" })
+    .click();
+  await page.getByRole("menuitemradio", { name: "True or false table" }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Question 1, column A" })
+  ).toContainText("True");
+  await expect(
+    page.getByRole("textbox", { name: "Question 1, column B" })
+  ).toContainText("False");
+  const sentBefore = changes.sent;
+  for (const [statement, text] of [
+    ["1", "Air mendidih pada 100 derajat Celsius."],
+    ["2", "Matahari mengelilingi Bumi."],
+    ["3", "Es lebih ringan dari air."],
+  ] as const) {
+    const field = page.getByRole("textbox", {
+      name: `Question 1, statement ${statement}`,
+    });
+    await field.fill(text);
+    await field.press("Tab");
+  }
+
+  // The key marks each statement True or False, and saves once all three are marked.
+  const panel = page.getByRole("complementary", { name: "For teachers" });
+  for (const [statement, column] of [
+    ["1", "True"],
+    ["2", "False"],
+    ["3", "True"],
+  ] as const) {
+    await panel
+      .getByRole("group", {
+        name: `Column for statement ${statement} of question 1`,
+      })
+      .getByRole("button", { exact: true, name: column })
+      .click();
+  }
+  await expect(
+    page.getByRole("region", { name: FIRST_QUESTION })
+  ).not.toContainText("No key yet");
+  await saved(changes, sentBefore);
+
+  // The student marks each statement with one of its two choices.
+  const trying = await context.newPage();
+  await trying.goto(page.url().replace(EDIT_SUFFIX, "/try"));
+  await trying.waitForURL(TRY_PATH);
+  const first = trying.getByRole("radiogroup", { name: "Statement 1" });
+  await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await first.getByRole("radio", { exact: true, name: "True" }).click();
+  await expect(
+    first.getByRole("radio", { exact: true, name: "True" })
+  ).toBeChecked();
+  await expect(trying.getByRole("radiogroup")).toHaveCount(3);
+  await context.close();
+});
