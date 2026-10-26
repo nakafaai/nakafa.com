@@ -19,6 +19,7 @@ import {
   SURAH_SIDEBAR_TRIGGER,
 } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const quranIndexUrlPattern = /\/id\/quran$/;
 const quranSurahUrlPattern = /\/id\/quran\/2$/;
@@ -350,12 +351,16 @@ const verifyQuranLocaleCoverage = Effect.fn(
 
   yield* Effect.promise(() => expect(page.locator("footer")).toHaveCount(0));
   const outline = page.locator(SURAH_SIDEBAR_TRIGGER).filter({ visible: true });
+  // The router can start before React takes the surah over, and a press before
+  // then opens nothing.
+  yield* Effect.promise(() => waitUntilTakenOver(outline));
   yield* Effect.promise(() => outline.click());
   const bibliography = page.getByRole("button", {
     exact: true,
     name: contract.bibliographyLabel,
   });
   yield* Effect.promise(() => expect(bibliography).toBeVisible());
+  yield* Effect.promise(() => waitUntilTakenOver(bibliography));
   yield* Effect.promise(() => bibliography.click());
   const bibliographySheet = page.locator(SHEET_POPUP);
   yield* Effect.promise(() =>
