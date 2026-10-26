@@ -3,7 +3,7 @@ import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 
 /**
  * A field that holds one number, as Base UI builds it: a text input that reads and writes the
@@ -12,10 +12,13 @@ import { useTranslations } from "use-intl";
  * text field that asks for the numeric keyboard.
  */
 function NumberField({ className, ...props }: NumberFieldPrimitive.Root.Props) {
+  const locale = useLocale();
+
   return (
     <NumberFieldPrimitive.Root
       className={cn("w-full", className)}
       data-slot="number-field"
+      locale={locale}
       {...props}
     />
   );
@@ -38,13 +41,16 @@ function NumberFieldGroup({
   );
 }
 
-/** The text input of a number field, with its digits centred at a fixed width. */
+/** The text input of a number field, with its digits centred, named as a number field in the page's locale. */
 function NumberFieldInput({
   className,
   ...props
 }: NumberFieldPrimitive.Input.Props) {
+  const t = useTranslations("Common");
+
   return (
     <NumberFieldPrimitive.Input
+      aria-roledescription={t("number-field")}
       className={cn(
         "w-full min-w-0 flex-1 bg-transparent px-2 text-center text-base tabular-nums outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm",
         className

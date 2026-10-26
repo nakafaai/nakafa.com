@@ -29,9 +29,9 @@ type DatePickerProps = Omit<
   "children" | "onChange" | "type" | "value"
 > & {
   /** The last day the calendar offers, as a day key such as `2026-12-31`. */
-  readonly max?: string;
+  readonly max?: string | undefined;
   /** The first day the calendar offers, as a day key such as `2026-07-13`. */
-  readonly min?: string;
+  readonly min?: string | undefined;
   /** Receives the chosen day as its day key. */
   readonly onValueChange: (day: string) => void;
   /** What the field shows while no day is chosen: an example day or a short hint. */
@@ -99,8 +99,12 @@ function DatePicker({
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
           autoFocus
-          defaultMonth={Option.getOrUndefined(
-            Option.orElse(chosen, () => first)
+          {...Option.match(
+            Option.orElse(chosen, () => first),
+            {
+              onNone: () => ({}),
+              onSome: (defaultMonth) => ({ defaultMonth }),
+            }
           )}
           disabled={Arr.getSomes([
             Option.map(first, (before) => ({ before })),
@@ -136,19 +140,19 @@ function DateTimePicker({
   timePlaceholder,
   value,
 }: {
-  readonly className?: string;
+  readonly className?: string | undefined;
   /** What the date shows while no day is chosen. */
   readonly dayPlaceholder: string;
   /** The id of the date trigger, which the field's label names. */
-  readonly id?: string;
+  readonly id?: string | undefined;
   /** The last day the calendar offers, as a day key. */
-  readonly max?: string;
+  readonly max?: string | undefined;
   /** The first day the calendar offers, as a day key. */
-  readonly min?: string;
+  readonly min?: string | undefined;
   /** Receives the chosen local time once both its day and its time are chosen. */
   readonly onValueChange: (local: string) => void;
   /** The minutes between two times that the time select offers. */
-  readonly step?: number;
+  readonly step?: number | undefined;
   /** What the time shows while no time is chosen. */
   readonly timePlaceholder: string;
   /** The chosen local time, or an empty text while none is chosen. */

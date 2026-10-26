@@ -4,7 +4,12 @@ import {
   QueryResult,
   useMutation,
 } from "@confect/react";
-import { Calendar03Icon } from "@hugeicons/core-free-icons";
+import {
+  Archive02Icon,
+  Calendar03Icon,
+  CalendarCheckIn01Icon,
+} from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -49,6 +54,13 @@ import {
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import type { readPeriodsFn } from "@/lib/tenant/settings.functions";
+
+/** The icon of each period status in the Filter menu: a planned calendar, a running one, and an archive. */
+const PERIOD_STATUS_ICONS = {
+  active: CalendarCheckIn01Icon,
+  archived: Archive02Icon,
+  planned: Calendar03Icon,
+} as const satisfies Record<typeof PeriodStatus.Type, IconSvgElement>;
 
 const SOURCE = "components/tenant/settings/periods";
 
@@ -146,8 +158,8 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
               facets={[
                 {
                   column: "status",
-                  icon: Calendar03Icon,
                   options: Arr.map(PeriodStatus.literals, (status) => ({
+                    icon: PERIOD_STATUS_ICONS[status],
                     label: t(`period-${status}`),
                     value: status,
                   })),

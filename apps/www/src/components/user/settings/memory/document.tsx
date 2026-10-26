@@ -181,6 +181,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
             defaultValue={starting.text}
             label={t("text")}
             labels={{
+              arabic: labels("arabic"),
               bold: labels("bold"),
               bullets: labels("bullets"),
               code: labels("code"),
@@ -190,9 +191,11 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
               heading2: labels("heading-2"),
               heading3: labels("heading-3"),
               highlight: labels("highlight"),
+              insert: labels("insert"),
               italic: labels("italic"),
               link: labels("link"),
               linkPlaceholder: labels("link-placeholder"),
+              lists: labels("lists"),
               more: labels("more"),
               numbers: labels("numbers"),
               quote: labels("quote"),

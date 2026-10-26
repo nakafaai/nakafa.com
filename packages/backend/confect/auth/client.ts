@@ -19,7 +19,10 @@ import {
 import { getCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
 import { declareWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
-import { claimAfterVerification } from "@repo/backend/confect/tenancy/claims";
+import {
+  claimAfterHostedDomain,
+  claimAfterVerification,
+} from "@repo/backend/confect/tenancy/claims";
 import { allocateUsername } from "@repo/backend/confect/users/allocation";
 import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
 import { accountMascot } from "@repo/backend/confect/users/mascot";
@@ -160,6 +163,30 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     },
     verbose: false,
     triggers: {
+      account: {
+        onCreate: (ctx, account): Promise<void> =>
+          claimAfterHostedDomain(
+            account.userId,
+            account.hostedDomain,
+            undefined
+          ).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+            ),
+            runHook
+          ),
+        onUpdate: (ctx, newDoc, oldDoc): Promise<void> =>
+          claimAfterHostedDomain(
+            newDoc.userId,
+            newDoc.hostedDomain,
+            oldDoc.hostedDomain
+          ).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)
+            ),
+            runHook
+          ),
+      },
       user: {
         onCreate: (ctx, authUser): Promise<void> =>
           createUser(authUser).pipe(
