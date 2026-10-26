@@ -4,7 +4,7 @@ import { lazy, Suspense } from "react";
 import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**
- * Whether the visitor carries the signed-in hint, read where the loader runs: the
+ * Whether the visitor carries the signed-in hint, read where the route runs: the
  * request's cookies on the server, and the document's cookies in the browser, so a
  * navigation into the try-out pages waits on no server request. The hint cookie is
  * not HttpOnly for this reason.
@@ -23,13 +23,16 @@ const readSignedInHint = createIsomorphicFn()
  * renders its player on the server, which needs the client during that render, so
  * the server decides from the hint cookie and the first HTML and the client agree.
  *
- * Every navigation reads the hint again. The catalog's first pages are
- * prerendered, so the answer that their HTML carries is the build's, which no
- * visitor's cookie decided, and a learner who opens one and presses into a running
- * attempt needs the client there.
+ * The hint is route context, read before every navigation. The catalog's first
+ * pages are prerendered, so the answer that their HTML carries is the build's,
+ * which no visitor's cookie decided, and a learner who opens one and presses into
+ * a running attempt needs the client there. A loader would not do: the router
+ * shows a stale loader answer at once and reads it again in the background, after
+ * the attempt has already rendered without the client, while `beforeLoad` runs on
+ * every navigation before the page renders.
  */
 export const Route = createFileRoute("/$locale/_main/try-out")({
-  loader: () => readSignedInHint(),
+  beforeLoad: async () => ({ signedIn: await readSignedInHint() }),
   component: TryoutLayout,
 });
 
@@ -47,7 +50,9 @@ const RouteConvexProvider = lazy(() =>
  * screen instead of showing an empty frame.
  */
 function TryoutLayout() {
-  const signedIn = Route.useLoaderData();
+  const signedIn = Route.useRouteContext({
+    select: (context) => context.signedIn,
+  });
   return (
     <Suspense fallback={null}>
       {signedIn ? (
