@@ -17,6 +17,7 @@ export function useDocumentLabels() {
     const heading1 = t("heading-1");
     const heading2 = t("heading-2");
     const heading3 = t("heading-3");
+    const insert = t("insert");
     const numbers = t("numbers");
     const quote = t("quote");
     const table = t("table");
@@ -50,7 +51,7 @@ export function useDocumentLabels() {
         latex: t("latex"),
         open: t("formula-edit"),
       },
-      insert: t("insert"),
+      insert,
       slash,
       toolbar: {
         bold: t("bold"),
@@ -66,9 +67,11 @@ export function useDocumentLabels() {
         heading2,
         heading3,
         image: t("image"),
+        insert,
         italic: t("italic"),
         link: t("link"),
         linkPlaceholder: t("link-placeholder"),
+        lists: t("lists"),
         more: t("more"),
         numbers,
         quote,
