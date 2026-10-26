@@ -135,38 +135,6 @@ const readPoolDay = Effect.fn("billing.overview.readPoolDay")(function* (
 });
 
 /**
- * The day a member who draws Nina from their school's pool sees (K46): the
- * school's daily cap, what is left of it today, which the school's month bounds
- * too, and the UTC midnight it starts over. Nothing for a viewer who draws from
- * their own credits.
- */
-const readPoolDay = Effect.fn("billing.overview.readPoolDay")(function* (
-  userId: Docs["users"]["_id"],
-  now: number
-) {
-  const pool = yield* schoolPoolOf(userId, now);
-  if (Option.isNone(pool)) {
-    return null;
-  }
-  const usage = yield* poolUsageOf(pool.value.tenantId, userId, now);
-  return {
-    allowance: pool.value.dailyCap,
-    balance: Math.max(
-      0,
-      Math.min(
-        pool.value.dailyCap - usage.day,
-        pool.value.capacity - usage.month
-      )
-    ),
-    resetAt: DateTime.toEpochMillis(
-      DateTime.add(DateTime.startOf(DateTime.makeUnsafe(now), "day"), {
-        days: 1,
-      })
-    ),
-  };
-});
-
-/**
  * The billing overview of one viewer at `now`: the plan the grants project, the
  * subscription that bills it, the end of the passes that give it instead, the
  * Nina credits of the current reset period with
