@@ -17,8 +17,10 @@ import {
 const WORDS = "Studies after dinner";
 /** The name of the search field on the German page. */
 const SEARCH_LABEL = "Erinnerung suchen";
-/** The search field, as a reader of the browser's shadow tree names it. */
-const SEARCH = `input[type="search"][aria-label="${SEARCH_LABEL}"]`;
+/** The search field, a text box that the browser draws no clear control for. */
+const SEARCH = `input[type="text"][role="searchbox"][aria-label="${SEARCH_LABEL}"]`;
+/** The design system's clear button of the search field, in German. */
+const CLEAR_LABEL = "Suche löschen";
 /** The card of the list is never narrower than 20rem. */
 const LIST_CARD = 320;
 /** What the row keeps for the list: the card and the 1.5rem of padding on each side. */
@@ -286,10 +288,12 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
       .getByRole("button", { name: "Erinnerung hinzufügen" })
       .boundingBox();
 
-    // The field is empty, so it hides its clear button and the placeholder has
+    // The field is empty, so it shows no clear button and the placeholder has
     // the whole of the field, and its text is not cut.
     expect(placeholder.room).toBeGreaterThan(0);
-    expect(placeholder.clear).toBe(0);
+    await expect(
+      listCard(page).getByRole("button", { name: CLEAR_LABEL })
+    ).toHaveCount(0);
     expect(
       placeholder.overflow,
       `the card is ${card?.width}px wide and the field gives the placeholder ${placeholder.room}px`
@@ -313,9 +317,16 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
     expect(edgesOf(explanation).top).toBeLessThan(edgesOf(button).bottom);
   });
 
-  // The first letter brings the clear button back.
-  yield* Effect.promise(() => search.fill("a"));
-  expect((yield* readPlaceholder(page, SEARCH)).clear).toBeGreaterThan(0);
+  // The first letter brings the design system's clear button, and pressing it
+  // empties the field and keeps the focus there.
+  yield* Effect.promise(async () => {
+    await search.fill("a");
+    const clear = listCard(page).getByRole("button", { name: CLEAR_LABEL });
+    await expect(clear).toBeVisible();
+    await clear.click();
+    await expect(search).toHaveValue("");
+    await expect(search).toBeFocused();
+  });
 });
 
 for (const viewport of [

@@ -16,6 +16,9 @@ describe("billing/xendit/contract", () => {
   it("takes a positive amount for a payment or a subscription, and exactly zero for a save", () => {
     expect(Option.isSome(decode(request))).toBe(true);
     expect(
+      Option.isSome(decode({ ...request, allow_save_payment_method: "FORCED" }))
+    ).toBe(true);
+    expect(
       Option.isSome(decode({ ...request, session_type: "SUBSCRIPTION" }))
     ).toBe(true);
     expect(

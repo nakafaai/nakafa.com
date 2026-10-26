@@ -11,12 +11,10 @@ import {
   ensureAccount,
   recordProviderCustomer,
 } from "@repo/backend/confect/billing/accounts";
-import {
-  admitCheckoutProgram,
-  holdsPro,
-} from "@repo/backend/confect/billing/checkout";
+import { admitCheckoutProgram } from "@repo/backend/confect/billing/checkout";
 import spec from "@repo/backend/confect/billing/checkout.spec";
 import { hasActiveProGrant } from "@repo/backend/confect/billing/grants";
+import { proHoldingOf } from "@repo/backend/confect/billing/holding";
 import {
   billingCurrencyFor,
   UNKNOWN_COUNTRY,
@@ -159,12 +157,12 @@ const mayAdoptCustomer = FunctionImpl.make(
   })
 );
 
-const holdsProQuery = FunctionImpl.make(
+const proHolding = FunctionImpl.make(
   databaseSchema,
   spec,
-  "holdsPro",
-  Effect.fn("billing.checkout.holdsProQuery")(function* (args) {
-    return yield* holdsPro(args.userId, yield* Clock.currentTimeMillis);
+  "proHolding",
+  Effect.fn("billing.checkout.proHoldingQuery")(function* (args) {
+    return yield* proHoldingOf(args.userId, yield* Clock.currentTimeMillis);
   })
 );
 
@@ -173,7 +171,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(recordCustomer),
   Layer.provide(admitCheckout),
   Layer.provide(mayAdoptCustomer),
-  Layer.provide(holdsProQuery),
+  Layer.provide(proHolding),
   Layer.provide(atomic),
   GroupImpl.finalize
 );

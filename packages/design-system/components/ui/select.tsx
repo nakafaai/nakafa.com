@@ -45,7 +45,7 @@ function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex w-fit cursor-pointer items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] ease-out focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 data-placeholder:text-muted-foreground *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:aria-invalid:ring-destructive/40 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "flex w-fit cursor-pointer items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] ease-out focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 data-placeholder:text-muted-foreground *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:aria-invalid:ring-destructive/40 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       data-size={size}
@@ -89,7 +89,7 @@ function SelectContent({
       >
         <SelectPrimitive.Popup
           className={cn(
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 inset-shadow-[0_-1px_--theme(--color-black/4%)] z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-y-auto overflow-x-hidden rounded-md border bg-popover not-dark:bg-clip-padding text-popover-foreground shadow-md duration-ui ease-out data-[align-trigger=true]:animate-none motion-safe:data-closed:animate-out motion-safe:data-open:animate-in dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 inset-shadow-[0_-1px_--theme(--color-black/4%)] z-50 max-h-(--available-height) w-max min-w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) overflow-y-auto overflow-x-hidden rounded-md border bg-popover not-dark:bg-clip-padding text-popover-foreground shadow-md duration-ui ease-out data-[align-trigger=true]:animate-none motion-safe:data-closed:animate-out motion-safe:data-open:animate-in dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
             className
           )}
           data-align-trigger={alignItemWithTrigger}
@@ -132,7 +132,7 @@ function SelectItem({
       data-slot="select-item"
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap">
+      <SelectPrimitive.ItemText className="flex min-w-0 flex-1 items-center gap-2 text-pretty">
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator

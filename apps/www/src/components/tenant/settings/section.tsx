@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { LayoutContent } from "@/components/shared/content/frame";
+import { TablePageBody } from "@/components/shared/table/frame";
 import { SchoolSettingsHeader } from "@/components/tenant/settings/header";
 
 /**
@@ -28,7 +29,9 @@ export function SettingsPage({
 /**
  * One School settings section that lists records: its one header, with the path to the
  * section, then what works on the list and the section's main action at the end, and
- * the list as the whole body, from edge to edge. A data table draws itself in it.
+ * the list as the whole body, in the one card of a table page (`TablePageBody`) at the
+ * column width of the settings cards. A data table, or the empty state in its place, draws
+ * itself in the card.
  */
 export function SettingsTablePage({
   actions,
@@ -41,7 +44,7 @@ export function SettingsTablePage({
   return (
     <>
       <SchoolSettingsHeader>{actions}</SchoolSettingsHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">{children}</div>
+      <TablePageBody width="column">{children}</TablePageBody>
     </>
   );
 }

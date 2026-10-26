@@ -10,8 +10,9 @@ import {
   Key01Icon,
   MoreHorizontalIcon,
   Plug01Icon,
-  School01Icon,
+  Unlink01Icon,
 } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -47,13 +48,19 @@ import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { scopeNameOf, scopeNames } from "@/components/tenant/settings/scope";
+import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import {
   type PreloadedPage,
   usePaginatedPreloaded,
 } from "@/lib/data/paginated";
+
+/** The icon of each client status in the Filter menu: a plugged-in client, and an unlinked one. */
+const CLIENT_STATUS_ICONS = {
+  active: Plug01Icon,
+  revoked: Unlink01Icon,
+} as const satisfies Record<typeof IntegrationStatus.Type, IconSvgElement>;
 
 const SOURCE = "components/tenant/settings/clients";
 
@@ -108,19 +115,15 @@ export function SchoolClientsSettings({
               facets={[
                 {
                   column: "scope",
-                  icon: School01Icon,
-                  options: Arr.map(
-                    QueryResult.isSuccess(viewer)
-                      ? scopeNames(viewer.value.tenant.name, viewer.value.units)
-                      : [],
-                    (name) => ({ label: name, value: name })
-                  ),
+                  options: QueryResult.isSuccess(viewer)
+                    ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
+                    : [],
                   title: t("client-scope"),
                 },
                 {
                   column: "status",
-                  icon: Plug01Icon,
                   options: Arr.map(IntegrationStatus.literals, (status) => ({
+                    icon: CLIENT_STATUS_ICONS[status],
                     label: t(`client-${status}`),
                     value: status,
                   })),

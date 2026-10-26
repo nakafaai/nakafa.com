@@ -1,18 +1,8 @@
 import { QueryResult, useQuery } from "@confect/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
-import { useMediaQuery } from "@mantine/hooks";
+import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { AttemptResult } from "@repo/backend/confect/exams/results/contract";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Sheet,
-  SheetHeader,
-  SheetPopup,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
-import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { Array as Arr, Number as Num } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import {
   useResultsPaper,
@@ -21,7 +11,11 @@ import {
 } from "@/components/exams/results/context";
 import { GradeField } from "@/components/exams/results/grade";
 import { responseText, verdictKeys } from "@/components/exams/results/model";
-import { useResultsSelection } from "@/components/exams/results/selection";
+import { PaneBody, PaneHeader } from "@/components/shared/pane";
+import { PanesDetail, usePanes } from "@/components/shared/panes";
+
+/** Reads the attempt that the open row names. */
+const readAttemptId = Schema.decodeUnknownOption(Id("examAttempts"));
 
 /** One question of the chosen student's answers: its number and verdict, its answer, and its points. */
 function AnswerItem({
@@ -65,16 +59,16 @@ function AnswerItem({
   );
 }
 
-/** The chosen student's answers, read once the student is chosen: a sentence before the submit. */
+/**
+ * The chosen student's answers, read once the student is chosen: the student's name and score in
+ * the header, then each answer, or a sentence before the submit.
+ */
 function AttemptAnswers({
   attemptId,
-  onClose,
 }: {
   readonly attemptId: Parameters<typeof GradeField>[0]["answer"]["attemptId"];
-  readonly onClose: () => void;
 }) {
   const t = useTranslations("Exams");
-  const tCommon = useTranslations("Common");
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
   const read = useQuery(
@@ -84,44 +78,41 @@ function AttemptAnswers({
 
   if (QueryResult.isFailure(read)) {
     return (
-      <p className="text-muted-foreground text-sm">
-        {t("results-unavailable")}
-      </p>
+      <>
+        <PaneHeader title={t("results-student-answers")} />
+        <PaneBody>
+          <p className="text-muted-foreground text-sm">
+            {t("results-unavailable")}
+          </p>
+        </PaneBody>
+      </>
     );
   }
   if (!QueryResult.isSuccess(read)) {
     return null;
   }
   const result = read.value;
-  const total =
-    result === null
-      ? 0
-      : Num.sumAll(Arr.map(result.questions, (question) => question.points));
+  if (result === null) {
+    return (
+      <>
+        <PaneHeader title={t("results-student-answers")} />
+        <PaneBody>
+          <p className="text-sm">{t("results-not-submitted")}</p>
+        </PaneBody>
+      </>
+    );
+  }
+  const total = Num.sumAll(
+    Arr.map(result.questions, (question) => question.points)
+  );
 
   return (
-    <div className="grid gap-4">
-      <div className="flex items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{result?.name ?? ""}</p>
-          {result === null ? null : (
-            <p className="text-muted-foreground text-sm tabular-nums">
-              {t("student-score", { points: result.points, total })}
-            </p>
-          )}
-        </div>
-        <Button
-          aria-label={tCommon("close")}
-          onClick={onClose}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons icon={Cancel01Icon} />
-        </Button>
-      </div>
-      {result === null ? (
-        <p className="text-sm">{t("results-not-submitted")}</p>
-      ) : (
+    <>
+      <PaneHeader
+        description={t("student-score", { points: result.points, total })}
+        title={result.name}
+      />
+      <PaneBody>
         <ol className="grid gap-3">
           {Arr.map(result.questions, (question) => (
             <AnswerItem
@@ -132,56 +123,35 @@ function AttemptAnswers({
             />
           ))}
         </ol>
-      )}
-    </div>
+      </PaneBody>
+    </>
   );
 }
 
 /**
- * The chosen student's answers beside the students' list (two panes): a pane along the page's right
- * edge on a wide screen, beside the list it leaves in view, and a sheet on a phone, as the proctor's
- * seat panel and the exam editor's panel are. A viewer who grades gives each answer its points here.
- * The pane stays closed until a student is chosen.
+ * The chosen student's answers beside the students' list, in the shared panes: a pane along the
+ * list on a wide screen and a sheet on a phone. A viewer who grades gives each answer its points
+ * here. The pane says what it shows until a student is chosen.
  */
 export function StudentAnswersPanel() {
   const t = useTranslations("Exams");
-  const selected = useResultsSelection((state) => state.selected);
-  const choose = useResultsSelection((state) => state.choose);
-  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
-
-  if (isDesktop) {
-    if (selected === null) {
-      return null;
-    }
-    return (
-      <aside
-        aria-label={t("results-student-answers")}
-        className="w-96 shrink-0 overflow-y-auto border-s p-4"
-      >
-        <AttemptAnswers attemptId={selected} onClose={() => choose(null)} />
-      </aside>
-    );
-  }
 
   return (
-    <Sheet
-      onOpenChange={(open) => {
-        if (!open) {
-          choose(null);
-        }
-      }}
-      open={selected !== null}
+    <PanesDetail
+      empty={t("results-answers-empty")}
+      label={t("results-student-answers")}
     >
-      <SheetPopup side="bottom">
-        <SheetHeader>
-          <SheetTitle>{t("results-student-answers")}</SheetTitle>
-        </SheetHeader>
-        {selected === null ? null : (
-          <div className="overflow-y-auto px-4 pb-4">
-            <AttemptAnswers attemptId={selected} onClose={() => choose(null)} />
-          </div>
-        )}
-      </SheetPopup>
-    </Sheet>
+      <OpenAttempt />
+    </PanesDetail>
   );
+}
+
+/** The attempt of the open row, or nothing while no row is open. */
+function OpenAttempt() {
+  const open = usePanes((state) => state.open);
+
+  return Option.match(Option.flatMap(open, readAttemptId), {
+    onNone: () => null,
+    onSome: (attemptId) => <AttemptAnswers attemptId={attemptId} />,
+  });
 }

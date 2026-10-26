@@ -83,11 +83,13 @@ describe("access/catalog", () => {
       "connection",
       "class",
       "grade",
+      "report",
       "visit",
       "document",
       "exam",
       "sitting",
       "result",
+      "guardianLink",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
@@ -224,6 +226,13 @@ describe("access/catalog", () => {
           "sitting.close",
           "exam.results.released",
           "exam.results.graded",
+          "report.locked",
+          "guardian.started",
+          "guardian.linked",
+          "guardian.withdrawn",
+          "guardian.revoked",
+          "roster.set",
+          "roster.imported",
         ],
         Order.String
       )
@@ -298,6 +307,7 @@ describe("access/catalog", () => {
       "exam.view",
       "billing.manage",
       "billing.view",
+      "guardian.list",
     ]);
   });
 

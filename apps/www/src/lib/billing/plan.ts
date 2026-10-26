@@ -1,9 +1,13 @@
+import type { OptimisticUpdate } from "@confect/react";
+import billing from "@repo/backend/confect/_generated/refs/billing";
+import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import type {
   BillingRail,
   billingOverviewValidator,
   billingSubscriptionSummaryValidator,
 } from "@repo/backend/confect/billing/schema";
-import { Number as Num } from "effect";
+import { Number as Num, Option } from "effect";
+import { getProMonthlyPricingFor } from "@/lib/pricing/monthly";
 
 /** What the billing settings show for a viewer. */
 export type BillingOverview = typeof billingOverviewValidator.Type;
@@ -30,8 +34,9 @@ export function creditFooterKey({ credits }: BillingOverview) {
 /**
  * The state of the plan card for one overview. A subscription on the account
  * decides the card, so a past-due subscription keeps its billing portal in reach.
- * Without one, the plan the grants project decides: Free shows the upgrade, and
- * Pro that no subscription on this account bills is granted from elsewhere.
+ * Without one, passes show when they alone give Pro, so another one extends them;
+ * otherwise the plan the grants project decides: Free shows the upgrade, and Pro
+ * that no subscription on this account bills is granted from elsewhere.
  * `ending` means the subscription stops with its paid period, because it cancels
  * there or is already canceled. Nothing decodes this state, so its type is the
  * union that this function returns.
@@ -46,6 +51,9 @@ export function planStateOf(overview: BillingOverview) {
         subscription.cancelAtPeriodEnd || subscription.status === "canceled",
       pastDue: subscription.status === "pastDue",
     } as const;
+  }
+  if (overview.pass !== null) {
+    return { kind: "pass", endsAt: overview.pass.endsAt } as const;
   }
   if (overview.plan === "pro") {
     return { kind: "granted" } as const;
@@ -102,6 +110,15 @@ export function formatCount(count: number, locale: string) {
 }
 
 /**
+ * An amount in a currency's minor units (rupiah, cents) as the pages write that
+ * currency, with the formatter the prices use, so an invoice reads like the price.
+ */
+export function formatMinorAmount(amount: number, currency: BillingCurrency) {
+  const pricing = getProMonthlyPricingFor(currency);
+  return pricing.formatter.format(amount / 10 ** pricing.price.fractionDigits);
+}
+
+/**
  * How much of the period's allowance the viewer has used, in whole percent from 0 to 100. A balance
  * above the allowance, such as one a grant raised, counts as nothing used, and a period that grants
  * nothing counts as all used.
@@ -118,3 +135,24 @@ export function usedPercent({
     minimum: 0,
   });
 }
+
+/**
+ * Shows a canceled Xendit plan as ending with its paid period at once, before
+ * the server answers. Convex drops the change if the mutation fails.
+ */
+export const cancelPlanChange: OptimisticUpdate<
+  typeof billing.xendit.cancel.cancelPlan
+> = (localStore) => {
+  const current = localStore.getQuery(billing.queries.overview, {});
+  if (Option.isNone(current) || current.value.subscription === null) {
+    return;
+  }
+  localStore.setQuery(
+    billing.queries.overview,
+    {},
+    Option.some({
+      ...current.value,
+      subscription: { ...current.value.subscription, cancelAtPeriodEnd: true },
+    })
+  );
+};
