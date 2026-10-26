@@ -1,8 +1,10 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import {
   billingOffer,
@@ -13,7 +15,7 @@ import { ProCheckoutOffer } from "@repo/backend/confect/billing/spec";
 import { readSubscription } from "@repo/backend/confect/billing/subscriptions";
 import { OFFER_DESCRIPTIONS } from "@repo/backend/confect/billing/xendit/checkout";
 import type { XenditPlanRequest } from "@repo/backend/confect/billing/xendit/contract";
-import { DateTime, Duration, Effect, Schema } from "effect";
+import { Array as Arr, DateTime, Duration, Effect, Schema } from "effect";
 
 const isProOffer = Schema.is(ProCheckoutOffer);
 
@@ -25,6 +27,9 @@ const WIB_OFFSET_MS = Duration.toMillis(Duration.hours(7));
 
 /** A failed renewal is charged again once a day, three times, and each failed attempt tells the buyer. */
 const RENEWAL_RETRIES = 3;
+
+/** The statuses of a subscription whose plan keeps charging. */
+const RENEWING_STATUSES = ["active", "pastDue"] as const;
 
 /**
  * The first renewal of a plan whose first `months` were paid at `now`: the same
@@ -118,7 +123,23 @@ export function planRequest(input: {
   };
 }
 
-/** Names the plan Xendit opened for a subscription, once; a subscription that is gone or has one keeps what it has. */
+/** Turns a plan off at Xendit in the background, retried there, so it charges nothing. */
+const turnOff = Effect.fn("billing.xendit.renewal.turnOff")(function* (
+  planId: string
+) {
+  yield* (yield* Scheduler).runAfter(
+    Duration.zero,
+    refs.internal.billing.xendit.cancel.deactivate,
+    { planId }
+  );
+});
+
+/**
+ * Names the plan Xendit opened for a subscription, once, and turns the plan off
+ * when it must not charge: the subscription was deleted, already has its plan,
+ * or was canceled or ended while the plan opened. A canceled subscription still
+ * names its plan, so it is on record while Xendit turns it off.
+ */
 export const recordRenewal = Effect.fn("billing.xendit.renewal.record")(
   function* (
     subscriptionId: Docs["billingSubscriptions"]["_id"],
@@ -130,6 +151,7 @@ export const recordRenewal = Effect.fn("billing.xendit.renewal.record")(
       subscription.provider.kind !== "xendit" ||
       subscription.provider.planId !== null
     ) {
+      yield* turnOff(planId);
       return null;
     }
     yield* (yield* DatabaseWriter)
@@ -138,6 +160,12 @@ export const recordRenewal = Effect.fn("billing.xendit.renewal.record")(
         provider: { ...subscription.provider, planId },
       })
       .pipe(Effect.orDie);
+    if (
+      subscription.cancelAtPeriodEnd ||
+      !Arr.contains(RENEWING_STATUSES, subscription.status)
+    ) {
+      yield* turnOff(planId);
+    }
     return null;
   }
 );

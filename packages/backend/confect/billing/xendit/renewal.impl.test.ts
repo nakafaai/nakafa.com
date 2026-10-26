@@ -67,11 +67,18 @@ beforeEach(() => {
   vi.stubEnv("XENDIT_API_KEY", "test-secret");
 });
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllEnvs();
 });
 
+/** The background jobs a test convex holds: under fake timers a turn-off is listed and never reaches Xendit. */
+function scheduledJobs(t: ReturnType<typeof createBillingTestConvex>) {
+  return t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect());
+}
+
 describe("billing/xendit/renewal", () => {
-  it("opens the plan of a paid first month on its saved channel and names it once", async () => {
+  it("opens the plan of a paid first month on its saved channel, names it once, and turns off a second plan", async () => {
+    vi.useFakeTimers();
     vi.mocked(createPlan).mockReturnValue(Effect.succeed(OPENED));
     const { subscriptionId, t } = await paidFirstMonth();
     await t.action(steps.open, { locale: "id", subscriptionId });
@@ -95,6 +102,56 @@ describe("billing/xendit/renewal", () => {
     expect(
       (await t.run((ctx) => ctx.db.get(subscriptionId)))?.provider
     ).toMatchObject({ planId: "repl_opened" });
+    expect(await scheduledJobs(t)).toMatchObject([
+      {
+        args: [{ planId: "repl_other" }],
+        name: "billing/xendit/cancel:deactivate",
+      },
+    ]);
+  });
+
+  it("turns off a plan that opened while its subscription was canceled, ended or deleted", async () => {
+    vi.useFakeTimers();
+    const canceled = await paidFirstMonth();
+    await canceled.t.run((ctx) =>
+      ctx.db.patch(canceled.subscriptionId, { cancelAtPeriodEnd: true })
+    );
+    await canceled.t.mutation(steps.record, {
+      planId: "repl_canceled",
+      subscriptionId: canceled.subscriptionId,
+    });
+    expect(
+      (await canceled.t.run((ctx) => ctx.db.get(canceled.subscriptionId)))
+        ?.provider
+    ).toMatchObject({ planId: "repl_canceled" });
+    expect(await scheduledJobs(canceled.t)).toMatchObject([
+      { args: [{ planId: "repl_canceled" }] },
+    ]);
+    const ended = await paidFirstMonth();
+    await ended.t.run((ctx) =>
+      ctx.db.patch(ended.subscriptionId, { status: "ended" })
+    );
+    await ended.t.mutation(steps.record, {
+      planId: "repl_ended",
+      subscriptionId: ended.subscriptionId,
+    });
+    expect(await scheduledJobs(ended.t)).toMatchObject([
+      { args: [{ planId: "repl_ended" }] },
+    ]);
+    const gone = await paidFirstMonth();
+    await gone.t.run((ctx) => ctx.db.delete(gone.subscriptionId));
+    expect(
+      await gone.t.mutation(steps.record, {
+        planId: "repl_gone",
+        subscriptionId: gone.subscriptionId,
+      })
+    ).toBeNull();
+    expect(await scheduledJobs(gone.t)).toMatchObject([
+      {
+        args: [{ planId: "repl_gone" }],
+        name: "billing/xendit/cancel:deactivate",
+      },
+    ]);
   });
 
   it("opens no plan for a subscription canceled before it opened, without a saved channel, without a Xendit customer, or gone", async () => {
@@ -130,12 +187,6 @@ describe("billing/xendit/renewal", () => {
       locale: "en",
       subscriptionId: gone.subscriptionId,
     });
-    expect(
-      await gone.t.mutation(steps.record, {
-        planId: "repl_gone",
-        subscriptionId: gone.subscriptionId,
-      })
-    ).toBeNull();
     expect(createPlan).not.toHaveBeenCalled();
   });
 

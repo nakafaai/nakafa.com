@@ -323,7 +323,7 @@ describe("billing/deletion", () => {
     expect(remaining).toBe(false);
   });
 
-  it("clears a long payment history in bounded batches until its last batch", async () => {
+  it("clears a long payment and checkout history in bounded batches until its last batch", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(async (ctx) => {
       const seeded = await seedDeletingUser(ctx, null);
@@ -340,6 +340,18 @@ describe("billing/deletion", () => {
           rail: "polar",
           status: "succeeded",
         });
+        await ctx.db.insert("billingCheckouts", {
+          accountId: seeded.accountId,
+          expiresAt: NOW,
+          invoiceId: null,
+          locale: "id",
+          offer: "pro.pass.1",
+          openedAt: NOW,
+          rail: "xendit",
+          sessionId: `ps_${index}`,
+          status: "expired",
+          url: `https://checkout-staging.xendit.co/sessions/ps_${index}`,
+        });
       }
       return seeded.userId;
     });
@@ -349,6 +361,9 @@ describe("billing/deletion", () => {
     });
     expect(
       await t.run((ctx) => ctx.db.query("billingPayments").collect())
+    ).toEqual([]);
+    expect(
+      await t.run((ctx) => ctx.db.query("billingCheckouts").collect())
     ).toEqual([]);
     expect(
       await t.run((ctx) => ctx.db.query("billingAccounts").collect())
