@@ -51,7 +51,7 @@ const drawUserCode = Effect.fn("integrations.device.userCode")(function* () {
   return Arr.join(
     Arr.map(
       Arr.fromIterable(bytes),
-      (byte) => ALPHABET[byte % ALPHABET.length] ?? ""
+      (byte) => ALPHABET.charAt(byte % ALPHABET.length)
     ),
     ""
   );

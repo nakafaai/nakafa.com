@@ -32,22 +32,44 @@ export const SchoolHost = Schema.String.check(
 /** The seconds RFC 8628 adds to the polling interval at each `slow_down`. */
 const SLOW_DOWN_SECONDS = 5;
 
-/** The client of one school host: the one `SchoolApi` definition, its Convex path served at the host's API path. */
-const schoolClient = (host: string) =>
-  HttpApiClient.make(SchoolApi, {
-    baseUrl: `https://${host}`,
-    transformClient: HttpClient.mapRequest(
-      HttpClientRequest.updateUrl(
-        Str.replace(SCHOOL_API_PATH, SCHOOL_HOST_API_PATH)
-      )
-    ),
-  });
+/** The HTTP client of a school host's requests: the `SchoolApi` definition's Convex path, served at the host's API path. */
+const hostHttpClient = Effect.map(
+  HttpClient.HttpClient,
+  HttpClient.mapRequest(
+    HttpClientRequest.updateUrl(
+      Str.replace(SCHOOL_API_PATH, SCHOOL_HOST_API_PATH)
+    )
+  )
+);
+
+/** The sign-in endpoints of one school host, which take no bearer token. */
+const oauthClient = (host: string) =>
+  Effect.flatMap(hostHttpClient, (httpClient) =>
+    HttpApiClient.group(SchoolApi, {
+      baseUrl: `https://${host}`,
+      group: "oauth",
+      httpClient,
+    })
+  );
 
 /** The bearer token of the stored sign-in, on every read. */
 const bearerLayer = (token: string) =>
   HttpApiMiddleware.layerClient(SchoolApiBearer, ({ next, request }) =>
     next(HttpClientRequest.bearerToken(request, token))
   );
+
+/**
+ * The roster reads of one school host with the stored token. The client reads its
+ * middleware when it is made, so the bearer layer comes first.
+ */
+const rosterClient = (host: string, token: string) =>
+  Effect.flatMap(hostHttpClient, (httpClient) =>
+    HttpApiClient.group(SchoolApi, {
+      baseUrl: `https://${host}`,
+      group: "roster",
+      httpClient,
+    })
+  ).pipe(Effect.provide(bearerLayer(token)));
 
 /**
  * A failed school command as the CLI reports it: the OAuth error code and sentence of a
@@ -67,10 +89,10 @@ const refusalOf = (error: Error) =>
 export const loginSchool = Effect.fn("NakafaCli.school.login")(function* (
   host: typeof SchoolHost.Type
 ) {
-  const client = yield* schoolClient(host);
+  const client = yield* oauthClient(host);
   // A school host's first label is the school's address.
   const school = Arr.headNonEmpty(Str.split(".")(host));
-  const device = yield* client.oauth
+  const device = yield* client
     .device({ payload: { client_id: CLI_CLIENT_ID, school } })
     .pipe(Effect.mapError(refusalOf));
   yield* Console.error(
@@ -81,7 +103,7 @@ export const loginSchool = Effect.fn("NakafaCli.school.login")(function* (
   ): Effect.Effect<typeof TokenResponse.Type, SchoolError> =>
     Effect.sleep(Duration.seconds(seconds)).pipe(
       Effect.andThen(
-        client.oauth.token({
+        client.token({
           payload: {
             client_id: CLI_CLIENT_ID,
             device_code: device.device_code,
@@ -144,26 +166,23 @@ export const readSchool = Effect.fn("NakafaCli.school.read")(function* (
   command: typeof SchoolRead.Type
 ) {
   const session = yield* readSession(yield* Clock.currentTimeMillis);
-  // The client reads its middleware when it is made, so the bearer layer comes first.
-  const client = yield* schoolClient(session.host).pipe(
-    Effect.provide(bearerLayer(session.token))
-  );
+  const client = yield* rosterClient(session.host, session.token);
   const read = Match.value(command).pipe(
     Match.discriminatorsExhaustive("read")({
       cohorts: (found) =>
-        client.roster.cohorts({
+        client.cohorts({
           query: { ...cursorOf(found.cursor), period: found.period },
         }),
       people: (found) =>
-        client.roster.people({
+        client.people({
           query: {
             ...cursorOf(found.cursor),
             ...(found.status === undefined ? {} : { status: found.status }),
           },
         }),
-      periods: () => client.roster.periods({ query: {} }),
+      periods: () => client.periods({ query: {} }),
       placements: (found) =>
-        client.roster.placements({
+        client.placements({
           query: { ...cursorOf(found.cursor), period: found.period },
         }),
     })
