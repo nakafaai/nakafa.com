@@ -20,8 +20,9 @@ const isPlacementRead = (request: Request) =>
 /**
  * Proves the lesson keeps its verified curriculum placement without polluting
  * SEO. The static lesson is readable before the placement arrives, the browser
- * asks for it once, and the lesson's own link then carries it while the title
- * and the first section stay where they were.
+ * asks the server for it once, without first missing a static answer that no
+ * build writes, and the lesson's own link then carries it while the title and
+ * the first section stay where they were.
  */
 test("material sidebar preserves verified curriculum context", async ({
   baseURL,
@@ -40,6 +41,15 @@ test("material sidebar preserves verified curriculum context", async ({
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
           const reads = MutableList.make<string>();
+          const missedAnswers = MutableList.make<string>();
+          page.on("response", (response) => {
+            if (
+              response.url().includes("/_data/") &&
+              response.status() === 404
+            ) {
+              MutableList.append(missedAnswers, response.url());
+            }
+          });
           const released = yield* Deferred.make<void>();
           const services = yield* Effect.context<never>();
           // The placement waits until the lesson has been read, as it would on
@@ -125,7 +135,10 @@ test("material sidebar preserves verified curriculum context", async ({
                   })
                   .toStrictEqual([MATERIAL_PATH, MATERIAL_CONTEXT])
               );
-              yield* Effect.sync(() => expect(reads.length).toBe(1));
+              yield* Effect.sync(() => {
+                expect(reads.length).toBe(1);
+                expect(MutableList.toArray(missedAnswers)).toEqual([]);
+              });
               const titleAfter = yield* Effect.promise(() =>
                 title.boundingBox()
               );

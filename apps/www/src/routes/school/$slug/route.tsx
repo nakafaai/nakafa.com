@@ -1,4 +1,3 @@
-import { captureException } from "@repo/analytics/posthog/capture";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { monospace } from "@repo/design-system/lib/monospace";
 import { SITE_ORIGIN } from "@repo/seo/origin";
@@ -11,21 +10,27 @@ import {
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { type ReactElement, useEffect } from "react";
+import type { ReactElement } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
 import { Broken } from "@/components/state/broken";
+import { RouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { TenantRefused } from "@/components/tenant/refused";
+import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
 import { readAuthLegalFn } from "@/lib/auth/legal.functions";
 import { readShellClassesFn } from "@/lib/tenant/classes.functions";
-import { canManageSchool, roleOf, type SchoolRead } from "@/lib/tenant/frame";
+import {
+  canManageSchool,
+  outsiderOf,
+  roleOf,
+  type SchoolRead,
+} from "@/lib/tenant/frame";
 import { readSchoolFrameFn } from "@/lib/tenant/frame.functions";
 import { schoolHead } from "@/lib/tenant/head";
 import { reusesVisitFrame } from "@/lib/tenant/visit";
@@ -175,6 +180,7 @@ function SchoolLayout(): ReactElement {
         account={viewer.account}
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
+        canOpenReports={canOpenReports(viewer)}
         classes={classes}
         greeting={school.greeting}
         home={school.home}
@@ -202,35 +208,49 @@ function SchoolRefused(): ReactElement {
 }
 
 /**
- * Keeps a school failure on the school's own surface. A viewer who lost the
- * school sees the refused page, and any other failure sees the broken page with
- * a way to retry or to leave for Nakafa.
+ * Keeps a school failure on the school's own surface. A member whom the school
+ * stopped counting while a page was open sees what a reload answers, and any
+ * other failure sees the broken page with a way to retry or to leave for Nakafa.
  */
 function SchoolError({ error }: ErrorComponentProps): ReactElement {
   const t = useTranslations("Error");
   const tState = useTranslations("State");
   const locale = useLocale();
-  const refused = isLostAccess(error);
-
-  useEffect(() => {
-    if (refused) {
-      return;
-    }
-    captureException(error, { source: "school-segment-error" });
-  }, [error, refused]);
-
-  if (refused) {
-    return <TenantRefused />;
+  if (isLostAccess(error)) {
+    return <SchoolLeft />;
   }
   return (
-    <Stage>
-      <Broken
-        description={t("description")}
-        home={tState("home-button")}
-        homeHref={new URL(`/${locale}`, SITE_ORIGIN).href}
-        retry={t("retry")}
-        title={t("title")}
-      />
-    </Stage>
+    <RouteFailure error={error} source="school-segment-error">
+      <Stage>
+        <Broken
+          description={t("description")}
+          home={tState("home-button")}
+          homeHref={new URL(`/${locale}`, SITE_ORIGIN).href}
+          retry={t("retry")}
+          title={t("title")}
+        />
+      </Stage>
+    </RouteFailure>
   );
+}
+
+/**
+ * The page of a member whom the school stopped counting while a page was open: the outsider page
+ * that a reload of the same address answers, drawn from the frame that the visit already holds, so
+ * the live answer and the reload agree. Its Check again reads the frame once more. An account with
+ * no name answers not found, as a reload does.
+ */
+function SchoolLeft(): ReactElement {
+  const { school } = Route.useRouteContext();
+  return Option.match(outsiderOf(school), {
+    onNone: () => <SchoolRefused />,
+    onSome: (outsider) => (
+      <TenantOutsider
+        account={outsider.account}
+        logo={outsider.profile.logo}
+        mascot={outsider.profile.mascot}
+        school={outsider.profile.name}
+      />
+    ),
+  });
 }

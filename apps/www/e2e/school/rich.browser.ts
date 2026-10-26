@@ -79,21 +79,27 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await page.keyboard.press("Enter");
   await expect(prompt.locator("ul li")).toHaveCount(2);
 
-  // A quote, which the toolbar's quote control lifts back to a paragraph when it is closed.
+  // A quote, which the quote of the toolbar's insert menu lifts back to a paragraph when it is
+  // closed. The menu shows the quote checked while the caret sits in it.
+  const insert = toolbar.getByRole("button", { name: "Insert a block" });
   await page.keyboard.type("/");
   await menu.getByRole("option", { name: "Quote" }).click();
   await page.keyboard.type("Kutipan");
   await expect(prompt.locator("blockquote")).toHaveText("Kutipan");
-  await toolbar.getByRole("button", { name: "Quote" }).click();
+  await insert.click();
+  const quote = page.getByRole("menuitemcheckbox", { name: "Quote" });
+  await expect(quote).toHaveAttribute("aria-checked", "true");
+  await quote.click();
   await expect(prompt.locator("blockquote")).toHaveCount(0);
 
-  // A code block takes plain text, and the toolbar's code block control closes it.
+  // A code block takes plain text, and the code block of the toolbar's insert menu closes it.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
   await menu.getByRole("option", { name: "Code block" }).click();
   await page.keyboard.type("const luas = p * l");
   await expect(prompt.locator("pre")).toHaveText("const luas = p * l");
-  await toolbar.getByRole("button", { name: "Code block" }).click();
+  await insert.click();
+  await page.getByRole("menuitemcheckbox", { name: "Code block" }).click();
   await expect(prompt.locator("pre")).toHaveCount(0);
 
   // A 2 by 2 table from the slash menu, with its header row filled through Tab.

@@ -93,6 +93,10 @@ test("a learner takes a new username in settings: a taken or invalid name says w
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);
+        await expect(usernameField(page)).toHaveAttribute(
+          "placeholder",
+          app.Auth["username-placeholder"]
+        );
         await usernameField(page).fill("1abc");
         await expect(
           page.getByText(app.Auth["username-letter-first"], { exact: true })

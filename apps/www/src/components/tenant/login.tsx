@@ -102,6 +102,7 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
             autoComplete="username"
             id={`${id}-username`}
             onChange={(event) => setLoginName(event.target.value)}
+            placeholder={t("username-placeholder")}
             value={loginName}
           />
         </Field>
@@ -125,6 +126,7 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
             }
             id={`${id}-password`}
             onChange={(event) => setPassword(event.target.value)}
+            placeholder={t("password-placeholder")}
             type="password"
             value={password}
           />

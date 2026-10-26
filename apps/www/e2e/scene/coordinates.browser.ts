@@ -155,7 +155,10 @@ const expectStableCoordinateSystem = Effect.fn(
   const scene = card.locator(LINE_SCENE);
   const canvas = scene.locator("canvas");
   const footer = card.locator(SCENE_ACTIONS);
-  const gridButton = footer.getByRole("button", { name: "Kisi" });
+  // The grid is a checked item of the menu at the end of the actions band,
+  // which opens above the page and closes once the item is chosen.
+  const moreButton = footer.getByRole("button", { name: "Aksi lainnya" });
+  const gridItem = page.getByRole("menuitemcheckbox", { name: "Kisi" });
   const playButton = footer.getByRole("button", { name: "Putar" });
 
   yield* Effect.promise(() =>
@@ -168,19 +171,22 @@ const expectStableCoordinateSystem = Effect.fn(
     }).toPass({ timeout: revealTimeoutMilliseconds })
   );
   yield* Effect.promise(() =>
-    expect(gridButton).toHaveAttribute("aria-pressed", "true")
-  );
-  yield* Effect.promise(() =>
     expect(playButton).toHaveAttribute("aria-pressed", "false")
   );
-  yield* Effect.promise(() => gridButton.click());
-  yield* Effect.promise(() =>
-    expect(gridButton).toHaveAttribute("aria-pressed", "false")
-  );
-  yield* Effect.promise(() => gridButton.click());
-  yield* Effect.promise(() =>
-    expect(gridButton).toHaveAttribute("aria-pressed", "true")
-  );
+  yield* Effect.promise(async () => {
+    await moreButton.click();
+    await expect(gridItem).toHaveAttribute("aria-checked", "true");
+    await gridItem.click();
+    await expect(gridItem).toHaveCount(0);
+    await moreButton.click();
+    await expect(gridItem).toHaveAttribute("aria-checked", "false");
+    await gridItem.click();
+    await expect(gridItem).toHaveCount(0);
+    await moreButton.click();
+    await expect(gridItem).toHaveAttribute("aria-checked", "true");
+    await page.keyboard.press("Escape");
+    await expect(gridItem).toHaveCount(0);
+  });
   yield* waitForStableCanvas(canvas);
   yield* observeDrawingBufferSize(canvas);
 

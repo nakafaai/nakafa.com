@@ -4,11 +4,12 @@ import {
   PlayIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   useVisual,
   VisualCardActions,
-  VisualCardFullscreen,
+  VisualCardMenu,
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -45,19 +46,20 @@ function VisualCardReset() {
   const resetView = useVisual((state) => state.resetView);
 
   return (
-    <Button onClick={resetView} size="icon" variant="secondary">
+    <DropdownMenuItem onClick={resetView}>
       <HugeIcons icon={CenterFocusIcon} />
-      <span className="sr-only">{t("reset")}</span>
-    </Button>
+      {t("reset-view")}
+    </DropdownMenuItem>
   );
 }
 
 /**
- * The actions every 3D scene has, in one band under it: play, the first view
- * back, and full screen at the end. A scene with actions of its own, such as
- * the grid of a coordinate scene, passes them as children, and they come first.
- * A static stand-in of the scene passes `inert` to the band, which makes every
- * action in it inert, so none takes focus until the scene is mounted.
+ * The actions every 3D scene has, in one band under it: play, then full screen
+ * joined with the menu of the scene's other actions, which starts with the first
+ * view back. A scene with actions of its own, such as the grid of a coordinate
+ * scene, passes them as menu items, and they follow. A static stand-in of the
+ * scene passes `inert` to the band, which makes every action in it inert, so none
+ * takes focus until the scene is mounted.
  */
 function VisualCardSceneActions({
   children,
@@ -68,10 +70,11 @@ function VisualCardSceneActions({
 }) {
   return (
     <VisualCardActions data-scene-actions="" inert={inert}>
-      {children}
       <VisualCardPlay />
-      <VisualCardReset />
-      <VisualCardFullscreen />
+      <VisualCardMenu>
+        <VisualCardReset />
+        {children}
+      </VisualCardMenu>
     </VisualCardActions>
   );
 }

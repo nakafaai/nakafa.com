@@ -84,6 +84,7 @@ export async function seedAuthenticatedUser(
     creditsResetAt = now,
     email = `${suffix}@example.com`,
     emailVerified = true,
+    hostedDomain,
     name = `User ${suffix}`,
     plan = DEFAULT_USER_PLAN,
     role,
@@ -94,6 +95,8 @@ export async function seedAuthenticatedUser(
     creditsResetAt?: Doc<"users">["creditsResetAt"];
     email?: Doc<"users">["email"];
     emailVerified?: boolean;
+    /** Seeds a Google account too, whose latest sign-in wrote this hosted domain. */
+    hostedDomain?: string | null;
     name?: Doc<"users">["name"];
     now: number;
     plan?: Doc<"users">["plan"];
@@ -129,6 +132,22 @@ export async function seedAuthenticatedUser(
     },
     select: ["_id"],
   });
+  if (hostedDomain !== undefined) {
+    await ctx.runMutation(components.betterAuth.adapter.create, {
+      input: {
+        model: "account",
+        data: {
+          accountId: `google-${suffix}`,
+          createdAt: now,
+          hostedDomain,
+          providerId: "google",
+          updatedAt: now,
+          userId: authUser._id,
+        },
+      },
+      select: ["_id"],
+    });
+  }
   const userId = await ctx.db.insert("users", {
     authId: authUser._id,
     credits,

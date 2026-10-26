@@ -14,6 +14,7 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import editor from "@repo/backend/confect/_generated/refs/editor";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import journal from "@repo/backend/confect/_generated/refs/journal";
@@ -24,6 +25,7 @@ import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import operators from "@repo/backend/confect/_generated/refs/operators";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import records from "@repo/backend/confect/_generated/refs/records";
+import roster from "@repo/backend/confect/_generated/refs/roster";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import users from "@repo/backend/confect/_generated/refs/users";
@@ -106,6 +108,7 @@ const domainModules = {
   contents,
   editor,
   exams,
+  guardians,
   identity,
   integrations,
   journal,
@@ -116,6 +119,7 @@ const domainModules = {
   operators,
   posts,
   records,
+  roster,
   tenancy,
   tryouts,
   users,
