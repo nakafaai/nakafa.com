@@ -6,6 +6,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { connect } from "@repo/backend/confect/connectors/connection";
+import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import {
   journal,
   TENANCY_NOW,
@@ -225,6 +226,7 @@ describe("connectors/sync", () => {
         const due = yield* Effect.forEach(Arr.range(1, 7), () =>
           connectionOf(fixture, "calendar")
         );
+        yield* fixture.run(createTenantKey(fixture.tenants.nf));
         const school = yield* fixture.run(
           Effect.gen(function* () {
             const connectionId = yield* connect(
