@@ -10,18 +10,41 @@ const root = {
   forum: "Forum",
   name: "Fisika X-1",
   slug,
+  tasks: "Tasks",
 };
 const channelId = Schema.decodeUnknownSync(Id("classroomChannels"))("umum");
 const channel = Option.some({ id: channelId, label: "Umum" });
 const none = Option.none();
 
 describe("class page path", () => {
+  it("names the tasks after the class, and a task's title after a link to the tasks", () => {
+    expect(
+      Arr.map(classPath({ _tag: "tasks" }, root, none, none), (item) => item.label)
+    ).toEqual(["Fisika X-1", "Tasks"]);
+    const task = classPath(
+      { _tag: "task", task: "latihan" },
+      root,
+      none,
+      Option.some("Latihan")
+    );
+    expect(Arr.map(task, (item) => item.label)).toEqual([
+      "Fisika X-1",
+      "Tasks",
+      "Latihan",
+    ]);
+    expect(Arr.get(task, 1).pipe(Option.map((item) => item.target))).toEqual(
+      Option.some(
+        expect.objectContaining({ to: "/school/$slug/classes/$classSlug/tasks" })
+      )
+    );
+  });
+
   it("names the class alone on its home, and the forum after it on the channel list", () => {
     expect(classPath({ _tag: "home" }, root, none, none)).toEqual([
       { label: "Fisika X-1" },
     ]);
     expect(
-      Array.from(
+      Arr.map(
         classPath({ _tag: "forum" }, root, none, none),
         (item) => item.label
       )
@@ -31,7 +54,7 @@ describe("class page path", () => {
   it("ends a channel with its name once it is known, and the forum before that", () => {
     const view = { _tag: "channel" as const, channelId, jump: Option.none() };
     expect(
-      Array.from(classPath(view, root, none, none), (item) => item.label)
+      Arr.map(classPath(view, root, none, none), (item) => item.label)
     ).toEqual(["Fisika X-1", "Forum"]);
     expect(Arr.last(classPath(view, root, channel, none))).toEqual(
       Option.some({ label: "Umum" })
@@ -45,7 +68,7 @@ describe("class page path", () => {
       number: 12,
     };
     const path = classPath(view, root, channel, Option.some("#12 Gaya gesek"));
-    expect(Array.from(path, (item) => item.label)).toEqual([
+    expect(Arr.map(path, (item) => item.label)).toEqual([
       "Fisika X-1",
       "Forum",
       "Umum",
@@ -55,7 +78,7 @@ describe("class page path", () => {
       expect.objectContaining({ search: { channel: channelId } })
     );
     expect(
-      Array.from(classPath(view, root, none, none), (item) => item.label)
+      Arr.map(classPath(view, root, none, none), (item) => item.label)
     ).toEqual(["Fisika X-1", "Forum"]);
   });
 });

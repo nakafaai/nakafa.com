@@ -71,6 +71,14 @@ export function NotificationRow({
             className: detail.className,
           })
     ),
+    Match.when("assignment.published", () =>
+      detail === null
+        ? t("assignment-published-gone")
+        : t("assignment-published", {
+            actor: detail.actor,
+            className: detail.className,
+          })
+    ),
     Match.when("announcement.posted", () =>
       detail === null
         ? t("announcement-posted-gone")

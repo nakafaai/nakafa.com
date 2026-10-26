@@ -6,6 +6,8 @@ import {
   schoolClassChannelTarget,
   schoolClassDiscussionTarget,
   schoolClassForumTarget,
+  schoolClassTaskTarget,
+  schoolClassTasksTarget,
   schoolClassTarget,
   schoolExamEditTarget,
   schoolExamSittingResultsTarget,
@@ -86,6 +88,15 @@ describe("school targets", () => {
       expect.objectContaining({
         params: { classSlug: "7a", number: "12", slug },
         to: "/school/$slug/classes/$classSlug/forum/$number",
+      })
+    );
+    expect(schoolClassTasksTarget(slug, "7a")).toEqual(
+      expect.objectContaining({ to: "/school/$slug/classes/$classSlug/tasks" })
+    );
+    expect(schoolClassTaskTarget(slug, "7a", "latihan")).toEqual(
+      expect.objectContaining({
+        params: { classSlug: "7a", slug, task: "latihan" },
+        to: "/school/$slug/classes/$classSlug/tasks/$task",
       })
     );
   });

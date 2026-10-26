@@ -30,7 +30,8 @@ function row(
 const detail = (
   messageId: string | null,
   channelId: string | null,
-  discussion: number | null
+  discussion: number | null,
+  task: string | null = null
 ) => ({
   actor: "Bu Rina",
   channelId,
@@ -38,6 +39,7 @@ const detail = (
   classSlug: "fisika-x-1",
   discussion,
   messageId,
+  task,
 });
 
 const href = (notification: ListNotification) =>
@@ -71,6 +73,13 @@ describe("inbox row destinations", () => {
     expect(
       href(row("announcement.posted", klass, detail(null, null, null)))
     ).toEqual(Option.some("https://harapan.nakafa.com/classes/fisika-x-1"));
+    expect(
+      href(
+        row("assignment.published", klass, detail(null, null, null, "latihan"))
+      )
+    ).toEqual(
+      Option.some("https://harapan.nakafa.com/classes/fisika-x-1/tasks/latihan")
+    );
   });
 
   it("opens no page for a class row without its detail, or for a subject of any other kind", () => {

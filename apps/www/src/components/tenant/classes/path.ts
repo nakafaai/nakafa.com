@@ -7,14 +7,16 @@ import {
   schoolClassChannelTarget,
   schoolClassForumTarget,
   schoolClassTarget,
+  schoolClassTasksTarget,
 } from "@/lib/routing/school/target";
 
-/** The class a path starts from, the school it belongs to, and the forum's label. */
+/** The class a path starts from, the school it belongs to, and the labels of the forum and the tasks. */
 const PathRoot = Schema.Struct({
   classSlug: Schema.String,
   forum: Schema.String,
   name: Schema.String,
   slug: TenantSlug,
+  tasks: Schema.String,
 });
 
 /** The channel a path passes through, by its ID and the name it shows. */
@@ -25,15 +27,16 @@ const PathChannel = Schema.Struct({
 
 /**
  * The path of a class page after the school's home, the page itself last: the class alone on its
- * home; the class and the forum on the channel list; the forum and the channel on a channel; and the
- * channel and the discussion's number and title on a discussion. A channel whose name is not known
- * yet is left out, so the path never shows a placeholder.
+ * home; the class and the forum on the channel list; the forum and the channel on a channel; the
+ * channel and the discussion's number and title on a discussion; the class and the tasks on the task
+ * list; and the tasks and the task's title on a task. A name that is not known yet is left out, so
+ * the path never shows a placeholder. `leaf` is the last name: the discussion's or the task's.
  */
 export const classPath = (
   view: typeof ClassView.Type,
   root: typeof PathRoot.Type,
   channel: Option.Option<typeof PathChannel.Type>,
-  discussion: Option.Option<string>
+  leaf: Option.Option<string>
 ): readonly BreadcrumbHeaderItem[] => {
   const klass = {
     label: root.name,
@@ -43,6 +46,10 @@ export const classPath = (
     label: root.forum,
     target: schoolClassForumTarget(root.slug, root.classSlug),
   };
+  const last = Option.match(leaf, {
+    onNone: () => [],
+    onSome: (label) => [{ label }],
+  });
   return Match.valueTags(view, {
     home: () => [{ label: root.name }],
     forum: () => [klass, { label: root.forum }],
@@ -67,10 +74,16 @@ export const classPath = (
           },
         ],
       }),
-      ...Option.match(discussion, {
-        onNone: () => [],
-        onSome: (label) => [{ label }],
-      }),
+      ...last,
+    ],
+    tasks: () => [klass, { label: root.tasks }],
+    task: () => [
+      klass,
+      {
+        label: root.tasks,
+        target: schoolClassTasksTarget(root.slug, root.classSlug),
+      },
+      ...last,
     ],
   });
 };

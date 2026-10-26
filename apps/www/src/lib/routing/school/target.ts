@@ -138,3 +138,28 @@ export function schoolClassDiscussionTarget(
     to: "/school/$slug/classes/$classSlug/forum/$number",
   } satisfies LinkTarget;
 }
+
+/** The tasks of one class of a school, by deadline. */
+export function schoolClassTasksTarget(
+  slug: TenantSlug,
+  classSlug: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug },
+    to: "/school/$slug/classes/$classSlug/tasks",
+  } satisfies LinkTarget;
+}
+
+/** One task of a class of a school, by its address (ADR 0026). */
+export function schoolClassTaskTarget(
+  slug: TenantSlug,
+  classSlug: string,
+  task: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug, task },
+    to: "/school/$slug/classes/$classSlug/tasks/$task",
+  } satisfies LinkTarget;
+}

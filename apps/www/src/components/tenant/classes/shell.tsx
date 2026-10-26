@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import { PaginatedQueryResult, QueryResult } from "@confect/react";
+import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -10,8 +10,6 @@ import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
-import { ActionLink } from "@/components/state/action";
-import { Missing } from "@/components/state/missing";
 import { AddChannel } from "@/components/tenant/classes/add";
 import {
   CHANNEL_PAGE_SIZE,
@@ -26,7 +24,11 @@ import { StartDiscussion } from "@/components/tenant/classes/forum/start";
 import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
 import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { ClassHome } from "@/components/tenant/classes/home/home";
+import { NewTask } from "@/components/tenant/classes/tasks/create";
+import { TaskList } from "@/components/tenant/classes/tasks/list";
+import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import { channelLabel } from "@/components/tenant/classes/label";
+import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
 import {
   ClassScopeContext,
@@ -179,6 +181,11 @@ function ResolvedClass({
     { initialNumItems: CHANNEL_PAGE_SIZE },
     Option.fromUndefinedOr(preload?.channels)
   );
+  // A task's title ends the path, read from the same task its page shows.
+  const task = useQuery(
+    classroom.tasks.get,
+    view._tag === "task" ? { classId: klass.id, slug, task: view.task } : "skip"
+  );
 
   if (QueryResult.isFailure(thread)) {
     if (isLostAccess(thread.error)) {
@@ -198,7 +205,13 @@ function ResolvedClass({
     : channels.results;
   const path = classPath(
     view,
-    { classSlug, forum: t("tabs-forum"), name: klass.name, slug },
+    {
+      classSlug,
+      forum: t("tabs-forum"),
+      name: klass.name,
+      slug,
+      tasks: t("tabs-tasks"),
+    },
     Option.map(
       Option.flatMap(channelId, (id) =>
         Arr.findFirst(listed, (channel) => channel.id === id)
@@ -208,12 +221,14 @@ function ResolvedClass({
         label: channelLabel(channel, t("general-channel")),
       })
     ),
-    Option.map(found, (shown) =>
-      t("discussion-label", {
-        number: shown.discussion.number,
-        title: shown.discussion.title,
-      })
-    )
+    QueryResult.isSuccess(task)
+      ? Option.some(task.value.title)
+      : Option.map(found, (shown) =>
+          t("discussion-label", {
+            number: shown.discussion.number,
+            title: shown.discussion.title,
+          })
+        )
   );
 
   return (
@@ -231,8 +246,8 @@ function ResolvedClass({
 
 /**
  * The header's one action: New announcement on the class home for its subject teachers, Add
- * channel on the channel list for whoever manages the forum, and New discussion in a channel for
- * whoever the server lets open one there.
+ * channel on the channel list for whoever manages the forum, New discussion in a channel for
+ * whoever the server lets open one there, and New task on the task list for its teachers.
  */
 function ForumAction({
   klass,
@@ -252,6 +267,9 @@ function ForumAction({
   }
   if (view._tag === "channel" && klass.opens) {
     return <StartDiscussion channelId={view.channelId} />;
+  }
+  if (view._tag === "tasks" && Arr.contains(klass.can, "task.manage")) {
+    return <NewTask />;
   }
   return null;
 }
@@ -301,6 +319,17 @@ function ClassBody({
   if (view._tag === "home") {
     return <ClassHome />;
   }
+  if (view._tag === "tasks") {
+    return <TaskList teacher={Arr.contains(klass.can, "task.manage")} />;
+  }
+  if (view._tag === "task") {
+    return (
+      <TaskPage
+        task={view.task}
+        teacher={Arr.contains(klass.can, "task.manage")}
+      />
+    );
+  }
   return (
     <ChannelList
       drafts={drafts}
@@ -309,7 +338,7 @@ function ClassBody({
   );
 }
 
-/** The tab bar of a class: its home and its forum, the current one marked as the page. */
+/** The tab bar of a class: its home, its forum, and its tasks, the current one marked as the page. */
 function ClassTabs({
   classSlug,
   tab,
@@ -333,11 +362,21 @@ function ClassTabs({
       </Link>
       <Link
         activeOptions={EXACT_ACTIVE_OPTIONS}
-        className={classTab({ active: tab !== "home" })}
+        className={classTab({
+          active: tab === "forum" || tab === "channel" || tab === "discussion",
+        })}
         params={params}
         to="/school/$slug/classes/$classSlug/forum"
       >
         {t("tabs-forum")}
+      </Link>
+      <Link
+        activeOptions={EXACT_ACTIVE_OPTIONS}
+        className={classTab({ active: tab === "tasks" || tab === "task" })}
+        params={params}
+        to="/school/$slug/classes/$classSlug/tasks"
+      >
+        {t("tabs-tasks")}
       </Link>
     </nav>
   );
@@ -355,20 +394,11 @@ const classTab = cva("-mb-px border-b-2 px-3 pb-2 font-medium text-sm", {
 
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
 function ClassMissing() {
-  const t = useTranslations("NotFound");
-  const tState = useTranslations("State");
-
   return (
     <>
       <SchoolHeader items={[]} />
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        <Missing description={t("description")} title={t("title")}>
-          <ActionLink
-            href="/"
-            label={tState("home-button")}
-            variant="default"
-          />
-        </Missing>
+        <ClassMissingBody />
       </LayoutContent>
     </>
   );
