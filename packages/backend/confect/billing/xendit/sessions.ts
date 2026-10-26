@@ -11,9 +11,9 @@ import { Effect } from "effect";
 import { HttpClientRequest } from "effect/http";
 
 /**
- * Opens a hosted checkout. A subscription session returns the recurring plan's
- * ID and a payment link the buyer approves in their wallet; a pay session returns
- * a payment link for one payment. The outcome arrives by webhook, never in this answer.
+ * Opens a hosted checkout and returns its payment link. A session that forces
+ * saving the channel also saves it as a payment token for a recurring plan. The
+ * outcome arrives by webhook, never in this answer.
  */
 export const createSession = Effect.fn("billing.xendit.createSession")(
   function* (body: XenditSessionRequest) {
