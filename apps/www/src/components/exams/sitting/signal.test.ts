@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { HashMap, Option } from "effect";
 import {
-  awayFor,
   leftFullscreen,
   SIGNAL_INTERVAL_MS,
   takeSignal,
@@ -59,25 +58,5 @@ describe("leftFullscreen", () => {
     expect(leftFullscreen(true, true)).toBe(false);
     expect(leftFullscreen(false, false)).toBe(false);
     expect(leftFullscreen(false, true)).toBe(false);
-  });
-});
-
-describe("awayFor", () => {
-  /** The signals of one attempt, newest first, as the panel reads them. */
-  const signals = [
-    { at: 95_000, kind: "return" as const },
-    { at: 90_000, kind: "exit" as const },
-    { at: 70_400, kind: "return" as const },
-    { at: 60_000, kind: "return" as const },
-    { at: 10_000, kind: "exit" as const },
-  ];
-
-  it("measures an exit to the first return after it, in whole seconds", () => {
-    expect(awayFor(signals, { at: 10_000 })).toEqual(Option.some(50));
-    expect(awayFor(signals, { at: 90_000 })).toEqual(Option.some(5));
-  });
-
-  it("measures nothing while the student has not come back", () => {
-    expect(awayFor(signals, { at: 99_000 })).toEqual(Option.none());
   });
 });

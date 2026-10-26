@@ -2,6 +2,7 @@ import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { awayFor } from "@repo/backend/confect/exams/sittings/away";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -33,7 +34,6 @@ import {
   UnlockDialog,
 } from "@/components/exams/sitting/dialogs";
 import { StudentScreen } from "@/components/exams/sitting/screen";
-import { awayFor } from "@/components/exams/sitting/signal";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";

@@ -1,5 +1,5 @@
 import type { SignalKind } from "@repo/backend/confect/exams/sittings/schema";
-import { Array as Arr, HashMap, Option } from "effect";
+import { HashMap, Option } from "effect";
 
 /** The kinds of signal that a student's screen can send. */
 type Kind = typeof SignalKind.Type;
@@ -40,28 +40,4 @@ export function visibilitySignal(
 /** Whether the page left full screen since the last check, which the student is asked to undo. */
 export function leftFullscreen(wasFullscreen: boolean, isFullscreen: boolean) {
   return wasFullscreen && !isFullscreen;
-}
-
-/**
- * How long a student stayed away after one exit (K25): until the first return after it, in whole
- * seconds, or none while the student has not come back. Outside the exam, a proctor sees only that the
- * student left and for how long, never what the student did there.
- */
-export function awayFor(
-  signals: readonly { readonly at: number; readonly kind: Kind }[],
-  exit: { readonly at: number }
-): Option.Option<number> {
-  return Option.map(
-    Arr.reduce(
-      signals,
-      Option.none<number>(),
-      (first, signal) =>
-        signal.kind === "return" &&
-        signal.at >= exit.at &&
-        Option.getOrElse(Option.map(first, (at) => signal.at < at), () => true)
-          ? Option.some(signal.at)
-          : first
-    ),
-    (back) => Math.round((back - exit.at) / 1000)
-  );
 }

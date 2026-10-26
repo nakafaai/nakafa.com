@@ -140,6 +140,13 @@ export const examAttemptValidator = Schema.Struct({
   state: AttemptState,
   submittedAt: Schema.optionalKey(Schema.Finite),
   tenantId: Id("tenants"),
+  /**
+   * The integrity indication of a submitted attempt (K25): how many times the student left the exam,
+   * and the seconds away in all, written once when the attempt is scored.
+   */
+  integrity: Schema.optionalKey(
+    Schema.Struct({ awaySeconds: Schema.Int, exits: Schema.Int })
+  ),
 });
 
 /**

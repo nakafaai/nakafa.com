@@ -53,6 +53,10 @@ export const Overview = Schema.Struct({
 export const StudentRow = Schema.Struct({
   answered: Schema.NullOr(Schema.Int),
   attemptId: Id("examAttempts"),
+  /** The seconds the student spent outside the exam in all, an indication only (K25). */
+  awaySeconds: Schema.NullOr(Schema.Int),
+  /** How many times the student left the exam, an indication only (K25). */
+  exits: Schema.NullOr(Schema.Int),
   name: PersonName,
   pending: Schema.NullOr(Schema.Int),
   points: Schema.NullOr(Schema.Int),
