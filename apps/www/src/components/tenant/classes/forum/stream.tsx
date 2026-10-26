@@ -20,9 +20,9 @@ import {
   useMessageScroller,
   useMessageScrollerVisibility,
 } from "@shadcn/react/message-scroller";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import {
   forumCall,
   runForumCall,
@@ -31,6 +31,7 @@ import {
   firstUnread,
   headToKeep,
   newestSeen,
+  opensDay,
   opensRun,
 } from "@/components/tenant/classes/forum/marks";
 import { ForumMessageRow } from "@/components/tenant/classes/forum/message";
@@ -44,7 +45,8 @@ import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 const MARK_DELAY_MILLISECONDS = 600;
 
 /**
- * The messages of one place, a channel or a discussion, oldest at the top, in a scroller that keeps
+ * The messages of one place, a channel or a discussion, oldest at the top, each day's first under
+ * a divider with its day, in a scroller that keeps
  * the reader's place (ADR 0025). It opens at the first message another member wrote after the read
  * mark the place had when it opened, under a divider that stays where it was while the reader
  * reads, or at the newest edge when nothing is unread. It follows the newest edge only while the
@@ -73,6 +75,12 @@ export function MessageStream({
   place: typeof ReadPlace.Type;
 }) {
   const t = useTranslations("Classroom");
+  const format = useFormatter();
+  // The reader's day of a time, which the divider above each day's first message shows.
+  const dayOf = (time: number) =>
+    format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(time)), {
+      dateStyle: "long",
+    });
   // The first unread message when the reader opened the place: the place opens there, and the
   // divider stays there while the reader reads. A message that arrives later is never the anchor,
   // so it never moves a reader who is not at the newest edge.
@@ -95,14 +103,19 @@ export function MessageStream({
 
   return (
     <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
-      <MessageScroller className="flex-1">
+      <MessageScroller className="min-h-0 flex-1">
         <MessageScrollerViewport
           aria-label={t("messages")}
           preserveScrollOnPrepend
         >
-          <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-4 py-2">
+          <MessageScrollerContent className="w-full gap-4 px-4 py-4">
             {loadOlder === undefined && Option.isSome(opening) ? (
               <MessageScrollerItem>
+                <Marker className="mb-4" role="separator" variant="separator">
+                  <MarkerContent>
+                    {dayOf(opening.value.createdAt)}
+                  </MarkerContent>
+                </Marker>
                 <ForumMessageRow message={opening.value} opens />
               </MessageScrollerItem>
             ) : null}
@@ -121,6 +134,27 @@ export function MessageStream({
                 {index === 0 && loadOlder ? (
                   <Intersection onIntersect={loadOlder} />
                 ) : null}
+                {Option.match(
+                  opensDay(
+                    messages,
+                    index,
+                    loadOlder !== undefined,
+                    opening,
+                    dayOf
+                  ),
+                  {
+                    onNone: () => null,
+                    onSome: (day) => (
+                      <Marker
+                        className="mb-4"
+                        role="separator"
+                        variant="separator"
+                      >
+                        <MarkerContent>{day}</MarkerContent>
+                      </Marker>
+                    ),
+                  }
+                )}
                 {Option.contains(divided, message.clientKey) ? (
                   <Marker className="mb-4" role="separator" variant="separator">
                     <MarkerContent>{t("unread-divider")}</MarkerContent>

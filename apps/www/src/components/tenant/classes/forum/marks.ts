@@ -88,3 +88,29 @@ export const opensRun = (
           Arr.contains(kept, message.clientKey)
       ),
   });
+
+/**
+ * The day a message opens, which a divider shows above it: the reader's day of the message
+ * (`dayOf`) when the message before it, or the discussion's opening message before the oldest
+ * reply, was written on another day. The oldest loaded message shows none while older history may
+ * still load, so the page that arrives above it never moves it.
+ */
+export const opensDay = (
+  messages: readonly ForumMessage[],
+  index: number,
+  older: boolean,
+  opening: Option.Option<ForumMessage>,
+  dayOf: (time: number) => string
+) =>
+  index === 0 && older
+    ? Option.none()
+    : Option.flatMap(Arr.get(messages, index), (message) => {
+        const day = dayOf(message.createdAt);
+        const before = index === 0 ? opening : Arr.get(messages, index - 1);
+        return Option.exists(
+          before,
+          (previous) => dayOf(previous.createdAt) === day
+        )
+          ? Option.none()
+          : Option.some(day);
+      });

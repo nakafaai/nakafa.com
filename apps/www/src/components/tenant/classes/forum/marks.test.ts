@@ -6,6 +6,7 @@ import {
   headToKeep,
   isPending,
   newestSeen,
+  opensDay,
   opensRun,
 } from "@/components/tenant/classes/forum/marks";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
@@ -87,5 +88,40 @@ describe("forum read marks", () => {
       true,
     ]);
     expect(opensRun(run, 1, ["first"])).toBe(true);
+  });
+
+  it("opens a day above the first message of each day, after the opening message, and never on a page still loading above", () => {
+    // A day is a thousand units here, so the times read as days 1, 1, 2 and 3.
+    const dayOf = (time: number) => `day ${Math.floor(time / 1000)}`;
+    const days = [
+      message("a", 1000),
+      message("b", 1500),
+      message("c", 2000),
+      message("d", 3000),
+    ];
+    expect(
+      Arr.map(days, (_, index) =>
+        opensDay(days, index, false, Option.none(), dayOf)
+      )
+    ).toEqual([
+      Option.some("day 1"),
+      Option.none(),
+      Option.some("day 2"),
+      Option.some("day 3"),
+    ]);
+    // The oldest loaded message waits while older history may load above it.
+    expect(opensDay(days, 0, true, Option.none(), dayOf)).toEqual(
+      Option.none()
+    );
+    // The oldest reply follows the discussion's opening message.
+    expect(
+      opensDay(days, 0, false, Option.some(message("opening", 1200)), dayOf)
+    ).toEqual(Option.none());
+    expect(
+      opensDay(days, 0, false, Option.some(message("opening", 500)), dayOf)
+    ).toEqual(Option.some("day 1"));
+    expect(opensDay(days, 4, false, Option.none(), dayOf)).toEqual(
+      Option.none()
+    );
   });
 });

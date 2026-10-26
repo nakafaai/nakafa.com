@@ -21,7 +21,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Message,
   MessageContent,
-  MessageFooter,
   MessageHeader,
 } from "@repo/design-system/components/ui/message";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -54,10 +53,11 @@ import {
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 
 /**
- * One message of a channel or of a discussion. The viewer's own messages stand at the end of the
- * row, and another member's show the author's name above the first message of a run by the same
- * author (`opens`). A message that opens a discussion shows the discussion's title above it and its
- * replies under it in the channel. The viewer's own message turns into its edit field in place.
+ * One message of a channel or of a discussion, as a chat shows it. The viewer's own messages stand
+ * at the end of the row, and another member's show the author's name above the first message of a
+ * run by the same author (`opens`). The time sits inside the bubble, and the message's menu beside
+ * it. A message that opens a discussion shows the discussion's title above it and its replies under
+ * it in the channel. The viewer's own message turns into its edit field in place.
  */
 export function ForumMessageRow({
   message,
@@ -87,16 +87,23 @@ export function ForumMessageRow({
             text={message.text}
           />
         ) : (
-          <MessageBubble message={message} />
+          // The menu stands on the bubble's inner side: before the viewer's own, after another's.
+          <div
+            className="group/row flex w-full min-w-0 items-center gap-1 data-[mine=true]:flex-row-reverse"
+            data-mine={message.mine}
+          >
+            <MessageBubble message={message} />
+            {message.text === null ? null : (
+              <MessageActions
+                message={message}
+                onEdit={() => setEditing(true)}
+              />
+            )}
+          </div>
         )}
         {discussion === null ? null : (
           <DiscussionReplies discussion={discussion} message={message} />
         )}
-        <MessageMeta
-          editing={editing}
-          message={message}
-          onEdit={() => setEditing(true)}
-        />
       </MessageContent>
     </Message>
   );
@@ -104,7 +111,8 @@ export function ForumMessageRow({
 
 /**
  * The body of a message: its text in the author's colour for the viewer's own message, and muted
- * for another member's. A message a teacher hid keeps its place with a sentence that says so.
+ * for another member's, with its time, and that it was edited, at the bubble's end. A message a
+ * teacher hid keeps its place with a sentence that says so.
  */
 function MessageBubble({ message }: { message: ForumMessage }) {
   const t = useTranslations("Classroom");
@@ -132,42 +140,36 @@ function MessageBubble({ message }: { message: ForumMessage }) {
                   <span key={segment.at}>{segment.text}</span>
                 )
             )}
+        <MessageTime message={message} />
       </BubbleContent>
     </Bubble>
   );
 }
 
 /**
- * The footer of a message: when it was written, that it was edited, and its menu, which a hidden
- * message and one in its edit field do not show.
+ * When a message was written, as the reader's clock shows it, with the whole date on hover and for
+ * assistive technology, and that it was edited. The day stands once above the day's first message.
  */
-function MessageMeta({
-  editing,
-  message,
-  onEdit,
-}: {
-  editing: boolean;
-  message: ForumMessage;
-  onEdit: () => void;
-}) {
+function MessageTime({ message }: { message: ForumMessage }) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
-  const written = format.dateTime(
-    DateTime.toDateUtc(DateTime.makeUnsafe(message.createdAt)),
-    { dateStyle: "medium", timeStyle: "short" }
-  );
-  const live = message.text !== null;
+  const written = DateTime.toDateUtc(DateTime.makeUnsafe(message.createdAt));
 
   return (
-    <MessageFooter className="gap-1 px-3">
-      <span>{written}</span>
-      {live && message.editedAt !== null ? (
+    <span className="mt-1 flex justify-end gap-1.5 text-xs not-italic opacity-70">
+      {message.text !== null && message.editedAt !== null ? (
         <span>{t("message-edited")}</span>
       ) : null}
-      {live && !editing ? (
-        <MessageActions message={message} onEdit={onEdit} />
-      ) : null}
-    </MessageFooter>
+      <time
+        dateTime={written.toISOString()}
+        title={format.dateTime(written, {
+          dateStyle: "full",
+          timeStyle: "short",
+        })}
+      >
+        {format.dateTime(written, { timeStyle: "short" })}
+      </time>
+    </span>
   );
 }
 
@@ -192,8 +194,10 @@ function MessageActions({
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
+            // With a mouse the menu shows on the message's hover or focus; a touch screen always shows it.
             <Button
               aria-label={common("more-actions")}
+              className="shrink-0 pointer-fine:opacity-0 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:group-hover/row:opacity-100 pointer-fine:data-popup-open:opacity-100"
               size="icon-xs"
               variant="ghost"
             >
