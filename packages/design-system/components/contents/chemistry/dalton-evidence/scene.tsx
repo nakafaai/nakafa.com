@@ -4,6 +4,7 @@ import type {
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 
 const ATOM_COLORS = {
   C: "var(--muted-foreground)",
@@ -12,31 +13,19 @@ const ATOM_COLORS = {
 } satisfies Record<AtomSymbol, string>;
 
 /**
- * Renders the selected Dalton evidence as one balanced comparison scene.
+ * Lays out the selected Dalton evidence as one balanced comparison scene: the
+ * molecules before, the comparison, and the molecules after.
  */
-export function DaltonEvidenceScene({
-  afterMolecules,
-  afterTitle,
-  beforeMolecules,
-  beforeTitle,
-  expression,
-}: {
-  afterMolecules: readonly Molecule[];
-  afterTitle: string;
-  beforeMolecules: readonly Molecule[];
-  beforeTitle: string;
-  expression: string;
-}) {
+export function DaltonEvidenceScene({ children }: { children: ReactNode }) {
   return (
     <div className="grid gap-3 py-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
-      <MoleculePanel molecules={beforeMolecules} title={beforeTitle} />
-      <ComparisonExpression expression={expression} />
-      <MoleculePanel molecules={afterMolecules} title={afterTitle} />
+      {children}
     </div>
   );
 }
 
-function MoleculePanel({
+/** One side of the comparison: its title and its molecules. */
+export function MoleculePanel({
   molecules,
   title,
 }: {
@@ -55,7 +44,8 @@ function MoleculePanel({
   );
 }
 
-function ComparisonExpression({ expression }: { expression: string }) {
+/** The expression that compares the two sides. */
+export function ComparisonExpression({ expression }: { expression: string }) {
   return (
     <div className="flex items-center justify-center">
       <span className="inline-flex w-fit shrink-0 items-center justify-center px-2 py-1">

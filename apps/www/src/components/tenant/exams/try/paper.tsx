@@ -4,7 +4,7 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -18,7 +18,11 @@ import {
 } from "@/components/tenant/exams/try/context";
 import { ExamTryQuestion } from "@/components/tenant/exams/try/question";
 import { createExamTry } from "@/components/tenant/exams/try/store";
-import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
+import {
+  ExamGone,
+  ExamUnavailable,
+} from "@/components/tenant/exams/unavailable";
+import { useLastValue } from "@/lib/data/kept";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolExamEditTarget } from "@/lib/routing/school/target";
@@ -48,14 +52,14 @@ export function ExamTryPaper({
     preload
   );
   const [store] = useState(createExamTry);
+  // An exam that goes while it is tried keeps its paper and its title, and says so in place of the note.
+  const kept = useLastValue(result);
 
-  if (QueryResult.isFailure(result)) {
-    return <ExamUnavailable />;
+  if (Option.isNone(kept)) {
+    return QueryResult.isFailure(result) ? <ExamUnavailable /> : null;
   }
-  if (!QueryResult.isSuccess(result)) {
-    return null;
-  }
-  const exam = result.value;
+  const exam = kept.value;
+  const gone = QueryResult.isFailure(result);
   const editor = schoolExamEditTarget(slug, examId);
 
   return (
@@ -63,12 +67,16 @@ export function ExamTryPaper({
       <TryStoreContext value={store}>
         <PlayerHeader>
           <PlayerTitle>{exam.title || t("untitled")}</PlayerTitle>
-          <TargetLink className={buttonVariants()} target={editor}>
-            {t("try-finish")}
-          </TargetLink>
+          {gone ? null : (
+            <TargetLink className={buttonVariants()} target={editor}>
+              {t("try-finish")}
+            </TargetLink>
+          )}
         </PlayerHeader>
         <PlayerMain navigator={null}>
-          <p className="text-muted-foreground text-sm">{t("try-note")}</p>
+          <p className="text-muted-foreground text-sm">
+            {gone ? <ExamGone /> : t("try-note")}
+          </p>
           <PlayerProvider
             keys={Arr.map(exam.questions, (question) => question.id)}
             mode="list"

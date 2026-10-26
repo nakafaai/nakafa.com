@@ -6,7 +6,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { useCallback, useState } from "react";
+import { createContext, use, useCallback, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
@@ -82,7 +82,9 @@ export function UserPosts({
           )}
           key={attempt}
         >
-          <PostsFeed first={first} key={profile._id} />
+          <PostsFirstPageContext value={first}>
+            <PostsFeed key={profile._id} />
+          </PostsFirstPageContext>
         </ErrorBoundary>
       </PostsProvider>
     </PostDraftProvider>
@@ -94,24 +96,31 @@ export function UserPosts({
  * reads its next pages through the server. A signed-in viewer's live list takes
  * its place once the page holds a client.
  */
-function PostsFeed({
-  first,
-}: {
-  first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
-}) {
+function PostsFeed() {
   return (
-    <ConvexIsland fallback={<VisitorPostsFeed first={first} />}>
-      <LivePostsFeed first={first} />
+    <ConvexIsland fallback={<VisitorPostsFeed />}>
+      <LivePostsFeed />
     </ConvexIsland>
   );
 }
 
+/** The first page the server read, which both variants of the list start from. */
+const PostsFirstPageContext = createContext<Option.Option<
+  Ref.Returns<typeof posts.queries.list>
+> | null>(null);
+
+/** Reads the first page of the list around a variant. */
+function usePostsFirstPage() {
+  const first = use(PostsFirstPageContext);
+  if (first === null) {
+    throw new Error("usePostsFirstPage must be used within UserPosts");
+  }
+  return first;
+}
+
 /** A visitor's list: the loader's first page, then the next pages the server reads by their cursor. */
-function VisitorPostsFeed({
-  first,
-}: {
-  first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
-}) {
+function VisitorPostsFeed() {
+  const first = usePostsFirstPage();
   const { profile } = usePostsContext();
   const locale = useLocale();
   const { list, loadMore } = useVisitorList({
@@ -135,11 +144,8 @@ function VisitorPostsFeed({
  * the session, and `postsView` decides what it shows from the answer and the
  * server's first page.
  */
-function LivePostsFeed({
-  first,
-}: {
-  first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
-}) {
+function LivePostsFeed() {
+  const first = usePostsFirstPage();
   const { profile } = usePostsContext();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const live = usePaginatedQuery(

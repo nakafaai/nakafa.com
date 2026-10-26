@@ -7,6 +7,7 @@ import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import { Collab } from "@repo/design-system/components/editor/collab";
 import { slashCommand } from "@repo/design-system/components/editor/command";
 import { depthGuard } from "@repo/design-system/components/editor/depth";
+import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import {
   documentSizeGuard,
@@ -142,7 +143,7 @@ export function ExamText({
   placeholder,
   size = "page",
 }: ExamTextProps) {
-  const { exam, slug } = useExam();
+  const { exam, gone, slug } = useExam();
   const frozen = isLocked(exam);
   const labels = useDocumentLabels();
   const extensions = useMemo(
@@ -167,6 +168,23 @@ export function ExamText({
   // quiet period after a change, or the next try of a round that met a fold.
   const opening = useRef<Fiber.Fiber<void> | null>(null);
   const waiting = useRef<Fiber.Fiber<void> | null>(null);
+  // The editor once it exists, and whether the exam is gone, which a late answer of the server reads.
+  const held = useRef<DocumentEditorInstance | null>(null);
+  const closed = useRef(gone);
+
+  // An exam gone while its text is open keeps the words on screen: the editor takes the lock in place, and the
+  // round it waits for stops, since the server takes nothing more for it.
+  useEffect(() => {
+    closed.current = gone;
+    if (!gone) {
+      return;
+    }
+    held.current?.setEditable(false, false);
+    const round = waiting.current;
+    if (round !== null) {
+      Effect.runFork(Fiber.interrupt(round));
+    }
+  }, [gone]);
 
   // A `behind` reply makes the round reopen the document from its snapshot, so it starts one too.
   useEffect(() => {
@@ -179,7 +197,8 @@ export function ExamText({
     }
   }, [reply, sync]);
 
-  // The text closes: stop the open and the waiting round, then send what the editor holds.
+  // The text closes: stop the open and the waiting round, then send what the editor holds, unless the exam is
+  // gone and the server takes nothing more.
   useEffect(
     () => () => {
       const current = session.current;
@@ -191,7 +210,7 @@ export function ExamText({
           { discard: true }
         ).pipe(
           Effect.andThen(
-            current === null || editor === null
+            current === null || editor === null || closed.current
               ? Effect.void
               : closeEditor(
                   current,
@@ -209,10 +228,8 @@ export function ExamText({
    * Opens the document for the session, then turns editing on once the server answered, unless
    * the exam is frozen.
    */
-  const open = (editor: {
-    readonly view: EditorView;
-    setEditable: (on: boolean) => unknown;
-  }) => {
+  const open = (editor: DocumentEditorInstance) => {
+    held.current = editor;
     view.current = editor.view;
     opening.current = Effect.runFork(
       startSync(
@@ -233,7 +250,7 @@ export function ExamText({
         Effect.tap(() =>
           Effect.sync(() => {
             show(documentId, editor.view.state.doc);
-            editor.setEditable(!frozen);
+            editor.setEditable(!(frozen || closed.current));
           })
         ),
         Effect.catchTag("EditorClosed", () => Effect.void),

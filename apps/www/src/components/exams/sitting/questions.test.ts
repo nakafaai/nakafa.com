@@ -54,9 +54,11 @@ describe("projectSittingQuestions", () => {
           version: 2,
         }),
         question("q-cleared", [choice(1)], { response: [] }),
+        question("q-typed", [choice(1)], { response: { text: "Jakarta" } }),
+        question("q-blank", [choice(1)], { response: { text: " " } }),
       ],
     };
-    const [empty, chosen, cleared] = projectSittingQuestions({
+    const [empty, chosen, cleared, typed, blank] = projectSittingQuestions({
       choose: vi.fn(),
       paper,
     });
@@ -72,6 +74,8 @@ describe("projectSittingQuestions", () => {
       key: "q-chosen",
     });
     expect(cleared).toMatchObject({ answered: false });
+    expect(typed).toMatchObject({ answered: true });
+    expect(blank).toMatchObject({ answered: false });
   });
 
   it("picks the option at the digit's index of a single choice, and saves it at once", () => {

@@ -207,6 +207,8 @@ describe("exams/results", () => {
             number: 1,
             optionIds: ["option-1", "option-2", "option-3", "option-4"],
             points: 1,
+            sourceIds: [],
+            targetIds: [],
           },
         ]);
         expect(
@@ -255,6 +257,7 @@ describe("exams/results", () => {
             { count: 0, optionId: "option-3" },
             { count: 0, optionId: "option-4" },
           ],
+          partial: 0,
           pending: 0,
         });
       })
@@ -319,10 +322,14 @@ describe("exams/results", () => {
           points: 0,
           questions: [
             {
+              earned: 0,
+              id: questionId,
               number: 1,
               optionIds: ["option-1", "option-2", "option-3", "option-4"],
               points: 1,
               response: ["option-2"],
+              sourceIds: [],
+              targetIds: [],
               verdict: "incorrect",
             },
           ],
@@ -412,7 +419,7 @@ describe("exams/results", () => {
   );
 
   it.effect(
-    "shows the release only to the exam's author and the Admin, and refuses it to a teacher who did not write the exam",
+    "shows the release only to the exam's author and the Admin, and refuses it to a teacher who did not write the exam, who still grades",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -430,7 +437,7 @@ describe("exams/results", () => {
           sittingId: made.id,
           slug: nf,
         });
-        expect(overview.can).toEqual(["result.view"]);
+        expect(overview.can).toEqual(["result.view", "result.grade"]);
         expect(
           yield* teacher
             .mutation(results.release, { sittingId: made.id, slug: nf })

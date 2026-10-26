@@ -16,7 +16,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
-import { Link, type LinkTarget, useRouteMatched } from "@/lib/routing/link";
+import { Link, type LinkTarget, useSectionMatched } from "@/lib/routing/link";
 import { articleCategoryTarget } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
@@ -69,7 +69,11 @@ export function NavExplore({
   );
 }
 
-/** One exploration link, which is active on its own page, as the router's match says. */
+/**
+ * One exploration link, which is active on its own page and on every page below
+ * it, so a surah keeps the Quran highlighted. Only its own page is the current
+ * page of the link.
+ */
 function ExploreItem({
   icon,
   label,
@@ -79,7 +83,7 @@ function ExploreItem({
   label: string;
   target: LinkTarget;
 }) {
-  const isActive = useRouteMatched(target.to, { exact: true });
+  const isActive = useSectionMatched(target);
 
   return (
     <SidebarMenuItem>

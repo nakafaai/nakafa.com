@@ -2,6 +2,7 @@ import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { awayFor } from "@repo/backend/confect/exams/sittings/away";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -32,6 +33,7 @@ import {
   LockDialog,
   UnlockDialog,
 } from "@/components/exams/sitting/dialogs";
+import { StudentScreen } from "@/components/exams/sitting/screen";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -56,6 +58,9 @@ const stateLabels: Record<
 };
 
 /** The copy key of each signal of a student's screen, as the panel names it. */
+/** The seconds of one minute, which a long time away is told in. */
+const SECONDS_IN_MINUTE = 60;
+
 const signalLabels: Record<
   NonNullable<DashboardAttempt["latestSignal"]>["kind"],
   | "signal-blur"
@@ -197,6 +202,7 @@ function StudentPanel({
           <HugeIcons icon={Cancel01Icon} />
         </Button>
       </div>
+      <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
       <div className="grid gap-2">
         <p className="text-muted-foreground text-sm">{t("signals")}</p>
         <SignalList attemptId={attempt.id} key={attempt.id} />
@@ -348,14 +354,12 @@ function SignalList({
   if (PaginatedQueryResult.isLoadingFirstPage(signals)) {
     return null;
   }
-  const failure = PaginatedQueryResult.isFailure(signals) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
+  const failed = PaginatedQueryResult.isFailure(signals);
 
   return (
     <div className="grid gap-2 text-sm">
-      {failure}
-      {Arr.isReadonlyArrayEmpty(signals.results) && failure === null ? (
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {Arr.isReadonlyArrayEmpty(signals.results) && !failed ? (
         <TableEmpty
           act="reading"
           description={t("signals-empty")}
@@ -364,7 +368,18 @@ function SignalList({
       ) : null}
       {Arr.map(signals.results, (signal) => (
         <p key={`${signal.at}-${signal.kind}`}>
-          {t(signalLabels[signal.kind])}
+          {signal.kind === "exit"
+            ? Option.match(awayFor(signals.results, signal), {
+                onNone: () => t(signalLabels[signal.kind]),
+                onSome: (seconds) =>
+                  seconds < SECONDS_IN_MINUTE
+                    ? t("signal-away-seconds", { seconds })
+                    : t("signal-away-minutes", {
+                        minutes: Math.floor(seconds / SECONDS_IN_MINUTE),
+                        seconds: seconds % SECONDS_IN_MINUTE,
+                      }),
+              })
+            : t(signalLabels[signal.kind])}
         </p>
       ))}
       {PaginatedQueryResult.isCanLoadMore(signals) ? (

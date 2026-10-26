@@ -129,7 +129,12 @@ export function RelativeMovementLab({
               shadow-normalBias={0.02}
             />
             <RelativeMovementCamera />
-            <RelativeMovementScene motion={motion} />
+            <group>
+              <CameraBounds exclude>
+                <Road />
+              </CameraBounds>
+              <AnimatedCarPair motion={motion} />
+            </group>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>
@@ -186,17 +191,6 @@ function RelativeMovementCamera() {
       enableZoom
       fov={43}
     />
-  );
-}
-
-function RelativeMovementScene({ motion }: { motion: RelativeMovementState }) {
-  return (
-    <group>
-      <CameraBounds exclude>
-        <Road />
-      </CameraBounds>
-      <AnimatedCarPair motion={motion} />
-    </group>
   );
 }
 

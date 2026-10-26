@@ -5,12 +5,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
+import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { Faq } from "@/components/marketing/about/faq/landing";
 import { PricingButton } from "@/components/marketing/about/pricing/button";
 import { PricingComparison } from "@/components/marketing/about/pricing/comparison";
 import { DeferredPricingToys } from "@/components/marketing/about/pricing/deferred";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
-import { StaticPrice } from "@/components/marketing/about/pricing/price";
+import {
+  PricingPrice,
+  StaticPrice,
+} from "@/components/marketing/about/pricing/price";
 import { Schools } from "@/components/marketing/about/schools";
 import { PRICING_CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { PageField } from "@/components/marketing/shared/field";
@@ -101,6 +105,7 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
 /** The headline above the two plans. */
 function PricingPagePlans() {
   const t = useTranslations("Landing");
+  const tPricing = useTranslations("Pricing");
   return (
     <section
       aria-labelledby="pricing-heading"
@@ -115,9 +120,16 @@ function PricingPagePlans() {
           {t("prices-title")}
         </h1>
         <PricingCards
+          freePrice={<PricingPrice Price={StaticPrice} plan="free" />}
           headingLevel="h2"
-          Price={StaticPrice}
           proAction={<PricingButton variant="default" />}
+          proPrice={
+            <PricingPrice
+              Price={StaticPrice}
+              period={tPricing("pro-period")}
+              plan="pro"
+            />
+          }
         />
       </div>
     </section>
@@ -136,7 +148,9 @@ function PricingPage() {
         <DeferredPricingToys />
         <PricingComparison />
         <Schools herd={PRICING_CLASS_HERD} />
-        <Faq faqs={faqs} />
+        <Faq>
+          <FaqAccordion faqs={faqs} openFirst />
+        </Faq>
       </div>
     </>
   );

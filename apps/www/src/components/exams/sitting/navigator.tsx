@@ -1,10 +1,11 @@
+import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 import { Array as Arr } from "effect";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 
-/** A question has a response once the student saved at least one option of it. */
-function isAnswered(question: PaperQuestion) {
-  return question.response !== null && question.response.length > 0;
+/** A question has a response once the student saved at least one option of it, or text that is not blank. */
+function isQuestionAnswered(question: PaperQuestion) {
+  return question.response !== null && isAnswered(question.response);
 }
 
 /**
@@ -20,7 +21,7 @@ export function SittingNavigator({
   return (
     <PlayerGrid
       questions={Arr.map(questions, (question) => ({
-        answered: isAnswered(question),
+        answered: isQuestionAnswered(question),
         flagged: question.flagged,
         key: question.id,
       }))}
