@@ -15,7 +15,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
 import { ActionLink } from "@/components/state/action";
 import { Broken, BrokenRetry } from "@/components/state/broken";
-import { RouteFailure } from "@/components/state/localized";
+import { useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
@@ -208,25 +208,29 @@ function SchoolRefused(): ReactElement {
  * other failure sees the broken page with a way to retry or to leave for Nakafa.
  */
 function SchoolError({ error }: ErrorComponentProps): ReactElement {
+  return isLostAccess(error) ? <SchoolLeft /> : <SchoolFailure error={error} />;
+}
+
+/** The broken page of a school failure, reported once, or nothing while the page reloads for a chunk of an earlier deploy. */
+function SchoolFailure({ error }: { error: unknown }): ReactElement | null {
   const t = useTranslations("Error");
   const tState = useTranslations("State");
   const locale = useLocale();
-  if (isLostAccess(error)) {
-    return <SchoolLeft />;
+  const reloading = useRouteFailure(error, "school-segment-error");
+  if (reloading) {
+    return null;
   }
   return (
-    <RouteFailure error={error} source="school-segment-error">
-      <Stage>
-        <Broken description={t("description")} title={t("title")}>
-          <BrokenRetry>{t("retry")}</BrokenRetry>
-          <ActionLink
-            href={new URL(`/${locale}`, SITE_ORIGIN).href}
-            label={tState("home-button")}
-            variant="ghost"
-          />
-        </Broken>
-      </Stage>
-    </RouteFailure>
+    <Stage>
+      <Broken description={t("description")} title={t("title")}>
+        <BrokenRetry>{t("retry")}</BrokenRetry>
+        <ActionLink
+          href={new URL(`/${locale}`, SITE_ORIGIN).href}
+          label={tState("home-button")}
+          variant="ghost"
+        />
+      </Broken>
+    </Stage>
   );
 }
 

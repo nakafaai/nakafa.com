@@ -2,7 +2,7 @@ import { captureException } from "@repo/analytics/posthog/capture";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createStore, useStore } from "zustand";
 import { ActionLink } from "@/components/state/action";
 import { Broken, BrokenRetry } from "@/components/state/broken";
@@ -50,21 +50,13 @@ export function LocalizedNotFound({
 }
 
 /**
- * The error component of a route. A chunk of an earlier deploy that a page,
- * loaded before the deploy, asked for is gone: the page reloads once at the same
- * address and loads the current chunks, and draws nothing meanwhile, so the
- * learner never sees an error for it. Every other failure, and a chunk that is
- * still missing after its reload, is reported and shows `children`.
+ * Handles the failure that a route's error component caught. A chunk of an earlier deploy that a page,
+ * loaded before the deploy, asked for is gone: the page reloads once at the same address and loads the
+ * current chunks, and this answers true meanwhile, so the error component draws nothing and the learner
+ * never sees an error for it. Every other failure, and a chunk that is still missing after its reload, is
+ * reported once under its source, and this answers false.
  */
-export function RouteFailure({
-  children,
-  error,
-  source,
-}: {
-  readonly children: ReactNode;
-  readonly error: unknown;
-  readonly source: string;
-}) {
+export function useRouteFailure(error: unknown, source: string) {
   // Whether the page is reloading for a chunk of an earlier deploy. The reload
   // writes it, from the tab's storage, so it lives in a store of its own.
   const [reload] = useState(() =>
@@ -86,40 +78,19 @@ export function RouteFailure({
     }
   }, [error, reload]);
 
-  if (reloading) {
-    return null;
-  }
-  return (
-    <>
-      <ReportedFailure error={error} source={source} />
-      {children}
-    </>
-  );
-}
-
-/** Reports one failure under its source; the failure page beside it draws it. */
-function ReportedFailure({
-  error,
-  source,
-}: {
-  readonly error: unknown;
-  readonly source: string;
-}) {
-  useReportedError(error, source);
-  return null;
-}
-
-/** Reports the failure that a route's error component caught, once, under its source. */
-function useReportedError(error: unknown, source: string) {
   useEffect(() => {
-    captureException(error, { source });
-  }, [error, source]);
+    if (!reloading) {
+      captureException(error, { source });
+    }
+  }, [error, reloading, source]);
+
+  return reloading;
 }
 
 /**
  * The error state of one locale, with a retry and a way home. It reads the
  * standalone dictionary; the error component that renders it reports the error
- * with `useReportedError`.
+ * with `useRouteFailure`.
  */
 export function LocalizedError({ locale }: { readonly locale: Locale }) {
   const messages = readStandaloneMessages(locale);
