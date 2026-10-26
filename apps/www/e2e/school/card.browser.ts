@@ -112,7 +112,7 @@ test("a signed-in learner who is not a member of an existing school sees the out
   ).toBeVisible();
   await expect(
     page.getByText(
-      "You are signed in as Acceptance Learner, which has no invite here yet."
+      "You are signed in as Acceptance Learner, which has no invite here yet, so ask an admin to send one or sign in with the address it went to."
     )
   ).toBeVisible();
   await expect(

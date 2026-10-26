@@ -11538,7 +11538,6 @@ export declare const api: {
           image?: string;
           mascot: string;
           name: string;
-          shareable: boolean;
           username: string;
         } | null
       >;

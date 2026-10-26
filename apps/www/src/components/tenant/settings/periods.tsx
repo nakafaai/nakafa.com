@@ -9,7 +9,6 @@ import {
   Calendar03Icon,
   CalendarCheckIn01Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -33,12 +32,13 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   SchoolPeriodMenu,
@@ -55,12 +55,15 @@ import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import type { readPeriodsFn } from "@/lib/tenant/settings.functions";
 
-/** The icon of each period status in the Filter menu: a planned calendar, a running one, and an archive. */
-const PERIOD_STATUS_ICONS = {
-  active: CalendarCheckIn01Icon,
-  archived: Archive02Icon,
-  planned: Calendar03Icon,
-} as const satisfies Record<typeof PeriodStatus.Type, IconSvgElement>;
+/**
+ * The look of each period status, in its table cell and in the Filter menu: a planned calendar, a
+ * running one, and an archive, each in its tone.
+ */
+const PERIOD_STATUS_LOOKS = {
+  active: { icon: CalendarCheckIn01Icon, tone: "success" },
+  archived: { icon: Archive02Icon, tone: "neutral" },
+  planned: { icon: Calendar03Icon, tone: "info" },
+} as const satisfies Record<typeof PeriodStatus.Type, StatusLook>;
 
 const SOURCE = "components/tenant/settings/periods";
 
@@ -108,7 +111,7 @@ export function SchoolPeriodsSettings({
         read={{ args: { slug }, ref: tenancy.viewer.get }}
       >
         <PeriodsPreloadContext value={preload}>
-          <SchoolPeriodsContent slug={slug} />
+          <SchoolPeriodsContent />
         </PeriodsPreloadContext>
       </ReadBoundary>
     </TableFiltersProvider>
@@ -119,7 +122,7 @@ export function SchoolPeriodsSettings({
  * The periods of the school's active unit, with the unit choice when the school has more than one unit.
  * A school with no active unit says so and links to the units, because a period belongs to a unit.
  */
-function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
+function SchoolPeriodsContent() {
   const preload = use(PeriodsPreloadContext);
   const t = useTranslations("SchoolSettings");
   const viewer = useViewerQuery();
@@ -159,7 +162,7 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
                 {
                   column: "status",
                   options: Arr.map(PeriodStatus.literals, (status) => ({
-                    icon: PERIOD_STATUS_ICONS[status],
+                    icon: PERIOD_STATUS_LOOKS[status].icon,
                     label: t(`period-${status}`),
                     value: status,
                   })),
@@ -181,14 +184,12 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
           <ReadBoundary>
             <SchoolPeriodTable
               first={unit.id === preload?.unitId ? preload.page : undefined}
-              slug={slug}
               unitId={unit.id}
             />
           </ReadBoundary>
           <SchoolPeriodAddDialog
             open={isAdding}
             setOpen={setIsAdding}
-            slug={slug}
             unitId={unit.id}
           />
         </>
@@ -205,13 +206,12 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
  */
 function SchoolPeriodTable({
   first,
-  slug,
   unitId,
 }: {
   first: PeriodsPreload["page"] | undefined;
-  slug: TenantSlug;
   unitId: UnitId;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
@@ -254,7 +254,13 @@ function SchoolPeriodTable({
       sortFn: "text",
     }),
     periodColumns.accessor((period) => period.status, {
-      cell: (info) => t(`period-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={PERIOD_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`period-${info.getValue()}`)}
+          tone={PERIOD_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("period-status"),
@@ -295,14 +301,13 @@ function SchoolPeriodTable({
 function SchoolPeriodAddDialog({
   open,
   setOpen,
-  slug,
   unitId,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
   unitId: UnitId;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const id = useId();

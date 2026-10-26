@@ -59,7 +59,6 @@ function TryoutCountryPage() {
             home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [{ label: route.labels.tryOut }],
-            menuLabel: route.labels.more,
             title: route.labels.tryOut,
           }}
         />

@@ -66,6 +66,7 @@
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Kata sandimu",
     "card-code-label": "Kode kartu",
+    "card-hint": "Tidak punya alamat Google? Masuk dengan username sekolah dan kartu dari admin.",
     "card-code-placeholder": "Masuk pertama atau kartu baru",
     "card-expired": "Minta kartu baru ke guru atau admin, karena kartu ini sudah kedaluwarsa.",
     "card-invalid": "Username atau kode kartu tidak cocok.",
@@ -73,7 +74,7 @@
     "card-used": "Minta kartu baru ke guru atau admin, karena kartu ini sudah dipakai.",
     "failed": "Gagal masuk, jadi coba lagi.",
     "outsider-card": "Masuk dengan kartu",
-    "outsider-description": "Kamu masuk sebagai {account}, yang belum punya undangan di sini.",
+    "outsider-description": "Kamu masuk sebagai {account}, yang belum punya undangan di sini, jadi minta admin mengirimnya atau masuk dengan alamat yang diundang.",
     "outsider-switch": "Ganti akun",
     "outsider-title": "Bukan anggota {school}",
     "password-label": "Kata sandi",
@@ -84,7 +85,7 @@
     "submit": "Masuk",
     "username-action": "Masuk dengan username",
     "username-label": "Username sekolah",
-    "outsider-check-again": "Periksa lagi"
+    "outsider-check-again": "Periksa lagi undanganku"
   },
   "SchoolGuardians": {
     "sign-in-action": "Masuk sebagai orang tua",
@@ -310,6 +311,8 @@
     "prompt-placeholder": "Tulis soal di sini.",
     "results-title": "Hasil",
     "results-name": "Nama",
+    "results-not-yet": "Belum",
+    "release-wait": "Penulis ujian atau Admin merilis hasilnya setelah sesi ditutup.",
     "results-status": "Status",
     "results-score": "Skor",
     "results-search": "Cari nama",
@@ -555,6 +558,7 @@
     "invoice-pay": "Bayar",
     "invoice-transfer": "Bayar lewat transfer",
     "manage-group": "Pengelolaan",
+    "back-to-school": "Kembali ke {school}",
     "manage-settings": "Pengaturan",
     "address-copy": "Salin alamat",
     "address-footer": "Salin untuk dibagikan ke sekolahmu.",
@@ -695,6 +699,7 @@
     "client-secret-title": "Rahasia baru",
     "client-secret-description": "Salin sekarang, karena rahasia ini tidak akan ditampilkan lagi.",
     "audit-description": "Siapa mengubah apa di sekolah ini, dan kapan.",
+    "audit-footer": "Nilai kebijakan tidak disalin ke jejak.",
     "audit-view": "Lihat jejak",
     "audit-when": "Kapan",
     "audit-who": "Siapa",
@@ -982,7 +987,7 @@
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
-    "policy-domains-invalid": "Periksa domain ini, satu di setiap baris: {domains}.",
+    "policy-domains-invalid": "Periksa domain ini: {domains}, lalu tulis masing-masing di baris sendiri.",
     "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
     "device-title": "Hubungkan perangkat",
     "device-description": "Ketik kode dari Nakafa CLI agar perangkat itu membaca sekolah sebagai {name}.",
@@ -1666,6 +1671,7 @@
     "contribute": "Berkontribusi"
   },
   "Auth": {
+    "back-to-nakafa": "Kembali ke Nakafa",
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
     "sign-in-title": "Masuk ke Nakafa",

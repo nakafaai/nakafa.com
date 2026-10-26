@@ -61,7 +61,7 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   if (masuk === "username") {
     return (
       <Suspense fallback={null}>
-        <TenantLogin slug={slug} />
+        <TenantLogin />
       </Suspense>
     );
   }

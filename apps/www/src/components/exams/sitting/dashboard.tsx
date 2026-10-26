@@ -17,6 +17,7 @@ import { SittingPanel } from "@/components/exams/sitting/panel";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
+import { SittingFilterRow } from "@/components/exams/sitting/toolbar";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -85,6 +86,7 @@ export function SittingDashboard({
       <SittingDataContext value={data}>
         <PanesProvider>
           <SittingHeader examId={examId} />
+          <SittingFilterRow />
           <Panes>
             <PanesList>
               <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">

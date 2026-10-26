@@ -1,4 +1,5 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { AddToListIcon, ListPlusIcon } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
   CHOICE_OPTIONS_MAX,
@@ -24,6 +25,8 @@ import {
 } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
+import { ExamDocument } from "@/components/tenant/exams/rich";
+import { PaperOption } from "@/components/tenant/exams/sheet";
 import {
   cellsKey,
   keyCells,
@@ -38,23 +41,54 @@ type Part = Pick<
   "id" | "label"
 >;
 
+/** What a column of parts holds: statements, numbered, or answers or columns, lettered. */
+type PartKind = "answers" | "columns" | "statements";
+
+/**
+ * The words of each kind of column: its heading, the name of a part's editor and of its remove control for
+ * assistive technology, and the hint an empty part shows.
+ */
+const PART_WORDS = {
+  answers: {
+    editor: "answer-of",
+    heading: "match-answers",
+    placeholder: "answer-placeholder",
+    remove: "answer-remove-of",
+  },
+  columns: {
+    editor: "column-of",
+    heading: "table-columns",
+    placeholder: "column-placeholder",
+    remove: "statement-remove-of",
+  },
+  statements: {
+    editor: "statement-of",
+    heading: "match-statements",
+    placeholder: "statement-placeholder",
+    remove: "statement-remove-of",
+  },
+} as const;
+
 /** The props of one column of parts on a question's paper. */
 interface PartColumnProps {
-  /** The action that adds a part and its name, or none while the column holds the most it may. */
-  readonly add: { readonly label: string; readonly run: () => void } | null;
+  /**
+   * The action that adds a part, with its own icon and its name, or none while the column holds the
+   * most it may. Statements and answers add with icons of their own, so the two columns of a match
+   * never draw the same one.
+   */
+  readonly add: {
+    readonly icon: IconSvgElement;
+    readonly label: string;
+    readonly run: () => void;
+  } | null;
   /** Whether the page is the chosen one, which shows the action that adds a part. */
   readonly chosen: boolean;
   /** Whether the exam is locked, so the parts take no change. */
   readonly frozen: boolean;
-  /** The heading of the column. */
-  readonly heading: string;
-  /** The letter or number that names a part by its place. */
-  readonly letterOf: (index: number) => string;
-  /** The name of a part's editor and of its remove control, by the part's letter. */
-  readonly namesOf: (letter: string) => {
-    readonly editor: string;
-    readonly remove: string;
-  };
+  /** What the column holds, which names its parts and words its heading. */
+  readonly kind: PartKind;
+  /** The number of the question, which names each part for assistive technology. */
+  readonly number: number;
   /** Saves the label a part's editor holds. Calls `unstored` when the server does not store it. */
   readonly onLabel: (
     partId: string,
@@ -65,8 +99,6 @@ interface PartColumnProps {
   readonly onRemove: ((partId: string) => void) | null;
   /** The parts as the page shows them, with every change the teacher made. */
   readonly parts: readonly Part[];
-  /** The text an empty part's editor shows. */
-  readonly placeholder: string;
   /** The parts as the server holds them, whose labels the editors start from. */
   readonly saved: readonly Part[];
 }
@@ -80,21 +112,24 @@ function PartColumn({
   add,
   chosen,
   frozen,
-  heading,
-  letterOf,
-  namesOf,
+  kind,
+  number,
   onLabel,
   onRemove,
   parts,
-  placeholder,
   saved,
 }: PartColumnProps) {
+  const t = useTranslations("Exams");
+  const words = PART_WORDS[kind];
+
   return (
     <div className="grid content-start gap-2">
-      <p className="font-medium text-muted-foreground text-sm">{heading}</p>
+      <p className="font-medium text-muted-foreground text-sm">
+        {t(words.heading)}
+      </p>
       {Arr.map(parts, (part, index) => {
-        const letter = letterOf(index);
-        const names = namesOf(letter);
+        const name =
+          kind === "statements" ? String(index + 1) : optionLetter(index);
         return (
           <OptionRow
             key={part.id}
@@ -103,22 +138,27 @@ function PartColumn({
               Arr.findFirst(saved, (item) => item.id === part.id),
               { onNone: () => part.label, onSome: (item) => item.label }
             )}
-            letter={letter}
             locked={frozen}
-            name={names.editor}
             onRemove={onRemove === null ? null : () => onRemove(part.id)}
             onSave={(label: OptionLabel, unstored: () => void) =>
               onLabel(part.id, label, unstored)
             }
-            placeholder={placeholder}
-            removeName={names.remove}
-          />
+            removeName={t(words.remove, { name, number })}
+          >
+            <PaperOption letter={name}>
+              <ExamDocument
+                label={t(words.editor, { name, number })}
+                placeholder={t(words.placeholder)}
+                size="line"
+              />
+            </PaperOption>
+          </OptionRow>
         );
       })}
       {add === null || frozen ? null : (
         <div className={chosen ? undefined : "invisible"}>
           <Button onClick={add.run} size="sm" type="button" variant="ghost">
-            <HugeIcons aria-hidden="true" icon={Add01Icon} />
+            <HugeIcons aria-hidden="true" icon={add.icon} />
             {add.label}
           </Button>
         </div>
@@ -126,12 +166,6 @@ function PartColumn({
     </div>
   );
 }
-
-/** How each side of a match names its parts: statements by number, answers by letter. */
-const PART_NAME = {
-  sources: (index: number) => String(index + 1),
-  targets: optionLetter,
-} satisfies Record<MatchSide, (index: number) => string>;
 
 /** The props of one side of a matching or a table question. */
 interface SideProps {
@@ -168,6 +202,7 @@ export function MatchColumn({
       add={
         parts.length < CHOICE_OPTIONS_MAX
           ? {
+              icon: statements ? ListPlusIcon : AddToListIcon,
               label: t(statements ? "statement-add" : "match-answer-add"),
               run: () =>
                 props.editing.saveAnswers((draft) => {
@@ -183,18 +218,8 @@ export function MatchColumn({
       }
       chosen={props.chosen}
       frozen={props.frozen}
-      heading={t(statements ? "match-statements" : "match-answers")}
-      letterOf={PART_NAME[side]}
-      namesOf={(name) => ({
-        editor: t(statements ? "statement-of" : "answer-of", {
-          name,
-          number: props.number,
-        }),
-        remove: t(statements ? "statement-remove-of" : "answer-remove-of", {
-          name,
-          number: props.number,
-        }),
-      })}
+      kind={statements ? "statements" : "answers"}
+      number={props.number}
       onLabel={(partId, label, unstored) =>
         props.editing.saveAnswers(
           (draft) => ({
@@ -218,9 +243,6 @@ export function MatchColumn({
           : null
       }
       parts={parts}
-      placeholder={t(
-        statements ? "statement-placeholder" : "answer-placeholder"
-      )}
       saved={Arr.flatMap(props.question.answers, (answer) =>
         answer.kind === "match" ? answer[side] : []
       )}
@@ -251,6 +273,7 @@ export function TableColumn({
       add={
         statements && parts.length < CHOICE_OPTIONS_MAX
           ? {
+              icon: ListPlusIcon,
               label: t("statement-add"),
               run: () =>
                 props.editing.saveAnswers((draft) => {
@@ -266,15 +289,8 @@ export function TableColumn({
       }
       chosen={props.chosen}
       frozen={props.frozen}
-      heading={t(statements ? "match-statements" : "table-columns")}
-      letterOf={statements ? (index) => String(index + 1) : optionLetter}
-      namesOf={(name) => ({
-        editor: t(statements ? "statement-of" : "column-of", {
-          name,
-          number: props.number,
-        }),
-        remove: t("statement-remove-of", { name, number: props.number }),
-      })}
+      kind={side}
+      number={props.number}
       onLabel={(partId, label, unstored) =>
         props.editing.saveAnswers(
           (draft) => ({
@@ -304,9 +320,6 @@ export function TableColumn({
           : null
       }
       parts={parts}
-      placeholder={t(
-        statements ? "statement-placeholder" : "column-placeholder"
-      )}
       saved={Arr.flatMap(props.question.answers, (answer) =>
         answer.kind === "matrix" ? answer[side] : []
       )}

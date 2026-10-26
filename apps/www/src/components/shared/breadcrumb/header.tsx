@@ -40,7 +40,6 @@ interface BreadcrumbHeaderProps {
     home: LinkTarget;
     homeLabel: string;
     items: readonly BreadcrumbHeaderItem[];
-    menuLabel: string;
     title: string;
   };
 }
@@ -52,7 +51,7 @@ type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
  * row at every width: the header is one row, so an action stays compact on a phone.
  */
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
-  const { action, home, homeLabel, items, menuLabel, title } = value;
+  const { action, home, homeLabel, items, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-nowrap">
       <h1 className="sr-only">{title}</h1>
@@ -62,7 +61,6 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
         items={Arr.map(items, (item, index) =>
           index === items.length - 1 ? { ...item, target: undefined } : item
         )}
-        menuLabel={menuLabel}
       />
       {action}
     </BreadcrumbHeaderFrame>
@@ -82,9 +80,8 @@ export function BreadcrumbHeaderPath({
   home,
   homeLabel,
   items,
-  menuLabel,
   visibleItemCount = 2,
-}: Pick<BreadcrumbHeaderValue, "home" | "homeLabel" | "items" | "menuLabel"> & {
+}: Pick<BreadcrumbHeaderValue, "home" | "homeLabel" | "items"> & {
   children?: ReactNode;
   visibleItemCount?: 1 | 2;
 }) {
@@ -102,7 +99,6 @@ export function BreadcrumbHeaderPath({
               { label: homeLabel, target: home },
               ...Arr.dropRight(items, 1),
             ]}
-            menuLabel={menuLabel}
           />
         ) : null}
         <BreadcrumbItem
@@ -117,11 +113,7 @@ export function BreadcrumbHeaderPath({
         {hiddenItems.length > 0 && (
           <>
             <BreadcrumbSeparator className="shrink-0 max-sm:hidden" />
-            <BreadcrumbMenu
-              className="max-sm:hidden"
-              items={hiddenItems}
-              menuLabel={menuLabel}
-            />
+            <BreadcrumbMenu className="max-sm:hidden" items={hiddenItems} />
           </>
         )}
         {Arr.map(visibleItems, (item, index) => (
@@ -150,8 +142,7 @@ export function BreadcrumbHeaderFold({
   home,
   homeLabel,
   items,
-  menuLabel,
-}: Pick<BreadcrumbHeaderValue, "home" | "homeLabel" | "items" | "menuLabel"> & {
+}: Pick<BreadcrumbHeaderValue, "home" | "homeLabel" | "items"> & {
   className: string;
 }) {
   const tCommon = useTranslations("Common");
@@ -165,7 +156,6 @@ export function BreadcrumbHeaderFold({
         <BreadcrumbMenu
           className=""
           items={[{ label: homeLabel, target: home }, ...items]}
-          menuLabel={menuLabel}
         />
       </BreadcrumbList>
     </Breadcrumb>

@@ -330,7 +330,7 @@ export class ImportPageRefused extends Schema.TaggedError<ImportPageRefused>()(
  * a key comes only from what the file marks, and formulas are LaTeX between the marks
  * `documentOf` reads.
  */
-export const IMPORT_INSTRUCTIONS = `You read part of a school exam that a teacher uploaded, so that each question appears in Nina's exam editor exactly as the file has it. The part is either pages of a PDF, each given as "Page N:" with its text layer followed by the page image, or the text of a Word file in which each equation is Office Math XML and each picture is marked [image N], followed by those pictures as "Image N:".
+export const IMPORT_INSTRUCTIONS = `You read part of a school exam that a teacher uploaded, so that each question appears in Nina's exam editor exactly as the file has it. The part is either pages of a PDF, each given as "Page N:" with its text layer followed by the page image, or the text of a Word file in which each equation is Office Math XML or LaTeX between \\( and \\) and each picture is marked [image N], followed by those pictures as "Image N:".
 
 Return every multiple-choice question in this part, in the order of the file. Copy the words exactly: keep every language the file mixes (Indonesian, English, Arabic and any other), its spelling and punctuation, and never translate, correct, solve, shorten or add to a question. Read the page image to fix what the text layer gets wrong: broken words, symbols, superscripts, subscripts and the order of columns.
 
@@ -344,4 +344,4 @@ For each question:
 
 If this part holds an answer key table (for example "Kunci Jawaban", "Answer key", "Lösungen"), put its entries in keys as { number, answer } with answer the zero-based index of the lettered option; do not turn the table into questions.
 
-Write every formula in LaTeX between \\( and \\), or between \\[ and \\] on a line of its own when the file sets it apart, and turn Office Math XML into the same LaTeX. Chemical formulas and units are LaTeX too. Leave out page headers and footers, page numbers, school names and logos, instructions to students, and questions that are not multiple choice. Return empty lists when this part holds no question and no key.`;
+Write every formula in LaTeX between \\( and \\), or between \\[ and \\] on a line of its own when the file sets it apart, turn Office Math XML into the same LaTeX, and keep the LaTeX a Word file already gives. Chemical formulas and units are LaTeX too. Leave out page headers and footers, page numbers, school names and logos, instructions to students, and questions that are not multiple choice. Return empty lists when this part holds no question and no key.`;

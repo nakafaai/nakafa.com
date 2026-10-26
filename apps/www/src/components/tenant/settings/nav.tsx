@@ -37,9 +37,11 @@ import {
 import { Array as Arr } from "effect";
 import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
+import { SettingsBack } from "@/components/shared/settings/return";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { TargetLink, useLeafRoutePath } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 import {
   type SchoolSettingsGroup,
   schoolSettingsGroups,
@@ -83,7 +85,8 @@ const sectionIcons: Record<
 
 /**
  * Renders the school settings as the sidebar body for settings routes, replacing the
- * school's own navigation without replacing the shell: one Settings group whose
+ * school's own navigation without replacing the shell: a first row back to the school
+ * page the viewer came from (or the school's home), then one Settings group whose
  * groups fold open into their sections, as shadcn's sidebar draws a menu with
  * submenus. The group that holds the current section opens, also when the current
  * section moves into it, as after the settings root sends the viewer to its first
@@ -92,15 +95,21 @@ const sectionIcons: Record<
  * school's own navigation.
  */
 export function SchoolSettingsNav() {
-  const { slug } = useTenant();
+  const { name, slug } = useTenant();
   const t = useTranslations("SchoolSettings");
 
   return (
-    <TenantSidebarGroup label={t("manage-settings")}>
-      {Arr.map(schoolSettingsGroups(slug), (group) => (
-        <SchoolSettingsNavGroup group={group} key={group.key} />
-      ))}
-    </TenantSidebarGroup>
+    <>
+      <SettingsBack
+        home={{ from: LOCALE_ROUTE, params: { slug }, to: "/school/$slug" }}
+        label={t("back-to-school", { school: name })}
+      />
+      <TenantSidebarGroup label={t("manage-settings")}>
+        {Arr.map(schoolSettingsGroups(slug), (group) => (
+          <SchoolSettingsNavGroup group={group} key={group.key} />
+        ))}
+      </TenantSidebarGroup>
+    </>
   );
 }
 

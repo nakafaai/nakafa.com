@@ -1,5 +1,4 @@
 import {
-  ArrowDown01Icon,
   CheckmarkSquare02Icon,
   FlowConnectionIcon,
   InputTextIcon,
@@ -8,6 +7,7 @@ import {
   RadioButtonIcon,
   Table02Icon,
   ThumbsUpDownIcon,
+  UnfoldMoreIcon,
 } from "@hugeicons/core-free-icons";
 import { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -72,9 +72,9 @@ export function QuestionType({
 
   if (!editable) {
     return (
-      <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
+      <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
-        <span className="truncate">{name}</span>
+        <span>{name}</span>
       </span>
     );
   }
@@ -85,15 +85,15 @@ export function QuestionType({
         render={
           <Button
             aria-label={t("template-label", { type: name })}
-            className="min-w-0 text-muted-foreground"
+            className="text-muted-foreground"
             size="sm"
             variant="ghost"
           />
         }
       >
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
-        <span className="truncate">{name}</span>
-        <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
+        <span>{name}</span>
+        <HugeIcons aria-hidden="true" icon={UnfoldMoreIcon} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
         <DropdownMenuGroup>
