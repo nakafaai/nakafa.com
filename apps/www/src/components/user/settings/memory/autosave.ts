@@ -14,9 +14,10 @@ import {
  * which counts the times the learner deleted every memory so far, `hide` and
  * `unhide`, which take the row of a new memory the learner deleted while its
  * first save was on its way out of the list and put it back, `leave`, which
- * closes the editor of a memory the server no longer has, and `reopen`, which
- * gives the words of a failed save back in the editor when the learner closed
- * it meanwhile.
+ * closes the editor of a memory the server no longer has, `renew`, which opens
+ * the words the learner wrote for that memory again as a new memory, and
+ * `reopen`, which gives the words of a failed save back in the editor when the
+ * learner closed it meanwhile.
  */
 type Send = Pick<
   ReturnType<typeof useMemoryActions>,
@@ -26,6 +27,7 @@ type Send = Pick<
   cleared: () => number;
   hide: (id: Memory["id"]) => void;
   leave: () => void;
+  renew: (draft: MemoryDraft) => void;
   reopen: (draft: MemoryDraft) => void;
   unhide: (id: Memory["id"]) => void;
 };
@@ -53,7 +55,9 @@ type Send = Pick<
  * fails, the server still holds a newer draft. A memory the server no longer
  * has closes the editor and stops the saving: the server answered a write with
  * a memory that is gone, or the learner deleted every memory while the first
- * save was on its way.
+ * save was on its way. A memory deleted somewhere else while the learner wrote
+ * gives the words the editor holds back as a new memory, so nothing they typed
+ * is lost.
  */
 export function createAutosave(
   memory: Memory | null,
@@ -112,9 +116,10 @@ export function createAutosave(
 
   /**
    * Takes the failure of the write that handed `draft` over. A memory that is
-   * gone closes the editor. Otherwise, when no newer write went out since, the
-   * server lacks the words the editor holds: the next write sends them again,
-   * and they come back in the editor when the learner can try again.
+   * gone closes the editor, and the words the editor holds open again as a new
+   * memory. Otherwise, when no newer write went out since, the server lacks the
+   * words the editor holds: the next write sends them again, and they come back
+   * in the editor when the learner can try again.
    */
   function failed(send: Send, draft: MemoryDraft, again: boolean) {
     const { sent, stopped, wanted } = MutableRef.get(state);
@@ -131,6 +136,9 @@ export function createAutosave(
     }
     if (!again) {
       gone(send);
+      if (!isBlank(wanted)) {
+        send.renew(wanted);
+      }
       return;
     }
     if (newest && !isBlank(wanted)) {

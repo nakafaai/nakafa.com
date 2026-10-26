@@ -1,10 +1,23 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect } from "effect";
 import { live, reloadUntil, saved } from "@/e2e/support/changes";
 import { DELETE, FAILED, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { ACCESS_TITLE } from "@/e2e/support/share";
+import {
+  inTheSheet,
+  openFromHistory,
+  openSheet,
+  promptWith,
+} from "@/e2e/support/sheet";
 import { shownTexts, watchTexts } from "@/e2e/support/shown";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
+
+/** The toast that says a chat on screen was deleted in another tab. */
+const DELETED_ELSEWHERE = en.Toast["chat-deleted"].title;
 
 /** A chat's row on the learner's chats page, which holds a link over the whole row. */
 const rowOf = (page: Page, chatId: string) =>
@@ -227,6 +240,90 @@ const staysWhenRefused = Effect.fn("NakafaE2E.deleteStaysWhenRefused")(
   }
 );
 
+/**
+ * Deletes a chat from the learner's chats page in a second tab of the same
+ * browser, as the learner would in another tab or on another device.
+ */
+const deleteInAnotherTab = Effect.fn("NakafaE2E.deleteInAnotherTab")(function* (
+  page: Page,
+  username: string,
+  chatId: string
+) {
+  const other = yield* Effect.promise(() => page.context().newPage());
+  yield* Effect.promise(async () => {
+    await other.goto(`/en/@${username}/chat`);
+    const more = rowOf(other, chatId).getByRole("button", {
+      name: "More actions",
+    });
+    await expect(more).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await waitUntilTakenOver(more);
+    await deleteFromRow(other, chatId);
+    await expect(rowOf(other, chatId)).toHaveCount(0);
+  });
+  return other;
+});
+
+/**
+ * The learner deletes, in another tab, the chat this tab shows. This tab goes
+ * to their chats and says why, and never shows the chat as one they may not
+ * read.
+ */
+const leavesWhenDeletedElsewhere = Effect.fn(
+  "NakafaE2E.deleteLeavesWhenDeletedElsewhere"
+)(function* (page: Page, baseURL: string) {
+  const { learner, oldest } = yield* inAnOpenChat(page, baseURL);
+
+  yield* Effect.promise(() => watchTexts(page, [ACCESS_TITLE]));
+  const other = yield* deleteInAnotherTab(
+    page,
+    learner.username,
+    oldest.chatId
+  );
+  yield* Effect.promise(async () => {
+    await expect(page).toHaveURL(new RegExp(`/en/@${learner.username}/chat$`), {
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(page.getByText(DELETED_ELSEWHERE)).toBeVisible();
+    await expect(rowOf(page, oldest.chatId)).toHaveCount(0);
+    expect(await shownTexts(page)).toEqual([]);
+    await other.close();
+  });
+});
+
+/**
+ * Nina's sheet shows a chat, and the learner deletes it in another tab. The
+ * sheet lets it go and says why, and never shows it as a chat they may not
+ * read.
+ */
+const sheetLetsGoWhenDeletedElsewhere = Effect.fn(
+  "NakafaE2E.sheetLetsGoWhenDeletedElsewhere"
+)(function* (page: Page, baseURL: string) {
+  const { learner } = yield* openChatPage(page, baseURL);
+  const gone = yield* learner.startChat("The chat that goes");
+  yield* learner.startChat("The chat that stays");
+  yield* learner.titleNewest(["Staying chat", "Going chat"]);
+  yield* openSheet(page);
+  yield* openFromHistory(page, "Going chat");
+  yield* Effect.promise(async () => {
+    await expect(
+      promptWith(inTheSheet(page), "The chat that goes")
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await watchTexts(page, [ACCESS_TITLE]);
+  });
+  const other = yield* deleteInAnotherTab(page, learner.username, gone.chatId);
+  yield* Effect.promise(async () => {
+    await expect(page.getByText(DELETED_ELSEWHERE)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(
+      promptWith(inTheSheet(page), "The chat that goes")
+    ).toHaveCount(0);
+    await expect(inTheSheet(page)).toBeVisible();
+    expect(await shownTexts(page)).toEqual([]);
+    await other.close();
+  });
+});
+
 test.describe("Chat delete at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
   test.describe.configure({ timeout: 180_000 });
@@ -259,6 +356,24 @@ test.describe("Chat delete at 1440px", () => {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       movesOnWhenDeleted(page, origin)
+    );
+  });
+
+  test("leaves for the chats when another tab deletes the open chat", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      leavesWhenDeletedElsewhere(page, origin)
+    );
+  });
+
+  test("lets the sheet's chat go when another tab deletes it", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      sheetLetsGoWhenDeletedElsewhere(page, origin)
     );
   });
 

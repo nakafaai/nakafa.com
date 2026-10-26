@@ -1530,6 +1530,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "This chat was deleted."
+    },
     "image-refused-size": {
       "title": "The image was not added.",
       "description": "Choose an image of at most 2 MB."

@@ -65,6 +65,28 @@ describe("ai/store/create", () => {
     });
   });
 
+  it("lets the sheet's chat go when it is the deleted one, and shows it again when the delete was refused", () => {
+    const store = createAiStore();
+    store.getState().setActiveChatId(chatId);
+
+    expect(store.getState().forgetChat(otherChatId)).toBe(false);
+    expect(store.getState().activeChatId).toBe(chatId);
+    expect(store.getState().forgetChat(chatId)).toBe(true);
+    expect(store.getState().activeChatId).toBeNull();
+
+    store.getState().recallChat(chatId);
+    expect(store.getState().activeChatId).toBe(chatId);
+  });
+
+  it("keeps a chat the learner opened since when a refused delete would show the deleted one again", () => {
+    const store = createAiStore();
+    store.getState().setActiveChatId(otherChatId);
+
+    store.getState().recallChat(chatId);
+
+    expect(store.getState().activeChatId).toBe(otherChatId);
+  });
+
   it("admits one ask at a time and opens the sheet for it", () => {
     const store = createAiStore();
 

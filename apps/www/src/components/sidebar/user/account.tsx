@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
 import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { Effect, Result } from "effect";
@@ -62,7 +63,11 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     pro: t("plan-pro"),
   };
 
-  /** Signs the user out, then opens the locale home as a full document load on success, so the socket closes and every store resets. */
+  /**
+   * Signs the user out, then opens the locale home as a full document load on
+   * success, so the socket closes and every store resets. A failed sign-out says
+   * so, because the account is still signed in.
+   */
   async function handleSignOut() {
     const result = await Effect.runPromise(
       Effect.result(signOutAccountBrowserIdentity())
@@ -70,7 +75,12 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     if (Result.isSuccess(result)) {
       Effect.runSync(clearAiDraftText);
       window.location.replace(localizeInternalHref("/", locale));
+      return;
     }
+    toast.error({
+      description: "sign-out-error.description",
+      title: "sign-out-error.title",
+    });
   }
 
   return (

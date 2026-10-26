@@ -13,6 +13,7 @@ import {
   clearDeletedAccountBrowserIdentity,
   signOutAccountBrowserIdentity,
 } from "@/lib/auth/identity/browser";
+import { followAuthSession, releaseSession } from "@/lib/auth/session";
 
 const authClient = vi.hoisted(() => ({ signOut: vi.fn() }));
 vi.mock("@/lib/auth/client", () => ({ readAuthClient: () => authClient }));
@@ -32,11 +33,25 @@ vi.mock(import("@repo/analytics/posthog/browser"), async (importOriginal) => ({
   resetBrowserAnalyticsIdentity: vi.fn(),
 }));
 
+/** The session readers saw, and Better Auth's answer once the account signed out. */
+const shownSession = {
+  hasError: false,
+  isPending: false,
+  sessionId: "session-1",
+  userId: "user-1",
+};
+const signedOutValue = { data: null, error: null, isPending: false };
+
+/** Whether the page's readers would keep the session they see, as while it signs out. */
+const keepsSession = () =>
+  followAuthSession(shownSession, signedOutValue) === shownSession;
+
 describe("account browser identity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
     window.sessionStorage.clear();
+    Effect.runSync(releaseSession());
   });
 
   it.effect("clears browser identity without stopping analytics", () =>
@@ -227,6 +242,8 @@ describe("account browser identity", () => {
       window.sessionStorage.setItem("nakafa-search", "deleted-account-search");
 
       expect(yield* signOutAccountBrowserIdentity()).toBeUndefined();
+      // The page leaves next, and its readers keep the session until then.
+      expect(keepsSession()).toBe(true);
 
       expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
       expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
@@ -259,6 +276,7 @@ describe("account browser identity", () => {
       ).pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(AccountSignOutFailed);
+      expect(keepsSession()).toBe(false);
       expect(window.localStorage.getItem("nakafa-ai")).toBe(
         "active-account-chat"
       );
@@ -275,6 +293,7 @@ describe("account browser identity", () => {
       ).pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(AccountSignOutFailed);
+      expect(keepsSession()).toBe(false);
       expect(window.sessionStorage.getItem("nakafa-search")).toBe(
         "active-account-search"
       );

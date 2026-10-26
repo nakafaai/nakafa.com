@@ -1,4 +1,4 @@
-import { Option, Predicate, Schema } from "effect";
+import { Effect, MutableRef, Option, Predicate, Schema } from "effect";
 
 /** The Better Auth route that reports the session of the cookie a request sends. */
 export const SESSION_PATH = "/api/auth/get-session";
@@ -83,12 +83,39 @@ export function readAuthSession(value: unknown) {
 }
 
 /**
+ * Whether the page signs its account out. A page that signs out leaves by
+ * loading another document, so its readers keep the session they saw until it
+ * goes: following Better Auth to signed out first would read every surface as a
+ * visitor's for that moment, with a sign-in card where the learner's chat was.
+ * Convex keeps answering the page's queries until then, because a query trusts
+ * the token it holds.
+ */
+const signingOut = MutableRef.make(false);
+
+/** Keeps the session every reader sees until the page leaves, because the page signs its account out. */
+export const holdSession = Effect.fn("www.auth.holdSession")(function* () {
+  yield* Effect.sync(() => MutableRef.set(signingOut, true));
+});
+
+/** Follows Better Auth again, because the sign-out did not happen. */
+export const releaseSession = Effect.fn("www.auth.releaseSession")(
+  function* () {
+    yield* Effect.sync(() => MutableRef.set(signingOut, false));
+  }
+);
+
+/**
  * Follows Better Auth's session atom from the session readers already see.
  *
  * Once the session has settled, a refetch of a signed-out session keeps that
  * session until Better Auth answers, so readers never fall back to loading.
+ * While the page signs its account out, readers keep the session they see
+ * (`holdSession`).
  */
 export function followAuthSession(previous: AuthSession, value: unknown) {
+  if (MutableRef.get(signingOut)) {
+    return previous;
+  }
   return !previous.isPending && isBetterAuthRefetch(value)
     ? previous
     : readAuthSession(value);

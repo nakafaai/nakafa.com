@@ -101,6 +101,17 @@ export function createAiStore() {
             };
           }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),
+        forgetChat: (chatId) => {
+          if (get().activeChatId !== chatId) {
+            return false;
+          }
+          set({ activeChatId: null });
+          return true;
+        },
+        recallChat: (chatId) =>
+          set((state) =>
+            state.activeChatId === null ? { activeChatId: chatId } : state
+          ),
         setContextTitle: (contextTitle) => set({ contextTitle }),
         setOpeningChat: (openingChat) => set({ openingChat }),
         // An open sheet shows its body, so opening also warms it.

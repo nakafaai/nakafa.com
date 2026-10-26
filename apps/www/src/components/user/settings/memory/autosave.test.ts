@@ -77,6 +77,7 @@ function page() {
       leave: () => note("leave"),
       remove: (memory: Memory, restore?: MemoryDraft) =>
         note(`remove ${memory.id} ${restore ? words(restore) : "-"}`),
+      renew: (draft: MemoryDraft) => note(`renew ${words(draft)}`),
       reopen: (draft: MemoryDraft) => note(`reopen ${words(draft)}`),
       unhide: (id: Memory["id"]) => note(`unhide ${id}`),
     },
@@ -278,12 +279,28 @@ describe("the saving of an open editor", () => {
     ]);
   });
 
-  it("closes the editor when the server has no such memory any more, and gives nothing back", () => {
+  it("closes the editor when the server has no such memory any more, and gives the words back as a new memory", () => {
     const { answer, send, sent } = page();
     const saving = createAutosave(stored, null);
 
     saving.change(second);
     saving.write(send);
+    answer("refused");
+
+    expect(sent()).toEqual([
+      `edit ${stored.id} School|Grade 12, science track`,
+      "leave",
+      "renew School|Grade 12, science track",
+    ]);
+  });
+
+  it("gives nothing back for a memory that is gone when the learner emptied the editor", () => {
+    const { answer, send, sent } = page();
+    const saving = createAutosave(stored, null);
+
+    saving.change(second);
+    saving.write(send);
+    saving.change({ text: "", title: "" });
     answer("refused");
 
     expect(sent()).toEqual([
@@ -304,6 +321,7 @@ describe("the saving of an open editor", () => {
     expect(sent()).toEqual([
       `edit ${stored.id} School|Grade 12, science track`,
       "leave",
+      "renew School|Grade 12, science track",
     ]);
   });
 
@@ -321,6 +339,7 @@ describe("the saving of an open editor", () => {
       `edit ${stored.id} |Grade 12, science`,
       `edit ${stored.id} School|Grade 12, science track`,
       "leave",
+      "renew School|Grade 12, science track",
     ]);
   });
 
