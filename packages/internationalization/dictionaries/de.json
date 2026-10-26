@@ -1021,9 +1021,8 @@
     "classification": "Bildung"
   },
   "Common": {
-    "load-error": "Das wurde nicht geladen, versuche es also später noch einmal.",
+    "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
     "load-error-retry": "Diese Daten konnten nicht geladen werden.",
-    "schools-load-error": "Deine Schulen wurden nicht geladen.",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
     "breadcrumb": "Navigationspfad",

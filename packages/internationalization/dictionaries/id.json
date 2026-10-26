@@ -1021,9 +1021,8 @@
     "classification": "Pendidikan"
   },
   "Common": {
-    "load-error": "Ini belum dapat dimuat, jadi coba lagi nanti.",
+    "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
     "load-error-retry": "Data ini belum dapat dimuat.",
-    "schools-load-error": "Sekolahmu belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
     "breadcrumb": "Jalur navigasi",

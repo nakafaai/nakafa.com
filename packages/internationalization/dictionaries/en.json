@@ -1021,9 +1021,8 @@
     "classification": "Education"
   },
   "Common": {
-    "load-error": "This did not load, so try again later.",
+    "load-error": "We could not load this data. Please try again.",
     "load-error-retry": "We could not load this data.",
-    "schools-load-error": "Your schools did not load.",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
     "breadcrumb": "Breadcrumb",

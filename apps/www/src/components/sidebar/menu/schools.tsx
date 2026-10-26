@@ -97,7 +97,7 @@ export function SidebarSchoolMenuItems({
       <DropdownMenuGroup>
         <DropdownMenuLabel>{t("your-schools")}</DropdownMenuLabel>
         {isFailed ? (
-          <DropdownMenuItem disabled>{t("schools-load-error")}</DropdownMenuItem>
+          <DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>
         ) : (
           Arr.map(memberships.results, ({ tenant }) => (
             <SidebarSchoolMenuItem key={tenant.slug} tenant={tenant} />
