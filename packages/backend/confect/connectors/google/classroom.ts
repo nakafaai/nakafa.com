@@ -21,7 +21,7 @@ const CourseAnswer = Schema.Struct({
 });
 
 /** When a piece of coursework due on a day with no time is due: the last minute of the day. */
-const END_OF_DAY = { hours: 23, minutes: 59 };
+const END_OF_DAY = { hour: 23, minute: 59 };
 
 /** A day as Classroom writes a due date. */
 const DueDate = Schema.Struct({
@@ -125,8 +125,8 @@ const deadlineOf = (work: typeof CourseWorkAnswer.Type) =>
         ...(work.dueTime === undefined
           ? END_OF_DAY
           : {
-              hours: work.dueTime.hours ?? 0,
-              minutes: work.dueTime.minutes ?? 0,
+              hour: work.dueTime.hours ?? 0,
+              minute: work.dueTime.minutes ?? 0,
             }),
       }),
       DateTime.toEpochMillis
