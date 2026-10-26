@@ -15,7 +15,7 @@ export type LinkItem = Ref.Returns<typeof guardians.links.list>["page"][number];
 export type ChildItem = Ref.Returns<typeof guardians.family.children>[number];
 
 /** Sets the status of one link on a page, and keeps every other link as it is. */
-export function setLinkStatus(
+function setLinkStatus(
   page: readonly LinkItem[],
   linkId: LinkItem["id"],
   status: LinkItem["status"]
@@ -26,7 +26,7 @@ export function setLinkStatus(
 }
 
 /** Sets the status of one child's link, and keeps every other child as it is. */
-export function setChildStatus(
+function setChildStatus(
   children: readonly ChildItem[],
   linkId: ChildItem["linkId"],
   status: ChildItem["status"]

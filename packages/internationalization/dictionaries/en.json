@@ -2095,12 +2095,12 @@
       "description": "Save it without the password first."
     },
     "school-refusal-guardian-closed": {
-      "title": "This link is not waiting for a check.",
-      "description": "Reload the list to see its status now."
+      "title": "This link has changed.",
+      "description": "Reload the list to see its status."
     },
     "school-refusal-guardian-link": {
-      "title": "The link could not be made.",
-      "description": "Choose an active student who is not linked to this email yet."
+      "title": "The link was not made.",
+      "description": "Choose an active student without this email."
     },
     "school-roster-imported": {
       "title": "The students are in the roster."

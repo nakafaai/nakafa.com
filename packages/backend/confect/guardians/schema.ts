@@ -16,7 +16,7 @@ export const CODE_TRIES = 3;
  * Pasal 1 angka 1, and counsel confirms it before the first school (K20).
  */
 export const CONSENT_POLICY_VERSION = "id-profile-pending-1";
-export const PolicyVersion = Schema.Literal(CONSENT_POLICY_VERSION);
+const PolicyVersion = Schema.Literal(CONSENT_POLICY_VERSION);
 
 /** Why a link ended: the guardian withdrew consent, the school revoked it, or it expired unverified. */
 export const LinkEndReason = Schema.Literals([

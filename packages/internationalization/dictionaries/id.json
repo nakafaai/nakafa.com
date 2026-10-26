@@ -2095,12 +2095,12 @@
       "description": "Simpan dulu tanpa kata sandi."
     },
     "school-refusal-guardian-closed": {
-      "title": "Tautan ini tidak menunggu pemeriksaan.",
-      "description": "Muat ulang daftar untuk melihat statusnya sekarang."
+      "title": "Tautan ini sudah berubah.",
+      "description": "Muat ulang daftar untuk melihat statusnya."
     },
     "school-refusal-guardian-link": {
-      "title": "Tautan tidak dapat dibuat.",
-      "description": "Pilih siswa aktif yang belum ditautkan ke email ini."
+      "title": "Tautan tidak dibuat.",
+      "description": "Pilih siswa aktif yang belum memakai email ini."
     },
     "school-roster-imported": {
       "title": "Siswa sudah masuk ke daftar."

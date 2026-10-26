@@ -2095,12 +2095,12 @@
       "description": "Speichere es zuerst ohne Passwort."
     },
     "school-refusal-guardian-closed": {
-      "title": "Diese Verknüpfung wartet auf keine Prüfung.",
-      "description": "Lade die Liste neu, um den aktuellen Status zu sehen."
+      "title": "Verknüpfung schon geändert.",
+      "description": "Lade die Liste neu, um den Status zu sehen."
     },
     "school-refusal-guardian-link": {
-      "title": "Die Verknüpfung ließ sich nicht anlegen.",
-      "description": "Wähle ein aktives Kind, das noch nicht mit dieser E-Mail verknüpft ist."
+      "title": "Verknüpfung nicht angelegt.",
+      "description": "Wähle ein aktives Kind ohne diese E-Mail."
     },
     "school-roster-imported": {
       "title": "Die Schüler sind in der Liste."

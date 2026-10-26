@@ -1,7 +1,4 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
 
 /**
@@ -31,10 +28,7 @@ const guardianCodeCopy = {
     ignore: "Jika Anda tidak meminta kode, abaikan email ini.",
     subject: "Kode masuk Nakafa Anda",
   },
-} satisfies Record<
-  ActiveAppLocaleCode,
-  { body: string; ignore: string; subject: string }
->;
+};
 
 /**
  * The subject, plain text, and HTML of a guardian's sign-in email. The words are

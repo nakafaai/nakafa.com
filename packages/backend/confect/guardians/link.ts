@@ -26,10 +26,10 @@ import type { Email } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Clock, Effect, Match, Option, Struct } from "effect";
 
 /** The most links one address or one guardian holds in a school; every read of them takes this many. */
-export const LINK_LIMIT = 20;
+const LINK_LIMIT = 20;
 
 /** The state of a link as lists show it. An unverified link past its term reads as expired. */
-export const linkStatusOf = (
+const linkStatusOf = (
   link: Pick<GuardianLinksDoc, "expiresAt" | "state">,
   now: number
 ): typeof LinkStatus.Type =>
