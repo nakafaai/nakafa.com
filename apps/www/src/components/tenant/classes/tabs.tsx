@@ -1,4 +1,5 @@
 import {
+  ChartBarLineIcon,
   Home01Icon,
   LibraryIcon,
   MessageMultiple01Icon,
@@ -14,13 +15,17 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * The toolbar row of a class under its header, one height on every view: its home, its forum, its
- * library, and its tasks, each with its icon, the current one marked as the page. On a narrow
- * screen the row scrolls within itself, never the page.
+ * library, its tasks, and its gradebook for a viewer who keeps the class's grades, each with its
+ * icon, the current one marked as the page. On a narrow screen the row scrolls within itself,
+ * never the page.
  */
 export function ClassTabs({
+  canGrade,
   classSlug,
   tab,
 }: {
+  /** Whether the viewer keeps the class's grades, so the gradebook is one of the tabs. */
+  canGrade: boolean;
   classSlug: string;
   tab: (typeof ClassView.Type)["_tag"];
 }) {
@@ -74,6 +79,17 @@ export function ClassTabs({
           <HugeIcons icon={Task01Icon} />
           {t("tabs-tasks")}
         </Link>
+        {canGrade ? (
+          <Link
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            className={classTab({ active: tab === "grades" })}
+            params={params}
+            to="/school/$slug/classes/$classSlug/grades"
+          >
+            <HugeIcons icon={ChartBarLineIcon} />
+            {t("tabs-grades")}
+          </Link>
+        ) : null}
       </nav>
     </div>
   );

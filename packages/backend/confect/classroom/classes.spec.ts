@@ -47,7 +47,7 @@ const ClassView = Schema.Struct({
  * on it, and whether the caller may open a discussion in its forum, so a page
  * offers only the actions the caller may take.
  */
-const ClassResolved = Schema.Struct({
+export const ClassResolved = Schema.Struct({
   ...ClassView.fields,
   can: Schema.Array(Kind.actions(entries, "class")),
   opens: Schema.Boolean,

@@ -1,4 +1,5 @@
 import {
+  Certificate01Icon,
   Home01Icon,
   Notification01Icon,
   Settings01Icon,
@@ -21,14 +22,14 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 /**
  * Renders the navigation of the school sidebar. The settings sections replace it
  * on a settings route for a viewer who may manage the school, and otherwise the
- * school's own groups show: home and notifications for everyone, the exams for a
- * viewer who may open them, then the
+ * school's own groups show: home and notifications for everyone, the exams and the report cards
+ * for a viewer who may open them, then the
  * management group, with the settings entry, only for a viewer who may manage the
  * school. The viewer's classes come last, when the viewer has any, so they never
  * move the groups above them.
  */
 export function TenantNavigation() {
-  const { canManage, canOpenExams, slug } = useTenant();
+  const { canManage, canOpenExams, canOpenReports, slug } = useTenant();
   const isSettings = useRouteMatched("/school/$slug/settings", {
     exact: false,
   });
@@ -36,6 +37,7 @@ export function TenantNavigation() {
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
   const tNotifications = useTranslations("Notifications");
+  const tReports = useTranslations("SchoolReports");
   const tSettings = useTranslations("SchoolSettings");
 
   if (canManage && isSettings) {
@@ -93,6 +95,24 @@ export function TenantNavigation() {
             >
               <HugeIcons icon={TaskEdit01Icon} />
               <span className="truncate">{tExams("title")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
+        {canOpenReports ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={
+                matchRoute({
+                  fuzzy: true,
+                  params: { slug },
+                  to: "/school/$slug/reports",
+                }) !== false
+              }
+              render={<Link params={{ slug }} to="/school/$slug/reports" />}
+              tooltip={tReports("title")}
+            >
+              <HugeIcons icon={Certificate01Icon} />
+              <span className="truncate">{tReports("title")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}

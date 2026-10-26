@@ -24,3 +24,18 @@ export class SchemeNotLater extends Schema.TaggedError<SchemeNotLater>()(
     "A new grading scheme must take effect after the newest one."
   )
 ) {}
+
+/** A student who is not placed in the cohort in its period, so the cohort holds no report for them. */
+export class ReportNotPlaced extends Schema.TaggedError<ReportNotPlaced>()(
+  "ReportNotPlaced",
+  refusal(
+    "REPORT_NOT_PLACED",
+    "This student is not placed in this class group."
+  )
+) {}
+
+/** A report card past the step the change needs: written only as a draft, handed in once, approved once. */
+export class ReportClosed extends Schema.TaggedError<ReportClosed>()(
+  "ReportClosed",
+  refusal("REPORT_CLOSED", "This report card has moved on from that step.")
+) {}

@@ -124,8 +124,10 @@ describe("auth/tokens", () => {
       const [account, ...others] = await storedAccounts(test);
       expect(others).toEqual([]);
       expectNoProviderTokens(account);
+      // The stand-in ID token has no payload, so it names no hosted domain.
       expect(account).toMatchObject({
         createdAt: NOW,
+        hostedDomain: null,
         providerId: "google",
         scope: SCOPE,
         updatedAt: NOW,
@@ -197,6 +199,31 @@ describe("auth/tokens", () => {
       expect(names).toContain(cookies.session);
       expect(names).not.toContain(cookies.account);
     }
+  });
+
+  it("keeps the hosted domain claim of the latest sign-in, lowercase, and null for a personal account", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await signInWithGoogle(test, "guru", NOW, { hd: "Harapan.Example.Test" });
+    const [workspace] = await storedAccounts(test);
+    expect(workspace.hostedDomain).toBe("harapan.example.test");
+    vi.setSystemTime(NOW + HOUR);
+    await signInWithGoogle(test, "guru", NOW + HOUR);
+    const [personal, ...others] = await storedAccounts(test);
+    expect(others).toEqual([]);
+    expect(personal.hostedDomain).toBeNull();
+  });
+
+  it("keeps the stored hosted domain through a write without an ID token", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await signInWithGoogle(test, "guru", NOW, { hd: "harapan.example.test" });
+    const [created] = await storedAccounts(test);
+    await test.mutation(async (ctx) => {
+      const { internalAdapter } = await betterAuthContext(ctx);
+      await internalAdapter.updateAccount(created._id, { scope: SCOPE });
+      return null;
+    });
+    const [updated] = await storedAccounts(test);
+    expect(updated.hostedDomain).toBe("harapan.example.test");
   });
 
   it("refuses a Google ID token on the link route, so no token that comes with it is stored", async () => {

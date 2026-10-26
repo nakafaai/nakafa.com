@@ -75,7 +75,7 @@ below).
 | Google Classroom | Classes, members, tasks, materials, announcements, and grades, as one import and then a sync | A teacher or an admin of a school Workspace; a student, for their own tasks and grades | Coursework import and sync built; the rest planned |
 | Google Calendar | Upcoming events, for Nina and the home page | A Google account | Built for Nina; the home page planned |
 | Gmail | Email context | A teacher or a staff member, never a student | Planned, after the security assessment |
-| Dapodik XLSX | A file the school uploads. Only the columns listed below are read. | A school in Indonesia | Planned |
+| Dapodik XLSX | A file the school chooses. Only the columns listed below are read, in the browser. | A school in Indonesia | Built |
 | OneRoster CSV | A roster file that the school uploads. ADR 0029 owns the standard and lists what the import reads. | A school in any country | Planned |
 
 - Dapodik has no official data API (K13). K13 has the owner send two written
@@ -443,6 +443,57 @@ Two kinds of connection decides.
   and it says each pool adds overhead, so many pools do not fit.
 - Always revoking at Google on disconnect. The revoke rule gives the reason.
 
+
+## Amendment: The Dapodik XLSX Import, 26 October 2026
+
+The Dapodik import is built (K13 path). Two rules of this ADR changed, and this
+section says why.
+
+- **The import lives in `confect/roster`, not `confect/connectors`.** A file
+  holds no token and opens no connection, so it needs no connection kind and no
+  sealed secret. The roster owns the student's NISN and under-age flag (ADR
+  0034), so it owns the rows a Dapodik file brings: `roster/imports:apply`
+  writes one batch, `roster/imports:list` reads the period's students a page at
+  a time, and `roster/exports:lines` reads them all for the export. The browser
+  half is `apps/www/src/components/tenant/roster`.
+
+- **The file is read in the browser, not in an action.** The rule above has the
+  import read the file in an action and delete it once the import is applied or
+  cancelled. The built import reads the XLSX in the Admin's browser with
+  `read-excel-file`, which loads only when the Admin chooses a file, and the file
+  never leaves the device. Only the read columns reach the server: the name, the
+  NISN, the class group, and the under-age flag, which the browser derives from
+  the birth date and then drops. No birth date, NIK, address, or other column is
+  read or sent, so no file is stored, and no file needs deleting. This keeps more
+  of the rule than an upload would: the date never reaches Nakafa at all.
+- The server checks each row as it would a row typed by hand: the NISN as ten
+  digits, the name as a Person name, the class group as a cohort name. A row that
+  fails a check is shown in the preview with its reason and not sent.
+- The preview comes before anything is applied. Cancel drops it, and nothing was
+  written. Apply sends the rows in batches of 100 to `roster/imports:apply`, each
+  batch one transaction: a batch that fails writes nothing, so a retry of the
+  same file adds no duplicate, because a NISN that the roster holds names its
+  student.
+- A NISN the roster holds changes that student's flag and placement. A new NISN
+  adds a student: a Person with the row's name, a student grant in the chosen unit,
+  the roster row with the NISN sealed and blinded under the school key (ADR 0030),
+  and the placement in the class group of that name in the unit's active period,
+  when the period holds one. Each batch journals `roster.imported` with the source
+  and the counts of rows added, changed, and skipped (ADR 0016).
+- The columns are found by their header text, so the title rows above the header
+  are skipped: `Nama`, `NISN`, `Rombel Saat Ini`, and `Tanggal Lahir` or `Tgl
+  Lahir`. A row that holds neither a name nor a NISN, such as the sub-header row
+  under the parents' column groups, is skipped. A birth date is read from a date
+  cell, a spreadsheet date number, or text as `YYYY-MM-DD`, `DD/MM/YYYY`,
+  `DD-MM-YYYY`, or `22 Agustus 2011`. A NISN kept in a number cell gets back the
+  leading zeros the number lost. The exact layout of each Dapodik version is
+  still to be confirmed with a pilot school's export, and a sheet without the
+  `Nama` and `NISN` header is refused with a message.
+- The export writes the same columns back as an XLSX in the browser with
+  `write-excel-file`, for the school to compare with Dapodik. The Dapodik upload
+  format of report data stays with Records (ADR 0033, S6) and waits for the pilot
+  file.
+
 ## Implementation Status
 
 | Part | Status |
@@ -461,7 +512,8 @@ Two kinds of connection decides.
 | A Google Cloud project for connectors, and its verification request | Planned, program wave A step |
 | A standalone workpool for connectors, and the cap on the pages of each school in it | The cap is built: a sweep every 10 minutes takes at most 50 due connections and at most 5 of one owner, leases each for 15 minutes, and schedules its run 2 seconds apart; a source that changed is read again in 30 minutes, a quiet one in 3 hours. The runs use the scheduler until the pool is declared, which needs the component's code generated against a deployment. |
 | Workspace guide in the setup flow | Planned |
-| Dapodik XLSX import and export, and the file import checks (the OneRoster CSV import of ADR 0029 uses them too) | Planned |
+| Dapodik XLSX import and export (`confect/roster`, `components/tenant/roster`), read and written in the browser; see the amendment above | Built |
+| The server-side file checks for an uploaded file (the OneRoster CSV import of ADR 0029) | Planned |
 
 ## References
 

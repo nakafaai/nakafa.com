@@ -10,6 +10,8 @@ import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
+import { PanesProvider } from "@/components/shared/panes";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { AddChannel } from "@/components/tenant/classes/add";
 import {
   CHANNEL_PAGE_SIZE,
@@ -39,6 +41,10 @@ import { NewTask } from "@/components/tenant/classes/tasks/create";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
 import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import type { ClassView } from "@/components/tenant/classes/view";
+import {
+  ClassGradebook,
+  GradebookFilters,
+} from "@/components/tenant/grades/sheet";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -49,9 +55,14 @@ import type {
   readClassForumFn,
 } from "@/lib/tenant/classes.functions";
 
-/** The first screen of a class page, which the page's loader read on the server. */
+/**
+ * The first screen of a class page, which the page's loader read on the server: the class, with
+ * the first channels on a view that lists them, or the discussion. The gradebook's loader reads no
+ * channel.
+ */
 type ClassPreload =
-  | Pick<Awaited<ReturnType<typeof readClassForumFn>>, "channels" | "resolved">
+  | (Pick<Awaited<ReturnType<typeof readClassForumFn>>, "resolved"> &
+      Partial<Pick<Awaited<ReturnType<typeof readClassForumFn>>, "channels">>)
   | Awaited<ReturnType<typeof readClassDiscussionFn>>;
 
 /** The first screen of a class page, which the page's loader read on the server. */
@@ -209,6 +220,7 @@ function ResolvedClass({
     {
       classSlug,
       forum: t("tabs-forum"),
+      grades: t("tabs-grades"),
       library: t("tabs-library"),
       name: klass.name,
       slug,
@@ -236,14 +248,20 @@ function ResolvedClass({
   return (
     <DraftsContext value={drafts}>
       <LibraryUploadsScope>
-        {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
-        <div className="flex h-svh min-h-0 flex-col">
-          <SchoolHeader items={path} title={klass.name}>
-            <ForumAction klass={klass} view={view} />
-          </SchoolHeader>
-          <ClassTabs classSlug={classSlug} tab={view._tag} />
-          <ClassBody found={found} klass={klass} view={view} />
-        </div>
+        <GradesScope view={view}>
+          {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
+          <div className="flex h-svh min-h-0 flex-col">
+            <SchoolHeader items={path} title={klass.name}>
+              <ForumAction klass={klass} view={view} />
+            </SchoolHeader>
+            <ClassTabs
+              canGrade={Arr.contains(klass.can, "grade.list")}
+              classSlug={classSlug}
+              tab={view._tag}
+            />
+            <ClassBody found={found} klass={klass} view={view} />
+          </div>
+        </GradesScope>
       </LibraryUploadsScope>
     </DraftsContext>
   );
@@ -280,7 +298,31 @@ function ForumAction({
   if (view._tag === "tasks" && Arr.contains(klass.can, "task.manage")) {
     return <NewTask />;
   }
+  if (view._tag === "grades") {
+    return <GradebookFilters />;
+  }
   return null;
+}
+
+/**
+ * The gradebook's filters and panes, which its header and its body share. The other views hold
+ * neither, so a table there never opens a row in a pane.
+ */
+function GradesScope({
+  children,
+  view,
+}: {
+  children: ReactNode;
+  view: typeof ClassView.Type;
+}) {
+  if (view._tag !== "grades") {
+    return children;
+  }
+  return (
+    <TableFiltersProvider>
+      <PanesProvider>{children}</PanesProvider>
+    </TableFiltersProvider>
+  );
 }
 
 /**
@@ -299,6 +341,7 @@ function ClassBody({
 }) {
   const preload = use(ClassPreloadContext);
   const drafts = useDrafts();
+  const { slug } = useClassScope();
   const canManage = Arr.contains(klass.can, "forum.manage");
   const canPost = Arr.contains(klass.can, "forum.post");
   // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
@@ -348,6 +391,14 @@ function ClassBody({
       <ClassScroll table>
         <TaskList teacher={Arr.contains(klass.can, "task.manage")} />
       </ClassScroll>
+    );
+  }
+  if (view._tag === "grades") {
+    // The header's 4rem and the tabs' 3rem stand above the gradebook's panes.
+    return (
+      <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
+        <ClassGradebook classId={klass.id} slug={slug} />
+      </div>
     );
   }
   if (view._tag === "task") {

@@ -7,7 +7,12 @@ import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
 } from "@/e2e/support/layout";
-import { CARD, LINE_SCENE, VISUAL_CARD } from "@/e2e/support/selector";
+import {
+  CARD,
+  LINE_SCENE,
+  VISUAL_CARD,
+  VISUAL_CARD_TOOLBAR,
+} from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** How long one attempt of a retried check waits before the next one. */
@@ -18,7 +23,7 @@ const SETTLE_ATTEMPTS = 10;
 
 /** The animated lab's scene, which names how many bacteria it draws. */
 export const BACTERIA_SCENE = "[data-bacteria-count]";
-/** The animated lab's generation option that names the start, such as "0 h". */
+/** The animated lab's generation that names the start, such as "0 h". */
 const FIRST_GENERATION = /^0\s/;
 
 /** Hides the Fullscreen API the way iPhone Safari does for everything but video. */
@@ -110,9 +115,17 @@ export const revealLab = Effect.fn("NakafaE2E.revealVisualLab")(function* (
   yield* Effect.promise(() =>
     expect(async () => {
       await scrollToElement(card, "start");
-      await expect(
-        card.getByRole("button", { name: FIRST_GENERATION, pressed: false })
-      ).toBeVisible({ timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
+      // The generation is the last select of the toolbar, in every locale.
+      const generation = card
+        .locator(VISUAL_CARD_TOOLBAR)
+        .getByRole("combobox")
+        .last();
+      await expect(generation).toBeVisible({
+        timeout: ATTEMPT_TIMEOUT_MILLISECONDS,
+      });
+      await expect(generation).not.toHaveText(FIRST_GENERATION, {
+        timeout: ATTEMPT_TIMEOUT_MILLISECONDS,
+      });
     }).toPass({ timeout: revealTimeoutMilliseconds })
   );
   return card;
@@ -144,6 +157,27 @@ export const revealAction = Effect.fn("NakafaE2E.revealVisualAction")(
     const action = card.getByRole("button", { exact: true, name: fullscreen });
     yield* Effect.promise(() => scrollToElement(action, "center"));
     return action;
+  }
+);
+
+/**
+ * Opens the menu at the end of the card's actions band, through its button
+ * named `more`, and returns the menu's item named `name`. The menu opens
+ * outside the card, above the page, so the item is found on the page.
+ */
+export const revealMenuItem = Effect.fn("NakafaE2E.revealVisualMenuItem")(
+  function* (
+    card: Locator,
+    more: string,
+    name: string,
+    role: "menuitem" | "menuitemcheckbox" = "menuitem"
+  ) {
+    const trigger = card.getByRole("button", { exact: true, name: more });
+    yield* Effect.promise(async () => {
+      await scrollToElement(trigger, "center");
+      await trigger.click();
+    });
+    return card.page().getByRole(role, { exact: true, name });
   }
 );
 

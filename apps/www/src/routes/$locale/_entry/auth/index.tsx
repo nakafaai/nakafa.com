@@ -18,6 +18,7 @@ import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { readStaticData } from "@/lib/static/data";
 
 /** The sign-in screen. A provider failure and the intent travel in the query string. */
 const AuthSearch = Schema.Struct({
@@ -29,7 +30,8 @@ const AuthSearch = Schema.Struct({
  * The sign-in page takes the root metadata, which names its title, description
  * and the canonical address of the locale's home, as the reference app does. A
  * signed-in visitor never sees it: the gate sends them on to the page the intent
- * names, or home, before the loader runs, with 307 on the server.
+ * names, or home, before the loader runs, with 307 on the server. The build
+ * prerenders the page for visitors, so its loader reads the static answers.
  */
 export const Route = createFileRoute("/$locale/_entry/auth/")({
   validateSearch: Schema.toStandardSchemaV1(AuthSearch),
@@ -49,10 +51,11 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
   },
   loader: async ({ params }) => {
     const [messages, legal] = await Promise.all([
-      readRouteMessages({
-        data: { locale: params.locale, namespaces: ["Metadata"] },
+      readStaticData(readRouteMessages, {
+        locale: params.locale,
+        namespaces: ["Metadata"],
       }),
-      readAuthLegalFn({ data: { locale: params.locale } }),
+      readStaticData(readAuthLegalFn, { locale: params.locale }),
     ]);
     const t = createTranslator({
       locale: params.locale,
