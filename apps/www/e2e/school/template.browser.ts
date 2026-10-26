@@ -11,6 +11,9 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 /** The address of an exam's try as a student on the school host. */
 const TRY_PATH = /\/exams\/[^/]+\/try$/;
 
+/** The end of an editor's address, which the try's address replaces. */
+const EDIT_SUFFIX = /\/edit$/u;
+
 /** The page of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^Question 1\b/;
 
@@ -129,5 +132,79 @@ test("a teacher turns a question into complex multiple choice, marks two answers
   await expect(
     page.getByRole("region", { name: FIRST_QUESTION })
   ).toContainText("No key yet");
+  await context.close();
+});
+
+test("a teacher turns a question into true or false and then cause and effect, whose options are fixed but retypable, and the student picks one", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("Fakta");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
+  await expect(prompt).toBeEditable({ timeout: readinessTimeoutMilliseconds });
+  await prompt.click();
+  await page.keyboard.type("Air mendidih pada 100 derajat Celsius.");
+
+  // True or false gives the question two options in the teacher's language, which keep their number.
+  await page
+    .getByRole("button", { name: "Question type: Multiple choice" })
+    .click();
+  await page.getByRole("menuitemradio", { name: "True or false" }).click();
+  const optionOf = (letter: string) =>
+    page.getByRole("textbox", { name: `Question 1, option ${letter}` });
+  await expect(optionOf("A")).toContainText("True");
+  await expect(optionOf("B")).toContainText("False");
+  await expect(optionOf("C")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Add option" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Remove option A of question 1" })
+  ).toHaveCount(0);
+  const panel = page.getByRole("complementary", { name: "For teachers" });
+  const sentBefore = changes.sent;
+  await panel
+    .getByRole("button", { name: "Mark option A of question 1 as correct" })
+    .click();
+  await saved(changes, sentBefore);
+
+  // The student taps True or False, one of them.
+  const trying = await context.newPage();
+  await trying.goto(page.url().replace(EDIT_SUFFIX, "/try"));
+  await trying.waitForURL(TRY_PATH);
+  const truth = trying.getByRole("radio", { exact: true, name: "True" });
+  await expect(truth).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(trying.getByRole("radio")).toHaveCount(2);
+  await truth.click();
+  await expect(truth).toBeChecked();
+  await trying.close();
+
+  // Cause and effect gives it the five relations of a statement and its reason, and clears the key.
+  await page
+    .getByRole("button", { name: "Question type: True or false" })
+    .click();
+  await page.getByRole("menuitemradio", { name: "Cause and effect" }).click();
+  await expect(optionOf("A")).toContainText(
+    "The statement and the reason are true and related"
+  );
+  await expect(optionOf("E")).toContainText(
+    "The statement and the reason are false"
+  );
+  await expect(
+    page.getByRole("region", { name: FIRST_QUESTION })
+  ).toContainText("No key yet");
+  await expect(page.getByRole("button", { name: "Add option" })).toHaveCount(0);
   await context.close();
 });
