@@ -142,6 +142,12 @@ export default GroupSpec.make()
         template: QuestionTemplate,
       }),
       returns: () => QuestionView,
-      error: () => Schema.Union([AccessDenied, ExamFrozen, RevisionStale]),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          DocumentTooLarge,
+          ExamFrozen,
+          RevisionStale,
+        ]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   );

@@ -403,6 +403,22 @@ describe("withOptionRemoved", () => {
     );
   });
 
+  it("keeps the answers of other interactions when an option leaves the key", () => {
+    const math: InteractionKey = {
+      expression: "x",
+      interaction: "math",
+      kind: "mathEntry",
+    };
+    const key = toggledKey(
+      [choice],
+      markedKey([choice], "option-1"),
+      "option-3"
+    );
+    expect(
+      keyWithoutOption(key === null ? null : [math, ...key], "option-1")
+    ).toEqual([math, ...markedKey([choice], "option-3")]);
+  });
+
   it("leaves a choice of two options as it is", () => {
     const pair = { ...choice, options: [choice.options[0], choice.options[1]] };
     expect(withOptionRemoved([pair, entry], "option-2")).toEqual([pair, entry]);

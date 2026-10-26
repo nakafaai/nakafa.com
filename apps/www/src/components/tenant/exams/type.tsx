@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
 
 /** The icon each template shows by: a radio for one answer, a check box for several. */
@@ -82,7 +82,7 @@ export function QuestionType({
             }}
             value={template}
           >
-            {QuestionTemplate.literals.map((item) => (
+            {Arr.map(QuestionTemplate.literals, (item) => (
               <DropdownMenuRadioItem
                 className="cursor-pointer"
                 key={item}
