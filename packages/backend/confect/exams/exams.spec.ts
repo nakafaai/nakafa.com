@@ -4,12 +4,12 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GrantScope } from "@repo/backend/confect/access/schema";
 import { DocumentTooLarge } from "@repo/backend/confect/editor/document";
 import { ExamAccess } from "@repo/backend/confect/exams/access";
+import { ExamFrozen } from "@repo/backend/confect/exams/errors";
 import {
   ExamSummary,
   ExamTitle,
   ExamView,
 } from "@repo/backend/confect/exams/exam";
-import { ExamFrozen } from "@repo/backend/confect/exams/errors";
 import { HomeView } from "@repo/backend/confect/exams/home/contract";
 import {
   ScheduleCohort,

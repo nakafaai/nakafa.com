@@ -17,10 +17,7 @@ import { Array as Arr, Duration, Effect } from "effect";
  * small whatever the documents' history (ADR 0028). The exam's order is the caller's to keep.
  */
 export const dropQuestion = Effect.fn("exams.question.drop")(function* (
-  question: Pick<
-    ExamQuestionsDoc,
-    "_id" | "explanation" | "prompt" | "rubric"
-  >
+  question: Pick<ExamQuestionsDoc, "_id" | "explanation" | "prompt" | "rubric">
 ) {
   yield* (yield* DatabaseWriter)
     .table("examQuestions")

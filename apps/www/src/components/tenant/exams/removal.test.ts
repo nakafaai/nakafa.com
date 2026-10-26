@@ -25,7 +25,10 @@ describe("removeExamUpdate", () => {
     const firstArgs = { paginationOpts: { cursor: null, numItems: 20 }, slug };
     const nextArgs = { paginationOpts: { cursor: "next", numItems: 20 }, slug };
     const home = {
-      drafts: [{ ...gone, createdAt: 2 }, { ...kept, createdAt: 1 }],
+      drafts: [
+        { ...gone, createdAt: 2 },
+        { ...kept, createdAt: 1 },
+      ],
       live: [],
       next: [],
     };
