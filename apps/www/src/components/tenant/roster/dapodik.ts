@@ -14,7 +14,7 @@ import {
  * The age limit of the consent gate for Indonesia, UU 35/2014 Pasal 1 angka 1, read here
  * until the signed country profile gives it (ADR 0032, ADR 0034).
  */
-export const AGE_LIMIT = 18;
+const AGE_LIMIT = 18;
 
 /**
  * One cell as the sheet reader gives it: text, a number, a boolean, a date, or empty. The
@@ -229,7 +229,7 @@ const holdsStudent = (row: readonly Cell[], columns: Columns) =>
 export const SheetProblem = Schema.Literals(["header", "empty"]);
 
 /** The answer of reading one sheet: its rows, or the problem that refuses it. */
-export const SheetRead = Schema.Union([
+const SheetRead = Schema.Union([
   Schema.Struct({
     outcome: Schema.Literal("read"),
     rows: Schema.Array(ReadRow),

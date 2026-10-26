@@ -24,12 +24,12 @@ import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { Effect, Option } from "effect";
 
 /** What applying one row did: a new student, a changed one, or a row it skipped. */
-export type RowOutcome = "added" | "changed" | "skipped";
+type RowOutcome = "added" | "changed" | "skipped";
 
 /** The student whose roster row holds this NISN in the school, if any. */
 const studentByNisn = Effect.fn("roster.import.byNisn")(function* (
   tenantId: GenericId.GenericId<"tenants">,
-  nisn: ImportRow["nisn"]
+  nisn: (typeof ImportRow.Type)["nisn"]
 ) {
   const blind = yield* blindNisn(tenantId, nisn);
   const entry = yield* (yield* DatabaseReader)
@@ -100,7 +100,7 @@ const placeNamed = Effect.fn("roster.import.place")(function* (
 export const applyRow = Effect.fn("roster.import.row")(function* (
   actor: typeof TenantActor.Type,
   period: TenantPeriodsDoc,
-  row: ImportRow
+  row: typeof ImportRow.Type
 ) {
   const known = yield* studentByNisn(period.tenantId, row.nisn);
   const person = yield* Option.match(known, {

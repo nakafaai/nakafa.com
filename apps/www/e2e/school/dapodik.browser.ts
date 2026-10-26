@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, String as Str } from "effect";
 import { readSheet } from "read-excel-file/node";
 import writeXlsxFile from "write-excel-file/node";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
@@ -153,12 +153,14 @@ test("an admin previews a Dapodik file, imports its students into the active per
   await page.locator("header").getByRole("button", { name: "Export" }).click();
   const file = await (await download).path();
   const rows = await readSheet(file);
-  expect(rows[0]).toEqual(["Nama", "NISN", "Rombel Saat Ini"]);
+  expect(Arr.head(rows)).toEqual(
+    Option.some(["Nama", "NISN", "Rombel Saat Ini"])
+  );
   expect(
-    rows
-      .slice(1)
-      .map((row) => row.join("|"))
-      .sort()
+    Arr.sort(
+      Arr.map(Arr.drop(rows, 1), (row) => Arr.join(Arr.map(row, String), "|")),
+      Str.Order
+    )
   ).toEqual(["Raka Pratama|0012345678|7A", "Sari Dewi|0098765432|7A"]);
 
   await page.goto(address("/settings/cohorts"));

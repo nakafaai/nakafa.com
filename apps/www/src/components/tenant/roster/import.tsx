@@ -2,7 +2,10 @@ import type { GenericId } from "@confect/core";
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { IMPORT_BATCH } from "@repo/backend/confect/roster/schema";
+import {
+  IMPORT_BATCH,
+  type RosterLine,
+} from "@repo/backend/confect/roster/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -69,13 +72,7 @@ const readFile = (file: File, today: DateTime.Utc) =>
   }).pipe(Effect.map((rows) => readDapodikSheet(rows, today)));
 
 /** Writes the period's students into an XLSX file with the columns the import reads. */
-const writeFile = (
-  lines: readonly {
-    readonly cohortName: string;
-    readonly name: string;
-    readonly nisn: string | null;
-  }[]
-) =>
+const writeFile = (lines: readonly (typeof RosterLine.Type)[]) =>
   Effect.tryPromise(async () => {
     const { default: writeXlsxFile } = await import("write-excel-file/browser");
     await writeXlsxFile([

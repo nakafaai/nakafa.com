@@ -5,6 +5,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import type { AuthFailure } from "@repo/backend/confect/auth/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/roster/exports.spec";
 import type { RosterLine } from "@repo/backend/confect/roster/schema";
@@ -24,7 +25,7 @@ const linesFrom = (
   read: readonly (typeof RosterLine.Type)[]
 ): Effect.Effect<
   readonly (typeof RosterLine.Type)[],
-  AccessDenied,
+  AccessDenied | AuthFailure,
   QueryRunner
 > =>
   Effect.gen(function* () {
@@ -33,12 +34,13 @@ const linesFrom = (
       ...args,
       paginationOpts: { cursor, numItems: EXPORT_PAGE },
     }).pipe(
-      Effect.catchTag("NotMember", () =>
-        Effect.fail(
-          new AccessDenied({ action: "roster.import", reason: "role" })
-        )
-      ),
-      Effect.catchTag("SchemaError", Effect.die)
+      Effect.catchTags({
+        NotMember: () =>
+          Effect.fail(
+            new AccessDenied({ action: "roster.import", reason: "role" })
+          ),
+        SchemaError: Effect.die,
+      })
     );
     const lines = Arr.appendAll(read, page.page);
     return page.isDone

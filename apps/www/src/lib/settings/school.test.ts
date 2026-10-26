@@ -67,6 +67,7 @@ describe("school settings routes", () => {
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
+      "/school/$slug/settings/members",
       "/school/$slug/settings/clients",
       "/school/$slug/settings/policies",
       "/school/$slug/settings/policies",
