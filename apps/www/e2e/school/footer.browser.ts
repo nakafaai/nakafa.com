@@ -120,7 +120,7 @@ test.describe("at 1440", () => {
     await expect(strip).toHaveCount(0);
   });
 
-  test("the grid replaces the canvas in place, a tile opens its question, a drag reorders for good, and Escape returns", async ({
+  test("the grid replaces the canvas in place, the keys move between tiles, Enter opens one, a drag reorders for good, and Escape returns", async ({
     baseURL,
     page,
   }) => {
@@ -143,9 +143,10 @@ test.describe("at 1440", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("region", { name: "Exam pages" })).toBeVisible();
 
-    // A tile opens its question on the canvas.
+    // Enter on a tile opens its question on the canvas, as a click does on a phone below.
     await page.getByRole("button", { name: "Grid view" }).click();
-    await grid.getByRole("button", { name: "Open question 3" }).click();
+    await grid.getByRole("button", { name: "Open question 3" }).focus();
+    await page.keyboard.press("Enter");
     await expect(
       page.getByRole("button", { name: /^Question 3 of 3/u })
     ).toBeVisible();
