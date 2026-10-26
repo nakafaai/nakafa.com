@@ -1,7 +1,7 @@
 import {
+  ArrowDown01Icon,
   Delete02Icon,
   FileImportIcon,
-  MoreVerticalIcon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -66,7 +66,7 @@ export function ExamMenu() {
                     />
                   }
                 >
-                  <HugeIcons aria-hidden="true" icon={MoreVerticalIcon} />
+                  <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
                 </DropdownMenuTrigger>
               }
             />

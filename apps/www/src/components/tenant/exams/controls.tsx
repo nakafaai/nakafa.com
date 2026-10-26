@@ -1,7 +1,7 @@
 import {
   Add01Icon,
-  ArrowDown01Icon,
-  ArrowUp01Icon,
+  ArrowDown02Icon,
+  ArrowUp02Icon,
   Copy01Icon,
   Delete02Icon,
   DragDropVerticalIcon,
@@ -75,14 +75,14 @@ export function PageActions({
         <PageAction
           disabled={index === 0}
           hint={t("move-up")}
-          icon={ArrowUp01Icon}
+          icon={ArrowUp02Icon}
           label={t("move-up-of", { number })}
           onClick={moveUp}
         />
         <PageAction
           disabled={index === count - 1}
           hint={t("move-down")}
-          icon={ArrowDown01Icon}
+          icon={ArrowDown02Icon}
           label={t("move-down-of", { number })}
           onClick={moveDown}
         />
@@ -122,11 +122,11 @@ export function PageActions({
           />
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem disabled={index === 0} onClick={moveUp}>
-              <HugeIcons aria-hidden="true" icon={ArrowUp01Icon} />
+              <HugeIcons aria-hidden="true" icon={ArrowUp02Icon} />
               {t("move-up")}
             </DropdownMenuItem>
             <DropdownMenuItem disabled={index === count - 1} onClick={moveDown}>
-              <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
+              <HugeIcons aria-hidden="true" icon={ArrowDown02Icon} />
               {t("move-down")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={copy}>
