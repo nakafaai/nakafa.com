@@ -20,6 +20,7 @@ import { sittingMode } from "@repo/backend/scripts/content/acceptance/sitting";
 import { studentMode } from "@repo/backend/scripts/content/acceptance/student";
 import { teacherMode } from "@repo/backend/scripts/content/acceptance/teacher";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/terminal";
+import { xenditMode } from "@repo/backend/scripts/content/acceptance/xendit";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
@@ -50,6 +51,7 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   studentMode,
   importMode,
   profileMode,
+  xenditMode,
 ];
 
 /** The usage line that names every mode with its arguments. */
