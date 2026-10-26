@@ -27,7 +27,8 @@ import {
 import { Array as Arr, Record as Rec } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { PaneTableRow, useHasPanes } from "@/components/shared/panes";
+import { PaneTableRow } from "@/components/shared/pane";
+import { useHasPanes } from "@/components/shared/panes";
 import { dataTableFeatures } from "@/components/shared/table/features";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyNina } from "@/components/state/empty";

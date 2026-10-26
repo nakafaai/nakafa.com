@@ -35,8 +35,8 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
+import { PaneOpen } from "@/components/shared/pane";
 import {
-  PaneOpen,
   Panes,
   PanesDetail,
   PanesList,

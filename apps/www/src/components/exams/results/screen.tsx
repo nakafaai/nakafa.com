@@ -13,12 +13,12 @@ import {
 } from "@/components/exams/results/context";
 import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
-import { ResultsSelectionProvider } from "@/components/exams/results/selection";
 import {
   type StatusFilter,
   StudentStatusFilter,
   StudentsTable,
 } from "@/components/exams/results/students";
+import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -135,7 +135,7 @@ function SittingResultsContent({
   return (
     <ResultsScopeContext value={scope}>
       <ResultsPaperContext value={paper}>
-        <ResultsSelectionProvider>
+        <PanesProvider>
           <TableFiltersProvider>
             <ResultsHeader
               examId={examId}
@@ -148,14 +148,14 @@ function SittingResultsContent({
               <QuestionsAction questions={questions} />
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
-            <div className="flex min-h-0 w-full min-w-0 flex-1">
-              <div className="flex min-w-0 flex-1 flex-col">
+            <Panes>
+              <PanesList>
                 <StudentsTable first={preload?.students} status={status} />
-              </div>
+              </PanesList>
               <StudentAnswersPanel />
-            </div>
+            </Panes>
           </TableFiltersProvider>
-        </ResultsSelectionProvider>
+        </PanesProvider>
       </ResultsPaperContext>
     </ResultsScopeContext>
   );

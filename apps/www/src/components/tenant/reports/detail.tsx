@@ -33,8 +33,8 @@ import {
   PaneFacts,
   PaneFooter,
   PaneHeader,
-  usePanes,
-} from "@/components/shared/panes";
+} from "@/components/shared/pane";
+import { usePanes } from "@/components/shared/panes";
 import { TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
