@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { createSession } from "@repo/backend/confect/billing/xendit/sessions";
-import { Effect, Schema } from "effect";
+import { DateTime, Effect, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 
 /** The fetch that Effect's client calls in place of the global one. */
@@ -31,6 +31,7 @@ describe("billing/xendit/sessions", () => {
       Effect.gen(function* () {
         fetcher.mockResolvedValue(
           ok({
+            expires_at: "2026-10-26T05:30:00.000Z",
             payment_id: null,
             payment_link_url: "https://xen.to/checkout",
             payment_session_id: "ps-1",
@@ -61,6 +62,9 @@ describe("billing/xendit/sessions", () => {
           payment_link_url: "https://xen.to/checkout",
           recurring_plan_id: "repl_1",
         });
+        expect(DateTime.toEpochMillis(session.expires_at)).toBe(
+          Date.UTC(2026, 9, 26, 5, 30, 0)
+        );
         expect(init?.method).toBe("POST");
         const sent = yield* Schema.decodeEffect(
           Schema.fromJsonString(Schema.Struct({ reference_id: Schema.String }))
