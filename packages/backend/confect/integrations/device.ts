@@ -49,9 +49,8 @@ const SWEEP_LIMIT = 200;
 const drawUserCode = Effect.fn("integrations.device.userCode")(function* () {
   const bytes = yield* (yield* Crypto.Crypto).randomBytes(CODE_LETTERS);
   return Arr.join(
-    Arr.map(
-      Arr.fromIterable(bytes),
-      (byte) => ALPHABET.charAt(byte % ALPHABET.length)
+    Arr.map(Arr.fromIterable(bytes), (byte) =>
+      ALPHABET.charAt(byte % ALPHABET.length)
     ),
     ""
   );
