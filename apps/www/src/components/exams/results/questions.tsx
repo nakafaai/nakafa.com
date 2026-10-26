@@ -4,6 +4,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
+import { ChartHistogramIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type {
   AnswerRow as AnswerRowSchema,
@@ -15,7 +16,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@repo/design-system/components/ui/sheet";
 import {
   Table,
   TableBody,
@@ -169,41 +180,67 @@ function AnswerList({
 }
 
 /**
- * The questions of the exam, one at a time: a question's button selects it, and its statistics and
- * answers show below. The selection lives in this component, so nothing above it is re-rendered.
+ * Questions, in the results page's header row: it opens a sheet with the questions of the exam, one at a
+ * time. A question's button selects it, and its statistics and answers show below. The selection lives
+ * in this component, so nothing above it is re-rendered. On a phone the button keeps its icon, so the
+ * page's name keeps its room.
  */
-export function QuestionResults({
+export function QuestionsAction({
   questions,
 }: {
   readonly questions: readonly Question[];
 }) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
   const [selected, setSelected] = useState(0);
   const current = Arr.get(questions, selected);
 
   return (
-    <div className="grid gap-4">
-      <h2 className="font-medium text-base">{t("questions")}</h2>
-      <div className="flex flex-wrap gap-2">
-        {Arr.map(questions, (question, index) => (
-          <Button
-            aria-pressed={index === selected}
-            key={question.id}
-            onClick={() => setSelected(index)}
-            size="sm"
-            type="button"
-            variant={index === selected ? "secondary" : "outline"}
-          >
-            {t("question", { number: question.number })}
+    <Sheet>
+      <SheetTrigger
+        render={
+          <Button type="button" variant="outline">
+            <HugeIcons icon={ChartHistogramIcon} />
+            <span className="max-sm:sr-only">{t("questions")}</span>
           </Button>
-        ))}
-      </div>
-      {Option.match(current, {
-        onNone: () => null,
-        onSome: (question) => (
-          <QuestionPanel key={question.id} question={question} />
-        ),
-      })}
-    </div>
+        }
+      />
+      <SheetContent className="sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle>{t("questions")}</SheetTitle>
+        </SheetHeader>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <div className="flex flex-wrap gap-2">
+            {Arr.map(questions, (question, index) => (
+              <Button
+                aria-pressed={index === selected}
+                key={question.id}
+                onClick={() => setSelected(index)}
+                size="sm"
+                type="button"
+                variant={index === selected ? "secondary" : "outline"}
+              >
+                {t("question", { number: question.number })}
+              </Button>
+            ))}
+          </div>
+          {Option.match(current, {
+            onNone: () => null,
+            onSome: (question) => (
+              <QuestionPanel key={question.id} question={question} />
+            ),
+          })}
+        </div>
+        <SheetFooter>
+          <SheetClose
+            render={
+              <Button type="button" variant="outline">
+                {common("close")}
+              </Button>
+            }
+          />
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
