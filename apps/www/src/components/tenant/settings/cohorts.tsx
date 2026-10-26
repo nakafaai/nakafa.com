@@ -37,11 +37,11 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { gradeItems } from "@/components/tenant/settings/choices";
 import { CohortFilter } from "@/components/tenant/settings/cohort/filter";
-import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort/menu";
+import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import { createCohortChange } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";

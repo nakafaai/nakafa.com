@@ -19,8 +19,8 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableFilter } from "@/components/shared/table/toolbar";
-import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import { gradeItems } from "@/components/tenant/settings/choices";
+import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 
 /** The icons of the school years in the Filter menu, one of study for each year. */
 const GRADE_ICONS = [
