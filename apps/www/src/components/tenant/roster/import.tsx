@@ -11,7 +11,6 @@ import {
   UserMultiple02Icon,
   UserQuestion01Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import roster from "@repo/backend/confect/_generated/refs/roster";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
@@ -30,8 +29,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { TableStatus } from "@/components/shared/table/status";
-import type { StatusTone } from "@/components/shared/table/tone";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
@@ -72,7 +70,7 @@ const ROSTER_STATUS_LOOKS = {
   under: { icon: UserLock01Icon, tone: "info" },
 } as const satisfies Record<
   typeof RowProblem.Type | "adult" | "under",
-  { icon: IconSvgElement; tone: typeof StatusTone.Type }
+  StatusLook
 >;
 
 const SOURCE = "components/tenant/roster/import";

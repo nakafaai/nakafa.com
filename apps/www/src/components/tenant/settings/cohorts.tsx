@@ -36,10 +36,8 @@ import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { gradeItems } from "@/components/tenant/settings/choices";
-import {
-  COHORT_STATUS_LOOKS,
-  CohortFilter,
-} from "@/components/tenant/settings/cohort/filter";
+import { CohortFilter } from "@/components/tenant/settings/cohort/filter";
+import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,

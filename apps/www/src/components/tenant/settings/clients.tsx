@@ -12,7 +12,6 @@ import {
   Plug01Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -37,8 +36,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { TableStatus } from "@/components/shared/table/status";
-import type { StatusTone } from "@/components/shared/table/tone";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
@@ -65,10 +63,7 @@ import {
 const CLIENT_STATUS_LOOKS = {
   active: { icon: Plug01Icon, tone: "success" },
   revoked: { icon: Unlink01Icon, tone: "neutral" },
-} as const satisfies Record<
-  typeof IntegrationStatus.Type,
-  { icon: IconSvgElement; tone: typeof StatusTone.Type }
->;
+} as const satisfies Record<typeof IntegrationStatus.Type, StatusLook>;
 
 const SOURCE = "components/tenant/settings/clients";
 
