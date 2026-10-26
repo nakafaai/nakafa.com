@@ -43,7 +43,7 @@ export function TenantGuardianSignIn({ slug }: { slug: TenantSlug }) {
 /** The form under the provider of `TenantGuardianSignIn`, one step at a time. */
 function GuardianSignInForm({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolGuardians");
-  const locale = Schema.decodeUnknownOption(ActiveAppLocaleCodeSchema)(
+  const locale = Schema.decodeOption(ActiveAppLocaleCodeSchema)(
     useLocale()
   );
   const id = useId();
