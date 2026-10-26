@@ -27,7 +27,7 @@ import {
 import { SetupCell, useSetupShown } from "@/components/tenant/home/setup";
 import { staffShown } from "@/components/tenant/home/shown";
 import { waitingOf } from "@/components/tenant/home/waiting";
-import { schoolWeekdayTimeText } from "@/components/tenant/settings/clock";
+import { schoolDayTimeText } from "@/components/tenant/settings/clock";
 import { schoolExamSittingTarget } from "@/lib/routing/school/target";
 
 /** A room that the staff home lists as upcoming. */
@@ -240,7 +240,7 @@ function scheduleItemOf(
     room: room.room,
     timeZone: room.timeZone,
     title: room.examTitle,
-    trailing: schoolWeekdayTimeText({
+    trailing: schoolDayTimeText({
       at: room.opensAt,
       locale,
       timeZone: room.timeZone,

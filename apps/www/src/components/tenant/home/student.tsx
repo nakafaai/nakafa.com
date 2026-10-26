@@ -22,7 +22,7 @@ import {
 } from "@/components/tenant/home/schedule";
 import { studentShown } from "@/components/tenant/home/shown";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { schoolDayTimeText } from "@/components/tenant/settings/clock";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolSittingTarget } from "@/lib/routing/school/target";
@@ -165,7 +165,7 @@ function SittingStatus({ sitting }: { sitting: Sitting }) {
       ? t("answers-saved")
       : t("sitting-open-now");
   }
-  return schoolDateTimeText({
+  return schoolDayTimeText({
     at: sitting.opensAt,
     locale,
     timeZone: sitting.timeZone,
