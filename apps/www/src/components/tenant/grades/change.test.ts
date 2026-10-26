@@ -1,5 +1,7 @@
+import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import records from "@repo/backend/confect/_generated/refs/records";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
 import {
@@ -40,8 +42,8 @@ const pageArgs = (forClass: typeof classId) => ({
   slug,
 });
 
-/** What the store records of one write: the page it stores. */
-type Written = Option.Option<{ readonly page: readonly SheetLine[] }>;
+/** What the store records of one write: the gradebook page it stores. */
+type Written = Option.Option<Ref.Returns<typeof records.grades.sheet>>;
 
 /** A store that holds the given pages and records what is written. */
 const storeOf = (pages: unknown[]) => {
