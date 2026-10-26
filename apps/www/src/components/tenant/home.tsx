@@ -139,7 +139,7 @@ function HomePage({
       <SchoolHeader heading={<HomeGreeting />} items={[]}>
         {action}
       </SchoolHeader>
-      <LayoutContent className="w-full max-w-none py-6">
+      <LayoutContent className="w-full max-w-7xl py-6">
         {children}
       </LayoutContent>
     </>

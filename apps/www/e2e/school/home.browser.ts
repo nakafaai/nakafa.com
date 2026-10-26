@@ -303,7 +303,7 @@ test("Beranda fits a 320 px phone without a sideways scroll", async ({
   await context.close();
 });
 
-test("Beranda fills the width beside the sidebar on a wide screen", async ({
+test("Beranda takes the app's page width on a wide screen, centred beside the sidebar", async ({
   baseURL,
   browser,
 }) => {
@@ -319,15 +319,9 @@ test("Beranda fills the width beside the sidebar on a wide screen", async ({
   await page.goto(address("/"));
   await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
 
-  const header = await page.locator('[data-slot="page-header"]').boundingBox();
-  const dashboard = await page
-    .locator('[data-slot="dashboard"]')
-    .first()
-    .boundingBox();
-  // The page's side padding is all that stands between the header's edges and the dashboard's.
-  expect((header?.width ?? 0) - (dashboard?.width ?? 0)).toBeLessThanOrEqual(
-    64
-  );
+  // Every app page keeps max-w-7xl (80rem, 1280 px), and the page's side padding sits inside it.
+  const content = await page.locator("article").first().boundingBox();
+  expect(content?.width).toBe(1280);
   await context.close();
 });
 
