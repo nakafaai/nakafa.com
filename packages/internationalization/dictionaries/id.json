@@ -970,6 +970,7 @@
   "Classroom": {
     "tabs-home": "Beranda",
     "tabs-forum": "Forum",
+    "tabs-grades": "Nilai",
     "general-channel": "Umum",
     "channels-title": "Kanal",
     "channels-empty": "Belum ada kanal",
@@ -999,6 +1000,26 @@
     "messages-empty": "Belum ada pesan",
     "messages-empty-description": "Pesan pertama kanal ini akan tampil di sini.",
     "scroll-to-latest": "Ke pesan terbaru"
+  },
+  "SchoolGrades": {
+    "student": "Siswa",
+    "value": "Nilai",
+    "value-label": "Nilai {name}",
+    "value-placeholder": "0-100",
+    "note": "Hasil",
+    "state": "Status",
+    "state-none": "Belum diisi",
+    "state-draft": "Draf",
+    "state-released": "Dirilis",
+    "kktp-reached": "Mencapai KKTP",
+    "kktp-notReached": "Di bawah KKTP",
+    "search": "Cari siswa",
+    "release": "Rilis",
+    "empty": "Belum ada siswa di kelas ini.",
+    "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
+    "detail": "Nilai siswa",
+    "detail-empty": "Pilih siswa untuk melihat nilainya.",
+    "kktp": "KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

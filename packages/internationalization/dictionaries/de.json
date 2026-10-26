@@ -970,6 +970,7 @@
   "Classroom": {
     "tabs-home": "Start",
     "tabs-forum": "Forum",
+    "tabs-grades": "Noten",
     "general-channel": "Allgemein",
     "channels-title": "Kanal",
     "channels-empty": "Noch kein Kanal",
@@ -999,6 +1000,26 @@
     "messages-empty": "Noch keine Nachricht",
     "messages-empty-description": "Die erste Nachricht dieses Kanals erscheint hier.",
     "scroll-to-latest": "Zur neuesten Nachricht"
+  },
+  "SchoolGrades": {
+    "student": "Schüler",
+    "value": "Note",
+    "value-label": "Note von {name}",
+    "value-placeholder": "0-100",
+    "note": "Ergebnis",
+    "state": "Status",
+    "state-none": "Nicht eingetragen",
+    "state-draft": "Entwurf",
+    "state-released": "Freigegeben",
+    "kktp-reached": "Erreicht das KKTP",
+    "kktp-notReached": "Unter dem KKTP",
+    "search": "Schüler suchen",
+    "release": "Freigeben",
+    "empty": "Noch kein Schüler in dieser Klasse.",
+    "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
+    "detail": "Note der Schülerin oder des Schülers",
+    "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
+    "kktp": "KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
