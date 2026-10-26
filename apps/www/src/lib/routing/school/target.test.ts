@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import {
+  schoolClassForumTarget,
   schoolClassTarget,
   schoolExamEditTarget,
   schoolExamSittingResultsTarget,
@@ -62,6 +63,12 @@ describe("school targets", () => {
       expect.objectContaining({
         params: { classSlug: "7a", slug },
         to: "/school/$slug/classes/$classSlug",
+      })
+    );
+    expect(schoolClassForumTarget(slug, "7a")).toEqual(
+      expect.objectContaining({
+        params: { classSlug: "7a", slug },
+        to: "/school/$slug/classes/$classSlug/forum",
       })
     );
   });

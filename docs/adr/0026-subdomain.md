@@ -141,6 +141,7 @@ Every address below is planned, except the root of a school host, which is live.
 | `harapan.nakafa.com/setup` | Setup for the owner and the admin. It disappears when setup is complete. |
 | `harapan.nakafa.com/classes/fisika-x-1` | A class home. The slug comes from the subject and the class group, not from an ID. |
 | `.../classes/fisika-x-1/forum`, `/library`, `/tasks`, `/people`, `/grades` | The class tabs. Each tab has its own address. |
+| `.../classes/fisika-x-1/forum?channel=<id>` | One channel of the forum, by the channel's ID. A channel is a search value, so the path below the forum stays the discussions' numbers. |
 | `.../classes/fisika-x-1/forum/12` | A numbered discussion. The number is per class, like an issue number. |
 | `.../classes/fisika-x-1/tasks/latihan-gerak-lurus` | A task. The slug comes from the task title. |
 | `harapan.nakafa.com/exams` | All exams and their status. |
