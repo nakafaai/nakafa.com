@@ -6,6 +6,7 @@ import {
   FileSystem,
   Layer,
   Path,
+  PlatformError,
   Ref,
   Schema,
   Sink,
@@ -37,8 +38,24 @@ const decodeJson = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Json)
 );
 
+/** The refusal of a configuration directory that the user may not write. */
+const readOnly = (method: string, path: string) =>
+  Effect.fail(
+    PlatformError.systemError({
+      _tag: "PermissionDenied",
+      method,
+      module: "FileSystem",
+      pathOrDescriptor: path,
+    })
+  );
+
 const cliPlatformLayer = Layer.mergeAll(
-  FileSystem.layerNoop({}),
+  // The CLI writes no file in these tests: storing or removing a school sign-in fails as it
+  // does in a read-only configuration directory.
+  FileSystem.layerNoop({
+    makeDirectory: (path) => readOnly("makeDirectory", path),
+    remove: (path) => readOnly("remove", path),
+  }),
   Path.layer,
   Layer.succeed(
     Terminal.Terminal,

@@ -5722,6 +5722,20 @@ export declare const api: {
         { id: Id<"integrationClients">; secret: string }
       >;
     };
+    devices: {
+      authorize: FunctionReference<
+        "mutation",
+        "public",
+        { clientId: Id<"integrationClients">; slug: string; userCode: string },
+        {}
+      >;
+      deny: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string; userCode: string },
+        {}
+      >;
+    };
   };
   journal: {
     audit: {
@@ -5829,6 +5843,10 @@ export declare const api: {
               | {
                   client: Id<"integrationClients">;
                   type: "integration.revoked";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.authorized";
                 }
               | { type: "period.created" }
               | { type: "period.opened" }
@@ -13909,6 +13927,133 @@ export declare const internal: {
         { slug: string },
         { code: string; loginName: string }
       >;
+    };
+  };
+  integrations: {
+    devices: {
+      poll: FunctionReference<
+        "mutation",
+        "internal",
+        { deviceCode: string },
+        | { expiresIn: number; outcome: "issued"; token: string }
+        | { outcome: "pending" | "slow_down" | "denied" | "expired" }
+      >;
+      start: FunctionReference<
+        "mutation",
+        "internal",
+        { slug: string },
+        | {
+            deviceCode: string;
+            expiresIn: number;
+            interval: number;
+            outcome: "started";
+            userCode: string;
+            verificationUri: string;
+          }
+        | { outcome: "unknown" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    reads: {
+      cohorts: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              grade: number;
+              id: string;
+              name: string;
+              periodId: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      people: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          status: "active" | "suspended" | "removed";
+        },
+        | {
+            data: Array<{
+              account: "claimed" | "unclaimed";
+              id: string;
+              name: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      periods: FunctionReference<
+        "query",
+        "internal",
+        { clientId: Id<"integrationClients"> },
+        | {
+            data: Array<{
+              end: string;
+              id: string;
+              name: string;
+              start: string;
+              status: string;
+              unitId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      placements: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              cohortId: string;
+              periodId: string;
+              personId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+    };
+    tokens: {
+      check: FunctionReference<
+        "mutation",
+        "internal",
+        { resource: "api" | "mcp"; token: string },
+        | { clientId: Id<"integrationClients">; outcome: "allowed" }
+        | { outcome: "unauthorized" }
+        | { outcome: "limited"; retryAfter: number }
+      >;
+      issue: FunctionReference<
+        "mutation",
+        "internal",
+        { clientId: string; resource?: string; secret: string },
+        | { expiresIn: number; outcome: "issued"; token: string }
+        | { error: "invalid_client" | "invalid_target"; outcome: "refused" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
   };
   nina: {
