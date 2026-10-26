@@ -2,7 +2,6 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readProfileGate } from "@/lib/profile/gate";
-import { answerStaticPath } from "@/lib/routing/assets.server";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
@@ -71,8 +70,8 @@ const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
  * Answers a request that no address decision answered: the not-found page of a
  * document that the projection does not own, then the root's locale redirect, then
  * the locale redirect of a bare page address, or else the router's page. A path
- * that no Worker route renders is answered from the static assets before the
- * router runs (`answerStaticPath`).
+ * that no Worker route renders answers the static not-found page before the
+ * router runs.
  */
 const answerRouter = Effect.fn("www.routing.answer.router")(function* (
   request: Request,
@@ -98,7 +97,7 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
     }
   }
   if (!isRenderedRoutePath(url)) {
-    return yield* answerStaticPath(request, route);
+    return yield* answerUnmatchedRequest(request);
   }
   return yield* answerRouted(request, route);
 });

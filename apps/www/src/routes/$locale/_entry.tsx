@@ -20,7 +20,6 @@ import { RouteFailure } from "@/components/state/localized";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
-import { readStaticData } from "@/lib/static/data";
 
 /** The messages of the entry pages, which the locale route's messages join. */
 const ENTRY_NAMESPACES = [
@@ -36,14 +35,12 @@ const localeRoute = getRouteApi("/$locale");
 /**
  * The entry frame: one visual shell stays mounted while the sign-in, the error,
  * the onboarding and the school start change. The frame's own messages join the
- * locale route's messages, which the frame does not load again. The sign-in page
- * is prerendered, so the frame reads its messages from the build's static answer.
+ * locale route's messages, which the frame does not load again.
  */
 export const Route = createFileRoute("/$locale/_entry")({
   loader: ({ params }) =>
-    readStaticData(readRouteMessages, {
-      locale: params.locale,
-      namespaces: ENTRY_NAMESPACES,
+    readRouteMessages({
+      data: { locale: params.locale, namespaces: ENTRY_NAMESPACES },
     }),
   component: EntryLayout,
   errorComponent: EntryError,

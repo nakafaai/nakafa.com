@@ -1,7 +1,6 @@
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Order } from "effect";
 import type { Locale } from "use-intl";
-import { signInPath } from "@/lib/routing/signin";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 
@@ -39,9 +38,8 @@ export function isExcludedPath(path: string): boolean {
 /**
  * Selects the public paths that the build prerenders: the sitemap's URLs without
  * the search screen and the try-out tracks, sets and sections, plus the articles
- * index, the try-out hub and the sign-in page of every locale, which no sitemap
- * page lists. The result is unique and sorted, so the build and its verifier
- * compare the same list.
+ * index and the try-out hub of every locale, which no sitemap page lists. The
+ * result is unique and sorted, so the build and its verifier compare the same list.
  */
 export function selectStaticPagePaths({
   locales,
@@ -54,7 +52,6 @@ export function selectStaticPagePaths({
   const indexes = Arr.flatMap(locales, (locale) => [
     `/${locale}/${ARTICLES_SEGMENT}`,
     `/${locale}/${TRYOUT_SEGMENT}`,
-    signInPath(locale),
   ]);
   return Arr.sort(Arr.dedupe(Arr.appendAll(listed, indexes)), Order.String);
 }
