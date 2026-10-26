@@ -8,10 +8,10 @@ import {
   Verdict,
 } from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /**
  * The wire contracts of the results functions. A spec imports them, so this module holds

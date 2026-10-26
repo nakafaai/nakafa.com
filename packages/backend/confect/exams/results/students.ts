@@ -5,10 +5,10 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
+import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 import type { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Struct } from "effect";
-import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 
 /** The most students that one page of the students' list holds. A larger request is clamped to it. */
 const STUDENT_PAGE_SIZE = 100;

@@ -1,13 +1,13 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { resultAccess } from "@repo/backend/confect/exams/results/authority";
+import { grade } from "@repo/backend/confect/exams/results/grade";
 import { mine } from "@repo/backend/confect/exams/results/mine";
 import { overview } from "@repo/backend/confect/exams/results/overview";
 import {
   byQuestion,
   questionStats,
 } from "@repo/backend/confect/exams/results/questions";
-import { grade } from "@repo/backend/confect/exams/results/grade";
 import { release } from "@repo/backend/confect/exams/results/release";
 import spec from "@repo/backend/confect/exams/results/results.spec";
 import { byStudent } from "@repo/backend/confect/exams/results/students";

@@ -35,7 +35,7 @@ export const createAcceptanceSitting = Effect.fn(
   email: string,
   output: string,
   crowd: number | undefined,
-  extra?: (typeof SittingExtra.Type)
+  extra?: typeof SittingExtra.Type
 ) {
   const runtime = yield* readLocalRuntime(root);
   if (runtime === undefined) {

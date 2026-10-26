@@ -1,6 +1,7 @@
-import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import type { QuestionSummary } from "@repo/backend/confect/exams/results/contract";
+import type { Verdict } from "@repo/backend/confect/exams/results/schema";
 import {
+  type ExamPair,
   type ExamResponse,
   isCellsResponse,
   isPairsResponse,
@@ -42,19 +43,18 @@ const responseLetters = (
  * The pairs of a match as a paper writes them, in the order of its statements: each statement's number
  * and the letter of the answer it took, such as `1-B`.
  */
-const pairLabels = (
-  question: QuestionParts,
-  pairs: readonly { readonly source: string; readonly target: string }[]
-) =>
+const pairLabels = (question: QuestionParts, pairs: readonly ExamPair[]) =>
   Arr.filterMap(question.sourceIds, (sourceId, index) =>
     Option.match(
       Option.flatMap(
         Arr.findFirst(pairs, (pair) => pair.source === sourceId),
-        (pair) => Arr.findFirstIndex(question.targetIds, (id) => id === pair.target)
+        (pair) =>
+          Arr.findFirstIndex(question.targetIds, (id) => id === pair.target)
       ),
       {
         onNone: () => Result.failVoid,
-        onSome: (target) => Result.succeed(`${index + 1}-${optionLetter(target)}`),
+        onSome: (target) =>
+          Result.succeed(`${index + 1}-${optionLetter(target)}`),
       }
     )
   );

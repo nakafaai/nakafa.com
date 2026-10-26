@@ -241,7 +241,9 @@ test("a teacher turns a question into a short answer with accepted answers, and 
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toHaveCount(0);
-  await expect(page.getByRole("textbox", { name: "Answer line" })).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Answer line" })
+  ).toBeVisible();
 
   // The layer lists the accepted answers, which the teacher adds one by one.
   const panel = page.getByRole("complementary", { name: "For teachers" });
@@ -393,7 +395,9 @@ test("a teacher turns a question into a true or false table, marks every stateme
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "True or false table" }).click();
+  await page
+    .getByRole("menuitemradio", { name: "True or false table" })
+    .click();
   await expect(
     page.getByRole("textbox", { name: "Question 1, column A" })
   ).toContainText("True");

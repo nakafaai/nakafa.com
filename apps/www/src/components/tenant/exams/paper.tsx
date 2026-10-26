@@ -29,9 +29,8 @@ import {
   useQuestionEditing,
 } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
-import { matchOf } from "@/components/tenant/exams/match";
-import { tableOf } from "@/components/tenant/exams/table";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
+import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { TeacherPortal } from "@/components/tenant/exams/panel";
@@ -47,6 +46,7 @@ import {
   PaperOptions,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
+import { tableOf } from "@/components/tenant/exams/table";
 import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
 

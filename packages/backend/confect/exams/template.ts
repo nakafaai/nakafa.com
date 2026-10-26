@@ -8,6 +8,7 @@ import {
   matchAnswers,
   newChoiceAnswers,
   type QuestionTemplate,
+  type QuestionView,
   shortAnswers,
   tableAnswers,
   textLabel,
@@ -30,10 +31,7 @@ export const asTemplate = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
   key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   labels: readonly string[]
-): {
-  readonly answers: Arr.NonEmptyReadonlyArray<Interaction>;
-  readonly key: Arr.NonEmptyReadonlyArray<InteractionKey> | null;
-} => {
+): Pick<QuestionView, "answers" | "key"> => {
   if (template === "short") {
     return { answers: shortAnswers(), key: null };
   }

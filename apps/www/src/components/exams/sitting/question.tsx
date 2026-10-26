@@ -24,14 +24,14 @@ import {
   PromptReserve,
   SittingDocument,
 } from "@/components/exams/sitting/document";
+import { SittingField } from "@/components/exams/sitting/field";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
+import { SittingPairs } from "@/components/exams/sitting/pairs";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
-import { SittingField } from "@/components/exams/sitting/field";
-import { SittingPairs } from "@/components/exams/sitting/pairs";
 import {
   choiceOf,
   pairingOf,
@@ -109,12 +109,18 @@ export function SittingQuestion({
         Option.match(pairing, {
           onNone: () => [],
           onSome: (found) =>
-            Arr.map(Arr.appendAll(found.sources, found.targets), (part) => part.label),
+            Arr.map(
+              Arr.appendAll(found.sources, found.targets),
+              (part) => part.label
+            ),
         }),
         Option.match(table, {
           onNone: () => [],
           onSome: (found) =>
-            Arr.map(Arr.appendAll(found.statements, found.columns), (part) => part.label),
+            Arr.map(
+              Arr.appendAll(found.statements, found.columns),
+              (part) => part.label
+            ),
         })
       )
     );

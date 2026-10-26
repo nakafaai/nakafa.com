@@ -80,7 +80,10 @@ export function MatchKey({
       <FieldTitle>{t("answer-key")}</FieldTitle>
       <ol className="grid gap-2">
         {Arr.map(match.sources, (source, index) => (
-          <li className="flex items-center justify-between gap-4" key={source.id}>
+          <li
+            className="flex items-center justify-between gap-4"
+            key={source.id}
+          >
             <span className="text-sm tabular-nums">
               {t("statement-number", { name: index + 1 })}
             </span>

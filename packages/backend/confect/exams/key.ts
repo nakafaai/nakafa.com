@@ -4,6 +4,10 @@ import {
 } from "@nakafa/aksara-contracts/assessment/identity";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type {
+  ExamCell,
+  ExamPair,
+} from "@repo/backend/confect/exams/sittings/response";
 import { Array as Arr } from "effect";
 
 /**
@@ -13,7 +17,7 @@ import { Array as Arr } from "effect";
  */
 export const pairsFit = (
   match: Extract<Interaction, { kind: "match" }>,
-  pairs: readonly { readonly source: string; readonly target: string }[]
+  pairs: readonly ExamPair[]
 ) =>
   hasDistinctIds(Arr.map(pairs, (pair) => pair.source)) &&
   hasDistinctIds(Arr.map(pairs, (pair) => pair.target)) &&
@@ -30,7 +34,7 @@ export const pairsFit = (
  */
 export const cellsFit = (
   matrix: Extract<Interaction, { kind: "matrix" }>,
-  cells: readonly { readonly column: string; readonly statement: string }[]
+  cells: readonly ExamCell[]
 ) =>
   hasDistinctIds(Arr.map(cells, (cell) => cell.statement)) &&
   Arr.every(

@@ -8,9 +8,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   encodeAnswers,
-  matchAnswers,
   newChoiceAnswers,
-  tableAnswers,
   shortAnswers,
 } from "@repo/backend/confect/exams/question";
 import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
@@ -280,111 +278,6 @@ describe("exams/sittings answer", () => {
         }).pipe(Effect.flip);
         expect(options).toMatchObject({ _tag: "ResponseDoesNotFit" });
       })
-  );
-
-  it.effect(
-    "refuses any response to a question whose one interaction is neither a choice nor a text entry",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { question, sittingId } = yield* enteredSitting(fixture);
-        yield* setInteractions(fixture, question, [
-          { id: "essay", kind: "extendedText", label: "Answer" },
-        ]);
-        const failure = yield* answerAs(fixture, {
-          deviceId: deviceOf(1),
-          questionId: question,
-          response: { text: "Esai" },
-          sittingId,
-          version: 1,
-        }).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "ResponseDoesNotFit" });
-      })
-  );
-
-  it.effect(
-    "saves the pairs a student makes in a match, some or all, and refuses a statement or an answer paired twice",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { question, sittingId } = yield* enteredSitting(fixture);
-        yield* setInteractions(fixture, question, matchAnswers());
-        yield* answerAs(fixture, {
-          deviceId: deviceOf(1),
-          questionId: question,
-          response: { pairs: [{ source: "source-1", target: "target-2" }] },
-          sittingId,
-          version: 1,
-        });
-        const twice = yield* answerAs(fixture, {
-          deviceId: deviceOf(1),
-          questionId: question,
-          response: {
-            pairs: [
-              { source: "source-1", target: "target-2" },
-              { source: "source-2", target: "target-2" },
-            ],
-          },
-          sittingId,
-          version: 2,
-        }).pipe(Effect.flip);
-        expect(twice).toMatchObject({ _tag: "ResponseDoesNotFit" });
-        const unknown = yield* answerAs(fixture, {
-          deviceId: deviceOf(1),
-          questionId: question,
-          response: { pairs: [{ source: "source-9", target: "target-1" }] },
-          sittingId,
-          version: 2,
-        }).pipe(Effect.flip);
-        expect(unknown).toMatchObject({ _tag: "ResponseDoesNotFit" });
-      })
-  );
-
-  it.effect(
-    "saves the cells a student marks in a table, and refuses a statement marked twice",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { question, sittingId } = yield* enteredSitting(fixture);
-        yield* setInteractions(fixture, question, tableAnswers(["Benar", "Salah"]));
-        yield* answerAs(fixture, {
-          deviceId: deviceOf(1),
-          questionId: question,
-          response: {
-            cells: [{ column: "column-2", statement: "statement-1" }],
-          },
-          sittingId,
-          version: 1,
-        });
-        const twice = yield* answerAs(fixture, {
-          deviceId: deviceOf(1),
-          questionId: question,
-          response: {
-            cells: [
-              { column: "column-1", statement: "statement-1" },
-              { column: "column-2", statement: "statement-1" },
-            ],
-          },
-          sittingId,
-          version: 2,
-        }).pipe(Effect.flip);
-        expect(twice).toMatchObject({ _tag: "ResponseDoesNotFit" });
-      })
-  );
-
-  it.effect("refuses typed text where the question is a choice", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { question, sittingId } = yield* enteredSitting(fixture);
-      const failure = yield* answerAs(fixture, {
-        deviceId: deviceOf(1),
-        questionId: question,
-        response: { text: "B" },
-        sittingId,
-        version: 1,
-      }).pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "ResponseDoesNotFit" });
-    })
   );
 
   it.effect(

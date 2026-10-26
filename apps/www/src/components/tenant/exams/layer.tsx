@@ -19,8 +19,8 @@ import type { Node } from "@tiptap/pm/model";
 import { Array as Arr, Function as Fn, Option, Schema } from "effect";
 import { lazy, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
+import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   acceptedOf,
   changedOption,
@@ -28,17 +28,17 @@ import {
   markedOptions,
   optionLetter,
 } from "@/components/tenant/exams/answer";
+import { TableKey } from "@/components/tenant/exams/cells";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
-import { tableOf } from "@/components/tenant/exams/table";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
-import { TableKey } from "@/components/tenant/exams/cells";
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam } from "@/components/tenant/exams/provider";
+import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
 const ExamText = lazy(() =>
@@ -212,12 +212,12 @@ interface TeacherLayerProps {
   readonly number: number;
   /** Saves the answers a short answer accepts, which saves at once. */
   readonly onAccept: (accepted: readonly string[]) => void;
-  /** Marks an option as the key of the question, which saves at once. */
-  readonly onMark: (optionId: string) => void;
   /** Saves the cells of a true or false table's key, which saves at once. */
   readonly onCells: (
     cells: readonly { readonly column: string; readonly statement: string }[]
   ) => void;
+  /** Marks an option as the key of the question, which saves at once. */
+  readonly onMark: (optionId: string) => void;
   /** Saves the pairs of a matching question's key, which saves at once. */
   readonly onPair: (
     pairs: readonly { readonly source: string; readonly target: string }[]

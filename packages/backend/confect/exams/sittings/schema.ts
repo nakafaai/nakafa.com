@@ -1,9 +1,9 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /** The most characters a room's name may hold, counted as Unicode code points. */
 const ROOM_NAME_MAX_LENGTH = 80;

@@ -1,6 +1,6 @@
+import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
-import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 
 /**

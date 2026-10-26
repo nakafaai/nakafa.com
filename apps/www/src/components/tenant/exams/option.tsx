@@ -47,16 +47,16 @@ interface OptionRowProps {
   readonly locked: boolean;
   /** The name of the option's editor for assistive technology, such as "Question 1, option A". */
   readonly name: string;
-  /** The text the empty editor shows. */
-  readonly placeholder: string;
-  /** The name of the remove control for assistive technology. */
-  readonly removeName: string;
   /** Removes the option, or none while the question holds the fewest options it may take. */
   readonly onRemove: (() => void) | null;
   /**
    * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
    */
   readonly onSave: (label: OptionLabel, unstored: () => void) => void;
+  /** The text the empty editor shows. */
+  readonly placeholder: string;
+  /** The name of the remove control for assistive technology. */
+  readonly removeName: string;
 }
 
 /**

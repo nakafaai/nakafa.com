@@ -29,6 +29,7 @@ import {
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { SITTING_REFUSALS } from "@repo/backend/confect/exams/sittings/refusal";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import {
   DeviceId,
   Minutes,
@@ -40,7 +41,6 @@ import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /**
  * The proctored sittings of school exams. A student enters with a token, signals, and
