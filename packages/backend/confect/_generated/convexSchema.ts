@@ -96,6 +96,7 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import reportCards from "./tables/reportCards";
 import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import tenantAssignments from "./tables/tenantAssignments";
@@ -223,6 +224,7 @@ export default $defineSchema({
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
+  reportCards: $Table.tableDefinition(reportCards),
   schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   tenantAssignments: $Table.tableDefinition(tenantAssignments),
