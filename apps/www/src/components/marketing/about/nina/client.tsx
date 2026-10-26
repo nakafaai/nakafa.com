@@ -1,7 +1,15 @@
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useNavigate } from "@tanstack/react-router";
-import { Option } from "effect";
-import { lazy, Suspense, startTransition, useEffect, useState } from "react";
+import { Deferred, Effect, Option } from "effect";
+import {
+  lazy,
+  Suspense,
+  startTransition,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { NinaInput } from "@/components/ai/input";
 import { HeldPromptContext } from "@/components/marketing/about/nina/held";
 import { useLiveSession } from "@/components/providers/live";
@@ -36,19 +44,41 @@ function NinaComposerInput() {
   const [engaged, setEngaged] = useState(false);
   const [held, setHeld] = useState<PromptInputMessage | null>(null);
   const isVisitor = !(isSignedIn || isSessionPending);
-
-  // A send held while the session loaded follows the session once it settles.
+  // The session settles once per page, so one deferred marks that moment.
+  const [sessionKnown] = useState(() => Deferred.makeUnsafe<void>());
   useEffect(() => {
-    if (held === null || isSessionPending) {
-      return;
+    if (!isSessionPending) {
+      Deferred.doneUnsafe(sessionKnown, Effect.void);
     }
+  }, [isSessionPending, sessionKnown]);
+  // A held send follows the session as the render that knows it reads it, and
+  // a composer that leaves meanwhile drops it.
+  const follow = useRef<(() => void) | null>(followSession);
+  useLayoutEffect(() => {
+    follow.current = followSession;
+    return () => {
+      follow.current = null;
+    };
+  });
+
+  /** Loads the live composer for a signed-in session, or asks a visitor to sign in. */
+  function followSession() {
     if (isSignedIn) {
       startTransition(() => setEngaged(true));
       return;
     }
     setHeld(null);
     navigate(authNavigation.readTarget());
-  }, [authNavigation, held, isSessionPending, isSignedIn, navigate]);
+  }
+
+  /** Holds a send pressed while the session loads, until the session is known. */
+  function hold(message: PromptInputMessage) {
+    setHeld(message);
+    Effect.runPromise(Deferred.await(sessionKnown)).then(() =>
+      follow.current?.()
+    );
+    return false;
+  }
 
   function signIn() {
     navigate(authNavigation.readTarget());
@@ -70,13 +100,7 @@ function NinaComposerInput() {
           attachments={false}
           onAttachRequest={isVisitor ? signIn : undefined}
           onEngage={isSignedIn ? engage : undefined}
-          onSubmit={(message) => {
-            if (isVisitor) {
-              return signIn();
-            }
-            setHeld(message);
-            return false;
-          }}
+          onSubmit={(message) => (isVisitor ? signIn() : hold(message))}
         />
       )}
     </Suspense>
