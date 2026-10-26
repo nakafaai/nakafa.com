@@ -221,6 +221,7 @@
       "**/*",
       "!packages/backend/convex/**/*",
       "!packages/backend/confect/_generated/**/*",
+      "!packages/backend/confect/integrations/openapi.json",
       "!packages/backend/components/betterAuth/_generated/**/*",
       "!repos/**/*"
     ]

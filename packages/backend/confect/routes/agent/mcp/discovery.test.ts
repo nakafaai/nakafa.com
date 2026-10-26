@@ -1,7 +1,10 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { withDiscoveryCapabilities } from "@repo/backend/confect/routes/agent/mcp/discovery";
+import {
+  NAKAFA_CAPABILITIES,
+  withDiscoveryCapabilities,
+} from "@repo/backend/confect/routes/agent/mcp/discovery";
 import { Effect } from "effect";
 
 const DISCOVER_REQUEST = { method: "server/discover" };
@@ -29,7 +32,8 @@ describe("Nakafa MCP discovery capabilities", () => {
         );
         const declared = yield* withDiscoveryCapabilities(
           DISCOVER_REQUEST,
-          answer
+          answer,
+          NAKAFA_CAPABILITIES
         );
 
         expect(declared.status).toBe(200);
@@ -49,9 +53,13 @@ describe("Nakafa MCP discovery capabilities", () => {
         const answer = jsonAnswer(
           '{"jsonrpc":"2.0","id":30,"error":{"code":-32022,"message":"Unsupported protocol version"}}'
         );
-        expect(yield* withDiscoveryCapabilities(DISCOVER_REQUEST, answer)).toBe(
-          answer
-        );
+        expect(
+          yield* withDiscoveryCapabilities(
+            DISCOVER_REQUEST,
+            answer,
+            NAKAFA_CAPABILITIES
+          )
+        ).toBe(answer);
       })
   );
 
@@ -60,9 +68,13 @@ describe("Nakafa MCP discovery capabilities", () => {
     () =>
       Effect.gen(function* () {
         const answer = jsonAnswer('{"jsonrpc":"2.0","id":1,"result":{}}');
-        expect(yield* withDiscoveryCapabilities(DISCOVER_REQUEST, answer)).toBe(
-          answer
-        );
+        expect(
+          yield* withDiscoveryCapabilities(
+            DISCOVER_REQUEST,
+            answer,
+            NAKAFA_CAPABILITIES
+          )
+        ).toBe(answer);
       })
   );
 
@@ -71,18 +83,26 @@ describe("Nakafa MCP discovery capabilities", () => {
       const answer = jsonAnswer(
         '{"jsonrpc":"2.0","id":2,"result":{"capabilities":{"tools":{}},"tools":[]}}'
       );
-      expect(yield* withDiscoveryCapabilities(TOOLS_LIST_REQUEST, answer)).toBe(
-        answer
-      );
+      expect(
+        yield* withDiscoveryCapabilities(
+          TOOLS_LIST_REQUEST,
+          answer,
+          NAKAFA_CAPABILITIES
+        )
+      ).toBe(answer);
     })
   );
 
   it.effect("returns a body that does not decode as the same response", () =>
     Effect.gen(function* () {
       const answer = jsonAnswer("not a JSON document");
-      expect(yield* withDiscoveryCapabilities(DISCOVER_REQUEST, answer)).toBe(
-        answer
-      );
+      expect(
+        yield* withDiscoveryCapabilities(
+          DISCOVER_REQUEST,
+          answer,
+          NAKAFA_CAPABILITIES
+        )
+      ).toBe(answer);
     })
   );
 });
