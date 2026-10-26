@@ -18,14 +18,22 @@ const LazySittingDocument = lazy(() =>
 export function SittingDocument(
   props: ComponentProps<typeof LazySittingDocument>
 ) {
-  const fallback = props.size === "line" ? null : <PromptReserve />;
   return (
-    <Suspense fallback={fallback}>
-      <ClientOnly fallback={fallback}>
+    <Suspense fallback={<DocumentReserve size={props.size} />}>
+      <ClientOnly fallback={<DocumentReserve size={props.size} />}>
         <LazySittingDocument {...props} />
       </ClientOnly>
     </Suspense>
   );
+}
+
+/** What a document keeps while its reader loads: a prompt's height for a page, nothing for a line. */
+function DocumentReserve({
+  size,
+}: {
+  size: ComponentProps<typeof LazySittingDocument>["size"];
+}) {
+  return size === "line" ? null : <PromptReserve />;
 }
 
 /** The space a prompt keeps before its reader is ready: empty and hidden from assistive technology. */

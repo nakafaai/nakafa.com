@@ -91,14 +91,11 @@ export function CardLink({
   title: string;
 }) {
   const className = cardRow({ linked: true });
-  const arrowIcon = (
-    <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
-  );
   return (
     <li className="group/list">
       <TargetLink className={className} target={target} title={title}>
         {children}
-        {arrowIcon}
+        <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
       </TargetLink>
     </li>
   );

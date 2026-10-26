@@ -274,25 +274,23 @@ function RoomsTable({
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
-  const failure = PaginatedQueryResult.isFailure(pagination) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
-  const loadMoreTrigger = PaginatedQueryResult.isCanLoadMore(pagination) ? (
-    <Intersection onIntersect={() => pagination.loadMore(ROOM_PAGE_SIZE)} />
-  ) : null;
+  const failed = PaginatedQueryResult.isFailure(pagination);
+  const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
+    ? () => pagination.loadMore(ROOM_PAGE_SIZE)
+    : null;
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failure !== null) {
-      return failure;
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
     }
     if (pagination._tag !== "Exhausted") {
-      return loadMoreTrigger;
+      return <RoomsMore loadMore={loadMore} />;
     }
     return <RoomsEmpty filter={filter} />;
   }
 
   return (
     <>
-      {failure}
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
         <TableHeader>
           <TableRow>
@@ -310,9 +308,14 @@ function RoomsTable({
           ))}
         </TableBody>
       </Table>
-      {loadMoreTrigger}
+      <RoomsMore loadMore={loadMore} />
     </>
   );
+}
+
+/** The sentinel that reads the next page of rooms as it comes into view, while the list has more. */
+function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
+  return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
 }
 
 /**

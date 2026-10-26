@@ -288,29 +288,20 @@ function StudentRowsSection({
 }) {
   const t = useTranslations("Exams");
   const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
-  // A page that holds no match is not the end of the search while later pages still load, so
-  // the empty state waits for the last page, and the table shows nothing in the meantime.
-  const more =
-    loadMore === null ? null : <Intersection onIntersect={loadMore} />;
-  const empty = filtering ? (
-    <TableEmpty
-      act="reading"
-      description={t("filter-empty")}
-      title={t("results-no-match")}
-    />
-  ) : (
-    <TableEmpty
-      act="reading"
-      description={t("results-empty")}
-      title={t("results-empty-title")}
-    />
-  );
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {rows.length > 0 ? <StudentTable rows={rows} /> : null}
-      {exhausted && rows.length === 0 ? empty : null}
-      {more}
+      {/* A page that holds no match is not the end of the search while later pages still load, so
+          the empty state waits for the last page, and the table shows nothing in the meantime. */}
+      {exhausted && rows.length === 0 ? (
+        <TableEmpty
+          act="reading"
+          description={t(filtering ? "filter-empty" : "results-empty")}
+          title={t(filtering ? "results-no-match" : "results-empty-title")}
+        />
+      ) : null}
+      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
   );
 }

@@ -354,14 +354,12 @@ function SignalList({
   if (PaginatedQueryResult.isLoadingFirstPage(signals)) {
     return null;
   }
-  const failure = PaginatedQueryResult.isFailure(signals) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
+  const failed = PaginatedQueryResult.isFailure(signals);
 
   return (
     <div className="grid gap-2 text-sm">
-      {failure}
-      {Arr.isReadonlyArrayEmpty(signals.results) && failure === null ? (
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {Arr.isReadonlyArrayEmpty(signals.results) && !failed ? (
         <TableEmpty
           act="reading"
           description={t("signals-empty")}

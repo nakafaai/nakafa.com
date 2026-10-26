@@ -214,15 +214,6 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
     read: readNotes,
     saved,
   });
-  const paper = (
-    <PaperSketch
-      doc={prompt}
-      question={question}
-      selected={chosen}
-      withControls
-    />
-  );
-
   return (
     <section
       aria-label={t("question", { number })}
@@ -241,7 +232,16 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
         template={editing.displayed.template}
       />
       {live ? (
-        <Suspense fallback={paper}>
+        <Suspense
+          fallback={
+            <PaperSketch
+              doc={prompt}
+              question={question}
+              selected={chosen}
+              withControls
+            />
+          }
+        >
           <LivePaper
             chosen={chosen}
             editing={editing}
@@ -250,7 +250,12 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
           />
         </Suspense>
       ) : (
-        paper
+        <PaperSketch
+          doc={prompt}
+          question={question}
+          selected={chosen}
+          withControls
+        />
       )}
       {chosen ? (
         <TeacherPortal>
