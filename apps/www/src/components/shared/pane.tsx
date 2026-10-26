@@ -9,9 +9,9 @@ import {
 import { TableRow } from "@repo/design-system/components/ui/table";
 import { cva } from "class-variance-authority";
 import { Option } from "effect";
-import { type ReactNode, use } from "react";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { PaneModeContext, usePanes } from "@/components/shared/panes";
+import { usePaneMode, usePanes } from "@/components/shared/panes";
 
 /**
  * A detail's header: its title, and what it shows on a second line; both wrap rather than
@@ -26,7 +26,7 @@ export function PaneHeader({
   title: string;
 }) {
   const t = useTranslations("Common");
-  const { close, place } = use(PaneModeContext);
+  const { close, place } = usePaneMode();
 
   if (place === "sheet") {
     return (
@@ -75,7 +75,7 @@ const paneBody = cva("min-h-0 flex-1 overflow-y-auto", {
 
 /** A detail's body, which scrolls on its own. */
 export function PaneBody({ children }: { children: ReactNode }) {
-  const { place } = use(PaneModeContext);
+  const { place } = usePaneMode();
 
   return <div className={paneBody({ place })}>{children}</div>;
 }

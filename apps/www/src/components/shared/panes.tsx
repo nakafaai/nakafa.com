@@ -76,10 +76,15 @@ interface PaneMode {
   readonly place: "aside" | "sheet";
 }
 
-export const PaneModeContext = createContext<PaneMode>({
+const PaneModeContext = createContext<PaneMode>({
   close: undefined,
   place: "aside",
 });
+
+/** Where the detail around the caller draws, and how its header closes it. */
+export function usePaneMode() {
+  return use(PaneModeContext);
+}
 
 /**
  * Gives a page its two panes, created once for the page: the list or the canvas in the first,
