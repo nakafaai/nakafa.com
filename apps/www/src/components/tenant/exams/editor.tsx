@@ -2,23 +2,15 @@ import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@repo/design-system/components/ui/resizable";
 import { Option } from "effect";
 import { useRef } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
+import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { ExamFooter } from "@/components/tenant/exams/footer";
 import { ExamGrid } from "@/components/tenant/exams/grid";
 import { ExamHeader, ExamLockedNote } from "@/components/tenant/exams/header";
-import {
-  ExamPanel,
-  ExamPanelProvider,
-  ExamPanelSheet,
-} from "@/components/tenant/exams/panel";
+import { ExamPanel } from "@/components/tenant/exams/panel";
 import {
   ExamProvider,
   useEditorView,
@@ -82,7 +74,7 @@ function ExamWorkspace() {
   const grid = useEditorView((view) => view.mode === "grid");
 
   return (
-    <ExamPanelProvider>
+    <PanesProvider wideFrom="lg">
       <main className="flex h-svh flex-col bg-background">
         <ExamHeader />
         <ExamToolbar />
@@ -90,23 +82,15 @@ function ExamWorkspace() {
         {grid ? (
           <ExamGrid />
         ) : (
-          // Below the large width the handle and the panel step aside, so the canvas takes the row.
-          <ResizablePanelGroup
-            className="max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden! min-h-0 flex-1"
-            orientation="horizontal"
-          >
-            <ResizablePanel className="flex min-w-0 flex-col" minSize="40%">
+          <Panes fill="parent">
+            <PanesList>
               <ExamCanvas canvas={canvas} />
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize="30%" maxSize="50%" minSize="20%">
-              <ExamPanel />
-            </ResizablePanel>
-          </ResizablePanelGroup>
+            </PanesList>
+            <ExamPanel />
+          </Panes>
         )}
-        <ExamPanelSheet />
         <ExamFooter canvas={canvas} onZoom={setZoom} />
       </main>
-    </ExamPanelProvider>
+    </PanesProvider>
   );
 }

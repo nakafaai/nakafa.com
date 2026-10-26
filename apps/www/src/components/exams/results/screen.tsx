@@ -1,9 +1,16 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
+import {
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  HourglassIcon,
+  SquareLock01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
-import { type ReactNode, useMemo, useState } from "react";
+import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
@@ -13,13 +20,13 @@ import {
 } from "@/components/exams/results/context";
 import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
-import { ResultsSelectionProvider } from "@/components/exams/results/selection";
 import {
   type StatusFilter,
-  StudentStatusFilter,
   StudentsTable,
 } from "@/components/exams/results/students";
+import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import {
+  TableChoice,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -28,6 +35,11 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
+
+/** The exam the page's address names. */
+const ResultsPageContext = createContext<{
+  readonly examId: GenericId.GenericId<"exams"> | undefined;
+}>({ examId: undefined });
 
 /**
  * The results of one sitting for its teacher: the students' list as the page's body, and in its one
@@ -57,22 +69,23 @@ export function SittingResults({
       )}
       read={{ args: scope, ref: exams.results.results.overview }}
     >
-      <SittingResultsContent examId={examId} scope={scope} />
+      <ResultsPageContext value={{ examId }}>
+        <SittingResultsContent scope={scope} />
+      </ResultsPageContext>
     </ReadBoundary>
   );
 }
 
 /** The results of one sitting once its overview is in: the release, the students, and the questions. */
 function SittingResultsContent({
-  examId,
   scope,
 }: {
-  readonly examId: GenericId.GenericId<"exams">;
   readonly scope: {
     readonly sittingId: GenericId.GenericId<"examSittings">;
     readonly slug: TenantSlug;
   };
 }) {
+  const { examId } = use(ResultsPageContext);
   const settled = useSessionSettled();
   const overview = useQuery(
     exams.results.results.overview,
@@ -117,7 +130,7 @@ function SittingResultsContent({
   return (
     <ResultsScopeContext value={scope}>
       <ResultsPaperContext value={paper}>
-        <ResultsSelectionProvider>
+        <PanesProvider>
           <TableFiltersProvider>
             <ResultsHeader
               examId={examId}
@@ -126,18 +139,45 @@ function SittingResultsContent({
               sittingId={scope.sittingId}
             >
               <TableSearch placeholder={t("results-search")} />
-              <StudentStatusFilter onChange={setStatus} value={status} />
+              <TableChoice
+                onChange={setStatus}
+                options={[
+                  { icon: UserGroupIcon, label: t("filter-all"), value: "all" },
+                  {
+                    icon: Clock01Icon,
+                    label: t("state-in-progress"),
+                    value: "inProgress",
+                  },
+                  {
+                    icon: HourglassIcon,
+                    label: t("state-closing"),
+                    value: "closing",
+                  },
+                  {
+                    icon: SquareLock01Icon,
+                    label: t("state-locked"),
+                    value: "locked",
+                  },
+                  {
+                    icon: CheckmarkCircle02Icon,
+                    label: t("state-submitted"),
+                    value: "submitted",
+                  },
+                ]}
+                title={t("filter-label")}
+                value={status}
+              />
               <QuestionsAction questions={questions} />
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
-            <div className="flex min-h-0 w-full min-w-0 flex-1">
-              <div className="flex min-w-0 flex-1 flex-col">
+            <Panes>
+              <PanesList>
                 <StudentsTable status={status} />
-              </div>
+              </PanesList>
               <StudentAnswersPanel />
-            </div>
+            </Panes>
           </TableFiltersProvider>
-        </ResultsSelectionProvider>
+        </PanesProvider>
       </ResultsPaperContext>
     </ResultsScopeContext>
   );

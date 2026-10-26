@@ -1,16 +1,28 @@
-import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
+import {
+  Clock04Icon,
+  DashboardSpeed01Icon,
+  PauseIcon,
+  PlayIcon,
+  Table01Icon,
+} from "@hugeicons/core-free-icons";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
-import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
-  VisualCardFullscreen,
-  VisualCardGroup,
   VisualCardHeader,
+  VisualCardMenu,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Effect, Fiber, Schedule } from "effect";
@@ -138,6 +150,14 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
     () => getTableChairArrangement(deferredTableCount),
     [deferredTableCount]
   );
+  const speedItems = Arr.map(SPEED_VALUES, (value) => ({
+    label: `${value}x`,
+    value,
+  }));
+  const tableItems = Arr.makeBy(maxTables, (index) => ({
+    label: `${index + 1} ${labels.table}`,
+    value: index + 1,
+  }));
 
   return (
     <VisualCard ref={ref}>
@@ -149,37 +169,53 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
       />
 
       <VisualCardToolbar>
-        <VisualCardGroup>
-          {Arr.map(SPEED_VALUES, (speedValue) => (
-            <Choice
-              aria-label={`${labels.setSpeed} ${speedValue}x`}
-              key={speedValue}
-              onClick={() => setSpeed(speedValue)}
-              pressed={speed === speedValue}
-            >
-              {speedValue}x
-            </Choice>
-          ))}
-        </VisualCardGroup>
+        <Select
+          items={speedItems}
+          onValueChange={(next: number | null) => {
+            if (next !== null) {
+              setSpeed(next);
+            }
+          }}
+          value={speed}
+        >
+          <SelectTrigger aria-label={labels.setSpeed} size="sm">
+            <HugeIcons
+              className="text-muted-foreground"
+              icon={DashboardSpeed01Icon}
+            />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Arr.map(speedItems, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <VisualCardGroup>
-          {Arr.map(
-            Array.from({ length: maxTables }, (_, index) => index + 1),
-            (count) => (
-              <Choice
-                aria-label={`${labels.setTableCount} ${count}`}
-                key={`table-count-${count}`}
-                onClick={() => {
-                  setTableCount(count);
-                  setIsPlaying(false);
-                }}
-                pressed={tableCount === count}
-              >
-                {count} {labels.table}
-              </Choice>
-            )
-          )}
-        </VisualCardGroup>
+        <Select
+          items={tableItems}
+          onValueChange={(next: number | null) => {
+            if (next !== null) {
+              setTableCount(next);
+              setIsPlaying(false);
+            }
+          }}
+          value={tableCount}
+        >
+          <SelectTrigger aria-label={labels.setTableCount} size="sm">
+            <HugeIcons className="text-muted-foreground" icon={Table01Icon} />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Arr.map(tableItems, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </VisualCardToolbar>
 
       <VisualCardBody className="p-(--card-spacing)">
@@ -261,15 +297,6 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
       <VisualCardActions>
         <Button
-          aria-label={labels.reset}
-          onClick={resetAnimation}
-          size="icon"
-          variant="outline"
-        >
-          <HugeIcons icon={Clock04Icon} />
-          <span className="sr-only">{labels.reset}</span>
-        </Button>
-        <Button
           aria-label={isPlaying ? labels.pause : labels.play}
           onClick={togglePlayPause}
           size="icon"
@@ -280,7 +307,12 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             {isPlaying ? labels.pause : labels.play}
           </span>
         </Button>
-        <VisualCardFullscreen />
+        <VisualCardMenu>
+          <DropdownMenuItem onClick={resetAnimation}>
+            <HugeIcons icon={Clock04Icon} />
+            {labels.reset}
+          </DropdownMenuItem>
+        </VisualCardMenu>
       </VisualCardActions>
     </VisualCard>
   );

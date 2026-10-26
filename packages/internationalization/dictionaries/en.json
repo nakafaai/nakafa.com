@@ -87,6 +87,98 @@
     "outsider-hint": "If an admin invited this address, the invite can take a moment to appear. Check again, or ask an admin to send it again. If the invite went to another address, sign in with that one.",
     "outsider-check-again": "Check again"
   },
+  "SchoolGuardians": {
+    "sign-in-action": "Sign in as a parent",
+    "email-label": "Parent email",
+    "email-placeholder": "parent@example.com",
+    "email-description": "Use the email the school registered.",
+    "email-invalid": "Enter a valid email address.",
+    "send-code": "Send code",
+    "code-label": "Sign-in code",
+    "code-description": "If the school linked {email}, a six-digit code was sent there.",
+    "code-invalid": "Enter the six digits from the email.",
+    "code-refused": "The code is wrong or has expired.",
+    "sign-in": "Sign in",
+    "resend-code": "Send the code again",
+    "failed": "Could not connect. Try again.",
+    "home-title": "My children",
+    "home-empty": "No child is linked yet.",
+    "home-empty-description": "Ask the school to link your email to your child.",
+    "child-pending": "The link is waiting for a check.",
+    "child-verified": "The link is verified.",
+    "child-expired": "The link has expired.",
+    "child-revoked": "The school ended this link.",
+    "child-withdrawn": "You withdrew consent.",
+    "child-staff-check": "The school will check this link.",
+    "child-ended-hint": "Contact the school to link again.",
+    "nisn-label": "Child's NISN",
+    "nisn-hint": "Enter your child's NISN to confirm this link.",
+    "nisn-refused": "The details do not match, check them or contact the school.",
+    "nisn-submit": "Check",
+    "withdraw": "Withdraw consent",
+    "withdraw-hint": "You can withdraw consent at any time.",
+    "withdraw-title": "Withdraw consent?",
+    "withdraw-description": "You will not see your child's grades until the school links you again.",
+    "grades-empty": "No grade is released yet.",
+    "grade-class": "Class",
+    "grade-value": "Grade",
+    "grade-note": "Note",
+    "kktp-reached": "Reached",
+    "kktp-notReached": "Not reached",
+    "link-add": "Link a parent",
+    "link-add-description": "The parent asks for a sign-in code on the school's parent page.",
+    "links-empty": "No parent is linked yet.",
+    "links-empty-description": "Link a parent's email to a student so they can sign in.",
+    "links-search": "Search students",
+    "student": "Student",
+    "guardian-name": "Parent's name",
+    "guardian-name-placeholder": "The parent's full name",
+    "status": "Status",
+    "status-pending": "Pending",
+    "status-verified": "Verified",
+    "status-expired": "Expired",
+    "status-revoked": "Ended",
+    "status-withdrawn": "Withdrawn",
+    "status-mismatch": "Details do not match",
+    "link-verify": "Verify by hand",
+    "link-revoke": "End link",
+    "link-revoke-title": "End this link?",
+    "link-revoke-description": "The parent can no longer see the child's records.",
+    "link-detail": "Parent link",
+    "link-detail-empty": "Choose a student to see their link.",
+    "expires": "Expires",
+    "mismatches": "Failed NISN checks",
+    "child": "Child",
+    "child-detail": "Child",
+    "child-detail-empty": "Choose a child to see the details."
+  },
+  "SchoolRoster": {
+    "import": "Import",
+    "export": "Export",
+    "file-label": "Dapodik student list",
+    "empty": "Import the students from Dapodik.",
+    "empty-description": "Choose the student list exported from Dapodik. The file stays on this device.",
+    "no-period": "No active period yet.",
+    "no-period-description": "Open a period before you import students.",
+    "file-refused": "This file cannot be imported.",
+    "file-unreadable": "Choose an XLSX file exported from Dapodik.",
+    "file-header": "The file has no Nama and NISN columns.",
+    "file-empty": "The file has no student below its header.",
+    "line": "Row",
+    "name": "Name",
+    "nisn": "NISN",
+    "cohort": "Class group",
+    "status": "Status",
+    "search": "Search names",
+    "status-under": "Under 18",
+    "status-adult": "18 or older",
+    "status-name": "Name missing",
+    "status-nisn": "NISN is not 10 digits",
+    "status-birth": "Birth date unreadable",
+    "status-cohort": "Class group name too long",
+    "cancel": "Cancel",
+    "apply": "Import students"
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Change token",
@@ -100,6 +192,7 @@
     "seat-waiting": "Not entered yet.",
     "filter-empty": "No student matches this filter.",
     "panel-label": "Student session",
+    "panel-empty": "Choose a seat to see the student's session.",
     "state-in-progress": "In progress",
     "state-locked": "Locked",
     "state-closing": "Closing",
@@ -112,6 +205,7 @@
     "screen-none": "The student has not opened a question yet.",
     "results-away": "Left the exam",
     "results-student-answers": "Student's answers",
+    "results-answers-empty": "Choose a student to see their answers.",
     "results-not-submitted": "The student has not submitted the exam yet.",
     "results-away-seconds": "{count, plural, one {Once} other {# times}} for {seconds} s",
     "results-away-minutes": "{count, plural, one {Once} other {# times}} for {minutes} min {seconds} s",
@@ -404,6 +498,8 @@
     "members": "Members",
     "invites": "Invites",
     "students": "Student accounts",
+    "roster": "Dapodik",
+    "guardians": "Parents",
     "clients": "API clients",
     "policies": "Policies",
     "audit": "Audit trail",
@@ -478,7 +574,7 @@
     "policy-threads": "Student threads",
     "policy-threads-description": "Students may open threads in this school.",
     "policy-domains": "Email domains",
-    "policy-domains-description": "Only addresses on these domains may join this school.",
+    "policy-domains-description": "Only Google Workspace accounts on these domains, one per line, may join.",
     "policy-domains-placeholder": "sekolah.sch.id",
     "policy-domains-footer": "An empty list admits every address.",
     "save": "Save",
@@ -629,6 +725,9 @@
       "scheme": {
         "stored": "Grading scheme version added"
       },
+      "report": {
+        "locked": "Report card locked"
+      },
       "cohort": {
         "created": "Cohort added",
         "renamed": "Cohort renamed",
@@ -739,7 +838,17 @@
         "declined": "Visit declined",
         "ended": "Visit ended"
       },
-      "unknown": "Another change"
+      "unknown": "Another change",
+      "guardian": {
+        "started": "Parent linked",
+        "linked": "Parent link verified",
+        "withdrawn": "Parent consent withdrawn",
+        "revoked": "Parent link ended"
+      },
+      "roster": {
+        "set": "Student record updated",
+        "imported": "Students imported from Dapodik"
+      }
     },
     "role-description": {
       "owner": "Can do everything in this school.",
@@ -860,12 +969,13 @@
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
-    "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
-    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
+    "policy-domains-invalid": "Invalid domains: {domains}; write one domain on each line.",
+    "policy-domains-limit": "Use up to {limit} domains, each on its own line."
   },
   "Classroom": {
     "tabs-home": "Home",
     "tabs-forum": "Forum",
+    "tabs-grades": "Grades",
     "general-channel": "General",
     "channels-title": "Channel",
     "channels-empty": "No channel yet",
@@ -895,6 +1005,65 @@
     "messages-empty": "No message yet",
     "messages-empty-description": "The first message of this channel shows here.",
     "scroll-to-latest": "Go to the newest message"
+  },
+  "SchoolGrades": {
+    "student": "Student",
+    "value": "Grade",
+    "value-label": "Grade of {name}",
+    "value-placeholder": "0-100",
+    "note": "Result",
+    "state": "Status",
+    "state-none": "Not entered",
+    "state-draft": "Draft",
+    "state-released": "Released",
+    "kktp-reached": "Meets KKTP",
+    "kktp-notReached": "Below KKTP",
+    "search": "Search students",
+    "release": "Release",
+    "empty": "No student in this class yet.",
+    "empty-description": "Students appear here once they are placed in the class group.",
+    "detail": "Student's grade",
+    "detail-empty": "Choose a student to see their grade.",
+    "kktp": "KKTP"
+  },
+  "SchoolReports": {
+    "title": "Report cards",
+    "cohort": "Class group",
+    "period": "Period",
+    "search-cohorts": "Search class groups",
+    "cohorts-empty": "No class group to report on.",
+    "cohorts-empty-description": "A homeroom teacher sees their class group here, and the principal every class group of the period.",
+    "student": "Student",
+    "status": "Status",
+    "state-none": "Not started",
+    "state-draft": "Draft",
+    "state-completed": "Handed in",
+    "state-approved": "Locking",
+    "state-locked": "Locked",
+    "search-students": "Search students",
+    "students-empty": "No student in this class group yet.",
+    "students-empty-description": "Students appear here once they are placed in the class group.",
+    "write": "Write note",
+    "write-description": "The note on the report card of {name}.",
+    "note-label": "Homeroom teacher's note",
+    "note-placeholder": "What the student did well, and what comes next",
+    "save-note": "Save note",
+    "complete": "Hand in",
+    "reopen": "Take back",
+    "approve": "Approve",
+    "open-pdf": "Open PDF",
+    "open-check": "Open check page",
+    "detail": "Student's report card",
+    "detail-empty": "Choose a student to see their report card.",
+    "report-empty": "This report card has not started. Write the homeroom teacher's note to start it.",
+    "approved-at": "Approved",
+    "note-empty": "No note yet.",
+    "subjects-empty": "No grade is released yet.",
+    "subject": "Subject",
+    "grade": "Grade",
+    "result": "Result",
+    "kktp-reached": "Meets KKTP",
+    "kktp-notReached": "Below KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
@@ -1021,8 +1190,7 @@
     "classification": "Education"
   },
   "Common": {
-    "load-error": "We could not load this data. Please try again.",
-    "load-error-retry": "We could not load this data.",
+    "load-error": "We could not load this data.",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
     "breadcrumb": "Breadcrumb",
@@ -1093,6 +1261,8 @@
     "play": "Play",
     "pause": "Pause",
     "reset": "Reset",
+    "reset-view": "Reset view",
+    "speed": "Speed",
     "no-website": "No website",
     "high": "High",
     "official": "Official",
@@ -1111,6 +1281,8 @@
     "angle": "Angle",
     "increase-angle": "Increase angle",
     "decrease-angle": "Decrease angle",
+    "increase": "Increase",
+    "decrease": "Decrease",
     "number-field": "Number field",
     "share": "Share",
     "contributor": "Contributor",
@@ -1458,7 +1630,7 @@
   },
   "ComingSoon": {
     "title": "Coming Soon",
-    "description": "This feature is not available yet. Please check back later or contribute to the project.",
+    "description": "This content is still being written.",
     "contribute": "Contribute"
   },
   "Auth": {
@@ -1593,6 +1765,7 @@
     "bullets": "Bulleted list",
     "numbers": "Numbered list",
     "tasks": "Task list",
+    "lists": "Lists",
     "quote": "Quote",
     "code-block": "Code block",
     "divider": "Divider",
@@ -2128,6 +2301,28 @@
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
     },
+    "school-refusal-report-closed": {
+      "title": "This report card has moved on.",
+      "description": "Reload the list to see its status."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "This student is not here.",
+      "description": "Place the student in the class group first."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "This link has changed.",
+      "description": "Reload the list to see its status."
+    },
+    "school-refusal-guardian-link": {
+      "title": "The link was not made.",
+      "description": "Choose an active student without this email."
+    },
+    "school-roster-imported": {
+      "title": "The students are in the roster."
+    },
+    "school-roster-export-failed": {
+      "title": "The file was not saved."
+    },
     "audit-export-error": {
       "title": "We could not export the trail.",
       "description": "Check your connection, then try again."
@@ -2548,7 +2743,7 @@
     "title": "Usage data",
     "prompt-description": "Sharing details is optional.",
     "prompt-footer": "You can change it later.",
-    "description": "Allow Nakafa to see which features you use and what needs fixing without recording your screen. Nakafa always counts visits, without cookies or accounts, to operate the site. Choose Allow only if you are 18 or older, or 13 to 17 with a parent or legal guardian's approval.",
+    "description": "Nakafa counts visits without cookies, and with your consent it also sees which features you use, never your screen.",
     "allow": "Allow",
     "decline": "Decline",
     "manage": "Usage data",
@@ -2557,10 +2752,10 @@
     "status-browser-signal": "Your browser privacy settings keep detailed sharing off.",
     "status-pending": "We are loading your choice.",
     "status-prompt": "You have not chosen yet.",
-    "policy": "<privacy-policy>Privacy Policy</privacy-policy>",
-    "load-error": "We could not load your choice. Usage sharing stays off while we retry.",
-    "runtime-error": "Your choice was saved, but usage sharing could not be applied. It stays as it was.",
-    "save-error": "We could not save your choice. Usage sharing stays off. Try again."
+    "policy": "Allow at 18 or older, or at 13 to 17 with a guardian's approval, as the <privacy-policy>Privacy Policy</privacy-policy> explains.",
+    "load-error": "We could not load your choice, so sharing stays off while we retry.",
+    "runtime-error": "Your choice was saved, but sharing stays as it was.",
+    "save-error": "We could not save your choice, so sharing stays off."
   },
   "SEO": {
     "subject": {
@@ -2593,5 +2788,16 @@
       "description": "Read Surah {name} ({transliteration}) with verse-by-verse translation. {numberOfVerses} verses from the Holy Quran.",
       "keywords": "Surah {name}, Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "ReportCheck": {
+    "locked": "This report card is on record.",
+    "locked-description": "Its code belongs to a report card that the school locked.",
+    "unknown": "No report card has this code.",
+    "unknown-description": "Check the address, or ask the school that issued it.",
+    "school": "School",
+    "kind": "Document",
+    "kind-report": "Report card",
+    "period": "Period",
+    "approved": "Approved on"
   }
 }

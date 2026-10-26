@@ -27,6 +27,7 @@ const ENTRY_NAMESPACES = [
   "Auth",
   "Legal",
   "LearningPrograms",
+  "ReportCheck",
   "SchoolStart",
 ] as const;
 

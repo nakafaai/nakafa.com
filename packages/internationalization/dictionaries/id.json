@@ -87,6 +87,98 @@
     "outsider-hint": "Jika admin mengundang alamat ini, undangan mungkin butuh waktu untuk muncul. Periksa lagi, atau minta admin mengirimnya ulang. Jika undangan dikirim ke alamat lain, masuk dengan alamat itu.",
     "outsider-check-again": "Periksa lagi"
   },
+  "SchoolGuardians": {
+    "sign-in-action": "Masuk sebagai orang tua",
+    "email-label": "Email orang tua",
+    "email-placeholder": "orangtua@contoh.com",
+    "email-description": "Gunakan email yang didaftarkan sekolah.",
+    "email-invalid": "Tulis alamat email yang benar.",
+    "send-code": "Kirim kode",
+    "code-label": "Kode masuk",
+    "code-description": "Jika sekolah menautkan {email}, kode enam angka dikirim ke sana.",
+    "code-invalid": "Tulis enam angka dari email.",
+    "code-refused": "Kode salah atau sudah kedaluwarsa.",
+    "sign-in": "Masuk",
+    "resend-code": "Kirim ulang kode",
+    "failed": "Tidak dapat terhubung. Coba lagi.",
+    "home-title": "Anak saya",
+    "home-empty": "Belum ada anak yang ditautkan.",
+    "home-empty-description": "Minta sekolah menautkan email Anda ke data anak.",
+    "child-pending": "Tautan menunggu pemeriksaan.",
+    "child-verified": "Tautan terverifikasi.",
+    "child-expired": "Tautan sudah kedaluwarsa.",
+    "child-revoked": "Sekolah mengakhiri tautan ini.",
+    "child-withdrawn": "Anda menarik persetujuan.",
+    "child-staff-check": "Sekolah akan memeriksa tautan ini.",
+    "child-ended-hint": "Hubungi sekolah untuk menautkan lagi.",
+    "nisn-label": "NISN anak",
+    "nisn-hint": "Masukkan NISN anak untuk memastikan tautan ini.",
+    "nisn-refused": "Data tidak cocok, periksa lagi atau hubungi sekolah.",
+    "nisn-submit": "Periksa",
+    "withdraw": "Tarik persetujuan",
+    "withdraw-hint": "Anda dapat menarik persetujuan kapan saja.",
+    "withdraw-title": "Tarik persetujuan?",
+    "withdraw-description": "Anda tidak akan melihat nilai anak lagi sampai sekolah menautkan ulang.",
+    "grades-empty": "Belum ada nilai yang dirilis.",
+    "grade-class": "Kelas",
+    "grade-value": "Nilai",
+    "grade-note": "Keterangan",
+    "kktp-reached": "Tuntas",
+    "kktp-notReached": "Belum tuntas",
+    "link-add": "Tautkan orang tua",
+    "link-add-description": "Orang tua meminta kode masuk sendiri di halaman orang tua sekolah.",
+    "links-empty": "Belum ada orang tua yang ditautkan.",
+    "links-empty-description": "Tautkan email orang tua ke siswa agar mereka dapat masuk.",
+    "links-search": "Cari siswa",
+    "student": "Siswa",
+    "guardian-name": "Nama orang tua",
+    "guardian-name-placeholder": "Nama lengkap orang tua",
+    "status": "Status",
+    "status-pending": "Menunggu",
+    "status-verified": "Terverifikasi",
+    "status-expired": "Kedaluwarsa",
+    "status-revoked": "Diakhiri",
+    "status-withdrawn": "Ditarik",
+    "status-mismatch": "Data tidak cocok",
+    "link-verify": "Verifikasi manual",
+    "link-revoke": "Akhiri tautan",
+    "link-revoke-title": "Akhiri tautan ini?",
+    "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi.",
+    "link-detail": "Tautan orang tua",
+    "link-detail-empty": "Pilih siswa untuk melihat tautannya.",
+    "expires": "Berakhir",
+    "mismatches": "Cek NISN gagal",
+    "child": "Anak",
+    "child-detail": "Anak",
+    "child-detail-empty": "Pilih anak untuk melihat rinciannya."
+  },
+  "SchoolRoster": {
+    "import": "Impor",
+    "export": "Ekspor",
+    "file-label": "Daftar peserta didik Dapodik",
+    "empty": "Impor siswa dari Dapodik.",
+    "empty-description": "Pilih daftar peserta didik hasil ekspor Dapodik. File tetap di perangkat ini.",
+    "no-period": "Belum ada periode aktif.",
+    "no-period-description": "Buka periode sebelum mengimpor siswa.",
+    "file-refused": "File ini tidak bisa diimpor.",
+    "file-unreadable": "Pilih file XLSX hasil ekspor Dapodik.",
+    "file-header": "File tidak punya kolom Nama dan NISN.",
+    "file-empty": "File tidak punya siswa di bawah judul kolomnya.",
+    "line": "Baris",
+    "name": "Nama",
+    "nisn": "NISN",
+    "cohort": "Rombel",
+    "status": "Status",
+    "search": "Cari nama",
+    "status-under": "Di bawah 18 tahun",
+    "status-adult": "18 tahun atau lebih",
+    "status-name": "Nama kosong",
+    "status-nisn": "NISN bukan 10 digit",
+    "status-birth": "Tanggal lahir tidak terbaca",
+    "status-cohort": "Nama rombel terlalu panjang",
+    "cancel": "Batal",
+    "apply": "Impor siswa"
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Ganti token",
@@ -100,6 +192,7 @@
     "seat-waiting": "Belum masuk.",
     "filter-empty": "Tidak ada siswa yang sesuai dengan saringan ini.",
     "panel-label": "Sesi siswa",
+    "panel-empty": "Pilih kursi untuk melihat sesi siswa.",
     "state-in-progress": "Sedang dikerjakan",
     "state-locked": "Terkunci",
     "state-closing": "Menutup",
@@ -112,6 +205,7 @@
     "screen-none": "Siswa belum membuka soal.",
     "results-away": "Keluar ujian",
     "results-student-answers": "Jawaban siswa",
+    "results-answers-empty": "Pilih siswa untuk melihat jawabannya.",
     "results-not-submitted": "Siswa belum mengumpulkan ujian.",
     "results-away-seconds": "{count} kali selama {seconds} detik",
     "results-away-minutes": "{count} kali selama {minutes} menit {seconds} detik",
@@ -404,6 +498,8 @@
     "members": "Anggota",
     "invites": "Undangan",
     "students": "Akun siswa",
+    "roster": "Dapodik",
+    "guardians": "Orang tua",
     "clients": "Klien API",
     "policies": "Kebijakan",
     "audit": "Jejak audit",
@@ -478,7 +574,7 @@
     "policy-threads": "Thread siswa",
     "policy-threads-description": "Siswa boleh membuka thread di sekolah ini.",
     "policy-domains": "Domain email",
-    "policy-domains-description": "Hanya alamat pada domain ini yang boleh bergabung dengan sekolah ini.",
+    "policy-domains-description": "Hanya akun Google Workspace pada domain ini, satu per baris, yang boleh bergabung.",
     "policy-domains-placeholder": "sekolah.sch.id",
     "policy-domains-footer": "Daftar kosong menerima setiap alamat.",
     "save": "Simpan",
@@ -629,6 +725,9 @@
       "scheme": {
         "stored": "Versi skema nilai ditambahkan"
       },
+      "report": {
+        "locked": "Rapor dikunci"
+      },
       "cohort": {
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",
@@ -739,7 +838,17 @@
         "declined": "Kunjungan ditolak",
         "ended": "Kunjungan selesai"
       },
-      "unknown": "Perubahan lain"
+      "unknown": "Perubahan lain",
+      "guardian": {
+        "started": "Orang tua ditautkan",
+        "linked": "Tautan orang tua terverifikasi",
+        "withdrawn": "Persetujuan orang tua ditarik",
+        "revoked": "Tautan orang tua diakhiri"
+      },
+      "roster": {
+        "set": "Data siswa diperbarui",
+        "imported": "Siswa diimpor dari Dapodik"
+      }
     },
     "role-description": {
       "owner": "Dapat melakukan semua hal di sekolah ini.",
@@ -860,12 +969,13 @@
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
-    "policy-domains-invalid": "Periksa domain ini: {domains}. Tulis satu domain di setiap baris.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."
+    "policy-domains-invalid": "Domain tidak valid: {domains}; tulis satu domain di setiap baris.",
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain, masing-masing di baris sendiri."
   },
   "Classroom": {
     "tabs-home": "Beranda",
     "tabs-forum": "Forum",
+    "tabs-grades": "Nilai",
     "general-channel": "Umum",
     "channels-title": "Kanal",
     "channels-empty": "Belum ada kanal",
@@ -895,6 +1005,65 @@
     "messages-empty": "Belum ada pesan",
     "messages-empty-description": "Pesan pertama kanal ini akan tampil di sini.",
     "scroll-to-latest": "Ke pesan terbaru"
+  },
+  "SchoolGrades": {
+    "student": "Siswa",
+    "value": "Nilai",
+    "value-label": "Nilai {name}",
+    "value-placeholder": "0-100",
+    "note": "Hasil",
+    "state": "Status",
+    "state-none": "Belum diisi",
+    "state-draft": "Draf",
+    "state-released": "Dirilis",
+    "kktp-reached": "Mencapai KKTP",
+    "kktp-notReached": "Di bawah KKTP",
+    "search": "Cari siswa",
+    "release": "Rilis",
+    "empty": "Belum ada siswa di kelas ini.",
+    "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
+    "detail": "Nilai siswa",
+    "detail-empty": "Pilih siswa untuk melihat nilainya.",
+    "kktp": "KKTP"
+  },
+  "SchoolReports": {
+    "title": "Rapor",
+    "cohort": "Rombel",
+    "period": "Periode",
+    "search-cohorts": "Cari rombel",
+    "cohorts-empty": "Belum ada rombel untuk dirapor.",
+    "cohorts-empty-description": "Wali kelas melihat rombelnya di sini, dan kepala sekolah melihat setiap rombel pada periode ini.",
+    "student": "Siswa",
+    "status": "Status",
+    "state-none": "Belum dimulai",
+    "state-draft": "Draf",
+    "state-completed": "Diserahkan",
+    "state-approved": "Dikunci",
+    "state-locked": "Terkunci",
+    "search-students": "Cari siswa",
+    "students-empty": "Belum ada siswa di rombel ini.",
+    "students-empty-description": "Siswa muncul di sini setelah ditempatkan di rombel.",
+    "write": "Tulis catatan",
+    "write-description": "Catatan pada rapor {name}.",
+    "note-label": "Catatan wali kelas",
+    "note-placeholder": "Apa yang sudah baik dari siswa, dan langkah berikutnya",
+    "save-note": "Simpan catatan",
+    "complete": "Serahkan",
+    "reopen": "Tarik kembali",
+    "approve": "Setujui",
+    "open-pdf": "Buka PDF",
+    "open-check": "Buka halaman pemeriksaan",
+    "detail": "Rapor siswa",
+    "detail-empty": "Pilih siswa untuk melihat rapornya.",
+    "report-empty": "Rapor ini belum dimulai. Tulis catatan wali kelas untuk memulainya.",
+    "approved-at": "Disetujui",
+    "note-empty": "Belum ada catatan.",
+    "subjects-empty": "Belum ada nilai yang dirilis.",
+    "subject": "Mata pelajaran",
+    "grade": "Nilai",
+    "result": "Hasil",
+    "kktp-reached": "Mencapai KKTP",
+    "kktp-notReached": "Belum mencapai KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
@@ -1021,8 +1190,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
-    "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
-    "load-error-retry": "Data ini belum dapat dimuat.",
+    "load-error": "Data ini belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
     "breadcrumb": "Jalur navigasi",
@@ -1093,6 +1261,8 @@
     "play": "Putar",
     "pause": "Jeda",
     "reset": "Ulangi",
+    "reset-view": "Kembalikan tampilan",
+    "speed": "Kecepatan",
     "no-website": "Tidak ada website",
     "high": "Tinggi",
     "official": "Resmi",
@@ -1111,6 +1281,8 @@
     "angle": "Sudut",
     "increase-angle": "Perbesar sudut",
     "decrease-angle": "Perkecil sudut",
+    "increase": "Tambah",
+    "decrease": "Kurangi",
     "number-field": "Isian angka",
     "share": "Bagikan",
     "contributor": "Kontributor",
@@ -1458,7 +1630,7 @@
   },
   "ComingSoon": {
     "title": "Segera Hadir",
-    "description": "Fitur ini belum tersedia. Silakan periksa kembali nanti atau berkontribusi pada proyek.",
+    "description": "Konten ini masih ditulis.",
     "contribute": "Berkontribusi"
   },
   "Auth": {
@@ -1593,6 +1765,7 @@
     "bullets": "Daftar berbutir",
     "numbers": "Daftar bernomor",
     "tasks": "Daftar tugas",
+    "lists": "Daftar",
     "quote": "Kutipan",
     "code-block": "Blok kode",
     "divider": "Garis pemisah",
@@ -2128,6 +2301,28 @@
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
     },
+    "school-refusal-report-closed": {
+      "title": "Rapor ini sudah berlanjut.",
+      "description": "Muat ulang daftar untuk melihat statusnya."
+    },
+    "school-refusal-report-not-placed": {
+      "title": "Siswa ini tidak di sini.",
+      "description": "Tempatkan siswa di rombel terlebih dahulu."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "Tautan ini sudah berubah.",
+      "description": "Muat ulang daftar untuk melihat statusnya."
+    },
+    "school-refusal-guardian-link": {
+      "title": "Tautan tidak dibuat.",
+      "description": "Pilih siswa aktif yang belum memakai email ini."
+    },
+    "school-roster-imported": {
+      "title": "Siswa sudah masuk ke daftar."
+    },
+    "school-roster-export-failed": {
+      "title": "File tidak tersimpan."
+    },
     "audit-export-error": {
       "title": "Jejak audit gagal diekspor.",
       "description": "Periksa koneksi, lalu coba lagi."
@@ -2548,7 +2743,7 @@
     "title": "Data penggunaan",
     "prompt-description": "Berbagi detail bersifat opsional.",
     "prompt-footer": "Kamu bisa mengubahnya nanti.",
-    "description": "Izinkan Nakafa melihat fitur yang kamu gunakan dan bagian yang perlu diperbaiki tanpa merekam layar. Nakafa selalu menghitung kunjungan, tanpa cookie atau akun, untuk menjalankan situs. Pilih Izinkan hanya jika kamu berusia minimal 18 tahun, atau 13 sampai 17 tahun dengan persetujuan orang tua atau wali hukum.",
+    "description": "Nakafa menghitung kunjungan tanpa cookie, dan dengan izinmu juga melihat fitur yang kamu pakai, tanpa merekam layar.",
     "allow": "Izinkan",
     "decline": "Tolak",
     "manage": "Data penggunaan",
@@ -2557,10 +2752,10 @@
     "status-browser-signal": "Pengaturan privasi browsermu menonaktifkan berbagi detail.",
     "status-pending": "Pilihanmu sedang dimuat.",
     "status-prompt": "Belum ada pilihan.",
-    "policy": "<privacy-policy>Kebijakan Privasi</privacy-policy>",
-    "load-error": "Kami tidak dapat memuat pilihanmu. Pembagian data tetap nonaktif selama kami mencoba lagi.",
-    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tidak dapat diterapkan. Statusnya tetap seperti semula.",
-    "save-error": "Kami tidak dapat menyimpan pilihanmu. Pembagian data tetap nonaktif. Coba lagi."
+    "policy": "Izinkan jika kamu berusia 18 tahun ke atas, atau 13 sampai 17 tahun dengan persetujuan wali, sesuai <privacy-policy>Kebijakan Privasi</privacy-policy>.",
+    "load-error": "Pilihanmu belum dapat dimuat, jadi pembagian data tetap nonaktif selama kami mencoba lagi.",
+    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tetap seperti semula.",
+    "save-error": "Pilihanmu tidak dapat disimpan, jadi pembagian data tetap nonaktif."
   },
   "SEO": {
     "subject": {
@@ -2593,5 +2788,16 @@
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Qur'an.",
       "keywords": "Surat {name}, Al-Qur'an{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
+  },
+  "ReportCheck": {
+    "locked": "Rapor ini tercatat.",
+    "locked-description": "Kodenya milik rapor yang dikunci sekolah.",
+    "unknown": "Tidak ada rapor dengan kode ini.",
+    "unknown-description": "Periksa alamatnya, atau tanyakan sekolah yang menerbitkannya.",
+    "school": "Sekolah",
+    "kind": "Dokumen",
+    "kind-report": "Rapor",
+    "period": "Periode",
+    "approved": "Disetujui pada"
   }
 }

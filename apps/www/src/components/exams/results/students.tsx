@@ -1,11 +1,4 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import {
-  CheckmarkCircle02Icon,
-  Clock01Icon,
-  HourglassIcon,
-  SquareLock01Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -19,22 +12,19 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, DateTime, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   useResultsPaper,
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { useResultsSelection } from "@/components/exams/results/selection";
 import { DataFailure } from "@/components/shared/failure";
+import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
-import {
-  TableChoice,
-  useTableFilters,
-} from "@/components/shared/table/toolbar";
+import { useTableFilters } from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
@@ -94,10 +84,11 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
-  const chosen = useResultsSelection(
-    (state) => state.selected === row.attemptId
+  const chosen = usePanes((state) =>
+    Option.exists(state.open, (open) => open === row.attemptId)
   );
-  const choose = useResultsSelection((state) => state.choose);
+  const show = usePanes((state) => state.show);
+  const close = usePanes((state) => state.close);
 
   return (
     <TableRow data-state={chosen ? "selected" : undefined}>
@@ -105,7 +96,7 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
         <Button
           aria-pressed={chosen}
           className="h-auto px-0"
-          onClick={() => choose(chosen ? null : row.attemptId)}
+          onClick={() => (chosen ? close() : show(row.attemptId))}
           type="button"
           variant="link"
         >
@@ -134,43 +125,6 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
             )}
       </TableCell>
     </TableRow>
-  );
-}
-
-/**
- * The students' Filter menu, in the results page's header row: every attempt, or only the attempts in one
- * state, which the server reads. Each value carries the icon of its state.
- */
-export function StudentStatusFilter({
-  onChange,
-  value,
-}: {
-  readonly onChange: (status: StatusFilter) => void;
-  readonly value: StatusFilter;
-}) {
-  const t = useTranslations("Exams");
-
-  return (
-    <TableChoice
-      onChange={onChange}
-      options={[
-        { icon: UserGroupIcon, label: t("filter-all"), value: "all" },
-        {
-          icon: Clock01Icon,
-          label: t(stateKeys.inProgress),
-          value: "inProgress",
-        },
-        { icon: HourglassIcon, label: t(stateKeys.closing), value: "closing" },
-        { icon: SquareLock01Icon, label: t(stateKeys.locked), value: "locked" },
-        {
-          icon: CheckmarkCircle02Icon,
-          label: t(stateKeys.submitted),
-          value: "submitted",
-        },
-      ]}
-      title={t("filter-label")}
-      value={value}
-    />
   );
 }
 
