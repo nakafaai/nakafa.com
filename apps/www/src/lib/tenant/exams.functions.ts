@@ -25,12 +25,20 @@ export const readExamRoomsFn = createServerFn({ method: "GET" })
     return examRoomsHandler(options);
   });
 
-/** One exam as its editor and its try open it, which their loaders call. */
+/** One exam as its try opens it, which the try's loader calls. */
 export const readExamFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(ExamInput))
   .handler(async (options) => {
     const { examOpenHandler } = await import("@/lib/tenant/exams.server");
     return examOpenHandler(options);
+  });
+
+/** One exam as its editor opens it, with its first question's prompt, which the editor's loader calls. */
+export const readExamEditorFn = createServerFn({ method: "GET" })
+  .validator(Schema.toStandardSchemaV1(ExamInput))
+  .handler(async (options) => {
+    const { examEditorHandler } = await import("@/lib/tenant/exams.server");
+    return examEditorHandler(options);
   });
 
 /** The proctor's dashboard of one sitting, which the dashboard's loader calls. */

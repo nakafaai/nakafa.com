@@ -20,7 +20,8 @@ import { Schema } from "effect";
  * to, then registers the stored file: the server reads its size and leading bytes, accepts only
  * the images the editor draws, and stores the image as the exam's. A reader who may view the
  * exam reads the addresses of a prompt's images in one call. `commit`, `discard`, and `stored`
- * are internal: only the registration calls them.
+ * are internal: only the registration calls them. `sweep`, also internal, deletes the images
+ * of a deleted exam in pages.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -102,6 +103,13 @@ export default GroupSpec.make()
       name: "discard",
       args: () => ({ storageId: Id("_storage") }),
       returns: () => Schema.Struct({}),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "sweep",
+      args: () => ({ examId: Id("exams") }),
+      returns: () => Schema.Struct({ done: Schema.Boolean }),
     })
   )
   .addFunction(

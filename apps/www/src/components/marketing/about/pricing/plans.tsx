@@ -38,6 +38,41 @@ function PricingFeature({ text }: { text: string }) {
 }
 
 /**
+ * The Free card's action: a visitor signs in on a new page, so the plans stay
+ * open, and a learner opens home. Both are rendered, and the signed-in hint of the
+ * root picks the one that shows, as the header's call to action does.
+ */
+function FreePlanAction() {
+  const t = useTranslations("Pricing");
+
+  return (
+    <>
+      <span className="contents" data-account="visitor">
+        <Button
+          className="w-full"
+          nativeButton={false}
+          render={
+            <Link rel="noopener noreferrer" target="_blank" to="/$locale/auth">
+              <HugeIcons icon={ArrowUpRight01Icon} />
+              {t("free-cta")}
+            </Link>
+          }
+          variant="outline"
+        />
+      </span>
+      <span className="contents" data-account="member">
+        <Button
+          className="w-full"
+          nativeButton={false}
+          render={<Link to="/$locale/home">{t("free-cta")}</Link>}
+          variant="outline"
+        />
+      </span>
+    </>
+  );
+}
+
+/**
  * The two plan cards. Pro stands out with the brand ring, and Nina peeks from
  * behind its top edge: the card is drawn over her, so its line cuts her body.
  * From `md` the cards share four rows (heading, price, list, action), so the
@@ -79,21 +114,7 @@ export function PricingCards({
           </ul>
         </CardContent>
         <CardFooter>
-          <Button
-            className="w-full"
-            nativeButton={false}
-            render={
-              <Link
-                rel="noopener noreferrer"
-                target="_blank"
-                to="/$locale/auth"
-              >
-                <HugeIcons icon={ArrowUpRight01Icon} />
-                {t("free-cta")}
-              </Link>
-            }
-            variant="outline"
-          />
+          <FreePlanAction />
         </CardFooter>
       </Card>
 

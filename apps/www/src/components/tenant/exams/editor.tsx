@@ -1,4 +1,3 @@
-import type { Ref } from "@confect/core";
 import { QueryResult } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
@@ -22,6 +21,7 @@ import { ExamProvider, useExamZoom } from "@/components/tenant/exams/provider";
 import { ExamToolbar } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { readExamEditorFn } from "@/lib/tenant/exams.functions";
 
 /**
  * The editor of one exam, as a design tool lays out its document: a header with the title and the
@@ -37,7 +37,8 @@ export function ExamEditor({
   slug,
 }: {
   examId: Id<"exams">;
-  preload: Ref.Returns<typeof exams.exams.open> | undefined;
+  /** The exam and its first question's prompt as the loader read them, which the first paint draws. */
+  preload: Awaited<ReturnType<typeof readExamEditorFn>> | undefined;
   slug: TenantSlug;
 }) {
   // The exam needs the session, which Convex learns a moment after the page draws.
@@ -45,7 +46,7 @@ export function ExamEditor({
   const result = usePreloadedQueryResult(
     exams.exams.open,
     isSettled ? { examId, slug } : "skip",
-    preload
+    preload?.exam
   );
 
   if (QueryResult.isFailure(result)) {
@@ -57,7 +58,7 @@ export function ExamEditor({
   }
 
   return (
-    <ExamProvider exam={result.value} slug={slug}>
+    <ExamProvider exam={result.value} prompt={preload?.prompt} slug={slug}>
       <ExamWorkspace />
     </ExamProvider>
   );
