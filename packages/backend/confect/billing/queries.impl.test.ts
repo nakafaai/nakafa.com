@@ -206,22 +206,58 @@ describe("billing/queries proOffers", () => {
       expect(
         await t.query(api.billing.queries.proOffers, { currency: "IDR" })
       ).toEqual([
-        { amount: 79_000, currency: "IDR", months: 1, offer: "pro.monthly" },
+        {
+          amount: 79_000,
+          currency: "IDR",
+          interval: "month",
+          months: 1,
+          offer: "pro.monthly",
+        },
       ]);
       vi.stubEnv("BILLING_INDONESIA_RAIL", "xendit");
       vi.stubEnv("XENDIT_API_KEY", "test-secret");
       expect(
         await t.query(api.billing.queries.proOffers, { currency: "IDR" })
       ).toEqual([
-        { amount: 79_000, currency: "IDR", months: 1, offer: "pro.monthly" },
-        { amount: 79_000, currency: "IDR", months: 1, offer: "pro.pass.1" },
-        { amount: 229_000, currency: "IDR", months: 3, offer: "pro.pass.3" },
-        { amount: 790_000, currency: "IDR", months: 12, offer: "pro.pass.12" },
+        {
+          amount: 79_000,
+          currency: "IDR",
+          interval: "month",
+          months: 1,
+          offer: "pro.monthly",
+        },
+        {
+          amount: 79_000,
+          currency: "IDR",
+          interval: "pass",
+          months: 1,
+          offer: "pro.pass.1",
+        },
+        {
+          amount: 229_000,
+          currency: "IDR",
+          interval: "pass",
+          months: 3,
+          offer: "pro.pass.3",
+        },
+        {
+          amount: 790_000,
+          currency: "IDR",
+          interval: "pass",
+          months: 12,
+          offer: "pro.pass.12",
+        },
       ]);
       expect(
         await t.query(api.billing.queries.proOffers, { currency: "USD" })
       ).toEqual([
-        { amount: 899, currency: "USD", months: 1, offer: "pro.monthly" },
+        {
+          amount: 899,
+          currency: "USD",
+          interval: "month",
+          months: 1,
+          offer: "pro.monthly",
+        },
       ]);
     } finally {
       vi.unstubAllEnvs();

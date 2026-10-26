@@ -53,6 +53,7 @@ const proOffers = FunctionImpl.make(
             offer,
             amount: route.amount,
             currency: route.currency,
+            interval: billingOffer(offer).interval,
             months: billingOffer(offer).months,
           })
         ),

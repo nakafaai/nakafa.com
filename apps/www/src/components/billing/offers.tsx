@@ -1,5 +1,4 @@
 import { Wallet01Icon } from "@hugeicons/core-free-icons";
-import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -92,7 +91,7 @@ export function ProOfferDialog({
 /** One offer: its name, how it is paid, and its price. */
 function ProOfferOption({ offer }: { offer: ProOffer }) {
   const t = useTranslations("Pricing");
-  const isPass = billingOffer(offer.offer).interval === "pass";
+  const isPass = offer.interval === "pass";
 
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-data-checked:border-primary">

@@ -19,6 +19,8 @@ export const ProOffers = Schema.Array(
     offer: ProCheckoutOffer,
     amount: Schema.Int,
     currency: BillingCurrency,
+    /** `month` renews by itself; `pass` is paid once for `months` months. */
+    interval: Schema.Literals(["month", "pass", "year"]),
     months: Schema.Int,
   })
 );

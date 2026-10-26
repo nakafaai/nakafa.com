@@ -25,9 +25,27 @@ vi.mock("@confect/js", async (importOriginal) => {
 });
 
 const OFFERS = [
-  { amount: 79_000, currency: "IDR", months: 1, offer: "pro.monthly" },
-  { amount: 79_000, currency: "IDR", months: 1, offer: "pro.pass.1" },
-  { amount: 229_000, currency: "IDR", months: 3, offer: "pro.pass.3" },
+  {
+    amount: 79_000,
+    currency: "IDR",
+    interval: "month",
+    months: 1,
+    offer: "pro.monthly",
+  },
+  {
+    amount: 79_000,
+    currency: "IDR",
+    interval: "pass",
+    months: 1,
+    offer: "pro.pass.1",
+  },
+  {
+    amount: 229_000,
+    currency: "IDR",
+    interval: "pass",
+    months: 3,
+    offer: "pro.pass.3",
+  },
 ] as const;
 
 describe("billing/offers", () => {

@@ -1,9 +1,6 @@
 import { HttpClient } from "@confect/js";
 import billing from "@repo/backend/confect/_generated/refs/billing";
-import {
-  type BillingCurrency,
-  billingOffer,
-} from "@repo/backend/confect/billing/catalog";
+import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import { Array as Arr, Effect } from "effect";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -23,6 +20,6 @@ export const readProOffers = Effect.fn("www.billing.offers.read")(function* (
     Effect.provide(httpLayer())
   );
   return passesOnly
-    ? Arr.filter(offers, ({ offer }) => billingOffer(offer).interval === "pass")
+    ? Arr.filter(offers, ({ interval }) => interval === "pass")
     : offers;
 });
