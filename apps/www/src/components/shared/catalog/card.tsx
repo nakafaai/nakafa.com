@@ -9,16 +9,14 @@ import {
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Predicate } from "effect";
-import { createContext, type ReactElement, type ReactNode, use } from "react";
+import { type ReactElement, type ReactNode, use } from "react";
+import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 
 interface CatalogCardProps {
   readonly action: ReactElement;
   readonly children: ReactElement;
   readonly title: string;
 }
-
-/** The label of every card's action in one catalog grid, such as Open, which the grid provides. */
-export const CatalogActionLabelContext = createContext<string | null>(null);
 
 /** Renders one image or tile catalog choice with the action its grid names. */
 export function CatalogCard({ action, children, title }: CatalogCardProps) {

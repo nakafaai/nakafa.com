@@ -4,8 +4,8 @@ import { useState } from "react";
 import { ConvexIsland } from "@/components/providers/island";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
 import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
-import { TryoutSetTableContext } from "@/components/tryout/catalog/table/header";
 import { CatalogQuery } from "@/components/tryout/catalog/table/query";
+import { TryoutSetTableContext } from "@/components/tryout/catalog/table/selection";
 import type {
   TryoutSetListArgs,
   TryoutSetPage,

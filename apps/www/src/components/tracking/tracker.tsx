@@ -20,11 +20,13 @@ interface Props {
   section: RecordContentViewArgs["section"];
 }
 
-/** The inputs that the view recorder reads, with the route locale narrowed. */
-type RecorderInputs = Omit<Props, "enabled" | "locale"> & { locale: Locale };
-
-/** The view the surrounding tracker records. Only the recorder reads it, so it never wraps the page. */
-const ContentViewContext = createContext<RecorderInputs | null>(null);
+/**
+ * The view the surrounding tracker records, with the route locale narrowed.
+ * Only the recorder reads it, so it never wraps the page.
+ */
+const ContentViewContext = createContext<
+  (Omit<Props, "enabled" | "locale"> & { locale: Locale }) | null
+>(null);
 
 /**
  * Records a delayed graph content view when a runtime content identity exists.

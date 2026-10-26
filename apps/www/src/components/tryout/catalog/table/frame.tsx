@@ -8,11 +8,9 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  TryoutTableHeader,
-  useTryoutSetTable,
-} from "@/components/tryout/catalog/table/header";
+import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
+import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
 import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
 
 /**

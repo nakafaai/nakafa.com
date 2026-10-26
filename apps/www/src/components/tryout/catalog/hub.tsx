@@ -7,11 +7,11 @@ import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import {
-  CatalogActionLabelContext,
   CatalogCard,
   CatalogCardTile,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
+import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";

@@ -23,12 +23,9 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
-import { createContext, use } from "react";
 import { useTranslations } from "use-intl";
-import type {
-  TryoutSetSort,
-  TryoutSetStatusFilter,
-} from "@/components/tryout/catalog/table/types";
+import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
+import type { TryoutSetStatusFilter } from "@/components/tryout/catalog/table/types";
 import {
   TryoutStatusIcon,
   TryoutStatusLabel,
@@ -56,24 +53,6 @@ const headings = {
     desc: "set-sort-score-descending",
   },
 } as const;
-
-/** The filter and the sort the table shows, how to change them, and the table's title. */
-export const TryoutSetTableContext = createContext<{
-  filter: TryoutSetStatusFilter;
-  onFilter: (filter: TryoutSetStatusFilter) => void;
-  onSort: (sort: TryoutSetSort) => void;
-  sort: TryoutSetSort;
-  title: string;
-} | null>(null);
-
-/** Reads the selection of the surrounding try-out set table. */
-export function useTryoutSetTable() {
-  const value = use(TryoutSetTableContext);
-  if (value === null) {
-    throw new Error("useTryoutSetTable must be used within TryoutSetTable");
-  }
-  return value;
-}
 
 /** Fixed columns keep the same geometry while the server changes row order. */
 export function TryoutTableHeader() {

@@ -1,23 +1,14 @@
 import { Array as Arr, Option } from "effect";
-import { createContext, use } from "react";
+import { use } from "react";
 import { PlayerQuestion } from "@/components/player/question";
 import { PlayerQuestions } from "@/components/player/questions";
-import type { TryoutRunningContent } from "@/components/tryout/content/model";
+import { TryoutContentContext } from "@/components/tryout/content/context";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { joinTryoutBodies } from "@/components/tryout/player/model";
 import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
 import { TryoutQuestionHeader } from "@/components/tryout/runtime/question/shell";
 import { TryoutResponse } from "@/components/tryout/runtime/response/input";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
-
-/**
- * The signed questions of the running section, rendered on the server, which
- * the page gives the player's articles. It holds the page's content, fixed for
- * one page, so it never changes above the streamed bodies.
- */
-export const TryoutContentContext = createContext<{
-  readonly content: TryoutRunningContent | null;
-} | null>(null);
 
 /**
  * Lays out the running questions with their signed bodies for the player. The

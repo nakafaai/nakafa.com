@@ -6,10 +6,10 @@ import { Array as Arr, Schema, Tuple } from "effect";
 import { useTranslations } from "use-intl";
 
 import {
-  CatalogActionLabelContext,
   CatalogCard,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
+import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";
 import { TryoutPageLink } from "@/components/tryout/route/link";

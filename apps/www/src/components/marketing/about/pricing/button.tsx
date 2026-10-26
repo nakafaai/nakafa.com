@@ -15,7 +15,7 @@ import {
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** The emphasis of the Pro action: the page's one primary on the pricing page, secondary elsewhere. */
-export type PricingButtonVariant = "default" | "secondary";
+type PricingButtonVariant = "default" | "secondary";
 
 /** The emphasis of the Pro action around a variant of it. */
 const PricingButtonVariantContext = createContext<PricingButtonVariant | null>(

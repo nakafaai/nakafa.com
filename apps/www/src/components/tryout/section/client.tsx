@@ -6,9 +6,9 @@ import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
 import { ShellLock } from "@/components/sidebar/lock";
+import { TryoutContentContext } from "@/components/tryout/content/context";
 import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
-import { TryoutContentContext } from "@/components/tryout/player/articles";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import {
   type TryoutFinish,

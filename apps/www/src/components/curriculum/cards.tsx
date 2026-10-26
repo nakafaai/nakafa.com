@@ -1,10 +1,10 @@
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Array as Arr } from "effect";
 import {
-  CatalogActionLabelContext,
   CatalogCard,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
+import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 import { PublicPathLink } from "@/lib/routing/public/link";
 

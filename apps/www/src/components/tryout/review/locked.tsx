@@ -8,8 +8,6 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import type { Locale } from "@repo/internationalization/src/locale";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect } from "effect";
 import {
   PricingPrice,
@@ -22,6 +20,7 @@ import {
 } from "@/components/shared/card/section";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import type { readReviewTranslators } from "@/components/tryout/review/copy.server";
 import { projectTryoutReview } from "@/components/tryout/review/model";
 import { TryoutReviewCheckout } from "@/components/tryout/review/upgrade";
 import {
@@ -31,14 +30,6 @@ import {
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import { Link } from "@/lib/routing/link";
-
-/** Reads the try-out and pricing translators of a locale, which the locked review reads while its preview loads. */
-export function readReviewTranslators(locale: Locale) {
-  return Promise.all([
-    readServerTranslator({ locale, namespace: "Tryouts" }),
-    readServerTranslator({ locale, namespace: "Pricing" }),
-  ]);
-}
 
 /**
  * Loads the leading questions the backend previews to a free learner, with

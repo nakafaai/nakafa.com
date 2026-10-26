@@ -6,10 +6,8 @@ import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { TryoutAskButton } from "@/components/tryout/review/ask";
-import {
-  readReviewTranslators,
-  TryoutReviewLocked,
-} from "@/components/tryout/review/locked";
+import { readReviewTranslators } from "@/components/tryout/review/copy.server";
+import { TryoutReviewLocked } from "@/components/tryout/review/locked";
 import { projectTryoutReview } from "@/components/tryout/review/model";
 import {
   TryoutReviewQuestionExplanation,
