@@ -8,7 +8,7 @@ import {
 import { basename, dirname, join } from "node:path";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, Result, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import { toJSONAsync } from "seroval";
 import type { Plugin } from "vite";
@@ -23,12 +23,14 @@ import {
   notFoundPagePath,
   staticNotFoundDocument,
 } from "#www/src/lib/static/notfound";
+import { deferStaticScripts } from "#www/src/lib/static/scripts";
 import { THEME_PREPAINT_SCRIPT } from "#www/src/lib/theme/prepaint";
 
 /*
  * The build steps that run after TanStack has prerendered the public pages: the
- * static answers that the browser reads on a navigation, the static not-found page
- * of each locale, then the check that the output holds exactly the listed pages.
+ * static answers that the browser reads on a navigation, the deferred scripts of
+ * each page, the static not-found page of each locale, then the check that the
+ * output holds exactly the listed pages.
  * `vite.config.ts` adds them in that order.
  */
 
@@ -219,6 +221,34 @@ export const writeStaticAnswers = (pages: readonly string[]): Plugin => ({
     },
   },
   name: "www:write-static-answers",
+});
+
+/**
+ * Defers the scripts of every prerendered page until the page has painted (see
+ * `deferStaticScripts`). It runs after the static answers, which close each page.
+ */
+export const deferStaticPageScripts = (pages: readonly string[]): Plugin => ({
+  apply: "build",
+  enforce: "post",
+  buildApp: {
+    order: "post",
+    handler: (builder) => {
+      const outDir = builder.environments.client.config.build.outDir;
+      for (const path of pages) {
+        const file = join(outDir, path, "index.html");
+        const deferred = Result.getOrThrowWith(
+          deferStaticScripts(readFileSync(file, "utf8")),
+          (error) =>
+            new Error(
+              `The prerendered page ${path} cannot defer its scripts: ${error.reason}`
+            )
+        );
+        writeFileSync(file, deferred);
+      }
+      return Promise.resolve();
+    },
+  },
+  name: "www:defer-static-scripts",
 });
 
 /** Verifies the prerendered pages against the list that the build was given. */

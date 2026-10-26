@@ -3,7 +3,7 @@ import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
-import { createContext, use, useMemo } from "react";
+import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
@@ -11,10 +11,18 @@ import {
   ResultsScopeContext,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { QuestionResults } from "@/components/exams/results/questions";
-import { ReleaseCard } from "@/components/exams/results/release";
+import { QuestionsAction } from "@/components/exams/results/questions";
+import { ReleaseAction } from "@/components/exams/results/release";
 import { ResultsSelectionProvider } from "@/components/exams/results/selection";
-import { StudentsTable } from "@/components/exams/results/students";
+import {
+  type StatusFilter,
+  StudentStatusFilter,
+  StudentsTable,
+} from "@/components/exams/results/students";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -24,9 +32,8 @@ import { schoolExamsTarget } from "@/lib/routing/school/target";
 import type { readResultsFn } from "@/lib/tenant/exams.functions";
 
 /** The first screen of the results, which the results page's loader read on the server. */
-type ResultsPreload = Pick<
-  Awaited<ReturnType<typeof readResultsFn>>,
-  "overview" | "students"
+type ResultsPreload = Partial<
+  Pick<Awaited<ReturnType<typeof readResultsFn>>, "overview" | "students">
 >;
 
 /** The first screen of the results, which the page's loader read on the server. */
@@ -35,9 +42,9 @@ const ResultsPreloadContext = createContext<ResultsPreload | undefined>(
 );
 
 /**
- * The results of one sitting for its teacher: the release of the results, the students' list, and each
- * question's statistics and answers. The page shows the header, one row of it, and the release as the
- * page's one primary action. A viewer who may not read the results gets one sentence instead. A failed
+ * The results of one sitting for its teacher: the students' list as the page's body, and in its one
+ * header row the search and Filter of that list, Questions, which opens each question's statistics and
+ * answers in a sheet, and Release results, the page's main action. A viewer who may not read the results gets one sentence instead. A failed
  * read shows its own sentence and Try again in place of the page, and a viewer who lost the school's
  * access is sent to the refused page.
  */
@@ -104,6 +111,8 @@ function SittingResultsContent({
     () => ({ canGrade, timeZone, total }),
     [canGrade, timeZone, total]
   );
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const t = useTranslations("Exams");
 
   if (QueryResult.isFailure(overview)) {
     if (isLostAccess(overview.error)) {
@@ -125,22 +134,27 @@ function SittingResultsContent({
     sitting.state === "closed" && Arr.contains(can, "result.release");
   return (
     <ResultsScopeContext value={scope}>
-      <ResultsHeader
-        examId={examId}
-        examTitle={sitting.examTitle}
-        room={sitting.room}
-        sittingId={scope.sittingId}
-      />
       <ResultsPaperContext value={paper}>
         <ResultsSelectionProvider>
-          <div className="flex min-h-0 min-w-0 flex-1">
-            <div className="grid min-w-0 flex-1 content-start gap-4 p-4 md:p-6">
-              <ReleaseCard canRelease={canRelease} releasedAt={releasedAt} />
-              <StudentsTable first={preload?.students} />
-              <QuestionResults questions={questions} />
+          <TableFiltersProvider>
+            <ResultsHeader
+              examId={examId}
+              examTitle={sitting.examTitle}
+              room={sitting.room}
+              sittingId={scope.sittingId}
+            >
+              <TableSearch placeholder={t("results-search")} />
+              <StudentStatusFilter onChange={setStatus} value={status} />
+              <QuestionsAction questions={questions} />
+              <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
+            </ResultsHeader>
+            <div className="flex min-h-0 w-full min-w-0 flex-1">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <StudentsTable first={preload?.students} status={status} />
+              </div>
+              <StudentAnswersPanel />
             </div>
-            <StudentAnswersPanel />
-          </div>
+          </TableFiltersProvider>
         </ResultsSelectionProvider>
       </ResultsPaperContext>
     </ResultsScopeContext>
@@ -167,13 +181,18 @@ function useExamCrumbs(
     : [{ href: `/exams/${examId}`, label: examTitle }];
 }
 
-/** The one header of the results page: the path from the exam through the room to the results. */
+/**
+ * The one header of the results page: the path from the exam through the room to the results, then what
+ * works on the students' list and the page's main action, Release results.
+ */
 function ResultsHeader({
+  children,
   examId,
   examTitle,
   room,
   sittingId,
 }: {
+  readonly children: ReactNode;
   readonly examId: GenericId.GenericId<"exams">;
   readonly examTitle: string;
   readonly room: string;
@@ -190,7 +209,9 @@ function ResultsHeader({
         { label: t("results-title") },
       ]}
       title={t("results-title")}
-    />
+    >
+      {children}
+    </SchoolHeader>
   );
 }
 
