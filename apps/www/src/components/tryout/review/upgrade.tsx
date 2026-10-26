@@ -71,6 +71,8 @@ export function TryoutReviewCheckout() {
           }
           billing.openCheckout({ locale, source: "tryout-review-checkout" });
         }}
+        onFocus={() => billing.warmCheckout({})}
+        onPointerEnter={() => billing.warmCheckout({})}
       >
         <Spinner
           data-icon="inline-start"

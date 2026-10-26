@@ -114,6 +114,8 @@ export function UpgradePlanCard() {
           <Button
             disabled={billing.isPending || !isActiveLocale(locale)}
             onClick={handleUpgrade}
+            onFocus={() => billing.warmCheckout({})}
+            onPointerEnter={() => billing.warmCheckout({})}
           >
             <Spinner icon={Diamond02Icon} isLoading={billing.isPending} />
             {t("upgrade")}

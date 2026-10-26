@@ -113,6 +113,8 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
           <Button
             disabled={billing.isPending || !isActiveLocale(locale)}
             onClick={handleExtend}
+            onFocus={() => billing.warmCheckout({ passesOnly: true })}
+            onPointerEnter={() => billing.warmCheckout({ passesOnly: true })}
           >
             <Spinner icon={Diamond02Icon} isLoading={billing.isPending} />
             {t("plan-pass-extend")}

@@ -120,6 +120,12 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
       source: "pricing-checkout",
     });
   };
+  // A signed-in learner without a plan reads the offers as soon as they point at the button.
+  const warmBilling = () => {
+    if (currentUser && subscription === null && overviewResolved) {
+      billing.warmCheckout({ passesOnly: holdsPass });
+    }
+  };
   const isPending = billing.isPending || isAuthPending;
   const isWaiting = isIdentityPending || !billingReady;
 
@@ -129,6 +135,8 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
         className="w-full"
         disabled={isPending || isWaiting || !isActiveLocale(locale)}
         onClick={handleBilling}
+        onFocus={warmBilling}
+        onPointerEnter={warmBilling}
         variant={variant}
       >
         <Spinner icon={Diamond02Icon} isLoading={isPending || isWaiting} />

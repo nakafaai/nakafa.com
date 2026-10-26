@@ -4,8 +4,8 @@ import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
-import { Array as Arr, Effect, Schema } from "effect";
-import { useState, useTransition } from "react";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+import { useRef, useState, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   type BillingDestination,
@@ -30,10 +30,35 @@ const CHECKOUT_FAILURE_COPY = {
 /** One Pro offer the payment method dialog lists, as the offers read answers it. */
 export type ProOffer = Ref.Returns<typeof billing.queries.proOffers>[number];
 
+/**
+ * Starts one read of the Pro offers sold in `currency` from a browser event,
+ * loading the read on intent so no page carries it before then, and hands back
+ * its outcome.
+ */
+function startOffersRead(
+  convex: Parameters<typeof requireConvexOnline>[0],
+  currency: ReturnType<typeof readShownCurrency>,
+  passesOnly: boolean
+) {
+  return Effect.runPromiseExit(
+    requireConvexOnline(convex).pipe(
+      Effect.andThen(Effect.tryPromise(() => import("@/lib/billing/offers"))),
+      Effect.flatMap(({ readProOffers }) => readProOffers(currency, passesOnly))
+    )
+  );
+}
+
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
   const [isPending, startTransition] = useTransition();
   // The offers the payment method dialog lists while it is open, and where the request came from.
+  // The offers read a Pro button started on the learner's intent, which its click then uses.
+  const warmed = useRef(
+    Option.none<{
+      readonly exit: ReturnType<typeof startOffersRead>;
+      readonly key: string;
+    }>()
+  );
   const [choice, setChoice] = useState<
     | (BillingSource & {
         readonly locale: ActiveAppLocaleCode;
@@ -106,10 +131,34 @@ export function useBillingNavigation() {
       { ...failure, copy: CHECKOUT_FAILURE_COPY }
     );
 
+  /** Starts the offers read of the currency the page shows, once per kind of request, and hands back that read. */
+  const offersRead = (passesOnly: boolean) => {
+    const currency = readShownCurrency(document.documentElement);
+    const key = `${currency}:${passesOnly}`;
+    const started = Option.filter(warmed.current, (read) => read.key === key);
+    if (Option.isSome(started)) {
+      return started.value.exit;
+    }
+    const exit = startOffersRead(convex, currency, passesOnly);
+    warmed.current = Option.some({ exit, key });
+    return exit;
+  };
+
   return {
     isPending,
     /** The offers the payment method dialog lists while it is open. */
     choice,
+    /**
+     * Starts reading the offers as soon as the learner points at or focuses a Pro
+     * button, so the click finds them read and opens the dialog at once.
+     */
+    warmCheckout: ({
+      passesOnly = false,
+    }: {
+      readonly passesOnly?: boolean;
+    }) => {
+      offersRead(passesOnly);
+    },
     /** Closes the payment method dialog without buying. */
     dismissChoice: () => setChoice(null),
     /** Starts the checkout of the offer the learner chose in the payment method dialog. */
@@ -135,15 +184,13 @@ export function useBillingNavigation() {
     }) =>
       startTransition(() =>
         Effect.runPromise(
-          requireConvexOnline(convex).pipe(
-            Effect.andThen(
-              Effect.tryPromise(() => import("@/lib/billing/offers"))
-            ),
-            Effect.flatMap(({ readProOffers }) =>
-              readProOffers(
-                readShownCurrency(document.documentElement),
-                passesOnly
-              )
+          Effect.promise(() => offersRead(passesOnly)).pipe(
+            Effect.flatten,
+            // A failed read is not kept, so the next click reads the offers again.
+            Effect.tapError(() =>
+              Effect.sync(() => {
+                warmed.current = Option.none();
+              })
             ),
             Effect.tapError((cause) =>
               reportClientException(cause, { source: failure.source })
