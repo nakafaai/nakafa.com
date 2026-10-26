@@ -445,7 +445,12 @@ function SchoolInvoiceAction({
       <DropdownMenuContent align="end" className="w-48">
         {invoice.paymentLink === null ? (
           <DropdownMenuItem
-            render={<a href={transferMailto(invoice.number)} />}
+            render={
+              <a
+                href={transferMailto(invoice.number)}
+                title={t("invoice-transfer")}
+              />
+            }
           >
             <HugeIcons icon={Mail01Icon} />
             {t("invoice-transfer")}
@@ -453,7 +458,12 @@ function SchoolInvoiceAction({
         ) : (
           <DropdownMenuItem
             render={
-              <a href={invoice.paymentLink} rel="noopener" target="_blank" />
+              <a
+                href={invoice.paymentLink}
+                rel="noopener"
+                target="_blank"
+                title={t("invoice-pay")}
+              />
             }
           >
             <HugeIcons icon={CreditCardIcon} />

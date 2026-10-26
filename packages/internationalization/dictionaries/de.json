@@ -1980,7 +1980,7 @@
     },
     "school-refusal-seats-paid": {
       "title": "Alle Schüler sind bezahlt.",
-      "description": "Neue Schüler können abgerechnet werden, sobald sie eingeschrieben sind."
+      "description": "Neue Schüler lassen sich nach der Einschreibung abrechnen."
     },
     "school-refusal-person-inactive": {
       "title": "Diese Person ist nicht mehr aktiv.",
