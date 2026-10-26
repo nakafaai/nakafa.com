@@ -572,7 +572,7 @@
     "policy-threads": "Thread siswa",
     "policy-threads-description": "Siswa boleh membuka thread di sekolah ini.",
     "policy-domains": "Domain email",
-    "policy-domains-description": "Hanya alamat pada domain ini yang boleh bergabung dengan sekolah ini.",
+    "policy-domains-description": "Hanya akun Google Workspace pada domain ini, satu per baris, yang boleh bergabung.",
     "policy-domains-placeholder": "sekolah.sch.id",
     "policy-domains-footer": "Daftar kosong menerima setiap alamat.",
     "save": "Simpan",
@@ -964,8 +964,8 @@
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
-    "policy-domains-invalid": "Periksa domain ini: {domains}. Tulis satu domain di setiap baris.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."
+    "policy-domains-invalid": "Domain tidak valid: {domains}; tulis satu domain di setiap baris.",
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain, masing-masing di baris sendiri."
   },
   "Classroom": {
     "tabs-home": "Beranda",

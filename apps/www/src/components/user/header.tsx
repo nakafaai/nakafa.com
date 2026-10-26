@@ -12,7 +12,8 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 /**
  * The header of a profile: the name and the address on the left, the picture on
  * the right, the bio under them, and one row of buttons. The owner edits the
- * profile, and everyone shares it.
+ * profile, and everyone shares a profile that is public; a school member's profile,
+ * which only its owner opens, has no Share.
  */
 export function UserHeader({
   isOwner,
@@ -62,7 +63,9 @@ export function UserHeader({
             variant="outline"
           />
         )}
-        <ShareProfileButton username={profile.username} />
+        {profile.shareable ? (
+          <ShareProfileButton username={profile.username} />
+        ) : null}
       </div>
     </section>
   );
