@@ -1,5 +1,5 @@
 import { Kind } from "@repo/backend/confect/access/kind";
-import { person } from "@repo/backend/confect/tenancy/kinds";
+import { period, person } from "@repo/backend/confect/tenancy/kinds";
 import { Schema } from "effect";
 
 /**
@@ -26,8 +26,34 @@ const rosterPerson = Kind.extend(person, {
   published: [],
 });
 
-/** The roster module's kinds for the access catalog: its extension of the Person. */
+/**
+ * The school's Admin and Staff import a Dapodik file into one period (ADR 0015): the
+ * action is ruled on the period, so an archived period refuses it. Each batch is journaled
+ * as `roster.imported` with its counts, never a name or a NISN (ADR 0016).
+ */
+const rosterPeriod = Kind.extend(period, {
+  actions: {
+    "roster.import": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "staff"],
+    },
+  },
+  changes: [
+    Schema.Struct({
+      added: Schema.Finite,
+      changed: Schema.Finite,
+      skipped: Schema.Finite,
+      source: Schema.Literal("dapodik"),
+      type: Schema.Literal("roster.imported"),
+    }),
+  ],
+  published: [],
+});
+
+/** The roster module's kinds for the access catalog: its extensions of the Person and the period. */
 export const roster = {
-  extensions: [rosterPerson],
+  extensions: [rosterPerson, rosterPeriod],
   kinds: [],
 };

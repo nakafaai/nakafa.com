@@ -7,14 +7,18 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import type {
+import {
   Nisn,
-  RosterView,
-  rosterEntryValidator,
+  type RosterView,
+  type rosterEntryValidator,
 } from "@repo/backend/confect/roster/schema";
 import { readTenantKeys } from "@repo/backend/confect/vault/keys";
-import { blindText, sealText } from "@repo/backend/confect/vault/text";
-import { Effect, Option } from "effect";
+import {
+  blindText,
+  openText,
+  sealText,
+} from "@repo/backend/confect/vault/text";
+import { Effect, Option, Schema } from "effect";
 
 /**
  * The field a NISN is blinded in. The blind names no row, so one NISN blinds the
@@ -88,8 +92,7 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
 ) {
   const existing = yield* rosterEntryOf(person._id);
   const nisn = yield* Option.match(facts.nisn, {
-    onNone: () =>
-      Effect.succeed(Option.getOrUndefined(existing)?.nisn),
+    onNone: () => Effect.succeed(Option.getOrUndefined(existing)?.nisn),
     onSome: (value) =>
       Effect.gen(function* () {
         const keys = yield* schoolKeys(person.tenantId);
@@ -120,4 +123,23 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
         .pipe(Effect.as(entry._id)),
   }).pipe(Effect.orDie);
   return row;
+});
+
+/**
+ * The NISN a roster row holds, opened under the school key for the school's own export.
+ * A sealed NISN that does not open is a defect in the school's data (ADR 0030).
+ */
+export const openNisn = Effect.fn("roster.entry.open")(function* (
+  entry: RosterEntriesDoc
+) {
+  if (entry.nisn === undefined) {
+    return Option.none<typeof Nisn.Type>();
+  }
+  const keys = yield* schoolKeys(entry.tenantId);
+  const text = yield* openText(
+    keys,
+    { ...NISN_BLIND, row: [entry.personId] },
+    entry.nisn.sealed
+  ).pipe(Effect.orDie);
+  return Option.some(yield* Schema.decodeEffect(Nisn)(text).pipe(Effect.orDie));
 });

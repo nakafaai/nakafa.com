@@ -142,6 +142,33 @@
     "link-revoke-title": "End this link?",
     "link-revoke-description": "The parent can no longer see the child's records."
   },
+  "SchoolRoster": {
+    "import": "Import",
+    "export": "Export",
+    "file-label": "Dapodik student list",
+    "empty": "Import the students from Dapodik.",
+    "empty-description": "Choose the student list exported from Dapodik. The file stays on this device.",
+    "no-period": "No active period yet.",
+    "no-period-description": "Open a period before you import students.",
+    "file-refused": "This file cannot be imported.",
+    "file-unreadable": "Choose an XLSX file exported from Dapodik.",
+    "file-header": "The file has no Nama and NISN columns.",
+    "file-empty": "The file has no student below its header.",
+    "line": "Row",
+    "name": "Name",
+    "nisn": "NISN",
+    "cohort": "Class group",
+    "status": "Status",
+    "search": "Search names",
+    "status-under": "Under 18",
+    "status-adult": "18 or older",
+    "status-name": "Name missing",
+    "status-nisn": "NISN is not 10 digits",
+    "status-birth": "Birth date unreadable",
+    "status-cohort": "Class group name too long",
+    "cancel": "Cancel",
+    "apply": "Import students"
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Change token",
@@ -390,6 +417,7 @@
     "members": "Members",
     "invites": "Invites",
     "students": "Student accounts",
+    "roster": "Dapodik",
     "clients": "API clients",
     "policies": "Policies",
     "audit": "Audit trail",
@@ -682,7 +710,8 @@
         "revoked": "Parent link ended"
       },
       "roster": {
-        "set": "Student record updated"
+        "set": "Student record updated",
+        "imported": "Students imported from Dapodik"
       }
     },
     "role-description": {
@@ -2072,6 +2101,12 @@
     "school-refusal-guardian-link": {
       "title": "The link could not be made.",
       "description": "Choose an active student who is not linked to this email yet."
+    },
+    "school-roster-imported": {
+      "title": "The students are in the roster."
+    },
+    "school-roster-export-failed": {
+      "title": "The file was not saved. Try again."
     }
   },
   "Ai": {

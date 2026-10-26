@@ -13,6 +13,7 @@ const SchoolSettingsLabelKeySchema = Schema.Literals([
   "roles",
   "invites",
   "students",
+  "roster",
   "guardians",
   "clients",
   "policies",
@@ -115,6 +116,15 @@ const SCHOOL_SETTINGS_GROUPS = [
             from: LOCALE_ROUTE,
             params: { slug },
             to: "/school/$slug/settings/students",
+          }) satisfies LinkTarget
+      ),
+      settingsSection(
+        "roster",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/roster",
           }) satisfies LinkTarget
       ),
       settingsSection(

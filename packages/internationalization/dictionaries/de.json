@@ -142,6 +142,33 @@
     "link-revoke-title": "Diese Verknüpfung beenden?",
     "link-revoke-description": "Die Eltern sehen die Daten des Kindes nicht mehr."
   },
+  "SchoolRoster": {
+    "import": "Importieren",
+    "export": "Exportieren",
+    "file-label": "Schülerliste aus Dapodik",
+    "empty": "Importiere die Schüler aus Dapodik.",
+    "empty-description": "Wähle die Schülerliste, die Dapodik exportiert hat. Die Datei bleibt auf diesem Gerät.",
+    "no-period": "Noch kein aktiver Zeitraum.",
+    "no-period-description": "Öffne einen Zeitraum, bevor du Schüler importierst.",
+    "file-refused": "Diese Datei lässt sich nicht importieren.",
+    "file-unreadable": "Wähle eine XLSX-Datei, die Dapodik exportiert hat.",
+    "file-header": "Die Datei hat keine Spalten Nama und NISN.",
+    "file-empty": "Die Datei hat unter ihrer Kopfzeile keinen Schüler.",
+    "line": "Zeile",
+    "name": "Name",
+    "nisn": "NISN",
+    "cohort": "Klasse",
+    "status": "Status",
+    "search": "Namen suchen",
+    "status-under": "Unter 18",
+    "status-adult": "18 oder älter",
+    "status-name": "Name fehlt",
+    "status-nisn": "NISN hat nicht 10 Ziffern",
+    "status-birth": "Geburtsdatum unlesbar",
+    "status-cohort": "Klassenname zu lang",
+    "cancel": "Abbrechen",
+    "apply": "Schüler importieren"
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Token ändern",
@@ -390,6 +417,7 @@
     "members": "Mitglieder",
     "invites": "Einladungen",
     "students": "Schülerkonten",
+    "roster": "Dapodik",
     "clients": "API-Clients",
     "policies": "Richtlinien",
     "audit": "Prüfprotokoll",
@@ -682,7 +710,8 @@
         "revoked": "Elternverknüpfung beendet"
       },
       "roster": {
-        "set": "Schülerdaten aktualisiert"
+        "set": "Schülerdaten aktualisiert",
+        "imported": "Schüler aus Dapodik importiert"
       }
     },
     "role-description": {
@@ -2072,6 +2101,12 @@
     "school-refusal-guardian-link": {
       "title": "Die Verknüpfung ließ sich nicht anlegen.",
       "description": "Wähle ein aktives Kind, das noch nicht mit dieser E-Mail verknüpft ist."
+    },
+    "school-roster-imported": {
+      "title": "Die Schüler sind in der Liste."
+    },
+    "school-roster-export-failed": {
+      "title": "Die Datei wurde nicht gespeichert. Versuche es erneut."
     }
   },
   "Ai": {

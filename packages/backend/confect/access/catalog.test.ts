@@ -226,6 +226,7 @@ describe("access/catalog", () => {
           "guardian.withdrawn",
           "guardian.revoked",
           "roster.set",
+          "roster.imported",
         ],
         Order.String
       )

@@ -1,4 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { CohortName } from "@repo/backend/confect/tenancy/cohort";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
@@ -36,4 +38,33 @@ export const RosterView = Schema.Struct({
   hasNisn: Schema.Boolean,
   personId: Id("tenantPeople"),
   underAgeLimit: Schema.optionalKey(Schema.Boolean),
+});
+
+/** The rows one apply call takes; an import of a larger file sends several batches. */
+export const IMPORT_BATCH = 100;
+
+/**
+ * One student row of a Dapodik import, as the browser read it from the file (ADR 0015): the
+ * name, the NISN, the class group when the file names one, and the under-age flag, which
+ * the browser derived from the birth date before it dropped the date.
+ */
+export const ImportRow = Schema.Struct({
+  cohortName: Schema.optionalKey(CohortName),
+  name: PersonName,
+  nisn: Nisn,
+  underAgeLimit: Schema.Boolean,
+});
+
+/** What one batch did: the students it added, the ones it changed, and the rows it skipped. */
+export const ImportSummary = Schema.Struct({
+  added: Schema.Finite,
+  changed: Schema.Finite,
+  skipped: Schema.Finite,
+});
+
+/** One student of a period as the export writes them: the name, the NISN on file, and the class group. */
+export const RosterLine = Schema.Struct({
+  cohortName: CohortName,
+  name: PersonName,
+  nisn: Schema.NullOr(Nisn),
 });

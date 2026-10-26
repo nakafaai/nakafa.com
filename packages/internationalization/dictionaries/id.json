@@ -142,6 +142,33 @@
     "link-revoke-title": "Akhiri tautan ini?",
     "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi."
   },
+  "SchoolRoster": {
+    "import": "Impor",
+    "export": "Ekspor",
+    "file-label": "Daftar peserta didik Dapodik",
+    "empty": "Impor siswa dari Dapodik.",
+    "empty-description": "Pilih daftar peserta didik hasil ekspor Dapodik. File tetap di perangkat ini.",
+    "no-period": "Belum ada periode aktif.",
+    "no-period-description": "Buka periode sebelum mengimpor siswa.",
+    "file-refused": "File ini tidak bisa diimpor.",
+    "file-unreadable": "Pilih file XLSX hasil ekspor Dapodik.",
+    "file-header": "File tidak punya kolom Nama dan NISN.",
+    "file-empty": "File tidak punya siswa di bawah judul kolomnya.",
+    "line": "Baris",
+    "name": "Nama",
+    "nisn": "NISN",
+    "cohort": "Rombel",
+    "status": "Status",
+    "search": "Cari nama",
+    "status-under": "Di bawah 18 tahun",
+    "status-adult": "18 tahun atau lebih",
+    "status-name": "Nama kosong",
+    "status-nisn": "NISN bukan 10 digit",
+    "status-birth": "Tanggal lahir tidak terbaca",
+    "status-cohort": "Nama rombel terlalu panjang",
+    "cancel": "Batal",
+    "apply": "Impor siswa"
+  },
   "Exams": {
     "token": "Token",
     "change-token": "Ganti token",
@@ -390,6 +417,7 @@
     "members": "Anggota",
     "invites": "Undangan",
     "students": "Akun siswa",
+    "roster": "Dapodik",
     "clients": "Klien API",
     "policies": "Kebijakan",
     "audit": "Jejak audit",
@@ -682,7 +710,8 @@
         "revoked": "Tautan orang tua diakhiri"
       },
       "roster": {
-        "set": "Data siswa diperbarui"
+        "set": "Data siswa diperbarui",
+        "imported": "Siswa diimpor dari Dapodik"
       }
     },
     "role-description": {
@@ -2072,6 +2101,12 @@
     "school-refusal-guardian-link": {
       "title": "Tautan tidak dapat dibuat.",
       "description": "Pilih siswa aktif yang belum ditautkan ke email ini."
+    },
+    "school-roster-imported": {
+      "title": "Siswa sudah masuk ke daftar."
+    },
+    "school-roster-export-failed": {
+      "title": "File tidak tersimpan. Coba lagi."
     }
   },
   "Ai": {
