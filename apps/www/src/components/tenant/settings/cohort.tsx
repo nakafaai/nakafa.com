@@ -24,9 +24,11 @@ import type { readCohortFn } from "@/lib/tenant/settings.functions";
  * The first screen of one cohort page, which its loader read on the server: the cohort, the first page of its
  * members, and the cohorts of its period, which the cohort's move menu lists.
  */
-type CohortPreload = Pick<
-  Awaited<ReturnType<typeof readCohortFn>>,
-  "cohorts" | "detail" | "members"
+type CohortPreload = Partial<
+  Pick<
+    Awaited<ReturnType<typeof readCohortFn>>,
+    "cohorts" | "detail" | "members"
+  >
 >;
 
 /** The first screen of one cohort page, which the page's loader read on the server. */
