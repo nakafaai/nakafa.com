@@ -306,6 +306,15 @@
     "seats-filter-title": "Tidak ada kursi yang cocok",
     "signals-empty-title": "Belum ada peristiwa",
     "student-start": "Mulai ujian",
+    "import-label": "Soal dari berkas",
+    "import-description": "Opsional: Nina menaruh soal dari berkas Word atau PDF ke ujian.",
+    "import-action": "Impor",
+    "import-title": "Impor soal",
+    "import-dialog-description": "Nina menaruh soal dari berkas Word atau PDF di akhir ujian ini.",
+    "import-submit": "Impor",
+    "import-hint": "Word atau PDF, paling besar 20 MB.",
+    "import-drop": "Letakkan berkas Word atau PDF di sini, atau pilih satu.",
+    "import-remove": "Hapus berkas",
     "presence-editor": "{name} sedang mengedit",
     "presence-more": "{names} sedang mengedit"
   },
@@ -1918,6 +1927,54 @@
     "school-refusal-npsn-taken": {
       "title": "NPSN ini sudah dipakai.",
       "description": "Unit lain di sekolah ini sudah memakainya."
+    },
+    "import-reading": {
+      "title": "Nina sedang membaca berkasmu.",
+      "description": "Setiap soal muncul di ujian begitu ia membacanya."
+    },
+    "import-done": {
+      "title": "Soalmu sudah ada di ujian.",
+      "description": "Setiap soal sudah punya kunci jawaban."
+    },
+    "import-keyless": {
+      "title": "Soalmu sudah ada di ujian.",
+      "description": "Tandai kunci jawaban yang tidak ditandai di berkas."
+    },
+    "import-mathtype": {
+      "title": "Ada persamaan berupa gambar.",
+      "description": "Ketik ulang persamaan itu di editor."
+    },
+    "import-empty": {
+      "title": "Nina tidak menemukan soal.",
+      "description": "Tulis soalnya di editor, atau coba berkas lain."
+    },
+    "import-stopped": {
+      "title": "Nina tidak bisa membaca sisanya.",
+      "description": "Soal yang sudah terbaca ada di ujian."
+    },
+    "import-unread": {
+      "title": "Nina tidak bisa membaca berkas ini.",
+      "description": "Coba lagi, atau tulis soalnya di editor."
+    },
+    "import-type": {
+      "title": "Berkas ini tidak bisa diimpor.",
+      "description": "Pilih berkas Word atau PDF."
+    },
+    "import-size": {
+      "title": "Berkas ini terlalu besar.",
+      "description": "Pilih berkas paling besar 20 MB."
+    },
+    "import-pages": {
+      "title": "PDF ini terlalu panjang.",
+      "description": "Pilih PDF paling banyak 30 halaman."
+    },
+    "import-macro": {
+      "title": "Berkas ini berisi makro.",
+      "description": "Simpan dulu sebagai dokumen Word tanpa makro."
+    },
+    "import-encrypted": {
+      "title": "PDF ini memakai kata sandi.",
+      "description": "Simpan dulu tanpa kata sandi."
     }
   },
   "Ai": {

@@ -46,9 +46,12 @@ const sizeOf = Effect.fn("exams.image.size")(function* (file: File) {
   );
 });
 
-/** Sends one file to the upload address that `exams.assets.uploadUrl` answered, and returns the storage ID the file received. */
-const sendImageFile = Effect.fn("exams.image.send")(
-  function* (url: URL, file: File) {
+/**
+ * Sends one file to the upload address that `exams.assets.uploadUrl` answered, and returns the
+ * storage ID the file received: an image of the exam, or a page image of an import.
+ */
+export const sendStorageFile = Effect.fn("exams.image.send")(
+  function* (url: URL, file: Blob) {
     const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
     const request = HttpClientRequest.post(url, {
       body: HttpBody.raw(file, {
@@ -94,7 +97,7 @@ export function storeExamImage<
   return Effect.gen(function* () {
     const size = yield* sizeOf(file);
     const url = yield* awaited(requestUrl);
-    const storageId = yield* sendImageFile(url, file);
+    const storageId = yield* sendStorageFile(url, file);
     const registered = yield* awaited(() => register({ ...size, storageId }));
     return { id: registered.id, ...size };
   });
