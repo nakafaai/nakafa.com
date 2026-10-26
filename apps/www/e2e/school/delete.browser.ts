@@ -15,9 +15,13 @@ const TITLE = "Ulangan Hapus";
 /** What the editor or the list must never show while a draft is deleted: the unavailable state and the load errors. */
 const BROKEN = ["This exam is not available.", "We could not load this data."];
 
+/** What the page recorded when the exams list showed the deleted draft, even for one frame. */
+const FLASHED = "the deleted draft in the exams list";
+
 /**
  * Deleting a draft from its editor lands on the exams at once, without the draft, and the page never
- * shows the unavailable exam or an error on the way: the editor is left before the delete empties it.
+ * shows the unavailable exam, an error, or the draft in the list on the way: the editor is left before
+ * the server deletes the exam that its live read follows.
  */
 test("a teacher deletes a draft from its editor and lands on the exams without an error on the way", async ({
   baseURL,
@@ -41,24 +45,31 @@ test("a teacher deletes a draft from its editor and lands on the exams without a
     page.getByRole("button", { name: "More actions" })
   ).toBeVisible();
 
-  // Record every text the page shows from the press of Delete until the exams settle.
-  await page.evaluate((broken) => {
-    const seen: string[] = [];
-    Object.assign(window, { nakafaSeenBroken: seen });
-    const record = () => {
-      const text = document.body.innerText;
-      for (const phrase of broken) {
-        if (text.includes(phrase)) {
-          seen.push(phrase);
+  // Record every text the page shows from the press of Delete until the exams settle, and the draft's
+  // title on the exams list, where it must never appear once the editor is left.
+  await page.evaluate(
+    ({ broken, flashed, title }) => {
+      const seen: string[] = [];
+      Object.assign(window, { nakafaSeenBroken: seen });
+      const record = () => {
+        const text = document.body.innerText;
+        for (const phrase of broken) {
+          if (text.includes(phrase)) {
+            seen.push(phrase);
+          }
         }
-      }
-    };
-    new MutationObserver(record).observe(document.body, {
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
-  }, BROKEN);
+        if (location.pathname.endsWith("/exams") && text.includes(title)) {
+          seen.push(flashed);
+        }
+      };
+      new MutationObserver(record).observe(document.body, {
+        characterData: true,
+        childList: true,
+        subtree: true,
+      });
+    },
+    { broken: BROKEN, flashed: FLASHED, title: TITLE }
+  );
 
   await page.getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Delete exam" }).click();
