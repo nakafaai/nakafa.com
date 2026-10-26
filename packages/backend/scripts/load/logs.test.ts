@@ -1,6 +1,6 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
-import { captureLogs, serverSamples } from "@repo/backend/scripts/load/logs";
+import { captureLogs, serverRun } from "@repo/backend/scripts/load/logs";
 import { Effect, FileSystem, MutableList, Schema, Sink, Stream } from "effect";
 import { type ChildProcess, ChildProcessSpawner } from "effect/process";
 
@@ -17,28 +17,61 @@ const completion = (fields: Record<string, unknown>) =>
     logLines: [],
     timestamp: 1,
     udfType: "Mutation",
+    usageStats: { databaseReadDocuments: 14 },
     ...fields,
   });
 
 describe("load logs", () => {
-  it("reads the server's timing of every completion, named by its kind and function", () => {
+  it("reads each execution's timing, reads and conflict, named by its kind, component and function", () => {
     const text = [
       completion({}),
       completion({ error: "Uncaught Error: refused" }),
       completion({
+        cachedResult: true,
         error: null,
         identifier: "exams/sittings.js:paper",
         udfType: "Query",
       }),
+      completion({
+        componentPath: "betterAuth",
+        identifier: "session.js:live",
+        occInfo: { tableName: "session" },
+        udfType: "Query",
+      }),
+      completion({ occInfo: {} }),
       encodeLine({ kind: "Progress", logLines: ["working"] }),
-      encodeLine({ kind: "Completion", identifier: "broken" }),
+      encodeLine({ identifier: "broken", kind: "Completion" }),
       "not json",
       "",
     ].join("\n");
-    expect(serverSamples(text)).toEqual([
-      { failed: false, ms: 12.5, name: "mutation:exams/sittings:answer" },
-      { failed: true, ms: 12.5, name: "mutation:exams/sittings:answer" },
-      { failed: false, ms: 12.5, name: "query:exams/sittings:paper" },
+    const run = serverRun(text);
+    expect(run.timings).toEqual([
+      { failed: false, name: "mutation:exams/sittings:answer", value: 12.5 },
+      { failed: true, name: "mutation:exams/sittings:answer", value: 12.5 },
+      {
+        failed: false,
+        name: "query:exams/sittings:paper (cached)",
+        value: 12.5,
+      },
+      { failed: false, name: "query:betterAuth/session:live", value: 12.5 },
+      { failed: false, name: "mutation:exams/sittings:answer", value: 12.5 },
+    ]);
+    expect(run.reads[0]).toEqual({
+      failed: false,
+      name: "mutation:exams/sittings:answer",
+      value: 14,
+    });
+    expect(run.conflicts).toEqual([
+      {
+        failed: true,
+        name: "query:betterAuth/session:live on session",
+        value: 1,
+      },
+      {
+        failed: true,
+        name: "mutation:exams/sittings:answer on an unnamed table",
+        value: 1,
+      },
     ]);
   });
 
@@ -79,7 +112,9 @@ describe("load logs", () => {
             spawner
           )
         );
-        expect(serverSamples(yield* fs.readFileString(path))).toHaveLength(1);
+        expect(serverRun(yield* fs.readFileString(path)).timings).toHaveLength(
+          1
+        );
         const [command] = MutableList.toArray(commands);
         expect(command?._tag === "StandardCommand" && command.args).toEqual([
           "node_modules/convex/bin/main.js",

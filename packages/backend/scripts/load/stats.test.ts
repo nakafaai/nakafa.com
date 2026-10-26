@@ -1,14 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  latencyByName,
-  latencyOf,
+  spreadByName,
+  spreadOf,
   percentile,
   type Sample,
 } from "@repo/backend/scripts/load/stats";
 import { Array as Arr } from "effect";
 
 /** One successful sample of a call. */
-const ok = (name: string, ms: number): Sample => ({ failed: false, ms, name });
+const ok = (name: string, value: number): Sample => ({
+  failed: false,
+  name,
+  value,
+});
 
 describe("load stats", () => {
   it("reads a percentile by the nearest rank, and zero from no samples", () => {
@@ -21,9 +25,9 @@ describe("load stats", () => {
   });
 
   it("counts a failed call in the latency, as the student waited for it too", () => {
-    const latency = latencyOf([
+    const latency = spreadOf([
       ok("mutation:answer", 30),
-      { failed: true, ms: 500, name: "mutation:answer" },
+      { failed: true, value: 500, name: "mutation:answer" },
       ok("mutation:answer", 10),
       ok("mutation:answer", 20),
     ]);
@@ -38,7 +42,7 @@ describe("load stats", () => {
   });
 
   it("reports no call as zero everywhere", () => {
-    expect(latencyOf([])).toEqual({
+    expect(spreadOf([])).toEqual({
       count: 0,
       failed: 0,
       max: 0,
@@ -49,7 +53,7 @@ describe("load stats", () => {
   });
 
   it("groups the samples by the call they name", () => {
-    const latencies = latencyByName([
+    const latencies = spreadByName([
       ok("mutation:answer", 12),
       ok("query:paper", 40),
       ok("mutation:answer", 8),

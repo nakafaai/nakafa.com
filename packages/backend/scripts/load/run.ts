@@ -2,7 +2,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { audit, StoredAnswer } from "@repo/backend/scripts/load/ledger";
-import { serverSamples } from "@repo/backend/scripts/load/logs";
+import { serverRun } from "@repo/backend/scripts/load/logs";
 import { type LoadPlan, scriptOf } from "@repo/backend/scripts/load/plan";
 import { runProctor } from "@repo/backend/scripts/load/proctor";
 import { Recorder, timed } from "@repo/backend/scripts/load/recorder";
@@ -12,7 +12,7 @@ import {
   passes,
 } from "@repo/backend/scripts/load/report";
 import { seedRun } from "@repo/backend/scripts/load/seed";
-import { latencyByName } from "@repo/backend/scripts/load/stats";
+import { spreadByName } from "@repo/backend/scripts/load/stats";
 import { runStudent } from "@repo/backend/scripts/load/student";
 import { issueToken, sessionCookie } from "@repo/backend/scripts/load/token";
 import { openWire } from "@repo/backend/scripts/load/wire";
@@ -112,7 +112,7 @@ export const runLoad = Effect.fn("load.run")(function* <E>(
     const after = yield* Clock.currentTimeMillis;
     yield* recorder.sample({
       failed: false,
-      ms: after - before - Duration.toMillis(LAG_PROBE),
+      value: after - before - Duration.toMillis(LAG_PROBE),
       name: "driver:lag",
     });
   }).pipe(Effect.forever, Effect.forkScoped);
@@ -174,14 +174,17 @@ export const runLoad = Effect.fn("load.run")(function* <E>(
     acknowledged,
     Arr.filter(stored, (row) => HashSet.has(attempts, row.attempt))
   );
-  const client = latencyByName(yield* recorder.samples);
+  const client = spreadByName(yield* recorder.samples);
+  const server = serverRun(yield* fs.readFileString(logPath));
   const report = LoadReport.make({
     audit: checked,
     client,
+    conflicts: spreadByName(server.conflicts),
     endedAt,
     passed: passes(client, checked),
     plan: input.plan,
-    server: latencyByName(serverSamples(yield* fs.readFileString(logPath))),
+    reads: spreadByName(server.reads),
+    server: spreadByName(server.timings),
     startedAt: start,
   });
   yield* fs.writeFileString(

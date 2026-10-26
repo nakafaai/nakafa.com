@@ -44,7 +44,7 @@ export const timed = Effect.fn("load.recorder.timed")(function* <A, E, R>(
   const end = yield* Clock.currentTimeMillis;
   yield* recorder.sample({
     failed: Exit.isFailure(exit),
-    ms: end - start,
+    value: end - start,
     name,
   });
   return yield* exit;

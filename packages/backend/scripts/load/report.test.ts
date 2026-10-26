@@ -6,10 +6,10 @@ import {
   markdownOf,
   passes,
 } from "@repo/backend/scripts/load/report";
-import type { Latency } from "@repo/backend/scripts/load/stats";
+import type { Spread } from "@repo/backend/scripts/load/stats";
 
 /** A latency whose percentiles all read `p95`. */
-const latency = (p95: number): Latency => ({
+const latency = (p95: number): Spread => ({
   count: 10,
   failed: 0,
   max: p95,
@@ -59,9 +59,11 @@ describe("load report", () => {
     const report: LoadReport = {
       audit: clean,
       client: { "query:paper": latency(40.4), ...fast },
+      conflicts: {},
       endedAt: 61_000,
       passed: false,
       plan: BLUEPRINT_PLAN,
+      reads: { "mutation:exams/sittings:answer": latency(14) },
       server: { "mutation:exams/sittings:answer": latency(12.6) },
       startedAt: 1000,
     };
@@ -77,6 +79,21 @@ describe("load report", () => {
       "| mutation:exams/sittings:answer | 10 | 0 | 13 | 13 | 13 | 13 |"
     );
     expect(text).toContain("| Audit | 10 | 10 | 0 | 0 | 0 | 0 | 0 |");
+    expect(text).toContain(
+      "| Call | Count | Failed | p50 docs | p95 docs | p99 docs | Max docs |"
+    );
+    expect(text).toContain("The backend retried no write after a conflict.");
     expect(markdownOf({ ...report, passed: true })).toContain("Verdict: pass.");
+    const conflicted = markdownOf({
+      ...report,
+      conflicts: {
+        "mutation:b on examAnswers": latency(1),
+        "mutation:a on examAttempts": { ...latency(1), count: 3 },
+      },
+    });
+    expect(conflicted).toContain("| Conflict | Retries |");
+    expect(conflicted.indexOf("mutation:a on examAttempts | 3")).toBeLessThan(
+      conflicted.indexOf("mutation:b on examAnswers | 10")
+    );
   });
 });

@@ -20,7 +20,7 @@ describe("load recorder", () => {
       expect(yield* Fiber.join(call)).toBe("saved");
       const recorder = yield* Recorder;
       expect(yield* recorder.samples).toEqual([
-        { failed: false, ms: 42, name: "mutation:answer" },
+        { failed: false, value: 42, name: "mutation:answer" },
       ]);
     }).pipe(Effect.provide(recorderLayer))
   );
@@ -33,7 +33,7 @@ describe("load recorder", () => {
       expect(failure).toBe("refused");
       const recorder = yield* Recorder;
       expect(yield* recorder.samples).toEqual([
-        { failed: true, ms: 0, name: "mutation:enter" },
+        { failed: true, value: 0, name: "mutation:enter" },
       ]);
     }).pipe(Effect.provide(recorderLayer))
   );

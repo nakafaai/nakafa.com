@@ -223,7 +223,7 @@ describe("load student", () => {
             (sample) => sample.name === "mutation:answer"
           )
         ).toEqual([
-          { failed: true, ms: expect.any(Number), name: "mutation:answer" },
+          { failed: true, value: expect.any(Number), name: "mutation:answer" },
         ]);
       })
   );

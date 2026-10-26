@@ -1,6 +1,6 @@
 import { Audit } from "@repo/backend/scripts/load/ledger";
 import { LoadPlan } from "@repo/backend/scripts/load/plan";
-import { Latency } from "@repo/backend/scripts/load/stats";
+import { Spread } from "@repo/backend/scripts/load/stats";
 import { Array as Arr, Option, Order, pipe, Record, Schema } from "effect";
 
 /**
@@ -15,27 +15,32 @@ export const TARGETS = {
   sync: 5000,
 } as const;
 
-/** What one run measured: its plan, its length, every call's latency on both ends, and the audit. */
+/**
+ * What one run measured: its plan and length, every call's latency on both ends, the documents
+ * each function read, the write conflicts the backend retried, and the audit of the answers.
+ */
 export const LoadReport = Schema.Struct({
   audit: Audit,
-  client: Schema.Record(Schema.String, Latency),
+  client: Schema.Record(Schema.String, Spread),
+  conflicts: Schema.Record(Schema.String, Spread),
   endedAt: Schema.Finite,
   passed: Schema.Boolean,
   plan: LoadPlan,
-  server: Schema.Record(Schema.String, Latency),
+  reads: Schema.Record(Schema.String, Spread),
+  server: Schema.Record(Schema.String, Spread),
   startedAt: Schema.Finite,
 });
 export type LoadReport = typeof LoadReport.Type;
 
 /** The 95th percentile of one kind of call, none when the run made no such call. */
 const p95Of = (
-  latencies: Record.ReadonlyRecord<string, Latency>,
+  latencies: Record.ReadonlyRecord<string, Spread>,
   name: string
 ) => Option.map(Record.get(latencies, name), (latency) => latency.p95);
 
 /** Whether a run met every target: each latency under its target, and no answer lost, duplicated or changed. */
 export const passes = (
-  client: Record.ReadonlyRecord<string, Latency>,
+  client: Record.ReadonlyRecord<string, Spread>,
   audit: Audit
 ) =>
   Arr.every(
@@ -55,24 +60,27 @@ export const passes = (
   audit.duplicated === 0 &&
   audit.mismatched === 0;
 
-/** One whole number of milliseconds, as the tables print it. */
-const ms = (value: number) => String(Math.round(value));
+/** One whole number, as the tables print every measure. */
+const whole = (value: number) => String(Math.round(value));
 
-/** A table of latencies by call, sorted by the call's name. */
-const latencyTable = (latencies: Record.ReadonlyRecord<string, Latency>) =>
+/** A table of spreads by call in `unit`, sorted by the call's name. */
+const spreadTable = (
+  spreads: Record.ReadonlyRecord<string, Spread>,
+  unit: string
+) =>
   pipe(
-    Record.toEntries(latencies),
+    Record.toEntries(spreads),
     Arr.sort(
-      Order.mapInput(Order.String, ([name]: readonly [string, Latency]) => name)
+      Order.mapInput(Order.String, ([name]: readonly [string, Spread]) => name)
     ),
     Arr.map(
-      ([name, latency]) =>
-        `| ${name} | ${latency.count} | ${latency.failed} | ${ms(latency.p50)} | ${ms(latency.p95)} | ${ms(latency.p99)} | ${ms(latency.max)} |`
+      ([name, spread]) =>
+        `| ${name} | ${spread.count} | ${spread.failed} | ${whole(spread.p50)} | ${whole(spread.p95)} | ${whole(spread.p99)} | ${whole(spread.max)} |`
     ),
     (rows) =>
       Arr.join(
         [
-          "| Call | Count | Failed | p50 ms | p95 ms | p99 ms | Max ms |",
+          `| Call | Count | Failed | p50 ${unit} | p95 ${unit} | p99 ${unit} | Max ${unit} |`,
           "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
           ...rows,
         ],
@@ -80,7 +88,26 @@ const latencyTable = (latencies: Record.ReadonlyRecord<string, Latency>) =>
       )
   );
 
-/** The report as Markdown: the verdict, the client and server latency tables, and the audit. */
+/** The write conflicts by function and table, or a sentence that the backend retried none. */
+const conflictLines = (conflicts: Record.ReadonlyRecord<string, Spread>) =>
+  Record.isEmptyRecord(conflicts)
+    ? ["The backend retried no write after a conflict."]
+    : [
+        "| Conflict | Retries |",
+        "| --- | ---: |",
+        ...Arr.map(
+          Arr.sort(
+            Record.toEntries(conflicts),
+            Order.mapInput(
+              Order.String,
+              ([name]: readonly [string, Spread]) => name
+            )
+          ),
+          ([name, spread]) => `| ${name} | ${spread.count} |`
+        ),
+      ];
+
+/** The report as Markdown: the verdict, the client and server latencies, the reads, the conflicts, and the audit. */
 export const markdownOf = (report: LoadReport) =>
   Arr.join(
     [
@@ -88,11 +115,17 @@ export const markdownOf = (report: LoadReport) =>
       "",
       "Client, as each student and proctor waited:",
       "",
-      latencyTable(report.client),
+      spreadTable(report.client, "ms"),
       "",
       "Server, as the backend ran each function:",
       "",
-      latencyTable(report.server),
+      spreadTable(report.server, "ms"),
+      "",
+      "Documents each function read:",
+      "",
+      spreadTable(report.reads, "docs"),
+      "",
+      ...conflictLines(report.conflicts),
       "",
       "| Answers | Acknowledged | Stored | Lost | Duplicated | Mismatched | Ahead | Unacknowledged |",
       "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
