@@ -17,7 +17,7 @@ export const Route = createFileRoute("/school/$slug/settings/cohorts/$cohort")({
     return { cohortId: cohortId.value };
   },
   loader: ({ context }) => {
-    if (context.school._tag !== "Member") {
+    if (!context.firstHtml || context.school._tag !== "Member") {
       return;
     }
     return readCohortFn({
