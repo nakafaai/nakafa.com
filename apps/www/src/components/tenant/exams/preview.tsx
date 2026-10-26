@@ -2,7 +2,10 @@ import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
-import { CHOICE_OPTIONS_MAX } from "@repo/backend/confect/exams/question";
+import {
+  CHOICE_OPTIONS_MAX,
+  fixedOptions,
+} from "@repo/backend/confect/exams/question";
 import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import {
   editorContent,
@@ -218,9 +221,11 @@ export function PaperSketch({
 }) {
   const { exam } = useExam();
   const choice = choiceOf(question.answers);
+  // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
     withControls &&
     !isLocked(exam) &&
+    Option.isNone(fixedOptions(question.template)) &&
     Option.exists(
       choice,
       (current) => current.options.length < CHOICE_OPTIONS_MAX
