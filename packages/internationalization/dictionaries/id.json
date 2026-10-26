@@ -63,6 +63,8 @@
     "all-exams": "Semua ujian"
   },
   "SchoolEntry": {
+    "username-placeholder": "ayu.lestari",
+    "password-placeholder": "Kata sandimu",
     "card-code-label": "Kode kartu",
     "card-code-placeholder": "Masuk pertama atau kartu baru",
     "card-expired": "Minta kartu baru ke guru atau admin, karena kartu ini sudah kedaluwarsa.",
@@ -177,6 +179,7 @@
     "apply": "Impor siswa"
   },
   "Exams": {
+    "minutes-placeholder": "10",
     "token": "Token",
     "change-token": "Ganti token",
     "close-sitting": "Tutup sesi",
@@ -487,6 +490,12 @@
     "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom."
   },
   "SchoolSettings": {
+    "student-add-name-placeholder": "Ayu Lestari",
+    "invite-name-placeholder": "Budi Santoso",
+    "invite-email-placeholder": "budi@example.com",
+    "unit-add-name-placeholder": "SMA Harapan Bangsa",
+    "address-placeholder": "harapan-bangsa",
+    "name-placeholder": "Harapan Bangsa",
     "school": "Sekolah",
     "people": "Orang",
     "integrations": "Integrasi",
