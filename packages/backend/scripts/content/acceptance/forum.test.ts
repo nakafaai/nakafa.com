@@ -36,8 +36,8 @@ type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 const SeedArgs = Schema.fromJsonString(
   Schema.Struct({
     classSlug: Schema.String,
-    count: Schema.Number,
-    read: Schema.Number,
+    count: Schema.Finite,
+    read: Schema.Finite,
     slug: Schema.String,
   })
 );

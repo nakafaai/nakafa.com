@@ -84,22 +84,19 @@ const history = FunctionImpl.make(
           clientKey: `seed-${general._id}-${index}`,
         };
         const createdAt = now - (count - index) * SEED_GAP_MILLISECONDS;
-        const messageId = yield* writer
-          .table("classroomMessages")
-          .insert({
-            ...fields,
-            authorId,
-            createdAt,
-            sealedText: yield* sealText(
-              keys,
-              messageField(fields),
-              `Pesan ${index}`
-            ).pipe(Effect.orDie),
-            tenantId: row.tenantId,
-          })
-          .pipe(Effect.orDie);
+        const messageId = yield* writer.table("classroomMessages").insert({
+          ...fields,
+          authorId,
+          createdAt,
+          sealedText: yield* sealText(
+            keys,
+            messageField(fields),
+            `Pesan ${index}`
+          ),
+          tenantId: row.tenantId,
+        });
         return { createdAt, messageId };
-      })
+      }).pipe(Effect.orDie)
     );
     const teachers = yield* reader
       .table("classTeachers")

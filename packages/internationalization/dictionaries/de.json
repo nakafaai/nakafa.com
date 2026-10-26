@@ -618,7 +618,10 @@
         "declined": "Besuch abgelehnt",
         "ended": "Besuch beendet"
       },
-      "unknown": "Andere Änderung"
+      "unknown": "Andere Änderung",
+      "announcement": {
+        "posted": "Ankündigung gepostet"
+      }
     },
     "role-description": {
       "owner": "Kann alles in dieser Schule tun.",

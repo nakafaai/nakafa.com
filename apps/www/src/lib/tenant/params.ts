@@ -33,5 +33,5 @@ const DiscussionAddress = Schema.String.check(
 
 /** The discussion at an address of a class's forum, such as `12`, or none when the address names no discussion. */
 export function readDiscussionNumber(number: string) {
-  return Schema.decodeUnknownOption(DiscussionAddress)(number);
+  return Schema.decodeOption(DiscussionAddress)(number);
 }

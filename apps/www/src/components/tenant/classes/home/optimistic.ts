@@ -16,22 +16,28 @@ const { list } = classroom.posts;
 
 /**
  * Writes what `change` makes of each page of the class's announcements that the store holds. A
- * page that `change` leaves as it was is not written.
+ * page that `change` answers none for is left as it was.
  */
 const changePages = (
   localStore: LocalStore.OptimisticLocalStore,
   classId: Id<"classes">,
-  change: (page: readonly ClassPost[], first: boolean) => readonly ClassPost[]
+  change: (
+    page: readonly ClassPost[],
+    first: boolean
+  ) => Option.Option<ClassPost[]>
 ) => {
   for (const query of localStore.getAllQueries(list)) {
     if (Option.isSome(query.value) && query.args.classId === classId) {
-      const page = query.value.value.page;
-      const changed = change(page, query.args.paginationOpts.cursor === null);
-      if (changed !== page) {
+      const value = query.value.value;
+      const changed = change(
+        value.page,
+        query.args.paginationOpts.cursor === null
+      );
+      if (Option.isSome(changed)) {
         localStore.setQuery(
           list,
           query.args,
-          Option.some({ ...query.value.value, page: changed })
+          Option.some({ ...value, page: changed.value })
         );
       }
     }
@@ -43,7 +49,7 @@ export const publishUpdate =
   (post: ClassPost): OptimisticUpdate<typeof classroom.posts.publish> =>
   (localStore, args) => {
     changePages(localStore, args.classId, (page, first) =>
-      first ? [post, ...page] : page
+      first ? Option.some([post, ...page]) : Option.none()
     );
   };
 
@@ -53,12 +59,14 @@ export const editPostUpdate =
   (localStore, args) => {
     changePages(localStore, args.classId, (page) =>
       Arr.some(page, (post) => post.id === args.postId)
-        ? Arr.map(page, (post) =>
-            post.id === args.postId
-              ? { ...post, editedAt: at, text: args.text }
-              : post
+        ? Option.some(
+            Arr.map(page, (post) =>
+              post.id === args.postId
+                ? { ...post, editedAt: at, text: args.text }
+                : post
+            )
           )
-        : page
+        : Option.none()
     );
   };
 
@@ -68,7 +76,7 @@ export const removePostUpdate: OptimisticUpdate<
 > = (localStore, args) => {
   changePages(localStore, args.classId, (page) =>
     Arr.some(page, (post) => post.id === args.postId)
-      ? Arr.filter(page, (post) => post.id !== args.postId)
-      : page
+      ? Option.some(Arr.filter(page, (post) => post.id !== args.postId))
+      : Option.none()
   );
 };

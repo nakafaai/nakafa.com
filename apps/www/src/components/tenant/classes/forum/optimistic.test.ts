@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   editUpdate,
   type ForumMessage,
@@ -131,9 +131,18 @@ describe("editUpdate and hideUpdate", () => {
   });
 });
 
-/** A store that holds the given queries of each reference, and records what is written. */
-const storeByRef = (queries: ReadonlyMap<unknown, unknown[]>) => {
-  const getAllQueries = vi.fn((ref: unknown) => queries.get(ref) ?? []);
+/** A store that holds the given queries of each reference, as pairs, and records what is written. */
+const storeByRef = (queries: readonly (readonly [unknown, unknown[]])[]) => {
+  const getAllQueries = vi.fn();
+  getAllQueries.mockImplementation((ref: unknown) =>
+    Option.getOrElse(
+      Option.map(
+        Arr.findFirst(queries, ([key]) => key === ref),
+        ([, rows]) => rows
+      ),
+      () => []
+    )
+  );
   const setQuery = vi.fn();
   return {
     localStore: { getAllQueries, getQuery: vi.fn(), setQuery },
@@ -210,56 +219,54 @@ describe("replyUpdate", () => {
     const other = opening("other", 2);
     const own = opening("own", 1);
     const plain = message("plain", "Biasa");
-    const { localStore, setQuery } = storeByRef(
-      new Map<unknown, unknown[]>([
+    const { localStore, setQuery } = storeByRef([
+      [
+        classroom.forum.threads.replies,
         [
-          classroom.forum.threads.replies,
-          [
-            {
-              args: repliesArgs(1, null),
-              value: Option.some({ isDone: true, page: [] }),
-            },
-            {
-              args: repliesArgs(1, "older"),
-              value: Option.some({ isDone: true, page: [] }),
-            },
-            {
-              args: repliesArgs(2, null),
-              value: Option.some({ isDone: true, page: [] }),
-            },
-            { args: repliesArgs(1, null), value: Option.none() },
-          ],
+          {
+            args: repliesArgs(1, null),
+            value: Option.some({ isDone: true, page: [] }),
+          },
+          {
+            args: repliesArgs(1, "older"),
+            value: Option.some({ isDone: true, page: [] }),
+          },
+          {
+            args: repliesArgs(2, null),
+            value: Option.some({ isDone: true, page: [] }),
+          },
+          { args: repliesArgs(1, null), value: Option.none() },
         ],
+      ],
+      [
+        classroom.forum.threads.get,
         [
-          classroom.forum.threads.get,
-          [
-            {
-              args: { classId, number: 1, slug },
-              value: Option.some(thread(1)),
-            },
-            {
-              args: { classId, number: 2, slug },
-              value: Option.some(thread(2)),
-            },
-            { args: { classId, number: 1, slug }, value: Option.none() },
-          ],
+          {
+            args: { classId, number: 1, slug },
+            value: Option.some(thread(1)),
+          },
+          {
+            args: { classId, number: 2, slug },
+            value: Option.some(thread(2)),
+          },
+          { args: { classId, number: 1, slug }, value: Option.none() },
         ],
+      ],
+      [
+        classroom.forum.messages.page,
         [
-          classroom.forum.messages.page,
-          [
-            {
-              args: pageArgs(general, null),
-              value: Option.some({ isDone: true, page: [plain, own, other] }),
-            },
-            {
-              args: pageArgs(topic, null),
-              value: Option.some({ isDone: true, page: [plain] }),
-            },
-            { args: pageArgs(general, null), value: Option.none() },
-          ],
+          {
+            args: pageArgs(general, null),
+            value: Option.some({ isDone: true, page: [plain, own, other] }),
+          },
+          {
+            args: pageArgs(topic, null),
+            value: Option.some({ isDone: true, page: [plain] }),
+          },
+          { args: pageArgs(general, null), value: Option.none() },
         ],
-      ])
-    );
+      ],
+    ]);
 
     replyUpdate(sent)(localStore, {
       classId,
@@ -303,46 +310,44 @@ describe("markUpdate", () => {
       name: "Kanal",
       unread,
     });
-    const { localStore, setQuery } = storeByRef(
-      new Map<unknown, unknown[]>([
+    const { localStore, setQuery } = storeByRef([
+      [
+        classroom.forum.reads.get,
         [
-          classroom.forum.reads.get,
-          [
-            { args: { classId, place, slug }, value: Option.some({ at: 100 }) },
-            { args: { classId, place, slug }, value: Option.some({ at: 900 }) },
-            {
-              args: { classId, place, slug },
-              value: Option.some({ at: null }),
-            },
-            {
-              args: { classId, place: elsewhere, slug },
-              value: Option.some({ at: 1 }),
-            },
-            { args: { classId, place, slug }, value: Option.none() },
-          ],
+          { args: { classId, place, slug }, value: Option.some({ at: 100 }) },
+          { args: { classId, place, slug }, value: Option.some({ at: 900 }) },
+          {
+            args: { classId, place, slug },
+            value: Option.some({ at: null }),
+          },
+          {
+            args: { classId, place: elsewhere, slug },
+            value: Option.some({ at: 1 }),
+          },
+          { args: { classId, place, slug }, value: Option.none() },
         ],
+      ],
+      [
+        classroom.forum.channels.list,
         [
-          classroom.forum.channels.list,
-          [
-            {
-              args: { classId, slug },
-              value: Option.some({
-                isDone: true,
-                page: [channel(general, true), channel(topic, true)],
-              }),
-            },
-            {
-              args: { classId, slug },
-              value: Option.some({
-                isDone: true,
-                page: [channel(topic, true)],
-              }),
-            },
-            { args: { classId, slug }, value: Option.none() },
-          ],
+          {
+            args: { classId, slug },
+            value: Option.some({
+              isDone: true,
+              page: [channel(general, true), channel(topic, true)],
+            }),
+          },
+          {
+            args: { classId, slug },
+            value: Option.some({
+              isDone: true,
+              page: [channel(topic, true)],
+            }),
+          },
+          { args: { classId, slug }, value: Option.none() },
         ],
-      ])
-    );
+      ],
+    ]);
 
     markUpdate(localStore, { at: 500, classId, place, slug });
 
@@ -375,19 +380,17 @@ describe("markUpdate", () => {
 
   it("clears the unread dot of a discussion only up to its newest reply", () => {
     const own = opening("own", 1);
-    const { localStore, setQuery } = storeByRef(
-      new Map<unknown, unknown[]>([
+    const { localStore, setQuery } = storeByRef([
+      [
+        classroom.forum.messages.page,
         [
-          classroom.forum.messages.page,
-          [
-            {
-              args: pageArgs(general, null),
-              value: Option.some({ isDone: true, page: [own] }),
-            },
-          ],
+          {
+            args: pageArgs(general, null),
+            value: Option.some({ isDone: true, page: [own] }),
+          },
         ],
-      ])
-    );
+      ],
+    ]);
     const place = { _tag: "discussion" as const, number: 1 };
 
     markUpdate(localStore, { at: 5, classId, place, slug });
