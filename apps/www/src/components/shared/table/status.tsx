@@ -1,17 +1,7 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Schema } from "effect";
 import type { ComponentProps } from "react";
-
-/** The tones a record's status takes in a table, each drawn from its colour token of the theme. */
-export const StatusTone = Schema.Literals([
-  "danger",
-  "info",
-  "neutral",
-  "primary",
-  "success",
-  "warning",
-]);
+import type { StatusTone } from "@/components/shared/table/tone";
 
 /** The badge that draws each tone. */
 const TONE_VARIANTS = {
