@@ -33,7 +33,9 @@ const expectSteadyComposer = Effect.fn("NakafaE2E.expectSteadyComposer")(
           const services = yield* Effect.context();
           yield* Effect.promise(() =>
             context.route(SESSION_READ, async (route) => {
-              await Effect.runPromiseWith(services)(Effect.sleep(SESSION_DELAY));
+              await Effect.runPromiseWith(services)(
+                Effect.sleep(SESSION_DELAY)
+              );
               await route.continue();
             })
           );
