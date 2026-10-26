@@ -75,9 +75,9 @@ export function OptionRow({
 }: OptionRowProps) {
   const t = useTranslations("Exams");
   const editor = useRef<DocumentEditorInstance | null>(null);
-  // The label the editor held last with no typing of the teacher's on top: the label it started with or took from
-  // the server, or the one its last save sent. Text that differs from it waits for the quiet save.
-  const settled = useRef(label);
+  // The label the server held at the last render, which the editor holds too while the teacher has typed nothing
+  // on top of it since.
+  const previous = useRef(label);
   // The save calls the latest `onSave`, so a save after the quiet period uses the answers and the
   // revision of the render that is on screen when it runs.
   const save = useCallbackRef(onSave);
@@ -106,7 +106,6 @@ export function OptionRow({
               });
               return;
             }
-            settled.current = edit.label;
             save(edit.label, () => restoreUnstored(edit.label));
           }),
         OPTION_SAVE_QUIET
@@ -125,17 +124,19 @@ export function OptionRow({
   };
 
   // The editor takes a label the server holds once it changes, as a save of this option lands after the editor
-  // opened, or another editor saves it, unless the teacher has typed text here that waits for its save, which wins.
+  // opened, or another editor saves it. An editor that no longer holds the label it had before has the teacher's
+  // own typing, which waits for its save and wins.
   useEffect(() => {
+    const before = previous.current;
+    previous.current = label;
     const current = editor.current;
-    if (
-      current === null ||
-      holdsLabel(settled.current, label) ||
-      !holdsLabel(current.getJSON(), settled.current)
-    ) {
+    if (current === null) {
       return;
     }
-    settled.current = label;
+    const held = current.getJSON();
+    if (holdsLabel(held, label) || !holdsLabel(held, before)) {
+      return;
+    }
     current.commands.setContent(
       Node.fromJSON(assessmentSchema, label).toJSON(),
       { emitUpdate: false }
@@ -186,7 +187,6 @@ export function OptionRow({
           }}
           onEditor={(next) => {
             editor.current = next;
-            settled.current = label;
             next.commands.setContent(
               Node.fromJSON(assessmentSchema, label).toJSON(),
               { emitUpdate: false }

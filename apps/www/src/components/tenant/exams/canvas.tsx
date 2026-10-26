@@ -75,8 +75,12 @@ function useReveal(canvas: RefObject<HTMLElement | null>) {
     }
     const page = document.getElementById(`question-${reveal}`);
     if (page !== null) {
-      root.scrollTop +=
-        page.getBoundingClientRect().top - root.getBoundingClientRect().top;
+      root.scrollTo({
+        top:
+          root.scrollTop +
+          page.getBoundingClientRect().top -
+          root.getBoundingClientRect().top,
+      });
     }
     selection.getState().pin(reveal);
     settle();

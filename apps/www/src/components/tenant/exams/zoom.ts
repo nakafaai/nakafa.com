@@ -44,7 +44,7 @@ export const ZOOM_PRESETS = [200, 150, 100, 75, 50] as const;
  * canvas is narrower, which the server draws too; `fill` stretches the pages to the canvas's whole width;
  * and `percent` draws them at the zoom the teacher chose on the slider or in the menu.
  */
-export const ZoomMode = Schema.Literals(["fit", "fill", "percent"]);
+const ZoomMode = Schema.Literals(["fit", "fill", "percent"]);
 
 /** The width of the column of pages at the default zoom, as `max-w-3xl` draws it, which Fill stretches. */
 export const PAGE_WIDTH = 768;
@@ -103,7 +103,10 @@ export const drawnZoom = (
     return ZOOM_DEFAULT;
   }
   return Math.min(
-    Math.max(Math.floor((zoom.canvasWidth / PAGE_WIDTH) * ZOOM_DEFAULT), ZOOM_MIN),
+    Math.max(
+      Math.floor((zoom.canvasWidth / PAGE_WIDTH) * ZOOM_DEFAULT),
+      ZOOM_MIN
+    ),
     ZOOM_MAX
   );
 };

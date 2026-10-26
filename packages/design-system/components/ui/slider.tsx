@@ -36,7 +36,10 @@ function Slider<Value extends number | readonly number[]>({
   // in the cascade, and in a row that sizes to its content the track would measure nothing and only the thumb show.
   return (
     <SliderPrimitive.Root
-      className={cn("w-full data-vertical:h-full data-vertical:w-auto", className)}
+      className={cn(
+        "w-full data-vertical:h-full data-vertical:w-auto",
+        className
+      )}
       data-slot="slider"
       defaultValue={defaultValue}
       max={max}

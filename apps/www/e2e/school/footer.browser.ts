@@ -14,6 +14,21 @@ const REMOVE = "exams/questions:remove";
 /** The prompts of the three questions, in their first order. */
 const PROMPTS = ["Soal satu", "Soal dua", "Soal tiga"] as const;
 
+/** The counter's name at any page of the three, and at each page. */
+const ANY_OF_THREE = /^Question \d of 3/u;
+const FIRST_OF_THREE = /^Question 1 of 3/u;
+const SECOND_OF_THREE = /^Question 2 of 3/u;
+const THIRD_OF_THREE = /^Question 3 of 3/u;
+
+/** The strip's thumbnail of the third question, whose name starts with its number. */
+const THIRD_THUMBNAIL = /^Question 3/u;
+
+/** A grid tile, whose name opens its question. */
+const OPEN_TILE = /^Open question/u;
+
+/** The first page of the canvas, whose name starts with its number. */
+const FIRST_PAGE = /^Question 1\b/u;
+
 /** The zoom the column of pages is drawn at, read from its style. */
 const columnZoom = (page: Page) =>
   page
@@ -98,7 +113,7 @@ test.describe("at 1440", () => {
     page,
   }) => {
     await examOfThree(page, baseURL);
-    await page.getByRole("button", { name: /^Question \d of 3/u }).click();
+    await page.getByRole("button", { name: ANY_OF_THREE }).click();
     const field = page.getByRole("spinbutton", {
       name: "Go to question, 1 to 3",
     });
@@ -106,15 +121,15 @@ test.describe("at 1440", () => {
     await field.fill("1");
     await field.press("Enter");
     await expect(
-      page.getByRole("button", { name: /^Question 1 of 3/u })
+      page.getByRole("button", { name: FIRST_OF_THREE })
     ).toBeVisible();
 
     const strip = page.getByRole("navigation", { name: "Pages" });
     await page.getByRole("button", { name: "Pages", exact: true }).click();
     await expect(strip.getByRole("button")).toHaveCount(3);
-    await strip.getByRole("button", { name: /^Question 3/u }).click();
+    await strip.getByRole("button", { name: THIRD_THUMBNAIL }).click();
     await expect(
-      page.getByRole("button", { name: /^Question 3 of 3/u })
+      page.getByRole("button", { name: THIRD_OF_THREE })
     ).toBeVisible();
     await page.getByRole("button", { name: "Pages", exact: true }).click();
     await expect(strip).toHaveCount(0);
@@ -132,7 +147,7 @@ test.describe("at 1440", () => {
     await expect(page.getByRole("region", { name: "Exam pages" })).toHaveCount(
       0
     );
-    await expect(grid.getByRole("button", { name: /^Open question/u })).toHaveCount(3);
+    await expect(grid.getByRole("button", { name: OPEN_TILE })).toHaveCount(3);
 
     // The arrow keys move between the tiles, and Escape goes back to the pages.
     await grid.getByRole("button", { name: "Open question 1" }).focus();
@@ -141,14 +156,16 @@ test.describe("at 1440", () => {
       grid.getByRole("button", { name: "Open question 2" })
     ).toBeFocused();
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("region", { name: "Exam pages" })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Exam pages" })
+    ).toBeVisible();
 
     // Enter on a tile opens its question on the canvas, as a click does on a phone below.
     await page.getByRole("button", { name: "Grid view" }).click();
     await grid.getByRole("button", { name: "Open question 3" }).focus();
     await page.keyboard.press("Enter");
     await expect(
-      page.getByRole("button", { name: /^Question 3 of 3/u })
+      page.getByRole("button", { name: THIRD_OF_THREE })
     ).toBeVisible();
 
     // A drag of the third tile onto the first moves it first, which a reload keeps.
@@ -160,9 +177,10 @@ test.describe("at 1440", () => {
       .dragTo(grid.getByRole("listitem").first());
     await saved(changes, sentBefore);
     await page.reload();
-    await expect(
-      page.getByRole("region", { name: /^Question 1\b/u })
-    ).toContainText("Soal tiga", { timeout: readinessTimeoutMilliseconds });
+    await expect(page.getByRole("region", { name: FIRST_PAGE })).toContainText(
+      "Soal tiga",
+      { timeout: readinessTimeoutMilliseconds }
+    );
   });
 
   test("the grid duplicates and deletes the selected questions, and rolls a refused delete back", async ({
@@ -172,7 +190,7 @@ test.describe("at 1440", () => {
     const changes = await examOfThree(page, baseURL);
     await page.getByRole("button", { name: "Grid view" }).click();
     const grid = page.getByRole("region", { name: "Grid view" });
-    const tiles = grid.getByRole("button", { name: /^Open question/u });
+    const tiles = grid.getByRole("button", { name: OPEN_TILE });
 
     await grid.getByRole("checkbox", { name: "Select question 1" }).click();
     await grid.getByRole("button", { name: "Duplicate", exact: true }).click();
@@ -238,7 +256,7 @@ test.describe("at 390", () => {
     ).toBe(0);
     await grid.getByRole("button", { name: "Open question 2" }).click();
     await expect(
-      page.getByRole("button", { name: /^Question 2 of 3/u })
+      page.getByRole("button", { name: SECOND_OF_THREE })
     ).toBeVisible();
   });
 });

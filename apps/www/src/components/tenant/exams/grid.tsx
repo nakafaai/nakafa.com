@@ -1,15 +1,23 @@
-import { Add01Icon, Copy01Icon, Delete02Icon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  Copy01Icon,
+  Delete02Icon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { useHotkeys } from "@mantine/hooks";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { type KeyboardEvent, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { isLocked } from "@/components/tenant/exams/freeze";
-import type { Question, QuestionId } from "@/components/tenant/exams/optimistic";
+import type {
+  Question,
+  QuestionId,
+} from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { QuestionPreview } from "@/components/tenant/exams/preview";
 import {
@@ -38,10 +46,7 @@ const tileFrame = cva(
 const columnsOf = (grid: HTMLElement | null) =>
   grid === null
     ? 1
-    : Math.max(
-        getComputedStyle(grid).gridTemplateColumns.split(" ").length,
-        1
-      );
+    : Math.max(getComputedStyle(grid).gridTemplateColumns.split(" ").length, 1);
 
 /** The props of one tile of the grid. */
 interface TileProps {
@@ -50,11 +55,14 @@ interface TileProps {
   /** Whether the tile takes a drag, which a locked exam does not. */
   readonly editable: boolean;
   readonly index: number;
-  /** Moves the keyboard focus to another tile, by the key the teacher pressed. */
-  readonly onKey: (event: KeyboardEvent<HTMLButtonElement>, index: number) => void;
+  readonly onDragStart: (questionId: QuestionId) => void;
   /** Drops the dragged question on this tile's place. */
   readonly onDrop: (index: number) => void;
-  readonly onDragStart: (questionId: QuestionId) => void;
+  /** Moves the keyboard focus to another tile, by the key the teacher pressed. */
+  readonly onKey: (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => void;
   readonly onSelect: (questionId: QuestionId, selected: boolean) => void;
   readonly question: Question;
   readonly selected: boolean;
@@ -83,32 +91,30 @@ function GridTile({
   const saved = !isPlaceholderId(question.prompt);
 
   return (
-    <li
-      className="grid gap-2"
-      draggable={editable && saved}
-      onDragEnd={() => setTarget(false)}
-      onDragLeave={() => setTarget(false)}
-      onDragOver={(event) => {
-        if (editable) {
-          event.preventDefault();
-          setTarget(true);
-        }
-      }}
-      onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = "move";
-        onDragStart(question.id);
-      }}
-      onDrop={(event) => {
-        event.preventDefault();
-        setTarget(false);
-        onDrop(index);
-      }}
-    >
+    <li className="grid gap-2">
       <button
         aria-current={current ? "true" : undefined}
         className={tileFrame({ current, target })}
         data-tile={index}
+        draggable={editable && saved}
         onClick={() => open(question.id)}
+        onDragEnd={() => setTarget(false)}
+        onDragLeave={() => setTarget(false)}
+        onDragOver={(event) => {
+          if (editable) {
+            event.preventDefault();
+            setTarget(true);
+          }
+        }}
+        onDragStart={(event) => {
+          event.dataTransfer.effectAllowed = "move";
+          onDragStart(question.id);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setTarget(false);
+          onDrop(index);
+        }}
         onKeyDown={(event) => onKey(event, index)}
         type="button"
       >
@@ -153,6 +159,23 @@ export function ExamGrid() {
   const dragged = useRef<QuestionId | null>(null);
   const [selected, setSelected] = useState<readonly QuestionId[]>([]);
   const [asking, setAsking] = useState(false);
+  const area = useRef<HTMLElement>(null);
+  // Escape goes back to the canvas from anywhere in the grid, or from the page itself. The delete question and the
+  // footer's menus sit outside the grid and take their own Escape.
+  useHotkeys([
+    [
+      "Escape",
+      (event) => {
+        const target = event.target;
+        if (
+          target instanceof Node &&
+          (target === document.body || area.current?.contains(target) === true)
+        ) {
+          toggleGrid();
+        }
+      },
+    ],
+  ]);
   const currentId = Option.getOrNull(
     Option.map(active, (page) => page.question.id)
   );
@@ -173,8 +196,11 @@ export function ExamGrid() {
         : Arr.filter(current, (id) => id !== questionId)
     );
 
-  /** Moves the keyboard focus to the tile a key names, or back to the canvas on Escape. */
-  const moveFocus = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+  /** Moves the keyboard focus to the tile an arrow, Home or End names. */
+  const moveFocus = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => {
     if (!isTileKey(event.key)) {
       return;
     }
@@ -183,9 +209,7 @@ export function ExamGrid() {
       columns: columnsOf(grid.current),
       count: exam.questions.length,
     });
-    grid.current
-      ?.querySelector<HTMLElement>(`[data-tile="${next}"]`)
-      ?.focus();
+    grid.current?.querySelector<HTMLElement>(`[data-tile="${next}"]`)?.focus();
   };
 
   /** Duplicates each selected question right after itself, and keeps the copies selected for nothing else. */
@@ -205,12 +229,7 @@ export function ExamGrid() {
     <section
       aria-label={t("grid")}
       className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/40"
-      onKeyDown={(event) => {
-        // The delete question's own Escape closes it, and its key bubbles here through the portal.
-        if (event.key === "Escape" && !asking) {
-          toggleGrid();
-        }
-      }}
+      ref={area}
     >
       {editable ? (
         <div className="sticky top-0 z-10 flex min-h-12 flex-wrap items-center gap-2 border-b bg-background px-4 py-2">
@@ -222,7 +241,9 @@ export function ExamGrid() {
             }
             onCheckedChange={(checked) =>
               setSelected(
-                checked ? Arr.map(exam.questions, (question) => question.id) : []
+                checked
+                  ? Arr.map(exam.questions, (question) => question.id)
+                  : []
               )
             }
           />

@@ -11,13 +11,13 @@ import { useRef } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { ExamFooter } from "@/components/tenant/exams/footer";
+import { ExamGrid } from "@/components/tenant/exams/grid";
 import { ExamHeader, ExamLockedNote } from "@/components/tenant/exams/header";
 import {
   ExamPanel,
   ExamPanelProvider,
   ExamPanelSheet,
 } from "@/components/tenant/exams/panel";
-import { ExamGrid } from "@/components/tenant/exams/grid";
 import {
   ExamProvider,
   useEditorView,

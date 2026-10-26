@@ -49,7 +49,6 @@ export function PageCounter({
       onBlur={() => setTyping(null)}
       onChange={(event) => setTyping(event.currentTarget.value)}
       onFocus={(event) => event.currentTarget.select()}
-      ref={focusOnMount}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           setTyping(null);
@@ -64,9 +63,9 @@ export function PageCounter({
           onJump(number - 1);
         }
       }}
+      ref={focusOnMount}
       type="number"
       value={typing}
     />
   );
 }
-

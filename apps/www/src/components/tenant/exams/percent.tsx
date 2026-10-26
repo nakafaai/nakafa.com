@@ -32,7 +32,11 @@ const zoomChoice = (zoom: Pick<ExamZoom, "mode" | "percent">) =>
  * zooms from the largest to the smallest, then Fit, which draws each page at its own width and is chosen
  * at first, and Fill, which stretches the pages across the canvas. The button names the zoom drawn now.
  */
-export function ZoomMenu({ onZoom }: { readonly onZoom: (percent: number) => void }) {
+export function ZoomMenu({
+  onZoom,
+}: {
+  readonly onZoom: (percent: number) => void;
+}) {
   const t = useTranslations("Exams");
   const drawn = useExamZoom(drawnZoom);
   const choice = useExamZoom(zoomChoice);
@@ -92,4 +96,3 @@ export function ZoomMenu({ onZoom }: { readonly onZoom: (percent: number) => voi
     </DropdownMenu>
   );
 }
-

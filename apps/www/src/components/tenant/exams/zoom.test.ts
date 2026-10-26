@@ -40,15 +40,23 @@ it("starts the pages fitted at the default zoom, takes a new zoom at once, and f
 
 it("draws a fitted page at its own width, a chosen zoom as chosen, and a filled page across the canvas", () => {
   const canvasWidth = PAGE_WIDTH * 1.5;
-  expect(drawnZoom({ canvasWidth, mode: "fit", percent: 150 })).toBe(ZOOM_DEFAULT);
+  expect(drawnZoom({ canvasWidth, mode: "fit", percent: 150 })).toBe(
+    ZOOM_DEFAULT
+  );
   expect(drawnZoom({ canvasWidth, mode: "percent", percent: 75 })).toBe(75);
   expect(drawnZoom({ canvasWidth, mode: "fill", percent: 75 })).toBe(150);
 });
 
 it("keeps a filled page within the zooms the editor allows, and at the default before the canvas is measured", () => {
-  expect(drawnZoom({ canvasWidth: 5000, mode: "fill", percent: 100 })).toBe(ZOOM_MAX);
-  expect(drawnZoom({ canvasWidth: 200, mode: "fill", percent: 100 })).toBe(ZOOM_MIN);
-  expect(drawnZoom({ canvasWidth: 0, mode: "fill", percent: 100 })).toBe(ZOOM_DEFAULT);
+  expect(drawnZoom({ canvasWidth: 5000, mode: "fill", percent: 100 })).toBe(
+    ZOOM_MAX
+  );
+  expect(drawnZoom({ canvasWidth: 200, mode: "fill", percent: 100 })).toBe(
+    ZOOM_MIN
+  );
+  expect(drawnZoom({ canvasWidth: 0, mode: "fill", percent: 100 })).toBe(
+    ZOOM_DEFAULT
+  );
 });
 
 it("keeps the width the canvas measured for Fill", () => {
