@@ -13,6 +13,7 @@ import {
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { ownedChat } from "@/e2e/support/share";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** How long each recording runs after the press. The open animation takes about 200 ms. */
 const RECORD_MILLISECONDS = 1500;
@@ -142,9 +143,21 @@ test("each submenu of the account menu shows its items in its first frame", asyn
             duration: RECORD_MILLISECONDS,
             selector: MENU,
           });
-          await page
-            .getByRole("menuitem", { exact: true, name: submenu.name })
-            .hover();
+          const item = page.getByRole("menuitem", {
+            exact: true,
+            name: submenu.name,
+          });
+          // A reader's pointer travels to the next item. Base UI closes the
+          // open submenu once the pointer leaves the path to it, and the menu
+          // takes pointer events again only then, so a single jump never lands.
+          const box = await item.boundingBox();
+          expect(box).not.toBeNull();
+          await page.mouse.move(
+            (box?.x ?? 0) + (box?.width ?? 0) / 2,
+            (box?.y ?? 0) + (box?.height ?? 0) / 2,
+            { steps: 10 }
+          );
+          await item.hover();
           await expect(
             page.getByRole("menu").filter({ hasText: submenu.contains })
           ).toBeVisible();
@@ -171,6 +184,7 @@ test("the Nina sheet shows its composer in its first frame", async ({
           name: "Ask Nina",
         });
         await expect(askNina).toBeVisible();
+        await waitUntilTakenOver(askNina);
         await recordPaints(page, {
           contains: "",
           duration: RECORD_MILLISECONDS,
@@ -267,6 +281,7 @@ test("the school account menu shows every group in its first frame", async ({
               name: "Acceptance Owner",
             });
             await expect(account).toBeVisible();
+            await waitUntilTakenOver(account);
             await recordPaints(page, {
               contains: "Back to Nakafa",
               duration: RECORD_MILLISECONDS,

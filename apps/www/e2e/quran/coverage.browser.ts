@@ -145,9 +145,8 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
   yield* Effect.promise(() => quranIndexLink.click());
   yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
-  yield* Effect.promise(() => expect(trigger).toBeAttached());
-  yield* Effect.promise(() => expect(trigger).toBeHidden());
-  yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
+  // The router unmounts the surah it leaves, so back draws it again.
+  yield* Effect.promise(() => expect(trigger).toHaveCount(0));
 
   yield* Effect.promise(() => page.goBack());
   yield* Effect.promise(() => expect(page).toHaveURL(quranSurahUrlPattern));
