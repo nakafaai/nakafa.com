@@ -3,8 +3,12 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { QuestionPoints } from "@repo/backend/confect/exams/question";
-import { Verdict } from "@repo/backend/confect/exams/results/schema";
+import {
+  GradePoints,
+  Verdict,
+} from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
@@ -18,14 +22,16 @@ import { Schema } from "effect";
 const ResultAction = Kind.actions(entries, "result");
 
 /**
- * One question of the exam in its order: its number, the option IDs of its choice in their order, and the
- * points that a correct answer to it earns.
+ * One question of the exam in its order: its number, the option IDs of its choice in their order, the
+ * statements and answers of its match in their order, and the points that a correct answer to it earns.
  */
 export const QuestionSummary = Schema.Struct({
   id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
   points: QuestionPoints,
+  sourceIds: Schema.Array(LocalIdSchema),
+  targetIds: Schema.Array(LocalIdSchema),
 });
 
 /**
@@ -47,6 +53,10 @@ export const Overview = Schema.Struct({
 export const StudentRow = Schema.Struct({
   answered: Schema.NullOr(Schema.Int),
   attemptId: Id("examAttempts"),
+  /** The seconds the student spent outside the exam in all, an indication only (K25). */
+  awaySeconds: Schema.NullOr(Schema.Int),
+  /** How many times the student left the exam, an indication only (K25). */
+  exits: Schema.NullOr(Schema.Int),
   name: PersonName,
   pending: Schema.NullOr(Schema.Int),
   points: Schema.NullOr(Schema.Int),
@@ -54,11 +64,12 @@ export const StudentRow = Schema.Struct({
   submittedAt: Schema.NullOr(Schema.Finite),
 });
 
-/** One student's answer to a question, with its verdict, in the question's list. */
+/** One student's answer to a question, with the points it earned and its verdict, in the question's list. */
 export const AnswerRow = Schema.Struct({
   attemptId: Id("examAttempts"),
   name: PersonName,
-  response: Schema.Array(LocalIdSchema),
+  points: GradePoints,
+  response: ExamResponse,
   verdict: Verdict,
 });
 
@@ -73,6 +84,7 @@ export const QuestionStats = Schema.Struct({
   correct: Schema.Int,
   counted: Schema.Int,
   incorrect: Schema.Int,
+  partial: Schema.Int,
   optionCounts: Schema.Array(
     Schema.Struct({ count: Schema.Int, optionId: LocalIdSchema })
   ),
@@ -81,14 +93,19 @@ export const QuestionStats = Schema.Struct({
 
 /**
  * One question of a student's released result: its number, the option IDs of its choice in their
- * order, the points that a correct answer earns, the option IDs that the student chose, and the verdict.
- * The chosen IDs are empty when the student left the question unanswered.
+ * order, the points that a correct answer earns, the option IDs that the student chose or the text the
+ * student typed, and the verdict. A question the student left unanswered chose no option.
  */
 const StudentAnswer = Schema.Struct({
+  /** The points the answer earned: the weight for a correct one, the teacher's grade, or none. */
+  earned: GradePoints,
+  id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
   points: QuestionPoints,
-  response: Schema.Array(LocalIdSchema),
+  response: ExamResponse,
+  sourceIds: Schema.Array(LocalIdSchema),
+  targetIds: Schema.Array(LocalIdSchema),
   verdict: Verdict,
 });
 
@@ -99,4 +116,14 @@ const StudentAnswer = Schema.Struct({
 export const StudentResult = Schema.Struct({
   points: Schema.Int,
   questions: Schema.Array(StudentAnswer),
+});
+
+/**
+ * One student's scored answers as a teacher reads them beside the students' list: the student's name,
+ * the points the attempt earned, and each question with its answer, its points, and its verdict.
+ */
+export const AttemptResult = Schema.Struct({
+  name: PersonName,
+  points: Schema.Int,
+  questions: StudentResult.fields.questions,
 });

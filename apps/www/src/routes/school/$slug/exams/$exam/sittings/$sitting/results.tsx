@@ -1,9 +1,11 @@
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
 import type { ReactElement } from "react";
 import { SittingResults } from "@/components/exams/results/screen";
 import { STUDENT_PAGE_SIZE } from "@/components/exams/results/students";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { readOnce } from "@/lib/convex/read";
 import { readResultsFn } from "@/lib/tenant/exams.functions";
 import { readExamId, readSittingId } from "@/lib/tenant/params";
 
@@ -22,6 +24,18 @@ export const Route = createFileRoute(
   loader: ({ context }) => {
     if (context.school._tag !== "Member") {
       return;
+    }
+    // After a press the header's overview reads once from Convex; the students then read live.
+    if (!context.firstHtml) {
+      return Effect.runPromise(
+        readOnce(exams.results.results.overview, {
+          sittingId: context.sittingId,
+          slug: context.slug,
+        }).pipe(
+          Effect.map((overview) => ({ overview })),
+          Effect.orElseSucceed(() => undefined)
+        )
+      );
     }
     return readResultsFn({
       data: {

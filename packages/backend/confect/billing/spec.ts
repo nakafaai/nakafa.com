@@ -1,6 +1,10 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
 import { accountUnavailableCode } from "@repo/backend/confect/auth/spec";
+import {
+  BillingCurrency,
+  BillingOfferKey,
+} from "@repo/backend/confect/billing/catalog";
 import { checkoutLocaleValidator } from "@repo/backend/confect/billing/locale";
 import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
@@ -49,6 +53,15 @@ export class RailMismatch extends Schema.TaggedError<RailMismatch>()(
   }
 ) {}
 
+/** No invoice carries the number an operator named, so there is nothing to record a payment against. */
+export class InvoiceNotFound extends Schema.TaggedError<InvoiceNotFound>()(
+  "InvoiceNotFound",
+  {
+    number: Schema.String,
+    message: Schema.String,
+  }
+) {}
+
 /** A school contract ends no later than it starts, so it grants no time. */
 export class ContractWindowInvalid extends Schema.TaggedError<ContractWindowInvalid>()(
   "ContractWindowInvalid",
@@ -77,6 +90,26 @@ export const checkoutRequestInputValidator = Schema.Struct({
   successUrl: Schema.String,
 });
 export type CheckoutRequestInput = typeof checkoutRequestInputValidator.Type;
+
+/** The Pro offers a learner picks at checkout: the monthly subscription, or a pass paid once. */
+export const ProCheckoutOffer = BillingOfferKey.pick([
+  "pro.monthly",
+  "pro.pass.1",
+  "pro.pass.3",
+  "pro.pass.12",
+]);
+
+/**
+ * A Pro checkout request: the offer, and the currency of the price the learner was
+ * shown. The page shows rupiah exactly when the visitor is in Indonesia, so rupiah
+ * routes through the Indonesia rail and any other currency goes to Polar, which
+ * prices the buyer by IP.
+ */
+export const proCheckoutRequestInputValidator = Schema.Struct({
+  ...checkoutRequestInputValidator.fields,
+  offer: ProCheckoutOffer,
+  currency: BillingCurrency,
+});
 
 /**
  * The arguments of the admission that revalidates a checkout once Polar has
@@ -188,6 +221,51 @@ export class XenditDeactivateError extends Schema.TaggedError<XenditDeactivateEr
   declare readonly message: string;
 }
 export const XenditDeactivateErrorWire = publicFailure(XenditDeactivateError);
+
+/** Raised when the offer is not sold to this buyer now: its rail does not sell it in the buyer's currency, or Xendit is not set up on this deployment. */
+export const checkoutOfferUnavailableCode = "BILLING_OFFER_UNAVAILABLE";
+export class CheckoutOfferUnavailable extends Schema.TaggedError<CheckoutOfferUnavailable>()(
+  "CheckoutOfferUnavailable",
+  {
+    code: Schema.Literal(checkoutOfferUnavailableCode),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof checkoutOfferUnavailableCode;
+  declare readonly message: string;
+}
+export const CheckoutOfferUnavailableWire = publicFailure(
+  CheckoutOfferUnavailable
+);
+
+/** Raised when Xendit could not open a hosted checkout, or answered with a body Nakafa cannot read. */
+export const xenditCheckoutErrorCode = "XENDIT_CHECKOUT_ERROR";
+export class XenditCheckoutError extends Schema.TaggedError<XenditCheckoutError>()(
+  "XenditCheckoutError",
+  {
+    code: Schema.Literal(xenditCheckoutErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof xenditCheckoutErrorCode;
+  declare readonly message: string;
+}
+export const XenditCheckoutErrorWire = publicFailure(XenditCheckoutError);
+
+/** Raised when a school asks to pay for students its running School grants already pay for. */
+export const schoolSeatsPaidCode = "SCHOOL_SEATS_PAID";
+export class SchoolSeatsPaid extends Schema.TaggedError<SchoolSeatsPaid>()(
+  "SchoolSeatsPaid",
+  {
+    code: Schema.Literal(schoolSeatsPaidCode),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof schoolSeatsPaidCode;
+  declare readonly message: string;
+}
+export const SchoolSeatsPaidWire = publicFailure(SchoolSeatsPaid);
 
 /** What linking a Polar customer to a Nakafa user did. Only `linked` links anything. */
 export const LinkPolarCustomerOutcome = Schema.Literals([

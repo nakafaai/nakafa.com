@@ -17,13 +17,13 @@ import {
 } from "@repo/backend/confect/billing/checkout";
 import spec from "@repo/backend/confect/billing/checkout.spec";
 import { hasActiveProGrant } from "@repo/backend/confect/billing/grants";
-import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
+import {
+  billingCurrencyFor,
+  UNKNOWN_COUNTRY,
+} from "@repo/backend/confect/billing/route";
 import { checkoutSessionIoError } from "@repo/backend/confect/billing/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import { Clock, Effect, flow, Layer } from "effect";
-
-/** The country a personal Polar account is made with: Polar decides the buyer's country at checkout, so Nakafa holds it as unknown. */
-const POLAR_ACCOUNT_COUNTRY = "ZZ";
 
 const openAccount = FunctionImpl.make(
   databaseSchema,
@@ -44,8 +44,8 @@ const openAccount = FunctionImpl.make(
     const accountId = yield* ensureAccount({
       owner: { kind: "personal", userId: args.userId },
       rail: "polar",
-      country: POLAR_ACCOUNT_COUNTRY,
-      currency: billingCurrencyFor(POLAR_ACCOUNT_COUNTRY),
+      country: UNKNOWN_COUNTRY,
+      currency: billingCurrencyFor(UNKNOWN_COUNTRY),
     });
     // The account was just ensured, so reading it back always finds the row.
     const account = yield* reader

@@ -5,7 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const nf = slugOf("nf");
 const { assign, list, revoke } = refs.public.access.grants;
@@ -30,10 +30,43 @@ describe("access/grants list", () => {
         expect(answer.page).toContainEqual({
           id: fixture.people.teacher.grantId,
           person: { id: fixture.people.teacher.personId, name: "Teacher" },
+          revocable: true,
           role: { key: "teacher", kind: "builtin" },
           scope: { kind: "unit", unitId: fixture.units.smp },
         });
         expect(answer.isDone).toBe(true);
+      })
+  );
+
+  it.effect(
+    "offers no revoke on the school's last signed-in Owner, and offers it once a second Owner signs in",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const ownerGrant = fixture.people.owner.grantId;
+        const alone = yield* fixture.as("admin").query(list, {
+          paginationOpts: { cursor: null, numItems: 100 },
+          slug: nf,
+        });
+        yield* fixture.as("owner").mutation(assign, {
+          personId: fixture.people.admin.personId,
+          role: "owner",
+          scope: { kind: "tenant" },
+          slug: nf,
+        });
+        const shared = yield* fixture.as("admin").query(list, {
+          paginationOpts: { cursor: null, numItems: 100 },
+          slug: nf,
+        });
+        const [before, after] = Arr.map([alone, shared], (answer) =>
+          Arr.findFirst(answer.page, (row) => row.id === ownerGrant).pipe(
+            Option.map((row) => row.revocable)
+          )
+        );
+        expect([before, after]).toEqual([
+          Option.some(false),
+          Option.some(true),
+        ]);
       })
   );
 

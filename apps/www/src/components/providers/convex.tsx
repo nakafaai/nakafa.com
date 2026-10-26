@@ -21,6 +21,7 @@ import {
   ConvexTokenReadError,
   createConvexAuthStore,
   hasSettledSignedOut,
+  pageReturns,
   readConvexSessionId,
   releaseConvexAuth,
 } from "@/lib/auth/convex";
@@ -28,13 +29,16 @@ import { loadKnownSession, saveKnownSession } from "@/lib/auth/known";
 import { readConvexClient } from "@/lib/convex/client";
 
 /**
- * Reads a fresh Convex JWT through the installed Better Auth client plugin.
+ * Reads a fresh Convex JWT through the installed Better Auth client plugin. A
+ * request that never got an answer and a server failure may answer otherwise
+ * when asked again; a refusal and an answer without a token do not.
  * https://labs.convex.dev/better-auth/framework-guides/next
  */
 const readConvexToken = Effect.tryPromise({
   catch: () =>
     new ConvexTokenReadError({
       detail: "Better Auth could not read a Convex access token.",
+      retryable: true,
     }),
   try: () => readAuthClient().convex.token({ fetchOptions: { throw: false } }),
 }).pipe(
@@ -43,6 +47,7 @@ const readConvexToken = Effect.tryPromise({
       ? Effect.fail(
           new ConvexTokenReadError({
             detail: "Better Auth rejected the Convex access token request.",
+            retryable: response.error.status >= 500,
           })
         )
       : Effect.fromOption(
@@ -50,6 +55,7 @@ const readConvexToken = Effect.tryPromise({
           () =>
             new ConvexTokenReadError({
               detail: "Better Auth returned no Convex access token.",
+              retryable: false,
             })
         )
   )
@@ -87,9 +93,10 @@ function useConvexSessionId() {
  * Hands the Convex client around it the session's credentials. It renders before the provider's
  * children, so its effect runs before theirs and a known session authenticates
  * the client before any child subscribes to a query, as the first child of
- * `ConvexProviderWithAuth` does. A session that settles on none releases the
- * client's hold on its calls. It also keeps what each settled session says for
- * the next page load.
+ * `ConvexProviderWithAuth` does. A session whose credentials Convex refused is
+ * handed to Convex again when the reader comes back to the page. A session that
+ * settles on none releases the client's hold on its calls. It also keeps what
+ * each settled session says for the next page load.
  */
 export function ConvexSessionCredentials({
   store,
@@ -121,6 +128,7 @@ export function ConvexSessionCredentials({
         authenticateConvex({
           client,
           readToken: readConvexToken,
+          returns: pageReturns,
           sessionId,
           store,
         }),

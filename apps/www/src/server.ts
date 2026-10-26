@@ -5,7 +5,7 @@ import {
   defaultStreamHandler,
   handleStartError,
 } from "@tanstack/react-start/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { answerRequest } from "@/lib/routing/answer.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
 import "@/lib/server/runtime";
@@ -25,6 +25,8 @@ const startHandler = createStartHandler((context) => {
  * Start's server entry. The address and the headers decide each answer before the
  * router sees the request, in the order that `answerRequest` names. Only then does
  * the router answer, and every page and not-found answer carries the page headers.
+ * A request that a decision answers not found reaches the router with its
+ * not-found page in the request context, which the root route reads.
  * Route errors are handled by the router. Only an error that escapes a decision
  * reaches the catch, which reports it and answers with Start's error response.
  *
@@ -35,7 +37,15 @@ export default createServerEntry({
     // The default runtime runs this answer because it requires no services from
     // its caller: every layer that the answer uses is provided where it is used.
     return Effect.runPromise(
-      answerRequest(request, async (routed) => startHandler(routed, opts)).pipe(
+      answerRequest(request, async (routed, notFound) =>
+        startHandler(routed, {
+          ...opts,
+          context: {
+            ...opts?.context,
+            notFound: Option.getOrUndefined(notFound),
+          },
+        })
+      ).pipe(
         Effect.catchTag("UncaughtRequestError", (error) =>
           reportUncaughtRequestError(error.cause, request).pipe(
             Effect.as(handleStartError(error.cause))

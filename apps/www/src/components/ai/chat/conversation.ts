@@ -2,7 +2,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useState } from "react";
-import { readChatArgs } from "@/components/ai/chat/access";
+import { isDeletedOwnChat, readChatArgs } from "@/components/ai/chat/access";
 import { useChatTurns } from "@/components/ai/chat/closing";
 import { nextAnswer, shownAnswer } from "@/components/ai/chat/kept";
 import { turnOf } from "@/components/ai/chat/turns";
@@ -25,6 +25,11 @@ import { useConvexAuth } from "@/components/auth/convex";
  * so nothing acts on a turn that may have moved on. A read that is skipped,
  * while the session changes or the chat is being deleted, drops it
  * (`kept.ts`), so the read that follows never shows another learner's chat.
+ *
+ * A read that fails because the learner's own chat was deleted elsewhere is no
+ * failure of the page: the chat and its title stay shown, its turns and
+ * messages are no longer read, and `deleted` is true, so the surface moves on
+ * (`isDeletedOwnChat`). Every other failure is thrown to the chat's boundary.
  */
 export function useConversation(
   chatId: Id<"chats">,
@@ -37,9 +42,16 @@ export function useConversation(
     nina.conversation.get,
     skip ? "skip" : readChatArgs(chatId, shareToken)
   );
-  const ended = useChatTurns(chatId, shareToken, skip);
   const [answered, setAnswered] = useState(result);
-  if (QueryResult.isFailure(result)) {
+  const deleted =
+    QueryResult.isFailure(result) &&
+    isDeletedOwnChat(
+      result.error,
+      QueryResult.isSuccess(answered) ? answered.value.chat.userId : undefined
+    );
+  // The turns of a deleted chat fail as its conversation does, in the same answer.
+  const ended = useChatTurns(chatId, shareToken, skip || deleted);
+  if (QueryResult.isFailure(result) && !deleted) {
     throw result.error;
   }
   const next = nextAnswer(answered, result);
@@ -51,6 +63,7 @@ export function useConversation(
   return {
     chat: value ? value.chat : undefined,
     current,
+    deleted,
     loadMoreTurns: ended.loadMore,
     turn,
     turnAt: (order: number) => turnOf(turn, ended.ended, order),
