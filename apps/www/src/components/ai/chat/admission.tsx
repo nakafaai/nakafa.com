@@ -116,24 +116,34 @@ export function useChatAdmission({
   }, [viewerId]);
 
   // The held send is admitted by the render that knows the viewer, so it reads
-  // the viewer, the surface and the draft as they are then.
-  const submitNow = useRef(submit);
+  // the viewer, the surface and the draft as they are then. That render still
+  // shows the send as waiting, so the held send skips that check.
+  const admitLatest = useRef(admitPrompt);
   useLayoutEffect(() => {
-    submitNow.current = submit;
+    admitLatest.current = admitPrompt;
   });
 
+  /** Admits a send the learner pressed, unless one is already held for the viewer. */
   function submit(message: PromptInputMessage) {
+    if (waiting) {
+      return false;
+    }
+    return admitPrompt(message);
+  }
+
+  function admitPrompt(message: PromptInputMessage) {
     const query = message.text?.trim();
-    if (!query || busy || waiting) {
+    if (!query || busy) {
       return false;
     }
     if (gate.pending) {
-      // The send is admitted, or sent to sign-in, once the viewer is known.
+      // The send is admitted, or sent to sign-in, once the viewer is known. A
+      // composer that left or hid meanwhile keeps the words for the learner.
       setWaiting(true);
       Effect.runPromise(Deferred.await(viewerKnown)).then(() => {
+        setWaiting(false);
         if (mounted.current) {
-          setWaiting(false);
-          submitNow.current(message);
+          admitLatest.current(message);
         }
       });
       return false;
