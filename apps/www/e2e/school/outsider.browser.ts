@@ -7,6 +7,8 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The entry address that holds the school username form alone. */
 const USERNAME_ADDRESS = /masuk=username/;
 
+/** The fill of the design system's primary button. */
+const PRIMARY = /(?:^|\s)bg-primary(?:\s|$)/;
 test("a signed-in learner who is not a member gets the card form at once, while the account signs out", async ({
   browser,
   baseURL,
@@ -62,6 +64,38 @@ test("a sign-out that fails returns the outsider to the not-member page with its
   await expect(page.getByText("We could not sign you out.")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: `Not a member of ${school.name}` })
+  ).toBeVisible();
+  await context.close();
+});
+
+test("the not-member page leads with Sign in with a card, keeps Check again for an invite in its menu, and the card form says who signs in with one", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
+  const context = await browser.newContext();
+  await Effect.runPromise(signInLearner(context, schoolHome));
+  const page = await context.newPage();
+  await page.goto(schoolHome);
+
+  const card = page.getByRole("button", { name: "Sign in with a card" });
+  const switchAccount = page.getByRole("button", { name: "Switch account" });
+  await waitUntilTakenOver(card);
+  // The card is the main action; switching account is the one outlined secondary.
+  await expect(card).toHaveClass(PRIMARY);
+  await expect(switchAccount).not.toHaveClass(PRIMARY);
+  await page.getByRole("button", { name: "More actions" }).click();
+  await expect(
+    page.getByRole("menuitem", { name: "Check again for my invite" })
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await card.click();
+  await expect(
+    page.getByText(
+      "No Google address? Sign in with the school username and card your admin gave you."
+    )
   ).toBeVisible();
   await context.close();
 });

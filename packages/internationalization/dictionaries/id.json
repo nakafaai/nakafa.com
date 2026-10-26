@@ -66,6 +66,7 @@
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Kata sandimu",
     "card-code-label": "Kode kartu",
+    "card-hint": "Tidak punya alamat Google? Masuk dengan username sekolah dan kartu dari admin.",
     "card-code-placeholder": "Masuk pertama atau kartu baru",
     "card-expired": "Minta kartu baru ke guru atau admin, karena kartu ini sudah kedaluwarsa.",
     "card-invalid": "Username atau kode kartu tidak cocok.",
@@ -73,7 +74,7 @@
     "card-used": "Minta kartu baru ke guru atau admin, karena kartu ini sudah dipakai.",
     "failed": "Gagal masuk, jadi coba lagi.",
     "outsider-card": "Masuk dengan kartu",
-    "outsider-description": "Kamu masuk sebagai {account}, yang belum punya undangan di sini.",
+    "outsider-description": "Kamu masuk sebagai {account}, yang belum punya undangan di sini, jadi minta admin mengirimnya atau masuk dengan alamat yang diundang.",
     "outsider-switch": "Ganti akun",
     "outsider-title": "Bukan anggota {school}",
     "password-label": "Kata sandi",
@@ -84,7 +85,7 @@
     "submit": "Masuk",
     "username-action": "Masuk dengan username",
     "username-label": "Username sekolah",
-    "outsider-check-again": "Periksa lagi"
+    "outsider-check-again": "Periksa lagi undanganku"
   },
   "SchoolGuardians": {
     "sign-in-action": "Masuk sebagai orang tua",
