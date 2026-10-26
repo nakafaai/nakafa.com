@@ -65,6 +65,7 @@ export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSi
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
+export type IntegrationDevicesDoc = Document.Document<typeof schemaDefinition, "integrationDevices">;
 export type IntegrationTokensDoc = Document.Document<typeof schemaDefinition, "integrationTokens">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
@@ -193,6 +194,7 @@ export interface Docs {
   exams: ExamsDoc;
   gradingSchemes: GradingSchemesDoc;
   integrationClients: IntegrationClientsDoc;
+  integrationDevices: IntegrationDevicesDoc;
   integrationTokens: IntegrationTokensDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;

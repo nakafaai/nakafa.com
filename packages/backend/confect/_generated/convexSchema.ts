@@ -65,6 +65,7 @@ import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
 import integrationClients from "./tables/integrationClients";
+import integrationDevices from "./tables/integrationDevices";
 import integrationTokens from "./tables/integrationTokens";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -193,6 +194,7 @@ export default $defineSchema({
   exams: $Table.tableDefinition(exams),
   gradingSchemes: $Table.tableDefinition(gradingSchemes),
   integrationClients: $Table.tableDefinition(integrationClients),
+  integrationDevices: $Table.tableDefinition(integrationDevices),
   integrationTokens: $Table.tableDefinition(integrationTokens),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
