@@ -17,6 +17,7 @@ import {
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 import { titleOf, widthOf, wordsShown, writeWorst } from "@/e2e/support/worst";
 
 const TITLE = "Study habits";
@@ -51,6 +52,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
   yield* Effect.promise(async () => {
     const row = memoryRow(page, TITLE);
 
+    await waitUntilTakenOver(row.getByText(TITLE));
     await row.getByText(TITLE).click();
     await opened(page, WORDS);
     const before = changes.sent;
