@@ -29,7 +29,6 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
-import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useParams } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
@@ -69,7 +68,6 @@ export function AiChatSidebar({
   first: Option.Option<ChatFirstPage>;
 }) {
   const t = useTranslations("Ai");
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const [q, setQ] = useState("");
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
   return (
@@ -88,7 +86,6 @@ export function AiChatSidebar({
               render={
                 <Link
                   activeOptions={EXACT_ACTIVE_OPTIONS}
-                  onClick={() => setOpenMobile(false)}
                   title={t("new-chat")}
                   to="/$locale/chat"
                 >
@@ -200,7 +197,6 @@ function SidebarChatRows({
   const t = useTranslations("Ai");
   const locale = useCurrentLocale();
   const drafts = useAi((state) => state.chatDrafts);
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
   });
@@ -226,7 +222,6 @@ function SidebarChatRows({
                 render={
                   <Link
                     activeOptions={EXACT_ACTIVE_OPTIONS}
-                    onClick={() => setOpenMobile(false)}
                     params={{ id: chat._id, locale }}
                     title={chat.title}
                     to="/$locale/chat/$id"

@@ -19,7 +19,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr } from "effect";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
@@ -125,23 +124,13 @@ function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
  */
 function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
   const isActive = useActiveHeading(heading);
-  // Below the desktop width the outline is a sheet over the page, so choosing
-  // an entry closes it and the reader sees where they jumped.
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
 
   return (
     <SidebarTreeTooltip label={heading.label}>
       <SidebarMenuButton
         isActive={isActive}
         render={
-          <a
-            href={heading.href}
-            onClick={(event) => {
-              setOpenMobile(false);
-              jumpToHeading(event);
-            }}
-            title={heading.label}
-          >
+          <a href={heading.href} onClick={jumpToHeading} title={heading.label}>
             <SidebarTreeLabel label={heading.label} />
           </a>
         }

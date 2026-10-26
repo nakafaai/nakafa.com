@@ -48,6 +48,8 @@ for (const viewport of [
     await waitUntilTakenOver(entry);
     await entry.click();
     await expect(page).toHaveURL(THIS_SCHOOL);
+    // On a phone the sidebar steps aside for the page it opened.
+    await expect(page.getByRole("dialog", { name: "Sidebar" })).toBeHidden();
 
     await expect(
       page.getByRole("heading", { name: "Notifications", level: 1 })
