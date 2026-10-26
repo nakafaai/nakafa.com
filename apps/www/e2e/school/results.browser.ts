@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
   hostAddress,
@@ -73,13 +74,7 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
-  await proctor
-    .getByRole("dialog")
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
+  await closeSitting(proctor);
   await proctor.getByRole("link", { name: "Results", exact: true }).click();
 
   // The students are the page's one table; the questions open from the header in a sheet.
@@ -95,6 +90,22 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await expect(students.getByRole("row", { name: LEARNER_NAME })).toContainText(
     "1 / 2"
   );
+  // A student's answers open beside the list in the shared panes, and close from the pane's header.
+  const answers = proctor.getByRole("complementary", {
+    name: "Student's answers",
+  });
+  await expect(
+    answers.getByText("Choose a student to see their answers.")
+  ).toBeVisible();
+  await students.getByRole("button", { name: LEARNER_NAME }).click();
+  await expect(
+    answers.getByRole("heading", { name: LEARNER_NAME })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(answers.getByText("Question 1")).toBeVisible();
+  await answers.getByRole("button", { name: "Close" }).click();
+  await expect(
+    answers.getByText("Choose a student to see their answers.")
+  ).toBeVisible();
   await header.getByRole("button", { name: "Questions" }).click();
   await expect(
     proctor.getByRole("dialog", { name: "Questions" }).getByRole("button", {

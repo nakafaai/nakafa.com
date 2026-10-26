@@ -81,11 +81,12 @@ export const PersonKind = Schema.Literals(["member", "operator"]);
 /** Operator Persons are suspended between visits; replaced pending Owners are removed. */
 export const PersonStatus = Schema.Literals(["active", "suspended", "removed"]);
 /**
- * How an account came to hold a Person: an invite, a login card, operator work,
- * or founding the school itself.
+ * How an account came to hold a Person: an invite, a login card, a guardian's
+ * email code (ADR 0034), operator work, or founding the school itself.
  */
 export const ClaimMethod = Schema.Literals([
   "card",
+  "code",
   "invite",
   "operator",
   "founder",

@@ -69,9 +69,11 @@
     "qrcode-generator": "^2.0.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "read-excel-file": "9.3.12",
     "takumi-js": "^2.17.1",
     "use-intl": "catalog:",
     "virtua": "catalog:",
+    "write-excel-file": "4.1.1",
     "zustand": "catalog:"
   },
   "devDependencies": {

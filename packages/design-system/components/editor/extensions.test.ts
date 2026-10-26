@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
-import { Editor, type JSONContent } from "@tiptap/core";
+import { Editor, type JSONContent, type NodeViewRenderer } from "@tiptap/core";
 import { EditorState, type Transaction } from "@tiptap/pm/state";
 import { Array as Arr } from "effect";
 
@@ -12,7 +12,13 @@ function openEditor(
   { limit = 100_000, onRefuse = vi.fn<() => void>() } = {}
 ) {
   return new Editor({
-    ...richOptions({ limit, onRefuse, placeholder: "" }),
+    // An editor without a page draws no node, so it calls no task view.
+    ...richOptions({
+      limit,
+      onRefuse,
+      placeholder: "",
+      taskView: vi.fn<NodeViewRenderer>(),
+    }),
     content,
     ...(typeof content === "string"
       ? { contentType: "markdown" as const }
@@ -160,6 +166,34 @@ describe("richOptions", () => {
     });
   });
 
+  describe("the tasks", () => {
+    it("draws each task with the view the page gives, around the task's words", () => {
+      const taskView = vi.fn<NodeViewRenderer>(() => {
+        const dom = document.createElement("li");
+        const contentDOM = document.createElement("div");
+        dom.append(contentDOM);
+        return { contentDOM, dom };
+      });
+      const editor = new Editor({
+        ...richOptions({
+          limit: 100_000,
+          onRefuse: vi.fn<() => void>(),
+          placeholder: "",
+          taskView,
+        }),
+        content: DOC,
+        element: document.createElement("div"),
+      });
+
+      expect(taskView).toHaveBeenCalledOnce();
+      expect(
+        editor.view.dom.querySelector("ul[data-type=taskList] > li")
+          ?.textContent
+      ).toBe("done");
+      editor.destroy();
+    });
+  });
+
   describe("the direction", () => {
     it("puts the attribute that takes the direction of the words on every kind of block", () => {
       const editor = openEditor(DOC);
@@ -190,6 +224,7 @@ describe("richOptions", () => {
           limit: 100_000,
           onRefuse: vi.fn<() => void>(),
           placeholder: "",
+          taskView: vi.fn<NodeViewRenderer>(),
         }).extensions,
       });
       const stored = withDirection.getMarkdown();

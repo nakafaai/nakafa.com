@@ -8,6 +8,7 @@ import { liveTenant } from "@/components/tenant/live";
 const rendered: TenantValue = {
   canManage: true,
   canOpenExams: true,
+  canOpenReports: true,
   greeting: { firstName: "Sari", part: "morning" },
   home: { canCreate: false, canWatch: false, choices: [] },
   logo: "https://files.example.com/rendered.png",

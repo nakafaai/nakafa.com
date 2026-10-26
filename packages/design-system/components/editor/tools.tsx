@@ -1,24 +1,24 @@
 import {
-  CheckListIcon,
-  CodeSquareIcon,
-  HighlighterIcon,
-  LeftToRightListBulletIcon,
-  LeftToRightListNumberIcon,
-  MinusSignIcon,
-  QuoteDownIcon,
+  ArrowDown01Icon,
   Redo02Icon,
-  SourceCodeIcon,
-  TextBoldIcon,
-  TextItalicIcon,
-  TextStrikethroughIcon,
-  TextUnderlineIcon,
   Undo02Icon,
 } from "@hugeicons/core-free-icons";
-import { RichEditorLink } from "@repo/design-system/components/editor/link";
 import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
+import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
 
 /** One control of the toolbar, named in its tooltip. It shows as pressed while the caret sits in its format. */
@@ -89,173 +89,123 @@ export function RichEditorHistory({
   );
 }
 
-/** The marks a writer reaches for most: bold, italic, underlined and struck words, and links. */
-export function RichEditorMarks({
-  labels,
-}: {
-  labels: {
-    bold: string;
-    italic: string;
-    link: string;
-    linkPlaceholder: string;
-    strike: string;
-    underline: string;
-  };
-}) {
-  const { editor } = useCurrentEditor();
-  const state = useEditorState({
-    editor,
-    selector: ({ editor: current }) => ({
-      bold: current?.isActive("bold") ?? false,
-      italic: current?.isActive("italic") ?? false,
-      link: current?.isActive("link") ?? false,
-      strike: current?.isActive("strike") ?? false,
-      underline: current?.isActive("underline") ?? false,
-    }),
-  });
+/**
+ * One control of a toolbar group or menu: its icon, the name a writer hears and sees, the key
+ * it goes by, what it does, and, for a format, whether the caret sits in it. A control without
+ * `active` acts once, such as a divider that is inserted.
+ */
+interface EditorTool {
+  readonly active?: boolean;
+  readonly icon: ComponentProps<typeof HugeIcons>["icon"];
+  readonly label: string;
+  readonly name: string;
+  readonly run: () => void;
+}
 
+/**
+ * Formats that a writer turns on and off, such as the marks, as one group of toggles: each is
+ * named in its tooltip and pressed while the caret sits in its format, and the arrow keys move
+ * between them. A press keeps the focus in the text.
+ */
+export function EditorToggles({ tools }: { tools: readonly EditorTool[] }) {
   return (
-    <>
-      <RichEditorControl
-        active={state?.bold ?? false}
-        icon={TextBoldIcon}
-        label={labels.bold}
-        onClick={() => editor?.chain().focus().toggleBold().run()}
-      />
-      <RichEditorControl
-        active={state?.italic ?? false}
-        icon={TextItalicIcon}
-        label={labels.italic}
-        onClick={() => editor?.chain().focus().toggleItalic().run()}
-      />
-      <RichEditorControl
-        active={state?.underline ?? false}
-        icon={TextUnderlineIcon}
-        label={labels.underline}
-        onClick={() => editor?.chain().focus().toggleUnderline().run()}
-      />
-      <RichEditorControl
-        active={state?.strike ?? false}
-        icon={TextStrikethroughIcon}
-        label={labels.strike}
-        onClick={() => editor?.chain().focus().toggleStrike().run()}
-      />
-      <RichEditorLink
-        active={state?.link ?? false}
-        label={labels.link}
-        placeholder={labels.linkPlaceholder}
-      />
-    </>
+    <ToggleGroup
+      size="sm"
+      type="multiple"
+      value={Arr.map(
+        Arr.filter(tools, (tool) => tool.active === true),
+        (tool) => tool.name
+      )}
+    >
+      {Arr.map(tools, (tool) => (
+        <ToolHint key={tool.name} label={tool.label}>
+          <ToggleGroupItem
+            aria-label={tool.label}
+            className="flex-none"
+            onClick={tool.run}
+            // The press must not take the focus from the text, or the caret and the
+            // next keystrokes would be lost for a moment.
+            onMouseDown={(event) => event.preventDefault()}
+            value={tool.name}
+          >
+            <HugeIcons icon={tool.icon} />
+          </ToggleGroupItem>
+        </ToolHint>
+      ))}
+    </ToggleGroup>
   );
 }
 
-/** Bulleted, numbered and task lists. */
-export function RichEditorLists({
-  labels,
+/**
+ * Controls a writer needs less often, behind one button named `label`: it shows the icon of the
+ * format the caret sits in, or `icon`, and opens a menu of the controls with their names. A
+ * format shows its check in the menu. After a pick with the pointer the caret goes back to the
+ * text, and the menu closes.
+ */
+export function EditorMenu({
+  icon,
+  label,
+  tools,
 }: {
-  labels: { bullets: string; numbers: string; tasks: string };
+  icon: ComponentProps<typeof HugeIcons>["icon"];
+  label: string;
+  tools: readonly EditorTool[];
 }) {
   const { editor } = useCurrentEditor();
-  const state = useEditorState({
-    editor,
-    selector: ({ editor: current }) => ({
-      bullets: current?.isActive("bulletList") ?? false,
-      numbers: current?.isActive("orderedList") ?? false,
-      tasks: current?.isActive("taskList") ?? false,
-    }),
-  });
-
-  return (
-    <>
-      <RichEditorControl
-        active={state?.bullets ?? false}
-        icon={LeftToRightListBulletIcon}
-        label={labels.bullets}
-        onClick={() => editor?.chain().focus().toggleBulletList().run()}
-      />
-      <RichEditorControl
-        active={state?.numbers ?? false}
-        icon={LeftToRightListNumberIcon}
-        label={labels.numbers}
-        onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-      />
-      <RichEditorControl
-        active={state?.tasks ?? false}
-        icon={CheckListIcon}
-        label={labels.tasks}
-        onClick={() => editor?.chain().focus().toggleTaskList().run()}
-      />
-    </>
+  const shown = Option.getOrElse(
+    Option.map(
+      Arr.findFirst(tools, (tool) => tool.active === true),
+      (tool) => tool.icon
+    ),
+    () => icon
   );
-}
-
-/** The marks a writer needs less often: code and highlighted words. */
-export function RichEditorInline({
-  labels,
-}: {
-  labels: { code: string; highlight: string };
-}) {
-  const { editor } = useCurrentEditor();
-  const state = useEditorState({
-    editor,
-    selector: ({ editor: current }) => ({
-      code: current?.isActive("code") ?? false,
-      highlight: current?.isActive("highlight") ?? false,
-    }),
-  });
 
   return (
-    <>
-      <RichEditorControl
-        active={state?.code ?? false}
-        icon={SourceCodeIcon}
-        label={labels.code}
-        onClick={() => editor?.chain().focus().toggleCode().run()}
-      />
-      <RichEditorControl
-        active={state?.highlight ?? false}
-        icon={HighlighterIcon}
-        label={labels.highlight}
-        onClick={() => editor?.chain().focus().toggleHighlight().run()}
-      />
-    </>
-  );
-}
-
-/** Quotes, code blocks and dividers. */
-export function RichEditorBlocks({
-  labels,
-}: {
-  labels: { codeBlock: string; divider: string; quote: string };
-}) {
-  const { editor } = useCurrentEditor();
-  const state = useEditorState({
-    editor,
-    selector: ({ editor: current }) => ({
-      codeBlock: current?.isActive("codeBlock") ?? false,
-      quote: current?.isActive("blockquote") ?? false,
-    }),
-  });
-
-  return (
-    <>
-      <RichEditorControl
-        active={state?.quote ?? false}
-        icon={QuoteDownIcon}
-        label={labels.quote}
-        onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-      />
-      <RichEditorControl
-        active={state?.codeBlock ?? false}
-        icon={CodeSquareIcon}
-        label={labels.codeBlock}
-        onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-      />
-      <RichEditorControl
-        icon={MinusSignIcon}
-        label={labels.divider}
-        onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-      />
-    </>
+    <DropdownMenu>
+      <ToolHint label={label}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={label}
+              className="gap-0.5 has-[>svg]:px-1.5"
+              size="sm"
+              type="button"
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons icon={shown} />
+          <HugeIcons
+            className="size-3 text-muted-foreground"
+            icon={ArrowDown01Icon}
+          />
+        </DropdownMenuTrigger>
+      </ToolHint>
+      <DropdownMenuContent
+        className="w-48"
+        finalFocus={(closed) =>
+          closed === "keyboard" ? true : (editor?.view.dom ?? true)
+        }
+      >
+        {Arr.map(tools, (tool) =>
+          tool.active === undefined ? (
+            <DropdownMenuItem key={tool.name} onClick={tool.run}>
+              <HugeIcons icon={tool.icon} />
+              {tool.label}
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuCheckboxItem
+              checked={tool.active}
+              closeOnClick
+              key={tool.name}
+              onCheckedChange={tool.run}
+            >
+              <HugeIcons icon={tool.icon} />
+              {tool.label}
+            </DropdownMenuCheckboxItem>
+          )
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

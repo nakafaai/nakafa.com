@@ -1,5 +1,4 @@
 import {
-  ArrowDown01Icon,
   Delete02Icon,
   FileImportIcon,
   ViewIcon,
@@ -12,16 +11,11 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { SplitMenuTrigger } from "@/components/shared/split";
 import { DeleteExam } from "@/components/tenant/exams/delete";
 import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
@@ -36,7 +30,6 @@ import { Link } from "@/lib/routing/link";
  */
 export function ExamMenu() {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const { gone } = useExam();
   const locked = useExamLocked();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
@@ -54,26 +47,7 @@ export function ExamMenu() {
       <ButtonGroup aria-label={t("exam-actions")}>
         <TryAsStudent />
         <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <DropdownMenuTrigger
-                  render={
-                    <Button
-                      aria-label={common("more-actions")}
-                      size="icon"
-                      variant="outline"
-                    />
-                  }
-                >
-                  <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
-                </DropdownMenuTrigger>
-              }
-            />
-            <TooltipContent side="bottom">
-              {common("more-actions")}
-            </TooltipContent>
-          </Tooltip>
+          <SplitMenuTrigger />
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuGroup>
               <DropdownMenuItem

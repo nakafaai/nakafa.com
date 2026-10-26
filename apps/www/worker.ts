@@ -8,6 +8,7 @@ import {
 } from "@repo/site/keys";
 import { Array as Arr, Record, Redacted } from "effect";
 import { setValues } from "#www/deploy/environment";
+import { SIGN_IN_PATHS } from "#www/src/lib/routing/signin";
 import { weatherKeys } from "#www/src/lib/weather/keys";
 
 /**
@@ -57,11 +58,14 @@ export const workerSettings = {
    * alike. A prerendered page is `<path>/index.html`, and its URL has no trailing
    * slash, so the asset answers at `/en` instead of redirecting to `/en/`. A path
    * with no asset reaches the Worker, a browser navigation included under the
-   * flag above, and the Worker answers the nearest `404.html`.
+   * flag above, and the Worker answers the nearest `404.html`. The sign-in pages
+   * reach the Worker first, so a request that holds a session moves past the page
+   * on the server; the Worker answers a visitor with the prerendered page.
    */
   assets: {
     htmlHandling: HTML_HANDLING,
     notFoundHandling: NOT_FOUND_HANDLING,
+    runWorkerFirst: [...SIGN_IN_PATHS],
   },
 };
 
