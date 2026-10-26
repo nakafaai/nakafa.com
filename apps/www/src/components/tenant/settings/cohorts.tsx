@@ -164,7 +164,9 @@ function SchoolCohortsOfUnit({ slug }: { slug: TenantSlug }) {
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <SettingsTablePage actions={<CohortsUnitChoice />}>{failure}</SettingsTablePage>
+        <SettingsTablePage actions={<CohortsUnitChoice />}>
+          {failure}
+        </SettingsTablePage>
       )}
       read={{ args: { slug, unitId }, ref: tenancy.cohorts.activePeriod }}
     >
@@ -210,7 +212,11 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
 
   if (periodId === undefined) {
-    return <SettingsTablePage actions={<CohortsUnitChoice />}>{null}</SettingsTablePage>;
+    return (
+      <SettingsTablePage actions={<CohortsUnitChoice />}>
+        {null}
+      </SettingsTablePage>
+    );
   }
   if (periodId === null) {
     return (

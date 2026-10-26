@@ -3,6 +3,7 @@ import {
   type BiologyItemStore,
   BiologyLabProvider,
   useBiologyItemSelection,
+  useBiologyView,
 } from "@repo/design-system/components/contents/biology/context";
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -34,8 +35,8 @@ export function BiologyStage({
   return (
     <ThreeCanvas frameloop="always">
       <Suspense>
-        <BiologyLabProvider colors={colors} store={store}>
-          <BiologyCamera view={view} />
+        <BiologyLabProvider colors={colors} store={store} view={view}>
+          <BiologyCamera />
           <ambientLight intensity={0.58} />
           <hemisphereLight
             color={colors.skyLight}
@@ -67,17 +68,18 @@ export function BiologyStage({
  * Frames the scene again for each item the reader picks, so every item opens
  * from the same camera position.
  */
-function BiologyCamera({ view }: { view: NarrowCameraPose }) {
+function BiologyCamera() {
   const selectedIndex = useBiologyItemSelection((state) => state.selectedIndex);
 
-  return <ResponsiveBiologyCamera key={selectedIndex} view={view} />;
+  return <ResponsiveBiologyCamera key={selectedIndex} />;
 }
 
 /**
  * Keeps the active biology scene framed on narrow and wide canvases.
  */
-function ResponsiveBiologyCamera({ view }: { view: NarrowCameraPose }) {
+function ResponsiveBiologyCamera() {
   const size = useThree((state) => state.size);
+  const view = useBiologyView();
   const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
     ? view.narrowCameraPosition
     : view.cameraPosition;

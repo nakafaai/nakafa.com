@@ -3,15 +3,15 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileShifts } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Predicate } from "effect";
-import type { Locale } from "use-intl";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import {
   CatalogCard,
-  CatalogCardImage,
   CatalogCardTile,
+  CatalogCardVisual,
 } from "@/components/shared/catalog/card";
+import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";
@@ -20,7 +20,6 @@ import { getTryoutCountryCatalogArtwork } from "@/lib/tryout/artwork";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation";
 
 interface TryoutHubClientProps {
-  locale: Locale;
   page: {
     readonly countries: Ref.Returns<
       typeof tryouts.queries.catalog.getHubPage
@@ -37,30 +36,21 @@ type HubCountry = HubCountries[number];
  * learner's cards also save the chosen country through the page's live client,
  * which mounts only once the page holds one.
  */
-export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
+export function TryoutHubClient({ page }: TryoutHubClientProps) {
   if (page.countries.length === 0) {
     return <ComingSoon />;
   }
 
   return (
-    <ConvexIsland
-      fallback={
-        <TryoutHubCountries countries={page.countries} locale={locale} />
-      }
-    >
-      <TryoutHubSignedCountries countries={page.countries} locale={locale} />
+    <ConvexIsland fallback={<TryoutHubCountries countries={page.countries} />}>
+      <TryoutHubSignedCountries countries={page.countries} />
     </ConvexIsland>
   );
 }
 
 /** A learner's country cards: a click saves the country as the learner's choice, once the learner is signed in. */
-function TryoutHubSignedCountries({
-  countries,
-  locale,
-}: {
-  countries: HubCountries;
-  locale: Locale;
-}) {
+function TryoutHubSignedCountries({ countries }: { countries: HubCountries }) {
+  const locale = useLocale();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredTryout = useSetPreferredTryoutMutation(countries);
@@ -85,24 +75,19 @@ function TryoutHubSignedCountries({
   }
 
   return (
-    <TryoutHubCountries
-      countries={countries}
-      locale={locale}
-      onPick={handleCountryClick}
-    />
+    <TryoutHubCountries countries={countries} onPick={handleCountryClick} />
   );
 }
 
 /** The country cards of the hub. A card reports its pick only when the page passes `onPick`. */
 function TryoutHubCountries({
   countries,
-  locale,
   onPick,
 }: {
   countries: HubCountries;
-  locale: Locale;
   onPick?: (country: HubCountry) => void;
 }) {
+  const locale = useLocale();
   const tTryouts = useTranslations("Tryouts");
   const visuals = getTileShifts(
     Arr.map(countries, (country) => {
@@ -115,31 +100,37 @@ function TryoutHubCountries({
   );
 
   return (
-    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(Arr.zip(countries, visuals), ([country, visual], index) => (
-        <CatalogCard
-          action={
-            <TryoutPageLink
-              onClick={onPick === undefined ? undefined : () => onPick(country)}
-              publicPath={country.publicPath}
-            />
-          }
-          actionLabel={tTryouts("open-country-cta")}
-          key={country.countryKey}
-          title={country.title}
-        >
-          {Predicate.isNumber(visual) ? (
-            <CatalogCardTile seed={country.countryKey} shift={visual}>
-              <CountryFlagIcon
-                className="h-6 w-9 rounded-xs ring-1 ring-border/60"
-                countryCode={country.countryCode}
+    <CatalogActionLabelContext value={tTryouts("open-country-cta")}>
+      <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+        {Arr.map(Arr.zip(countries, visuals), ([country, visual], index) => (
+          <CatalogCard
+            action={
+              <TryoutPageLink
+                onClick={
+                  onPick === undefined ? undefined : () => onPick(country)
+                }
+                publicPath={country.publicPath}
               />
-            </CatalogCardTile>
-          ) : (
-            <CatalogCardImage preload={index === 0} src={visual.imageSrc} />
-          )}
-        </CatalogCard>
-      ))}
-    </div>
+            }
+            key={country.countryKey}
+            title={country.title}
+          >
+            {Predicate.isNumber(visual) ? (
+              <CatalogCardTile seed={country.countryKey} shift={visual}>
+                <CountryFlagIcon
+                  className="h-6 w-9 rounded-xs ring-1 ring-border/60"
+                  countryCode={country.countryCode}
+                />
+              </CatalogCardTile>
+            ) : (
+              <CatalogCardVisual
+                preload={index === 0}
+                visual={visual.imageSrc}
+              />
+            )}
+          </CatalogCard>
+        ))}
+      </div>
+    </CatalogActionLabelContext>
   );
 }

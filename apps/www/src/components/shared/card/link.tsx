@@ -38,29 +38,34 @@ const cardArrow = cva("size-4 shrink-0 transition-opacity ease-out", {
   },
 });
 
+/** A card's page link: the page it opens, its title, and when its arrow shows. */
+interface CardLinkProps {
+  /** When the arrow shows: on hover, which is the default, or always. */
+  arrow?: VariantProps<typeof cardArrow>["arrow"];
+  children: ReactNode;
+  target: LinkTarget;
+  title: string;
+}
+
 /**
  * One page link of a card, addressed by a signed public path of the content. A
  * path that names no page renders no row.
  */
 export function PublicPathCardLink({
-  arrow,
   children,
   context,
   publicPath,
-  title,
-}: {
-  arrow?: VariantProps<typeof cardArrow>["arrow"];
-  children: ReactNode;
+  ...row
+}: Omit<CardLinkProps, "target"> & {
   context?: string | undefined;
   publicPath: string;
-  title: string;
 }) {
   const target = publicPathTarget(publicPath, context);
   if (Option.isNone(target)) {
     return null;
   }
   return (
-    <CardLink arrow={arrow} target={target.value} title={title}>
+    <CardLink {...row} target={target.value}>
       {children}
     </CardLink>
   );
@@ -78,22 +83,11 @@ export function CardLinks({ children }: { children: ReactNode }) {
  * top spacing when the list opens the card. Rows prefetch on intent, since a
  * card can list many pages.
  */
-export function CardLink({
-  arrow,
-  children,
-  target,
-  title,
-}: {
-  /** When the arrow shows: on hover, which is the default, or always. */
-  arrow?: VariantProps<typeof cardArrow>["arrow"];
-  children: ReactNode;
-  target: LinkTarget;
-  title: string;
-}) {
+export function CardLink({ arrow, children, ...link }: CardLinkProps) {
   const className = cardRow({ linked: true });
   return (
     <li className="group/list">
-      <TargetLink className={className} target={target} title={title}>
+      <TargetLink className={className} {...link}>
         {children}
         <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
       </TargetLink>

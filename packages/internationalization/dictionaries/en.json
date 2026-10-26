@@ -184,6 +184,7 @@
     "unavailable": "This exam is not available.",
     "frozen-note": "This exam is scheduled, so its questions are fixed.",
     "archived-note": "This school is archived, so its exams are read-only until it is restored.",
+    "gone-note": "This exam was deleted or closed to you, so nothing you change here is saved.",
     "room-cancel": "Cancel room",
     "room-cancel-title": "Cancel this room?",
     "room-cancel-description": "Students cannot enter it. The exam's questions can change again once no room of it remains.",

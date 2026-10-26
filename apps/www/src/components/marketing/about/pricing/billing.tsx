@@ -11,7 +11,7 @@ import { Effect } from "effect";
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ProOfferDialog } from "@/components/billing/offers";
-import type { PricingButtonVariant } from "@/components/marketing/about/pricing/button";
+import { usePricingButtonVariant } from "@/components/marketing/about/pricing/button";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,
@@ -27,16 +27,10 @@ import { useViewer } from "@/lib/identity/client";
  * The signed-in billing action. It mounts its own island around the page's one
  * Convex client, so every query and action it runs shares that client.
  */
-export function BillingButton({
-  client,
-  variant,
-}: {
-  client: ConvexReactClient;
-  variant: PricingButtonVariant;
-}) {
+export function BillingButton({ client }: { client: ConvexReactClient }) {
   return (
     <ConvexProvider client={client}>
-      <BillingAction variant={variant} />
+      <BillingAction />
     </ConvexProvider>
   );
 }
@@ -46,7 +40,8 @@ export function BillingButton({
  * a Polar plan, the billing settings for a plan Xendit bills. A pass holder is
  * offered only passes, which extend the pass.
  */
-function BillingAction({ variant }: { variant: PricingButtonVariant }) {
+function BillingAction() {
+  const variant = usePricingButtonVariant();
   const locale = useLocale();
   const navigate = useNavigate();
   const t = useTranslations("Pricing");

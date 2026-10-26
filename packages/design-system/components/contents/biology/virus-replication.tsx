@@ -101,12 +101,21 @@ function LysogenicReplicationScene({ item }: BiologySceneProps) {
  */
 function VirusReplicationScene({ item }: BiologySceneProps) {
   const selectedIndex = useBiologyItemSelection((state) => state.selectedIndex);
+  const isLysogenic = selectedIndex === 1;
 
-  if (selectedIndex === 1) {
-    return <LysogenicReplicationScene item={item} />;
-  }
-
-  return <LyticReplicationScene item={item} />;
+  return (
+    <group
+      key={selectedIndex}
+      position={REPLICATION_SCENE_POSITION}
+      scale={REPLICATION_SCENE_SCALE}
+    >
+      {isLysogenic ? <LysogenicCycle /> : <LyticCycle />}
+      <BiologyCallouts
+        callouts={item.callouts}
+        targets={isLysogenic ? LYSOGENIC_LABEL_TARGETS : LYTIC_LABEL_TARGETS}
+      />
+    </group>
+  );
 }
 
 /**

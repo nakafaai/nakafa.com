@@ -12,12 +12,6 @@ import { publicPathTarget } from "@/lib/routing/target";
 interface Props {
   className?: string;
   pagination: ContentPagination;
-  /**
-   * Whether the link preloads its page as soon as it renders. A page that cannot
-   * name its final destination yet preloads on intent instead, so only the
-   * destination that the reader chooses is preloaded.
-   */
-  prefetchNext?: boolean;
 }
 
 /**
@@ -130,11 +124,7 @@ function PaginationLabel({
  * link preloads its page in view. Previous waits for intent, which spares a
  * reader who only moves forward the second server render.
  */
-export function PaginationContent({
-  pagination,
-  className,
-  prefetchNext = true,
-}: Props) {
+export function PaginationContent({ pagination, className }: Props) {
   const t = useTranslations("Common");
 
   return (
@@ -159,7 +149,7 @@ export function PaginationContent({
           icon={ArrowRight02Icon}
           iconPosition="right"
           label={t("next")}
-          prefetch={prefetchNext}
+          prefetch
           publicPath={pagination.next.publicPath}
           title={pagination.next.title}
         />

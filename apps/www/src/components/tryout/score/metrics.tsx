@@ -7,6 +7,7 @@ import {
 import {
   TryoutMetricFraction,
   TryoutMetricNumber,
+  TryoutMetricSlash,
 } from "@/components/tryout/section/metrics";
 
 /** Renders strategy-aware score and correctness metrics. */
@@ -24,10 +25,11 @@ export function TryoutScoreMetrics({ score }: { score: TryoutScoreResult }) {
       </TryoutPartStat>
 
       <TryoutPartStat label={tTryouts("correct-answers-label")}>
-        <TryoutMetricFraction
-          correct={score.totalCorrect}
-          total={score.totalQuestions}
-        />
+        <TryoutMetricFraction>
+          <TryoutMetricNumber value={score.totalCorrect} />
+          <TryoutMetricSlash />
+          <TryoutMetricNumber value={score.totalQuestions} />
+        </TryoutMetricFraction>
       </TryoutPartStat>
     </TryoutPartStats>
   );

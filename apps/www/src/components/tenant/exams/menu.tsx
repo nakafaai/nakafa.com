@@ -23,9 +23,8 @@ import {
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { DeleteExam } from "@/components/tenant/exams/delete";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import { ImportQuestions } from "@/components/tenant/exams/import/dialog";
-import { useExam } from "@/components/tenant/exams/provider";
+import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -38,10 +37,15 @@ import { Link } from "@/lib/routing/link";
 export function ExamMenu() {
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
-  const { exam } = useExam();
+  const { gone } = useExam();
+  const locked = useExamLocked();
   const [dialog, setDialog] = useState<"delete" | "import" | null>(null);
 
-  if (isLocked(exam)) {
+  // A gone exam has no try to open.
+  if (gone) {
+    return null;
+  }
+  if (locked) {
     return <TryAsStudent />;
   }
 

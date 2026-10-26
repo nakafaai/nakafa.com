@@ -88,13 +88,8 @@ function SavedWords({ markdown }: { markdown: string }) {
  * cannot load, so nothing moves when the editor arrives. `open` is false while a
  * closing editor is still on the page, and such an editor takes no focus.
  */
-export function MemoryDocument({
-  memory,
-  open,
-}: {
-  memory: Memory | null;
-  open: boolean;
-}) {
+export function MemoryDocument({ memory }: { memory: Memory | null }) {
+  const open = useMemoryPage((state) => state.open);
   const t = useTranslations("Memory");
   const labels = useTranslations("Editor");
   const common = useTranslations("Common");

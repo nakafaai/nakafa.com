@@ -25,3 +25,25 @@ export function ExamUnavailable() {
     </main>
   );
 }
+
+/**
+ * The sentence of an exam that went while its page was open, deleted or closed to the viewer, with the way back
+ * to the exams. The editor, the try and the rooms keep the exam's title and say it in their own frame.
+ */
+export function ExamGone() {
+  const { slug } = useTenant();
+  const t = useTranslations("Exams");
+
+  return (
+    <>
+      {t("gone-note")}{" "}
+      <Link
+        className="font-medium text-foreground underline-offset-4 hover:underline"
+        params={{ slug }}
+        to="/school/$slug/exams"
+      >
+        {t("title")}
+      </Link>
+    </>
+  );
+}

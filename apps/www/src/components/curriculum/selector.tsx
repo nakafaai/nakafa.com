@@ -15,6 +15,7 @@ import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
+import { createContext, use } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
@@ -58,10 +59,28 @@ interface CurriculumSelectorProps {
  */
 export function CurriculumSelector(props: CurriculumSelectorProps) {
   return (
-    <ConvexIsland fallback={<VisitorCurriculumSelector {...props} />}>
-      <SignedCurriculumSelector {...props} />
-    </ConvexIsland>
+    <CurriculumSelectorContext value={props}>
+      <ConvexIsland fallback={<VisitorCurriculumSelector />}>
+        <SignedCurriculumSelector />
+      </ConvexIsland>
+    </CurriculumSelectorContext>
   );
+}
+
+/** The curriculum on screen, the menu's label, and its options, which both variants of the selector read. */
+const CurriculumSelectorContext = createContext<CurriculumSelectorProps | null>(
+  null
+);
+
+/** Reads the curriculum selector around a variant. */
+function useCurriculumSelector() {
+  const value = use(CurriculumSelectorContext);
+  if (value === null) {
+    throw new Error(
+      "useCurriculumSelector must be used within CurriculumSelector"
+    );
+  }
+  return value;
 }
 
 /** The selected option of a change, when the change names another curriculum. */
@@ -77,11 +96,8 @@ function pickCurriculum(
 }
 
 /** A visitor's selector: a change navigates to the curriculum, and nothing is saved. */
-function VisitorCurriculumSelector({
-  currentValue,
-  label,
-  options,
-}: CurriculumSelectorProps) {
+function VisitorCurriculumSelector() {
+  const { currentValue, options } = useCurriculumSelector();
   const navigate = useNavigate();
 
   /** Navigate to a selected curriculum. */
@@ -96,22 +112,13 @@ function VisitorCurriculumSelector({
   }
 
   return (
-    <CurriculumSelect
-      currentValue={currentValue}
-      disabled={false}
-      label={label}
-      onValueChange={handleValueChange}
-      options={options}
-    />
+    <CurriculumSelect disabled={false} onValueChange={handleValueChange} />
   );
 }
 
 /** A learner's selector: a change navigates, and then saves the curriculum as the learner's choice. */
-function SignedCurriculumSelector({
-  currentValue,
-  label,
-  options,
-}: CurriculumSelectorProps) {
+function SignedCurriculumSelector() {
+  const { currentValue, options } = useCurriculumSelector();
   const locale = useLocale();
   const navigate = useNavigate();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
@@ -159,27 +166,19 @@ function SignedCurriculumSelector({
   }
 
   return (
-    <CurriculumSelect
-      currentValue={currentValue}
-      disabled={isLoading}
-      label={label}
-      onValueChange={handleValueChange}
-      options={options}
-    />
+    <CurriculumSelect disabled={isLoading} onValueChange={handleValueChange} />
   );
 }
 
 /** The curriculum menu that both variants share. */
 function CurriculumSelect({
-  currentValue,
   disabled,
-  label,
   onValueChange,
-  options,
-}: CurriculumSelectorProps & {
+}: {
   disabled: boolean;
   onValueChange: (value: string | null) => void;
 }) {
+  const { currentValue, label, options } = useCurriculumSelector();
   const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,
