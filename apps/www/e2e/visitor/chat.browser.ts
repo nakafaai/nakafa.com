@@ -5,6 +5,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect, MutableList } from "effect";
 import { CHAT_PATH } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SESSION_READ = "/api/auth/get-session";
 const AUTH_URL = /\/auth/;
@@ -36,6 +37,8 @@ test("a visitor's new chat opens no socket, and sending from its composer asks f
         );
         const composer = page.getByLabel(app.Ai["text-placeholder"]).first();
         yield* Effect.promise(() => expect(composer).toBeVisible());
+        // React holds what the composer says only once it takes it over.
+        yield* Effect.promise(() => waitUntilTakenOver(composer));
         yield* Effect.promise(() =>
           composer.fill("Explain the quadratic formula")
         );

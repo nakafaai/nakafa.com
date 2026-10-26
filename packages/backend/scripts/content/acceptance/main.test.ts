@@ -16,7 +16,7 @@ import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
 /** The usage line, which names every mode with its arguments in the registry's order. */
 const USAGE =
-  "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|class-teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming]|card <school-slug> <card-file>|student <school-slug> <learner-address>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>|xendit <user-id> <pass|plan>|transfer <invoice-number> <bank-reference>>";
+  "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|class-teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay]|card <school-slug> <card-file>|student <school-slug> <learner-address>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>|xendit <user-id> <pass|plan>|transfer <invoice-number> <bank-reference>>";
 
 /** The mode words of the registry, in the order that the usage lists them. */
 const MODE_WORDS = [

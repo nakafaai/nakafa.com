@@ -10,13 +10,35 @@ import {
 } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 
 /**
- * The templates a question may take. This slice writes one: a single-answer
- * multiple choice. Each later slice adds its own member here.
+ * The templates a question may take (K23): a single-answer multiple choice
+ * (`choice`); a complex multiple choice (`choices`), whose student checks every
+ * correct option; true or false (`truefalse`), a single-answer choice of two
+ * fixed options; and cause and effect (`cause`), a single-answer choice of the
+ * five fixed relations between a statement and its reason, which the prompt
+ * holds; a short answer (`short`), a text entry that the key's accepted
+ * answers score; an essay (`essay`), a long written answer that the teacher
+ * scores by the rubric; matching (`match`), where the student pairs each
+ * statement with one answer; and a true or false table (`table`), where the
+ * student marks each statement true or false. A new question starts as
+ * `choice`, and each later template adds its member here.
  */
-const QuestionTemplate = Schema.Literals(["choice"]);
+export const QuestionTemplate = Schema.Literals([
+  "choice",
+  "choices",
+  "truefalse",
+  "cause",
+  "short",
+  "essay",
+  "match",
+  "table",
+]);
+export type QuestionTemplate = typeof QuestionTemplate.Type;
+
+/** The template every new question starts as, an imported one included: a single-answer choice (K23). */
+export const NEW_QUESTION_TEMPLATE: QuestionTemplate = "choice";
 
 /**
  * The options a new question starts with. The research notes of this lane recorded
@@ -67,22 +89,148 @@ export const CHOICE_OPTIONS_MIN = 2;
 export const CHOICE_OPTIONS_MAX = 5;
 
 /**
- * Whether the interactions of a question are the ones this kind takes: distinct
- * single-answer choices, each with a minimum and a maximum of one option, and from
- * two to five options. A question that holds any other interaction, a choice that may
- * take no option or more than one, or a choice with another number of options, is
- * refused.
+ * The most options one choice of a template takes: every option it holds for a complex choice,
+ * whose student checks each correct one, and one for every other template.
  */
-export const isChoiceAnswers = (answers: readonly Interaction[]) =>
-  hasUniqueIds(answers) &&
+export const choiceLimit = (template: QuestionTemplate, options: number) =>
+  Match.value(template).pipe(
+    Match.when("choices", () => options),
+    Match.orElse(() => 1)
+  );
+
+/** The options of a true or false question: true and false. */
+const TRUE_FALSE_OPTIONS = 2;
+
+/**
+ * The options of a cause and effect question: both true and related, both true and unrelated, the
+ * statement true and the reason false, the statement false and the reason true, and both false.
+ */
+const CAUSE_OPTIONS = 5;
+
+/**
+ * The number of options a template fixes, or none when the teacher adds and removes them: two for
+ * true or false, and five for cause and effect. The editor writes their labels in the teacher's
+ * language when the question takes the template, and the teacher may retype them, so a question
+ * in any language reads them in its own words.
+ */
+export const fixedOptions = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("truefalse", () => Option.some(TRUE_FALSE_OPTIONS)),
+    Match.when("cause", () => Option.some(CAUSE_OPTIONS)),
+    Match.orElse(() => Option.none<number>())
+  );
+
+/**
+ * Whether a template's question takes a rubric, the teacher's guide to scoring an answer by hand.
+ * A choice and a short answer are scored by their key, so neither takes one, and an essay
+ * is scored by the teacher, who reads its rubric; the layer shows a rubric only for a
+ * template that takes one. Each template decides it here, so a new
+ * template cannot leave it undecided.
+ */
+export const takesRubric = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("choice", () => false),
+    Match.when("choices", () => false),
+    Match.when("truefalse", () => false),
+    Match.when("cause", () => false),
+    Match.when("short", () => false),
+    Match.when("essay", () => true),
+    Match.when("match", () => false),
+    Match.when("table", () => false),
+    Match.exhaustive
+  );
+
+/** The columns of a true or false table: true and false. */
+const TABLE_COLUMNS = 2;
+
+/**
+ * The labels the editor writes in the teacher's language when a question takes a template: the options a
+ * choice template fixes (`fixedOptions`), the two columns of a true or false table, and none for any other.
+ */
+export const templateLabels = (template: QuestionTemplate) =>
+  template === "table"
+    ? TABLE_COLUMNS
+    : Option.getOrElse(fixedOptions(template), () => 0);
+
+/**
+ * Whether a template's question needs an answer key before its exam is scheduled: an essay is scored by
+ * the teacher with its rubric, so it needs none, and every other template is scored by its key.
+ */
+export const needsKey = (template: QuestionTemplate) => !takesRubric(template);
+
+/** The most characters of one fixed option's label, as the editor writes it for the template. */
+const OPTION_LABEL_MAX = 200;
+
+/**
+ * The labels of the options a template fixes, as plain text in the teacher's language: one
+ * for each fixed option (`fixedOptions`), and none for a template whose options the teacher
+ * adds.
+ */
+export const TemplateLabels = Schema.Array(
+  Schema.NonEmptyString.check(Schema.isMaxLength(OPTION_LABEL_MAX))
+).check(Schema.isMaxLength(CHOICE_OPTIONS_MAX));
+
+/**
+ * Whether one interaction is a choice that a choice template takes: a choice of two to five
+ * options, as many as the template fixes when it fixes them (`fixedOptions`), taking at least one
+ * option and at most the template's limit (`choiceLimit`).
+ */
+const choiceFits = (template: QuestionTemplate, answer: Interaction) =>
+  answer.kind === "choice" &&
+  answer.minChoices === 1 &&
+  answer.maxChoices === choiceLimit(template, answer.options.length) &&
+  answer.options.length >= CHOICE_OPTIONS_MIN &&
+  answer.options.length <= CHOICE_OPTIONS_MAX &&
+  Option.match(fixedOptions(template), {
+    onNone: () => true,
+    onSome: (count) => answer.options.length === count,
+  });
+
+/**
+ * Whether one interaction is a match that the matching template takes: two to five statements and two
+ * to five answers, each statement paired with one answer and each answer with one statement at most.
+ */
+const matchFits = (answer: Interaction) =>
+  answer.kind === "match" &&
+  answer.sources.length >= CHOICE_OPTIONS_MIN &&
+  answer.sources.length <= CHOICE_OPTIONS_MAX &&
+  answer.targets.length >= CHOICE_OPTIONS_MIN &&
+  answer.targets.length <= CHOICE_OPTIONS_MAX &&
   Arr.every(
-    answers,
-    (answer) =>
-      answer.kind === "choice" &&
-      answer.minChoices === 1 &&
-      answer.maxChoices === 1 &&
-      answer.options.length >= CHOICE_OPTIONS_MIN &&
-      answer.options.length <= CHOICE_OPTIONS_MAX
+    [...answer.sources, ...answer.targets],
+    (part) => part.maxMatches === 1
+  );
+
+/**
+ * Whether one interaction is a table that the true or false template takes: two to five statements, and
+ * the two columns, true and false.
+ */
+const tableFits = (answer: Interaction) =>
+  answer.kind === "matrix" &&
+  answer.statements.length >= CHOICE_OPTIONS_MIN &&
+  answer.statements.length <= CHOICE_OPTIONS_MAX &&
+  answer.columns.length === TABLE_COLUMNS;
+
+/**
+ * Whether the interactions of a question are the ones its template takes: distinct interactions,
+ * each a text entry for a short answer, a long text for an essay, a match for matching (`matchFits`), a
+ * table for a true or false table (`tableFits`),
+ * and each a choice that fits the template (`choiceFits`) for
+ * every other template. A question that holds any other interaction is refused.
+ */
+export const answersFit = (
+  template: QuestionTemplate,
+  answers: readonly Interaction[]
+) =>
+  hasUniqueIds(answers) &&
+  Arr.every(answers, (answer) =>
+    Match.value(template).pipe(
+      Match.when("short", () => answer.kind === "textEntry"),
+      Match.when("essay", () => answer.kind === "extendedText"),
+      Match.when("match", () => matchFits(answer)),
+      Match.when("table", () => tableFits(answer)),
+      Match.orElse(() => choiceFits(template, answer))
+    )
   );
 
 /** The interactions of a question as JSON text, decoded with the contract's interaction schema. */
@@ -182,6 +330,12 @@ const emptyLabel: typeof ContentDocumentSchema.Type = {
   type: "doc",
 };
 
+/** The label of an option that reads `text`: one paragraph of plain text, as the option editor writes it. */
+export const textLabel = (text: string): typeof ContentDocumentSchema.Type => ({
+  content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
+  type: "doc",
+});
+
 /**
  * The name of a new choice, read by screen readers. The contract refuses an empty label,
  * and the editor of this slice has no field for a teacher to name a choice yet, so a new
@@ -214,6 +368,76 @@ export const choiceAnswers = (
     shuffle: false,
   },
 ];
+
+/** The interactions of a short answer question: one text entry, which the key's accepted answers score. */
+export const shortAnswers = (): readonly [
+  Extract<Interaction, { kind: "textEntry" }>,
+] => [{ id: "entry", kind: "textEntry", label: NEW_CHOICE_LABEL }];
+
+/** The statements and the answers a new matching question starts with. */
+const NEW_MATCH_PARTS = 3;
+
+/**
+ * The interactions of a matching question: one match of `NEW_MATCH_PARTS` empty statements and as
+ * many empty answers, numbered from one, each paired at most once.
+ */
+export const matchAnswers = (): readonly [
+  Extract<Interaction, { kind: "match" }>,
+] => [
+  {
+    id: "match",
+    kind: "match",
+    label: NEW_CHOICE_LABEL,
+    shuffle: false,
+    sources: [
+      { id: "source-1", label: emptyLabel, maxMatches: 1 },
+      ...Arr.makeBy(NEW_MATCH_PARTS - 1, (index) => ({
+        id: `source-${index + 2}`,
+        label: emptyLabel,
+        maxMatches: 1,
+      })),
+    ],
+    targets: [
+      { id: "target-1", label: emptyLabel, maxMatches: 1 },
+      ...Arr.makeBy(NEW_MATCH_PARTS - 1, (index) => ({
+        id: `target-${index + 2}`,
+        label: emptyLabel,
+        maxMatches: 1,
+      })),
+    ],
+  },
+];
+
+/**
+ * The interactions of a true or false table: one table of `NEW_MATCH_PARTS` empty statements, and its two
+ * columns labelled with `labels`, true then false, in the teacher's language.
+ */
+export const tableAnswers = (
+  labels: readonly string[]
+): readonly [Extract<Interaction, { kind: "matrix" }>] => [
+  {
+    columns: Arr.map(labels, (text, index) => ({
+      id: `column-${index + 1}`,
+      label: textLabel(text),
+    })),
+    id: "matrix",
+    kind: "matrix",
+    label: NEW_CHOICE_LABEL,
+    shuffle: false,
+    statements: [
+      { id: "statement-1", label: emptyLabel },
+      ...Arr.makeBy(NEW_MATCH_PARTS - 1, (index) => ({
+        id: `statement-${index + 2}`,
+        label: emptyLabel,
+      })),
+    ],
+  },
+];
+
+/** The interactions of an essay question: one long text, which the teacher scores by the rubric. */
+export const essayAnswers = (): readonly [
+  Extract<Interaction, { kind: "extendedText" }>,
+] => [{ id: "essay", kind: "extendedText", label: NEW_CHOICE_LABEL }];
 
 /**
  * The interactions of a new question: a single-answer choice with `NEW_QUESTION_OPTIONS`

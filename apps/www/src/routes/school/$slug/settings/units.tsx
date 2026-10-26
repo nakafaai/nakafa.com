@@ -6,7 +6,7 @@ import { readUnitsFn } from "@/lib/tenant/settings.functions";
 /** The units of the school, with their time zones and content languages. */
 export const Route = createFileRoute("/school/$slug/settings/units")({
   loader: ({ context }) =>
-    context.school._tag === "Member"
+    context.firstHtml && context.school._tag === "Member"
       ? readUnitsFn({ data: { slug: context.slug } })
       : undefined,
   component: SchoolUnitsPage,

@@ -1,4 +1,3 @@
-import { Clock01Icon, LiveStreaming02Icon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
@@ -31,11 +30,7 @@ export function LiveCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader
-        icon={LiveStreaming02Icon}
-        title={t("tile-live")}
-        tone="success"
-      />
+      <Dashboard.CellHeader title={t("tile-live")} />
       <Dashboard.List>
         {Arr.map(rooms, (room) => (
           <LiveRow key={room.id} now={now} room={room} />
@@ -60,7 +55,6 @@ function LiveRow({ now, room }: { now: number; room: Room }) {
           percent={percent}
         />
       }
-      icon={Clock01Icon}
       render={
         <TargetLink
           target={schoolExamSittingTarget(tenant.slug, room.examId, room.id)}
@@ -68,7 +62,6 @@ function LiveRow({ now, room }: { now: number; room: Room }) {
         />
       }
       title={room.examTitle}
-      tone="success"
       trailing={t("tile-minutes-left", {
         count: minutesLeft(room.closesAt, now),
       })}

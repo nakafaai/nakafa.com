@@ -25,6 +25,7 @@ import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
+import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";
 import { SignedInIsland } from "@/components/providers/island";
 import { formatShortAge } from "@/components/user/age";
@@ -244,14 +245,19 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
   const t = useTranslations("Common");
   const tAi = useTranslations("Ai");
   const deleteChat = useDeleteChatMutation();
+  const forgetChat = useAi((state) => state.forgetChat);
+  const recallChat = useAi((state) => state.recallChat);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   /**
    * Delete this chat through the optimistic list mutation, once the learner
-   * confirms in the dialog. The dialog closes first, as the row leaves the list.
+   * confirms in the dialog. The dialog closes first, as the row leaves the list,
+   * and Nina's sheet lets the chat go with it. A delete that fails puts the chat
+   * back in the sheet when the sheet showed it.
    */
   function handleDelete() {
     setConfirmDelete(false);
+    const shown = forgetChat(chat._id);
     Effect.runFork(
       Effect.asVoid(
         Effect.tryPromise(() =>
@@ -268,6 +274,9 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
+                  if (shown) {
+                    recallChat(chat._id);
+                  }
                   toast.error({
                     description: "action-error.description",
                     title: "action-error.title",

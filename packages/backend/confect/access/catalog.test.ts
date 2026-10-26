@@ -222,6 +222,7 @@ describe("access/catalog", () => {
           "sitting.cancel",
           "sitting.close",
           "exam.results.released",
+          "exam.results.graded",
         ],
         Order.String
       )

@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Filter",
     "no-results": "No results.",
     "reset": "Reset"
   },
@@ -107,6 +108,15 @@
     "signals-empty": "No signal has been recorded.",
     "signal-exit": "Left the exam",
     "signal-return": "Came back to the exam",
+    "screen-title": "Student screen",
+    "screen-none": "The student has not opened a question yet.",
+    "results-away": "Left the exam",
+    "results-student-answers": "Student's answers",
+    "results-not-submitted": "The student has not submitted the exam yet.",
+    "results-away-seconds": "{count, plural, one {Once} other {# times}} for {seconds} s",
+    "results-away-minutes": "{count, plural, one {Once} other {# times}} for {minutes} min {seconds} s",
+    "signal-away-seconds": "Left the exam for {seconds} s",
+    "signal-away-minutes": "Left the exam for {minutes} min {seconds} s",
     "signal-blur": "Left the window",
     "signal-fullscreenExit": "Left full screen",
     "signal-copy": "Copied text",
@@ -225,13 +235,11 @@
     "release-title": "Release the results to students?",
     "release-description": "Each student sees their own score and answers once you release them.",
     "release-action": "Release results",
-    "release-footer": "Students see their results after you release them.",
-    "release-wait-footer": "The exam author or the Admin releases the results once the sitting closes.",
-    "released-footer": "Students can see their results.",
+    "released": "Released",
     "student-results-title": "Your result",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
-    "student-answer": "Your answer: {letters}",
+    "student-answer": "Your answer: {answer}",
     "student-answers": "Your answers",
     "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",
@@ -247,9 +255,9 @@
     "schedule-keys": "Mark the correct answer of every question first.",
     "schedule-past": "The start has passed. Choose a later time.",
     "rooms-title": "Rooms",
+    "edit-action": "Edit exam",
     "rooms-empty": "No rooms yet",
     "rooms-empty-description": "Each room appears here once the exam is scheduled.",
-    "rooms-empty-action": "Open the exam",
     "rooms-filter-empty": "No room is in this state",
     "rooms-filter-empty-description": "Choose another state to see the other rooms.",
     "rooms-unavailable": "You cannot view the rooms of this exam.",
@@ -292,6 +300,19 @@
     "fullscreen": "Full screen",
     "fullscreen-exit": "Exit full screen",
     "zoom": "Zoom",
+    "zoom-options": "Zoom options",
+    "zoom-fit": "Fit",
+    "zoom-fill": "Fill",
+    "page-of": "Question {current} of {total}, go to a question",
+    "page-jump": "Go to question, 1 to {total}",
+    "open-question": "Open question {number}",
+    "select-question": "Select question {number}",
+    "select-all": "Select all",
+    "grid-duplicate": "Duplicate",
+    "grid-delete": "Delete",
+    "selected-count": "{count} selected",
+    "remove-many-title": "{count, plural, one {Remove # question?} other {Remove # questions?}}",
+    "remove-many-description": "The questions and their answers leave this exam.",
     "student-retry": "This sitting could not load, so try again in a moment.",
     "student-opens-at": "This sitting opens {time}.",
     "student-scheduled-footer": "The token field opens with the sitting.",
@@ -320,7 +341,55 @@
     "import-drop": "Drop a Word or PDF file here, or choose one.",
     "import-remove": "Remove file",
     "presence-editor": "{name} is editing",
-    "presence-more": "{names} are editing"
+    "presence-more": "{names} are editing",
+    "template-choice": "Multiple choice",
+    "template-choices": "Complex multiple choice",
+    "template-label": "Question type: {type}",
+    "template-truefalse": "True or false",
+    "template-cause": "Cause and effect",
+    "truefalse-true": "True",
+    "truefalse-false": "False",
+    "cause-related": "The statement and the reason are true and related",
+    "cause-unrelated": "The statement and the reason are true but not related",
+    "cause-reason-false": "The statement is true and the reason is false",
+    "cause-statement-false": "The statement is false and the reason is true",
+    "cause-both-false": "The statement and the reason are false",
+    "template-short": "Short answer",
+    "short-placeholder": "Type your answer",
+    "short-line": "Answer line",
+    "accepted-answers": "Accepted answers",
+    "accepted-of": "Accepted answer {index} of question {number}",
+    "accepted-remove-of": "Remove accepted answer {index} of question {number}",
+    "accepted-add": "Add answer",
+    "accepted-hint": "Case and extra spaces do not count, and any other answer waits for you to mark.",
+    "template-essay": "Essay",
+    "essay-placeholder": "Write your answer",
+    "essay-area": "Answer area",
+    "verdict-partial": "Partly correct",
+    "results-points": "Points",
+    "grade-of": "Points of {name}",
+    "template-match": "Matching",
+    "match-statements": "Statements",
+    "match-answers": "Answers",
+    "statement-of": "Question {number}, statement {name}",
+    "answer-of": "Question {number}, answer {name}",
+    "statement-placeholder": "Statement",
+    "answer-placeholder": "Answer",
+    "statement-remove-of": "Remove statement {name} of question {number}",
+    "answer-remove-of": "Remove answer {name} of question {number}",
+    "statement-add": "Add statement",
+    "match-answer-add": "Add an answer",
+    "statement-number": "Statement {name}",
+    "pair-of": "Answer for statement {name} of question {number}",
+    "pair-choose": "Choose",
+    "pair-hint": "Each answer pairs one statement, and the key saves once every statement has one.",
+    "pair-statement": "Answer for statement {number}",
+    "template-table": "True or false table",
+    "table-columns": "Columns",
+    "column-of": "Question {number}, column {name}",
+    "column-placeholder": "Column",
+    "cell-of": "Column for statement {name} of question {number}",
+    "cell-hint": "Each statement takes one column, and the key saves once every statement has one."
   },
   "SchoolSettings": {
     "school": "School",
@@ -519,13 +588,13 @@
     "client-secret-title": "New secret",
     "client-secret-description": "Copy it now, because it will not be shown again.",
     "audit-description": "Who changed what in this school, and when.",
-    "audit-footer": "Policy values are not copied into the trail.",
     "audit-view": "View trail",
     "audit-when": "When",
     "audit-who": "Who",
     "audit-change": "Change",
     "audit-empty": "Nothing has changed yet.",
     "audit-search": "Find a change",
+    "audit-export": "Export",
     "audit-operator": "Nakafa staff",
     "audit-system": "System",
     "audit-label": {
@@ -631,7 +700,8 @@
       },
       "exam": {
         "results": {
-          "released": "Exam results released"
+          "released": "Exam results released",
+          "graded": "Exam answer graded"
         }
       },
       "tenant": {
@@ -790,7 +860,6 @@
     "no-unit-description": "Periods and cohorts belong to an active unit. Restore or add one first.",
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
-    "members-empty-action": "Open invitations",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
     "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
     "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
@@ -1602,6 +1671,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "This chat was deleted."
+    },
     "image-refused-size": {
       "title": "The image was not added.",
       "description": "Choose an image of at most 2 MB."
@@ -2078,6 +2150,13 @@
     "import-encrypted": {
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
+    },
+    "audit-export-error": {
+      "title": "We could not export the trail.",
+      "description": "Check your connection, then try again."
+    },
+    "school-own-role-ended": {
+      "title": "Your role has ended."
     }
   },
   "Ai": {

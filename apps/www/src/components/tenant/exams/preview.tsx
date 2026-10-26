@@ -2,7 +2,10 @@ import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
-import { CHOICE_OPTIONS_MAX } from "@repo/backend/confect/exams/question";
+import {
+  CHOICE_OPTIONS_MAX,
+  fixedOptions,
+} from "@repo/backend/confect/exams/question";
 import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import {
   editorContent,
@@ -14,22 +17,27 @@ import { DOMSerializer, Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
+import { useTranslations } from "use-intl";
 import {
   choiceOf,
+  entryOf,
   type OptionLabel,
   optionLetter,
 } from "@/components/tenant/exams/answer";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import {
   ControlRoom,
   OptionAddRoom,
+  PaperLine,
   PaperOption,
   PaperOptions,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
+import { tableOf } from "@/components/tenant/exams/table";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
 import { PREVIEW_CLIENT } from "@/lib/tenant/exams";
@@ -177,25 +185,71 @@ function PaperChoice({
   letter: string;
   withControls: boolean;
 }) {
-  const option = (
-    <PaperOption letter={letter}>
-      <OptionSketch label={label} />
-    </PaperOption>
-  );
-
   if (!withControls) {
-    return option;
+    return <ChoiceText label={label} letter={letter} />;
   }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-      {option}
+      <ChoiceText label={label} letter={letter} />
       <div aria-hidden className="flex items-center gap-1">
         <ControlRoom />
       </div>
     </div>
   );
 }
+
+/** The letter and the drawn text of one option. */
+function ChoiceText({ label, letter }: { label: OptionLabel; letter: string }) {
+  return (
+    <PaperOption letter={letter}>
+      <OptionSketch label={label} />
+    </PaperOption>
+  );
+}
+
+/**
+ * One column of a matching or a table question drawn without editors, as its live column draws it: its
+ * heading, its parts numbered or lettered, and the room of the action that adds a part when it takes one.
+ */
+function PartSketch({
+  adds,
+  heading,
+  letterOf,
+  parts,
+  withControls,
+}: {
+  adds: boolean;
+  heading: string;
+  letterOf: (index: number) => string;
+  parts: readonly { readonly id: string; readonly label: OptionLabel }[];
+  withControls: boolean;
+}) {
+  const { exam } = useExam();
+
+  return (
+    <div className="grid content-start gap-2">
+      <p className="font-medium text-muted-foreground text-sm">{heading}</p>
+      {Arr.map(parts, (part, index) => (
+        <PaperChoice
+          key={part.id}
+          label={part.label}
+          letter={letterOf(index)}
+          withControls={withControls}
+        />
+      ))}
+      {withControls &&
+      adds &&
+      !isLocked(exam) &&
+      parts.length < CHOICE_OPTIONS_MAX ? (
+        <OptionAddRoom />
+      ) : null}
+    </div>
+  );
+}
+
+/** The number that names a statement by its place: 1 for the first, 2 for the second, and so on. */
+const statementNumber = (index: number) => String(index + 1);
 
 /**
  * The paper of one question drawn without editors: its prompt and its options as the student reads
@@ -216,11 +270,14 @@ export function PaperSketch({
   selected?: boolean;
   withControls?: boolean;
 }) {
+  const t = useTranslations("Exams");
   const { exam } = useExam();
   const choice = choiceOf(question.answers);
+  // A template that fixes its options takes no added option, so its page keeps no room for the action.
   const addsOption =
     withControls &&
     !isLocked(exam) &&
+    Option.isNone(fixedOptions(question.template)) &&
     Option.exists(
       choice,
       (current) => current.options.length < CHOICE_OPTIONS_MAX
@@ -241,6 +298,50 @@ export function PaperSketch({
           ))}
         </PaperOptions>
       ) : null}
+      {Option.match(matchOf(question.answers), {
+        onNone: () => null,
+        onSome: (match) => (
+          <div className="grid min-w-0 gap-6 md:grid-cols-2">
+            <PartSketch
+              adds
+              heading={t("match-statements")}
+              letterOf={statementNumber}
+              parts={match.sources}
+              withControls={withControls}
+            />
+            <PartSketch
+              adds
+              heading={t("match-answers")}
+              letterOf={optionLetter}
+              parts={match.targets}
+              withControls={withControls}
+            />
+          </div>
+        ),
+      })}
+      {Option.match(tableOf(question.answers), {
+        onNone: () => null,
+        onSome: (table) => (
+          <div className="grid min-w-0 gap-6 md:grid-cols-2">
+            <PartSketch
+              adds
+              heading={t("match-statements")}
+              letterOf={statementNumber}
+              parts={table.statements}
+              withControls={withControls}
+            />
+            <PartSketch
+              adds={false}
+              heading={t("table-columns")}
+              letterOf={optionLetter}
+              parts={table.columns}
+              withControls={withControls}
+            />
+          </div>
+        ),
+      })}
+      {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
+      {question.template === "essay" ? <PaperLine essay /> : null}
       {addsOption ? <OptionAddRoom /> : null}
     </QuestionPaper>
   );

@@ -8,6 +8,7 @@ import {
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import { Schema } from "effect";
 import {
+  isDeletedOwnChat,
   readChatAccess,
   readChatArgs,
   readChatFailureKind,
@@ -102,6 +103,28 @@ describe("chat/access arguments", () => {
       chatId,
       shareToken: token,
     });
+  });
+});
+
+describe("chat/access deleted chat", () => {
+  const notFound = new ChatAccessError({
+    code: "CHAT_NOT_FOUND",
+    message: "Gone.",
+  });
+
+  it("reads a chat the server no longer finds as deleted when the chat it showed named the viewer as its owner", () => {
+    expect(isDeletedOwnChat(notFound, learner)).toBe(true);
+  });
+
+  it("keeps a chat shown to a reader, a refusal and any other failure as failures of the read", () => {
+    expect(isDeletedOwnChat(notFound, undefined)).toBe(false);
+    expect(
+      isDeletedOwnChat(
+        new ChatAccessError({ code: "FORBIDDEN", message: "Not yours." }),
+        learner
+      )
+    ).toBe(false);
+    expect(isDeletedOwnChat(new Error("offline"), learner)).toBe(false);
   });
 });
 

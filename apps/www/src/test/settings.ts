@@ -108,6 +108,7 @@ export function grant(
   return {
     id: Schema.decodeUnknownSync(Id("tenantGrants"))(id),
     person: { id: personId, name: "Admin" },
+    revocable: true,
     role: { key: role, kind: "builtin" },
     scope: { kind: "tenant" },
   };
