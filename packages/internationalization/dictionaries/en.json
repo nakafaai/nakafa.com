@@ -111,6 +111,8 @@
     "screen-title": "Student screen",
     "screen-none": "The student has not opened a question yet.",
     "results-away": "Left the exam",
+    "results-student-answers": "Student's answers",
+    "results-not-submitted": "The student has not submitted the exam yet.",
     "results-away-seconds": "{count, plural, one {Once} other {# times}} for {seconds} s",
     "results-away-minutes": "{count, plural, one {Once} other {# times}} for {minutes} min {seconds} s",
     "signal-away-seconds": "Left the exam for {seconds} s",

@@ -5021,6 +5021,34 @@ export declare const api: {
     };
     results: {
       results: {
+        attempt: FunctionReference<
+          "query",
+          "public",
+          {
+            attemptId: Id<"examAttempts">;
+            sittingId: Id<"examSittings">;
+            slug: string;
+          },
+          {
+            name: string;
+            points: number;
+            questions: Array<{
+              earned: number;
+              id: Id<"examQuestions">;
+              number: number;
+              optionIds: Array<string>;
+              points: number;
+              response:
+                | Array<string>
+                | { text: string }
+                | { pairs: Array<{ source: string; target: string }> }
+                | { cells: Array<{ column: string; statement: string }> };
+              sourceIds: Array<string>;
+              targetIds: Array<string>;
+              verdict: "correct" | "incorrect" | "partial" | "pending";
+            }>;
+          } | null
+        >;
         byQuestion: FunctionReference<
           "query",
           "public",
@@ -5108,6 +5136,8 @@ export declare const api: {
           {
             points: number;
             questions: Array<{
+              earned: number;
+              id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
               points: number;

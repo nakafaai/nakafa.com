@@ -4,6 +4,7 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ResultAccess } from "@repo/backend/confect/exams/results/access";
 import {
   AnswerRow,
+  AttemptResult,
   Overview,
   QuestionStats,
   StudentResult,
@@ -86,6 +87,18 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => Schema.Union([AccessDenied, SittingNotClosed]),
     }).middleware(ResultAccess, { action: "result.release", arg: "sittingId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "attempt",
+      args: () => ({
+        attemptId: Id("examAttempts"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.NullOr(AttemptResult),
+      error: () => AccessDenied,
+    }).middleware(ResultAccess, { action: "result.view", arg: "sittingId" })
   )
   .addFunction(
     FunctionSpec.publicMutation({

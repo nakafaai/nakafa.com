@@ -1,4 +1,7 @@
-import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  ExamSittingsDoc,
+  TenantPeopleDoc,
+} from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
 import { questionSummary } from "@repo/backend/confect/exams/results/summary";
@@ -28,32 +31,45 @@ export const mine = Effect.fn("exams.results.mine")(function* (args: {
   ) {
     return null;
   }
-  const exam = yield* (yield* DatabaseReader)
-    .table("exams")
-    .get(sitting.examId)
-    .pipe(Effect.orDie);
-  const rows = yield* attemptResults(sitting._id, member.person._id);
-  const questions = yield* Effect.forEach(
-    exam.questions,
-    (questionId, index) =>
-      Effect.map(questionSummary(questionId, index + 1), (summary) =>
-        Arr.map(
-          Arr.filter(rows, (row) => row.question === questionId),
-          (row) => ({
-            number: index + 1,
-            optionIds: summary.optionIds,
-            points: summary.points,
-            sourceIds: summary.sourceIds,
-            targetIds: summary.targetIds,
-            response: row.response,
-            verdict: row.verdict,
-          })
-        )
-      ),
-    { concurrency: "unbounded" }
-  );
-  return {
-    points: Num.sumAll(Arr.map(rows, (row) => row.points)),
-    questions: Arr.flatten(questions),
-  };
+  return yield* attemptAnswers(sitting, member.person._id);
 });
+
+/**
+ * The scored answers of one student in one sitting: the points the attempt earned, and each question of
+ * the exam in its order with its parts, its weight, the points the answer earned, the response, and the
+ * verdict. The student's own released result and a teacher's view of one student read it alike.
+ */
+export const attemptAnswers = Effect.fn("exams.results.mine.answers")(
+  function* (sitting: ExamSittingsDoc, personId: TenantPeopleDoc["_id"]) {
+    const exam = yield* (yield* DatabaseReader)
+      .table("exams")
+      .get(sitting.examId)
+      .pipe(Effect.orDie);
+    const rows = yield* attemptResults(sitting._id, personId);
+    const questions = yield* Effect.forEach(
+      exam.questions,
+      (questionId, index) =>
+        Effect.map(questionSummary(questionId, index + 1), (summary) =>
+          Arr.map(
+            Arr.filter(rows, (row) => row.question === questionId),
+            (row) => ({
+              earned: row.points,
+              id: questionId,
+              number: index + 1,
+              optionIds: summary.optionIds,
+              points: summary.points,
+              response: row.response,
+              sourceIds: summary.sourceIds,
+              targetIds: summary.targetIds,
+              verdict: row.verdict,
+            })
+          )
+        ),
+      { concurrency: "unbounded" }
+    );
+    return {
+      points: Num.sumAll(Arr.map(rows, (row) => row.points)),
+      questions: Arr.flatten(questions),
+    };
+  }
+);
