@@ -98,6 +98,8 @@ for (const viewport of sidebarViewports) {
             name: "Learn more",
           });
           yield* Effect.promise(() => expect(learnMoreButton).toBeVisible());
+          // A hover opens the menu only once React has taken the button over.
+          yield* Effect.promise(() => waitUntilTakenOver(learnMoreButton));
           yield* Effect.promise(() => learnMoreButton.hover());
           const usageData = page.getByRole("menuitem", {
             exact: true,
@@ -299,6 +301,9 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           page.reload({ waitUntil: "domcontentloaded" })
         );
         yield* Effect.promise(() => expect(loginLink).toBeVisible());
+        // The link names the fragment from its own handler, which the reloaded
+        // page has only once React takes the link over.
+        yield* Effect.promise(() => waitUntilTakenOver(loginLink));
         yield* Effect.promise(() => loginLink.dispatchEvent("contextmenu"));
         yield* Effect.promise(() =>
           expect(loginLink).toHaveAttribute("href", exactHref)
