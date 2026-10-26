@@ -8,11 +8,11 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
-import { schedulePush } from "@repo/backend/confect/notifications/schedule";
 import spec, {
   type FanoutPhase,
   type FanoutSource,
 } from "@repo/backend/confect/notifications/fanout.spec";
+import { schedulePush } from "@repo/backend/confect/notifications/schedule";
 import { Array as Arr, Duration, Effect, Layer, Match, Option } from "effect";
 
 /** Persons one run notifies, the batch of ADR 0027. */

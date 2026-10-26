@@ -17,6 +17,9 @@ export const PushState = Schema.Literals([
 /** The address of the service worker that shows a push. */
 export const WORKER_PATH = "/sw.js";
 
+/** The name an iPhone, iPad or iPod gives itself in its user agent. */
+const APPLE_DEVICE = /iPad|iPhone|iPod/u;
+
 /** A step of the browser's push that failed. */
 export class DevicePushFailed extends Schema.TaggedError<DevicePushFailed>()(
   "DevicePushFailed",
@@ -31,38 +34,41 @@ export class DevicePushFailed extends Schema.TaggedError<DevicePushFailed>()(
  */
 const isAppleTab = () => {
   const apple =
-    /iPad|iPhone|iPod/u.test(navigator.userAgent) ||
+    APPLE_DEVICE.test(navigator.userAgent) ||
     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1);
   return apple && !window.matchMedia("(display-mode: standalone)").matches;
 };
 
 /** Where this browser stands with push, read from its own APIs. */
-export const readPushState = Effect.fn("notifications.device.state")(
-  function* (publicKey: string | undefined) {
-    if (publicKey === undefined) {
-      return "unsupported" as const;
-    }
-    if (
-      !("serviceWorker" in navigator && "PushManager" in window) ||
-      !("Notification" in window)
-    ) {
-      return isAppleTab() ? ("homeScreen" as const) : ("unsupported" as const);
-    }
-    if (Notification.permission === "denied") {
-      return "blocked" as const;
-    }
-    const registration = yield* Effect.promise(() =>
-      navigator.serviceWorker.getRegistration(WORKER_PATH)
-    );
-    if (registration === undefined) {
-      return "off" as const;
-    }
-    const subscription = yield* Effect.promise(() =>
-      registration.pushManager.getSubscription()
-    );
-    return subscription === null ? ("off" as const) : ("on" as const);
+export const readPushState = Effect.fn("notifications.device.state")(function* (
+  publicKey: string | undefined
+) {
+  if (publicKey === undefined) {
+    return "unsupported" as const;
   }
-);
+  if (
+    !(
+      "serviceWorker" in navigator &&
+      "PushManager" in window &&
+      "Notification" in window
+    )
+  ) {
+    return isAppleTab() ? ("homeScreen" as const) : ("unsupported" as const);
+  }
+  if (Notification.permission === "denied") {
+    return "blocked" as const;
+  }
+  const registration = yield* Effect.promise(() =>
+    navigator.serviceWorker.getRegistration(WORKER_PATH)
+  );
+  if (registration === undefined) {
+    return "off" as const;
+  }
+  const subscription = yield* Effect.promise(() =>
+    registration.pushManager.getSubscription()
+  );
+  return subscription === null ? ("off" as const) : ("on" as const);
+});
 
 /**
  * Turns push on for this browser after the person's tap: asks for permission,

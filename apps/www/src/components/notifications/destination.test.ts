@@ -53,7 +53,9 @@ describe("inbox row destinations", () => {
   it("opens a mention's message in its channel or in its discussion, and an announcement's class home", () => {
     const klass = { id: "class-1", kind: "class" };
     expect(
-      href(row("forum.mentioned", klass, detail("message-1", "channel-1", null)))
+      href(
+        row("forum.mentioned", klass, detail("message-1", "channel-1", null))
+      )
     ).toEqual(
       Option.some(
         "https://harapan.nakafa.com/classes/fisika-x-1/forum?channel=channel-1&message=message-1"

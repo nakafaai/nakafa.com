@@ -62,8 +62,16 @@ describe("classroom/forum mentions", () => {
           text: "@Student tolong kumpulkan tugasnya.",
         });
         expect(sent.mentions).toEqual([
-          { _tag: "person", id: fixture.people.student.personId, name: "Student" },
-          { _tag: "person", id: fixture.people.teacher.personId, name: "Teacher" },
+          {
+            _tag: "person",
+            id: fixture.people.student.personId,
+            name: "Student",
+          },
+          {
+            _tag: "person",
+            id: fixture.people.teacher.personId,
+            name: "Teacher",
+          },
         ]);
         const rows = yield* inboxOf(fixture, "student");
         expect(rows).toEqual([

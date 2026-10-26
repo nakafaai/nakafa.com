@@ -5,8 +5,8 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { loginAddress } from "@repo/backend/confect/identity/address";
 import { resend } from "@repo/backend/confect/emails/client";
+import { loginAddress } from "@repo/backend/confect/identity/address";
 import {
   forumClass,
   keyedFixture,
@@ -40,7 +40,12 @@ const unreachable = (fixture: Effect.Success<typeof keyedFixture>) =>
         plan: "free",
       });
       const carded = yield* writer.table("tenantPeople").insert({
-        account: { claimedAt: TENANCY_NOW, method: "invite", state: "claimed", userId },
+        account: {
+          claimedAt: TENANCY_NOW,
+          method: "invite",
+          state: "claimed",
+          userId,
+        },
         kind: "member",
         name: "Raka",
         status: "active",

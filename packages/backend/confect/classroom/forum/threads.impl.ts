@@ -14,11 +14,11 @@ import {
   missing,
 } from "@repo/backend/confect/classroom/forum/lookup";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
+import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import {
   checkMentions,
   noticeMentions,
 } from "@repo/backend/confect/classroom/forum/notice";
-import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";

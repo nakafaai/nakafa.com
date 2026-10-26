@@ -24,7 +24,10 @@ export default GroupSpec.make()
         Schema.NullOr(
           Schema.Struct({
             addresses: Schema.Array(
-              Schema.Struct({ email: Schema.String, personId: Id("tenantPeople") })
+              Schema.Struct({
+                email: Schema.String,
+                personId: Id("tenantPeople"),
+              })
             ),
             input: NoticeEmailInputSchema,
           })

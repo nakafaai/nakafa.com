@@ -1,11 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import {
-  readPushState,
-  subscribeDevice,
-} from "@/lib/notifications/device";
+import { readPushState, subscribeDevice } from "@/lib/notifications/device";
 
-const KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
+const KEY =
+  "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
 
 /** A service worker registration whose push manager holds `subscription`. */
 const registrationOf = (subscription: unknown) => ({

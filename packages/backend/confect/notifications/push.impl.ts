@@ -37,7 +37,11 @@ const subscribe = FunctionImpl.make(
     const existing = yield* byEndpoint(keys.endpoint);
     if (Option.isSome(existing)) {
       yield* writer
-        .replace(existing.value._id, { ...keys, createdAt, userId: appUser._id })
+        .replace(existing.value._id, {
+          ...keys,
+          createdAt,
+          userId: appUser._id,
+        })
         .pipe(Effect.orDie);
       return null;
     }

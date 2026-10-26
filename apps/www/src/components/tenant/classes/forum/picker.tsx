@@ -159,9 +159,7 @@ export function useMentionPicker(
         anchor={anchor}
         id={listId}
         label={t("mention-list")}
-        onClose={() =>
-          Option.map(typed, ({ start }) => setDismissed(start))
-        }
+        onClose={() => Option.map(typed, ({ start }) => setDismissed(start))}
         open={open}
       >
         {Arr.map(choices, (choice, position) => (

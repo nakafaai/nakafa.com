@@ -130,10 +130,13 @@ const send = FunctionImpl.make(
     const { runQuery } = yield* QueryRunner;
     const { runAction } = yield* ActionRunner;
     const { runMutation } = yield* MutationRunner;
-    const found = yield* runQuery(refs.internal.emails.notice.internal.readInput, {
-      postId,
-      recipients,
-    }).pipe(Effect.orDie);
+    const found = yield* runQuery(
+      refs.internal.emails.notice.internal.readInput,
+      {
+        postId,
+        recipients,
+      }
+    ).pipe(Effect.orDie);
     if (found === null || Arr.isReadonlyArrayEmpty(found.addresses)) {
       return null;
     }

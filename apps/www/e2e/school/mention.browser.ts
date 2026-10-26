@@ -48,7 +48,9 @@ for (const viewport of [
 
     // The list stays inside the viewport and never covers the line being typed.
     const box = Option.getOrThrow(Option.fromNullOr(await list.boundingBox()));
-    const line = Option.getOrThrow(Option.fromNullOr(await field.boundingBox()));
+    const line = Option.getOrThrow(
+      Option.fromNullOr(await field.boundingBox())
+    );
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
     expect(box.y + box.height).toBeLessThanOrEqual(line.y + 1);

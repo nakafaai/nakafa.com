@@ -45,12 +45,12 @@ import {
   DiscussionReplies,
   DiscussionTitle,
 } from "@/components/tenant/classes/forum/discussion";
+import { mentionSegments } from "@/components/tenant/classes/forum/mentions";
 import {
   editUpdate,
   type ForumMessage,
   hideUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
-import { mentionSegments } from "@/components/tenant/classes/forum/mentions";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 
 /**

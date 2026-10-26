@@ -9,6 +9,9 @@ import { Effect, Redacted, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
 
+/** The authorization header of a push request: a VAPID token and the public key. */
+const VAPID_HEADER = /^vapid t=.+, k=/u;
+
 /** The fetch that Effect's client calls in place of the global one. */
 const fetcher = vi.fn<typeof fetch>();
 
@@ -113,7 +116,10 @@ const decrypt = async (
   const key = (
     await hmac(
       pseudo,
-      join([encoder.encode("Content-Encoding: aes128gcm\0"), new Uint8Array([1])])
+      join([
+        encoder.encode("Content-Encoding: aes128gcm\0"),
+        new Uint8Array([1]),
+      ])
     )
   ).slice(0, 16);
   const nonce = (
@@ -247,7 +253,7 @@ describe("notifications/webpush", () => {
           "aes128gcm"
         );
         expect(new Headers(init?.headers).get("authorization")).toMatch(
-          /^vapid t=.+, k=/u
+          VAPID_HEADER
         );
         fetcher.mockResolvedValueOnce(new Response(null, { status: 410 }));
         expect(yield* push()).toBe("gone");

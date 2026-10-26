@@ -4,8 +4,8 @@ import type {
   TenantsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import type { ClassDetail } from "@repo/backend/confect/notifications/schema";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
+import type { ClassDetail } from "@repo/backend/confect/notifications/schema";
 import { Effect, Match, Option } from "effect";
 
 /**
@@ -25,7 +25,11 @@ const classPart = Effect.fn("notifications.detail.class")(function* (
     return Option.none();
   }
   if (
-    !(yield* mayIn("forum.read", klass.value, yield* principalOf(person, tenant)))
+    !(yield* mayIn(
+      "forum.read",
+      klass.value,
+      yield* principalOf(person, tenant)
+    ))
   ) {
     return Option.none();
   }

@@ -64,7 +64,13 @@ export const sendMessage = Effect.fn("classroom.forum.send")(function* <E>(
   args: SendArgs,
   mentions: Shown
 ) {
-  const message = yield* draft(author, args.clientKey, args.text, null, mentions);
+  const message = yield* draft(
+    author,
+    args.clientKey,
+    args.text,
+    null,
+    mentions
+  );
   return yield* forumCall(() => send(sendUpdate(message), args));
 });
 
@@ -75,7 +81,13 @@ export const sendReply = Effect.fn("classroom.forum.reply")(function* <E>(
   args: ReplyArgs,
   mentions: Shown
 ) {
-  const message = yield* draft(author, args.clientKey, args.text, null, mentions);
+  const message = yield* draft(
+    author,
+    args.clientKey,
+    args.text,
+    null,
+    mentions
+  );
   return yield* forumCall(() => reply(replyUpdate(message), args));
 });
 

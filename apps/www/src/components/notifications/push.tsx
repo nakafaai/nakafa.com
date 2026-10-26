@@ -29,9 +29,12 @@ export function PushOffer() {
   const publicKey = clientEnv.VITE_WEB_PUSH_PUBLIC_KEY;
   const [state, setState] = useState<typeof PushState.Type | null>(null);
 
+  // The key is fixed for the build, so the browser is read once, after the first paint.
   useEffect(() => {
-    Effect.runPromise(readPushState(publicKey)).then(setState);
-  }, [publicKey]);
+    Effect.runPromise(readPushState(clientEnv.VITE_WEB_PUSH_PUBLIC_KEY)).then(
+      setState
+    );
+  }, []);
 
   /** Turns push on at once, and turns it back off with the shared toast when a step fails. */
   const turnOn = () => {

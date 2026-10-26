@@ -93,7 +93,11 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
                 {
                   onNone: () => [],
                   onSome: (found) => [
-                    { _tag: "person" as const, id: found._id, name: found.name },
+                    {
+                      _tag: "person" as const,
+                      id: found._id,
+                      name: found.name,
+                    },
                   ],
                 }
               )

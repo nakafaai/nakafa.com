@@ -118,7 +118,9 @@ describe("notifications/deliver", () => {
         yield* fixture.internal.mutation(deliver.forget, {
           endpoint: "https://push.example.test/gone",
         });
-        yield* fixture.as("student").mutation(push.subscribe, yield* browserKeys);
+        yield* fixture
+          .as("student")
+          .mutation(push.subscribe, yield* browserKeys);
         yield* fixture.as("student").mutation(inbox.read, { notificationId });
         expect(
           yield* fixture.internal.query(deliver.notice, { notificationId })

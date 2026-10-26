@@ -24,7 +24,10 @@ export const checkMentions = Effect.fn("classroom.forum.notice.check")(
   function* (row: ClassesDoc, mentions: readonly (typeof Mention.Type)[]) {
     const principal = yield* Member;
     const reader = yield* DatabaseReader;
-    const everyone = Arr.some(mentions, (mention) => mention._tag === "everyone");
+    const everyone = Arr.some(
+      mentions,
+      (mention) => mention._tag === "everyone"
+    );
     if (everyone && !(yield* subjectTeacherOf(row, principal))) {
       return yield* new MentionRefused();
     }

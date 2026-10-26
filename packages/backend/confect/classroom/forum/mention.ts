@@ -17,7 +17,10 @@ export const Mentions = Schema.Array(Mention).check(
 
 /** One mention as a message shows it: a Person by name, or everyone. */
 export const MentionView = Schema.Union([
-  Schema.TaggedStruct("person", { id: Id("tenantPeople"), name: Schema.String }),
+  Schema.TaggedStruct("person", {
+    id: Id("tenantPeople"),
+    name: Schema.String,
+  }),
   Schema.TaggedStruct("everyone", {}),
 ]);
 

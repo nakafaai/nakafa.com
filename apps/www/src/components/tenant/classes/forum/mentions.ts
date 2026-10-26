@@ -8,6 +8,12 @@ import { Array as Arr, Option, Order, Schema, String as Str } from "effect";
 /** One Person a writer may mention. */
 type Person = typeof MentionablePerson.Type;
 
+/** A space or a line break, after which `@` opens a mention. */
+const SPACE = /\s/u;
+
+/** What ends a mention being typed: a line break or a second `@`. */
+const MENTION_END = /[\n@]/u;
+
 /** The most Persons the mention list shows at once. */
 export const MENTION_OPTIONS = 8;
 
@@ -23,8 +29,8 @@ export const mentionQuery = (text: string, caret: number) => {
     return Option.none();
   }
   const query = Str.slice(at + 1)(before);
-  const opens = at === 0 || /\s/u.test(before.charAt(at - 1));
-  if (!opens || /[\n@]/u.test(query) || query.length > 40) {
+  const opens = at === 0 || SPACE.test(before.charAt(at - 1));
+  if (!opens || MENTION_END.test(query) || query.length > 40) {
     return Option.none();
   }
   return Option.some({ query, start: at });
@@ -79,7 +85,9 @@ export const keptMentions = (
   Arr.take(
     Arr.dedupeWith(
       Arr.filter(picked, (mention) =>
-        text.includes(mention._tag === "everyone" ? "@everyone" : `@${mention.name}`)
+        text.includes(
+          mention._tag === "everyone" ? "@everyone" : `@${mention.name}`
+        )
       ),
       (self, that) =>
         self._tag === that._tag &&
@@ -96,7 +104,10 @@ export const Segment = Schema.Union([
 ]);
 
 /** The longest token first, so a name that holds another is matched whole. */
-const byLength = Order.mapInput(Order.flip(Order.Number), (token: string) => token.length);
+const byLength = Order.mapInput(
+  Order.flip(Order.Number),
+  (token: string) => token.length
+);
 
 /** Cuts a text, which starts at `offset` of the message, at the earliest token it holds, then cuts the rest the same way. */
 const cut = (
@@ -113,8 +124,10 @@ const cut = (
       text === "" ? [] : [{ _tag: "text" as const, at: offset, text }],
     onNonEmpty: (found) => {
       // The tokens are longest first, so the first hit at the earliest place is the longest one there.
-      const earliest = Arr.reduce(found, Arr.headNonEmpty(found), (best, hit) =>
-        hit.at < best.at ? hit : best
+      const earliest = Arr.reduce(
+        found,
+        Arr.headNonEmpty(found),
+        (best, hit) => (hit.at < best.at ? hit : best)
       );
       const after = earliest.at + earliest.token.length;
       return [
@@ -127,7 +140,11 @@ const cut = (
               },
             ]
           : []),
-        { _tag: "mention" as const, at: offset + earliest.at, text: earliest.token },
+        {
+          _tag: "mention" as const,
+          at: offset + earliest.at,
+          text: earliest.token,
+        },
         ...cut(text.slice(after), tokens, offset + after),
       ];
     },

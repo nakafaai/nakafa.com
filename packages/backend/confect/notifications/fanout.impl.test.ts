@@ -75,9 +75,7 @@ describe("notifications/fanout", () => {
           text: "Besok ulangan.",
         });
         yield* fixture.finishScheduled();
-        const rows = yield* fixture
-          .as("student")
-          .query(inbox.list, firstPage);
+        const rows = yield* fixture.as("student").query(inbox.list, firstPage);
         expect(rows.page).toEqual([
           expect.objectContaining({
             changeType: "announcement.posted",

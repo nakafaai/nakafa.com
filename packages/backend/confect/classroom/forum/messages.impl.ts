@@ -16,12 +16,12 @@ import {
   missing,
 } from "@repo/backend/confect/classroom/forum/lookup";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
+import { messageField } from "@repo/backend/confect/classroom/forum/message";
+import spec from "@repo/backend/confect/classroom/forum/messages.spec";
 import {
   checkMentions,
   noticeMentions,
 } from "@repo/backend/confect/classroom/forum/notice";
-import { messageField } from "@repo/backend/confect/classroom/forum/message";
-import spec from "@repo/backend/confect/classroom/forum/messages.spec";
 import {
   messageView,
   messageViews,

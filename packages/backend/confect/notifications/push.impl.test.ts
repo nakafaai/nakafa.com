@@ -24,7 +24,10 @@ const stored = (fixture: Effect.Success<typeof keyedFixture>) =>
         .take(50)
         .pipe(
           Effect.map((rows) =>
-            Arr.map(rows, (row) => ({ endpoint: row.endpoint, userId: row.userId }))
+            Arr.map(rows, (row) => ({
+              endpoint: row.endpoint,
+              userId: row.userId,
+            }))
           )
         )
     )
@@ -59,9 +62,9 @@ describe("notifications/push", () => {
         );
         const kept = yield* stored(fixture);
         expect(kept).toHaveLength(10);
-        expect(
-          Arr.some(kept, (row) => row.endpoint.endsWith("/shared"))
-        ).toBe(false);
+        expect(Arr.some(kept, (row) => row.endpoint.endsWith("/shared"))).toBe(
+          false
+        );
 
         // An account forgets only its own browsers.
         yield* student.mutation(push.unsubscribe, {

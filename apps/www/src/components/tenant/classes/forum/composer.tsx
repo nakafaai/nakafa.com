@@ -81,7 +81,14 @@ export function ForumComposer() {
         ? sendMessage(
             (update, args) => send.withOptimisticUpdate(update)(args),
             author,
-            { channelId, classId, clientKey, mentions: named, slug, text: message },
+            {
+              channelId,
+              classId,
+              clientKey,
+              mentions: named,
+              slug,
+              text: message,
+            },
             mentions
           )
         : sendReply(
@@ -161,8 +168,8 @@ export function ForumComposer() {
             }
           }}
           onKeyUp={picker.onCaret}
-          ref={field}
           placeholder={placeholder}
+          ref={field}
           value={text}
         />
         <InputGroupAddon

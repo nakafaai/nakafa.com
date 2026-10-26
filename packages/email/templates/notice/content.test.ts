@@ -16,7 +16,10 @@ describe("notice content", () => {
       getNoticeEmailCopy("de").subject,
       "Neue Ankündigung in deiner Klasse"
     );
-    assert.strictEqual(getNoticeEmailCopy("en").privacyPolicy, "Privacy Policy");
+    assert.strictEqual(
+      getNoticeEmailCopy("en").privacyPolicy,
+      "Privacy Policy"
+    );
   });
 
   it("takes a class address and the legal links, and refuses another address", () => {

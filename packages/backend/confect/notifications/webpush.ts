@@ -40,13 +40,10 @@ export const VapidKeys = Schema.Struct({
 });
 
 /** A push that failed: a key that does not decode, a crypto step, or a push service that refused or never answered. */
-export class PushFailed extends Schema.TaggedError<PushFailed>()(
-  "PushFailed",
-  {
-    reason: Schema.Literals(["key", "crypto", "unreached", "refused"]),
-    status: Schema.optionalKey(Schema.Int),
-  }
-) {}
+export class PushFailed extends Schema.TaggedError<PushFailed>()("PushFailed", {
+  reason: Schema.Literals(["key", "crypto", "unreached", "refused"]),
+  status: Schema.optionalKey(Schema.Int),
+}) {}
 
 /** Runs one Web Crypto call; a failure is a crypto failure, with no secret in it. */
 const subtle = <A>(call: () => PromiseLike<A>) =>
@@ -146,7 +143,10 @@ export const encryptPayload = Effect.fn("notifications.webpush.encrypt")(
     const pseudo = yield* hmac(salt, keyMaterial);
     const contentKey = (yield* hmac(
       pseudo,
-      join([encoder.encode("Content-Encoding: aes128gcm\0"), new Uint8Array([1])])
+      join([
+        encoder.encode("Content-Encoding: aes128gcm\0"),
+        new Uint8Array([1]),
+      ])
     )).slice(0, 16);
     const nonce = (yield* hmac(
       pseudo,
@@ -263,7 +263,10 @@ export const sendPush = Effect.fn("notifications.webpush.send")(function* (
     return "gone" as const;
   }
   if (response.status < 200 || response.status >= 300) {
-    return yield* new PushFailed({ reason: "refused", status: response.status });
+    return yield* new PushFailed({
+      reason: "refused",
+      status: response.status,
+    });
   }
   return "delivered" as const;
 });
