@@ -2,6 +2,7 @@ import {
   classifyNetworkFailure,
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
+import { localizeInternalHref } from "@repo/internationalization/src/href";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Data, Effect, Option, Schema, String as Str } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
@@ -73,7 +74,9 @@ function splitFragment(href: string) {
 
 /**
  * Calls the internal route-localization endpoint and decodes the JSON contract
- * before the caller hands it to `router.replace`. A missed deadline or a
+ * before the caller hands it to the router. The endpoint answers the page's
+ * public spelling without a locale, such as `/search` or `/kurikulum`, so the
+ * answer gets the chosen locale in front of it. A missed deadline or a
  * retryable network failure is tried again on the shared schedule.
  *
  * The request carries the path and the query of `href` and never its fragment,
@@ -93,7 +96,9 @@ export const requestLocalizedHref = Effect.fn("www.routing.locale.request")(
         message: "The route-localization request timed out.",
       })
     );
-    return { href: `${localized.href}${fragment}` };
+    return {
+      href: localizeInternalHref(`${localized.href}${fragment}`, locale),
+    };
   },
   Effect.provide(FetchClient)
 );

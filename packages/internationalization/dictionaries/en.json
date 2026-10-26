@@ -262,6 +262,7 @@
     "room-state-closed": "Closed",
     "state-all": "All states",
     "try-action": "Try as student",
+    "exam-actions": "Exam actions",
     "delete-action": "Delete exam",
     "delete-title": "Delete this exam?",
     "delete-description": "Its questions and pictures are deleted for good.",

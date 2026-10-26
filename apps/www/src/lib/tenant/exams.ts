@@ -21,6 +21,12 @@ export const ExamRoomsInput = Schema.Struct({
   slug: TenantSlug,
 });
 
+/**
+ * The session name the editor reads a prompt under to draw it without an editor. It never writes, so the
+ * server holds no record of it, and the read answers the document alone.
+ */
+export const PREVIEW_CLIENT = "preview";
+
 /** One exam of the school, for its editor and for its try. */
 export const ExamInput = Schema.Struct({
   examId: Id("exams"),
