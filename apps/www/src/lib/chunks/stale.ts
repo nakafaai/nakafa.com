@@ -12,7 +12,7 @@ const STALE_CHUNK_MESSAGES = [
 ] as const;
 
 /** The tab's storage could not be read or written, so the page does not reload. */
-export class ReloadMarkUnavailable extends Schema.TaggedError<ReloadMarkUnavailable>()(
+class ReloadMarkUnavailable extends Schema.TaggedError<ReloadMarkUnavailable>()(
   "ReloadMarkUnavailable",
   { cause: Schema.Unknown }
 ) {}

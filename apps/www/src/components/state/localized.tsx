@@ -104,7 +104,7 @@ function ReportedFailure({
 }
 
 /** Reports the failure that a route's error component caught, once, under its source. */
-export function useReportedError(error: unknown, source: string) {
+function useReportedError(error: unknown, source: string) {
   useEffect(() => {
     captureException(error, { source });
   }, [error, source]);
