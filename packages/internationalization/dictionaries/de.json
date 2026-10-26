@@ -756,7 +756,7 @@
       "integration": "Liest die Daten der Schule über die Aktionen seines Clients."
     },
     "roles-overview": "Was jede Rolle darf",
-    "roles-overview-description": "Jede Rolle dieser Schule und was sie darf.",
+    "roles-overview-description": "Nur Inhaber:innen vergeben die Rollen Inhaber:in und Admin.",
     "roles-overview-footer": "Eine Person kann mehrere Rollen haben.",
     "secret-copy": "Kopieren",
     "unit-npsn": "NPSN",

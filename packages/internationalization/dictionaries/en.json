@@ -756,7 +756,7 @@
       "integration": "Reads the school's data through the actions its client holds."
     },
     "roles-overview": "What each role may do",
-    "roles-overview-description": "Each role of this school, and what it may do.",
+    "roles-overview-description": "Only an Owner gives the Owner and Admin roles.",
     "roles-overview-footer": "A person may hold more than one role.",
     "secret-copy": "Copy",
     "unit-npsn": "NPSN",

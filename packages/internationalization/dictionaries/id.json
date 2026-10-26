@@ -756,7 +756,7 @@
       "integration": "Membaca data sekolah melalui aksi yang dimiliki kliennya."
     },
     "roles-overview": "Yang boleh dilakukan setiap peran",
-    "roles-overview-description": "Setiap peran di sekolah ini, dan apa yang boleh dilakukannya.",
+    "roles-overview-description": "Hanya Pemilik yang bisa memberi peran Pemilik dan Admin.",
     "roles-overview-footer": "Satu orang bisa memegang lebih dari satu peran.",
     "secret-copy": "Salin",
     "unit-npsn": "NPSN",
