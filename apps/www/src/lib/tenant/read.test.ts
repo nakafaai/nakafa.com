@@ -422,14 +422,12 @@ describe("outsiderOf", () => {
     "names the outsider by the username when the account has no name, as a reload does",
     () =>
       Effect.gen(function* () {
-        const member = yield* memberFrame({
-          ...VIEWER,
-          account: Schema.decodeSync(ViewerAccount)({
-            mascot: MASCOT,
-            name: "",
-            username: "ayu",
-          }),
+        const account = yield* Schema.decodeEffect(ViewerAccount)({
+          mascot: MASCOT,
+          name: "",
+          username: "ayu",
         });
+        const member = yield* memberFrame({ ...VIEWER, account });
         expect(
           Option.map(outsiderOf(member), (outsider) => outsider.account)
         ).toEqual(Option.some("ayu"));
@@ -440,13 +438,11 @@ describe("outsiderOf", () => {
     "gives none for an account that names nothing, where a reload answers not found",
     () =>
       Effect.gen(function* () {
-        const member = yield* memberFrame({
-          ...VIEWER,
-          account: Schema.decodeSync(ViewerAccount)({
-            mascot: MASCOT,
-            name: "",
-          }),
+        const account = yield* Schema.decodeEffect(ViewerAccount)({
+          mascot: MASCOT,
+          name: "",
         });
+        const member = yield* memberFrame({ ...VIEWER, account });
         expect(outsiderOf(member)).toEqual(Option.none());
       })
   );
