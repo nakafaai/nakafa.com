@@ -9,6 +9,7 @@ import {
   type ExamResponse,
   isAnswered,
   isTextResponse,
+  madePairs,
 } from "@repo/backend/confect/exams/sittings/response";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import type {
@@ -125,6 +126,58 @@ const answeredEntry = (
       )
     : Option.none();
 
+/** A match interaction, which a matching question holds. */
+type MatchInteraction = Extract<Interaction, { readonly kind: "match" }>;
+
+/** The key of one match: the pairs that are correct. */
+type MatchKey = Extract<InteractionKey, { readonly kind: "match" }>;
+
+/** The match that a question answers: its one interaction, when that is a match. */
+const answeredMatch = (
+  interactions: readonly Interaction[]
+): Option.Option<MatchInteraction> =>
+  interactions.length === 1
+    ? Arr.findFirst(
+        interactions,
+        (interaction): interaction is MatchInteraction =>
+          interaction.kind === "match"
+      )
+    : Option.none();
+
+/**
+ * Scores the pairs of a match against its key, all or nothing as a choice is: the response is `correct`
+ * when it makes exactly the key's pairs, and `incorrect` when it misses or changes any of them. A key
+ * with no pairs for the match leaves it `pending`.
+ */
+const scorePairs = (
+  match: MatchInteraction,
+  key: readonly InteractionKey[],
+  response: ExamResponse
+): Verdict =>
+  Option.match(
+    Arr.findFirst(
+      key,
+      (item): item is MatchKey =>
+        item.kind === "match" && item.interaction === match.id
+    ),
+    {
+      onNone: () => "pending",
+      onSome: ({ pairs }) => {
+        const made = madePairs(response);
+        return made.length === pairs.length &&
+          Arr.every(pairs, (pair) =>
+            Arr.some(
+              made,
+              (mine) =>
+                mine.source === pair.source && mine.target === pair.target
+            )
+          )
+          ? "correct"
+          : "incorrect";
+      },
+    }
+  );
+
 /** Whether a question is an essay: its one interaction is a long text, which the teacher scores (K6). */
 const isEssay = (interactions: readonly Interaction[]) =>
   interactions.length === 1 &&
@@ -166,7 +219,7 @@ const scoreText = (
  * choice is scored with the try-outs'
  * evaluation (`evaluate`, ADR 0031, section 9): an unanswered question, and a response that names no
  * option of its choice, are `incorrect`, as the sitting closes them. A text entry is scored by its
- * accepted answers (`scoreText`). A question that holds another shape, a question without a key, or a
+ * accepted answers (`scoreText`), and a match by its pairs (`scorePairs`). A question that holds another shape, a question without a key, or a
  * key with no answer for its interaction is `pending`, so a person judges it instead of the server
  * (ADR 0031, section 4).
  */
@@ -184,6 +237,10 @@ export function scoreResponse(
   const entry = answeredEntry(interactions);
   if (Option.isSome(entry)) {
     return scoreText(entry.value, key, response);
+  }
+  const match = answeredMatch(interactions);
+  if (Option.isSome(match)) {
+    return scorePairs(match.value, key, response);
   }
   const choice = answeredChoice(interactions);
   if (Option.isNone(choice)) {

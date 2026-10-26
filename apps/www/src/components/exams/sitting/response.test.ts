@@ -3,6 +3,8 @@ import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interacti
 import { Option, Schema } from "effect";
 import {
   choiceOf,
+  pairedWith,
+  pairingOf,
   writtenOf,
   toggleOption,
 } from "@/components/exams/sitting/response";
@@ -106,5 +108,54 @@ describe("writtenOf", () => {
   it("finds nothing written in a choice, or in a question of two interactions", () => {
     expect(writtenOf([choice(1)])).toEqual(Option.none());
     expect(writtenOf([entry, choice(1)])).toEqual(Option.none());
+  });
+});
+
+describe("pairedWith", () => {
+  /** A match of three statements, whose order the pairs keep. */
+  const match = { sources: [{ id: "source-1" }, { id: "source-2" }, { id: "source-3" }] };
+
+  it("pairs a statement with an answer, which another statement gives up, in the order of the statements", () => {
+    const one = pairedWith(match.sources, [], { source: "source-2", target: "target-1" });
+    expect(one).toEqual([{ source: "source-2", target: "target-1" }]);
+    expect(
+      pairedWith(match.sources, one, { source: "source-1", target: "target-1" })
+    ).toEqual([{ source: "source-1", target: "target-1" }]);
+    expect(
+      pairedWith(match.sources, one, { source: "source-1", target: "target-3" })
+    ).toEqual([
+      { source: "source-1", target: "target-3" },
+      { source: "source-2", target: "target-1" },
+    ]);
+  });
+
+  it("drops a pair of a statement that the match does not hold", () => {
+    expect(
+      pairedWith(match.sources, [], { source: "source-9", target: "target-1" })
+    ).toEqual([]);
+  });
+});
+
+describe("pairingOf", () => {
+  /** A match, which a matching question holds alone. */
+  const match = decodeInteraction({
+    id: "match",
+    kind: "match",
+    label: "Pairs",
+    shuffle: false,
+    sources: [
+      { id: "source-1", label: label("Ibu kota"), maxMatches: 1 },
+      { id: "source-2", label: label("Mata uang"), maxMatches: 1 },
+    ],
+    targets: [
+      { id: "target-1", label: label("Jakarta"), maxMatches: 1 },
+      { id: "target-2", label: label("Rupiah"), maxMatches: 1 },
+    ],
+  });
+
+  it("finds the match of a question that holds only it, and none beside a choice", () => {
+    expect(pairingOf([match])).toEqual(Option.some(match));
+    expect(pairingOf([match, choice(1)])).toEqual(Option.none());
+    expect(pairingOf([choice(1)])).toEqual(Option.none());
   });
 });

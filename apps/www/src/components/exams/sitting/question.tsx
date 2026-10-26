@@ -5,6 +5,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   chosenOptions,
   type ExamResponse,
+  madePairs,
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/exams/sittings/response";
@@ -29,7 +30,12 @@ import {
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
 import { SittingField } from "@/components/exams/sitting/field";
-import { choiceOf, writtenOf } from "@/components/exams/sitting/response";
+import { SittingPairs } from "@/components/exams/sitting/pairs";
+import {
+  choiceOf,
+  pairingOf,
+  writtenOf,
+} from "@/components/exams/sitting/response";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
@@ -73,6 +79,10 @@ export function SittingQuestion({
     () => writtenOf(question.interactions),
     [question.interactions]
   );
+  const pairing = useMemo(
+    () => pairingOf(question.interactions),
+    [question.interactions]
+  );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
   const promptDocument = useMemo(
     () =>
@@ -83,14 +93,21 @@ export function SittingQuestion({
   );
   // The images of the prompt and of the options, resolved in one read by this student's device.
   const pictureIds = useMemo(() => {
-    const labels = Option.match(choice, {
-      onNone: () => [],
-      onSome: (found) => Arr.map(found.options, (option) => option.label),
-    });
+    const labels = Arr.appendAll(
+      Option.match(choice, {
+        onNone: () => [],
+        onSome: (found) => Arr.map(found.options, (option) => option.label),
+      }),
+      Option.match(pairing, {
+        onNone: () => [],
+        onSome: (found) =>
+          Arr.map(Arr.appendAll(found.sources, found.targets), (part) => part.label),
+      })
+    );
     return pictureIdsOfDocuments(
       promptDocument === null ? labels : [promptDocument, ...labels]
     );
-  }, [choice, promptDocument]);
+  }, [choice, pairing, promptDocument]);
   const pictures = useQuery(
     exams.sittings.images,
     pictureIds.length === 0
@@ -150,6 +167,15 @@ export function SittingQuestion({
               labelledBy={titleId}
               onType={(text) => onChoose({ text })}
               text={typedText(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(pairing) ? (
+            <SittingPairs
+              disabled={locked}
+              labelledBy={titleId}
+              match={pairing.value}
+              onPair={(pairs) => onChoose({ pairs })}
+              pairs={madePairs(question.response ?? NO_RESPONSE)}
             />
           ) : null}
         </SittingPictures>

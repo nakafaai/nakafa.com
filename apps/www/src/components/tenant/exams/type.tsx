@@ -3,6 +3,7 @@ import {
   CheckmarkSquare02Icon,
   FlowConnectionIcon,
   InputTextIcon,
+  LinkSquare02Icon,
   NoteEditIcon,
   RadioButtonIcon,
   ThumbsUpDownIcon,
@@ -24,13 +25,14 @@ import { useTranslations } from "use-intl";
 /**
  * The icon each template shows by: a radio for one answer, a check box for several, a thumb up and
  * down for true or false, a flow from a statement to its reason for cause and effect, a text
- * field for a short answer, and a note for an essay.
+ * field for a short answer, a note for an essay, and a link for matching.
  */
 const TEMPLATE_ICON = {
   cause: FlowConnectionIcon,
   choice: RadioButtonIcon,
   choices: CheckmarkSquare02Icon,
   essay: NoteEditIcon,
+  match: LinkSquare02Icon,
   short: InputTextIcon,
   truefalse: ThumbsUpDownIcon,
 } satisfies Record<QuestionTemplate, typeof RadioButtonIcon>;
@@ -41,6 +43,7 @@ const TEMPLATE_NAME = {
   choice: "template-choice",
   choices: "template-choices",
   essay: "template-essay",
+  match: "template-match",
   short: "template-short",
   truefalse: "template-truefalse",
 } as const satisfies Record<QuestionTemplate, string>;

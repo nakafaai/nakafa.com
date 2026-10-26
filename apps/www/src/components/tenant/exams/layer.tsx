@@ -29,10 +29,12 @@ import {
   optionLetter,
 } from "@/components/tenant/exams/answer";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { matchOf } from "@/components/tenant/exams/match";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
+import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam } from "@/components/tenant/exams/provider";
 
@@ -210,6 +212,10 @@ interface TeacherLayerProps {
   readonly onAccept: (accepted: readonly string[]) => void;
   /** Marks an option as the key of the question, which saves at once. */
   readonly onMark: (optionId: string) => void;
+  /** Saves the pairs of a matching question's key, which saves at once. */
+  readonly onPair: (
+    pairs: readonly { readonly source: string; readonly target: string }[]
+  ) => void;
   /** The question the layer belongs to, as the server holds it. */
   readonly question: Question;
   /** The answers, the key, and the template the page shows, so the key shows a change at once. */
@@ -229,6 +235,7 @@ export function TeacherLayer({
   number,
   onAccept,
   onMark,
+  onPair,
   question,
   shown,
 }: TeacherLayerProps) {
@@ -260,7 +267,21 @@ export function TeacherLayer({
           onChange={onAccept}
         />
       ) : null}
-      {needsKey(shown.template) && shown.template !== "short" ? (
+      {Option.match(matchOf(shown.answers), {
+        onNone: () => null,
+        onSome: (match) => (
+          <MatchKey
+            editable={editable}
+            keyed={shown.key}
+            match={match}
+            number={number}
+            onPair={onPair}
+          />
+        ),
+      })}
+      {needsKey(shown.template) &&
+      shown.template !== "short" &&
+      shown.template !== "match" ? (
         <AnswerKey
           editable={editable}
           marked={markedOptions(shown.key)}

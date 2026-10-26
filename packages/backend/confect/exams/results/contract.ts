@@ -22,14 +22,16 @@ import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 const ResultAction = Kind.actions(entries, "result");
 
 /**
- * One question of the exam in its order: its number, the option IDs of its choice in their order, and the
- * points that a correct answer to it earns.
+ * One question of the exam in its order: its number, the option IDs of its choice in their order, the
+ * statements and answers of its match in their order, and the points that a correct answer to it earns.
  */
 export const QuestionSummary = Schema.Struct({
   id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
   points: QuestionPoints,
+  sourceIds: Schema.Array(LocalIdSchema),
+  targetIds: Schema.Array(LocalIdSchema),
 });
 
 /**
@@ -95,6 +97,8 @@ const StudentAnswer = Schema.Struct({
   optionIds: Schema.Array(LocalIdSchema),
   points: QuestionPoints,
   response: ExamResponse,
+  sourceIds: Schema.Array(LocalIdSchema),
+  targetIds: Schema.Array(LocalIdSchema),
   verdict: Verdict,
 });
 

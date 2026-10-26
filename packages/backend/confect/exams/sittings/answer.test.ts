@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   encodeAnswers,
+  matchAnswers,
   newChoiceAnswers,
   shortAnswers,
 } from "@repo/backend/confect/exams/question";
@@ -297,6 +298,44 @@ describe("exams/sittings answer", () => {
           version: 1,
         }).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "ResponseDoesNotFit" });
+      })
+  );
+
+  it.effect(
+    "saves the pairs a student makes in a match, some or all, and refuses a statement or an answer paired twice",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { question, sittingId } = yield* enteredSitting(fixture);
+        yield* setInteractions(fixture, question, matchAnswers());
+        yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: { pairs: [{ source: "source-1", target: "target-2" }] },
+          sittingId,
+          version: 1,
+        });
+        const twice = yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: {
+            pairs: [
+              { source: "source-1", target: "target-2" },
+              { source: "source-2", target: "target-2" },
+            ],
+          },
+          sittingId,
+          version: 2,
+        }).pipe(Effect.flip);
+        expect(twice).toMatchObject({ _tag: "ResponseDoesNotFit" });
+        const unknown = yield* answerAs(fixture, {
+          deviceId: deviceOf(1),
+          questionId: question,
+          response: { pairs: [{ source: "source-9", target: "target-1" }] },
+          sittingId,
+          version: 2,
+        }).pipe(Effect.flip);
+        expect(unknown).toMatchObject({ _tag: "ResponseDoesNotFit" });
       })
   );
 

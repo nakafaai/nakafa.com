@@ -18,6 +18,7 @@ import {
   type Question,
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
+import { pairsKey } from "@/components/tenant/exams/match";
 import { useExam } from "@/components/tenant/exams/provider";
 import {
   makeQuestionWriter,
@@ -183,11 +184,18 @@ export function useQuestionEditing(question: Question) {
   const setAccepted = (texts: readonly string[]) =>
     saveAnswers((base) => ({ ...base, key: acceptedKey(base.answers, texts) }));
 
+  /** Sets the pairs of a matching question's key, which saves at once once they pair every statement (`pairsKey`). */
+  const setPairs = (
+    pairs: readonly { readonly source: string; readonly target: string }[]
+  ) =>
+    saveAnswers((base) => ({ ...base, key: pairsKey(base.answers, pairs) }));
+
   return {
     displayed: shown ?? question,
     markOption,
     saveAnswers,
     setAccepted,
+    setPairs,
     setTemplate,
   };
 }

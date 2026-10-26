@@ -17,6 +17,7 @@ import { DOMSerializer, Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
+import { useTranslations } from "use-intl";
 import {
   choiceOf,
   entryOf,
@@ -24,6 +25,7 @@ import {
   optionLetter,
 } from "@/components/tenant/exams/answer";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
@@ -203,6 +205,43 @@ function PaperChoice({
 }
 
 /**
+ * One side of a matching question drawn without editors, as its live column draws it: its heading, its
+ * parts numbered or lettered, and the room of the action that adds a part.
+ */
+function MatchSketch({
+  match,
+  side,
+  withControls,
+}: {
+  match: Extract<Question["answers"][number], { kind: "match" }>;
+  side: "sources" | "targets";
+  withControls: boolean;
+}) {
+  const t = useTranslations("Exams");
+  const { exam } = useExam();
+  const parts = match[side];
+
+  return (
+    <div className="grid content-start gap-2">
+      <p className="font-medium text-muted-foreground text-sm">
+        {t(side === "sources" ? "match-statements" : "match-answers")}
+      </p>
+      {Arr.map(parts, (part, index) => (
+        <PaperChoice
+          key={part.id}
+          label={part.label}
+          letter={side === "sources" ? String(index + 1) : optionLetter(index)}
+          withControls={withControls}
+        />
+      ))}
+      {withControls && !isLocked(exam) && parts.length < CHOICE_OPTIONS_MAX ? (
+        <OptionAddRoom />
+      ) : null}
+    </div>
+  );
+}
+
+/**
  * The paper of one question drawn without editors: its prompt and its options as the student reads
  * them. The page draws it when its editors are not mounted, and the thumbnails draw it small, so a
  * page and its thumbnail look alike. The prompt keeps its room even before its document is known, so
@@ -248,6 +287,15 @@ export function PaperSketch({
           ))}
         </PaperOptions>
       ) : null}
+      {Option.match(matchOf(question.answers), {
+        onNone: () => null,
+        onSome: (match) => (
+          <div className="grid min-w-0 gap-6 md:grid-cols-2">
+            <MatchSketch match={match} side="sources" withControls={withControls} />
+            <MatchSketch match={match} side="targets" withControls={withControls} />
+          </div>
+        ),
+      })}
       {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
       {question.template === "essay" ? <PaperLine essay /> : null}
       {addsOption ? <OptionAddRoom /> : null}

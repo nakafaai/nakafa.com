@@ -2,7 +2,6 @@ import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentResult } from "@repo/backend/confect/exams/results/contract";
-import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
   CardContent,
@@ -20,18 +19,16 @@ import {
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /**
- * The letters of the options that a student chose or the text the student typed, or a line that says
- * the question was left unanswered.
+ * The letters of the options that a student chose, the text the student typed, or the pairs the
+ * student made, or a line that says the question was left unanswered.
  */
 function AnswerLine({
-  optionIds,
-  response,
+  question,
 }: {
-  readonly optionIds: readonly string[];
-  readonly response: ExamResponse;
+  readonly question: (typeof StudentResult.Type)["questions"][number];
 }) {
   const t = useTranslations("Exams");
-  const shown = responseText(optionIds, response);
+  const shown = responseText(question, question.response);
   if (shown === "") {
     return t("student-no-answer");
   }
@@ -53,10 +50,7 @@ function AnswerItem({
         <span>{t(verdictKeys[question.verdict])}</span>
       </div>
       <span className="text-muted-foreground">
-        <AnswerLine
-          optionIds={question.optionIds}
-          response={question.response}
-        />
+        <AnswerLine question={question} />
       </span>
     </li>
   );

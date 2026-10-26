@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import {
+  matchAnswers,
+  newChoiceAnswers,
+} from "@repo/backend/confect/exams/question";
 import {
   pointsOf,
   scoreResponse,
@@ -135,6 +138,39 @@ describe("exams/results/score", () => {
     );
     expect(scoreResponse([essay], null, { text: "" })).toBe("incorrect");
     expect(scoreResponse([essay], keyOf(["option-1"]), [])).toBe("incorrect");
+  });
+
+  it("scores a match correct when it makes exactly the key's pairs, and incorrect when it misses or changes one", () => {
+    const [match] = matchAnswers();
+    const key: InteractionKey[] = [
+      {
+        interaction: "match",
+        kind: "match",
+        pairs: [
+          { source: "source-1", target: "target-2" },
+          { source: "source-2", target: "target-1" },
+          { source: "source-3", target: "target-3" },
+        ],
+      },
+    ];
+    const pairs = [
+      { source: "source-2", target: "target-1" },
+      { source: "source-1", target: "target-2" },
+      { source: "source-3", target: "target-3" },
+    ];
+    expect(scoreResponse([match], key, { pairs })).toBe("correct");
+    expect(scoreResponse([match], key, { pairs: Arr.take(pairs, 2) })).toBe(
+      "incorrect"
+    );
+    expect(
+      scoreResponse([match], key, {
+        pairs: [...Arr.take(pairs, 2), { source: "source-3", target: "target-1" }],
+      })
+    ).toBe("incorrect");
+    expect(scoreResponse([match], key, [])).toBe("incorrect");
+    expect(scoreResponse([match], keyOf(["option-1"]), { pairs })).toBe(
+      "pending"
+    );
   });
 
   it("scores a choice that a text response answers incorrect, as it chooses no option", () => {

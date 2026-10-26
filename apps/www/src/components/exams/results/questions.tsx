@@ -164,7 +164,7 @@ function AnswerList({
             <TableRow key={answer.attemptId}>
               <TableCell>{answer.name}</TableCell>
               <TableCell className="max-w-96 whitespace-normal">
-                {responseText(question.optionIds, answer.response)}
+                {responseText(question, answer.response)}
               </TableCell>
               <TableCell className="tabular-nums">
                 {canGrade ? (

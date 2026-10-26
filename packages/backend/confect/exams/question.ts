@@ -19,9 +19,10 @@ import { Array as Arr, Effect, Match, Option, Schema } from "effect";
  * fixed options; and cause and effect (`cause`), a single-answer choice of the
  * five fixed relations between a statement and its reason, which the prompt
  * holds; a short answer (`short`), a text entry that the key's accepted
- * answers score; and an essay (`essay`), a long written answer that the
- * teacher scores by the rubric. A new question starts as `choice`, and each
- * later template adds its member here.
+ * answers score; an essay (`essay`), a long written answer that the teacher
+ * scores by the rubric; and matching (`match`), where the student pairs each
+ * statement with one answer. A new question starts as `choice`, and each later
+ * template adds its member here.
  */
 export const QuestionTemplate = Schema.Literals([
   "choice",
@@ -30,6 +31,7 @@ export const QuestionTemplate = Schema.Literals([
   "cause",
   "short",
   "essay",
+  "match",
 ]);
 export type QuestionTemplate = typeof QuestionTemplate.Type;
 
@@ -131,6 +133,7 @@ export const takesRubric = (template: QuestionTemplate) =>
     Match.when("cause", () => false),
     Match.when("short", () => false),
     Match.when("essay", () => true),
+    Match.when("match", () => false),
     Match.exhaustive
   );
 
@@ -169,8 +172,21 @@ const choiceFits = (template: QuestionTemplate, answer: Interaction) =>
   });
 
 /**
+ * Whether one interaction is a match that the matching template takes: two to five statements and two
+ * to five answers, each statement paired with one answer and each answer with one statement at most.
+ */
+const matchFits = (answer: Interaction) =>
+  answer.kind === "match" &&
+  answer.sources.length >= CHOICE_OPTIONS_MIN &&
+  answer.sources.length <= CHOICE_OPTIONS_MAX &&
+  answer.targets.length >= CHOICE_OPTIONS_MIN &&
+  answer.targets.length <= CHOICE_OPTIONS_MAX &&
+  Arr.every([...answer.sources, ...answer.targets], (part) => part.maxMatches === 1);
+
+/**
  * Whether the interactions of a question are the ones its template takes: distinct interactions,
- * each a text entry for a short answer, a long text for an essay, and each a choice that fits the template (`choiceFits`) for
+ * each a text entry for a short answer, a long text for an essay, a match for matching (`matchFits`),
+ * and each a choice that fits the template (`choiceFits`) for
  * every other template. A question that holds any other interaction is refused.
  */
 export const answersFit = (
@@ -182,6 +198,7 @@ export const answersFit = (
     Match.value(template).pipe(
       Match.when("short", () => answer.kind === "textEntry"),
       Match.when("essay", () => answer.kind === "extendedText"),
+      Match.when("match", () => matchFits(answer)),
       Match.orElse(() => choiceFits(template, answer))
     )
   );
@@ -326,6 +343,40 @@ export const choiceAnswers = (
 export const shortAnswers = (): readonly [
   Extract<Interaction, { kind: "textEntry" }>,
 ] => [{ id: "entry", kind: "textEntry", label: NEW_CHOICE_LABEL }];
+
+/** The statements and the answers a new matching question starts with. */
+const NEW_MATCH_PARTS = 3;
+
+/**
+ * The interactions of a matching question: one match of `NEW_MATCH_PARTS` empty statements and as
+ * many empty answers, numbered from one, each paired at most once.
+ */
+export const matchAnswers = (): readonly [
+  Extract<Interaction, { kind: "match" }>,
+] => [
+  {
+    id: "match",
+    kind: "match",
+    label: NEW_CHOICE_LABEL,
+    shuffle: false,
+    sources: [
+      { id: "source-1", label: emptyLabel, maxMatches: 1 },
+      ...Arr.makeBy(NEW_MATCH_PARTS - 1, (index) => ({
+        id: `source-${index + 2}`,
+        label: emptyLabel,
+        maxMatches: 1,
+      })),
+    ],
+    targets: [
+      { id: "target-1", label: emptyLabel, maxMatches: 1 },
+      ...Arr.makeBy(NEW_MATCH_PARTS - 1, (index) => ({
+        id: `target-${index + 2}`,
+        label: emptyLabel,
+        maxMatches: 1,
+      })),
+    ],
+  },
+];
 
 /** The interactions of an essay question: one long text, which the teacher scores by the rubric. */
 export const essayAnswers = (): readonly [

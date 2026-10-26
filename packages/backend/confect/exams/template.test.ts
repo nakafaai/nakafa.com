@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
+  matchAnswers,
   newChoiceAnswers,
   shortAnswers,
   textLabel,
@@ -79,6 +80,13 @@ describe("exams/template asTemplate", () => {
     expect(short).toEqual({ answers: shortAnswers(), key: null });
     expect(asTemplate("choice", short.answers, null, [])).toEqual({
       answers: newChoiceAnswers(),
+      key: null,
+    });
+  });
+
+  it("turns any question into one match of empty statements and answers with no key", () => {
+    expect(asTemplate("match", newChoiceAnswers(), null, [])).toEqual({
+      answers: matchAnswers(),
       key: null,
     });
   });

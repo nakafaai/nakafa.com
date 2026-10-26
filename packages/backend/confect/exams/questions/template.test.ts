@@ -5,6 +5,7 @@ import { nf } from "@repo/backend/test/editor";
 import {
   choiceAnswers,
   essayAnswers,
+  matchAnswers,
   newChoiceAnswers,
   shortAnswers,
   textLabel,
@@ -415,6 +416,77 @@ describe("exams/questions/template", () => {
           })
           .pipe(Effect.flip);
         expect(refused).toMatchObject({ _tag: "KeyDoesNotFit" });
+      })
+  );
+
+  it.effect(
+    "turns a choice into matching, which takes a key that pairs every statement once and refuses any other",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Jodohkan");
+        const [question] = exam.questions;
+        const match = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: [],
+          questionId: question.id,
+          revision: 0,
+          slug: nf,
+          template: "match",
+        });
+        expect(match).toMatchObject({ key: null, template: "match" });
+        expect(match.answers).toEqual(matchAnswers());
+        const pairs = [
+          { source: "source-1", target: "target-3" },
+          { source: "source-2", target: "target-1" },
+          { source: "source-3", target: "target-2" },
+        ] as const;
+        const keyed = yield* teacher.mutation(answer, {
+          answers: match.answers,
+          examId: exam.id,
+          key: [{ interaction: "match", kind: "match", pairs }],
+          questionId: question.id,
+          revision: match.revision,
+          slug: nf,
+        });
+        expect(keyed.key).toEqual([
+          { interaction: "match", kind: "match", pairs },
+        ]);
+        const partial = yield* teacher
+          .mutation(answer, {
+            answers: match.answers,
+            examId: exam.id,
+            key: [
+              { interaction: "match", kind: "match", pairs: [pairs[0], pairs[1]] },
+            ],
+            questionId: question.id,
+            revision: keyed.revision,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(partial).toMatchObject({ _tag: "KeyDoesNotFit" });
+        const twice = yield* teacher
+          .mutation(answer, {
+            answers: match.answers,
+            examId: exam.id,
+            key: [
+              {
+                interaction: "match",
+                kind: "match",
+                pairs: [
+                  pairs[0],
+                  pairs[1],
+                  { source: "source-3", target: "target-3" },
+                ],
+              },
+            ],
+            questionId: question.id,
+            revision: keyed.revision,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(twice).toMatchObject({ _tag: "KeyDoesNotFit" });
       })
   );
 

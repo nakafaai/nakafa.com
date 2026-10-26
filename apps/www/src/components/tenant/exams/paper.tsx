@@ -22,12 +22,14 @@ import {
   withOptionLabel,
   withOptionRemoved,
 } from "@/components/tenant/exams/answer";
+import { MatchColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import {
   type QuestionEditing,
   useQuestionEditing,
 } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { matchOf } from "@/components/tenant/exams/match";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
@@ -212,6 +214,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
             number={number}
             onAccept={editing.setAccepted}
             onMark={editing.markOption}
+            onPair={editing.setPairs}
             question={question}
             shown={editing.displayed}
           />
@@ -243,6 +246,7 @@ function LivePaper({
   const frozen = isLocked(exam);
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
+  const match = Option.getOrNull(matchOf(displayed.answers));
   // The label the server holds for an option. Its editor starts from that label, and a label the server does not
   // store goes back to it, so the editor never keeps text that is not saved. An option the server does not hold
   // yet has the label the paper shows.
@@ -278,6 +282,28 @@ function LivePaper({
         label={t("question-text", { number })}
         placeholder={t("prompt-placeholder")}
       />
+      {match === null ? null : (
+        <div className="grid min-w-0 gap-6 md:grid-cols-2">
+          <MatchColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={frozen}
+            match={match}
+            number={number}
+            question={question}
+            side="sources"
+          />
+          <MatchColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={frozen}
+            match={match}
+            number={number}
+            question={question}
+            side="targets"
+          />
+        </div>
+      )}
       {choice === null ? null : (
         <PaperOptions>
           {Arr.map(choice.options, (option, index) => (
@@ -286,7 +312,7 @@ function LivePaper({
               label={savedLabel(option)}
               letter={optionLetter(index)}
               locked={frozen}
-              number={number}
+              name={t("option-of", { letter: optionLetter(index), number })}
               onRemove={
                 choice.options.length > CHOICE_OPTIONS_MIN && !fixed
                   ? () =>
@@ -306,6 +332,11 @@ function LivePaper({
                   unstored
                 )
               }
+              placeholder={t("option-placeholder")}
+              removeName={t("option-remove-of", {
+                letter: optionLetter(index),
+                number,
+              })}
             />
           ))}
         </PaperOptions>

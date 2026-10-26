@@ -1,5 +1,6 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import { Array as Arr, Option } from "effect";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { Array as Arr, Option, Result } from "effect";
 
 /** The choice interaction, whose response is the options the student chose. */
 export type Choice = Extract<Interaction, { readonly kind: "choice" }>;
@@ -63,4 +64,51 @@ export function toggleOption(
     return response;
   }
   return Arr.append(response, optionId);
+}
+
+/** The match interaction, whose response is the pairs the student made. */
+export type MatchPart = Extract<Interaction, { readonly kind: "match" }>;
+
+/**
+ * The match of a question, when the question holds exactly one interaction and that interaction is a
+ * match, as a matching question does. This is the rule that the server applies.
+ */
+export function pairingOf(
+  interactions: readonly Interaction[]
+): Option.Option<MatchPart> {
+  if (interactions.length !== 1) {
+    return Option.none();
+  }
+  return Arr.findFirst(
+    interactions,
+    (interaction): interaction is MatchPart => interaction.kind === "match"
+  );
+}
+
+/** One pair of a match, as the contract names it: a statement and the answer the student or the key gives it. */
+type Pair = Extract<InteractionKey, { kind: "match" }>["pairs"][number];
+
+/**
+ * The pairs once one statement takes one answer: the statement's earlier pair is replaced, and a statement
+ * that held this answer gives it up, since each answer pairs one statement. The pairs keep the order of the
+ * match's statements, and a pair of a statement the match does not hold is dropped.
+ */
+export function pairedWith(
+  sources: readonly { readonly id: string }[],
+  pairs: readonly Pair[],
+  next: Pair
+): readonly Pair[] {
+  const all = Arr.append(
+    Arr.filter(
+      pairs,
+      (pair) => pair.source !== next.source && pair.target !== next.target
+    ),
+    next
+  );
+  return Arr.filterMap(sources, (source) =>
+    Option.match(
+      Arr.findFirst(all, (pair) => pair.source === source.id),
+      { onNone: () => Result.failVoid, onSome: Result.succeed }
+    )
+  );
 }

@@ -5,6 +5,7 @@ import type {
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import type { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { pairsFit } from "@repo/backend/confect/exams/key";
 import { questionAnswers } from "@repo/backend/confect/exams/question";
 import {
   ResponseDoesNotFit,
@@ -13,6 +14,7 @@ import {
 import { sittingGate } from "@repo/backend/confect/exams/sittings/gate";
 import {
   type ExamResponse,
+  isPairsResponse,
   isTextResponse,
   TEXT_RESPONSE_MAX,
 } from "@repo/backend/confect/exams/sittings/response";
@@ -37,8 +39,9 @@ const fitsChoice = (choice: Choice, response: readonly string[]) =>
 
 /**
  * Whether a response fits the one interaction of a question: a choice takes the options it holds
- * (`fitsChoice`), a text entry takes one line of typed text, and an essay takes written text, blank
- * text included in both, which leaves the question unanswered. A question of any other shape, or of
+ * (`fitsChoice`), a text entry takes one line of typed text, an essay takes written text, blank text
+ * included in both, which leaves the question unanswered, and a match takes pairs that pair each of its
+ * statements and answers at most once (`pairsFit`), none or some of them included. A question of any other shape, or of
  * more than one interaction, takes no response.
  */
 const fitsQuestion = (
@@ -60,6 +63,10 @@ const fitsQuestion = (
           response.text.length <= TEXT_RESPONSE_MAX
       ),
       Match.when({ kind: "extendedText" }, () => isTextResponse(response)),
+      Match.when(
+        { kind: "match" },
+        (match) => isPairsResponse(response) && pairsFit(match, response.pairs)
+      ),
       Match.orElse(() => false)
     )
   );

@@ -5,6 +5,7 @@ import {
   choiceLimit,
   essayAnswers,
   fixedOptions,
+  matchAnswers,
   newChoiceAnswers,
   type QuestionTemplate,
   shortAnswers,
@@ -38,8 +39,11 @@ export const asTemplate = (
   if (template === "essay") {
     return { answers: essayAnswers(), key: null };
   }
+  if (template === "match") {
+    return { answers: matchAnswers(), key: null };
+  }
   const fixed = Option.isSome(fixedOptions(template));
-  // A short answer and an essay hold no choice, so a choice template starts them from a new choice.
+  // A short answer, an essay, and a match hold no choice, so a choice template starts them from a new choice.
   const choices = Arr.some(answers, (answer) => answer.kind === "choice")
     ? answers
     : newChoiceAnswers();

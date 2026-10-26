@@ -17,6 +17,23 @@ export const optionIdsOf = (interactions: readonly Interaction[]): string[] =>
       : []
   );
 
+/**
+ * The statements and the answers of a question's matches, each in the order the match lists them, and
+ * none for another interaction. A result names a pair by the statement's number and the answer's letter.
+ */
+export const pairIdsOf = (interactions: readonly Interaction[]) => ({
+  sourceIds: Arr.flatMap(interactions, (interaction) =>
+    interaction.kind === "match"
+      ? Arr.map(interaction.sources, (part) => part.id)
+      : []
+  ),
+  targetIds: Arr.flatMap(interactions, (interaction) =>
+    interaction.kind === "match"
+      ? Arr.map(interaction.targets, (part) => part.id)
+      : []
+  ),
+});
+
 /** One scored answer as a tally reads it: the options it chose or the text it typed, and its verdict. */
 export type ScoredAnswer = Pick<
   typeof examResultValidator.Type,
