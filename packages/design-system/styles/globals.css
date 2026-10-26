@@ -348,7 +348,7 @@
 }
 
 /*
- * Geist Mono is defined by @fontsource-variable/geist-mono. Applying this class defines
+ * Geist Mono is defined in styles/monospace.css. Applying this class defines
  * `--font-geist-mono` for the element and every descendant, so the shared monospace
  * token resolves to the face only where the class applies.
  */
