@@ -1,7 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { Page } from "@playwright/test";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
-import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
+import { Array as Arr, Clock, Effect, FileSystem, Schedule, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { trackChanges } from "@/e2e/support/changes";
 import {
@@ -195,7 +195,13 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
         Effect.flatMap(Schema.decodeUnknownEffect(Schema.String))
       );
     }),
-    /** Starts a chat the way the new chat page does, and returns where it lives. */
+    /**
+     * Starts a chat the way the new chat page does, and returns where it lives.
+     * A free learner's answer holds every credit of the day while it runs, and
+     * the local backend ends each answer at once for want of a model, so a
+     * second chat started at the same moment waits for that hold to end, as a
+     * learner's own second message does.
+     */
     startChat: Effect.fn("NakafaE2E.startChat")(function* (text: string) {
       const now = yield* Clock.currentTimeMillis;
       return yield* call("mutation", START, {
@@ -205,7 +211,14 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
           prompt: { text },
         },
         requestId: `e2e-${now}-${text}`,
-      }).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Receipt)));
+      }).pipe(
+        Effect.retry({
+          schedule: Schedule.spaced("250 millis"),
+          times: 40,
+          while: (error) => error.message.includes("INSUFFICIENT_CREDITS"),
+        }),
+        Effect.flatMap(Schema.decodeUnknownEffect(Receipt))
+      );
     }),
     /** Gives the newest chats of the list these titles, the newest first. */
     titleNewest: Effect.fn("NakafaE2E.titleNewest")(function* (
