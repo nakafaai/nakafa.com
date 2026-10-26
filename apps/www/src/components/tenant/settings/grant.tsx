@@ -1,7 +1,6 @@
 import { useMutation } from "@confect/react";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -21,6 +20,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import { roleIcon } from "@/components/tenant/roles";
 import { assignGrantChange } from "@/components/tenant/settings/mutation";
 import {
@@ -38,12 +38,11 @@ const SOURCE = "components/tenant/settings/grant";
 export function SchoolGrantDialog({
   open,
   setOpen,
-  slug,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const common = useTranslations("Common");
@@ -115,7 +114,6 @@ export function SchoolGrantDialog({
             id={`${id}-person`}
             onChoose={setPersonId}
             personId={personId}
-            slug={slug}
           />
         </Field>
         <Field>

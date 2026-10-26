@@ -14,7 +14,10 @@ type DisplayOption =
   | (typeof regionOptions)[number]
   | (typeof roleOptions)[number];
 
-/** Renders one localized choice with the existing app icon and flag primitives. */
+/**
+ * Renders one localized choice with the existing app icon and flag primitives,
+ * its title and its description each read in full.
+ */
 export function OnboardingOption({ option }: { option: DisplayOption }) {
   const t = useTranslations("LearningPrograms");
   const countryCode = "countryCode" in option ? option.countryCode : undefined;
@@ -42,13 +45,10 @@ export function OnboardingOption({ option }: { option: DisplayOption }) {
         ) : null}
         {icon ? <HugeIcons className="size-4" icon={icon} /> : null}
       </span>
-      <span className="flex min-w-0 flex-col gap-1 overflow-hidden">
-        <span className="truncate font-medium">{title}</span>
+      <span className="flex min-w-0 flex-col gap-1">
+        <span className="font-medium">{title}</span>
         {description ? (
-          <QuestionnaireChoiceDescription
-            className="truncate"
-            title={description}
-          >
+          <QuestionnaireChoiceDescription>
             {description}
           </QuestionnaireChoiceDescription>
         ) : null}

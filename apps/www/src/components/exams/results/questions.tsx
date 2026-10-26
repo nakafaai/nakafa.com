@@ -4,7 +4,13 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { ChartHistogramIcon } from "@hugeicons/core-free-icons";
+import {
+  CancelCircleIcon,
+  ChartHistogramIcon,
+  CheckmarkCircle02Icon,
+  HourglassIcon,
+  MinusSignCircleIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type {
   AnswerRow as AnswerRowSchema,
@@ -55,6 +61,15 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+
+/** The look of each verdict of an answer: a check, a cross, a half mark and a wait, each in its tone. */
+const VERDICT_LOOKS = {
+  correct: { icon: CheckmarkCircle02Icon, tone: "success" },
+  incorrect: { icon: CancelCircleIcon, tone: "danger" },
+  partial: { icon: MinusSignCircleIcon, tone: "warning" },
+  pending: { icon: HourglassIcon, tone: "neutral" },
+} as const satisfies Record<keyof typeof verdictKeys, StatusLook>;
 
 /** The answers of one page of a question's list. The next page loads as the list's end comes into view. */
 const ANSWER_PAGE_SIZE = 50;
@@ -174,8 +189,10 @@ function AnswerList({
           {Arr.map(results, (answer) => (
             <TableRow key={answer.attemptId}>
               <TableCell>{answer.name}</TableCell>
-              <TableCell className="max-w-96 whitespace-normal">
-                {responseText(question, answer.response)}
+              <TableCell>
+                <span className="line-clamp-2 block max-w-96 whitespace-normal">
+                  {responseText(question, answer.response)}
+                </span>
               </TableCell>
               <TableCell className="tabular-nums">
                 {canGrade ? (
@@ -184,7 +201,13 @@ function AnswerList({
                   answer.points
                 )}
               </TableCell>
-              <TableCell>{t(verdictKeys[answer.verdict])}</TableCell>
+              <TableCell>
+                <TableStatus
+                  icon={VERDICT_LOOKS[answer.verdict].icon}
+                  label={t(verdictKeys[answer.verdict])}
+                  tone={VERDICT_LOOKS[answer.verdict].tone}
+                />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

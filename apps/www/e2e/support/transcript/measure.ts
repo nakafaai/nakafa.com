@@ -34,7 +34,9 @@ export function reachable(row: Locator) {
     return [...root.querySelectorAll(".katex")].every(
       (formula) =>
         formula.getBoundingClientRect().right <= edge + 0.5 ||
-        formula.closest('[data-slot="scroll-area-viewport"]') !== null
+        formula.closest(
+          '[data-slot="scroll-area-viewport"], [data-slot="math-scroll"]'
+        ) !== null
     );
   });
 }
@@ -143,7 +145,10 @@ export function replyOverflow(page: Page) {
       ),
     ]
       .filter(
-        (element) => !element.closest('[data-slot="scroll-area-viewport"], svg')
+        (element) =>
+          !element.closest(
+            '[data-slot="scroll-area-viewport"], [data-slot="math-scroll"], svg'
+          )
       )
       .map((element) => element.getBoundingClientRect().right - edge);
     return Math.max(0, ...reach);

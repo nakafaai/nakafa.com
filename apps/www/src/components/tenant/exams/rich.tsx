@@ -14,6 +14,9 @@ import type { Transaction } from "@tiptap/pm/state";
 import { Array as Arr, Record as Rec } from "effect";
 import {
   type ComponentProps,
+  createContext,
+  type ReactNode,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -27,16 +30,53 @@ import { pictureIdsPlugin } from "@/lib/editor/pictures";
 /** The extensions of one rich text, the shared ones among them. */
 type ExamExtensions = ComponentProps<typeof DocumentEditor>["extensions"];
 
-/** The props of one rich text of the exam editor, which the prompt and each option share. */
-interface ExamDocumentProps {
-  /** The extensions of this text, built once by the caller, on top of the shared ones. */
+/**
+ * How a rich text is wired to its owner, a question's text or an option row, which provides it to the
+ * document it composes.
+ */
+interface ExamDocumentWiring {
+  /** The extensions of this text, built once by the owner, on top of the shared ones. */
   readonly extensions: ExamExtensions;
-  /** The accessible name of the text. */
-  readonly label: string;
   /** Called after each transaction of the text, including one another editor brought in. */
   readonly onChange: (transaction: Transaction) => void;
   /** Called once with the editor, as soon as it exists. */
   readonly onEditor: (editor: DocumentEditorInstance) => void;
+}
+
+/** The wiring of the rich text below, which its owner provides. */
+const ExamDocumentWiringContext = createContext<ExamDocumentWiring | null>(
+  null
+);
+
+/** Gives the rich text its owner composes the owner's wiring. */
+export function ExamDocumentWiringProvider({
+  children,
+  extensions,
+  onChange,
+  onEditor,
+}: ExamDocumentWiring & { readonly children: ReactNode }) {
+  return (
+    <ExamDocumentWiringContext value={{ extensions, onChange, onEditor }}>
+      {children}
+    </ExamDocumentWiringContext>
+  );
+}
+
+/** Reads the wiring of the rich text. It throws outside an owner, which always provides it. */
+function useDocumentWiring() {
+  const wiring = use(ExamDocumentWiringContext);
+  if (wiring === null) {
+    throw new Error(
+      "useDocumentWiring must be used within ExamText or OptionRow"
+    );
+  }
+  return wiring;
+}
+
+/** The props of one rich text of the exam editor, which the prompt, the notes and each option share. */
+interface ExamDocumentProps {
+  /** The accessible name of the text. */
+  readonly label: string;
   /** The hint shown while the text is empty. */
   readonly placeholder: string;
   /** The room the text takes at least: an option takes one line, and a prompt a page of writing. */
@@ -48,16 +88,14 @@ interface ExamDocumentProps {
  * the pictures and formulas of its document, and it makes its editor the one the toolbar acts on
  * when the editor takes focus. A picture pasted or dropped into the text waits for its alt text in
  * the exam's queue, which inserts it into this editor. The editor gives its place up when it is
- * removed.
+ * removed. Its owner, a question's text or an option row, wires it through `ExamDocumentWiringProvider`.
  */
 export function ExamDocument({
-  extensions,
   label,
-  onChange,
-  onEditor,
   placeholder,
   size = "page",
 }: ExamDocumentProps) {
+  const { extensions, onChange, onEditor } = useDocumentWiring();
   const { exam, slug } = useExam();
   const labels = useDocumentLabels();
   const activate = useExamEditing((state) => state.activate);

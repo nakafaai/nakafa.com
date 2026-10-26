@@ -60,7 +60,11 @@ export function ReleaseAction({
     );
   }
   if (!canRelease) {
-    return null;
+    return (
+      <Button disabled type="button">
+        {t("release-action")}
+      </Button>
+    );
   }
   return (
     <>
