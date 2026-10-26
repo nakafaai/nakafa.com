@@ -2,7 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, Deferred, Effect } from "effect";
 import {
   type ComponentProps,
   useEffect,
@@ -79,6 +79,24 @@ export function useChatAdmission({
     shownNow.current = shown;
   });
   const viewerId = gate.viewerId;
+  // A send pressed before the viewer is known waits for the viewer, so no
+  // composer is disabled before the learner acts and no early send is lost.
+  // The viewer settles once per page, so one deferred marks that moment.
+  const [waiting, setWaiting] = useState(false);
+  const [viewerKnown] = useState(() => Deferred.makeUnsafe<void>());
+  useEffect(() => {
+    if (!gate.pending) {
+      Deferred.doneUnsafe(viewerKnown, Effect.void);
+    }
+  }, [gate.pending, viewerKnown]);
+  // A composer that leaves while its send waits drops the send.
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   // The prompt stays until the admission is refused, or until the surface that
   // shows it hides or ends, so the composer waits for the chat it opens.
   const busy = admitting || prompt !== null;
@@ -97,9 +115,30 @@ export function useChatAdmission({
     };
   }, [viewerId]);
 
+  // The held send is admitted by the render that knows the viewer, so it reads
+  // the viewer, the surface and the draft as they are then.
+  const submitNow = useRef(submit);
+  useLayoutEffect(() => {
+    submitNow.current = submit;
+  });
+
   function submit(message: PromptInputMessage) {
     const query = message.text?.trim();
-    if (!query || busy || !gate.admit()) {
+    if (!query || busy || waiting) {
+      return false;
+    }
+    if (gate.pending) {
+      // The send is admitted, or sent to sign-in, once the viewer is known.
+      setWaiting(true);
+      Effect.runPromise(Deferred.await(viewerKnown)).then(() => {
+        if (mounted.current) {
+          setWaiting(false);
+          submitNow.current(message);
+        }
+      });
+      return false;
+    }
+    if (!gate.admit()) {
       return false;
     }
     const draft = { ...message, text: query };
@@ -166,5 +205,5 @@ export function useChatAdmission({
       });
   }
 
-  return { disabled: busy || gate.pending, prompt, promptId, submit };
+  return { disabled: busy || waiting, prompt, promptId, submit };
 }
