@@ -167,6 +167,54 @@ describeGate("tryouts", {
 
 describe("tryouts/gate", () => {
   it.effect(
+    "flags and unflags a running question in the shared flags table, and a repeat changes nothing",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        expect(yield* world.flag("learner", "running", true)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.flag("learner", "running", true)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.flags).toMatchObject([
+          {
+            attempt: world.attemptId,
+            kind: "tryout",
+            question: world.placementId,
+          },
+        ]);
+        expect(yield* world.flag("learner", "running", false)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.flag("learner", "running", false)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.flags).toEqual([]);
+      })
+  );
+  it.effect(
+    "refuses a flag once the section's deadline passed, as an answer that came too late",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        yield* world.arrange("expire-section");
+        expect(yield* world.flag("learner", "running", true)).toEqual(
+          Option.some(tryoutRefusals.answer.Expired)
+        );
+        expect(yield* world.flags).toEqual([]);
+      })
+  );
+  it.effect("refuses another learner's flag as a missing question", () =>
+    Effect.gen(function* () {
+      const world = yield* seedTryoutGate;
+      expect(yield* world.flag("other", "running", true)).toEqual(
+        Option.some(tryoutRefusals.answer.Missing)
+      );
+      expect(yield* world.flags).toEqual([]);
+    })
+  );
+  it.effect(
     "keeps the first answer time and counts seconds spent in the section",
     () =>
       Effect.gen(function* () {

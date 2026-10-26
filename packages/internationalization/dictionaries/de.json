@@ -296,7 +296,6 @@
     "student-opens-at": "Diese Sitzung beginnt {time}.",
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
-    "flag-question": "Zur Überprüfung markieren",
     "seat-last-activity": "Letzte Aktivität {time}.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
     "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
@@ -1291,6 +1290,11 @@
     "shortcut-step": "Vorherige oder nächste Aufgabe",
     "shortcut-pick": "Option wählen",
     "shortcut-navigator": "Aufgabenübersicht",
+    "flag": "Markieren",
+    "review": "Prüfen",
+    "legend-answered": "Beantwortet",
+    "legend-flagged": "Markiert",
+    "shortcut-flag": "Aufgabe markieren",
     "cell-flagged": "{state, select, answered {Aufgabe {number}, beantwortet, zur Überprüfung markiert} other {Aufgabe {number}, offen, zur Überprüfung markiert}}"
   },
   "Utils": {
@@ -1653,6 +1657,10 @@
     },
     "tryout-submit-answer-error": {
       "title": "Antwort nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-flag-error": {
+      "title": "Markierung nicht gespeichert.",
       "description": "Versuche es erneut."
     },
     "memory-limit": {

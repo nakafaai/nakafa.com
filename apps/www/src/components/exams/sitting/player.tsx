@@ -24,22 +24,26 @@ import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
-import { SittingNavigator } from "@/components/exams/sitting/navigator";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
-import { projectSittingQuestions } from "@/components/exams/sitting/questions";
+import {
+  projectSittingCells,
+  projectSittingQuestions,
+} from "@/components/exams/sitting/questions";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import { useSittingSignals } from "@/components/exams/sitting/signals";
 import { useSittingClock } from "@/components/exams/sitting/timer";
 import { PlayerFinish } from "@/components/player/finish";
+import { PlayerFlag } from "@/components/player/flag";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerKeys } from "@/components/player/keys";
 import type { PlayerMode } from "@/components/player/mode";
+import type { PlayerCellModel } from "@/components/player/model";
+import { PlayerGrid } from "@/components/player/navigator/grid";
+import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
-import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
-import { PlayerModeToggle } from "@/components/player/navigator/toggle";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
@@ -94,10 +98,10 @@ export function StudentPlayer({
               attempt={attempt}
               deviceId={deviceId}
               locked={!takesAnswers(attempt.state)}
+              questions={projectSittingCells(paper.value)}
               sittingId={sittingId}
               slug={slug}
             />
-            <PlayerOpener />
           </SittingBar>
         }
         locked={!takesAnswers(attempt.state)}
@@ -118,6 +122,7 @@ export function StudentPlayer({
             attempt={attempt}
             deviceId={deviceId}
             locked={!takesAnswers(attempt.state)}
+            questions={[]}
             sittingId={sittingId}
             slug={slug}
           />
@@ -136,19 +141,21 @@ export function StudentPlayer({
 }
 
 /**
- * The student's one primary action, which a lock holds closed. It asks before the answers close, and it
- * exists only while the attempt is active.
+ * The student's one primary action, which a lock holds closed. It reviews the flagged and the unanswered
+ * questions before the answers close, and it exists only while the attempt is active.
  */
 function StudentFinish({
   attempt,
   deviceId,
   locked,
+  questions,
   sittingId,
   slug,
 }: {
   readonly attempt: AttemptValue;
   readonly deviceId: string;
   readonly locked: boolean;
+  readonly questions: readonly PlayerCellModel[];
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
@@ -170,6 +177,7 @@ function StudentFinish({
         )
       }
       pending={false}
+      questions={questions}
       title={t("finish-title")}
     />
   );
@@ -221,15 +229,23 @@ function RunningPaper({
   const mark = useMarkFlag();
   useResendKeptAnswers({ attemptId, deviceId, locked, paper, sittingId, slug });
 
-  /** Marks or unmarks the question with `key` for review, and tells the student when the server refuses it. */
-  function onMark(key: string) {
-    const question = Arr.findFirst(paper.questions, (item) => item.id === key);
-    if (Option.isSome(question)) {
+  const questions = projectSittingQuestions({
+    choose: (question, response) =>
+      choose({
+        attemptId,
+        deviceId,
+        question,
+        response,
+        sittingId,
+        slug,
+      }),
+    // Flags the question, or takes its flag off, and tells the student when the server refuses it.
+    flag: (question) =>
       Effect.runPromise(
         mark({
           deviceId,
-          flagged: !question.value.flagged,
-          questionId: question.value.id,
+          flagged: !question.flagged,
+          questionId: question.id,
           sittingId,
           slug,
         }).pipe(
@@ -237,38 +253,22 @@ function RunningPaper({
             sittingCallFailures(Option.toArray(failure))
           )
         )
-      );
-    }
-  }
+      ),
+    paper,
+  });
 
   return (
     <PlayerProvider
       keys={Arr.map(paper.questions, (question) => question.id)}
       mode={mode}
     >
-      <PlayerKeys
-        locked={locked}
-        onMark={onMark}
-        questions={projectSittingQuestions({
-          choose: (question, response) =>
-            choose({
-              attemptId,
-              deviceId,
-              question,
-              response,
-              sittingId,
-              slug,
-            }),
-          paper,
-        })}
-      />
+      <PlayerKeys locked={locked} questions={questions} />
       {header}
       <PlayerMain
         navigator={
           <PlayerSidebar>
-            <SittingNavigator questions={paper.questions} />
-            <PlayerModeToggle />
-            <PlayerShortcuts />
+            <PlayerGrid questions={questions} />
+            <PlayerLegend />
           </PlayerSidebar>
         }
       >
@@ -287,10 +287,13 @@ function RunningPaper({
           ))}
         </PlayerQuestions>
       </PlayerMain>
-      <PlayerFooter />
+      <PlayerFooter>
+        <PlayerFlag locked={locked} questions={questions} />
+        <PlayerOpener />
+      </PlayerFooter>
       <PlayerSheet>
-        <SittingNavigator questions={paper.questions} />
-        <PlayerModeToggle />
+        <PlayerGrid questions={questions} />
+        <PlayerLegend />
       </PlayerSheet>
     </PlayerProvider>
   );

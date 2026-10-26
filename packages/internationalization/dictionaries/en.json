@@ -296,7 +296,6 @@
     "student-opens-at": "This sitting opens {time}.",
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
-    "flag-question": "Flag for review",
     "seat-last-activity": "Last activity {time}.",
     "title-needed": "The exam needs a title before you can create it.",
     "title-too-long": "The title can have at most {count} characters.",
@@ -1291,6 +1290,11 @@
     "shortcut-step": "Previous or next question",
     "shortcut-pick": "Choose an option",
     "shortcut-navigator": "Question navigator",
+    "flag": "Flag",
+    "review": "Review",
+    "legend-answered": "Answered",
+    "legend-flagged": "Flagged",
+    "shortcut-flag": "Flag the question",
     "cell-flagged": "{state, select, answered {Question {number}, answered, flagged for review} other {Question {number}, unanswered, flagged for review}}"
   },
   "Utils": {
@@ -1653,6 +1657,10 @@
     },
     "tryout-submit-answer-error": {
       "title": "We couldn't save your answer.",
+      "description": "Please try again."
+    },
+    "tryout-flag-error": {
+      "title": "We couldn't save your flag.",
       "description": "Please try again."
     },
     "memory-limit": {

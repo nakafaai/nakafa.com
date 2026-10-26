@@ -61,11 +61,13 @@ const openerOf = (page: Page) =>
 
 /**
  * Where a reader sees which question is current: the marked number of the
- * sidebar from the large breakpoint, and the number on the footer button below
- * it.
+ * sidebar from the large breakpoint, and the current number of the position on
+ * the footer button below it.
  */
 export const currentNumberOf = (page: Page, hasTouch: boolean) =>
-  hasTouch ? openerOf(page) : sidebarOf(page).locator('[aria-current="step"]');
+  hasTouch
+    ? openerOf(page).locator("[data-player-position]")
+    : sidebarOf(page).locator('[aria-current="step"]');
 
 /** The sheet or dialog that is open. */
 export const openSurface = (page: Page) => page.getByRole("dialog");

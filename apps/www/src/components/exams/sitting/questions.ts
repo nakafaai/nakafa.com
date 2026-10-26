@@ -4,7 +4,10 @@ import type {
   PaperValue,
 } from "@/components/exams/sitting/paper";
 import { choiceOf } from "@/components/exams/sitting/response";
-import type { PlayerQuestionModel } from "@/components/player/model";
+import type {
+  PlayerCellModel,
+  PlayerQuestionModel,
+} from "@/components/player/model";
 
 /**
  * The option that a digit key picks: the option at `index` of a single choice. A question of
@@ -17,19 +20,40 @@ const pickedOption = (question: PaperQuestion, index: number) =>
       : Option.none()
   );
 
+/** A question is answered once the student saved at least one option of it. */
+const isAnswered = (question: PaperQuestion) =>
+  question.response !== null && question.response.length > 0;
+
 /**
- * The paper's questions as the shared player marks and picks them. A pick saves the option at once,
- * through `choose`, as a click on the option does, and a question is answered once it holds a response.
+ * The paper's questions as the navigator and the finish's review mark them, in the paper's order: answered
+ * and flagged follow the paper, so an answer or a flag shows as soon as the student makes it.
+ */
+export function projectSittingCells(
+  paper: PaperValue
+): readonly PlayerCellModel[] {
+  return Arr.map(paper.questions, (question) => ({
+    answered: isAnswered(question),
+    flagged: question.flagged,
+    key: question.id,
+  }));
+}
+
+/**
+ * The paper's questions as the shared player marks, flags, and picks them. A pick saves the option at
+ * once, through `choose`, as a click on the option does, a flag goes through `flag`, and a question is
+ * answered once it holds a response.
  */
 export function projectSittingQuestions(input: {
   readonly choose: (
     question: PaperQuestion,
     response: readonly string[]
   ) => void;
+  readonly flag: (question: PaperQuestion) => void;
   readonly paper: PaperValue;
 }): readonly PlayerQuestionModel[] {
   return Arr.map(input.paper.questions, (question) => ({
-    answered: question.response !== null && question.response.length > 0,
+    answered: isAnswered(question),
+    flag: () => input.flag(question),
     flagged: question.flagged,
     key: question.id,
     pick: (index) =>

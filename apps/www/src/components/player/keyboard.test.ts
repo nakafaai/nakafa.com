@@ -36,8 +36,8 @@ describe("player keys", () => {
     ["ArrowLeft", { delta: -1, kind: "step" }],
     ["ArrowRight", { delta: 1, kind: "step" }],
     ["g", { kind: "navigator" }],
-    ["m", { kind: "mark" }],
-    ["M", { kind: "mark" }],
+    ["f", { kind: "flag" }],
+    ["F", { kind: "flag" }],
     ["G", { kind: "navigator" }],
     ["1", { index: 0, kind: "pick" }],
     ["5", { index: 4, kind: "pick" }],
@@ -58,7 +58,9 @@ describe("player keys", () => {
     ["a held digit", press("1", { repeat: true }), idle],
     ["a held navigator key", press("g", { repeat: true }), idle],
     ["a digit after time ran out", press("2"), { ...idle, locked: true }],
-    ["a mark after time ran out", press("m"), { ...idle, locked: true }],
+    ["a flag after time ran out", press("f"), { ...idle, locked: true }],
+    ["a held flag key", press("f", { repeat: true }), idle],
+    ["the old mark key", press("m"), idle],
   ])("ignores %s", (_case, event, context) => {
     expect(readPlayerKey(event, context)).toEqual(Option.none());
   });

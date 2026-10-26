@@ -3,9 +3,13 @@ import tryoutAttemptPlacements from "@repo/backend/confect/_generated/tables/try
 import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
 import tryoutResponses from "@repo/backend/confect/_generated/tables/tryoutResponses";
 import tryoutSectionAttempts from "@repo/backend/confect/_generated/tables/tryoutSectionAttempts";
+import { setAssessmentFlag } from "@repo/backend/confect/assessment/flags";
 import { make } from "@repo/backend/confect/assessment/gate/admit";
 import type { EndReason } from "@repo/backend/confect/assessment/gate/end";
-import type { Version } from "@repo/backend/confect/assessment/gate/rules";
+import {
+  rules,
+  type Version,
+} from "@repo/backend/confect/assessment/gate/rules";
 import { Answerable } from "@repo/backend/confect/assessment/gate/store";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import {
@@ -25,6 +29,7 @@ import {
 } from "@repo/backend/confect/tryouts/response/integrity";
 import {
   type SaveTryoutResponseArgs,
+  type TryoutFlagArgs,
   toTryoutResponseError,
   toTryoutSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
@@ -158,11 +163,20 @@ const loadAnswering = Effect.fn("tryouts.gate.loadAnswering")(function* (
 });
 
 /**
- * The target of one answer: its placement and attempt, then, only for the
- * attempt's owner, its running section, whose stored answer loads last.
+ * The target of one write to a question: its placement and attempt, then, only
+ * for the attempt's owner, its running section, whose `live` rows load last.
  */
-const loadPlacement = Effect.fn("tryouts.gate.loadPlacement")(function* (
-  placementId: Id<"tryoutAttemptPlacements">
+const loadPlacement = Effect.fn("tryouts.gate.loadPlacement")(function* <
+  L,
+  LE,
+  LR,
+>(
+  placementId: Id<"tryoutAttemptPlacements">,
+  live: (
+    attempt: Live["attempt"],
+    section: Live["section"],
+    placement: Answering["placement"]
+  ) => Effect.Effect<L, LE, LR>
 ) {
   const reader = yield* DatabaseReader;
   const placement = yield* reader
@@ -185,7 +199,7 @@ const loadPlacement = Effect.fn("tryouts.gate.loadPlacement")(function* (
       Effect.map(
         Option.map((section) => ({
           deadline: section.expiresAt,
-          live: loadAnswering(loaded, section, placed),
+          live: live(loaded, section, placed),
           verify: verifySection(loaded, section, placed),
         }))
       )
@@ -244,9 +258,17 @@ const gate = make({
       version,
     }),
   finish: finishSection,
-  placement: loadPlacement,
+  placement: (placementId: Id<"tryoutAttemptPlacements">) =>
+    loadPlacement(placementId, loadAnswering),
   section: loadSection,
 });
+
+/** What a flag needs once admitted: the attempt and the question's placement, and no answer rows. */
+const loadFlagging = (
+  attempt: Live["attempt"],
+  _section: Live["section"],
+  placement: Answering["placement"]
+) => Effect.succeed({ attempt, placement });
 
 /**
  * Consumer try-out writes admitted through the live-attempt gate (ADR 0013).
@@ -280,6 +302,33 @@ export const tryoutGate = {
       ResponseRejected: flow(toTryoutSelectionError, Effect.fail),
       Stale: flow(toTryoutStale, Effect.fail),
     }),
+    Effect.catchDefect(flow(toTryoutResponseError, Effect.fail))
+  ),
+  /**
+   * Flags or unflags one question of the caller's running section to come back
+   * to, in the flags table that school sittings share (ADR 0031). The flag rule
+   * admits it until the live deadline, and a flag carries no version: a repeated
+   * flag or unflag changes nothing.
+   */
+  flag: Effect.fn("tryouts.gate.flag")(
+    function* (owner: Id<"users">, args: TryoutFlagArgs) {
+      const { live } = yield* gate.admit(
+        rules.flag,
+        owner,
+        Option.none(),
+        loadPlacement(args.placementId, loadFlagging)
+      );
+      yield* setAssessmentFlag({
+        attempt: live.attempt._id,
+        flagged: args.flagged,
+        kind: "tryout",
+        question: live.placement._id,
+      });
+    },
+    Effect.catchTag(
+      "AttemptRefused",
+      flow(toTryoutFailure.answer, Effect.fail)
+    ),
     Effect.catchDefect(flow(toTryoutResponseError, Effect.fail))
   ),
   /** Ends and scores the caller's running section. */

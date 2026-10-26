@@ -1,22 +1,17 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
-import { Flag01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { useId, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { useChooseAnswer } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import {
   PromptReserve,
   SittingDocument,
 } from "@/components/exams/sitting/document";
-import { useMarkFlag } from "@/components/exams/sitting/mark";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
   pictureIdsOfDocuments,
@@ -26,8 +21,8 @@ import { choiceOf } from "@/components/exams/sitting/response";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
- * One question of the paper: its number, its prompt as the editor holds it now, its options, and the
- * flag that the student sets for review. A choice is kept in the browser before it is sent, so a reload
+ * One question of the paper: its number, its prompt as the editor holds it now, and its options. The
+ * player's footer flags the current question. A choice is kept in the browser before it is sent, so a reload
  * or a closed tab sends it again. The prompt waits while the server folds the editor's steps, and the
  * query runs again when the fold is written, so a prompt that is not ready shows nothing yet.
  */
@@ -57,7 +52,6 @@ export function SittingQuestion({
     slug,
   });
   const choose = useChooseAnswer();
-  const mark = useMarkFlag();
   const choice = useMemo(
     () => choiceOf(question.interactions),
     [question.interactions]
@@ -133,32 +127,6 @@ export function SittingQuestion({
             />
           ) : null}
         </SittingPictures>
-        <div>
-          <Button
-            aria-pressed={question.flagged}
-            disabled={locked}
-            onClick={() =>
-              Effect.runPromise(
-                mark({
-                  deviceId,
-                  flagged: !question.flagged,
-                  questionId: question.id,
-                  sittingId,
-                  slug,
-                }).pipe(
-                  Effect.flatMap((failure) =>
-                    sittingCallFailures(Option.toArray(failure))
-                  )
-                )
-              )
-            }
-            type="button"
-            variant={question.flagged ? "default-outline" : "outline"}
-          >
-            <HugeIcons icon={Flag01Icon} />
-            {t("flag-question")}
-          </Button>
-        </div>
       </div>
     </PlayerQuestion>
   );

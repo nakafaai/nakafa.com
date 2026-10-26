@@ -259,12 +259,10 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     })
   ).toHaveAttribute("aria-current", "step");
 
-  // The second question takes a flag, which the navigator marks as well.
-  const second = student.getByRole("article", { name: "Question 2" });
-  await second.getByRole("button", { name: "Flag for review" }).click();
-  await expect(
-    second.getByRole("button", { name: "Flag for review" })
-  ).toHaveAttribute("aria-pressed", "true");
+  // The footer's flag marks the current question, the second, and the navigator marks it as well.
+  const flag = student.getByRole("button", { exact: true, name: "Flag" });
+  await flag.click();
+  await expect(flag).toHaveAttribute("aria-pressed", "true");
   await expect(
     navigator.getByRole("button", {
       exact: true,
@@ -289,7 +287,7 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
-  // On a phone the navigator opens from the header, and a number in it closes the sheet.
+  // On a phone the navigator opens from the footer, and a number in it closes the sheet.
   await student.setViewportSize({ height: 812, width: 375 });
   await student
     .getByRole("button", { name: "Open the question navigator, question 1" })

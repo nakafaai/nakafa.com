@@ -11,6 +11,7 @@ export function PlayerShortcuts() {
     <dl className="mt-auto grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-muted-foreground text-xs">
       <PlayerShortcut keys={["←", "→"]}>{t("shortcut-step")}</PlayerShortcut>
       <PlayerShortcut keys={["1-5"]}>{t("shortcut-pick")}</PlayerShortcut>
+      <PlayerShortcut keys={["F"]}>{t("shortcut-flag")}</PlayerShortcut>
       <PlayerShortcut keys={["G"]}>{t("shortcut-navigator")}</PlayerShortcut>
     </dl>
   );
