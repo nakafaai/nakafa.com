@@ -1,4 +1,5 @@
 import { createRouter } from "@tanstack/react-router";
+import type { NotFoundPage } from "@/lib/routing/not-found";
 import { routeRewrite } from "@/lib/routing/rewrite";
 import { makeScrollRestoration } from "@/lib/routing/scroll";
 import { routeTree } from "@/routeTree.gen";
@@ -28,11 +29,16 @@ export function getRouter() {
 /**
  * Registers the router's type with TanStack Router, so every link, route and
  * loader reads the one route tree. The app renders on the server, so loader
- * results are checked for serialization.
+ * results are checked for serialization. The server entry gives every request
+ * the not-found page that a decision before the router answered it with, or
+ * none, and the root route reads it as its server context.
  */
 declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>;
+    server: {
+      requestContext: { readonly notFound: NotFoundPage | undefined };
+    };
     ssr: true;
   }
 }

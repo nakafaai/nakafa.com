@@ -9,19 +9,19 @@ import { TryoutPageHeader } from "@/components/tryout/shell/header";
  * while the page shows the current catalog version of the set.
  */
 export function TryoutSetPageHeader({
-  action,
+  children,
   currentPath,
   page,
   returnPath,
 }: {
-  action: ReactNode;
+  /** The page's action, at the end of the header. */
+  children: ReactNode;
   currentPath: string;
   page: Pick<SetPage, "exam" | "set" | "track">;
   returnPath: string;
 }) {
   return (
     <TryoutPageHeader
-      action={action}
       items={[
         {
           label: page.exam.title,
@@ -38,6 +38,8 @@ export function TryoutSetPageHeader({
         },
       ]}
       title={page.set.title}
-    />
+    >
+      {children}
+    </TryoutPageHeader>
   );
 }

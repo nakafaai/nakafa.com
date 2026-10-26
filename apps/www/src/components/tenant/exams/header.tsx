@@ -21,6 +21,7 @@ import { ExamPresence } from "@/components/tenant/exams/presence";
 import { useExam } from "@/components/tenant/exams/provider";
 import { ScheduleExam } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
+import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -33,11 +34,12 @@ import { Link } from "@/lib/routing/link";
  * joined to it (ExamMenu), and Schedule, the main action. The title takes the room left between
  * them, truncated while the field is not focused. On a phone the buttons keep their icons and their
  * names for screen readers, so the title keeps room to read at 375 pixels.
- * A frozen exam says why its questions are fixed in a line under the header (ExamLockedNote).
+ * A frozen exam says why its questions are fixed in a line under the header (ExamLockedNote), and a gone exam
+ * keeps its title with neither button.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
-  const { exam, slug } = useExam();
+  const { exam, gone, slug } = useExam();
   const [draft, setDraft] = useState<string | null>(null);
   const rename = useMutation(exams.exams.rename).withOptimisticUpdate(
     renameUpdate
@@ -91,24 +93,32 @@ export function ExamHeader() {
           }
         }}
         placeholder={t("untitled")}
-        readOnly={exam.archived}
+        readOnly={exam.archived || gone}
         value={draft ?? exam.title}
       />
       <ExamPresence />
       <ExamMenu />
-      {exam.archived ? null : <ScheduleExam />}
+      {exam.archived || gone ? null : <ScheduleExam />}
     </header>
   );
 }
 
 /**
  * The sentence the editor shows under its header, across the page, when its exam is locked:
- * why its questions are fixed, because a sitting is scheduled or its school is archived. It
- * wraps on a phone instead of being cut short beside the title.
+ * why its questions are fixed, because a sitting is scheduled or its school is archived, or that
+ * the exam is gone, with the way back to the exams. It wraps on a phone instead of being cut short
+ * beside the title.
  */
 export function ExamLockedNote() {
   const t = useTranslations("Exams");
-  const { exam } = useExam();
+  const { exam, gone } = useExam();
+  if (gone) {
+    return (
+      <p className="border-b px-4 py-2 text-muted-foreground text-sm">
+        <ExamGone />
+      </p>
+    );
+  }
   if (!isLocked(exam)) {
     return null;
   }

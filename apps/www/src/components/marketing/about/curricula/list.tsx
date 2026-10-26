@@ -12,6 +12,7 @@ import { Array as Arr } from "effect";
 import { animate } from "motion";
 import { useMotionValue, useMotionValueEvent } from "motion/react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 import { PublicPathLink } from "@/lib/routing/public/link";
@@ -27,7 +28,6 @@ type CurriculumLink = Pick<
 
 interface CurriculumListProps {
   readonly curricula: readonly CurriculumLink[];
-  readonly label: string;
 }
 
 /**
@@ -38,7 +38,8 @@ interface CurriculumListProps {
  * a pointer or focus is on the list, and holds on the first name with reduced
  * motion.
  */
-export function CurriculumList({ curricula, label }: CurriculumListProps) {
+export function CurriculumList({ curricula }: CurriculumListProps) {
+  const t = useTranslations("Landing");
   const { entry, ref: viewRef } = useIntersection({ threshold: 0.5 });
   const { hovered, ref: hoverRef } = useHover();
   const { focused, ref: focusRef } = useFocusWithin();
@@ -76,7 +77,7 @@ export function CurriculumList({ curricula, label }: CurriculumListProps) {
   };
 
   return (
-    <nav aria-label={label} className="grid gap-4" ref={ref}>
+    <nav aria-label={t("curricula-list")} className="grid gap-4" ref={ref}>
       {Arr.map(curricula, (curriculum, position) => (
         <PublicPathLink
           className={cn(

@@ -1,4 +1,5 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ScheduleInvalid } from "@repo/backend/confect/exams/sittings/errors";
 import {
@@ -12,6 +13,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -257,6 +259,13 @@ export function ScheduleSitting({
               <SelectContent>
                 {Arr.map(audienceItems, (item) => (
                   <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons
+                      icon={
+                        item.value === UNIT_AUDIENCE
+                          ? Building03Icon
+                          : UserMultiple02Icon
+                      }
+                    />
                     {item.label}
                   </SelectItem>
                 ))}

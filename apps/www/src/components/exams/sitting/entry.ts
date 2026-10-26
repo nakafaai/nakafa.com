@@ -127,6 +127,14 @@ export function isFinalRefusal(error: unknown): boolean {
   );
 }
 
+/**
+ * Whether a failed call says the proctor retired this device, so another device holds the attempt now and this
+ * one can neither answer nor finish it.
+ */
+export function isRetiredDevice(error: unknown): boolean {
+  return Option.contains(reasonOf(error), "DeviceRetired");
+}
+
 /** The sentence for a failed call, or none when the error names no sentence. */
 export function sittingFailureMessage(
   error: unknown

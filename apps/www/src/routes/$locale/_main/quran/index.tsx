@@ -9,6 +9,7 @@ import { createTranslator } from "use-intl/core";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";
+import { QuranSurahName } from "@/components/shared/quran/name";
 import { QuranSurahRow } from "@/components/shared/quran/surah";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getQuranSurahName } from "@/lib/content/quran/navigation";
@@ -103,11 +104,9 @@ function QuranIndexPage() {
                 target={quranSurahTarget(surah.number)}
                 title={surah.title}
               >
-                <QuranSurahRow
-                  arabic={surah.arabic}
-                  number={surah.number}
-                  title={surah.title}
-                />
+                <QuranSurahRow number={surah.number}>
+                  <QuranSurahName arabic={surah.arabic} title={surah.title} />
+                </QuranSurahRow>
               </CardLink>
             ))}
           </CardLinks>

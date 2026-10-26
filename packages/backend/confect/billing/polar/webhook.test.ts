@@ -366,4 +366,105 @@ describe("billing/polar/webhook", () => {
     );
     expect(await readGrants(t)).toEqual([]);
   });
+
+  it("grants a school's students Pro for the seats a School subscription pays, on the school its checkout named", async () => {
+    const t = createBillingTestConvex();
+    const tenantId = await t.run((ctx) =>
+      ctx.db.insert("tenants", {
+        country: "DE",
+        currency: "EUR",
+        kind: "school",
+        name: "Schule Polar",
+        policies: { emailDomains: [], nina: false, studentThreads: false },
+        slug: "schule-polar",
+        status: "active",
+      })
+    );
+    const school = (overrides: Record<string, unknown>) =>
+      subscriptionEvent("subscription.created", {
+        customer_id: "cust_school_admin",
+        id: "sub_school_1",
+        metadata: { tenantId },
+        product_id: polarProductIdFor("school.seat.year", "sandbox"),
+        recurring_interval: "year",
+        seats: 340,
+        ...overrides,
+      });
+    const applied = await applyBody(t, school({}));
+    const rows = await t.run(async (ctx) => ({
+      accounts: await ctx.db.query("billingAccounts").collect(),
+      grants: await ctx.db.query("billingGrants").collect(),
+      subscriptions: await ctx.db.query("billingSubscriptions").collect(),
+    }));
+    expect(applied).toBe("applied");
+    expect(rows.accounts).toMatchObject([
+      {
+        country: "DE",
+        currency: "EUR",
+        owner: { kind: "tenant", tenantId },
+        rail: "polar",
+      },
+    ]);
+    expect(rows.subscriptions).toMatchObject([
+      { offer: "school.seat.year", quantity: 340, status: "active" },
+    ]);
+    expect(rows.grants).toMatchObject([
+      { ninaSeats: 340, product: "school", seats: 340, tenantId },
+    ]);
+    const indonesian = await t.run((ctx) =>
+      ctx.db.insert("tenants", {
+        country: "ID",
+        currency: "IDR",
+        kind: "school",
+        name: "Sekolah Polar",
+        policies: { emailDomains: [], nina: false, studentThreads: false },
+        slug: "sekolah-polar",
+        status: "active",
+      })
+    );
+    expect(
+      await applyBody(
+        t,
+        school({ id: "sub_school_2", metadata: { tenantId: indonesian } })
+      )
+    ).toBe("unsupported");
+    expect(
+      await applyBody(
+        t,
+        school({ id: "sub_school_3", metadata: { tenantId: "not-a-school" } })
+      )
+    ).toBe("unsupported");
+    const closed = await t.run(async (ctx) => {
+      const id = await ctx.db.insert("tenants", {
+        country: "DE",
+        currency: "EUR",
+        kind: "school",
+        name: "Schule Geschlossen",
+        policies: { emailDomains: [], nina: false, studentThreads: false },
+        slug: "schule-geschlossen",
+        status: "active",
+      });
+      await ctx.db.delete(id);
+      return id;
+    });
+    expect(
+      await applyBody(
+        t,
+        school({ id: "sub_school_4", metadata: { tenantId: closed } })
+      )
+    ).toBe("unsupported");
+    // A School subscription Polar sends without its seats bills one seat.
+    await applyBody(
+      t,
+      school({
+        id: "sub_school_1",
+        modified_at: "2026-10-03T00:00:00.000Z",
+        seats: null,
+      })
+    );
+    const updated = await t.run((ctx) =>
+      ctx.db.query("billingSubscriptions").collect()
+    );
+    expect(updated).toMatchObject([{ quantity: 1 }]);
+  });
 });

@@ -53,7 +53,6 @@ export const renderAccountReadyEmail = Effect.fn("email.accountReady.render")(
       )
     );
     const copy = getAccountReadyEmailCopy(props.locale);
-    const email = <AccountReadyEmail {...props} />;
     const renderFailure = () =>
       new AccountReadyEmailRenderError({
         code: "ACCOUNT_READY_EMAIL_RENDER_FAILED",
@@ -63,12 +62,12 @@ export const renderAccountReadyEmail = Effect.fn("email.accountReady.render")(
       [
         Effect.tryPromise({
           catch: renderFailure,
-          try: () => render(email),
+          try: () => render(<AccountReadyEmail {...props} />),
         }),
         Effect.tryPromise({
           catch: renderFailure,
           try: () =>
-            render(email, {
+            render(<AccountReadyEmail {...props} />, {
               plainText: true,
             }),
         }),

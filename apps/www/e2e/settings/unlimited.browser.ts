@@ -136,6 +136,14 @@ const revisesOldest = Effect.fn("NakafaE2E.revisesOldest")(function* (
     await reloadUntil(page, () =>
       expect(firstRow(page)).toContainText(OLDEST_REVISED, { timeout: 3000 })
     );
+    // The next steps type into the search, and words typed before React has
+    // taken the page over are lost, as reloadFresh waits for too.
+    await expect
+      .poll(() => isHydrated(firstRow(page)), {
+        timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(true);
+    await live(changes);
   });
 });
 

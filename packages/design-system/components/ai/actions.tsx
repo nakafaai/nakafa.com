@@ -24,13 +24,15 @@ type ActionProps = ComponentProps<typeof Button> & {
   label?: string;
 };
 
-/** Renders the button owned by one response action. */
+/** Renders the button owned by one response action, named for assistive technology by its label. */
 function ActionButton({
+  children,
   className,
+  label,
   variant = "outline",
   size = "icon",
   ...props
-}: ComponentProps<typeof Button>) {
+}: ComponentProps<typeof Button> & { label: string | undefined }) {
   return (
     <Button
       className={cn(className)}
@@ -38,7 +40,10 @@ function ActionButton({
       type="button"
       variant={variant}
       {...props}
-    />
+    >
+      {children}
+      <span className="sr-only">{label}</span>
+    </Button>
   );
 }
 
@@ -47,20 +52,23 @@ function ActionButton({
  * itself for assistive technology: its label, or its tooltip when it has none.
  */
 export function Action({ children, label, tooltip, ...props }: ActionProps) {
-  const button = (
-    <ActionButton {...props}>
-      {children}
-      <span className="sr-only">{label || tooltip}</span>
-    </ActionButton>
-  );
-
   if (!tooltip) {
-    return button;
+    return (
+      <ActionButton label={label} {...props}>
+        {children}
+      </ActionButton>
+    );
   }
 
   return (
     <Tooltip>
-      <TooltipTrigger render={button} />
+      <TooltipTrigger
+        render={
+          <ActionButton label={label || tooltip} {...props}>
+            {children}
+          </ActionButton>
+        }
+      />
       <TooltipContent side="bottom">
         <p>{tooltip}</p>
       </TooltipContent>

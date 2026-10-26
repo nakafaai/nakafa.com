@@ -69,11 +69,10 @@ function whenNear(element: Element, then: () => void) {
 export function Wake({ children, label, options, size }: WakeProps) {
   const [life, setLife] = useState<Life>();
   const mode = modeOf(options);
-  const still = <Frame mode={mode}>{children}</Frame>;
 
   if (life !== undefined) {
     return (
-      <ErrorBoundary fallback={still}>
+      <ErrorBoundary fallback={<Frame mode={mode}>{children}</Frame>}>
         <life.Live key={mode} label={label} options={options} size={size} />
       </ErrorBoundary>
     );

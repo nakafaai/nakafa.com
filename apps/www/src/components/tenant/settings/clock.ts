@@ -50,7 +50,10 @@ export function schoolDateTimeText(request: ClockRequest) {
   return writeSchoolTime("dateTime", request);
 }
 
-/** Writes one moment as its weekday and its time on the school's clock, in the reader's language. */
-export function schoolWeekdayTimeText(request: ClockRequest) {
-  return writeSchoolTime("weekdayTime", request);
+/**
+ * Writes one moment as its day, its month and its time on the school's clock, in the reader's language,
+ * without the year: a short name for a moment of the next weeks that a phone row has room for.
+ */
+export function schoolDayTimeText(request: ClockRequest) {
+  return writeSchoolTime("dayTime", request);
 }

@@ -16,6 +16,7 @@ import type {
   BuiltinRole,
   GrantScope,
 } from "@repo/backend/confect/access/schema";
+import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -105,7 +106,20 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
     });
     return { kind: "unit", unitId } as const;
   });
-  return { grant, person, unit };
+  /** Gives the school a School grant that runs until 2099, as a paid term does. */
+  const paid = Effect.fn(function* () {
+    yield* writer.table("billingGrants").insert({
+      product: "school",
+      tenantId,
+      scope: { kind: "tenant" },
+      seats: SCHOOL_FREE_STUDENTS,
+      ninaSeats: SCHOOL_FREE_STUDENTS,
+      source: { kind: "contract", contractId: "contract-grant-test" },
+      validFrom: 0,
+      validTo: Date.UTC(2099, 0, 1),
+    });
+  });
+  return { grant, paid, person, unit };
 });
 
 /** Runs one scenario inside a mutation of a fresh deployment. */
@@ -177,6 +191,57 @@ describe("access/grant assignRole", () => {
           Codes
         );
         expect(codes).toEqual(["GRANT_LIMIT", "GRANT_LIMIT"]);
+      })
+  );
+});
+
+describe("access/grant student seats", () => {
+  it.effect(
+    "holds a free school at its student limit, lets a student it holds join another unit, and lifts the limit once the school pays",
+    () =>
+      Effect.gen(function* () {
+        const codes = yield* scenario(
+          Effect.gen(function* () {
+            const { grant, paid, person, unit } = yield* tenant();
+            const near = yield* unit();
+            const students = yield* Effect.forEach(
+              Arr.range(1, SCHOOL_FREE_STUDENTS),
+              () => person(false, "active")
+            );
+            yield* Effect.forEach(students, (student) =>
+              grant(student._id, "student", near)
+            );
+            const newcomer = yield* person(false, "active");
+            const refused = yield* assignRole(
+              system,
+              newcomer,
+              "student",
+              near
+            ).pipe(code);
+            const anotherUnit = yield* assignRole(
+              system,
+              students[0] ?? newcomer,
+              "student",
+              yield* unit()
+            ).pipe(code);
+            const teacher = yield* assignRole(
+              system,
+              newcomer,
+              "teacher",
+              near
+            ).pipe(code);
+            yield* paid();
+            const afterPaying = yield* assignRole(
+              system,
+              newcomer,
+              "student",
+              near
+            ).pipe(code);
+            return [refused, anotherUnit, teacher, afterPaying];
+          }),
+          Codes
+        );
+        expect(codes).toEqual(["SEAT_LIMIT", "ok", "ok", "ok"]);
       })
   );
 });

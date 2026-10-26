@@ -21,3 +21,14 @@ export function scopeNameOf(
     )?.name ?? ""
   );
 }
+
+/**
+ * Every name that a grant or a client may cover, in the order a filter lists them: the
+ * school's own name first, then each unit's, each once.
+ */
+export function scopeNames(
+  schoolName: string,
+  units: readonly Pick<Unit, "name">[]
+) {
+  return Arr.dedupe([schoolName, ...Arr.map(units, (unit) => unit.name)]);
+}
