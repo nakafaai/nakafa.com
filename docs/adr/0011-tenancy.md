@@ -99,7 +99,10 @@ An invite names a Person and an email address. A claim binds the Person to the
 account that controls the address: an invite is claimed automatically when an
 account whose Better Auth email is verified and equal to the invite address
 exists, the tenant is active, and the tenant's allowed email domains, one of its
-policies, admit the address (an empty list admits every address). An invite claim
+policies, admit the address (an empty list admits every address). A tenant that
+sets domains also needs the account's Google sign-ins to come from them: the
+account holds a Google account, and each of them names one of the domains as
+its hosted domain (ADR 0009). An invite claim
 is the one place where an account is matched by its verified email, and ADR 0009
 names it as the exception to its rule that a school account is never matched by
 its email address. An invite expires 14 days after it is created if nobody has

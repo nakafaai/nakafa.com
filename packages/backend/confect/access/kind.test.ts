@@ -61,6 +61,7 @@ describe("access/kind declarations", () => {
       "period.view",
       "grant.manage",
       "integration.manage",
+      "report.open",
       "document.edit",
       "exam.edit",
       "exam.rooms",
@@ -92,6 +93,7 @@ describe("access/kind declarations", () => {
       "grant.ended",
       "person.reactivated",
       "person.suspended",
+      "roster.set",
     ]);
   });
 });

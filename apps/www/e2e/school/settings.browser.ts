@@ -1,6 +1,8 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, FileSystem } from "effect";
+import { chooseDay } from "@/e2e/support/date";
+import { giveRole, revokeRole } from "@/e2e/support/roles";
 import {
   createSchool,
   grantStudent,
@@ -9,7 +11,6 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
-import { giveRole, revokeRole } from "@/e2e/support/roles";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The Admin grant that the Owner gives an invited learner. */
@@ -118,8 +119,9 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
   await addPeriod.click();
   const periodDialog = page.getByRole("dialog");
   await periodDialog.getByLabel("Name").fill("Semester 1");
-  await periodDialog.getByLabel("First day").fill("2027-07-01");
-  await periodDialog.getByLabel("Last day").fill("2027-12-20");
+  await expect(periodDialog.locator('input[type="date"]')).toHaveCount(0);
+  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
+  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
   await periodDialog.getByRole("button", { name: "Add period" }).click();
   const periodRow = page.getByRole("row", { name: "Semester 1" });
   await periodRow.getByRole("button", { name: "More actions" }).click();
@@ -181,8 +183,8 @@ test("an admin places a student in a cohort, then moves the student to another",
   await addPeriod.click();
   const periodDialog = page.getByRole("dialog");
   await periodDialog.getByLabel("Name").fill("Semester 1");
-  await periodDialog.getByLabel("First day").fill("2027-07-01");
-  await periodDialog.getByLabel("Last day").fill("2027-12-20");
+  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
+  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
   await periodDialog.getByRole("button", { name: "Add period" }).click();
   await page
     .getByRole("row", { name: "Semester 1" })

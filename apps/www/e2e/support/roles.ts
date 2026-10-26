@@ -1,14 +1,12 @@
 import { expect, type Page } from "@playwright/test";
+import { Schema } from "effect";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** One person and one of the school's roles, as the Roles page names them. */
-interface RoleOf {
-  readonly person: string;
-  readonly role: string;
-}
+const RoleOf = Schema.Struct({ person: Schema.String, role: Schema.String });
 
 /** The row of the Roles page that holds the person's grant of the role. */
-function grantRow(page: Page, { person, role }: RoleOf) {
+function grantRow(page: Page, { person, role }: typeof RoleOf.Type) {
   return page
     .getByRole("row")
     .filter({ hasText: person })
@@ -19,7 +17,7 @@ function grantRow(page: Page, { person, role }: RoleOf) {
  * Gives the person the role from the Roles page that `page` shows, through the header's
  * Give role dialog, and waits until the grant's row appears.
  */
-export async function giveRole(page: Page, grant: RoleOf) {
+export async function giveRole(page: Page, grant: typeof RoleOf.Type) {
   const give = page
     .locator("header")
     .getByRole("button", { name: "Give role" });
@@ -35,7 +33,7 @@ export async function giveRole(page: Page, grant: RoleOf) {
 }
 
 /** Revokes the person's grant of the role from the Roles page that `page` shows, behind its confirmation. */
-export async function revokeRole(page: Page, grant: RoleOf) {
+export async function revokeRole(page: Page, grant: typeof RoleOf.Type) {
   const more = grantRow(page, grant).getByRole("button", {
     name: "More actions",
   });
