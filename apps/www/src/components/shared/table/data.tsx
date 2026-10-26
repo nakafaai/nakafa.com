@@ -38,7 +38,8 @@ const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };
  * A data table as the whole body of its page, as shadcn builds the table on TanStack Table: every row at full width,
  * from edge to edge. The page's header row filters it: its search box keeps the rows whose `search` column holds the
  * text, and its Filter menu keeps the rows whose columns hold a chosen value (`TableFiltersProvider`). A sortable
- * column sorts from its head. A filter that leaves no row shows Nina searching in the table's place.
+ * column sorts from its head. Every row has the height of a row with its three-dot menu, so rows with and
+ * without one keep one rhythm. A filter that leaves no row shows Nina searching in the table's place.
  */
 export function DataTable<TData extends RowData>({
   columns,
@@ -94,7 +95,7 @@ export function DataTable<TData extends RowData>({
       <TableBody>
         {Arr.isReadonlyArrayNonEmpty(rows) ? (
           Arr.map(rows, (row) => (
-            <TableRow key={row.id}>
+            <TableRow className="h-12" key={row.id}>
               {Arr.map(row.getAllCells(), (cell) => (
                 <TableCell key={cell.id}>
                   <table.FlexRender cell={cell} />

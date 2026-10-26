@@ -103,10 +103,8 @@ export function ExamList({
   return (
     <TableFiltersProvider>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {loadingFirst || empty ? null : (
-          <TableSearch placeholder={t("exams-search")} />
-        )}
-        {tenant.home.canCreate && !(loadingFirst || empty) ? (
+        {empty ? null : <TableSearch placeholder={t("exams-search")} />}
+        {tenant.home.canCreate && !empty ? (
           <CreateExam
             choices={tenant.home.choices}
             drafts={drafts}
