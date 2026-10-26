@@ -15,15 +15,17 @@ import {
   syncSubscriptionGrant,
 } from "@repo/backend/confect/billing/grants";
 import { recordPayment } from "@repo/backend/confect/billing/payments";
-import { applyInvoicePaid } from "@repo/backend/confect/billing/school";
 import {
   BillingRowMissing,
   RailMismatch,
 } from "@repo/backend/confect/billing/spec";
 import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import { XenditSessionEvent } from "@repo/backend/confect/billing/xendit/contract";
+import {
+  applyInvoiceSessionPaid,
+  clearInvoiceLink,
+} from "@repo/backend/confect/billing/xendit/invoice";
 import { renewalAnchor } from "@repo/backend/confect/billing/xendit/renewal";
-import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { Clock, DateTime, Duration, Effect, Option, Schema } from "effect";
 
 const decodeSession = Schema.decodeUnknownOption(XenditSessionEvent);
@@ -169,7 +171,7 @@ const applyFirstMonthPaid = Effect.fn("billing.xendit.session.firstMonthPaid")(
         renewalAnchor(now, billingOffer(checkout.offer).months)
       ),
       cancelAtPeriodEnd: false,
-      provider: { kind: "xendit", planId: null, tokenId, channel: null },
+      provider: { kind: "xendit", planId: null, tokenId },
       providerUpdatedAt: now,
     });
     yield* recordPayment({
@@ -197,23 +199,6 @@ const applyFirstMonthPaid = Effect.fn("billing.xendit.session.firstMonthPaid")(
       refs.internal.billing.xendit.renewal.open,
       { locale: checkout.locale, subscriptionId }
     );
-  }
-);
-
-/** Takes the payment link off an invoice that is still open. A paid invoice keeps the link it was paid on. */
-const clearPaymentLink = Effect.fn("billing.xendit.session.clearLink")(
-  function* (invoiceId: Docs["billingInvoices"]["_id"]) {
-    const invoice = yield* (yield* DatabaseReader)
-      .table("billingInvoices")
-      .get(invoiceId)
-      .pipe(Effect.orDie);
-    if (invoice.status !== "open") {
-      return;
-    }
-    yield* (yield* DatabaseWriter)
-      .table("billingInvoices")
-      .patch(invoiceId, { paymentLink: null })
-      .pipe(Effect.orDie);
   }
 );
 
@@ -249,11 +234,7 @@ export const applySessionCompleted = Effect.fn(
   const paymentId =
     session.value.payment_id ?? session.value.payment_session_id;
   if (checkout.value.invoiceId !== null) {
-    yield* applyInvoicePaid(systemActor, checkout.value.invoiceId, {
-      method: "session",
-      paidAt: yield* Clock.currentTimeMillis,
-      providerPaymentId: paymentId,
-    });
+    yield* applyInvoiceSessionPaid(checkout.value.invoiceId, paymentId);
   } else if (billingOffer(checkout.value.offer).interval === "pass") {
     yield* applyPassPaid(checkout.value, paymentId);
   } else {
@@ -281,9 +262,8 @@ export const applySessionExpired = Effect.fn("billing.xendit.session.expired")(
     if (Option.isNone(checkout)) {
       return "unknownSession" as const;
     }
-    // An invoice whose payment closed unpaid loses its link, so the next request to pay opens another.
     if (checkout.value.invoiceId !== null) {
-      yield* clearPaymentLink(checkout.value.invoiceId);
+      yield* clearInvoiceLink(checkout.value.invoiceId);
     }
     yield* closeCheckout(checkout.value, "expired");
     return "applied" as const;

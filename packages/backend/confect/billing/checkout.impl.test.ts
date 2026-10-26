@@ -319,7 +319,6 @@ describe("billing/checkout internal steps", () => {
           kind: "xendit",
           planId: "plan_holds",
           tokenId: null,
-          channel: "CARDS",
         },
         providerUpdatedAt: NOW,
       });

@@ -54,7 +54,6 @@ async function paidFirstMonth(
         kind: "xendit",
         planId: null,
         tokenId: changes.tokenId === undefined ? "pt-1" : changes.tokenId,
-        channel: null,
       },
       status: "active",
     });

@@ -100,7 +100,7 @@ async function seedXenditUser(ctx: MutationCtx, planId: string) {
     currentPeriodStart: NOW,
     currentPeriodEnd: NOW + 1000,
     cancelAtPeriodEnd: false,
-    provider: { kind: "xendit", planId, tokenId: null, channel: "CARDS" },
+    provider: { kind: "xendit", planId, tokenId: null },
     providerUpdatedAt: NOW,
   });
   return { accountId, userId };

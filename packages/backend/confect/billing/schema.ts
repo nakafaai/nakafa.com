@@ -18,15 +18,6 @@ export const BillingCountry = Schema.String.check(
 );
 export type BillingCountry = typeof BillingCountry.Type;
 
-/** The Xendit channels a recurring Pro or School subscription can be linked through. */
-const XenditChannel = Schema.Literals([
-  "CARDS",
-  "DANA",
-  "GOPAY_RECURRING",
-  "OVO",
-  "SHOPEEPAY",
-]);
-
 /** A payer. The owner is the person or the school, never both. */
 export const billingAccountValidator = Schema.Struct({
   owner: Space,
@@ -49,10 +40,8 @@ export const billingProviderValidator = Schema.Union([
     kind: Schema.Literal("xendit"),
     /** The recurring plan that charges every month after the first, which opens once the first month is paid; none until then. */
     planId: Schema.NullOr(Schema.String),
-    /** The channel the first month saved, which the plan charges. */
+    /** The payment token of the channel the first month saved, which the plan charges. */
     tokenId: Schema.NullOr(Schema.String),
-    /** The channel the buyer linked. Checkout opens the plan before the buyer picks one, so it starts unknown. */
-    channel: Schema.NullOr(XenditChannel),
   }),
 ]).pipe(Schema.toTaggedUnion("kind"));
 

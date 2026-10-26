@@ -69,7 +69,6 @@ async function subscriber() {
         kind: "xendit",
         planId: "repl_cancel",
         tokenId: null,
-        channel: null,
       },
       providerUpdatedAt: NOW,
     });
@@ -134,7 +133,6 @@ describe("billing/xendit/cancel", () => {
           kind: "xendit",
           planId: null,
           tokenId: "pt-1",
-          channel: null,
         },
       })
     );
