@@ -76,6 +76,8 @@ describe("exams/sittings screen", () => {
           questionId: entered.questionId,
           slug: nf,
         });
+        // The student looks at the question before answering it, so the screen shows no response yet.
+        expect(yield* read()).toMatchObject({ number: 1, response: null });
         yield* fixture.as("student").mutation(answer, {
           deviceId: deviceOf(1),
           questionId: entered.questionId,

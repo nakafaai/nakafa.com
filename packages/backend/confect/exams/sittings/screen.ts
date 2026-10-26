@@ -116,11 +116,10 @@ export const screen = Effect.fn("exams.sittings.screen")(function* (args: {
   return {
     at: stored.value.at,
     interactions: yield* questionAnswers(question.answers),
+    // The questions before it in the exam's order; a frozen exam keeps the question in that order.
     number:
-      Option.getOrElse(
-        Arr.findFirstIndex(sitting.exam.questions, (id) => id === question._id),
-        () => 0
-      ) + 1,
+      Arr.takeWhile(sitting.exam.questions, (id) => id !== question._id)
+        .length + 1,
     prompt: yield* currentPrompt(question.prompt),
     response: Option.match(answer, {
       onNone: () => null,
