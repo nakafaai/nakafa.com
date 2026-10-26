@@ -1,6 +1,5 @@
 import {
   ArrowTurnBackwardIcon,
-  Notification01Icon,
   SchoolIcon,
   Settings01Icon,
   TranslateIcon,
@@ -70,9 +69,8 @@ function changeLanguage(
  * The items of the school's account menu, between the account and sign-out, in at
  * most three groups with the icons of the Nakafa account menu: the person, the
  * school, then the preferences, Learn more and the way back to Nakafa. The
- * person's notifications open on the school's host, this school's first; the
- * profile and the settings open the pages of the Nakafa account on the main site,
- * where the same session signs the viewer in. The profile link is listed only for an account
+ * person's links open the pages of the Nakafa account on the main site, where the
+ * same session signs the viewer in. The profile link is listed only for an account
  * with a username, as the Nakafa account menu lists it.
  */
 export function TenantAccountItems({
@@ -102,14 +100,6 @@ export function TenantAccountItems({
             }
           />
         )}
-        <DropdownMenuItem
-          render={
-            <Link params={{ slug }} to="/school/$slug/notifications">
-              <HugeIcons icon={Notification01Icon} />
-              {t("Notifications.title")}
-            </Link>
-          }
-        />
         <DropdownMenuItem
           render={
             <a href={new URL(`/${locale}/user/settings`, SITE_ORIGIN).href}>

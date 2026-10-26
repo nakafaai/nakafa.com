@@ -73,7 +73,7 @@ message (ADR 0016).
 - A row is kept for 90 days, the period that K10 proposes. Deleting an account
   deletes the rows of the account and of the Persons it held.
 - There is one inbox, at `nakafa.com/id/notifications` (ADR 0026), served by
-  the cell that holds the account. Inside a school, the account menu's
+  the cell that holds the account. Inside a school, the sidebar's
   Notifications opens the same inbox as the school's own page on its host
   (`/notifications`), as every School page is one header and a body: this
   school's rows first, and a header filter, "This school" or "All schools",

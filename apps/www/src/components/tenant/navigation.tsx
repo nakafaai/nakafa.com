@@ -1,5 +1,6 @@
 import {
   Home01Icon,
+  Notification01Icon,
   Settings01Icon,
   TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
@@ -20,7 +21,8 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 /**
  * Renders the navigation of the school sidebar. The settings sections replace it
  * on a settings route for a viewer who may manage the school, and otherwise the
- * school's own groups show: the exams for a viewer who may open them, then the
+ * school's own groups show: home and notifications for everyone, the exams for a
+ * viewer who may open them, then the
  * management group, with the settings entry, only for a viewer who may manage the
  * school. The viewer's classes come last, when the viewer has any, so they never
  * move the groups above them.
@@ -33,6 +35,7 @@ export function TenantNavigation() {
   const matchRoute = useMatchRoute();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
+  const tNotifications = useTranslations("Notifications");
   const tSettings = useTranslations("SchoolSettings");
 
   if (canManage && isSettings) {
@@ -58,6 +61,21 @@ export function TenantNavigation() {
           >
             <HugeIcons icon={Home01Icon} />
             <span className="truncate">{t("home")}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={
+              matchRoute({
+                params: { slug },
+                to: "/school/$slug/notifications",
+              }) !== false
+            }
+            render={<Link params={{ slug }} to="/school/$slug/notifications" />}
+            tooltip={tNotifications("title")}
+          >
+            <HugeIcons icon={Notification01Icon} />
+            <span className="truncate">{tNotifications("title")}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         {canOpenExams ? (

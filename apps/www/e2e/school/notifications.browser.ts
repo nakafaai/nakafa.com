@@ -6,11 +6,15 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const INVITED = "You have been invited to join this school.";
 
+/** The page's address with this school's rows, and with every school's. */
+const THIS_SCHOOL = /\/notifications$/u;
+const ALL_SCHOOLS = /\/notifications\?schools=all$/u;
+
 for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`a learner reads this school's notifications on the school's host and filters to every school, without an error or a sideways scroll, at ${viewport.width} px`, async ({
+  test(`a learner opens this school's notifications from the sidebar and filters to every school, without an error or a sideways scroll, at ${viewport.width} px`, async ({
     browser,
     baseURL,
   }) => {
@@ -29,7 +33,21 @@ for (const viewport of [
     const page = await context.newPage();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(String(error)));
-    await page.goto(address("/notifications"));
+    await page.goto(address("/"));
+
+    // The sidebar's For you group leads to the page; on a phone the sidebar opens from its trigger.
+    if (viewport.width < 768) {
+      const trigger = page.getByRole("button", { name: "Toggle Sidebar" });
+      await waitUntilTakenOver(trigger);
+      await trigger.click();
+    }
+    const entry = page.getByRole("link", {
+      name: "Notifications",
+      exact: true,
+    });
+    await waitUntilTakenOver(entry);
+    await entry.click();
+    await expect(page).toHaveURL(THIS_SCHOOL);
 
     await expect(
       page.getByRole("heading", { name: "Notifications", level: 1 })
@@ -42,7 +60,7 @@ for (const viewport of [
     await waitUntilTakenOver(filter);
     await filter.click();
     await page.getByRole("menuitemradio", { name: "All schools" }).click();
-    await expect(page).toHaveURL(/\/notifications\?schools=all$/u);
+    await expect(page).toHaveURL(ALL_SCHOOLS);
     await expect(page.getByText(INVITED)).toBeVisible();
     await expect(
       page.getByRole("button", { name: "All schools" })
