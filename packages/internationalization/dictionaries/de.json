@@ -627,7 +627,8 @@
       },
       "exam": {
         "results": {
-          "released": "Prüfungsergebnisse freigegeben"
+          "released": "Prüfungsergebnisse freigegeben",
+          "graded": "Prüfungsantwort bewertet"
         }
       },
       "tenant": {

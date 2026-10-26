@@ -1,11 +1,12 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import {
-  CHOICE_OPTIONS_MAX,
-  CHOICE_OPTIONS_MIN,
-} from "@repo/backend/confect/exams/question";
+import { CHOICE_OPTIONS_MAX } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option, Result } from "effect";
-import { emptyLabel, type OptionLabel } from "@/components/tenant/exams/answer";
+import {
+  emptyLabel,
+  type OptionLabel,
+  withoutPart,
+} from "@/components/tenant/exams/answer";
 
 /** The table interaction, which a true or false table holds. */
 type Table = Extract<Interaction, { kind: "matrix" }>;
@@ -76,17 +77,10 @@ export const withStatementRemoved = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
   statementId: string
 ) =>
-  changeTable(answers, (table) =>
-    table.statements.length > CHOICE_OPTIONS_MIN
-      ? {
-          ...table,
-          statements: Arr.filter(
-            table.statements,
-            (part) => part.id !== statementId
-          ),
-        }
-      : table
-  );
+  changeTable(answers, (table) => ({
+    ...table,
+    statements: withoutPart(table.statements, statementId),
+  }));
 
 /** The cells a key marks for a table, or none while the key is absent or marks no table. */
 export const keyCells = (

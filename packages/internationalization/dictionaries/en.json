@@ -627,7 +627,8 @@
       },
       "exam": {
         "results": {
-          "released": "Exam results released"
+          "released": "Exam results released",
+          "graded": "Exam answer graded"
         }
       },
       "tenant": {
