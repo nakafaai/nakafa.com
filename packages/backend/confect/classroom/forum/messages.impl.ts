@@ -94,6 +94,7 @@ const messageViews = Effect.fn("classroom.forum.messages.views")(function* (
           : yield* openText(keys, messageField(message), message.sealedText);
       return {
         author: { id: message.authorId, name: author.name },
+        clientKey: message.clientKey,
         createdAt: message.createdAt,
         editedAt: message.editedAt ?? null,
         id: message._id,

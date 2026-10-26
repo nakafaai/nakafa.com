@@ -62,6 +62,7 @@ export function ForumComposer() {
           send.withOptimisticUpdate(
             sendUpdate({
               author: { id: person.id, name: person.name },
+              clientKey,
               createdAt,
               editedAt: null,
               id,

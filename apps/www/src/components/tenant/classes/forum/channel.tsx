@@ -120,7 +120,12 @@ function ChannelMessages() {
         >
           <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-4 py-2">
             {Arr.map(messages, (message, index) => (
-              <MessageScrollerItem key={message.id} messageId={message.id}>
+              // The client key stays the same from the send to the server's answer, so the row
+              // and anything open in it outlive the placeholder ID.
+              <MessageScrollerItem
+                key={message.clientKey}
+                messageId={message.clientKey}
+              >
                 {index === 0 && loadOlder ? (
                   <Intersection onIntersect={loadOlder} />
                 ) : null}

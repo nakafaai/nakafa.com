@@ -43,13 +43,15 @@ export const messageValidator = Schema.Struct({
 /**
  * One message as the forum shows it: its author's name, its text, or null once a
  * teacher hid it, when it was written and last edited, and whether the viewer
- * wrote it.
+ * wrote it. Its client key is the one the composer gave it, so the forum keeps
+ * one row for the message from the moment it is sent to the server's answer.
  */
 export const MessageView = Schema.Struct({
   author: Schema.Struct({
     id: Id("tenantPeople"),
     name: Schema.String,
   }),
+  clientKey: ClientKey,
   createdAt: Schema.Finite,
   editedAt: Schema.NullOr(Schema.Finite),
   id: Id("classroomMessages"),

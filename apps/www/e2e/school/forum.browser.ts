@@ -49,6 +49,10 @@ for (const viewport of [
       page.getByText("Tugas bab 3 dikumpulkan hari Jumat.")
     ).toBeVisible();
     await expect(field).toHaveValue("");
+    // The message keeps its row when the server answers, so its menu opens right away.
+    await page.getByRole("button", { name: "More actions" }).click();
+    await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible();
+    await page.keyboard.press("Escape");
 
     // The server holds it, so the channel opened again shows it.
     await page.reload();
