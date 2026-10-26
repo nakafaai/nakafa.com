@@ -3,7 +3,7 @@ import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
 /** The most characters one message of the forum may hold. */
-export const MESSAGE_MAX_LENGTH = 4000;
+const MESSAGE_MAX_LENGTH = 4000;
 
 /** The text of a message as a member writes it: trimmed, and 1 to 4,000 characters. */
 export const MessageText = Schema.String.check(

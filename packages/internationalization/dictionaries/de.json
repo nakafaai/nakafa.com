@@ -490,6 +490,9 @@
       "grade": {
         "released": "Note freigegeben"
       },
+      "message": {
+        "hidden": "Nachricht ausgeblendet"
+      },
       "scheme": {
         "stored": "Notenschema-Version hinzugefügt"
       },
@@ -742,7 +745,23 @@
     "channel-limit-reached": "Diese Klasse hat die maximale Anzahl an Kanälen erreicht.",
     "add-submit": "Hinzufügen",
     "channel-name-needed": "Gib dem Kanal zuerst einen Namen.",
-    "channel-name-too-long": "Der Name darf höchstens {count} Zeichen lang sein."
+    "channel-name-too-long": "Der Name darf höchstens {count} Zeichen lang sein.",
+    "messages": "Nachrichten",
+    "message-placeholder": "Nachricht schreiben",
+    "send-message": "Senden",
+    "send-failed": "Deine Nachricht wurde nicht gesendet.",
+    "send-retry": "Erneut versuchen",
+    "message-hidden": "Eine Lehrkraft hat diese Nachricht ausgeblendet.",
+    "message-edited": "Bearbeitet",
+    "message-edit": "Bearbeiten",
+    "message-save": "Speichern",
+    "message-hide": "Ausblenden",
+    "hide-title": "Diese Nachricht ausblenden",
+    "hide-description": "Ihr Text verschwindet für alle in der Klasse und kommt nicht zurück.",
+    "read-only": "In diesem Kanal schreiben die Klasse und ihre Lehrkräfte.",
+    "messages-empty": "Noch keine Nachricht",
+    "messages-empty-description": "Die erste Nachricht dieses Kanals erscheint hier.",
+    "scroll-to-latest": "Zur neuesten Nachricht"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

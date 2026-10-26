@@ -490,6 +490,9 @@
       "grade": {
         "released": "Nilai dirilis"
       },
+      "message": {
+        "hidden": "Pesan disembunyikan"
+      },
       "scheme": {
         "stored": "Versi skema nilai ditambahkan"
       },
@@ -742,7 +745,23 @@
     "channel-limit-reached": "Kelas ini sudah mencapai batas jumlah kanal.",
     "add-submit": "Tambah",
     "channel-name-needed": "Beri nama kanal terlebih dahulu.",
-    "channel-name-too-long": "Nama paling banyak {count} karakter."
+    "channel-name-too-long": "Nama paling banyak {count} karakter.",
+    "messages": "Pesan",
+    "message-placeholder": "Tulis pesan",
+    "send-message": "Kirim",
+    "send-failed": "Pesanmu belum terkirim.",
+    "send-retry": "Coba lagi",
+    "message-hidden": "Guru menyembunyikan pesan ini.",
+    "message-edited": "Diedit",
+    "message-edit": "Edit",
+    "message-save": "Simpan",
+    "message-hide": "Sembunyikan",
+    "hide-title": "Sembunyikan pesan ini",
+    "hide-description": "Teksnya hilang untuk semua anggota kelas, dan tidak bisa kembali.",
+    "read-only": "Siswa dan guru kelas ini yang menulis di kanal ini.",
+    "messages-empty": "Belum ada pesan",
+    "messages-empty-description": "Pesan pertama kanal ini akan tampil di sini.",
+    "scroll-to-latest": "Ke pesan terbaru"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

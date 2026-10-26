@@ -490,6 +490,9 @@
       "grade": {
         "released": "Grade released"
       },
+      "message": {
+        "hidden": "Message hidden"
+      },
       "scheme": {
         "stored": "Grading scheme version added"
       },
@@ -742,7 +745,23 @@
     "channel-limit-reached": "This class holds the most channels it can.",
     "add-submit": "Add",
     "channel-name-needed": "Give the channel a name first.",
-    "channel-name-too-long": "The name can have at most {count} characters."
+    "channel-name-too-long": "The name can have at most {count} characters.",
+    "messages": "Messages",
+    "message-placeholder": "Write a message",
+    "send-message": "Send",
+    "send-failed": "Your message was not sent.",
+    "send-retry": "Try again",
+    "message-hidden": "A teacher hid this message.",
+    "message-edited": "Edited",
+    "message-edit": "Edit",
+    "message-save": "Save",
+    "message-hide": "Hide",
+    "hide-title": "Hide this message",
+    "hide-description": "Its text is removed for everyone in the class, and it cannot come back.",
+    "read-only": "The class and its teachers write in this channel.",
+    "messages-empty": "No message yet",
+    "messages-empty-description": "The first message of this channel shows here.",
+    "scroll-to-latest": "Go to the newest message"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
