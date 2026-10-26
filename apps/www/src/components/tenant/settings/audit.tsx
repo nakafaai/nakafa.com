@@ -3,7 +3,19 @@ import {
   PaginatedQueryResult,
   QueryResult,
 } from "@confect/react";
-import { Download01Icon, UserIcon } from "@hugeicons/core-free-icons";
+import {
+  Download01Icon,
+  UserAccountIcon,
+  UserCheck01Icon,
+  UserCircleIcon,
+  UserEdit01Icon,
+  UserIcon,
+  UserLove01Icon,
+  UserSettings01Icon,
+  UserShield01Icon,
+  UserSquareIcon,
+  UserStar01Icon,
+} from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -19,6 +31,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFilter,
@@ -32,6 +45,20 @@ import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import type { readAuditFn } from "@/lib/tenant/settings.functions";
+
+/** The icons of the people in the trail's Filter menu, one of a person for each. */
+const PERSON_ICONS = [
+  UserIcon,
+  UserCircleIcon,
+  UserSquareIcon,
+  UserStar01Icon,
+  UserAccountIcon,
+  UserCheck01Icon,
+  UserEdit01Icon,
+  UserLove01Icon,
+  UserSettings01Icon,
+  UserShield01Icon,
+] as const;
 
 /** How many entries one page of the journal loads, and each page after it. */
 export const PAGE_SIZE = 25;
@@ -124,8 +151,7 @@ function AuditFilter({
       facets={[
         {
           column: "who",
-          icon: UserIcon,
-          options: Arr.map(actors, (name) => ({ label: name, value: name })),
+          options: namedOptions(actors, PERSON_ICONS),
           title: t("audit-who"),
         },
       ]}

@@ -150,13 +150,14 @@ export function TableSearch({ placeholder }: { placeholder: string }) {
 /** The icon data that the design system's icon takes. */
 type FacetIcon = ComponentProps<typeof HugeIcons>["icon"];
 
-/** A column that filters by the values it holds: its title, the icon of its values, and the label of each value. */
+/**
+ * A column that filters by the values it holds: its title, and each value with its label and its icon, which
+ * fits the value and which no other value of the menu draws.
+ */
 interface TableFacet {
   readonly column: string;
-  /** The icon of each value, unless the value names its own. */
-  readonly icon: FacetIcon;
   readonly options: readonly {
-    readonly icon?: FacetIcon;
+    readonly icon: FacetIcon;
     readonly label: string;
     readonly value: string;
   }[];
@@ -193,7 +194,7 @@ export function TableFilter({ facets }: { facets: readonly TableFacet[] }) {
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="min-w-56">
         {Arr.map(facets, (facet, index) => (
           <Fragment key={facet.column}>
             {index === 0 ? null : <DropdownMenuSeparator />}
@@ -218,8 +219,8 @@ export function TableFilter({ facets }: { facets: readonly TableFacet[] }) {
                       )
                     }
                   >
-                    <HugeIcons icon={option.icon ?? facet.icon} />
-                    <span className="truncate">{option.label}</span>
+                    <HugeIcons icon={option.icon} />
+                    {option.label}
                   </DropdownMenuCheckboxItem>
                 );
               })}
@@ -281,7 +282,7 @@ export function TableChoice<Value extends string>({
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="min-w-56">
         <DropdownMenuGroup>
           <DropdownMenuLabel>{title}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
@@ -296,7 +297,7 @@ export function TableChoice<Value extends string>({
             {Arr.map(options, (option) => (
               <DropdownMenuRadioItem key={option.value} value={option.value}>
                 <HugeIcons icon={option.icon} />
-                <span className="truncate">{option.label}</span>
+                {option.label}
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>

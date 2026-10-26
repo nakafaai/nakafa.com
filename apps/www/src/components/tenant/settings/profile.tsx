@@ -228,6 +228,7 @@ function SchoolProfileCard({
           <Input
             aria-label={t("address-title")}
             className="max-w-sm"
+            placeholder={t("address-placeholder")}
             readOnly
             value={address}
           />

@@ -1,6 +1,26 @@
+import {
+  Building01Icon,
+  Building02Icon,
+  Building03Icon,
+  Building04Icon,
+  Building05Icon,
+  Building06Icon,
+  School01Icon,
+} from "@hugeicons/core-free-icons";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { Array as Arr, Option } from "effect";
+import { namedOptions } from "@/components/shared/table/filter";
 import type { Unit } from "@/components/tenant/settings/state";
+
+/** The icons of the units in a scope's filter: buildings, the school itself keeping its own. */
+const UNIT_ICONS = [
+  Building01Icon,
+  Building02Icon,
+  Building03Icon,
+  Building04Icon,
+  Building05Icon,
+  Building06Icon,
+] as const;
 
 /**
  * The name of what a grant or a client covers: the school's name when it covers the
@@ -23,12 +43,22 @@ export function scopeNameOf(
 }
 
 /**
- * Every name that a grant or a client may cover, in the order a filter lists them: the
- * school's own name first, then each unit's, each once.
+ * Every scope that a grant or a client may cover, as the options of a filter: the school's
+ * own name first with the school's icon, then each unit's name once, each unit with a
+ * building that no other unit of the menu draws.
  */
-export function scopeNames(
+export function scopeOptions(
   schoolName: string,
   units: readonly Pick<Unit, "name">[]
 ) {
-  return Arr.dedupe([schoolName, ...Arr.map(units, (unit) => unit.name)]);
+  return [
+    { icon: School01Icon, label: schoolName, value: schoolName },
+    ...namedOptions(
+      Arr.filter(
+        Arr.dedupe(Arr.map(units, (unit) => unit.name)),
+        (name) => name !== schoolName
+      ),
+      UNIT_ICONS
+    ),
+  ];
 }

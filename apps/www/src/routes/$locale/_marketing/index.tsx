@@ -6,6 +6,7 @@ import {
 } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
+import { type ReactNode, Suspense } from "react";
 import { createTranslator } from "use-intl/core";
 import { Closing } from "@/components/marketing/about/closing";
 import { Community } from "@/components/marketing/about/community";
@@ -167,25 +168,63 @@ function HomePage() {
       <PageField />
       <div className="relative grid grid-cols-1">
         <Hero />
-        <Lesson locale={locale} />
-        <Tryout value={featuredTryout} />
-        <NinaSection />
-        <Memory />
-        <Privacy />
-        <Curricula>
-          <CurriculumList curricula={curricula} />
-        </Curricula>
-        <Letter />
-        <Medals />
-        <Pricing />
-        <Schools herd={CLASS_HERD} />
-        <Faq>
-          <FaqAccordion faqs={faqs} openFirst />
-        </Faq>
-        <Community />
-        <Closing />
+        <LaterSection>
+          <Lesson locale={locale} />
+        </LaterSection>
+        <LaterSection>
+          <Tryout value={featuredTryout} />
+        </LaterSection>
+        <LaterSection>
+          <NinaSection />
+        </LaterSection>
+        <LaterSection>
+          <Memory />
+        </LaterSection>
+        <LaterSection>
+          <Privacy />
+        </LaterSection>
+        <LaterSection>
+          <Curricula>
+            <CurriculumList curricula={curricula} />
+          </Curricula>
+        </LaterSection>
+        <LaterSection>
+          <Letter />
+        </LaterSection>
+        <LaterSection>
+          <Medals />
+        </LaterSection>
+        <LaterSection>
+          <Pricing />
+        </LaterSection>
+        <LaterSection>
+          <Schools herd={CLASS_HERD} />
+        </LaterSection>
+        <LaterSection>
+          <Faq>
+            <FaqAccordion faqs={faqs} openFirst />
+          </Faq>
+        </LaterSection>
+        <LaterSection>
+          <Community />
+        </LaterSection>
+        <LaterSection>
+          <Closing />
+        </LaterSection>
         <HomeToys />
       </div>
     </>
   );
+}
+
+/**
+ * One section after the hero, in a hydration boundary of its own. The static
+ * page draws every section from its HTML at once. React hydrates the hero with
+ * the page, then each later section on its own at the lowest priority, in small
+ * slices, so no long task holds the main thread while the page comes alive. A
+ * press on a section that has not hydrated yet hydrates it first. Nothing in a
+ * section suspends, so a client navigation renders it at once.
+ */
+function LaterSection({ children }: { children: ReactNode }) {
+  return <Suspense fallback={null}>{children}</Suspense>;
 }
