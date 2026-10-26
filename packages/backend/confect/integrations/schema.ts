@@ -102,3 +102,67 @@ export const TokenCheck = Schema.Union([
     retryAfter: Schema.Finite,
   }),
 ]);
+
+/** The seconds a device code lives, and the seconds a device waits between two polls (RFC 8628). */
+export const DEVICE_SECONDS = 600;
+export const DEVICE_INTERVAL = 5;
+
+/** The seconds an access token of an authorized device lives: the CLI signs in again after it. */
+export const DEVICE_TOKEN_SECONDS = 30 * 24 * 60 * 60;
+
+/** A device's user code as a person types it: eight letters, shown as `XXXX-XXXX`. */
+export const UserCode = Schema.String.check(
+  Schema.isPattern(/^[BCDFGHJKLMNPQRSTVWXZ]{8}$/)
+);
+
+/**
+ * Where a device authorization stands: waiting for the school's Admin, authorized for one
+ * integration client of the school, or denied. An authorized device reads as its client.
+ */
+const DeviceState = Schema.Union([
+  Schema.Struct({ status: Schema.Literal("pending") }),
+  Schema.Struct({
+    clientId: Id("integrationClients"),
+    status: Schema.Literal("authorized"),
+  }),
+  Schema.Struct({ status: Schema.Literal("denied") }),
+]);
+
+/**
+ * One device authorization of the device grant (RFC 8628): the digest of its device code,
+ * which only the device holds, its user code, which a person types, the school it asks
+ * for, and when it expires and was last polled.
+ */
+export const integrationDeviceValidator = Schema.Struct({
+  deviceCodeHash: SecretHash,
+  expiresAt: Schema.Finite,
+  polledAt: Schema.Finite,
+  state: DeviceState,
+  tenantId: Id("tenants"),
+  userCode: UserCode,
+});
+
+/** What the internal start of a device authorization answers: its codes once, or an unknown school. */
+export const DeviceStart = Schema.Union([
+  Schema.Struct({
+    deviceCode: Schema.String,
+    expiresIn: Schema.Finite,
+    interval: Schema.Finite,
+    outcome: Schema.Literal("started"),
+    userCode: UserCode,
+    verificationUri: Schema.String,
+  }),
+  Schema.Struct({ outcome: Schema.Literal("unknown") }),
+]);
+
+/** What one poll of a device code answers (RFC 8628 section 3.5). */
+export const DevicePoll = Schema.Union([
+  Schema.Struct({
+    expiresIn: Schema.Finite,
+    outcome: Schema.Literal("issued"),
+    token: Schema.String,
+  }),
+  Schema.Struct({
+    outcome: Schema.Literals(["pending", "slow_down", "denied", "expired"]),
+  }),
+]);

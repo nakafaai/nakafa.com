@@ -26,7 +26,7 @@ describe("billing/xendit/sessions", () => {
   });
 
   it.effect(
-    "opens a subscription checkout and returns its payment link and plan, from an answer that leaves out the empty nullable fields",
+    "opens a pay session that saves its channel, and reads an answer that leaves out the empty nullable fields",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValue(
@@ -35,40 +35,40 @@ describe("billing/xendit/sessions", () => {
             expires_at: "2026-10-26T05:30:00.000Z",
             payment_link_url: "https://xen.to/checkout",
             payment_session_id: "ps-1",
-            recurring_plan_id: "repl_1",
             reference_id: "billing-1",
-            session_type: "SUBSCRIPTION",
+            session_type: "PAY",
             status: "ACTIVE",
           })
         );
         const session = yield* createSession({
+          allow_save_payment_method: "FORCED",
           amount: 79_000,
           country: "ID",
           currency: "IDR",
           mode: "PAYMENT_LINK",
           reference_id: "billing-1",
-          session_type: "SUBSCRIPTION",
-          subscription: {
-            schedule: {
-              anchor_date: "2026-11-01T00:00:00+00:00",
-              interval: "MONTH",
-              interval_count: 1,
-            },
-          },
+          session_type: "PAY",
         }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
         const [, init] = fetcher.mock.calls[0] ?? [];
         expect(session).toMatchObject({
           payment_link_url: "https://xen.to/checkout",
-          recurring_plan_id: "repl_1",
         });
         expect(DateTime.toEpochMillis(session.expires_at)).toBe(
           Date.UTC(2026, 9, 26, 5, 30, 0)
         );
         expect(init?.method).toBe("POST");
         const sent = yield* Schema.decodeEffect(
-          Schema.fromJsonString(Schema.Struct({ reference_id: Schema.String }))
+          Schema.fromJsonString(
+            Schema.Struct({
+              allow_save_payment_method: Schema.String,
+              reference_id: Schema.String,
+            })
+          )
         )(String(init?.body));
-        expect(sent).toEqual({ reference_id: "billing-1" });
+        expect(sent).toEqual({
+          allow_save_payment_method: "FORCED",
+          reference_id: "billing-1",
+        });
       })
   );
 
