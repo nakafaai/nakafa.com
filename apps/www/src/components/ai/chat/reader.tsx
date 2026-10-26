@@ -238,7 +238,7 @@ function ReaderAction() {
   const navigate = useNavigate();
   return (
     <div
-      className="mx-auto flex w-full max-w-3xl justify-center px-4 pb-4"
+      className="mx-auto flex w-full max-w-7xl justify-center px-4 pb-4"
       data-slot="reader-action"
     >
       <Button
