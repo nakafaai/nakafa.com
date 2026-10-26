@@ -110,9 +110,9 @@ test("sign-out lands on the locale home in a new document with no socket", async
  * test holds it.
  */
 async function watchUntilLeaving(page: Page, texts: readonly string[]) {
-  const shown: string[] = [];
+  const shown = MutableList.make<string>();
   await page.exposeBinding("nakafaShown", (_source, text: string) => {
-    shown.push(text);
+    MutableList.append(shown, text);
   });
   await page.evaluate((needles) => {
     const tell = Reflect.get(window, "nakafaShown");
@@ -160,7 +160,7 @@ const signsOutOfAChat = Effect.fn("NakafaE2E.signsOutOfAChat")(function* (
     await page.waitForURL((url) => url.pathname === "/en", {
       waitUntil: "load",
     });
-    expect(shown).toStrictEqual([]);
+    expect(MutableList.toArray(shown)).toStrictEqual([]);
   });
 });
 

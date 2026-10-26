@@ -112,24 +112,28 @@ describe("Following Better Auth's session", () => {
     });
   });
 
-  it("keeps the session readers see while the page signs out, and follows again once the sign-out failed", () => {
-    const shown = readAuthSession({
-      data: signedIn,
-      error: null,
-      isPending: false,
-    });
-    const signedOut = { data: null, error: null, isPending: false };
+  it.effect(
+    "keeps the session readers see while the page signs out, and follows again once the sign-out failed",
+    () =>
+      Effect.gen(function* () {
+        const shown = readAuthSession({
+          data: signedIn,
+          error: null,
+          isPending: false,
+        });
+        const signedOut = { data: null, error: null, isPending: false };
 
-    Effect.runSync(holdSession());
-    expect(followAuthSession(shown, signedOut)).toBe(shown);
-    Effect.runSync(releaseSession());
-    expect(followAuthSession(shown, signedOut)).toStrictEqual({
-      hasError: false,
-      isPending: false,
-      sessionId: null,
-      userId: null,
-    });
-  });
+        yield* holdSession();
+        expect(followAuthSession(shown, signedOut)).toBe(shown);
+        yield* releaseSession();
+        expect(followAuthSession(shown, signedOut)).toStrictEqual({
+          hasError: false,
+          isPending: false,
+          sessionId: null,
+          userId: null,
+        });
+      })
+  );
 
   it("takes the session the refetch answers with", () => {
     expect(
