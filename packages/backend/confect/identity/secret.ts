@@ -6,8 +6,9 @@ import {
 import { Config, Crypto, Effect, Redacted } from "effect";
 import { Hex } from "effect/encoding";
 
-/** Names what the hash is for, so the same secret never hashes a code for another purpose. */
+/** Names what each hash is for, so the same secret never hashes a code for another purpose. */
 const CODE_HASH_LABEL = "nakafa/identity/card/v1:";
+const GUARDIAN_CODE_LABEL = "nakafa/identity/guardian-code/v1:";
 const encoder = new TextEncoder();
 
 /**
@@ -25,14 +26,12 @@ export const drawCardCode = Effect.fn("identity.code.draw")(
 );
 
 /**
- * The keyed hash of a canonical code: HMAC-SHA-256 under the server secret, in
- * hex. Only this hash is stored, so without the secret nobody can check a
- * guessed code against the table. A missing secret is a deployment defect.
- * This module reads the secret, so only Convex functions may import it.
+ * HMAC-SHA-256 of a labelled text under the server secret, in hex. Only such a
+ * hash is stored, so without the secret nobody can check a guessed code against
+ * the table. A missing secret is a deployment defect. This module reads the
+ * secret, so only Convex functions may import it.
  */
-export const hashCardCode = Effect.fn("identity.code.hash")(function* (
-  code: string
-) {
+const keyedHash = Effect.fnUntraced(function* (text: string) {
   const secret = yield* Config.Redacted("LOGIN_CARD_SECRET");
   const key = yield* Effect.promise(() =>
     crypto.subtle.importKey(
@@ -44,7 +43,45 @@ export const hashCardCode = Effect.fn("identity.code.hash")(function* (
     )
   );
   const signature = yield* Effect.promise(() =>
-    crypto.subtle.sign("HMAC", key, encoder.encode(`${CODE_HASH_LABEL}${code}`))
+    crypto.subtle.sign("HMAC", key, encoder.encode(text))
   );
   return Hex.encode(new Uint8Array(signature));
 }, Effect.orDie);
+
+/** The keyed hash of a canonical card code. */
+export const hashCardCode = Effect.fn("identity.code.hash")(function* (
+  code: string
+) {
+  return yield* keyedHash(`${CODE_HASH_LABEL}${code}`);
+});
+
+/** How many six-digit codes there are. */
+const GUARDIAN_CODE_RANGE = 1_000_000n;
+
+/**
+ * Draws a six-digit guardian code from Effect's `Crypto` service. Eight random
+ * bytes taken modulo a million leave every code within 5.5 x 10^-14 of equally
+ * likely, so no draw is repeated.
+ */
+export const drawGuardianCode = Effect.fn("identity.guardianCode.draw")(
+  function* () {
+    const bytes = yield* (yield* Crypto.Crypto).randomBytes(8);
+    const value = new DataView(bytes.buffer, bytes.byteOffset).getBigUint64(0);
+    return String(value % GUARDIAN_CODE_RANGE).padStart(6, "0");
+  },
+  Effect.orDie,
+  Effect.provide(WebCryptoLayer)
+);
+
+/**
+ * The keyed hash of a guardian code, under its own purpose label (ADR 0034), and
+ * bound to the school and the address it was sent to, so a code matches only the
+ * sign-in it was drawn for and never a login card's hash.
+ */
+export const hashGuardianCode = Effect.fn("identity.guardianCode.hash")(
+  function* (tenantId: string, email: string, code: string) {
+    return yield* keyedHash(
+      `${GUARDIAN_CODE_LABEL}${tenantId}:${email}:${code}`
+    );
+  }
+);

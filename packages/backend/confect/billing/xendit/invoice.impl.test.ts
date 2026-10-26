@@ -28,7 +28,6 @@ function openedSession(paymentLink: string | null) {
     expires_at: DateTime.makeUnsafe(DUE),
     payment_link_url: paymentLink,
     payment_session_id: "ps-invoice-1",
-    recurring_plan_id: null,
     reference_id: "NKF-2026-000001",
     session_type: "PAY" as const,
     status: "ACTIVE" as const,

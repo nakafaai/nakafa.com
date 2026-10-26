@@ -1,7 +1,15 @@
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useNavigate } from "@tanstack/react-router";
-import { Option } from "effect";
-import { lazy, Suspense, startTransition, useState } from "react";
+import { Deferred, Effect, Option } from "effect";
+import {
+  lazy,
+  Suspense,
+  startTransition,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { NinaInput } from "@/components/ai/input";
 import { HeldPromptContext } from "@/components/marketing/about/nina/held";
 import { useLiveSession } from "@/components/providers/live";
@@ -19,40 +27,63 @@ const LiveNinaComposer = lazy(() =>
 );
 
 /**
- * A visitor's composer. Its attach button and its send both ask for sign-in,
- * so the page loads no chat code and opens no Convex client.
+ * The composer before its live code loads: one input that looks the same and
+ * keeps its text while the page's session settles, so a signed-in learner never
+ * sees it dim and come back. A visitor's attach and send ask for sign-in. A send
+ * pressed while the session loads is held: a session that signs in loads the
+ * live composer, which admits it, and a session that settles signed out asks
+ * for sign-in. A signed-in learner's first focus or input loads the live
+ * composer as a transition, so React keeps this input, focused and holding its
+ * text, until the live composer has loaded, which admits a send held here.
  */
-function VisitorNinaComposer() {
+function NinaComposerInput() {
+  const isSignedIn = useLiveSession((state) => Option.isSome(state.client));
+  const isSessionPending = useLiveSession((state) => state.isPending);
   const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
+  const [engaged, setEngaged] = useState(false);
+  const [held, setHeld] = useState<PromptInputMessage | null>(null);
+  const isVisitor = !(isSignedIn || isSessionPending);
+  // The session settles once per page, so one deferred marks that moment.
+  const [sessionKnown] = useState(() => Deferred.makeUnsafe<void>());
+  useEffect(() => {
+    if (!isSessionPending) {
+      Deferred.doneUnsafe(sessionKnown, Effect.void);
+    }
+  }, [isSessionPending, sessionKnown]);
+  /** Loads the live composer for a signed-in session, or asks a visitor to sign in. */
+  function followSession() {
+    if (isSignedIn) {
+      startTransition(() => setEngaged(true));
+      return;
+    }
+    setHeld(null);
+    navigate(authNavigation.readTarget());
+  }
+
+  // A held send follows the session as the render that knows it reads it, and
+  // a composer that leaves meanwhile drops it.
+  const follow = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    follow.current = followSession;
+    return () => {
+      follow.current = null;
+    };
+  });
+
+  /** Holds a send pressed while the session loads, until the session is known. */
+  function hold(message: PromptInputMessage) {
+    setHeld(message);
+    Effect.runPromise(Deferred.await(sessionKnown)).then(() =>
+      follow.current?.()
+    );
+    return false;
+  }
 
   function signIn() {
     navigate(authNavigation.readTarget());
     return false;
   }
-
-  return (
-    <NinaInput attachments={false} onAttachRequest={signIn} onSubmit={signIn} />
-  );
-}
-
-/**
- * A signed-in composer while its session loads. Its send waits for the account,
- * so it offers neither sign-in nor a send.
- */
-function PendingNinaComposer() {
-  return <NinaInput attachments={false} disabled onSubmit={() => false} />;
-}
-
-/**
- * A signed-in composer before its first focus or input. Engaging is a transition,
- * so React keeps this input, focused and holding its text, until the live composer
- * that replaces it has loaded. A send pressed here is held and admitted once that
- * composer mounts.
- */
-function SignedInNinaComposer() {
-  const [engaged, setEngaged] = useState(false);
-  const [held, setHeld] = useState<PromptInputMessage | null>(null);
 
   function engage() {
     startTransition(() => setEngaged(true));
@@ -60,36 +91,20 @@ function SignedInNinaComposer() {
 
   return (
     <Suspense fallback={null}>
-      {engaged ? (
+      {engaged && isSignedIn ? (
         <HeldPromptContext value={{ held }}>
           <LiveNinaComposer />
         </HeldPromptContext>
       ) : (
         <NinaInput
           attachments={false}
-          onEngage={engage}
-          onSubmit={(message) => {
-            setHeld(message);
-            engage();
-            return false;
-          }}
+          onAttachRequest={isVisitor ? signIn : undefined}
+          onEngage={isSignedIn ? engage : undefined}
+          onSubmit={(message) => (isVisitor ? signIn() : hold(message))}
         />
       )}
     </Suspense>
   );
-}
-
-/** Selects the composer that the page's live session allows: signed in, loading, or a visitor's. */
-function NinaComposerInput() {
-  const client = useLiveSession((state) => state.client);
-  const isSessionPending = useLiveSession((state) => state.isPending);
-  if (Option.isSome(client)) {
-    return <SignedInNinaComposer />;
-  }
-  if (isSessionPending) {
-    return <PendingNinaComposer />;
-  }
-  return <VisitorNinaComposer />;
 }
 
 /** Starts a conversation with the shared draft, attachments and admission. */

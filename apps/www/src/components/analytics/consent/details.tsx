@@ -1,4 +1,8 @@
 import { Alert02Icon } from "@hugeicons/core-free-icons";
+import {
+  Alert,
+  AlertDescription,
+} from "@repo/design-system/components/ui/alert";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "use-intl";
@@ -31,7 +35,10 @@ export function ConsentActions({
   );
 }
 
-/** The consent description, the privacy policy link, and the error, if any. */
+/**
+ * The consent body: one sentence on what sharing allows, the privacy policy line
+ * with who may allow it, and the error, if any, in one sentence of its own.
+ */
 export function ConsentDetails({
   error,
 }: Pick<AnalyticsConsentContextValue, "error">) {
@@ -80,6 +87,7 @@ function PrivacyPolicyLink() {
   );
 }
 
+/** The failed load, save or update of the choice, in one sentence that says what stays. */
 function ConsentError({
   error,
 }: {
@@ -88,9 +96,9 @@ function ConsentError({
   const t = useTranslations("AnalyticsConsent");
 
   return (
-    <p className="flex items-start gap-2 text-destructive text-sm" role="alert">
-      <HugeIcons className="mt-0.5 size-4 shrink-0" icon={Alert02Icon} />
-      {t(`${error}-error`)}
-    </p>
+    <Alert variant="destructive">
+      <HugeIcons icon={Alert02Icon} />
+      <AlertDescription>{t(`${error}-error`)}</AlertDescription>
+    </Alert>
   );
 }

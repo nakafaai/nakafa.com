@@ -1,3 +1,5 @@
+import type { IconSvgElement } from "@hugeicons/react";
+import { getTileLooks } from "@repo/design-system/lib/look";
 import { constructFilterFn } from "@tanstack/react-table";
 import { Array as Arr, Schema } from "effect";
 
@@ -28,3 +30,20 @@ export const oneOfFilter = constructFilterFn({
   autoRemove: choosesNothing,
   filter: isChosen,
 });
+
+/**
+ * The options of a facet whose values the school names, such as its units or the people of its
+ * trail, each with an icon of `pool` that no other value of the facet holds while the pool has one
+ * free, so no two items of the Filter menu draw the same icon. A facet longer than its pool repeats
+ * the icon it holds least first.
+ */
+export function namedOptions(
+  values: readonly string[],
+  pool: Arr.NonEmptyReadonlyArray<IconSvgElement>
+) {
+  return Arr.zipWith(
+    values,
+    getTileLooks(Arr.map(values, (value) => [pool, value] as const)),
+    (value, look) => ({ icon: look.icon, label: value, value })
+  );
+}

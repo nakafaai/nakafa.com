@@ -9,7 +9,14 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Duration,
+  Effect,
+  Record as Rec,
+  Schema,
+} from "effect";
 
 const nf = slugOf("nf");
 const other = slugOf("other");
@@ -48,6 +55,7 @@ describe("tenancy/roster invite and members", () => {
         expect(listed.page).toContainEqual({
           id: added.person,
           name: "Guru Baru",
+          removable: true,
           roles: ["teacher"],
           status: "invited",
         });
@@ -142,6 +150,42 @@ describe("tenancy/roster invite and members", () => {
     })
   );
 
+  it.effect(
+    "marks the members the caller may remove, as a removal decides it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const removableAs = (account: "admin" | "owner" | "auditor") =>
+          fixture
+            .as(account)
+            .query(members, { ...everyone, slug: nf })
+            .pipe(
+              Effect.map((listed) =>
+                Rec.fromEntries(
+                  Arr.map(listed.page, (row) => [row.name, row.removable])
+                )
+              )
+            );
+        expect(yield* removableAs("admin")).toMatchObject({
+          Admin: false,
+          Owner: false,
+          Student: true,
+          Teacher: true,
+          "Unit Admin": false,
+        });
+        expect(yield* removableAs("owner")).toMatchObject({
+          Admin: true,
+          Owner: false,
+          Teacher: true,
+          "Unit Admin": true,
+        });
+        expect(yield* removableAs("auditor")).toMatchObject({
+          Admin: false,
+          Owner: false,
+        });
+      })
+  );
+
   it.effect("refuses another school's members and invites", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
@@ -209,6 +253,7 @@ describe("tenancy/roster invite and members", () => {
           {
             id: earlier.personId,
             name: "Guru Baru",
+            removable: true,
             roles: ["teacher"],
             status: "invited",
           },
@@ -380,12 +425,14 @@ describe("tenancy/roster invite and members", () => {
             {
               id: seeded.lapsed,
               name: "Kartu Lewat",
+              removable: true,
               roles: [],
               status: "notInvited",
             },
             {
               id: seeded.current,
               name: "Kartu Berlaku",
+              removable: true,
               roles: [],
               status: "cardIssued",
             },

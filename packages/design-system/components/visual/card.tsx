@@ -5,15 +5,25 @@ import { useRender } from "@base-ui/react/use-render";
 import {
   ArrowExpand01Icon,
   ArrowShrink02Icon,
+  MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useMergedRef } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@repo/design-system/components/ui/button-group";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   createVisualStore,
@@ -244,8 +254,10 @@ function VisualCardBody({
 }
 
 /**
- * The visual's buttons, in one band under it: play, reset, the steps, and the
- * full screen action, which ends the row.
+ * The visual's buttons, in one band under it: its one main action, such as play,
+ * and `VisualCardMenu`, which ends the row with full screen and the visual's
+ * other actions. A card without other actions ends the row with
+ * `VisualCardFullscreen` alone.
  */
 function VisualCardActions(props: Omit<ComponentProps<"div">, "className">) {
   return (
@@ -304,20 +316,6 @@ function VisualCardFacts(props: Omit<ComponentProps<"dl">, "className">) {
 }
 
 /**
- * A group of one kind of control in the toolbar, such as the speeds or the
- * generations, kept together when the toolbar wraps.
- */
-function VisualCardGroup(props: Omit<ComponentProps<"div">, "className">) {
-  return (
-    <div
-      className="flex flex-wrap items-center gap-2"
-      data-slot="visual-card-group"
-      {...props}
-    />
-  );
-}
-
-/**
  * Shows the card across the whole screen, and returns it to the page. It ends
  * the actions band. Its pressed state and a polite status tell assistive
  * technology where the visual is.
@@ -348,6 +346,32 @@ function VisualCardFullscreen() {
   );
 }
 
+/**
+ * The end of the actions band: full screen joined with a menu of the visual's
+ * other actions, such as the first view back, given as menu items. The band then
+ * shows two things at most, its main action and this group, however many actions
+ * the visual has.
+ */
+function VisualCardMenu({ children }: { children: ReactNode }) {
+  const t = useTranslations("Common");
+
+  return (
+    <ButtonGroup className="ms-auto">
+      <VisualCardFullscreen />
+      <ButtonGroupSeparator />
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button size="icon" variant="secondary" />}
+        >
+          <HugeIcons icon={MoreHorizontalIcon} />
+          <span className="sr-only">{t("more-actions")}</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">{children}</DropdownMenuContent>
+      </DropdownMenu>
+    </ButtonGroup>
+  );
+}
+
 export {
   useVisual,
   useVisualScene,
@@ -357,8 +381,8 @@ export {
   VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
-  VisualCardGroup,
   VisualCardHeader,
+  VisualCardMenu,
   VisualCardTable,
   VisualCardToolbar,
 };
