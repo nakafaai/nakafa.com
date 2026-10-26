@@ -7,6 +7,7 @@ import {
 import { entries, type kinds } from "@repo/backend/confect/access/catalog";
 import { decide, type Placement } from "@repo/backend/confect/access/decision";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import type { ClientPrincipal } from "@repo/backend/confect/access/principal";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Rule } from "@repo/backend/confect/access/schema";
 import {
@@ -182,6 +183,31 @@ const make = <
     return row;
   });
 
+  /**
+   * Whether an integration client may perform an action on a loaded subject (ADR 0029).
+   * A client is decided by the rule, its action list, and its scope alone, so no relation
+   * is read: `decide` returns before it reaches the relations for a client.
+   */
+  const allowsClient = Effect.fn("access.allowsClient")(function* (
+    action: typeof Action.Type,
+    row: Row,
+    principal: typeof ClientPrincipal.Type
+  ) {
+    const rule = yield* Option.match(HashMap.get(rules, action), {
+      onNone: () =>
+        Effect.die(`Access action ${action} has no rule on kind ${name}.`),
+      onSome: Effect.succeed,
+    });
+    const decision = yield* decide(
+      action,
+      rule,
+      yield* subjectOf(row),
+      principal,
+      HashMap.empty()
+    );
+    return decision === "allow";
+  });
+
   /** The actions of this kind the caller may perform on a loaded subject; none on another tenant's. */
   const allowed = Effect.fn("access.allowed")(function* (row: Row) {
     const member = yield* Member;
@@ -256,7 +282,7 @@ const make = <
       );
     });
 
-  return { allowed, authorize, check, middleware, record };
+  return { allowed, allowsClient, authorize, check, middleware, record };
 };
 
 /** Constructors a lane uses to implement its kinds. */

@@ -443,10 +443,11 @@ The 15 files that import `convex-helpers`:
 | Public REST `api.nakafa.com/v1` and the OpenAPI document | Live |
 | Public MCP `mcp.nakafa.com/mcp` | Live |
 | `@nakafa/cli` 0.1.1 | Live, public and read only |
-| `effect/http-api` in Nakafa code | Not used yet |
+| `effect/http-api` in Nakafa code | Used by the school API (`confect/integrations/api.ts`), 26 October 2026 |
 | `integrationClients` and the client registry (the amendment of 14 October 2026) | Built, with no route yet |
 | `confect/integrations` (the `HttpApi` definition), `integrationDeliveries` | Planned, program wave C |
-| School REST, school MCP, and the CLI login | Planned, program wave C |
+| School REST | Built, 26 October 2026: the token endpoint, the bearer check, and the roster reads (see the amendment of that day) |
+| School MCP and the CLI login | Planned, program wave C |
 | Webhooks and exports | Planned, program wave C |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
 | The OneRoster CSV import, which uses the file import checks of ADR 0015 | Planned, program wave C |
@@ -534,6 +535,57 @@ first. The token endpoint, the bearer middleware, and the routes come later.
   presented secret with its `matchesToken`, which compares digests in constant
   time.
 - Ending the webhooks of a revoked client. Webhooks do not exist yet.
+
+## Amendment: The Token Endpoint And The First Routes, 26 October 2026
+
+The token endpoint, the bearer check, and the roster routes are built. Two
+decisions of the amendment of 14 October changed, and this section records why.
+
+1. **Token engine.** Nakafa issues its own opaque access tokens and does not
+   install `@better-auth/oauth-provider`. The 14 October amendment chose the
+   plugin with JWT access tokens. A JWT cannot be ended before it expires, so
+   revoking a client would leave its tokens working for their lifetime, which the
+   condition "revoked at once, or its lifetime is no longer than the revocation
+   delay Nakafa accepts" does not allow without a short lifetime and a deny list.
+   An opaque token is 256 random bits from `issueToken` (`@repo/utilities/token`,
+   the one owner of Nakafa's bearer tokens), only its SHA-256 digest is stored in
+   `integrationTokens`, and revoking or rotating a client deletes its tokens in the
+   same transaction. It needs no new package and no Better Auth table, so the
+   tenant of a client stays in `confect/tenancy` (ADR 0011).
+2. **Token format.** An access token is an opaque string, not a JWT. Its
+   audience is the `resource` field of its row: `api` for
+   `https://<school host>/api/v1` and `mcp` for `https://<school host>/mcp`
+   (RFC 8707). A token for one is refused by the other. A token is never a Convex
+   identity, because Convex never sees it as one.
+
+What is built:
+
+- `confect/integrations/api.ts`: the one `HttpApi` definition (`SchoolApi`) with
+  the `oauth` group (`POST /token`, the client credentials grant, form encoded)
+  and the `roster` group (`GET /periods`, `/cohorts?period=`, `/people?status=`,
+  `/placements?period=`), behind the `SchoolApiBearer` middleware. It imports no
+  Convex or server code, so the CLI can bundle it.
+- The Convex site serves it under `/api/school/v1` (`confect/integrations/routes.ts`),
+  with the OpenAPI document at `/api/school/v1/openapi.json`, which needs no
+  token. The committed `confect/integrations/openapi.json` is the contract, and a
+  test fails when the definition and it differ.
+- A school host forwards `/api/v1/*` to the Convex site of its cell
+  (`apps/www/src/routes/api/v1/$.ts`, `lib/tenant/api.server.ts`): it keeps the
+  `Authorization` header, drops the cookie, adds no secret, and answers not found
+  on a host that names no school.
+- `integrations/tokens`: `issue` checks the client's secret by digest in constant
+  time, limits a client to 20 tokens a minute, and stores the digest with a
+  lifetime of one hour. `check` verifies a token for its resource and counts the
+  request against the client's limit of 600 a minute, which answers 429 with
+  `retryAfter`. A sweep deletes expired tokens hourly.
+- `integrations/reads`: each read takes the client that the bearer check
+  verified, never a school the caller names, and decides every row for that
+  client through `allowsClient` of the kind's authority, which reads no relation.
+  A read that the action list or the scope does not open answers 403.
+
+Errors are the typed errors of the definition, as JSON. RFC 9457 problem details
+for the school API wait for the change that moves the public API to an `HttpApi`
+definition, so both answer the same shape.
 
 ## References
 

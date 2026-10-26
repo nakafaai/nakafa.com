@@ -18,6 +18,7 @@ import {
   tenantAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { endClientTokens } from "@repo/backend/confect/integrations/token";
 import { issueToken } from "@repo/utilities/token";
 import { Array as Arr, Clock, Effect, Struct } from "effect";
 
@@ -100,7 +101,8 @@ export const register = Effect.fn("integrations.client.register")(function* (
 
 /**
  * Draws a new secret for an active client and stores its digest, so the digest
- * of the old secret is gone at once. The secret is shown once.
+ * of the old secret is gone at once, and deletes the client's access tokens, so
+ * a token issued for the old secret stops working too. The secret is shown once.
  */
 export const rotateSecret = Effect.fn("integrations.client.rotate")(function* (
   actor: typeof TenantActor.Type,
@@ -118,6 +120,7 @@ export const rotateSecret = Effect.fn("integrations.client.rotate")(function* (
       })
     )
     .pipe(Effect.orDie);
+  yield* endClientTokens(client._id);
   yield* integrationAuthority.record(actor, client, {
     client: client._id,
     type: "integration.rotated",
@@ -126,8 +129,9 @@ export const rotateSecret = Effect.fn("integrations.client.rotate")(function* (
 });
 
 /**
- * Revokes an active client. It holds no secret from now on: its digest is
- * deleted with the revocation. The caller checks that the client is active.
+ * Revokes an active client. It holds no secret from now on: its digest and its
+ * access tokens are deleted with the revocation (ADR 0029). The caller checks
+ * that the client is active.
  */
 export const revokeClient = Effect.fn("integrations.client.revoke")(function* (
   actor: typeof TenantActor.Type,
@@ -148,6 +152,7 @@ export const revokeClient = Effect.fn("integrations.client.revoke")(function* (
       tenantId: client.tenantId,
     })
     .pipe(Effect.orDie);
+  yield* endClientTokens(client._id);
   yield* integrationAuthority.record(actor, client, {
     client: client._id,
     type: "integration.revoked",

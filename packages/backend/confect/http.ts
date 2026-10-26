@@ -11,6 +11,7 @@ import { batchRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/ru
 import { protectedRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/protected";
 import { publicRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/public";
 import { publicationRoutes } from "@repo/backend/confect/contentRelease/ingress/route";
+import { schoolApiRoutes } from "@repo/backend/confect/integrations/routes";
 import { agentApiRoutes } from "@repo/backend/confect/routes/agent/api";
 import { agentMcpRoutes } from "@repo/backend/confect/routes/agent/mcp/route";
 import { requestIdentity } from "@repo/backend/confect/routes/middleware/identity";
@@ -25,6 +26,7 @@ const http = ConfectHttpRouter.make(
     authDiscoveryRoutes,
     agentApiRoutes,
     agentMcpRoutes,
+    schoolApiRoutes,
     polarRoutes,
     xenditRoutes,
     publicationRoutes,
