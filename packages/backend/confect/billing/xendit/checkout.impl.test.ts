@@ -56,6 +56,7 @@ function insertOpenCheckout(
     status: "open",
     openedAt: FAR_PAST,
     expiresAt,
+    locale: "id",
   });
 }
 
@@ -133,6 +134,7 @@ describe("billing/xendit/checkout internal steps", () => {
     const subscription = await t.mutation(steps.admit, {
       accountId: prepared.accountId,
       event,
+      locale: "id",
       offer: "pro.monthly",
       session: {
         expiresAt: FAR_FUTURE,
@@ -145,6 +147,7 @@ describe("billing/xendit/checkout internal steps", () => {
     const pass = await t.mutation(steps.admit, {
       accountId: prepared.accountId,
       event,
+      locale: "id",
       offer: "pro.pass.3",
       session: {
         expiresAt: FAR_FUTURE,
@@ -191,6 +194,7 @@ describe("billing/xendit/checkout internal steps", () => {
       t.mutation(steps.admit, {
         accountId: prepared.accountId,
         event,
+        locale: "id",
         offer: "pro.monthly",
         session: {
           expiresAt: FAR_FUTURE,

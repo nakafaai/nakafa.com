@@ -1,7 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import { billingOverviewValidator } from "@repo/backend/confect/billing/schema";
+import {
+  BillingRail,
+  billingOverviewValidator,
+} from "@repo/backend/confect/billing/schema";
 import { ProCheckoutOffer } from "@repo/backend/confect/billing/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
@@ -20,6 +23,15 @@ export const ProOffers = Schema.Array(
   })
 );
 
+/** One payment a learner made, as the settings list it among their receipts. */
+export const RecentPayment = Schema.Struct({
+  amount: Schema.Int,
+  currency: BillingCurrency,
+  kind: Schema.Literals(["cycle", "pass", "invoice", "credits"]),
+  paidAt: Schema.Finite,
+  rail: BillingRail,
+});
+
 /** The learner's billing reads, for the settings and pricing screens. The offers need no session, since they name no viewer. */
 export default GroupSpec.make()
   .addFunction(
@@ -27,6 +39,14 @@ export default GroupSpec.make()
       name: "overview",
       args: () => ({}),
       returns: () => billingOverviewValidator,
+      error: () => AuthFailure,
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "payments",
+      args: () => ({}),
+      returns: () => Schema.Array(RecentPayment),
       error: () => AuthFailure,
     }).middleware(Session)
   )

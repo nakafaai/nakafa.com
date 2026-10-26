@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { readBillingOverview } from "@repo/backend/confect/billing/overview";
+import { readRecentPayments } from "@repo/backend/confect/billing/payments";
 import spec from "@repo/backend/confect/billing/queries.spec";
 import {
   checkoutCountryFor,
@@ -21,6 +22,17 @@ const overview = FunctionImpl.make(
     const { appUser } = yield* requireAuth();
     const now = yield* Clock.currentTimeMillis;
     return yield* readBillingOverview(appUser, now);
+  })
+);
+
+/** The viewer's newest payments, their receipts, read at the moment of the query. */
+const payments = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "payments",
+  Effect.fn("billing.queries.payments")(function* () {
+    const { appUser } = yield* requireAuth();
+    return yield* readRecentPayments(appUser._id);
   })
 );
 
@@ -57,6 +69,7 @@ const proOffers = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(overview),
+  Layer.provide(payments),
   Layer.provide(proOffers),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize

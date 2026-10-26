@@ -1,7 +1,9 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import {
   billingOffer,
@@ -21,7 +23,7 @@ import {
   readSubscriptionByXenditPlan,
 } from "@repo/backend/confect/billing/subscriptions";
 import { XenditSessionEvent } from "@repo/backend/confect/billing/xendit/contract";
-import { Clock, DateTime, Effect, Option, Schema } from "effect";
+import { Clock, DateTime, Duration, Effect, Option, Schema } from "effect";
 
 const decodeSession = Schema.decodeUnknownOption(XenditSessionEvent);
 
@@ -64,6 +66,9 @@ const readXenditAccount = Effect.fn("billing.xendit.session.readAccount")(
     return account;
   }
 );
+
+/** How long before a pass ends its owner is reminded, in the language they bought it in. */
+const PASS_REMINDER_LEAD_MS = Duration.toMillis(Duration.days(3));
 
 /**
  * Records a paid pass once, and gives its owner Pro for the offer's months from
@@ -110,18 +115,24 @@ const applyPassPaid = Effect.fn("billing.xendit.session.passPaid")(function* (
     yield* latestPersonalGrant(account.owner.userId, now),
     { onNone: () => now, onSome: (grant) => Math.max(now, grant.validTo) }
   );
-  yield* (yield* DatabaseWriter)
+  const end = DateTime.toEpochMillis(
+    DateTime.add(DateTime.makeUnsafe(start), { months: offer.months })
+  );
+  const grantId = yield* (yield* DatabaseWriter)
     .table("billingGrants")
     .insert({
       product: "pro",
       userId: account.owner.userId,
       source: { kind: "pass", paymentId: recorded.paymentId },
       validFrom: start,
-      validTo: DateTime.toEpochMillis(
-        DateTime.add(DateTime.makeUnsafe(start), { months: offer.months })
-      ),
+      validTo: end,
     })
     .pipe(Effect.orDie);
+  yield* (yield* Scheduler).runAt(
+    DateTime.makeUnsafe(Math.max(now, end - PASS_REMINDER_LEAD_MS)),
+    refs.internal.billing.reminder.delivery.deliver,
+    { grantId, locale: checkout.locale }
+  );
   yield* scheduleProjection(account.owner);
 });
 

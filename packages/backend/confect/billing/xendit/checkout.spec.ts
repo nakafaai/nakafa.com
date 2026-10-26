@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
 import {
@@ -51,6 +52,7 @@ export default GroupSpec.make()
         accountId: IdSchema("billingAccounts"),
         userId: IdSchema("users"),
         offer: ProCheckoutOffer,
+        locale: ActiveAppLocaleCodeSchema,
         session: openedSessionValidator,
         event: productAnalyticsEventValidator,
       }),

@@ -1,3 +1,4 @@
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
   BillingCurrency,
@@ -290,4 +291,6 @@ export const billingCheckoutValidator = Schema.Struct({
   openedAt: Schema.Finite,
   /** When the rail closes the session unpaid. */
   expiresAt: Schema.Finite,
+  /** The language the buyer checked out in, which every message about this purchase is written in. */
+  locale: ActiveAppLocaleCodeSchema,
 });

@@ -283,3 +283,81 @@ describe("billing/queries overview pass", () => {
     }
   });
 });
+
+describe("billing/queries payments", () => {
+  it("lists a viewer's payments that went through on both rails newest first, as their receipts", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    try {
+      const { authed, t, user } = await signIn("pro");
+      await t.mutation(async (ctx) => {
+        const polar = await insertPolarAccount(
+          ctx,
+          user.userId,
+          "cust_receipts"
+        );
+        const xendit = await ctx.db.insert("billingAccounts", {
+          owner: { kind: "personal", userId: user.userId },
+          rail: "xendit",
+          country: "ID",
+          currency: "IDR",
+          providerCustomerId: null,
+        });
+        await ctx.db.insert("billingPayments", {
+          kind: "credits",
+          accountId: polar,
+          status: "succeeded",
+          amount: 499,
+          currency: "USD",
+          rail: "polar",
+          providerPaymentId: "order_receipts",
+          providerUpdatedAt: NOW - 2000,
+          method: "polar",
+          paidAt: NOW - 2000,
+        });
+        await ctx.db.insert("billingPayments", {
+          kind: "pass",
+          accountId: xendit,
+          status: "succeeded",
+          amount: 229_000,
+          currency: "IDR",
+          rail: "xendit",
+          providerPaymentId: "py_receipts",
+          providerUpdatedAt: NOW - 1000,
+          method: "session",
+          paidAt: NOW - 1000,
+        });
+        await ctx.db.insert("billingPayments", {
+          kind: "pass",
+          accountId: xendit,
+          status: "refunded",
+          amount: 79_000,
+          currency: "IDR",
+          rail: "xendit",
+          providerPaymentId: "py_refunded",
+          providerUpdatedAt: NOW - 500,
+          method: "session",
+          paidAt: NOW - 500,
+        });
+      });
+      expect(await authed.query(api.billing.queries.payments, {})).toEqual([
+        {
+          amount: 229_000,
+          currency: "IDR",
+          kind: "pass",
+          paidAt: NOW - 1000,
+          rail: "xendit",
+        },
+        {
+          amount: 499,
+          currency: "USD",
+          kind: "credits",
+          paidAt: NOW - 2000,
+          rail: "polar",
+        },
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

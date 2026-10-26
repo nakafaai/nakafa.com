@@ -1,10 +1,12 @@
+import type { OptimisticUpdate } from "@confect/react";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import type {
   BillingRail,
   billingOverviewValidator,
   billingSubscriptionSummaryValidator,
 } from "@repo/backend/confect/billing/schema";
-import { Number as Num } from "effect";
+import { Number as Num, Option } from "effect";
 import { getProMonthlyPricingFor } from "@/lib/pricing/monthly";
 
 /** What the billing settings show for a viewer. */
@@ -118,3 +120,24 @@ export function usedPercent({
     minimum: 0,
   });
 }
+
+/**
+ * Shows a canceled Xendit plan as ending with its paid period at once, before
+ * the server answers. Convex drops the change if the mutation fails.
+ */
+export const cancelPlanChange: OptimisticUpdate<
+  typeof billing.xendit.cancel.cancelPlan
+> = (localStore) => {
+  const current = localStore.getQuery(billing.queries.overview, {});
+  if (Option.isNone(current) || current.value.subscription === null) {
+    return;
+  }
+  localStore.setQuery(
+    billing.queries.overview,
+    {},
+    Option.some({
+      ...current.value,
+      subscription: { ...current.value.subscription, cancelAtPeriodEnd: true },
+    })
+  );
+};

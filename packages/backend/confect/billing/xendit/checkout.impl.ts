@@ -112,6 +112,7 @@ const admit = FunctionImpl.make(
         status: "open",
         openedAt: now,
         expiresAt: args.session.expiresAt,
+        locale: args.locale,
       })
       .pipe(Effect.orDie);
     if (args.session.planId !== null) {

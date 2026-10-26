@@ -2,10 +2,8 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { findAccount } from "@repo/backend/confect/billing/accounts";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
+import { BillingRail } from "@repo/backend/confect/billing/schema";
 import { Array as Arr, Effect, Option } from "effect";
-
-/** The billing rails a user's personal account can pay through. */
-const PERSONAL_RAILS = ["polar", "xendit"] as const;
 
 /** The statuses of a Pro subscription that still holds Pro, or still owes its payment. */
 const PRO_HOLDING_STATUSES = ["active", "pastDue"] as const;
@@ -35,7 +33,7 @@ export const proHoldingOf = Effect.fn("billing.checkout.proHolding")(function* (
   if (Arr.some(grants, (grant) => grant.source.kind !== "pass")) {
     return "plan" as const;
   }
-  const accounts = yield* Effect.forEach(PERSONAL_RAILS, (rail) =>
+  const accounts = yield* Effect.forEach(BillingRail.literals, (rail) =>
     findAccount({ kind: "personal", userId }, rail)
   );
   for (const account of accounts) {

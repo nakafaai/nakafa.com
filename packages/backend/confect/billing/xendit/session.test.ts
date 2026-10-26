@@ -30,6 +30,7 @@ async function seedCheckout(
     status: "open",
     openedAt: 0,
     expiresAt: 1_800_000,
+    locale: "id",
   });
   return { accountId, checkoutId, subscriptionId, userId };
 }
@@ -123,14 +124,25 @@ describe("billing/xendit/session", () => {
           sessionDelivery("payment_session.completed", "PAY", "py_extend")
         )
       );
-      return await ctx.db
-        .query("billingGrants")
-        .withIndex("by_userId_and_validTo", (query) =>
-          query.eq("userId", userId)
-        )
-        .collect();
+      return {
+        grants: await ctx.db
+          .query("billingGrants")
+          .withIndex("by_userId_and_validTo", (query) =>
+            query.eq("userId", userId)
+          )
+          .collect(),
+        jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      };
     });
-    expect(grants).toMatchObject([
+    // The reminder goes out three days before the new pass ends, in the language of its checkout.
+    expect(grants.jobs).toMatchObject([
+      {
+        args: [{ locale: "id" }],
+        name: "billing/reminder/delivery:deliver",
+        scheduledTime: Date.UTC(2099, 1, 25),
+      },
+    ]);
+    expect(grants.grants).toMatchObject([
       { validTo: runningEnd },
       {
         source: { kind: "pass" },
@@ -229,6 +241,7 @@ describe("billing/xendit/session", () => {
         status: "open",
         openedAt: 0,
         expiresAt: 1_800_000,
+        locale: "id",
       });
       const outcome = await runInMutation(
         ctx,

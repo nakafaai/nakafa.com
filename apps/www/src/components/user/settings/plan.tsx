@@ -1,4 +1,10 @@
-import { Diamond02Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { useMutation } from "@confect/react";
+import {
+  Cancel01Icon,
+  Diamond02Icon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -7,8 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { Match } from "effect";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { Effect, Match } from "effect";
+import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ProOfferDialog } from "@/components/billing/offers";
 import {
@@ -17,10 +27,12 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { UpgradePlanCard } from "@/components/user/settings/upgrade";
+import { reportClientException } from "@/lib/analytics/client";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import {
   type BillingOverview,
   type BillingSubscription,
+  cancelPlanChange,
   formatBillingDate,
   type PlanState,
   planStateOf,
@@ -156,21 +168,115 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
           <dd>{providerNameOf(subscription.rail)}</dd>
         </dl>
       </CardContent>
-      <CardSectionFooter
-        hint={t(pastDue ? "plan-pro-past-due-footer" : "plan-pro-footer")}
-      >
-        <CardSectionActions>
-          <Button
-            disabled={billing.isPending || !isActiveLocale(locale)}
-            onClick={handleManage}
-            variant="outline"
-          >
-            <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
-            {t("manage-billing")}
-          </Button>
-        </CardSectionActions>
-      </CardSectionFooter>
+      {subscription.rail === "xendit" ? (
+        <XenditPlanFooter ending={ending} subscription={subscription} />
+      ) : (
+        <CardSectionFooter
+          hint={t(pastDue ? "plan-pro-past-due-footer" : "plan-pro-footer")}
+        >
+          <CardSectionActions>
+            <Button
+              disabled={billing.isPending || !isActiveLocale(locale)}
+              onClick={handleManage}
+              variant="outline"
+            >
+              <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
+              {t("manage-billing")}
+            </Button>
+          </CardSectionActions>
+        </CardSectionFooter>
+      )}
     </CardSection>
+  );
+}
+
+/**
+ * The footer of a plan Xendit bills, which no provider portal manages: the
+ * learner cancels it here, after confirming, and it ends with its paid period.
+ * A plan that already ends says so and offers nothing.
+ */
+function XenditPlanFooter({
+  ending,
+  subscription,
+}: {
+  ending: boolean;
+  subscription: BillingSubscription;
+}) {
+  const t = useTranslations("Auth");
+  const locale = useLocale();
+  const [isConfirming, setIsConfirming] = useState(false);
+  const cancelPlan = useMutation(
+    billing.xendit.cancel.cancelPlan
+  ).withOptimisticUpdate(cancelPlanChange);
+
+  if (ending) {
+    return <CardSectionFooter hint={t("plan-xendit-ending-footer")} />;
+  }
+
+  return (
+    <CardSectionFooter hint={t("plan-xendit-footer")}>
+      <CardSectionActions>
+        <Button
+          onClick={() => setIsConfirming(true)}
+          type="button"
+          variant="outline"
+        >
+          <HugeIcons icon={Cancel01Icon} />
+          {t("plan-cancel")}
+        </Button>
+      </CardSectionActions>
+      <ResponsiveDialog
+        description={t("plan-cancel-description", {
+          date: formatBillingDate(
+            subscription.currentPeriodEnd ?? subscription.currentPeriodStart,
+            locale
+          ),
+        })}
+        footer={
+          <>
+            <Button
+              onClick={() => setIsConfirming(false)}
+              type="button"
+              variant="outline"
+            >
+              {t("plan-keep")}
+            </Button>
+            <Button
+              onClick={() => {
+                setIsConfirming(false);
+                Effect.runPromise(
+                  Effect.tryPromise(() => cancelPlan({})).pipe(
+                    Effect.flatMap(Effect.fromResult),
+                    Effect.catch((error) =>
+                      reportClientException(error, {
+                        source: "components/user/settings/plan",
+                      }).pipe(
+                        Effect.andThen(
+                          Effect.sync(() => {
+                            toast.error({
+                              description: "action-error.description",
+                              title: "action-error.title",
+                            });
+                          })
+                        )
+                      )
+                    )
+                  )
+                );
+              }}
+              type="button"
+              variant="destructive"
+            >
+              <HugeIcons icon={Cancel01Icon} />
+              {t("plan-cancel")}
+            </Button>
+          </>
+        }
+        open={isConfirming}
+        setOpen={setIsConfirming}
+        title={t("plan-cancel-title")}
+      />
+    </CardSectionFooter>
   );
 }
 

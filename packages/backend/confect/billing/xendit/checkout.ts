@@ -197,6 +197,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
         },
       },
       offer: input.offer,
+      locale: input.locale,
       session: {
         sessionId: session.payment_session_id,
         url: session.payment_link_url,
