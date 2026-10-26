@@ -7,7 +7,6 @@ import type {
   MaterialPlacement,
 } from "@/lib/content/material/navigation";
 import { readMaterialPlacement } from "@/lib/content/material/placement.functions";
-import { readStaticData } from "@/lib/static/data";
 
 /**
  * The curriculum placement of one lesson page, as its links read it: none, as
@@ -35,9 +34,11 @@ export class PlacementReadFailed extends Schema.TaggedError<PlacementReadFailed>
 
 /**
  * Reads the placement that the `ctx` hint of the reader's address names, after
- * the page has hydrated, and keeps it in the store. An address without a valid
- * hint asks nothing and keeps no placement. A failed read is reported and keeps
- * the lesson's own links, which stay correct without a placement.
+ * the page has hydrated, and keeps it in the store. No build writes the answer of
+ * a reader's hint, so the browser asks the server function at once instead of
+ * looking for a static answer first. An address without a valid hint asks nothing
+ * and keeps no placement. A failed read is reported and keeps the lesson's own
+ * links, which stay correct without a placement.
  */
 export const startMaterialPlacement = Effect.fn(
   "www.materials.placement.start"
@@ -59,13 +60,15 @@ export const startMaterialPlacement = Effect.fn(
   }
   const placement = yield* Effect.tryPromise({
     try: () =>
-      readStaticData(readMaterialPlacement, {
-        contentKey: page.route.contentKey,
-        ctx,
-        locale,
-        materialKey: page.route.materialKey,
-        parentPath: page.route.parentPath,
-        publicPath: page.route.publicPath,
+      readMaterialPlacement({
+        data: {
+          contentKey: page.route.contentKey,
+          ctx,
+          locale,
+          materialKey: page.route.materialKey,
+          parentPath: page.route.parentPath,
+          publicPath: page.route.publicPath,
+        },
       }),
     catch: (cause) => new PlacementReadFailed({ cause }),
   }).pipe(
