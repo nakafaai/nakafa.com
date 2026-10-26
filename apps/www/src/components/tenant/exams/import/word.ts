@@ -362,7 +362,7 @@ const equationsOf = (
       catch: () => new MathTypeUnread({ reason: "unloaded" }),
       try: () => import("@/components/tenant/exams/import/mathtype/equation"),
     }).pipe(
-      Effect.map(Option.some),
+      Effect.asSome,
       Effect.catchTag("MathTypeUnread", () => Effect.succeedNone)
     );
     return yield* Effect.forEach(objects, (object) =>
