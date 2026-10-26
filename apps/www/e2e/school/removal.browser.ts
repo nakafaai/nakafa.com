@@ -160,7 +160,10 @@ test("a device the proctor retired says so and offers no Finish, while the attem
   );
   await proctor.getByRole("button", { name: "Acceptance Learner" }).click();
   await proctor
-    .getByRole("button", { exact: true, name: "Allow a second device" })
+    .getByRole("button", { name: "More actions for Acceptance Learner" })
+    .click();
+  await proctor
+    .getByRole("menuitem", { name: "Allow a second device" })
     .click();
   await proctor
     .getByRole("dialog")

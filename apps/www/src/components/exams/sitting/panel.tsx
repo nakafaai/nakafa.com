@@ -23,6 +23,10 @@ import {
   dashboardArgs,
 } from "@/components/exams/sitting/change";
 import {
+  type PanelDialog,
+  StudentPanelActions,
+} from "@/components/exams/sitting/controls";
+import {
   useMayProctor,
   useSittingData,
   useSittingStore,
@@ -39,9 +43,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-
-/** The dialog of a panel action that is open, or none. */
-type PanelDialog = "add-minutes" | "allow-device" | "lock" | "unlock";
 
 /** How many signals one page of the panel's list holds, the first one and each one after it. */
 const SIGNAL_PAGE_SIZE = 20;
@@ -163,10 +164,9 @@ function SelectedPanel() {
 }
 
 /**
- * The content of the panel for one student. The actions follow the table of ADR 0013: a lock
- * for an attempt in progress, an unlock for a locked one, and added minutes for either. A
- * second device is allowed in every state. The actions show only when the page lists them for
- * the viewer, so a viewer who may only view sees the signals and no action.
+ * The content of the panel for one student. The actions follow the table of ADR 0013 (see
+ * `StudentPanelActions`), and show only when the page lists them for the viewer, so a viewer who
+ * may only view sees the signals and no action.
  */
 function StudentPanel({
   attempt,
@@ -179,8 +179,6 @@ function StudentPanel({
   const tCommon = useTranslations("Common");
   const mayProctor = useMayProctor();
   const [dialog, setDialog] = useState<PanelDialog | null>(null);
-  const takesMinutes =
-    attempt.state === "inProgress" || attempt.state === "locked";
 
   return (
     <div className="grid gap-4">
@@ -208,46 +206,11 @@ function StudentPanel({
         <SignalList attemptId={attempt.id} key={attempt.id} />
       </div>
       {mayProctor ? (
-        <div className="flex flex-wrap gap-2">
-          {attempt.state === "inProgress" ? (
-            <Button
-              onClick={() => setDialog("lock")}
-              size="sm"
-              type="button"
-              variant="destructive"
-            >
-              {t("lock")}
-            </Button>
-          ) : null}
-          {attempt.state === "locked" ? (
-            <Button
-              onClick={() => setDialog("unlock")}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {t("unlock")}
-            </Button>
-          ) : null}
-          {takesMinutes ? (
-            <Button
-              onClick={() => setDialog("add-minutes")}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {t("add-minutes")}
-            </Button>
-          ) : null}
-          <Button
-            onClick={() => setDialog("allow-device")}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {t("allow-device")}
-          </Button>
-        </div>
+        <StudentPanelActions
+          name={attempt.name}
+          onOpen={setDialog}
+          state={attempt.state}
+        />
       ) : null}
       <LockDialog
         attemptId={attempt.id}

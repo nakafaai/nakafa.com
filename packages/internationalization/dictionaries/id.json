@@ -136,6 +136,7 @@
     "lock": "Kunci",
     "unlock": "Buka kunci",
     "allow-device": "Izinkan perangkat kedua",
+    "student-more": "Aksi lain untuk {name}",
     "confirm-lock-title": "Kunci sesi {name}?",
     "confirm-lock-description": "Siswa tidak bisa menjawab sampai pengawas membuka kunci sesinya.",
     "confirm-lock-action": "Kunci sesi",
