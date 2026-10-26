@@ -1,12 +1,15 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { keepVisible } from "@/components/player/navigator/scroll";
+import { PlayerShortcuts } from "@/components/player/navigator/shortcuts";
+import { PlayerModeToggle } from "@/components/player/navigator/toggle";
 import { usePlayer } from "@/components/player/provider";
 
 /**
- * The navigator beside the questions from the large breakpoint: a column that
- * stays under the header while the questions scroll, and scrolls by itself to
- * keep the current number in view. The page never moves for it.
+ * The navigator beside the questions from the large breakpoint: the numbers,
+ * then the view and the keys, in a column that stays under the header while the
+ * questions scroll, and scrolls by itself to keep the current number in view.
+ * The page never moves for it.
  */
 export function PlayerSidebar({ children }: { children: ReactNode }) {
   const t = useTranslations("Player");
@@ -36,6 +39,8 @@ export function PlayerSidebar({ children }: { children: ReactNode }) {
       ref={column}
     >
       {children}
+      <PlayerModeToggle />
+      <PlayerShortcuts />
     </aside>
   );
 }

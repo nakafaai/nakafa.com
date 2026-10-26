@@ -418,7 +418,6 @@
     "student-opens-at": "Sesi ini dibuka {time}.",
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
     "student-back-home": "Kembali ke beranda",
-    "flag-question": "Tandai untuk ditinjau",
     "seat-last-activity": "Aktivitas terakhir {time}.",
     "title-needed": "Ujian perlu judul sebelum dapat dibuat.",
     "title-too-long": "Judul paling banyak {count} karakter.",
@@ -1616,6 +1615,11 @@
     "shortcut-step": "Soal sebelumnya atau berikutnya",
     "shortcut-pick": "Pilih opsi",
     "shortcut-navigator": "Navigasi soal",
+    "flag": "Tandai",
+    "review": "Tinjau",
+    "legend-answered": "Terjawab",
+    "legend-flagged": "Ditandai",
+    "shortcut-flag": "Tandai soal",
     "cell-flagged": "{state, select, answered {Soal {number}, terjawab, ditandai untuk ditinjau} other {Soal {number}, belum dijawab, ditandai untuk ditinjau}}"
   },
   "Utils": {
@@ -2005,6 +2009,10 @@
     },
     "tryout-submit-answer-error": {
       "title": "Jawabanmu belum bisa disimpan.",
+      "description": "Coba lagi ya."
+    },
+    "tryout-flag-error": {
+      "title": "Tandanya belum tersimpan.",
       "description": "Coba lagi ya."
     },
     "memory-limit": {
