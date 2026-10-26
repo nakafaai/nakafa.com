@@ -169,17 +169,15 @@ export const revealMenuItem = Effect.fn("NakafaE2E.revealVisualMenuItem")(
   function* (
     card: Locator,
     more: string,
-    item: {
-      readonly name: string;
-      readonly role: "menuitem" | "menuitemcheckbox";
-    }
+    name: string,
+    role: "menuitem" | "menuitemcheckbox" = "menuitem"
   ) {
     const trigger = card.getByRole("button", { exact: true, name: more });
     yield* Effect.promise(async () => {
       await scrollToElement(trigger, "center");
       await trigger.click();
     });
-    return card.page().getByRole(item.role, { exact: true, name: item.name });
+    return card.page().getByRole(role, { exact: true, name });
   }
 );
 

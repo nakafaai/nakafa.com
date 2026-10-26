@@ -316,20 +316,6 @@ function VisualCardFacts(props: Omit<ComponentProps<"dl">, "className">) {
 }
 
 /**
- * A group of one kind of control in the toolbar, such as the speeds or the
- * generations, kept together when the toolbar wraps.
- */
-function VisualCardGroup(props: Omit<ComponentProps<"div">, "className">) {
-  return (
-    <div
-      className="flex flex-wrap items-center gap-2"
-      data-slot="visual-card-group"
-      {...props}
-    />
-  );
-}
-
-/**
  * Shows the card across the whole screen, and returns it to the page. It ends
  * the actions band. Its pressed state and a polite status tell assistive
  * technology where the visual is.
@@ -395,7 +381,6 @@ export {
   VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
-  VisualCardGroup,
   VisualCardHeader,
   VisualCardMenu,
   VisualCardTable,

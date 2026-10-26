@@ -38,9 +38,9 @@ import {
 } from "@/e2e/support/visual";
 
 const SCENE_PROBE = "held";
-
-/** The grid of a coordinate scene, a checked item of the menu that ends its actions band. */
-const GRID = { name: en.Common.grid, role: "menuitemcheckbox" } as const;
+/** The button that opens the menu ending a card's actions band, and the role of a checked item in it. */
+const MORE = en.Common["more-actions"];
+const CHECKED = "menuitemcheckbox";
 
 /** Room around two scenes shown at once, so neither sits at a viewport edge. */
 const SCENE_PAIR_MARGIN = 160;
@@ -73,18 +73,12 @@ function countLabelsInView(card: Locator) {
   }, LINE_SCENE);
 }
 
-/**
- * Proves playback still works: a reset, from the menu at the end of the actions
- * band, replays the growth from its start.
- */
+/** Proves playback still works: a reset from the band's menu replays the growth from its start. */
 const expectPlayback = Effect.fn("NakafaE2E.expectVisualPlayback")(function* (
   card: Locator
 ) {
   const scene = card.locator(BACTERIA_SCENE);
-  const reset = yield* revealMenuItem(card, en.Common["more-actions"], {
-    name: en.Common.reset,
-    role: "menuitem",
-  });
+  const reset = yield* revealMenuItem(card, MORE, en.Common.reset);
   yield* Effect.promise(async () => {
     await reset.click();
     const start = await scene.getAttribute("data-bacteria-count");
@@ -262,17 +256,16 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   });
   yield* waitForCanvasRest(canvas);
 
-  // The grid is checked in the menu at the end of the actions band, which
-  // opens above the card across the screen and closes once it is chosen.
+  // The grid is a checked item of the band's menu, above the card, which closes once chosen.
   const beforeGrid = yield* Effect.promise(() => canvas.screenshot());
-  const shown = yield* revealMenuItem(card, en.Common["more-actions"], GRID);
+  const shown = yield* revealMenuItem(card, MORE, en.Common.grid, CHECKED);
   yield* Effect.promise(async () => {
     await expect(shown).toHaveAttribute("aria-checked", "true");
     await shown.click();
     await expect(shown).toHaveCount(0);
   });
   yield* expectCanvasToMove(canvas, beforeGrid);
-  const hidden = yield* revealMenuItem(card, en.Common["more-actions"], GRID);
+  const hidden = yield* revealMenuItem(card, MORE, en.Common.grid, CHECKED);
   yield* Effect.promise(async () => {
     await expect(hidden).toHaveAttribute("aria-checked", "false");
     await hidden.click();
