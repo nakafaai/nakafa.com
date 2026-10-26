@@ -40,8 +40,9 @@ const SHORT_SCREEN = 640;
  * The pool's driver reveals the pile through `element.dataset.shown`,
  * and no other script writes that property. A minifier keeps property names,
  * while the React Compiler may move a JSX attribute's text into a variable.
+ * Vite's minifier writes the string as a template literal.
  */
-const POOL_SCRIPT = /\.dataset\.shown\s*=\s*["']true["']/u;
+const POOL_SCRIPT = /\.dataset\.shown\s*=\s*["'`]true["'`]/u;
 
 /** A box on the screen, in pixels. */
 const BoxSchema = Schema.Struct({

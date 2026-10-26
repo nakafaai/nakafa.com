@@ -49,10 +49,12 @@ vi.mock("@repo/backend/scripts/content/acceptance/process", async (load) => ({
     typeof import("@repo/backend/scripts/content/acceptance/process")
   >()),
   withLocalBackend: mocks.backend,
-  runBuildCommand: mocks.command,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/publication", () => ({
   publishAcceptanceSource: mocks.publish,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/terminal", () => ({
+  runBuildCommand: mocks.command,
 }));
 
 const runtime: LocalRuntime = {
