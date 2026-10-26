@@ -212,18 +212,29 @@ describe("the saving of an open editor", () => {
     ]);
   });
 
-  it("gives back nothing for a failed first save when the learner emptied the editor", () => {
-    const { answer, send, sent } = page();
-    const saving = createAutosave(null, null);
+  it.each([
+    { how: "failed", memory: null, sends: ["add |Grade 12"], words: first },
+    {
+      how: "refused",
+      memory: stored,
+      sends: [`edit ${stored.id} School|Grade 12, science track`, "leave"],
+      words: second,
+    },
+  ] as const)(
+    "gives back nothing when the learner emptied the editor and the save $how",
+    ({ how, memory, sends, words }) => {
+      const { answer, send, sent } = page();
+      const saving = createAutosave(memory, null);
 
-    saving.change(first);
-    saving.write(send);
-    saving.change(blank);
-    saving.write(send);
-    answer("failed");
+      saving.change(words);
+      saving.write(send);
+      saving.change(blank);
+      saving.write(send);
+      answer(how);
 
-    expect(sent()).toEqual(["add |Grade 12"]);
-  });
+      expect(sent()).toEqual(sends);
+    }
+  );
 
   it("sends a later write while an earlier one is on its way, so closing the editor never waits for an answer", () => {
     const { send, sent } = page();
@@ -279,37 +290,7 @@ describe("the saving of an open editor", () => {
     ]);
   });
 
-  it("closes the editor when the server has no such memory any more, and gives the words back as a new memory", () => {
-    const { answer, send, sent } = page();
-    const saving = createAutosave(stored, null);
-
-    saving.change(second);
-    saving.write(send);
-    answer("refused");
-
-    expect(sent()).toEqual([
-      `edit ${stored.id} School|Grade 12, science track`,
-      "leave",
-      "renew School|Grade 12, science track",
-    ]);
-  });
-
-  it("gives nothing back for a memory that is gone when the learner emptied the editor", () => {
-    const { answer, send, sent } = page();
-    const saving = createAutosave(stored, null);
-
-    saving.change(second);
-    saving.write(send);
-    saving.change({ text: "", title: "" });
-    answer("refused");
-
-    expect(sent()).toEqual([
-      `edit ${stored.id} School|Grade 12, science track`,
-      "leave",
-    ]);
-  });
-
-  it("writes nothing more once the server answered that the memory is gone, also when the editor saves what it still holds as it closes", () => {
+  it("closes the editor when the server has no such memory any more, gives the words back as a new memory, and writes nothing more for the gone one", () => {
     const { answer, send, sent } = page();
     const saving = createAutosave(stored, null);
 
