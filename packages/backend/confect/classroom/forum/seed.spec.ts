@@ -12,7 +12,7 @@ const SEED_HISTORY_LIMIT = 200;
 
 /**
  * Seeds the history of a class's general channel for an acceptance run: `count`
- * messages from a classmate, one minute apart and ending now, and the read mark
+ * messages from a classmate placed in the class, one minute apart and ending now, and the read mark
  * of every subject teacher of the class after the first `read` of them. It is
  * internal and refused outside the acceptance runtime, so no browser and no other
  * deployment can call it.

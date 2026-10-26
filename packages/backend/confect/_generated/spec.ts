@@ -100,6 +100,8 @@ import editor_steps from "../editor/steps.spec";
 import emails_invite_delivery from "../emails/invite/delivery.spec";
 import emails_invite_internal from "../emails/invite/internal.spec";
 import emails_invite_workflow from "../emails/invite/workflow.spec";
+import emails_notice_delivery from "../emails/notice/delivery.spec";
+import emails_notice_internal from "../emails/notice/internal.spec";
 import emails_retention from "../emails/retention.spec";
 import emails_welcome_delivery from "../emails/welcome/delivery.spec";
 import emails_welcome_internal from "../emails/welcome/internal.spec";
@@ -143,9 +145,11 @@ import nina_uploads from "../nina/uploads.spec";
 import nina_usage from "../nina/usage.spec";
 import nina_waits from "../nina/waits.spec";
 import notifications_consume from "../notifications/consume.spec";
+import notifications_deliver from "../notifications/deliver.spec";
 import notifications_fanout from "../notifications/fanout.spec";
 import notifications_inbox from "../notifications/inbox.spec";
 import notifications_purge from "../notifications/purge.spec";
+import notifications_push from "../notifications/push.spec";
 import notifications_read from "../notifications/read.spec";
 import onboarding_mutations from "../onboarding/mutations.spec";
 import onboarding_queries from "../onboarding/queries.spec";
@@ -221,14 +225,14 @@ const spec: Spec.Spec<{
   readonly contents: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "contents", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "mutations", never, GroupSpec.NamedAt<typeof contents_mutations_analytics, "analytics"> | GroupSpec.NamedAt<typeof contents_mutations_popularity, "popularity"> | GroupSpec.NamedAt<typeof contents_mutations_views, "views">>, "mutations"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "queries", never, GroupSpec.NamedAt<typeof contents_queries_recent, "recent"> | GroupSpec.NamedAt<typeof contents_queries_search, "search"> | GroupSpec.NamedAt<typeof contents_queries_trending, "trending">>, "queries"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "sections", never, GroupSpec.NamedAt<typeof contents_sections_build, "build"> | GroupSpec.NamedAt<typeof contents_sections_compare, "compare"> | GroupSpec.NamedAt<typeof contents_sections_hits, "hits"> | GroupSpec.NamedAt<typeof contents_sections_rows, "rows"> | GroupSpec.NamedAt<typeof contents_sections_search, "search"> | GroupSpec.NamedAt<typeof contents_sections_state, "state">>, "sections">>, "contents">;
   readonly credits: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "credits", never, GroupSpec.NamedAt<typeof credits_lots, "lots"> | GroupSpec.NamedAt<typeof credits_mutations, "mutations">>, "credits">;
   readonly editor: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "editor", never, GroupSpec.NamedAt<typeof editor_deletion, "deletion"> | GroupSpec.NamedAt<typeof editor_documents, "documents"> | GroupSpec.NamedAt<typeof editor_fold, "fold"> | GroupSpec.NamedAt<typeof editor_prune, "prune"> | GroupSpec.NamedAt<typeof editor_steps, "steps">>, "editor">;
-  readonly emails: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "emails", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "invite", never, GroupSpec.NamedAt<typeof emails_invite_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_invite_internal, "internal"> | GroupSpec.NamedAt<typeof emails_invite_workflow, "workflow">>, "invite"> | GroupSpec.NamedAt<typeof emails_retention, "retention"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "welcome", never, GroupSpec.NamedAt<typeof emails_welcome_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_welcome_internal, "internal"> | GroupSpec.NamedAt<typeof emails_welcome_reconciliation, "reconciliation"> | GroupSpec.NamedAt<typeof emails_welcome_workflow, "workflow">>, "welcome">>, "emails">;
+  readonly emails: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "emails", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "invite", never, GroupSpec.NamedAt<typeof emails_invite_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_invite_internal, "internal"> | GroupSpec.NamedAt<typeof emails_invite_workflow, "workflow">>, "invite"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "notice", never, GroupSpec.NamedAt<typeof emails_notice_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_notice_internal, "internal">>, "notice"> | GroupSpec.NamedAt<typeof emails_retention, "retention"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "welcome", never, GroupSpec.NamedAt<typeof emails_welcome_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_welcome_internal, "internal"> | GroupSpec.NamedAt<typeof emails_welcome_reconciliation, "reconciliation"> | GroupSpec.NamedAt<typeof emails_welcome_workflow, "workflow">>, "welcome">>, "emails">;
   readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_assets, "assets"> | GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_imports, "imports"> | GroupSpec.NamedAt<typeof exams_presence, "presence"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<typeof exams_reads, "reads"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "results", never, GroupSpec.NamedAt<typeof exams_results_results, "results">>, "results"> | GroupSpec.NamedAt<typeof exams_rooms, "rooms"> | GroupSpec.NamedAt<typeof exams_seed, "seed"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof exams_sittings, GroupSpec.NamedAt<typeof exams_sittings_timers, "timers">>, "sittings">>, "exams">;
   readonly identity: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "identity", never, GroupSpec.NamedAt<typeof identity_cards, "cards"> | GroupSpec.NamedAt<typeof identity_logins, "logins"> | GroupSpec.NamedAt<typeof identity_seed, "seed">>, "identity">;
   readonly integrations: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "integrations", never, GroupSpec.NamedAt<typeof integrations_clients, "clients">>, "integrations">;
   readonly journal: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "journal", never, GroupSpec.NamedAt<typeof journal_audit, "audit">>, "journal">;
   readonly learningPreferences: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "learningPreferences", never, GroupSpec.NamedAt<typeof learningPreferences_mutations, "mutations"> | GroupSpec.NamedAt<typeof learningPreferences_queries, "queries">>, "learningPreferences">;
   readonly nina: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "nina", never, GroupSpec.NamedAt<typeof nina_brief, "brief"> | GroupSpec.NamedAt<typeof nina_conversation, "conversation"> | GroupSpec.NamedAt<typeof nina_documents, "documents"> | GroupSpec.NamedAt<typeof nina_focus, "focus"> | GroupSpec.NamedAt<typeof nina_judgment, "judgment"> | GroupSpec.NamedAt<typeof nina_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof nina_memory, "memory"> | GroupSpec.NamedAt<typeof nina_messages, "messages"> | GroupSpec.NamedAt<typeof nina_phase, "phase"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof nina_portrait, GroupSpec.NamedAt<typeof nina_portrait_build, "build">>, "portrait"> | GroupSpec.NamedAt<typeof nina_presentation, "presentation"> | GroupSpec.NamedAt<typeof nina_response, "response"> | GroupSpec.NamedAt<typeof nina_sealed, "sealed"> | GroupSpec.NamedAt<typeof nina_summaries, "summaries"> | GroupSpec.NamedAt<typeof nina_turns, "turns"> | GroupSpec.NamedAt<typeof nina_uploads, "uploads"> | GroupSpec.NamedAt<typeof nina_usage, "usage"> | GroupSpec.NamedAt<typeof nina_waits, "waits">>, "nina">;
-  readonly notifications: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "notifications", never, GroupSpec.NamedAt<typeof notifications_consume, "consume"> | GroupSpec.NamedAt<typeof notifications_fanout, "fanout"> | GroupSpec.NamedAt<typeof notifications_inbox, "inbox"> | GroupSpec.NamedAt<typeof notifications_purge, "purge"> | GroupSpec.NamedAt<typeof notifications_read, "read">>, "notifications">;
+  readonly notifications: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "notifications", never, GroupSpec.NamedAt<typeof notifications_consume, "consume"> | GroupSpec.NamedAt<typeof notifications_deliver, "deliver"> | GroupSpec.NamedAt<typeof notifications_fanout, "fanout"> | GroupSpec.NamedAt<typeof notifications_inbox, "inbox"> | GroupSpec.NamedAt<typeof notifications_purge, "purge"> | GroupSpec.NamedAt<typeof notifications_push, "push"> | GroupSpec.NamedAt<typeof notifications_read, "read">>, "notifications">;
   readonly onboarding: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "onboarding", never, GroupSpec.NamedAt<typeof onboarding_mutations, "mutations"> | GroupSpec.NamedAt<typeof onboarding_queries, "queries">>, "onboarding">;
   readonly operators: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "operators", never, GroupSpec.NamedAt<typeof operators_expiry, "expiry"> | GroupSpec.NamedAt<typeof operators_staff, "staff"> | GroupSpec.NamedAt<typeof operators_tenants, "tenants"> | GroupSpec.NamedAt<typeof operators_visits, "visits">>, "operators">;
   readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
@@ -397,6 +401,10 @@ const spec: Spec.Spec<{
       ["internal"]: emails_invite_internal,
       ["workflow"]: emails_invite_workflow,
     }),
+    ["notice"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["delivery"]: emails_notice_delivery,
+      ["internal"]: emails_notice_internal,
+    }),
     ["retention"]: emails_retention,
     ["welcome"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["delivery"]: emails_welcome_delivery,
@@ -460,9 +468,11 @@ const spec: Spec.Spec<{
   }),
   ["notifications"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["consume"]: notifications_consume,
+    ["deliver"]: notifications_deliver,
     ["fanout"]: notifications_fanout,
     ["inbox"]: notifications_inbox,
     ["purge"]: notifications_purge,
+    ["push"]: notifications_push,
     ["read"]: notifications_read,
   }),
   ["onboarding"]: GroupSpec.addGroupsAt(GroupSpec.make(), {

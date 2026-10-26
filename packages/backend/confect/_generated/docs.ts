@@ -96,6 +96,7 @@ export type PostLikesDoc = Document.Document<typeof schemaDefinition, "postLikes
 export type PostsDoc = Document.Document<typeof schemaDefinition, "posts">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
+export type PushSubscriptionsDoc = Document.Document<typeof schemaDefinition, "pushSubscriptions">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
 export type SchoolLoginsDoc = Document.Document<typeof schemaDefinition, "schoolLogins">;
@@ -225,6 +226,7 @@ export interface Docs {
   posts: PostsDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;
+  pushSubscriptions: PushSubscriptionsDoc;
   quranRows: QuranRowsDoc;
   quranSearch: QuranSearchDoc;
   schoolLogins: SchoolLoginsDoc;

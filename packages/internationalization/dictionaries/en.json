@@ -1153,7 +1153,10 @@
     "forum-mentioned": "{actor} mentioned you in {className}.",
     "forum-mentioned-gone": "You were mentioned in a class you no longer read.",
     "announcement-posted": "{actor} posted an announcement in {className}.",
-    "announcement-posted-gone": "An announcement that is no longer there."
+    "announcement-posted-gone": "An announcement that is no longer there.",
+    "push-offer": "Get a notification on this device when something new comes.",
+    "push-on": "Turn on",
+    "push-home-screen": "On iPhone and iPad, notifications come only from the Home Screen: tap Share, then Add to Home Screen, and open Nakafa from its icon."
   },
   "Posts": {
     "placeholder": "What's new?",

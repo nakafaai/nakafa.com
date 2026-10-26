@@ -5,6 +5,7 @@ import {
   type InboxFirstPage,
   useInbox,
 } from "@/components/notifications/inbox";
+import { PushOffer } from "@/components/notifications/push";
 import { NotificationRow } from "@/components/notifications/row";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
@@ -37,6 +38,7 @@ export function NotificationsList({
         ))}
         {loadMore && <Intersection onIntersect={loadMore} />}
       </div>
+      <PushOffer />
     </div>
   );
 }

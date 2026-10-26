@@ -6,11 +6,13 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { assignRole } from "@repo/backend/confect/access/grant";
 import { holdersOf } from "@repo/backend/confect/classroom/classes/address";
 import { moveMark } from "@repo/backend/confect/classroom/forum/mark";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import spec from "@repo/backend/confect/classroom/forum/seed.spec";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
+import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
@@ -23,8 +25,9 @@ const SEED_TEACHER_LIMIT = 16;
 
 /**
  * Writes the history of the general channel of the school's class at `classSlug`:
- * a classmate Person writes `count` sealed messages, numbered from 1, the newest
- * now, and each subject teacher of the class has read the first `read` of them.
+ * a classmate Person, a student placed in the class's cohort, writes `count`
+ * sealed messages, numbered from 1, the newest now, and each subject teacher of
+ * the class has read the first `read` of them.
  */
 const history = FunctionImpl.make(
   databaseSchema,
@@ -74,6 +77,23 @@ const history = FunctionImpl.make(
         tenantId: row.tenantId,
       })
       .pipe(Effect.orDie);
+    // The classmate is a student placed in the class's cohort, so it writes in the class and a
+    // writer may mention it.
+    yield* writer
+      .table("tenantCohortMembers")
+      .insert({
+        cohortId: row.cohortId,
+        periodId: row.periodId,
+        personId: authorId,
+        tenantId: row.tenantId,
+      })
+      .pipe(Effect.orDie);
+    yield* assignRole(
+      systemActor,
+      yield* reader.table("tenantPeople").get(authorId).pipe(Effect.orDie),
+      "student",
+      { kind: "unit", unitId: row.unitId }
+    ).pipe(Effect.orDie);
     const keys = yield* schoolKeys(row.tenantId);
     const now = yield* Clock.currentTimeMillis;
     const written = yield* Effect.forEach(Arr.range(1, count), (index) =>

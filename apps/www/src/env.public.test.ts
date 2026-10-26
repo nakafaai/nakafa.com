@@ -17,6 +17,7 @@ describe("browser environment", () => {
   it("holds exactly the public values, with an unset preview flag undefined", async () => {
     stubPublicConvex();
     vi.stubEnv("VITE_AKSARA_PREVIEW_CHILD", undefined);
+    vi.stubEnv("VITE_WEB_PUSH_PUBLIC_KEY", undefined);
 
     const { clientEnv } = await import("@/env.public");
 
@@ -24,6 +25,7 @@ describe("browser environment", () => {
       VITE_AKSARA_PREVIEW_CHILD: undefined,
       VITE_CONVEX_SITE_URL: "https://example.convex.site",
       VITE_CONVEX_URL: "https://example.convex.cloud",
+      VITE_WEB_PUSH_PUBLIC_KEY: undefined,
     });
   });
 

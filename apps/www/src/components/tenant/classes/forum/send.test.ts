@@ -21,6 +21,7 @@ const args = {
   channelId,
   classId,
   clientKey: "0b5c9d1e-4f3a-4c2b-9a8d-7e6f5a4b3c2d",
+  mentions: [],
   slug,
   text: "Tugas dikumpulkan Jumat.",
 };
@@ -33,6 +34,7 @@ const stored: ForumMessage = {
   discussion: null,
   editedAt: null,
   id: Schema.decodeUnknownSync(Id("classroomMessages"))("message-1"),
+  mentions: [],
   mine: true,
   text: args.text,
 };
@@ -46,7 +48,7 @@ describe("sendMessage", () => {
           Promise.resolve(Result.succeed({ ...stored, text: sent.text }))
         );
 
-        const answer = yield* sendMessage(send, author, args);
+        const answer = yield* sendMessage(send, author, args, []);
 
         expect(answer).toEqual(stored);
         expect(send).toHaveBeenCalledWith(expect.any(Function), args);
@@ -89,7 +91,7 @@ describe("sendMessage", () => {
     Effect.gen(function* () {
       const send = () => Promise.resolve(Result.fail("refused"));
 
-      const exit = yield* Effect.exit(sendMessage(send, author, args));
+      const exit = yield* Effect.exit(sendMessage(send, author, args, []));
 
       expect(Exit.isFailure(exit)).toBe(true);
     })
@@ -127,11 +129,12 @@ describe("sendReply and openDiscussion", () => {
         const replyArgs = {
           classId,
           clientKey: args.clientKey,
+          mentions: [],
           number: 3,
           slug,
           text: args.text,
         };
-        expect(yield* sendReply(reply, author, replyArgs)).toEqual(stored);
+        expect(yield* sendReply(reply, author, replyArgs, [])).toEqual(stored);
         const replied = applyUpdate(
           reply.mock.calls[0]?.[0],
           classroom.forum.threads.replies,

@@ -1153,7 +1153,10 @@
     "forum-mentioned": "{actor} menyebutmu di {className}.",
     "forum-mentioned-gone": "Kamu disebut di kelas yang tidak lagi kamu baca.",
     "announcement-posted": "{actor} mengirim pengumuman di {className}.",
-    "announcement-posted-gone": "Pengumuman yang sudah tidak ada."
+    "announcement-posted-gone": "Pengumuman yang sudah tidak ada.",
+    "push-offer": "Dapatkan notifikasi di perangkat ini saat ada yang baru.",
+    "push-on": "Aktifkan",
+    "push-home-screen": "Di iPhone dan iPad, notifikasi hanya datang dari Layar Utama: ketuk Bagikan, lalu Tambah ke Layar Utama, dan buka Nakafa dari ikonnya."
   },
   "Posts": {
     "placeholder": "Apa yang baru?",

@@ -96,6 +96,7 @@ import postLikes from "./tables/postLikes";
 import posts from "./tables/posts";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
+import pushSubscriptions from "./tables/pushSubscriptions";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import schoolLogins from "./tables/schoolLogins";
@@ -225,6 +226,7 @@ export default $defineSchema({
   posts: $Table.tableDefinition(posts),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
+  pushSubscriptions: $Table.tableDefinition(pushSubscriptions),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
   schoolLogins: $Table.tableDefinition(schoolLogins),

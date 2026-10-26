@@ -23,6 +23,7 @@ const message = (
   createdAt,
   discussion: null,
   editedAt: null,
+  mentions: [],
   id: messageOf(pending ? key : `saved-${key}`),
   mine,
   text: "Halo",

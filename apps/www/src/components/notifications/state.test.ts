@@ -14,6 +14,7 @@ const notificationId = Schema.decodeUnknownSync(Id("notifications"));
 function row(id: string, readAt?: number): ListNotification {
   return Schema.decodeUnknownSync(NotificationView)({
     changeType: "person.invited",
+    detail: null,
     createdAt: 1,
     id,
     subject: { id: "person-1", kind: "person" },

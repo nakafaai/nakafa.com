@@ -8,6 +8,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
+import { schedulePush } from "@repo/backend/confect/notifications/schedule";
 import spec, {
   type FanoutPhase,
   type FanoutSource,
@@ -19,8 +20,8 @@ const FANOUT_BATCH = 100;
 
 /**
  * The notice a source makes: its class, its author, its time, the row fields that
- * name it, and the Persons it already notified on its own (the Persons a message
- * names). A source that no longer stands, such as a removed announcement, makes
+ * name it, whether its author chose email for it, and the Persons it already
+ * notified on its own (the Persons a message names). A source that no longer stands, such as a removed announcement, makes
  * none.
  */
 const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
@@ -35,6 +36,7 @@ const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
           authorId: message.authorId,
           classId: message.classId,
           createdAt: message.createdAt,
+          email: false,
           fields: { changeType: "forum.mentioned" as const, messageId },
           named: Arr.flatMap(message.mentions ?? [], (mention) =>
             mention._tag === "person" ? [mention.id] : []
@@ -48,6 +50,7 @@ const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
           authorId: post.authorId,
           classId: post.classId,
           createdAt: post.createdAt,
+          email: post.email,
           fields: { changeType: "announcement.posted" as const, postId },
           named: [],
         }))
@@ -97,7 +100,8 @@ const nextRun = (
 /**
  * Writes one batch of a notice's rows: each Person of the page who reads the
  * class now, but the author and the Persons the source already notified, gets one
- * row at the notice's time. The next run reads the next page, and the teachers
+ * row at the notice's time, and its push is scheduled. When the author of an
+ * announcement chose email, the batch's recipients get its notice email. The next run reads the next page, and the teachers
  * follow the students.
  */
 const run = FunctionImpl.make(
@@ -120,7 +124,7 @@ const run = FunctionImpl.make(
       .get(klass.tenantId)
       .pipe(Effect.orDie);
     const page = yield* rosterPage(klass, phase, cursor);
-    yield* Effect.forEach(
+    const notified = yield* Effect.forEach(
       Arr.filter(
         Arr.dedupe(page.people),
         (personId) =>
@@ -133,13 +137,14 @@ const run = FunctionImpl.make(
             .table("tenantPeople")
             .get(personId)
             .pipe(Effect.orDie);
-          if (
-            person.status !== "active" ||
-            !(yield* mayIn("forum.read", klass, yield* principalOf(person, tenant)))
-          ) {
-            return;
+          if (person.status !== "active") {
+            return Option.none();
           }
-          yield* writer
+          const principal = yield* principalOf(person, tenant);
+          if (!(yield* mayIn("forum.read", klass, principal))) {
+            return Option.none();
+          }
+          const notificationId = yield* writer
             .table("notifications")
             .insert({
               ...notice.value.fields,
@@ -149,9 +154,27 @@ const run = FunctionImpl.make(
               tenantId: klass.tenantId,
             })
             .pipe(Effect.orDie);
-        }),
-      { discard: true }
+          yield* schedulePush(
+            notificationId,
+            person,
+            principal.grants,
+            klass.unitId
+          );
+          return Option.some(personId);
+        })
     );
+    const recipients = Arr.getSomes(notified);
+    if (
+      notice.value.email &&
+      source._tag === "post" &&
+      Arr.isReadonlyArrayNonEmpty(recipients)
+    ) {
+      yield* (yield* Scheduler).runAfter(
+        Duration.zero,
+        refs.internal.emails.notice.internal.send,
+        { postId: source.postId, recipients }
+      );
+    }
     const next = nextRun(page, phase);
     if (Option.isSome(next)) {
       yield* (yield* Scheduler).runAfter(

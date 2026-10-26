@@ -47,7 +47,6 @@ const placeStrangers = (
             periodId: klass.periodId,
             personId,
             tenantId: klass.tenantId,
-            unitId: klass.unitId,
           });
         })
       );

@@ -95,6 +95,7 @@ import postLikes from "./tables/postLikes";
 import posts from "./tables/posts";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
+import pushSubscriptions from "./tables/pushSubscriptions";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import schoolLogins from "./tables/schoolLogins";
@@ -224,6 +225,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly posts: typeof posts;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
+  readonly pushSubscriptions: typeof pushSubscriptions;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
   readonly schoolLogins: typeof schoolLogins;
@@ -352,6 +354,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   posts,
   programBuckets,
   programCatalog,
+  pushSubscriptions,
   quranRows,
   quranSearch,
   schoolLogins,

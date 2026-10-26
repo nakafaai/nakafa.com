@@ -28,6 +28,7 @@ const message = (id: string, text: string): ForumMessage => ({
   createdAt: 1,
   discussion: null,
   editedAt: null,
+  mentions: [],
   id: messageOf(id),
   mine: true,
   text,

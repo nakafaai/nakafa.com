@@ -11,6 +11,7 @@ import { MentionRefused } from "@repo/backend/confect/classroom/forum/errors";
 import type { Mention } from "@repo/backend/confect/classroom/forum/mention";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
+import { schedulePush } from "@repo/backend/confect/notifications/schedule";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
 /**
@@ -41,16 +42,15 @@ export const checkMentions = Effect.fn("classroom.forum.notice.check")(
         if (
           Option.isNone(person) ||
           person.value.tenantId !== row.tenantId ||
-          person.value.status !== "active" ||
-          !(yield* mayIn(
-            "forum.post",
-            row,
-            yield* principalOf(person.value, principal.tenant)
-          ))
+          person.value.status !== "active"
         ) {
           return yield* new MentionRefused();
         }
-        return person.value;
+        const mentioned = yield* principalOf(person.value, principal.tenant);
+        if (!(yield* mayIn("forum.post", row, mentioned))) {
+          return yield* new MentionRefused();
+        }
+        return mentioned;
       })
     );
     return {
@@ -67,8 +67,9 @@ export const checkMentions = Effect.fn("classroom.forum.notice.check")(
 /**
  * Writes the inbox row of each Person a new message mentions, the sender left
  * out, in the transaction of the message, so a failed message leaves no row (ADR
- * 0027). A mention of everyone schedules the fan-out that writes the rest of the
- * class in batches; Convex schedules it only if the message commits.
+ * 0027), and schedules each row's push. A mention of everyone schedules the
+ * fan-out that writes the rest of the class in batches; Convex schedules both
+ * only if the message commits.
  */
 export const noticeMentions = Effect.fn("classroom.forum.notice.write")(
   function* (
@@ -80,19 +81,30 @@ export const noticeMentions = Effect.fn("classroom.forum.notice.write")(
     const { person } = yield* Member;
     const writer = yield* DatabaseWriter;
     yield* Effect.forEach(
-      Arr.filter(checked.people, (mentioned) => mentioned._id !== person._id),
+      Arr.filter(
+        checked.people,
+        (mentioned) => mentioned.person._id !== person._id
+      ),
       (mentioned) =>
-        writer
-          .table("notifications")
-          .insert({
-            changeType: "forum.mentioned",
-            createdAt,
-            messageId,
-            recipientPersonId: mentioned._id,
-            subject: { id: row._id, kind: "class" },
-            tenantId: row.tenantId,
-          })
-          .pipe(Effect.orDie),
+        Effect.gen(function* () {
+          const notificationId = yield* writer
+            .table("notifications")
+            .insert({
+              changeType: "forum.mentioned",
+              createdAt,
+              messageId,
+              recipientPersonId: mentioned.person._id,
+              subject: { id: row._id, kind: "class" },
+              tenantId: row.tenantId,
+            })
+            .pipe(Effect.orDie);
+          yield* schedulePush(
+            notificationId,
+            mentioned.person,
+            mentioned.grants,
+            row.unitId
+          );
+        }),
       { discard: true }
     );
     if (checked.everyone) {
