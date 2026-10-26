@@ -3,7 +3,12 @@ import {
   PaginatedQueryResult,
   useMutation,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  IdIcon,
+  MailSend01Icon,
+  MoreHorizontalIcon,
+} from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -34,18 +39,22 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
-import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
+import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import {
@@ -95,27 +104,24 @@ export function SchoolInvitesSettings({
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(locale)
   );
-  const [isInviting, setIsInviting] = useState(false);
 
   return (
-    <SettingsPage
-      actions={
-        <Button onClick={() => setIsInviting(true)} type="button">
-          {t("invite-action")}
-        </Button>
-      }
-    >
-      <ReadBoundary>
-        <InvitesFirstPageContext value={first}>
-          <SchoolInvitesBody sendLocale={sendLocale} slug={slug} />
-        </InvitesFirstPageContext>
-      </ReadBoundary>
-      <SchoolInviteDialog
-        open={isInviting}
-        setOpen={setIsInviting}
-        slug={slug}
-      />
-    </SettingsPage>
+    <TableFiltersProvider>
+      <SettingsTablePage
+        actions={
+          <>
+            <TableSearch placeholder={t("invites-search")} />
+            <SchoolInviteAction slug={slug} />
+          </>
+        }
+      >
+        <ReadBoundary>
+          <InvitesFirstPageContext value={first}>
+            <SchoolInvitesBody sendLocale={sendLocale} slug={slug} />
+          </InvitesFirstPageContext>
+        </ReadBoundary>
+      </SettingsTablePage>
+    </TableFiltersProvider>
   );
 }
 
@@ -231,7 +237,7 @@ function SchoolInviteTable({
       columns={columns}
       data={invites}
       rowId={(invite) => invite.id}
-      search={{ column: "name", placeholder: t("invites-search") }}
+      search="name"
     />
   );
 }
@@ -317,12 +323,14 @@ function SchoolInviteMenu({
               }
             }}
           >
+            <HugeIcons icon={MailSend01Icon} />
             {t("invite-resend")}
           </DropdownMenuItem>
           {isExpired ? null : (
             <>
               {cardOffered(invite.roles) ? (
                 <DropdownMenuItem onClick={() => setIsIssuing(true)}>
+                  <HugeIcons icon={IdIcon} />
                   {t("invite-card")}
                 </DropdownMenuItem>
               ) : null}
@@ -331,6 +339,7 @@ function SchoolInviteMenu({
                 onClick={() => setIsRevoking(true)}
                 variant="destructive"
               >
+                <HugeIcons icon={Delete02Icon} />
                 {t("invite-revoke")}
               </DropdownMenuItem>
             </>
