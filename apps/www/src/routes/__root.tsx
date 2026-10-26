@@ -1,4 +1,5 @@
 import "@fontsource-variable/inter";
+import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
@@ -25,7 +26,7 @@ import { ContentPageAnchorProvider } from "@/components/shared/content/anchor";
 import {
   LocalizedError,
   LocalizedNotFound,
-  RouteFailure,
+  useRouteFailure,
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
@@ -68,6 +69,16 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // Every page's text draws in Inter's Latin face. Found only from the
+      // stylesheet, it arrived after the first paint: the text swapped from its
+      // fallback in sight, and every element of the page recalculated its style.
+      {
+        as: "font",
+        crossOrigin: "anonymous",
+        href: interLatin,
+        rel: "preload",
+        type: "font/woff2",
+      },
       {
         href: "/favicon.ico",
         rel: "icon",
@@ -170,9 +181,6 @@ function RootNotFound({ data }: NotFoundRouteProps) {
  * locale's providers, inside the document of RootDocument.
  */
 function RootError({ error }: ErrorComponentProps) {
-  return (
-    <RouteFailure error={error} source="start-root-error">
-      <LocalizedError locale={DEFAULT_LOCALE} />
-    </RouteFailure>
-  );
+  const reloading = useRouteFailure(error, "start-root-error");
+  return reloading ? null : <LocalizedError locale={DEFAULT_LOCALE} />;
 }

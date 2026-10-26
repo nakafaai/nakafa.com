@@ -43,7 +43,6 @@ function TryoutHubPage() {
             home: HOME_TARGET,
             homeLabel: labels.home,
             items: [{ label: labels.tryOut }],
-            menuLabel: labels.more,
             title: labels.tryOut,
           }}
         />

@@ -15,6 +15,7 @@ import {
   openTrack,
   setHref,
 } from "@/e2e/support/tryout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The article of every question the player has mounted, shown or not. */
 const ARTICLE = "article[data-player-key]";
@@ -61,17 +62,19 @@ const openerOf = (page: Page) =>
 
 /**
  * Where a reader sees which question is current: the marked number of the
- * sidebar from the large breakpoint, and the number on the footer button below
- * it.
+ * sidebar from the large breakpoint, and the current number of the position on
+ * the footer button below it.
  */
 export const currentNumberOf = (page: Page, hasTouch: boolean) =>
-  hasTouch ? openerOf(page) : sidebarOf(page).locator('[aria-current="step"]');
+  hasTouch
+    ? openerOf(page).locator("[data-player-position]")
+    : sidebarOf(page).locator('[aria-current="step"]');
 
 /** The sheet or dialog that is open. */
 export const openSurface = (page: Page) => page.getByRole("dialog");
 
-/** The numbers of the navigator column, one for each question of the section. */
-export const numberCells = (page: Page) => sidebarOf(page).locator("li");
+/** The numbers of the navigator column, one for each question of the section; the legend is not one. */
+export const numberCells = (page: Page) => sidebarOf(page).locator("ol > li");
 
 /**
  * Scrolls the page to its start or its end in one step, as a reader who drags
@@ -220,6 +223,7 @@ const openNavigatorSheet = Effect.fn("NakafaE2E.openNavigatorSheet")(function* (
   page: Page,
   hasTouch: boolean
 ) {
+  yield* Effect.promise(() => waitUntilTakenOver(openerOf(page)));
   yield* activate(openerOf(page), hasTouch);
   const sheet = openSurface(page);
   yield* Effect.promise(() =>
@@ -242,10 +246,10 @@ export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   const scope: Locator = hasTouch
     ? yield* openNavigatorSheet(page, hasTouch)
     : sidebarOf(page);
-  yield* activate(
-    scope.getByRole("button", { exact: true, name: view }),
-    hasTouch
-  );
+  const choice = scope.getByRole("button", { exact: true, name: view });
+  // A page that was just loaded may not be React's yet, and a press before then is lost.
+  yield* Effect.promise(() => waitUntilTakenOver(choice));
+  yield* activate(choice, hasTouch);
   if (hasTouch) {
     yield* Effect.promise(() =>
       expect(openSurface(page)).toBeHidden({

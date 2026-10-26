@@ -16,7 +16,6 @@ export const Route = createFileRoute("/school/$slug/settings/invites")({
 });
 
 function SchoolInvitesPage(): ReactElement {
-  const { slug } = Route.useRouteContext();
   const first = Route.useLoaderData();
-  return <SchoolInvitesSettings first={first} slug={slug} />;
+  return <SchoolInvitesSettings first={first} />;
 }

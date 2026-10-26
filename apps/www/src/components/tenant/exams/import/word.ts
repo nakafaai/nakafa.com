@@ -1,6 +1,7 @@
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { strFromU8, type Unzipped, unzipSync } from "fflate";
 import { ImportFileRefused } from "@/components/tenant/exams/import/file";
+import { MathTypeUnread } from "@/components/tenant/exams/import/mathtype/errors";
 
 /** The part of a Word document that holds its body. */
 const MAIN_PART = "word/document.xml";
@@ -13,6 +14,9 @@ const RELATIONS_PART = "word/_rels/document.xml.rels";
 
 /** The folder of a Word package that holds its pictures. */
 const MEDIA_FOLDER = "word/media/";
+
+/** The folder of a Word package that holds its embedded objects, MathType equations among them. */
+const EMBEDDINGS_FOLDER = "word/embeddings/";
 
 /** The picture formats a browser draws. */
 const PictureType = Schema.Literals([
@@ -58,8 +62,8 @@ const MATH_STYLE = ["rPr", "ctrlPr"];
 
 /**
  * One Word document as the import reads it: its lines of text, with each picture a browser can
- * draw marked `[image N]`; how many MathType equations it holds; and those pictures, picture N
- * at index N - 1.
+ * draw marked `[image N]`; how many MathType equations keep their picture, which the teacher
+ * types again; and those pictures, picture N at index N - 1.
  */
 const WordText = Schema.Struct({
   lines: Schema.Array(Schema.String),
@@ -75,6 +79,9 @@ const WordText = Schema.Struct({
 
 /** The number of a picture by the relationship ID that names its file, or none for a picture the read leaves out. */
 type PictureNumbers = (relationship: string) => Option.Option<number>;
+
+/** The LaTeX of a MathType object, or none for one that keeps its picture. */
+type Equations = (object: Element) => Option.Option<string>;
 
 /** A list level, which Word writes as the text of a number. */
 const ListLevel = Schema.FiniteFromString;
@@ -136,23 +143,34 @@ const pictureMark = (picture: Element, numbers: PictureNumbers) =>
   });
 
 /** The text of the children of a node, in reading order. */
-const childrenText = (node: Node, numbers: PictureNumbers): string =>
+const childrenText = (
+  node: Node,
+  numbers: PictureNumbers,
+  equations: Equations
+): string =>
   Arr.join(
     Arr.map(Arr.fromIterable(node.childNodes), (child) =>
-      textOf(child, numbers)
+      textOf(child, numbers, equations)
     ),
     ""
   );
 
-/** The text of a node in reading order, with equations as Office Math XML and pictures as marks. */
-const textOf = (node: Node, numbers: PictureNumbers): string => {
+/**
+ * The text of a node in reading order, with Office Math equations as their XML, MathType
+ * equations as LaTeX between `\(` and `\)`, and pictures as marks.
+ */
+const textOf = (
+  node: Node,
+  numbers: PictureNumbers,
+  equations: Equations
+): string => {
   if (!(node instanceof Element)) {
     return "";
   }
   if (node.namespaceURI === MATH) {
     return node.localName === "oMath"
       ? equationOf(node)
-      : childrenText(node, numbers);
+      : childrenText(node, numbers, equations);
   }
   if (node.namespaceURI === WORD && Arr.contains(SKIPPED, node.localName)) {
     return "";
@@ -176,12 +194,18 @@ const textOf = (node: Node, numbers: PictureNumbers): string => {
     return " ";
   }
   if (isWord(node, "object")) {
-    return isMathType(node) ? "[equation image]" : "[image]";
+    if (!isMathType(node)) {
+      return "[image]";
+    }
+    return Option.match(equations(node), {
+      onNone: () => "[equation image]",
+      onSome: (latex) => `\\(${latex}\\)`,
+    });
   }
   if (isWord(node, "drawing") || isWord(node, "pict")) {
     return pictureMark(node, numbers);
   }
-  return childrenText(node, numbers);
+  return childrenText(node, numbers, equations);
 };
 
 /** The list level of a paragraph that Word numbers, or none for a paragraph outside a list. */
@@ -204,8 +228,12 @@ const listLevelOf = (paragraph: Element) =>
  * because Word writes its number as formatting, not text: that keeps each question and each
  * option apart for Nina.
  */
-const lineOf = (paragraph: Element, numbers: PictureNumbers) => {
-  const text = textOf(paragraph, numbers).trim();
+const lineOf = (
+  paragraph: Element,
+  numbers: PictureNumbers,
+  equations: Equations
+) => {
+  const text = textOf(paragraph, numbers, equations).trim();
   return Option.match(listLevelOf(paragraph), {
     onNone: () => text,
     onSome: (level) => `${"  ".repeat(level)}- ${text}`,
@@ -213,25 +241,56 @@ const lineOf = (paragraph: Element, numbers: PictureNumbers) => {
 };
 
 /** One table as lines: a row to a line, its cells apart with a bar. */
-const tableLines = (table: Element, numbers: PictureNumbers) =>
+const tableLines = (
+  table: Element,
+  numbers: PictureNumbers,
+  equations: Equations
+) =>
   Arr.map(childrenNamed(table, "tr"), (row) =>
     Arr.join(
-      Arr.map(childrenNamed(row, "tc"), (cell) => textOf(cell, numbers).trim()),
+      Arr.map(childrenNamed(row, "tc"), (cell) =>
+        textOf(cell, numbers, equations).trim()
+      ),
       " | "
     )
   );
 
 /** The lines of one block of the body: a paragraph, the rows of a table, or nothing. */
-const blockLines = (block: Element, numbers: PictureNumbers) => {
+const blockLines = (
+  block: Element,
+  numbers: PictureNumbers,
+  equations: Equations
+) => {
   if (isWord(block, "p")) {
-    return [lineOf(block, numbers)];
+    return [lineOf(block, numbers, equations)];
   }
-  return isWord(block, "tbl") ? tableLines(block, numbers) : [];
+  return isWord(block, "tbl") ? tableLines(block, numbers, equations) : [];
 };
 
 /** The extension of a file name, in lower case. */
 const extensionOf = (name: string) =>
   name.slice(name.lastIndexOf(".") + 1).toLowerCase();
+
+/** The file behind each relationship of the main part, by its ID. */
+const targetsOf = (relations: Document) =>
+  Arr.map(
+    Arr.fromIterable(relations.getElementsByTagName("Relationship")),
+    (relation) => ({
+      id: relation.getAttribute("Id") ?? "",
+      target: relation.getAttribute("Target") ?? "",
+    })
+  );
+
+/** The part of the package that a relationship of the main part names, when the package holds it. */
+const partOfRelationship = (
+  targets: ReturnType<typeof targetsOf>,
+  parts: Unzipped,
+  relationship: string
+) =>
+  Option.flatMap(
+    Arr.findFirst(targets, (candidate) => candidate.id === relationship),
+    ({ target }) => Option.fromUndefinedOr(parts[`word/${target}`])
+  );
 
 /**
  * The pictures of the main part that a browser can draw, in the order the document first shows
@@ -240,16 +299,9 @@ const extensionOf = (name: string) =>
  */
 const picturesOf = (
   document: Document,
-  relations: Document,
+  targets: ReturnType<typeof targetsOf>,
   parts: Unzipped
 ) => {
-  const targets = Arr.map(
-    Arr.fromIterable(relations.getElementsByTagName("Relationship")),
-    (relation) => ({
-      id: relation.getAttribute("Id") ?? "",
-      target: relation.getAttribute("Target") ?? "",
-    })
-  );
   const used = Arr.dedupe(
     Arr.getSomes(
       Arr.map(
@@ -277,6 +329,64 @@ const picturesOf = (
   );
 };
 
+/** The relationship ID that names the file of an embedded object: its OLE object's `r:id`. */
+const objectRelationship = (object: Element) =>
+  Arr.findFirst(
+    descendants(object),
+    (child) => child.localName === "OLEObject"
+  ).pipe(
+    Option.flatMap((ole) =>
+      Option.fromNullOr(ole.getAttributeNS(RELATIONSHIP, "id"))
+    )
+  );
+
+/**
+ * The LaTeX of each MathType object, read from the OLE file its relationship names. The reader
+ * loads only for a document that holds one. An equation it cannot read, an object whose file is
+ * missing, and every object when the reader does not load keep their picture.
+ */
+const equationsOf = (
+  objects: readonly Element[],
+  targets: ReturnType<typeof targetsOf>,
+  parts: Unzipped
+) =>
+  Effect.gen(function* () {
+    const unread = (object: Element) => ({
+      latex: Option.none<string>(),
+      object,
+    });
+    if (!Arr.isReadonlyArrayNonEmpty(objects)) {
+      return [];
+    }
+    const reader = yield* Effect.tryPromise({
+      catch: () => new MathTypeUnread({ reason: "unloaded" }),
+      try: () => import("@/components/tenant/exams/import/mathtype/equation"),
+    }).pipe(
+      Effect.asSome,
+      Effect.catchTag("MathTypeUnread", () => Effect.succeedNone)
+    );
+    return yield* Effect.forEach(objects, (object) =>
+      Option.match(
+        Option.all([
+          reader,
+          Option.flatMap(objectRelationship(object), (relationship) =>
+            partOfRelationship(targets, parts, relationship)
+          ),
+        ]),
+        {
+          onNone: () => Effect.succeed(unread(object)),
+          onSome: ([{ mathTypeEquation }, ole]) =>
+            mathTypeEquation(ole).pipe(
+              Effect.map((latex) => ({ latex: Option.some(latex), object })),
+              Effect.catchTag("MathTypeUnread", () =>
+                Effect.succeed(unread(object))
+              )
+            ),
+        }
+      )
+    );
+  });
+
 /** Parses one XML part of the package; a part that does not parse refuses the file. */
 const parsePart = (bytes: Uint8Array) =>
   Effect.gen(function* () {
@@ -298,8 +408,9 @@ const partOf = (parts: Unzipped, name: string) =>
 
 /**
  * Reads a Word document as XML, never through an office program: the main part's paragraphs and
- * tables as lines, with every equation as Office Math XML and every picture a browser can draw
- * marked by its number, and those pictures. A ZIP without a Word main part is no Word document,
+ * tables as lines, with every Office Math equation as its XML, every MathType equation the
+ * reader can write as LaTeX, and every picture a browser can draw marked by its number, and those
+ * pictures. A ZIP without a Word main part is no Word document,
  * and a document whose main part carries macros is refused.
  */
 export const readWord = Effect.fn("exams.import.word")(function* (
@@ -313,7 +424,8 @@ export const readWord = Effect.fn("exams.import.word")(function* (
           file.name === MAIN_PART ||
           file.name === TYPES_PART ||
           file.name === RELATIONS_PART ||
-          file.name.startsWith(MEDIA_FOLDER),
+          file.name.startsWith(MEDIA_FOLDER) ||
+          file.name.startsWith(EMBEDDINGS_FOLDER),
       }),
   });
   const declared = yield* parsePart(yield* partOf(parts, TYPES_PART));
@@ -336,7 +448,21 @@ export const readWord = Effect.fn("exams.import.word")(function* (
       onSome: parsePart,
     }
   );
-  const pictures = picturesOf(document, relations, parts);
+  const targets = targetsOf(relations);
+  const pictures = picturesOf(document, targets, parts);
+  const read = yield* equationsOf(
+    Arr.filter(
+      Arr.fromIterable(document.getElementsByTagNameNS(WORD, "object")),
+      isMathType
+    ),
+    targets,
+    parts
+  );
+  const equations: Equations = (object) =>
+    Option.flatMap(
+      Arr.findFirst(read, (equation) => equation.object === object),
+      ({ latex }) => latex
+    );
   const numbers: PictureNumbers = (relationship) =>
     Option.map(
       Arr.findFirstIndex(
@@ -351,15 +477,10 @@ export const readWord = Effect.fn("exams.import.word")(function* (
   );
   return {
     lines: Arr.filter(
-      Arr.flatMap(blocks, (block) => blockLines(block, numbers)),
+      Arr.flatMap(blocks, (block) => blockLines(block, numbers, equations)),
       (line) => line !== ""
     ),
-    mathType: Arr.length(
-      Arr.filter(
-        Arr.fromIterable(document.getElementsByTagNameNS(WORD, "object")),
-        isMathType
-      )
-    ),
+    mathType: Arr.length(Arr.filter(read, ({ latex }) => Option.isNone(latex))),
     pictures: Arr.map(pictures, ({ bytes: data, name, type }) => ({
       bytes: data,
       name,

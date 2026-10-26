@@ -10,6 +10,8 @@ import {
   StartRole,
 } from "@repo/backend/confect/tenancy/start";
 import {
+  QuestionnaireChoice,
+  QuestionnaireChoices,
   QuestionnaireDescription,
   QuestionnaireError,
   QuestionnaireItem,
@@ -21,8 +23,6 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useStart } from "@/components/tenant/start/context";
 import {
-  StartChoice,
-  StartChoices,
   StartLevelOption,
   StartOption,
 } from "@/components/tenant/start/option";
@@ -47,9 +47,9 @@ export function StartCountryQuestion() {
       <QuestionnaireDescription>
         {t("country-description")}
       </QuestionnaireDescription>
-      <StartChoices>
+      <QuestionnaireChoices>
         {Arr.map(StartCountry.literals, (country) => (
-          <StartChoice
+          <QuestionnaireChoice
             checked={draft?.country === country}
             key={country}
             onChange={(event) => {
@@ -60,9 +60,9 @@ export function StartCountryQuestion() {
             value={country}
           >
             <StartOption country={country} title={t(`country.${country}`)} />
-          </StartChoice>
+          </QuestionnaireChoice>
         ))}
-      </StartChoices>
+      </QuestionnaireChoices>
       <QuestionnaireError>{t("required-error")}</QuestionnaireError>
     </QuestionnaireItem>
   );
@@ -86,9 +86,9 @@ export function StartLevelsQuestion() {
       <QuestionnaireDescription>
         {t("levels-description")}
       </QuestionnaireDescription>
-      <StartChoices>
+      <QuestionnaireChoices>
         {Arr.map(offered, (level) => (
-          <StartChoice
+          <QuestionnaireChoice
             checked={Arr.contains(saved, level)}
             key={level}
             onChange={(event) => {
@@ -110,9 +110,9 @@ export function StartLevelsQuestion() {
             ) : (
               <StartOption title={t(`stage.${level}`)} />
             )}
-          </StartChoice>
+          </QuestionnaireChoice>
         ))}
-      </StartChoices>
+      </QuestionnaireChoices>
       <QuestionnaireError>{t("levels-error")}</QuestionnaireError>
     </QuestionnaireItem>
   );
@@ -129,9 +129,9 @@ export function StartRoleQuestion() {
       <QuestionnaireDescription>
         {t("role-description")}
       </QuestionnaireDescription>
-      <StartChoices>
+      <QuestionnaireChoices>
         {Arr.map(StartRole.literals, (role) => (
-          <StartChoice
+          <QuestionnaireChoice
             checked={draft?.role === role}
             key={role}
             onChange={(event) => {
@@ -146,9 +146,9 @@ export function StartRoleQuestion() {
               icon={roleIcons[role]}
               title={t(`role.${role}.title`)}
             />
-          </StartChoice>
+          </QuestionnaireChoice>
         ))}
-      </StartChoices>
+      </QuestionnaireChoices>
       <QuestionnaireError>{t("required-error")}</QuestionnaireError>
     </QuestionnaireItem>
   );
@@ -172,9 +172,9 @@ export function StartSizeQuestion() {
       <QuestionnaireDescription>
         {t("size-description")}
       </QuestionnaireDescription>
-      <StartChoices>
+      <QuestionnaireChoices>
         {Arr.map(SchoolSize.literals, (size) => (
-          <StartChoice
+          <QuestionnaireChoice
             checked={draft?.size === size}
             key={size}
             onChange={(event) => {
@@ -185,9 +185,9 @@ export function StartSizeQuestion() {
             value={size}
           >
             <StartOption title={t(`size.${size}`)} />
-          </StartChoice>
+          </QuestionnaireChoice>
         ))}
-      </StartChoices>
+      </QuestionnaireChoices>
       <QuestionnaireError>{t("required-error")}</QuestionnaireError>
       {draft?.size !== undefined && Arr.contains(LARGE_SIZES, draft.size) ? (
         <p className="text-pretty text-muted-foreground text-sm">

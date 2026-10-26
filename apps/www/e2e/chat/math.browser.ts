@@ -216,7 +216,7 @@ const scrollsDisplayFormulas = async (page: Page) => {
   const row = await drawnRow(page, FORMULAS.answer);
   const facts = await row.evaluate((element) => {
     const card = element.querySelector(
-      '[data-math-block] [data-slot="scroll-area-viewport"]'
+      '[data-math-block] [data-slot="math-scroll"]'
     );
     const transcript = element.closest(
       '[data-slot="message-scroller-viewport"]'

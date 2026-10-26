@@ -5,7 +5,6 @@ import {
 } from "@confect/react";
 import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -24,7 +23,7 @@ import { useTranslations } from "use-intl";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
 import { revokeGrantChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -43,13 +42,7 @@ const grantColumns = createColumnHelper<typeof dataTableFeatures, GrantItem>();
  * The grants in a data table that finds a person and filters by role and by what a grant
  * covers, or the table's empty state when no one holds a role.
  */
-export function SchoolGrantTable({
-  grants,
-  slug,
-}: {
-  grants: readonly GrantItem[];
-  slug: TenantSlug;
-}) {
+export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
   const t = useTranslations("SchoolSettings");
   const viewer = useViewerQuery();
 
@@ -92,7 +85,7 @@ export function SchoolGrantTable({
     grantColumns.display({
       cell: (info) =>
         info.row.original.revocable ? (
-          <SchoolGrantMenu grant={info.row.original} slug={slug} />
+          <SchoolGrantMenu grant={info.row.original} />
         ) : null,
       id: "actions",
     }),
@@ -115,13 +108,8 @@ export function SchoolGrantTable({
  * revoke follows there with one sentence: the settings page never turns into a refusal
  * under the viewer.
  */
-function SchoolGrantMenu({
-  grant,
-  slug,
-}: {
-  grant: GrantItem;
-  slug: TenantSlug;
-}) {
+function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const revoke = useMutation(access.grants.revoke).withOptimisticUpdate(

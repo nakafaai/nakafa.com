@@ -11,6 +11,7 @@ export function makeTryoutQuestion(
 ): TryoutRuntimeQuestion {
   return {
     contentHash: `hash-${name}`,
+    flagged: false,
     placementId: placementId(name),
     questionOrder: 1,
     response: null,

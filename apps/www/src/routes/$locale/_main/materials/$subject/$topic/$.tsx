@@ -129,7 +129,6 @@ const readMaterial = createServerFn({ method: "GET" })
             headings: getHeadings(published.rawMdx),
             labels: {
               home: tCommon("home"),
-              more: tCommon("more"),
               onThisPage: tCommon("on-this-page"),
             },
             locale,
@@ -246,7 +245,6 @@ function MaterialPage() {
                   home={HOME_TARGET}
                   homeLabel={labels.home}
                   items={[]}
-                  menuLabel={labels.more}
                 >
                   <MaterialBreadcrumb title={metadata.title} />
                 </BreadcrumbHeaderPath>

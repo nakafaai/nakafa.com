@@ -25,6 +25,20 @@ async function expectQuestion(page: Page, number: number) {
   expect(await panelOverflow(page)).toBeLessThanOrEqual(0);
 }
 
+/** How many columns the choices of the question on screen stand in, by their left edges. */
+function choiceColumns(page: Page) {
+  return page
+    .locator('[data-slot="questionnaire-choice"]:visible')
+    .evaluateAll(
+      (choices) =>
+        new Set(
+          choices.map((choice) =>
+            Math.round(choice.getBoundingClientRect().left)
+          )
+        ).size
+    );
+}
+
 /** Chooses an answer and goes on, once React holds the Continue button. */
 async function answer(page: Page, choice: string) {
   const next = page.getByRole("button", { name: "Continue" });
@@ -50,8 +64,10 @@ test("a signed-in learner answers each onboarding question on one laptop screen,
   await expectQuestion(page, 1);
   await answer(page, "Student");
 
-  // The six regions stand in two columns, so the longest question fits beside the artwork.
+  // The six regions stand in one compact list, and the longest question still fits beside the
+  // artwork.
   await expectQuestion(page, 2);
+  expect(await choiceColumns(page)).toBe(1);
   await answer(page, "Indonesia");
 
   // Back keeps the answer chosen on the earlier question.

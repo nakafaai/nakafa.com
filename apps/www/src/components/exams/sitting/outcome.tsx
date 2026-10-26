@@ -1,5 +1,4 @@
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
@@ -25,23 +24,21 @@ const sentenceKeys = {
 export function StudentOutcome({
   attempt,
   sitting,
-  slug,
 }: {
   readonly attempt: AttemptValue;
   readonly sitting: typeof SittingView.Type;
-  readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
 
   return (
     <>
       <SittingBar examTitle={sitting.examTitle} />
-      <SittingBody>
+      <SittingBody align="top">
         {attempt.state === "inProgress" ? null : (
           <p>{t(sentenceKeys[attempt.state])}</p>
         )}
         {attempt.state === "submitted" ? (
-          <StudentResults sittingId={sitting.id} slug={slug} />
+          <StudentResults sittingId={sitting.id} />
         ) : null}
       </SittingBody>
     </>

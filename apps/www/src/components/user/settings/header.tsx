@@ -27,7 +27,6 @@ export function UserSettingsHeader() {
           },
           { label },
         ],
-        menuLabel: tCommon("more"),
         title: label,
       }}
     />

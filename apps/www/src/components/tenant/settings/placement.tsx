@@ -120,7 +120,6 @@ export function SchoolPlacementAdd({
               id={`${id}-student`}
               onChoose={setPersonId}
               personId={personId}
-              slug={slug}
             />
           </Field>
         </FieldGroup>

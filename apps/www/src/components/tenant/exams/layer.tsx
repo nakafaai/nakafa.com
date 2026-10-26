@@ -29,6 +29,7 @@ import {
   optionLetter,
 } from "@/components/tenant/exams/answer";
 import { TableKey } from "@/components/tenant/exams/cells";
+import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
 import {
@@ -38,6 +39,7 @@ import {
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
+import { ExamDocument } from "@/components/tenant/exams/rich";
 import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
@@ -199,6 +201,11 @@ function AnswerKey({
 
 /** The props of the teacher's layer of one question. */
 interface TeacherLayerProps {
+  /**
+   * The edits of the question: the answers, the key and the template the page shows, so the key shows a change
+   * at once, and the saves of the key, each of which saves at once.
+   */
+  readonly editing: QuestionEditing;
   /** Whether the question's editors are mounted, so its fields take changes. */
   readonly live: boolean;
   /** The explanation and the rubric as they are drawn while their editors are not mounted. */
@@ -208,22 +215,8 @@ interface TeacherLayerProps {
   };
   /** The place of the question in the exam, which names its rich texts for assistive technology. */
   readonly number: number;
-  /** Saves the answers a short answer accepts, which saves at once. */
-  readonly onAccept: (accepted: readonly string[]) => void;
-  /** Saves the cells of a true or false table's key, which saves at once. */
-  readonly onCells: (
-    cells: readonly { readonly column: string; readonly statement: string }[]
-  ) => void;
-  /** Marks an option as the key of the question, which saves at once. */
-  readonly onMark: (optionId: string) => void;
-  /** Saves the pairs of a matching question's key, which saves at once. */
-  readonly onPair: (
-    pairs: readonly { readonly source: string; readonly target: string }[]
-  ) => void;
   /** The question the layer belongs to, as the server holds it. */
   readonly question: Question;
-  /** The answers, the key, and the template the page shows, so the key shows a change at once. */
-  readonly shown: Pick<Question, "answers" | "key" | "template">;
 }
 
 /**
@@ -234,17 +227,14 @@ interface TeacherLayerProps {
  * frozen exam shows its values without changes.
  */
 export function TeacherLayer({
+  editing,
   live,
   notes,
   number,
-  onAccept,
-  onCells,
-  onMark,
-  onPair,
   question,
-  shown,
 }: TeacherLayerProps) {
   const t = useTranslations("Exams");
+  const { displayed: shown } = editing;
   const { exam } = useExam();
   // A text opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone, so the
   // words on screen stay.
@@ -272,7 +262,7 @@ export function TeacherLayer({
           accepted={acceptedOf(shown.key)}
           editable={editable}
           number={number}
-          onChange={onAccept}
+          onChange={editing.setAccepted}
         />
       ) : null}
       {Option.match(matchOf(shown.answers), {
@@ -283,7 +273,7 @@ export function TeacherLayer({
             keyed={shown.key}
             match={match}
             number={number}
-            onPair={onPair}
+            onPair={editing.setPairs}
           />
         ),
       })}
@@ -294,7 +284,7 @@ export function TeacherLayer({
             editable={editable}
             keyed={shown.key}
             number={number}
-            onMark={onCells}
+            onMark={editing.setCells}
             table={table}
           />
         ),
@@ -308,7 +298,7 @@ export function TeacherLayer({
           marked={markedOptions(shown.key)}
           multiple={shown.template === "choices"}
           number={number}
-          onMark={onMark}
+          onMark={editing.markOption}
           options={options}
         />
       ) : null}
@@ -322,10 +312,13 @@ export function TeacherLayer({
               <ExamText
                 documentId={question.rubric}
                 key={`${question.rubric}-${frozen}`}
-                label={t("rubric-of", { number })}
-                placeholder={t("rubric-placeholder")}
-                size="line"
-              />
+              >
+                <ExamDocument
+                  label={t("rubric-of", { number })}
+                  placeholder={t("rubric-placeholder")}
+                  size="line"
+                />
+              </ExamText>
             </Suspense>
           ) : (
             <PreviewProse article doc={notes.rubric} size="line" />
@@ -343,10 +336,13 @@ export function TeacherLayer({
             <ExamText
               documentId={question.explanation}
               key={`${question.explanation}-${frozen}`}
-              label={t("explanation-of", { number })}
-              placeholder={t("explanation-placeholder")}
-              size="line"
-            />
+            >
+              <ExamDocument
+                label={t("explanation-of", { number })}
+                placeholder={t("explanation-placeholder")}
+                size="line"
+              />
+            </ExamText>
           </Suspense>
         ) : (
           <PreviewProse article doc={notes.explanation} size="line" />

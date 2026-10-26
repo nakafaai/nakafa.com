@@ -283,8 +283,11 @@ has exactly one owner.
   No export is taken from production, by the working rule of
   `docs/convex/cost.md`.
 - One flag table, `assessmentFlags`, holds the assessment flags. No
-  `tryoutFlags` table ships. A sitting writes its flags through the gate
-  (ADR 0013), and try-out flags join the table at the engine cutover.
+  `tryoutFlags` table ships. A sitting and a try-out each write their flags
+  through the gate (ADR 0013). The owner asked on 26 October 2026 for try-out
+  learners to flag questions before the cutover, so the try-out store of the
+  gate writes the table now, with the kind `tryout`, and the engine reads the
+  same rows after the cutover.
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
   That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer
