@@ -30,9 +30,10 @@ const expectSteadyComposer = Effect.fn("NakafaE2E.expectSteadyComposer")(
       (context) =>
         Effect.gen(function* () {
           yield* signInLearner(context, origin);
+          const services = yield* Effect.context();
           yield* Effect.promise(() =>
             context.route(SESSION_READ, async (route) => {
-              await Effect.runPromise(Effect.sleep(SESSION_DELAY));
+              await Effect.runPromiseWith(services)(Effect.sleep(SESSION_DELAY));
               await route.continue();
             })
           );
