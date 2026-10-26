@@ -79,6 +79,7 @@
     "password-label": "Passwort",
     "password-too-long": "Das Passwort ist zu lang.",
     "password-too-short": "Das Passwort ist zu kurz.",
+    "sign-in-missing": "Gib deinen Schul-Benutzernamen und dein Passwort ein.",
     "sign-in-refused": "Benutzername oder Passwort stimmen nicht, daher prüfe beides oder frag deine Lehrkraft, wenn es weiter scheitert.",
     "submit": "Anmelden",
     "username-action": "Mit Benutzername anmelden",

@@ -28,6 +28,35 @@ test("a wrong card code is refused with one message that does not say whether th
   );
 });
 
+test("a sign-in without the username or password answers at once and asks the server nothing", async ({
+  page,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const signIns: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/auth/sign-in/")) {
+      signIns.push(request.url());
+    }
+  });
+  await page.goto(
+    hostAddress(baseURL, `${school.slug}.localhost`, "/?masuk=username")
+  );
+  await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
+
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.locator("form").getByRole("alert")).toHaveText(
+    "Type your school username and password."
+  );
+
+  await page.getByLabel("School username").fill("siswa.uji");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.locator("form").getByRole("alert")).toHaveText(
+    "Type your school username and password."
+  );
+  expect(signIns).toEqual([]);
+});
+
 test("a student whose card an Admin printed signs in with the school username, the code, and a new password", async ({
   page,
   baseURL,
