@@ -73,6 +73,8 @@ describe("tenancy/viewer", () => {
         ]);
         expect(Arr.sort(view.can, Order.String)).toEqual([
           "audit.view",
+          "billing.manage",
+          "billing.view",
           "connection.view",
           "document.edit",
           "exam.edit",
@@ -139,6 +141,7 @@ describe("tenancy/viewer", () => {
       const view = yield* fixture.as("owner").query(viewer, { slug: nf });
       expect(Arr.sort(view.can, Order.String)).toEqual([
         "audit.view",
+        "billing.view",
         "connection.view",
         "exam.rooms",
         "exam.view",

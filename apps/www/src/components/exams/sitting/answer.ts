@@ -1,8 +1,8 @@
 import { useMutation } from "@confect/react";
-import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Clock, Effect, Option, Schema } from "effect";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
@@ -21,7 +21,7 @@ import {
 import { sittingStorage } from "@/components/exams/sitting/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
-/** Saves one response at once: the screen shows the chosen option, and a refused answer rolls back. */
+/** Saves one response at once: the screen shows the chosen option or the typed text, and a refused answer rolls back. */
 function useAnswer() {
   return useMutation(exams.sittings.answer).withOptimisticUpdate(
     (localStore, args) =>
@@ -39,7 +39,7 @@ const SentAnswer = Schema.Struct({
   attemptId: Id("examAttempts"),
   deviceId: Schema.String,
   questionId: Id("examQuestions"),
-  response: Schema.Array(LocalIdSchema),
+  response: ExamResponse,
   sittingId: Id("examSittings"),
   slug: TenantSlug,
   version: Version,
@@ -106,7 +106,7 @@ export function useChooseAnswer() {
     readonly attemptId: typeof SentAnswer.Type.attemptId;
     readonly deviceId: string;
     readonly question: PaperQuestion;
-    readonly response: readonly string[];
+    readonly response: ExamResponse;
     readonly sittingId: typeof SentAnswer.Type.sittingId;
     readonly slug: TenantSlug;
   }) => {

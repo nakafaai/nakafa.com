@@ -12,12 +12,6 @@ import { publicPathTarget } from "@/lib/routing/target";
 interface Props {
   className?: string;
   pagination: ContentPagination;
-  /**
-   * Whether the link preloads its page as soon as it renders. A page that cannot
-   * name its final destination yet preloads on intent instead, so only the
-   * destination that the reader chooses is preloaded.
-   */
-  prefetchNext?: boolean;
 }
 
 /**
@@ -54,7 +48,54 @@ function PaginationItem({
     "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
     className
   );
-  const content = (
+  return Option.match(publicPathTarget(publicPath, context), {
+    onNone: () => (
+      <div
+        aria-hidden="true"
+        className={cn(
+          itemClassName,
+          "pointer-events-none hidden opacity-50 sm:flex"
+        )}
+      >
+        <PaginationLabel
+          icon={icon}
+          iconPosition={iconPosition}
+          label={label}
+          title={title}
+        />
+      </div>
+    ),
+    onSome: (target) => (
+      <TargetLink
+        className={itemClassName}
+        preload={prefetch ? "render" : "intent"}
+        target={target}
+        title={title}
+      >
+        <PaginationLabel
+          icon={icon}
+          iconPosition={iconPosition}
+          label={label}
+          title={title}
+        />
+      </TargetLink>
+    ),
+  });
+}
+
+/** The direction and the title of one neighbouring page, with the arrow on the side it points to. */
+function PaginationLabel({
+  icon,
+  iconPosition,
+  label,
+  title,
+}: {
+  icon: IconSvgElement;
+  iconPosition: "left" | "right";
+  label: string;
+  title: string;
+}) {
+  return (
     <>
       <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
         {iconPosition === "left" && (
@@ -75,30 +116,6 @@ function PaginationItem({
       </p>
     </>
   );
-
-  return Option.match(publicPathTarget(publicPath, context), {
-    onNone: () => (
-      <div
-        aria-hidden="true"
-        className={cn(
-          itemClassName,
-          "pointer-events-none hidden opacity-50 sm:flex"
-        )}
-      >
-        {content}
-      </div>
-    ),
-    onSome: (target) => (
-      <TargetLink
-        className={itemClassName}
-        preload={prefetch ? "render" : "intent"}
-        target={target}
-        title={title}
-      >
-        {content}
-      </TargetLink>
-    ),
-  });
 }
 
 /**
@@ -107,11 +124,7 @@ function PaginationItem({
  * link preloads its page in view. Previous waits for intent, which spares a
  * reader who only moves forward the second server render.
  */
-export function PaginationContent({
-  pagination,
-  className,
-  prefetchNext = true,
-}: Props) {
+export function PaginationContent({ pagination, className }: Props) {
   const t = useTranslations("Common");
 
   return (
@@ -136,7 +149,7 @@ export function PaginationContent({
           icon={ArrowRight02Icon}
           iconPosition="right"
           label={t("next")}
-          prefetch={prefetchNext}
+          prefetch
           publicPath={pagination.next.publicPath}
           title={pagination.next.title}
         />

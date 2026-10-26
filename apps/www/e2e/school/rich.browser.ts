@@ -164,7 +164,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   );
 
   // The try shows the same document the way a student reads it, with the formula drawn.
-  await reopened.getByRole("link", { name: "Try as student" }).click();
+  await reopened.getByRole("button", { name: "Try as student" }).click();
   await reopened.waitForURL(TRY_PATH);
   await expect(reopened.getByText("Rumus")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

@@ -19,6 +19,7 @@ import {
   encodeAnswers,
   encodeKey,
   NEW_QUESTION_POINTS,
+  NEW_QUESTION_TEMPLATE,
   questionAnswers,
 } from "@repo/backend/confect/exams/question";
 import { answerQuestion } from "@repo/backend/confect/exams/questions/answer";
@@ -119,6 +120,7 @@ const place = FunctionImpl.make(
             points: NEW_QUESTION_POINTS,
             prompt: yield* importedDocument(exam, part.prompt),
             rubric: yield* createEmptyDocument(exam),
+            template: NEW_QUESTION_TEMPLATE,
           },
           keyed: part.key !== null,
           number,

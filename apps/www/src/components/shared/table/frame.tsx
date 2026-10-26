@@ -31,10 +31,10 @@ export function TableFrame({ children }: { children: ReactNode }) {
  * page header.
  */
 export function TableEmpty({
-  act,
   action,
   description,
   title,
+  ...nina
 }: {
   /** What Nina does in the empty state, chosen for the list. */
   act: typeof ActSchema.Type;
@@ -46,7 +46,7 @@ export function TableEmpty({
   return (
     <Empty className="flex-1 md:p-10">
       <EmptyHeader>
-        <EmptyNina act={act} />
+        <EmptyNina {...nina} />
         <EmptyTitle className="text-base">{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>

@@ -4,6 +4,7 @@ import {
   CatalogCard,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
+import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 import { PublicPathLink } from "@/lib/routing/public/link";
 
@@ -24,39 +25,18 @@ export function CurriculumCardGrid({
   }[];
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(cards, ({ route, visual }, index) => (
-        <CurriculumCard
-          actionLabel={actionLabel}
-          key={route.publicPath}
-          preload={index === 0}
-          route={route}
-          visual={visual}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** Renders one curriculum card with its visual and its page link. */
-function CurriculumCard({
-  actionLabel,
-  preload,
-  route,
-  visual,
-}: {
-  actionLabel: string;
-  preload: boolean;
-  route: CurriculumViewRoute;
-  visual: TileLook | string;
-}) {
-  return (
-    <CatalogCard
-      action={<PublicPathLink publicPath={route.publicPath} />}
-      actionLabel={actionLabel}
-      title={route.title}
-    >
-      <CatalogCardVisual preload={preload} visual={visual} />
-    </CatalogCard>
+    <CatalogActionLabelContext value={actionLabel}>
+      <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+        {Arr.map(cards, ({ route, visual }, index) => (
+          <CatalogCard
+            action={<PublicPathLink publicPath={route.publicPath} />}
+            key={route.publicPath}
+            title={route.title}
+          >
+            <CatalogCardVisual preload={index === 0} visual={visual} />
+          </CatalogCard>
+        ))}
+      </div>
+    </CatalogActionLabelContext>
   );
 }
