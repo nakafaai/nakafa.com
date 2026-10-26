@@ -90,6 +90,12 @@ function QuestionnaireDescription({
   );
 }
 
+/**
+ * The choices of one question as one compact list: a single column of rows of
+ * the same height, joined by dividers inside one border, so every choice reads
+ * in full on a phone and a long question never scrolls through a grid of
+ * uneven cards.
+ */
 function QuestionnaireChoices({
   className,
   ...props
@@ -97,7 +103,7 @@ function QuestionnaireChoices({
   return (
     <QuestionnairePrimitive.Choices
       className={cn(
-        "group/questionnaire-choices grid min-w-0 gap-3",
+        "group/questionnaire-choices grid min-w-0 divide-y divide-input rounded-md border border-input shadow-xs has-data-invalid:border-destructive",
         className
       )}
       data-slot="questionnaire-choices"
@@ -114,7 +120,7 @@ function QuestionnaireChoice({
   return (
     <QuestionnairePrimitive.Choice
       className={cn(
-        "group/questionnaire-choice relative flex min-h-11 cursor-pointer select-none items-start gap-3 rounded-md border border-input bg-transparent px-4 py-3.5 text-start text-sm shadow-xs outline-none transition-colors hover:bg-muted/50 has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-3 has-[>input:focus-visible]:ring-ring/50 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-checked:border-primary/40 data-invalid:border-destructive data-checked:bg-muted data-disabled:opacity-50 dark:bg-input/20 dark:data-checked:bg-muted",
+        "group/questionnaire-choice relative flex min-h-11 cursor-pointer select-none items-start gap-3 bg-transparent px-4 py-3.5 text-start text-sm outline-none transition-colors first:rounded-t-md last:rounded-b-md hover:bg-muted/50 has-[>input:focus-visible]:z-10 has-[>input:focus-visible]:ring-3 has-[>input:focus-visible]:ring-ring/50 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-checked:bg-muted data-disabled:opacity-50 dark:bg-input/20 dark:data-checked:bg-muted",
         className
       )}
       data-slot="questionnaire-choice"
@@ -148,7 +154,7 @@ function QuestionnaireChoice({
       <QuestionnairePrimitive.ChoiceShortcut
         className={cn(
           monospace,
-          "pointer-events-none ms-auto hidden size-5 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-md border border-input bg-background font-medium font-mono text-[0.625rem] text-muted-foreground leading-none shadow-xs group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[shortcut]/questionnaire-choice:inline-flex"
+          "pointer-events-none ms-auto hidden size-5 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-md border border-input bg-background font-medium font-mono text-[0.625rem] text-muted-foreground leading-none shadow-xs group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 sm:group-data-[shortcut]/questionnaire-choice:inline-flex"
         )}
         data-slot="questionnaire-choice-shortcut"
       />

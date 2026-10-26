@@ -1,15 +1,20 @@
 import { Effect } from "effect";
-import { ActionButton, ActionLink } from "@/components/state/action";
+import type { ReactNode } from "react";
+import { ActionButton } from "@/components/state/action";
 import { DeferredFigure } from "@/components/state/mascot";
-import { Screen } from "@/components/state/screen";
+import {
+  Screen,
+  ScreenActions,
+  ScreenDescription,
+  ScreenFigure,
+  ScreenHeader,
+  ScreenTitle,
+} from "@/components/state/screen";
 
 interface BrokenProps {
+  /** The ways on, as the page composes them: `BrokenRetry`, then a quiet way home. */
+  children: ReactNode;
   description: string;
-  /** The label of the quiet way on, to the home page. */
-  home: string;
-  homeHref: string;
-  /** The label of the main action. */
-  retry: string;
   title: string;
 }
 
@@ -32,28 +37,30 @@ const reloadDocument = Effect.fn("www.state.reloadDocument")(() =>
  * that it is not the learner's. The error is reported by the page that renders
  * it, which also knows what it caught.
  */
-export function Broken({
-  description,
-  home,
-  homeHref,
-  retry,
-  title,
-}: BrokenProps) {
+export function Broken({ children, description, title }: BrokenProps) {
   return (
-    <Screen
-      actions={
-        <>
-          <ActionButton
-            label={retry}
-            onClick={() => Effect.runSync(reloadDocument())}
-            variant="default"
-          />
-          <ActionLink href={homeHref} label={home} variant="ghost" />
-        </>
-      }
-      description={description}
-      figure={<DeferredFigure scene="broken" />}
-      title={<h1>{title}</h1>}
+    <Screen>
+      <ScreenHeader>
+        <ScreenFigure>
+          <DeferredFigure scene="broken" />
+        </ScreenFigure>
+        <ScreenTitle>
+          <h1>{title}</h1>
+        </ScreenTitle>
+        <ScreenDescription>{description}</ScreenDescription>
+      </ScreenHeader>
+      <ScreenActions>{children}</ScreenActions>
+    </Screen>
+  );
+}
+
+/** The main way on from something that broke: it loads the document again, under the label it holds. */
+export function BrokenRetry({ children }: { children: string }) {
+  return (
+    <ActionButton
+      label={children}
+      onClick={() => Effect.runSync(reloadDocument())}
+      variant="default"
     />
   );
 }

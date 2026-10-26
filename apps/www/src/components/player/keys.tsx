@@ -36,19 +36,16 @@ function useNavigatorToggle() {
 
 /**
  * Binds the player keys to the window: the arrows step, `1` to `5` pick an
- * option of a single-choice question, `M` marks the current question for review
- * through `onMark`, and `G` opens and closes the navigator. A key that the
- * current question takes is prevented, so the page never acts on it as well.
+ * option of a single-choice question, `F` flags the current question or takes
+ * its flag off, and `G` opens and closes the navigator. A key that the current
+ * question takes is prevented, so the page never acts on it as well.
  */
 export function PlayerKeys({
   locked,
-  onMark,
   questions,
 }: {
-  /** Answers are read-only because time ran out. */
+  /** Answers and flags are read-only because time ran out. */
   locked: boolean;
-  /** Marks the question for review, when the player has marks. */
-  onMark?: (questionKey: string) => void;
   questions: readonly PlayerQuestionModel[];
 }) {
   const current = usePlayer((state) => state.current);
@@ -69,22 +66,25 @@ export function PlayerKeys({
     if (action.kind === "step") {
       event.preventDefault();
       step(action.delta);
-    } else if (action.kind === "navigator") {
+      return;
+    }
+    if (action.kind === "navigator") {
       event.preventDefault();
       toggleNavigator();
-    } else if (action.kind === "mark") {
-      if (onMark !== undefined && current !== null) {
-        event.preventDefault();
-        onMark(current);
-      }
-    } else {
-      const picked = Arr.findFirst(
-        questions,
-        (question) => question.key === current
-      );
-      if (Option.isSome(picked) && picked.value.pick(action.index)) {
-        event.preventDefault();
-      }
+      return;
+    }
+    const picked = Arr.findFirst(
+      questions,
+      (question) => question.key === current
+    );
+    if (Option.isNone(picked)) {
+      return;
+    }
+    if (action.kind === "flag") {
+      event.preventDefault();
+      picked.value.flag();
+    } else if (picked.value.pick(action.index)) {
+      event.preventDefault();
     }
   });
 

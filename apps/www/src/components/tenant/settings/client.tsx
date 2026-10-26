@@ -3,7 +3,6 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { IntegrationName } from "@repo/backend/confect/integrations/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import {
@@ -27,7 +26,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   IntegrationAction,
   toggleAction,
@@ -46,13 +45,12 @@ export function SchoolClientCreateDialog({
   onIssued,
   open,
   setOpen,
-  slug,
 }: {
   onIssued: (secret: string) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const viewer = useViewerQuery();

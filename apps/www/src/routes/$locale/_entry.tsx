@@ -15,12 +15,12 @@ import {
 } from "@/components/entry/shell";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { Broken } from "@/components/state/broken";
-import { RouteFailure } from "@/components/state/localized";
+import { ActionLink } from "@/components/state/action";
+import { Broken, BrokenRetry } from "@/components/state/broken";
+import { useRouteFailure } from "@/components/state/localized";
 import { clientEnv } from "@/env.public";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
-import { readStaticData } from "@/lib/static/data";
 
 /** The messages of the entry pages, which the locale route's messages join. */
 const ENTRY_NAMESPACES = [
@@ -36,14 +36,12 @@ const localeRoute = getRouteApi("/$locale");
 /**
  * The entry frame: one visual shell stays mounted while the sign-in, the error,
  * the onboarding and the school start change. The frame's own messages join the
- * locale route's messages, which the frame does not load again. The sign-in page
- * is prerendered, so the frame reads its messages from the build's static answer.
+ * locale route's messages, which the frame does not load again.
  */
 export const Route = createFileRoute("/$locale/_entry")({
   loader: ({ params }) =>
-    readStaticData(readRouteMessages, {
-      locale: params.locale,
-      namespaces: ENTRY_NAMESPACES,
+    readRouteMessages({
+      data: { locale: params.locale, namespaces: ENTRY_NAMESPACES },
     }),
   component: EntryLayout,
   errorComponent: EntryError,
@@ -76,27 +74,33 @@ function EntryLayout() {
 function EntryError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
   const messages = readStandaloneMessages(locale);
+  const reloading = useRouteFailure(error, "start-entry-error");
+  if (reloading) {
+    return null;
+  }
   return (
-    <RouteFailure error={error} source="start-entry-error">
-      <EntryShell>
-        <EntryShellPanel>
-          <EntryShellHeader>
-            <div className="ms-auto">
-              <ThemePicker variant="ghost" />
-            </div>
-          </EntryShellHeader>
-          <EntryShellBody>
-            <Broken
-              description={messages.Error.description}
-              home={messages.State["home-button"]}
-              homeHref={`/${locale}`}
-              retry={messages.Error.retry}
-              title={messages.Error.title}
+    <EntryShell>
+      <EntryShellPanel>
+        <EntryShellHeader>
+          <div className="ms-auto">
+            <ThemePicker variant="ghost" />
+          </div>
+        </EntryShellHeader>
+        <EntryShellBody>
+          <Broken
+            description={messages.Error.description}
+            title={messages.Error.title}
+          >
+            <BrokenRetry>{messages.Error.retry}</BrokenRetry>
+            <ActionLink
+              href={`/${locale}`}
+              label={messages.State["home-button"]}
+              variant="ghost"
             />
-          </EntryShellBody>
-        </EntryShellPanel>
-        <EntryShellArtwork />
-      </EntryShell>
-    </RouteFailure>
+          </Broken>
+        </EntryShellBody>
+      </EntryShellPanel>
+      <EntryShellArtwork />
+    </EntryShell>
   );
 }

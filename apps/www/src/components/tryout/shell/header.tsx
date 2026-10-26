@@ -41,14 +41,12 @@ export function TryoutPageHeader({
           home={HOME_TARGET}
           homeLabel={tCommon("home")}
           items={path}
-          menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
             home={HOME_TARGET}
             homeLabel={tCommon("home")}
             items={path}
-            menuLabel={tCommon("more")}
             visibleItemCount={1}
           />
         </div>

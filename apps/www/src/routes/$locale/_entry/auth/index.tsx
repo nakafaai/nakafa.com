@@ -4,6 +4,7 @@ import { Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { Auth } from "@/components/auth";
+import { AuthLegal } from "@/components/auth/legal";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";
 import { BackButton } from "@/components/shared/back";
@@ -18,7 +19,6 @@ import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { readStaticData } from "@/lib/static/data";
 
 /** The sign-in screen. A provider failure and the intent travel in the query string. */
 const AuthSearch = Schema.Struct({
@@ -30,8 +30,7 @@ const AuthSearch = Schema.Struct({
  * The sign-in page takes the root metadata, which names its title, description
  * and the canonical address of the locale's home, as the reference app does. A
  * signed-in visitor never sees it: the gate sends them on to the page the intent
- * names, or home, before the loader runs, with 307 on the server. The build
- * prerenders the page for visitors, so its loader reads the static answers.
+ * names, or home, before the loader runs, with 307 on the server.
  */
 export const Route = createFileRoute("/$locale/_entry/auth/")({
   validateSearch: Schema.toStandardSchemaV1(AuthSearch),
@@ -51,11 +50,10 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
   },
   loader: async ({ params }) => {
     const [messages, legal] = await Promise.all([
-      readStaticData(readRouteMessages, {
-        locale: params.locale,
-        namespaces: ["Metadata"],
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: ["Metadata"] },
       }),
-      readStaticData(readAuthLegalFn, { locale: params.locale }),
+      readAuthLegalFn({ data: { locale: params.locale } }),
     ]);
     const t = createTranslator({
       locale: params.locale,
@@ -109,7 +107,7 @@ function AuthPage() {
             whole
           />
         }
-        legal={legal}
+        legal={<AuthLegal links={legal} />}
       >
         <h1 className="font-semibold text-2xl">{t("sign-in-title")}</h1>
       </SignInScreen>

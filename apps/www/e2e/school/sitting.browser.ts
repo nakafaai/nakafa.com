@@ -255,12 +255,10 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     })
   ).toHaveAttribute("aria-current", "step");
 
-  // The second question takes a flag, which the navigator marks as well.
-  const second = student.getByRole("article", { name: "Question 2" });
-  await second.getByRole("button", { name: "Flag for review" }).click();
-  await expect(
-    second.getByRole("button", { name: "Flag for review" })
-  ).toHaveAttribute("aria-pressed", "true");
+  // The footer's flag marks the current question, the second, and the navigator marks it as well.
+  const flag = student.getByRole("button", { exact: true, name: "Flag" });
+  await flag.click();
+  await expect(flag).toHaveAttribute("aria-pressed", "true");
   await expect(
     navigator.getByRole("button", {
       exact: true,
@@ -285,7 +283,7 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
-  // On a phone the navigator opens from the header, and a number in it closes the sheet.
+  // On a phone the navigator opens from the footer, and a number in it closes the sheet.
   await student.setViewportSize({ height: 812, width: 375 });
   await student
     .getByRole("button", { name: "Open the question navigator, question 1" })
@@ -301,4 +299,42 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
 
   await studentContext.close();
   await proctorContext.close();
+});
+
+test("a proctor sees the seat filters in a row under the header and switches them in one press", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `filters-${school.slug}@acceptance.example.test`;
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  await studentContext.close();
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  const page = await context.newPage();
+  await page.goto(
+    address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
+  );
+
+  const filters = page.getByRole("group", { name: "Filter students" });
+  const all = filters.getByRole("button", { name: "All" });
+  const attention = filters.getByRole("button", { name: "Needs attention" });
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  await expect(attention).toBeVisible();
+  await expect(filters.getByRole("button", { name: "Finished" })).toBeVisible();
+  await attention.click();
+  await expect(attention).toHaveAttribute("aria-pressed", "true");
+  await expect(all).toHaveAttribute("aria-pressed", "false");
+  await context.close();
 });

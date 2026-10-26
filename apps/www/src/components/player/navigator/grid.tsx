@@ -1,6 +1,7 @@
-import { Flag01Icon } from "@hugeicons/core-free-icons";
+import { Flag02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";
@@ -26,8 +27,9 @@ export function PlayerGrid({
 
 /**
  * One question number. An unanswered question is outlined, an answered one is
- * filled, and the current one carries a ring and `aria-current`, so no state
- * relies on color alone.
+ * filled, a flagged one carries a flag mark on its corner, and the current one
+ * carries a ring and `aria-current`, so no state relies on color alone. The
+ * mark sits over the corner, so a flag never moves the number.
  */
 function PlayerCell({ question }: { question: PlayerCellModel }) {
   const t = useTranslations("Player");
@@ -44,13 +46,41 @@ function PlayerCell({ question }: { question: PlayerCellModel }) {
           ? t("cell-flagged", { number, state })
           : t("cell", { number, state })
       }
-      className="w-full px-0 font-mono tabular-nums aria-[current=step]:ring-2 aria-[current=step]:ring-ring aria-[current=step]:ring-offset-2 aria-[current=step]:ring-offset-background"
+      className="relative w-full px-0 font-mono tabular-nums aria-[current=step]:ring-2 aria-[current=step]:ring-ring aria-[current=step]:ring-offset-2 aria-[current=step]:ring-offset-background"
       onClick={() => goTo(question.key)}
       type="button"
       variant={question.answered ? "default" : "outline"}
     >
-      {question.flagged ? <HugeIcons icon={Flag01Icon} /> : null}
       {number}
+      {question.flagged ? <PlayerFlagMark placement="corner" /> : null}
     </Button>
+  );
+}
+
+const flagMarkVariants = cva(
+  "grid size-4 shrink-0 place-items-center rounded-full bg-warning text-warning-foreground",
+  {
+    variants: {
+      placement: {
+        corner: "absolute -end-1.5 -top-1.5 ring-2 ring-background",
+        inline: "",
+      },
+    },
+  }
+);
+
+/**
+ * The flag mark of a flagged question: a small flag in the flag color, on the
+ * top end corner of its number, or in line where the legend names it.
+ */
+export function PlayerFlagMark({
+  placement,
+}: {
+  placement: "corner" | "inline";
+}) {
+  return (
+    <span aria-hidden="true" className={flagMarkVariants({ placement })}>
+      <HugeIcons className="size-2.5" icon={Flag02Icon} />
+    </span>
   );
 }

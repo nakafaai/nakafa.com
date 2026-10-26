@@ -18,7 +18,9 @@ import {
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import { SettingsBack } from "@/components/shared/settings/return";
 import { Link, type LinkTarget, useRouteMatched } from "@/lib/routing/link";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import {
   type UserSettingsLabelKey,
@@ -41,8 +43,11 @@ const sectionIcons: Record<
  * routes, replacing the browsing navigation without replacing the shell.
  */
 export function UserSettingsNav() {
+  const t = useTranslations("Auth");
+
   return (
     <>
+      <SettingsBack home={HOME_TARGET} label={t("back-to-nakafa")} />
       {Arr.map(userSettingsGroups, (group) => (
         <UserSettingsNavGroup group={group} key={group.key} />
       ))}

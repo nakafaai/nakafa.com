@@ -66,6 +66,7 @@
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Dein Passwort",
     "card-code-label": "Kartencode",
+    "card-hint": "Keine Google-Adresse? Melde dich mit dem Schul-Benutzernamen und der Karte von deinem Admin an.",
     "card-code-placeholder": "Erste Anmeldung oder neue Karte",
     "card-expired": "Bitte deine Lehrkraft oder einen Admin um eine neue Karte, denn diese ist abgelaufen.",
     "card-invalid": "Benutzername oder Kartencode stimmen nicht.",
@@ -73,7 +74,7 @@
     "card-used": "Bitte deine Lehrkraft oder einen Admin um eine neue Karte, denn diese wurde schon benutzt.",
     "failed": "Die Anmeldung hat nicht geklappt, also versuche es erneut.",
     "outsider-card": "Mit Karte anmelden",
-    "outsider-description": "Du bist als {account} angemeldet, und dieses Konto hat hier noch keine Einladung.",
+    "outsider-description": "Du bist als {account} angemeldet, das hier noch keine Einladung hat, also bitte einen Admin, eine zu senden, oder melde dich mit der eingeladenen Adresse an.",
     "outsider-switch": "Konto wechseln",
     "outsider-title": "Kein Mitglied von {school}",
     "password-label": "Passwort",
@@ -84,7 +85,7 @@
     "submit": "Anmelden",
     "username-action": "Mit Benutzername anmelden",
     "username-label": "Schul-Benutzername",
-    "outsider-check-again": "Erneut prüfen"
+    "outsider-check-again": "Erneut nach meiner Einladung sehen"
   },
   "SchoolGuardians": {
     "sign-in-action": "Als Elternteil anmelden",
@@ -310,6 +311,8 @@
     "prompt-placeholder": "Frage hier schreiben.",
     "results-title": "Ergebnisse",
     "results-name": "Name",
+    "results-not-yet": "Noch nicht",
+    "release-wait": "Die Administration oder der Autor der Prüfung gibt die Ergebnisse frei, sobald die Sitzung geschlossen ist.",
     "results-status": "Status",
     "results-score": "Punkte",
     "results-search": "Nach Namen suchen",
@@ -415,7 +418,6 @@
     "student-opens-at": "Diese Sitzung beginnt {time}.",
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
-    "flag-question": "Zur Überprüfung markieren",
     "seat-last-activity": "Letzte Aktivität {time}.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
     "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
@@ -556,6 +558,7 @@
     "invoice-pay": "Bezahlen",
     "invoice-transfer": "Per Überweisung zahlen",
     "manage-group": "Verwaltung",
+    "back-to-school": "Zurück zu {school}",
     "manage-settings": "Einstellungen",
     "address-copy": "Adresse kopieren",
     "address-footer": "Kopiere sie, um sie mit deiner Schule zu teilen.",
@@ -696,6 +699,7 @@
     "client-secret-title": "Neues Geheimnis",
     "client-secret-description": "Kopiere es jetzt, denn es wird nicht noch einmal angezeigt.",
     "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
+    "audit-footer": "Werte von Richtlinien werden nicht ins Protokoll übernommen.",
     "audit-view": "Protokoll ansehen",
     "audit-when": "Wann",
     "audit-who": "Wer",
@@ -983,7 +987,7 @@
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
-    "policy-domains-invalid": "Prüfe diese Domains, jede in einer eigenen Zeile: {domains}.",
+    "policy-domains-invalid": "Prüfe diese Domains: {domains}, und schreibe jede in eine eigene Zeile.",
     "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
     "device-title": "Gerät verbinden",
     "device-description": "Gib den Code der Nakafa CLI ein, damit sie die Schule als {name} liest.",
@@ -1611,6 +1615,11 @@
     "shortcut-step": "Vorherige oder nächste Aufgabe",
     "shortcut-pick": "Option wählen",
     "shortcut-navigator": "Aufgabenübersicht",
+    "flag": "Markieren",
+    "review": "Prüfen",
+    "legend-answered": "Beantwortet",
+    "legend-flagged": "Markiert",
+    "shortcut-flag": "Aufgabe markieren",
     "cell-flagged": "{state, select, answered {Aufgabe {number}, beantwortet, zur Überprüfung markiert} other {Aufgabe {number}, offen, zur Überprüfung markiert}}"
   },
   "Utils": {
@@ -1662,6 +1671,7 @@
     "contribute": "Mitwirken"
   },
   "Auth": {
+    "back-to-nakafa": "Zurück zu Nakafa",
     "continue-with-google": "Mit Google fortfahren",
     "opening-google": "Google wird geöffnet...",
     "sign-in-title": "Bei Nakafa anmelden",
@@ -1999,6 +2009,10 @@
     },
     "tryout-submit-answer-error": {
       "title": "Antwort nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-flag-error": {
+      "title": "Markierung nicht gespeichert.",
       "description": "Versuche es erneut."
     },
     "memory-limit": {

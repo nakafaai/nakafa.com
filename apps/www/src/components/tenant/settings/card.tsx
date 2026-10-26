@@ -3,14 +3,14 @@ import { useClipboard } from "@mantine/hooks";
 import { Id } from "@repo/backend/confect/_generated/id";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
-import { useTransition } from "react";
+import { type ReactNode, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import { cardQr } from "@/components/tenant/settings/qr";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -62,12 +62,11 @@ const cardValue = cva("min-w-0 font-medium", {
 export function SchoolCardDialog({
   card,
   onClose,
-  slug,
 }: {
   card: CardView | undefined;
   onClose: () => void;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const clipboard = useClipboard({ timeout: 1500 });
   const printCard = useMutation(identity.cards.print);
@@ -124,11 +123,13 @@ export function SchoolCardDialog({
     >
       {card === undefined ? null : (
         <>
-          <SchoolCardFace card={card} slug={slug} />
+          <SchoolCardFace card={card} />
           {typeof document === "undefined"
             ? null
             : createPortal(
-                <SchoolCardSheet card={card} slug={slug} />,
+                <SchoolCardSheet>
+                  <SchoolCardFace card={card} />
+                </SchoolCardSheet>,
                 document.body
               )}
         </>
@@ -138,17 +139,17 @@ export function SchoolCardDialog({
 }
 
 /**
- * The printed sheet of one card. It holds one card in its own area, hidden on the
- * screen and shown only when the browser prints.
+ * The printed sheet of one card. It holds the card the caller composes in its own area,
+ * hidden on the screen and shown only when the browser prints.
  */
-function SchoolCardSheet({ card, slug }: { card: CardView; slug: TenantSlug }) {
+function SchoolCardSheet({ children }: { children: ReactNode }) {
   return (
     <div
       className="hidden w-[85.6mm] bg-white p-[4mm] text-black print:block"
       data-school-card-sheet=""
     >
       <style>{PRINT_ONLY_SHEET}</style>
-      <SchoolCardFace card={card} slug={slug} />
+      {children}
     </div>
   );
 }
@@ -157,7 +158,8 @@ function SchoolCardSheet({ card, slug }: { card: CardView; slug: TenantSlug }) {
  * The face of one login card: the school address, the student, the username, the code,
  * and when the code stops working. The QR code holds the code alone.
  */
-function SchoolCardFace({ card, slug }: { card: CardView; slug: TenantSlug }) {
+function SchoolCardFace({ card }: { card: CardView }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const address = schoolOrigin(slug).host;
 

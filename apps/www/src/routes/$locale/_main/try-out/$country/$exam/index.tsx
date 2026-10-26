@@ -68,7 +68,6 @@ function TryoutExamPage() {
               },
               { label: route.exam.exam.title },
             ],
-            menuLabel: route.labels.more,
             title: route.exam.exam.title,
           }}
         />

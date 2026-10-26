@@ -92,6 +92,7 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
   const [shareWarmed, setShareWarmed] = useState(false);
   const warmShare = () => setShareWarmed(true);
   const {
+    boxRef,
     chatTitle,
     closeEditor,
     handleEdit,
@@ -166,7 +167,7 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
         {/* The rename's two answers sit inside its box, so the header keeps
             its two buttons while the learner edits the title. */}
         <Activity mode={isEditing ? "visible" : "hidden"}>
-          <InputGroup>
+          <InputGroup ref={boxRef}>
             <InputGroupInput
               aria-label={t("rename-chat")}
               maxLength={MAX_TITLE_LENGTH}

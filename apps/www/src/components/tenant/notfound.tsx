@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { useTranslations } from "use-intl";
+import { ActionLink } from "@/components/state/action";
 import { SchoolHeader } from "@/components/tenant/header";
 import { TenantMissing } from "@/components/tenant/missing";
 
@@ -11,10 +12,13 @@ import { TenantMissing } from "@/components/tenant/missing";
  */
 export function SchoolPageNotFound(): ReactElement {
   const t = useTranslations("NotFound");
+  const tState = useTranslations("State");
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} />
-      <TenantMissing homeHref="/" />
+      <TenantMissing>
+        <ActionLink href="/" label={tState("home-button")} variant="default" />
+      </TenantMissing>
     </>
   );
 }
