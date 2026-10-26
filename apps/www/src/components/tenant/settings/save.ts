@@ -42,6 +42,14 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-card-missing.description",
     title: "school-refusal-card-missing.title",
   },
+  LinkClosed: {
+    description: "school-refusal-guardian-closed.description",
+    title: "school-refusal-guardian-closed.title",
+  },
+  LinkRefused: {
+    description: "school-refusal-guardian-link.description",
+    title: "school-refusal-guardian-link.title",
+  },
   CardRoleRefused: {
     description: "school-refusal-card-role.description",
     title: "school-refusal-card-role.title",
