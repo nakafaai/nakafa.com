@@ -860,8 +860,8 @@
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
-    "policy-domains-invalid": "Ungültige Domains: {domains}.",
-    "policy-domains-limit": "Verwende höchstens {limit} Domains."
+    "policy-domains-invalid": "Ungültige Domains: {domains}; schreibe jede Domain in eine eigene Zeile.",
+    "policy-domains-limit": "Verwende höchstens {limit} Domains, jede in einer eigenen Zeile."
   },
   "Classroom": {
     "tabs-home": "Start",

@@ -860,8 +860,8 @@
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
-    "policy-domains-invalid": "Domain tidak valid: {domains}.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain."
+    "policy-domains-invalid": "Domain tidak valid: {domains}; tulis satu domain di setiap baris.",
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain, masing-masing di baris sendiri."
   },
   "Classroom": {
     "tabs-home": "Beranda",

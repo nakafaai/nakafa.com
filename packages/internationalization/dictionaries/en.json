@@ -860,8 +860,8 @@
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
-    "policy-domains-invalid": "Invalid domains: {domains}.",
-    "policy-domains-limit": "Use up to {limit} domains."
+    "policy-domains-invalid": "Invalid domains: {domains}; write one domain on each line.",
+    "policy-domains-limit": "Use up to {limit} domains, each on its own line."
   },
   "Classroom": {
     "tabs-home": "Home",
