@@ -4,7 +4,13 @@ import { Array as Arr, Effect, Schema } from "effect";
 /** The link elements that ask the browser to preload a font file. */
 export const PRELOADED_FONT_SELECTOR = 'link[rel="preload"][as="font"]';
 
-const katexFile = /\/KaTeX_([^./]+)\.[^/]+\.woff2$/;
+/**
+ * A KaTeX font file: its face, such as `Main-Regular`, then the bundler's hash.
+ * Vite joins the hash with a dash (`KaTeX_Main-Regular-B22Nviop.woff2`), so the
+ * face ends at its style name.
+ */
+const katexFile =
+  /\/KaTeX_([A-Za-z0-9]+-(?:BoldItalic|Bold|Italic|Regular))[-.][^/]+\.woff2$/;
 
 const LoadedFontFaceSchema = Schema.Struct({
   family: Schema.String,
