@@ -7,7 +7,9 @@ import { createStore, type StoreApi, useStore } from "zustand";
  * chose, or none while no row is chosen. The store holds the choice the rows write and the panel reads.
  */
 interface ResultsSelection {
-  readonly choose: (attemptId: GenericId.GenericId<"examAttempts"> | null) => void;
+  readonly choose: (
+    attemptId: GenericId.GenericId<"examAttempts"> | null
+  ) => void;
   readonly selected: GenericId.GenericId<"examAttempts"> | null;
 }
 
@@ -18,12 +20,14 @@ const createResultsSelection = () =>
     selected: null,
   }));
 
-const SelectionContext = createContext<StoreApi<ResultsSelection> | null>(
-  null
-);
+const SelectionContext = createContext<StoreApi<ResultsSelection> | null>(null);
 
 /** Gives one results screen its selection, created once for the screen. */
-export function ResultsSelectionProvider({ children }: { children: ReactNode }) {
+export function ResultsSelectionProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [store] = useState(createResultsSelection);
 
   return <SelectionContext value={store}>{children}</SelectionContext>;

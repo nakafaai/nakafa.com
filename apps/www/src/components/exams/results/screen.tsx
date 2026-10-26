@@ -5,15 +5,15 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
 import { createContext, use, useMemo } from "react";
 import { useTranslations } from "use-intl";
+import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
   ResultsPaperContext,
   ResultsScopeContext,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import { QuestionResults } from "@/components/exams/results/questions";
-import { ResultsSelectionProvider } from "@/components/exams/results/selection";
 import { ReleaseCard } from "@/components/exams/results/release";
+import { ResultsSelectionProvider } from "@/components/exams/results/selection";
 import { StudentsTable } from "@/components/exams/results/students";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";

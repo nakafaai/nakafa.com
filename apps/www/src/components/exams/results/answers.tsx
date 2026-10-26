@@ -83,7 +83,11 @@ function AttemptAnswers({
   );
 
   if (QueryResult.isFailure(read)) {
-    return <p className="text-muted-foreground text-sm">{t("results-unavailable")}</p>;
+    return (
+      <p className="text-muted-foreground text-sm">
+        {t("results-unavailable")}
+      </p>
+    );
   }
   if (!QueryResult.isSuccess(read)) {
     return null;

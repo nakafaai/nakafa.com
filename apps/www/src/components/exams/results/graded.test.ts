@@ -59,7 +59,9 @@ describe("components/exams/results graded", () => {
         },
       ],
     };
-    expect(gradedAttempt(result, { points: 3, questionId: questionId("q2") })).toEqual({
+    expect(
+      gradedAttempt(result, { points: 3, questionId: questionId("q2") })
+    ).toEqual({
       ...result,
       points: 4,
       questions: [

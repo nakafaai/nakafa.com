@@ -93,7 +93,9 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
   const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
-  const chosen = useResultsSelection((state) => state.selected === row.attemptId);
+  const chosen = useResultsSelection(
+    (state) => state.selected === row.attemptId
+  );
   const choose = useResultsSelection((state) => state.choose);
 
   return (
