@@ -344,6 +344,7 @@ export function AddMinutesDialog({
             id={minutesId}
             inputMode="numeric"
             onChange={(event) => setMinutesText(event.currentTarget.value)}
+            placeholder={t("minutes-placeholder")}
             value={minutesText}
           />
           {invalid ? (

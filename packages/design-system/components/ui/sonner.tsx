@@ -113,9 +113,9 @@ function Toaster({
             "absolute start-0 top-0 -translate-x-[35%] -translate-y-[35%]"
           ),
           content: "flex min-w-0 flex-1 flex-col gap-0.5",
-          description: "line-clamp-2 text-muted-foreground leading-[1.4]",
+          description: "text-pretty text-muted-foreground leading-[1.4]",
           icon: "-ms-0.75 me-1 flex size-4 shrink-0 items-center justify-center",
-          title: "line-clamp-1 font-medium leading-normal",
+          title: "text-pretty font-medium leading-normal",
           toast:
             "flex w-(--width) items-center gap-1.5 rounded-(--border-radius) border border-border bg-popover p-4 text-[13px] text-popover-foreground shadow-[0_4px_12px_rgba(0,0,0,0.1)] focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
         },

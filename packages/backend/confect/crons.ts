@@ -16,6 +16,7 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
+const GUARDIAN_CODE_SWEEP_INTERVAL_HOURS = 1;
 const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
@@ -279,11 +280,29 @@ export default CronJobs.make()
     )
   )
   .add(
+    /** Deletes guardian sign-in codes that expired unused (ADR 0034). */
+    CronJob.make(
+      "delete expired guardian codes",
+      Duration.hours(GUARDIAN_CODE_SWEEP_INTERVAL_HOURS),
+      internal.guardians.codes.sweep,
+      {}
+    )
+  )
+  .add(
     /** Deletes the access tokens of integration clients that expired (ADR 0029). */
     CronJob.make(
       "delete expired integration tokens",
       Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
       internal.integrations.tokens.sweep,
+      {}
+    )
+  )
+  .add(
+    /** Deletes the device authorizations of the device grant that expired (ADR 0029). */
+    CronJob.make(
+      "delete expired device authorizations",
+      Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
+      internal.integrations.devices.sweep,
       {}
     )
   );

@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MASCOT } from "@repo/backend/test/mascot";
+import { seedSchoolMember } from "@repo/backend/test/member";
 import { MascotCode } from "@repo/mascot/code";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -278,5 +279,43 @@ describe("comments/queries", () => {
         liked: false,
       },
     ]);
+  });
+
+  it("reads a school member's comments to the member alone, and an empty page to anyone else (K15)", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const author = await t.mutation(async (ctx) => {
+      const seeded = await seedAuthenticatedUser(ctx, {
+        now,
+        suffix: "member-author",
+      });
+      await ctx.db.insert("comments", {
+        likeCount: 0,
+        replyCount: 0,
+        slug: "articles/member",
+        text: "Komentar anggota sekolah",
+        userId: seeded.userId,
+      });
+      await seedSchoolMember(ctx, seeded.userId, now);
+      return seeded;
+    });
+    const readAs = (caller: Pick<typeof t, "query">) =>
+      caller.query(api.comments.queries.getCommentsByUserId, {
+        paginationOpts,
+        userId: author.userId,
+      });
+
+    expect(
+      await readAs(
+        t.withIdentity({
+          sessionId: author.sessionId,
+          subject: author.authUserId,
+        })
+      )
+    ).toMatchObject({ page: [{ text: "Komentar anggota sekolah" }] });
+    expect(await readAs(t)).toStrictEqual({
+      continueCursor: "",
+      isDone: true,
+      page: [],
+    });
   });
 });

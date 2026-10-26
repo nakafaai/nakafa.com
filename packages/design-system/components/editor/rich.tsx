@@ -7,6 +7,7 @@ import {
   editorPlaceholder,
   editorScroll,
 } from "@repo/design-system/components/editor/frame";
+import { TASK_VIEW } from "@repo/design-system/components/editor/task";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
 import { EditorPreview } from "@repo/design-system/components/editor/words";
 import type { EditorProps } from "@tiptap/pm/view";
@@ -101,7 +102,13 @@ export function RichEditor({
   const refuse = useCallbackRef(onRefuse);
   const [content] = useState(defaultValue);
   const options = useMemo(
-    () => richOptions({ limit, onRefuse: refuse, placeholder }),
+    () =>
+      richOptions({
+        limit,
+        onRefuse: refuse,
+        placeholder,
+        taskView: TASK_VIEW,
+      }),
     [limit, placeholder, refuse]
   );
   const editorProps = useMemo<EditorProps>(

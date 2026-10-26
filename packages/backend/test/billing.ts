@@ -252,7 +252,6 @@ export async function seedXenditSubscription(
       kind: "xendit",
       planId: options.planId ?? "repl_1",
       tokenId: null,
-      channel: "DANA",
     },
     providerUpdatedAt: options.providerUpdatedAt ?? XENDIT_STORED_AT,
   });

@@ -101,6 +101,7 @@ const record = FunctionImpl.make(
         status: "open",
         openedAt: yield* Clock.currentTimeMillis,
         expiresAt: args.expiresAt,
+        locale: "id",
         invoiceId: args.invoiceId,
       })
       .pipe(Effect.orDie);

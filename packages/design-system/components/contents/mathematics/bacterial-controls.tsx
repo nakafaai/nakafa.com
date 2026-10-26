@@ -1,23 +1,35 @@
-import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
-import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
+import {
+  Clock04Icon,
+  DashboardSpeed01Icon,
+  PauseIcon,
+  PlayIcon,
+  Time04Icon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
+import {
   VisualCardActions,
-  VisualCardFullscreen,
-  VisualCardGroup,
+  VisualCardMenu,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 
 const SPEED_STEP = 0.25;
-const SPEED_VALUES = Array.from(
-  { length: 5 },
-  (_, index) => SPEED_STEP * (index + 1)
-);
+const SPEED_VALUES = Arr.makeBy(5, (index) => SPEED_STEP * (index + 1));
 
-/** Renders the reset, playback, and full screen actions in the card's actions band. */
+/**
+ * Renders the card's actions band: play or pause, its one main action, then full
+ * screen joined with the menu that starts the growth over.
+ */
 export function BacterialPlayback({
   isPlaying,
   onReset,
@@ -31,10 +43,6 @@ export function BacterialPlayback({
 
   return (
     <VisualCardActions>
-      <Button onClick={onReset} size="icon" variant="outline">
-        <HugeIcons icon={Clock04Icon} />
-        <span className="sr-only">{t("reset")}</span>
-      </Button>
       <Button
         onClick={onTogglePlaying}
         size="icon"
@@ -43,12 +51,17 @@ export function BacterialPlayback({
         <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
         <span className="sr-only">{t(isPlaying ? "pause" : "play")}</span>
       </Button>
-      <VisualCardFullscreen />
+      <VisualCardMenu>
+        <DropdownMenuItem onClick={onReset}>
+          <HugeIcons icon={Clock04Icon} />
+          {t("reset")}
+        </DropdownMenuItem>
+      </VisualCardMenu>
     </VisualCardActions>
   );
 }
 
-/** Renders one choice per playback speed. */
+/** Renders the playback speed as one select, which names the speed it plays at. */
 export function BacterialSpeeds({
   onSpeedChange,
   speed,
@@ -56,18 +69,37 @@ export function BacterialSpeeds({
   onSpeedChange: (speed: number) => void;
   speed: number;
 }) {
+  const t = useTranslations("Common");
+  const items = Arr.map(SPEED_VALUES, (value) => ({
+    label: `${value}x`,
+    value,
+  }));
+
   return (
-    <VisualCardGroup>
-      {Arr.map(SPEED_VALUES, (speedValue) => (
-        <Choice
-          key={speedValue}
-          onClick={() => onSpeedChange(speedValue)}
-          pressed={speed === speedValue}
-        >
-          {speedValue}x
-        </Choice>
-      ))}
-    </VisualCardGroup>
+    <Select
+      items={items}
+      onValueChange={(next: number | null) => {
+        if (next !== null) {
+          onSpeedChange(next);
+        }
+      }}
+      value={speed}
+    >
+      <SelectTrigger aria-label={t("speed")} size="sm">
+        <HugeIcons
+          className="text-muted-foreground"
+          icon={DashboardSpeed01Icon}
+        />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {Arr.map(items, (item) => (
+          <SelectItem key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -104,7 +136,10 @@ function useBacterialTime() {
   return time;
 }
 
-/** Renders one choice per generation, labelled with its time. */
+/**
+ * Renders the generation as one select, each option labelled with its time. The
+ * select follows the growth as it advances on its own, and a choice jumps to it.
+ */
 export function BacterialGenerations({
   generation,
   maxGenerations,
@@ -114,23 +149,34 @@ export function BacterialGenerations({
   maxGenerations: number;
   onGenerationChange: (generation: number) => void;
 }) {
+  const t = useTranslations("Common");
   const { timeInterval, timeUnit } = useBacterialTime();
+  const items = Arr.makeBy(maxGenerations + 1, (index) => ({
+    label: `${index * timeInterval} ${timeUnit}`,
+    value: index,
+  }));
 
   return (
-    <VisualCardGroup>
-      {Array.from({ length: maxGenerations + 1 }, (_, index) => {
-        const time = index * timeInterval;
-
-        return (
-          <Choice
-            key={time.toString()}
-            onClick={() => onGenerationChange(index)}
-            pressed={generation === index}
-          >
-            {time} {timeUnit}
-          </Choice>
-        );
-      })}
-    </VisualCardGroup>
+    <Select
+      items={items}
+      onValueChange={(next: number | null) => {
+        if (next !== null) {
+          onGenerationChange(next);
+        }
+      }}
+      value={generation}
+    >
+      <SelectTrigger aria-label={t("time")} size="sm">
+        <HugeIcons className="text-muted-foreground" icon={Time04Icon} />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {Arr.map(items, (item) => (
+          <SelectItem key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

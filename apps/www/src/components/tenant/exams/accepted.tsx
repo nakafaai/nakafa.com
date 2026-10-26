@@ -50,6 +50,7 @@ function AcceptedRow({
   removeLabel,
   text,
 }: AcceptedRowProps) {
+  const t = useTranslations("Exams");
   // The text the teacher types, which stands for the saved answer until the field is left.
   const [draft, setDraft] = useState<string | null>(null);
 
@@ -76,6 +77,7 @@ function AcceptedRow({
             event.currentTarget.blur();
           }
         }}
+        placeholder={t("answer-placeholder")}
         ref={onRemove === null ? focusOnMount : undefined}
         value={draft ?? text}
       />

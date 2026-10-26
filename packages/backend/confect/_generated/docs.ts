@@ -67,7 +67,11 @@ export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSig
 export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
+export type GuardianCodesDoc = Document.Document<typeof schemaDefinition, "guardianCodes">;
+export type GuardianConsentsDoc = Document.Document<typeof schemaDefinition, "guardianConsents">;
+export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guardianLinks">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
+export type IntegrationDevicesDoc = Document.Document<typeof schemaDefinition, "integrationDevices">;
 export type IntegrationTokensDoc = Document.Document<typeof schemaDefinition, "integrationTokens">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
@@ -100,6 +104,8 @@ export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "prog
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
+export type ReportCardsDoc = Document.Document<typeof schemaDefinition, "reportCards">;
+export type RosterEntriesDoc = Document.Document<typeof schemaDefinition, "rosterEntries">;
 export type SchoolLoginsDoc = Document.Document<typeof schemaDefinition, "schoolLogins">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
 export type TenantAssignmentsDoc = Document.Document<typeof schemaDefinition, "tenantAssignments">;
@@ -198,7 +204,11 @@ export interface Docs {
   examSittings: ExamSittingsDoc;
   exams: ExamsDoc;
   gradingSchemes: GradingSchemesDoc;
+  guardianCodes: GuardianCodesDoc;
+  guardianConsents: GuardianConsentsDoc;
+  guardianLinks: GuardianLinksDoc;
   integrationClients: IntegrationClientsDoc;
+  integrationDevices: IntegrationDevicesDoc;
   integrationTokens: IntegrationTokensDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
@@ -231,6 +241,8 @@ export interface Docs {
   programCatalog: ProgramCatalogDoc;
   quranRows: QuranRowsDoc;
   quranSearch: QuranSearchDoc;
+  reportCards: ReportCardsDoc;
+  rosterEntries: RosterEntriesDoc;
   schoolLogins: SchoolLoginsDoc;
   snapshotBatches: SnapshotBatchesDoc;
   tenantAssignments: TenantAssignmentsDoc;
