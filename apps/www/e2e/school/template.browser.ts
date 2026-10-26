@@ -287,3 +287,80 @@ test("a teacher turns a question into a short answer with accepted answers, and 
   await expect(reopened.getByRole("radio")).toHaveCount(0);
   await context.close();
 });
+
+test("a teacher turns a question into matching, pairs every statement in the key, and the student pairs them by letter", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("Pasangan");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
+  await expect(prompt).toBeEditable({ timeout: readinessTimeoutMilliseconds });
+  await prompt.click();
+  await page.keyboard.type("Jodohkan ibu kota dengan negaranya.");
+
+  // Matching gives the paper three statements and three answers, each written in its own editor.
+  await page
+    .getByRole("button", { name: "Question type: Multiple choice" })
+    .click();
+  await page.getByRole("menuitemradio", { name: "Matching" }).click();
+  const sentBefore = changes.sent;
+  for (const [part, text] of [
+    ["statement 1", "Indonesia"],
+    ["statement 2", "Jepang"],
+    ["statement 3", "Jerman"],
+    ["answer A", "Berlin"],
+    ["answer B", "Jakarta"],
+    ["answer C", "Tokyo"],
+  ] as const) {
+    const field = page.getByRole("textbox", { name: `Question 1, ${part}` });
+    await field.fill(text);
+    await field.press("Tab");
+  }
+
+  // The key takes a letter for each statement, and saves once every statement holds one.
+  const panel = page.getByRole("complementary", { name: "For teachers" });
+  for (const [statement, letter] of [
+    ["1", "B"],
+    ["2", "C"],
+    ["3", "A"],
+  ] as const) {
+    await panel
+      .getByRole("combobox", {
+        name: `Answer for statement ${statement} of question 1`,
+      })
+      .click();
+    await page.getByRole("option", { exact: true, name: letter }).click();
+  }
+  await expect(
+    page.getByRole("region", { name: FIRST_QUESTION })
+  ).not.toContainText("No key yet");
+  await saved(changes, sentBefore);
+
+  // The student reads the answers by letter and picks one for each statement.
+  const trying = await context.newPage();
+  await trying.goto(page.url().replace(EDIT_SUFFIX, "/try"));
+  await trying.waitForURL(TRY_PATH);
+  const first = trying.getByRole("combobox", {
+    name: "Answer for statement 1",
+  });
+  await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(trying.getByText("Jakarta")).toBeVisible();
+  await first.click();
+  await trying.getByRole("option", { exact: true, name: "B" }).click();
+  await expect(first).toContainText("B");
+  await context.close();
+});
