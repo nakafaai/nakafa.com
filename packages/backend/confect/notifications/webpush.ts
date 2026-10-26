@@ -137,9 +137,9 @@ export const encryptPayload = Effect.fn("notifications.webpush.encrypt")(
       ])
     );
     // A random source that fails is a defect of the runtime, not of the push.
-    const salt = yield* (yield* Crypto.Crypto)
-      .randomBytes(16)
-      .pipe(Effect.orDie);
+    const salt = new Uint8Array(
+      yield* (yield* Crypto.Crypto).randomBytes(16).pipe(Effect.orDie)
+    );
     const pseudo = yield* hmac(salt, keyMaterial);
     const contentKey = (yield* hmac(
       pseudo,
