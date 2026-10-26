@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { cva } from "class-variance-authority";
@@ -118,7 +119,7 @@ export function ClassShell({
 }
 
 /** One class as its page resolves it, with the actions the viewer may take. */
-type Resolved = Ref.Returns<typeof classroom.classes.resolve>;
+type Resolved = typeof ClassResolved.Type;
 
 /**
  * The class page: the class is read by its address once Convex has settled the session, and a
