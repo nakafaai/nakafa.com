@@ -181,7 +181,8 @@ function SchoolMemberTable({
     }),
     memberColumns.display({
       cell: (info) =>
-        info.row.original.status === "notInvited" ? (
+        info.row.original.removable &&
+        info.row.original.status !== "invited" ? (
           <SchoolMemberMenu member={info.row.original} slug={slug} />
         ) : null,
       id: "actions",
@@ -199,9 +200,10 @@ function SchoolMemberTable({
 }
 
 /**
- * The row menu of a member who is not invited, because its invite ended or its card
- * expired. It removes the member behind a confirmation. An invited member is handled on
- * the invitations page, and a joined member has no menu here.
+ * The row menu of a member whom the viewer may remove: one who joined, one whose card waits,
+ * and one whose invite ended or card expired. It removes the member behind a confirmation, and
+ * the account of a member who joined loses the school at once. An invited member is handled on
+ * the invitations page, and the list answers which rows the viewer may remove.
  */
 function SchoolMemberMenu({
   member,
