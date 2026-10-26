@@ -3,15 +3,17 @@
 @import "@repo/design-system/styles/katex.css";
 
 /*
- * The Quran typeface for Quran text, its own family beside the Amiri that gives
- * Arabic glyphs their face in other text. With optional display it never swaps in
- * after the text is laid out, so the text never moves: a page view it does not
- * reach in time keeps the system Arabic face, and the next view uses the cached
- * file. The Quran text preloads both files (components/shared/quran/text.tsx):
- * the Arabic subset for the words and the Latin subset for the spaces between them.
+ * Amiri, the face of Arabic text: Quran text draws in it (`--font-quran`), and an
+ * Arabic character in any other text falls through Inter to it (`--font-sans`).
+ * Each subset loads only when a page draws a character in its range. With
+ * optional display it never swaps in after the text is laid out, so the text
+ * never moves: a page view it does not reach in time keeps the system Arabic
+ * face, and the next view uses the cached file. The Quran text preloads both
+ * files (components/shared/quran/text.tsx): the Arabic subset for the words and
+ * the Latin subset for the spaces between them.
  */
 @font-face {
-  font-family: "Amiri Quran";
+  font-family: "Amiri";
   font-style: normal;
   font-display: optional;
   font-weight: 400;
@@ -22,7 +24,7 @@
 }
 
 @font-face {
-  font-family: "Amiri Quran";
+  font-family: "Amiri";
   font-style: normal;
   font-display: optional;
   font-weight: 400;
