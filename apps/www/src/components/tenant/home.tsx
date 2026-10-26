@@ -3,14 +3,13 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
-import type { StoreApi } from "zustand";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
-import { CreateExam } from "@/components/tenant/exams/dialog";
 import {
-  createExamDrafts,
-  type ExamDrafts,
-} from "@/components/tenant/exams/drafts";
+  CreateExam,
+  ExamDraftsContext,
+} from "@/components/tenant/exams/dialog";
+import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import { SchoolHeader } from "@/components/tenant/header";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { HomeClock } from "@/components/tenant/home/clock";
@@ -23,6 +22,7 @@ import {
   useStudentSittings,
 } from "@/components/tenant/home/query";
 import { createHomeReleases } from "@/components/tenant/home/release";
+import { HomeReleasesContext } from "@/components/tenant/home/results";
 import { StaffHome } from "@/components/tenant/home/staff";
 import { StudentHome } from "@/components/tenant/home/student";
 import { HomeGreeting } from "@/components/tenant/home/title";
@@ -55,19 +55,21 @@ export function TenantHome({ preload }: { preload: HomePreload }) {
   }
   return (
     <HomePreloadContext value={preload}>
-      <HomeClock key={serverNow} serverNow={serverNow}>
-        <HomePage
-          action={<HomeAction drafts={drafts} studentView={studentView} />}
-        >
-          {studentView ? (
-            <StudentHome />
-          ) : (
-            <ReadBoundary read={homeExamsRead(tenant.slug)}>
-              <StaffHome drafts={drafts} releases={releases} />
-            </ReadBoundary>
-          )}
-        </HomePage>
-      </HomeClock>
+      <ExamDraftsContext value={drafts}>
+        <HomeReleasesContext value={releases}>
+          <HomeClock key={serverNow} serverNow={serverNow}>
+            <HomePage action={<HomeAction studentView={studentView} />}>
+              {studentView ? (
+                <StudentHome />
+              ) : (
+                <ReadBoundary read={homeExamsRead(tenant.slug)}>
+                  <StaffHome />
+                </ReadBoundary>
+              )}
+            </HomePage>
+          </HomeClock>
+        </HomeReleasesContext>
+      </ExamDraftsContext>
     </HomePreloadContext>
   );
 }
@@ -76,13 +78,7 @@ export function TenantHome({ preload }: { preload: HomePreload }) {
  * The one action of the header row: Create exam for a viewer who may create, and Start exam or Continue for a
  * student while a sitting is open. A viewer with neither gets no action.
  */
-function HomeAction({
-  drafts,
-  studentView,
-}: {
-  drafts: StoreApi<ExamDrafts>;
-  studentView: boolean;
-}) {
+function HomeAction({ studentView }: { studentView: boolean }) {
   const tenant = useTenant();
 
   if (studentView) {
@@ -91,13 +87,7 @@ function HomeAction({
   if (!tenant.home.canCreate) {
     return null;
   }
-  return (
-    <CreateExam
-      choices={tenant.home.choices}
-      drafts={drafts}
-      slug={tenant.slug}
-    />
-  );
+  return <CreateExam choices={tenant.home.choices} slug={tenant.slug} />;
 }
 
 /**

@@ -31,7 +31,7 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { useId, useState, useTransition } from "react";
+import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -49,6 +49,23 @@ import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
 
 /**
+ * The drafts of the list or the home that holds the create action: the exams the server is still saving,
+ * which the action starts and ends, and which their rows read. The page creates the store once and provides it.
+ */
+export const ExamDraftsContext = createContext<StoreApi<ExamDrafts> | null>(
+  null
+);
+
+/** Reads the page's drafts. It throws outside a page that provides them. */
+export function useExamDrafts() {
+  const drafts = use(ExamDraftsContext);
+  if (drafts === null) {
+    throw new Error("useExamDrafts must be used within ExamDraftsContext");
+  }
+  return drafts;
+}
+
+/**
  * The button and the dialog that create an exam. The dialog asks for the title and the place,
  * and takes a Word or PDF file when the teacher has the questions already. The new exam shows in
  * the list at once, as a placeholder that is inert until the server answers, and then the page
@@ -57,13 +74,12 @@ import { placeholderExamId } from "@/components/tenant/exams/placeholder";
  */
 export function CreateExam({
   choices,
-  drafts,
   slug,
 }: {
   choices: readonly ScopeChoice[];
-  drafts: StoreApi<ExamDrafts>;
   slug: TenantSlug;
 }) {
+  const drafts = useExamDrafts();
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const navigate = useNavigate();

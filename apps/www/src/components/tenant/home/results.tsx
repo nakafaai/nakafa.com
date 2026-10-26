@@ -4,7 +4,7 @@ import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { runSittingCall } from "@/components/exams/sitting/actions";
@@ -22,6 +22,20 @@ import {
 /** One closed sitting whose results the viewer may view, as the school home holds it. */
 type Result = (typeof HomeView.Type)["closed"][number];
 
+/** The releases in flight of the school home, which the home creates once and provides. */
+export const HomeReleasesContext = createContext<StoreApi<HomeReleases> | null>(
+  null
+);
+
+/** Reads the home's releases. It throws outside the home, which always provides them. */
+function useHomeReleases() {
+  const releases = use(HomeReleasesContext);
+  if (releases === null) {
+    throw new Error("useHomeReleases must be used within TenantHome");
+  }
+  return releases;
+}
+
 /**
  * The results of the closed sittings that the viewer may view, newest first, each with its exam, its room, and whether
  * its results are released. A row opens the sitting's results page. A sitting whose results may be released shows the
@@ -30,16 +44,15 @@ type Result = (typeof HomeView.Type)["closed"][number];
  */
 export function ResultsCell({
   bound,
-  releases,
   results,
   span,
 }: {
   /** Whether the list reached its bound, so older results may exist. */
   bound: boolean;
-  releases: StoreApi<HomeReleases>;
   results: readonly Result[];
   span: CellSpan;
 }) {
+  const releases = useHomeReleases();
   const t = useTranslations("School");
   const { slug } = useTenant();
   const pending = useStore(releases, (state) => state.ids);

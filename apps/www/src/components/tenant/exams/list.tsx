@@ -21,7 +21,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { type StoreApi, useStore } from "zustand";
+import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
@@ -33,11 +33,11 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
-import { CreateExam } from "@/components/tenant/exams/dialog";
 import {
-  createExamDrafts,
-  type ExamDrafts,
-} from "@/components/tenant/exams/drafts";
+  CreateExam,
+  ExamDraftsContext,
+} from "@/components/tenant/exams/dialog";
+import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -101,39 +101,39 @@ export function ExamList({
     !(loadingFirst || failed) &&
     Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
   return (
-    <TableFiltersProvider>
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {empty ? null : <TableSearch placeholder={t("exams-search")} />}
-        {tenant.home.canCreate && !empty ? (
-          <CreateExam
-            choices={tenant.home.choices}
-            drafts={drafts}
-            slug={slug}
-          />
-        ) : null}
-      </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
-        {empty ? (
-          <NoExamEmpty drafts={drafts} />
-        ) : (
-          <ExamListRows
-            exams={pagination.results}
-            failed={failed}
-            loadingFirst={loadingFirst}
-            saving={saving}
-          />
-        )}
-        {loadMore !== null && (
-          <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
-        )}
-      </div>
-    </TableFiltersProvider>
+    <ExamDraftsContext value={drafts}>
+      <TableFiltersProvider>
+        <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+          {empty ? null : <TableSearch placeholder={t("exams-search")} />}
+          {tenant.home.canCreate && !empty ? (
+            <CreateExam choices={tenant.home.choices} slug={slug} />
+          ) : null}
+        </SchoolHeader>
+        <div className="flex w-full min-w-0 flex-1 flex-col">
+          {empty ? (
+            <NoExamEmpty />
+          ) : (
+            <ExamListRows
+              exams={pagination.results}
+              failed={failed}
+              loadingFirst={loadingFirst}
+              saving={saving}
+            />
+          )}
+          {loadMore !== null && (
+            <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
+          )}
+        </div>
+      </TableFiltersProvider>
+    </ExamDraftsContext>
   );
 }
 
 /**
- * The rows of the exam list: the failure of its read above the rows it already holds, and the table,
- * or nothing while the first page loads. A first page that failed shows the failure alone.
+ * The rows of the exam list: the failure of its read above the rows it already holds, and the exams in a
+ * data table, or nothing while the first page loads. A first page that failed shows the failure alone. The
+ * title links to its editor, and the row menu to the exam's rooms. An exam that the server is still saving
+ * shows its title without a link and no menu, so it is inert.
  */
 function ExamListRows({
   exams: rows,
@@ -146,34 +146,15 @@ function ExamListRows({
   loadingFirst: boolean;
   saving: readonly ExamSummary["id"][];
 }) {
+  const t = useTranslations("Exams");
+  const tenant = useTenant();
+
   if (loadingFirst) {
     return null;
   }
   if (failed && Arr.isReadonlyArrayEmpty(rows)) {
     return <DataFailure onRetry={reloadPage} />;
   }
-  return (
-    <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <ExamTable exams={rows} saving={saving} />
-    </>
-  );
-}
-
-/**
- * The exams in a data table: the title links to its editor, and the last column links to the
- * exam's rooms. An exam that the server is still saving shows its title without a link and no
- * rooms link, so it is inert.
- */
-function ExamTable({
-  exams: rows,
-  saving,
-}: {
-  exams: readonly ExamSummary[];
-  saving: readonly ExamSummary["id"][];
-}) {
-  const t = useTranslations("Exams");
-  const tenant = useTenant();
 
   const columns = examColumns.columns([
     examColumns.accessor((exam) => exam.title, {
@@ -207,12 +188,15 @@ function ExamTable({
   ]);
 
   return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      rowId={(exam) => exam.id}
-      search="title"
-    />
+    <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      <DataTable
+        columns={columns}
+        data={rows}
+        rowId={(exam) => exam.id}
+        search="title"
+      />
+    </>
   );
 }
 
@@ -270,7 +254,7 @@ function ExamRowMenu({ exam }: { exam: ExamSummary }) {
  * Create exam, with Nina writing. A viewer with no unit to create an exam in is told why and
  * where it is fixed: a manager goes to the units, and anyone else is told to ask an admin.
  */
-function NoExamEmpty({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
+function NoExamEmpty() {
   const tenant = useTenant();
   const t = useTranslations("Exams");
 
@@ -278,13 +262,7 @@ function NoExamEmpty({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
     return (
       <TableEmpty
         act="writing"
-        action={
-          <CreateExam
-            choices={tenant.home.choices}
-            drafts={drafts}
-            slug={tenant.slug}
-          />
-        }
+        action={<CreateExam choices={tenant.home.choices} slug={tenant.slug} />}
         description={t("create-description")}
         title={t("empty")}
       />
