@@ -3,11 +3,15 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Array as Arr, Option } from "effect";
 import {
+  acceptedKey,
+  acceptedOf,
   changedOption,
   choiceOf,
   emptyLabel,
+  entryOf,
   holdsLabel,
   keyWithoutOption,
+  labelText,
   markedKey,
   markedOptions,
   type OptionLabel,
@@ -422,5 +426,67 @@ describe("withOptionRemoved", () => {
   it("leaves a choice of two options as it is", () => {
     const pair = { ...choice, options: [choice.options[0], choice.options[1]] };
     expect(withOptionRemoved([pair, entry], "option-2")).toEqual([pair, entry]);
+  });
+});
+
+describe("entryOf, acceptedKey and acceptedOf", () => {
+  it("finds the text entry of a short answer, and none in a choice", () => {
+    expect(entryOf([entry])).toEqual(Option.some(entry));
+    expect(entryOf([choice])).toEqual(Option.none());
+  });
+
+  it("accepts each text once, cleaned as the contract takes it, ignoring case and extra spaces", () => {
+    const key = acceptedKey(
+      [entry],
+      [" Jakarta ", "jakarta", "DKI\u00a0 Jakarta", "", "Batavia\u200b"]
+    );
+    expect(key).toEqual([
+      {
+        accepted: {
+          acceptedAnswers: ["Jakarta", "DKI Jakarta", "Batavia"],
+          collapseWhitespace: true,
+          ignoreCase: true,
+          kind: "text",
+        },
+        interaction: "entry",
+        kind: "textEntry",
+      },
+    ]);
+    expect(acceptedOf(key)).toEqual(["Jakarta", "DKI Jakarta", "Batavia"]);
+  });
+
+  it("clears the key when no text is left, and reads no accepted answer from a choice key or none", () => {
+    expect(acceptedKey([entry], ["  ", ""])).toBeNull();
+    expect(acceptedOf(null)).toEqual([]);
+    expect(acceptedOf(markedKey([choice], "option-1"))).toEqual([]);
+  });
+});
+
+describe("labelText", () => {
+  it("reads the text of a label's paragraphs, and nothing of an empty one", () => {
+    expect(labelText(textOf("Benar"))).toBe("Benar");
+    expect(
+      labelText({
+        content: [
+          { content: [{ text: "Salah", type: "text" }], type: "paragraph" },
+          { content: [{ text: "sekali", type: "text" }], type: "paragraph" },
+        ],
+        type: "doc",
+      })
+    ).toBe("Salah sekali");
+    expect(labelText(emptyLabel())).toBe("");
+    // A line break and a formula block hold no text of a label.
+    expect(
+      labelText({
+        content: [
+          {
+            content: [{ text: "Benar", type: "text" }, { type: "hardBreak" }],
+            type: "paragraph",
+          },
+          { attrs: { latex: "x^2" }, type: "mathBlock" },
+        ],
+        type: "doc",
+      })
+    ).toBe("Benar");
   });
 });

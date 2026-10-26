@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
 import { useNavigate } from "@tanstack/react-router";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
 import { useAi } from "@/components/ai/context";
@@ -32,19 +32,17 @@ export function SheetNew() {
   );
 }
 
-/** The welcome of a new chat and its composer, which every variant of the sheet shares. */
+/** The welcome of a new chat, which its variant composes, and its composer, which every variant of the sheet shares. */
 function NewChatSurface({
+  children,
   composer,
-  prompt,
 }: {
+  children: ReactNode;
   composer: ReactNode;
-  prompt: ComponentProps<typeof StartPrompt>["prompt"];
 }) {
   return (
     <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
-      <StartPrompt className="p-6" prompt={prompt}>
-        <NewChatWelcome />
-      </StartPrompt>
+      {children}
 
       <div className="grid shrink-0 px-2 pb-2">{composer}</div>
     </div>
@@ -93,8 +91,11 @@ function VisitorSheetNew() {
           <NinaSuggestions onSubmit={signIn} />
         </NinaInput>
       }
-      prompt={null}
-    />
+    >
+      <StartPrompt className="p-6" prompt={null}>
+        <NewChatWelcome />
+      </StartPrompt>
+    </NewChatSurface>
   );
 }
 
@@ -105,8 +106,11 @@ function PendingSheetNew() {
       composer={
         <NinaInput attachments={false} disabled onSubmit={() => false} />
       }
-      prompt={null}
-    />
+    >
+      <StartPrompt className="p-6" prompt={null}>
+        <NewChatWelcome />
+      </StartPrompt>
+    </NewChatSurface>
   );
 }
 
@@ -136,7 +140,10 @@ function SignedInSheetNew() {
           )}
         </NinaInput>
       }
-      prompt={prompt}
-    />
+    >
+      <StartPrompt className="p-6" prompt={prompt}>
+        <NewChatWelcome />
+      </StartPrompt>
+    </NewChatSurface>
   );
 }

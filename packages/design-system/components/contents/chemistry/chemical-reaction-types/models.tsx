@@ -22,8 +22,10 @@ import {
   DiatomicMolecule,
   Particle,
   ParticleCluster,
+  ParticleElementContext,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
 import { Array as Arr } from "effect";
+import { createContext, use } from "react";
 
 const PHOSPHORUS_POINTS = [
   [-0.18, -0.08, 0],
@@ -64,28 +66,44 @@ const PRODUCT_PHOSPHORUS_POINTS = [
 
 type ReactionPhase = "after" | "before";
 
-export function ReactionModel({ phase }: { phase: ReactionPhase }) {
+/** The side of the reaction a model draws: the reactants before it, or the products after it. */
+export const ReactionPhaseContext = createContext<ReactionPhase | null>(null);
+
+/** Reads the side of the reaction that the surrounding model draws. */
+function useReactionPhase() {
+  const phase = use(ReactionPhaseContext);
+  if (phase === null) {
+    throw new Error(
+      "useReactionPhase must be used within ReactionPhaseContext"
+    );
+  }
+  return phase;
+}
+
+/** Draws the model of the selected reaction type on the side its context names. */
+export function ReactionModel() {
   const typeId = useChemicalReactionTypeSelection((state) => state.typeId);
   if (typeId === COMBUSTION_TYPE_ID) {
-    return <CombustionModel phase={phase} />;
+    return <CombustionModel />;
   }
 
   if (typeId === RUST_TYPE_ID) {
-    return <RustModel phase={phase} />;
+    return <RustModel />;
   }
 
   if (typeId === PRECIPITATE_TYPE_ID) {
-    return <PrecipitateModel phase={phase} />;
+    return <PrecipitateModel />;
   }
 
   if (typeId === GAS_TYPE_ID) {
-    return <GasModel phase={phase} />;
+    return <GasModel />;
   }
 
   return null;
 }
 
-function CombustionModel({ phase }: { phase: ReactionPhase }) {
+function CombustionModel() {
+  const phase = useReactionPhase();
   const { colors } = useChemicalReactionTypeScene();
   if (phase === "before") {
     return (
@@ -93,8 +111,6 @@ function CombustionModel({ phase }: { phase: ReactionPhase }) {
         <ParticleCluster
           color={colors.phosphorus}
           label="P"
-          labelColor={colors.sphereText}
-          labelOutlineColor={colors.sphereTextOutline}
           points={PHOSPHORUS_POINTS}
           radius={0.13}
         />
@@ -103,8 +119,6 @@ function CombustionModel({ phase }: { phase: ReactionPhase }) {
             color={colors.oxygen}
             key={Arr.join(Arr.map(position, String), ",")}
             label="O"
-            labelColor={colors.sphereText}
-            labelOutlineColor={colors.sphereTextOutline}
             position={position}
           />
         ))}
@@ -117,16 +131,12 @@ function CombustionModel({ phase }: { phase: ReactionPhase }) {
       <ParticleCluster
         color={colors.oxygen}
         label="O"
-        labelColor={colors.sphereText}
-        labelOutlineColor={colors.sphereTextOutline}
         points={PRODUCT_POINTS}
         radius={0.1}
       />
       <ParticleCluster
         color={colors.phosphorus}
         label="P"
-        labelColor={colors.sphereText}
-        labelOutlineColor={colors.sphereTextOutline}
         points={PRODUCT_PHOSPHORUS_POINTS}
         radius={0.13}
       />
@@ -135,7 +145,8 @@ function CombustionModel({ phase }: { phase: ReactionPhase }) {
   );
 }
 
-function RustModel({ phase }: { phase: ReactionPhase }) {
+function RustModel() {
+  const phase = useReactionPhase();
   const { colors } = useChemicalReactionTypeScene();
   return (
     <group rotation={[-0.12, 0.2, 0]}>
@@ -152,31 +163,28 @@ function RustModel({ phase }: { phase: ReactionPhase }) {
           <DiatomicMolecule
             color={colors.oxygen}
             label="O"
-            labelColor={colors.sphereText}
-            labelOutlineColor={colors.sphereTextOutline}
             position={[-0.22, 0, 0.04]}
           />
-          <Particle
-            color={colors.hydrogen}
-            label="H"
-            labelColor={colors.sphereText}
-            labelOutlineColor={colors.sphereTextOutline}
-            position={[0.34, 0.03, 0]}
-            radius={0.11}
-          />
+          <ParticleElementContext
+            value={{ color: colors.hydrogen, label: "H", radius: 0.11 }}
+          >
+            <Particle position={[0.34, 0.03, 0]} />
+          </ParticleElementContext>
         </group>
       )}
     </group>
   );
 }
 
-function PrecipitateModel({ phase }: { phase: ReactionPhase }) {
+function PrecipitateModel() {
+  const phase = useReactionPhase();
   return (
     <Beaker>{phase === "before" ? <FloatingIons /> : <SettledSolid />}</Beaker>
   );
 }
 
-function GasModel({ phase }: { phase: ReactionPhase }) {
+function GasModel() {
+  const phase = useReactionPhase();
   const { colors } = useChemicalReactionTypeScene();
   return (
     <Beaker>
@@ -184,8 +192,6 @@ function GasModel({ phase }: { phase: ReactionPhase }) {
         <ParticleCluster
           color={colors.carbon}
           label="C"
-          labelColor={colors.sphereText}
-          labelOutlineColor={colors.sphereTextOutline}
           points={[
             [-0.16, -0.2, 0.06],
             [0.02, -0.04, -0.08],
@@ -194,7 +200,7 @@ function GasModel({ phase }: { phase: ReactionPhase }) {
           radius={0.08}
         />
       ) : (
-        <GasBubbles color={colors.bubble} />
+        <GasBubbles />
       )}
     </Beaker>
   );

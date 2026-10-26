@@ -111,6 +111,7 @@ const template = FunctionImpl.make(
   spec,
   "template",
   Effect.fn("exams.questions.template")(function* ({
+    labels,
     questionId,
     revision,
     template,
@@ -118,7 +119,7 @@ const template = FunctionImpl.make(
     const exam = yield* Exam;
     yield* requireUnfrozen(exam);
     const question = yield* questionOf(exam, questionId);
-    yield* switchTemplate(question, { revision, template });
+    yield* switchTemplate(question, { labels, revision, template });
     return yield* readQuestion(questionId);
   })
 );

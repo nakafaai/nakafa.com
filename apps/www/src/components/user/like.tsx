@@ -3,9 +3,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { FeedCount } from "@/components/user/feed";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /**
@@ -30,17 +30,18 @@ export function useWhenSignedIn() {
 
 /**
  * The like toggle of a post or a comment, at its own width: the heart, and the count
- * once it is above zero. The change is made at once and the server answers after it.
+ * the row composes, which shows once it is above zero. The change is made at once and the server answers after it.
  * The ghost variant recolors the icon on hover, so a liked heart keeps its color with
  * a rule of its own.
  */
 export function LikeButton({
+  children,
   liked,
-  likeCount,
   onToggle,
 }: {
+  /** The count of likes, as the row composes it with `FeedCount`. */
+  children: ReactNode;
   liked: boolean;
-  likeCount: number;
   onToggle: () => void;
 }) {
   const t = useTranslations("Common");
@@ -59,7 +60,7 @@ export function LikeButton({
         className={cn(liked && "text-destructive [&_path]:fill-current")}
         icon={FavouriteIcon}
       />
-      <FeedCount value={likeCount} />
+      {children}
     </Button>
   );
 }

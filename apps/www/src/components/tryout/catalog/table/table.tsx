@@ -5,6 +5,7 @@ import { ConvexIsland } from "@/components/providers/island";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
 import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
 import { CatalogQuery } from "@/components/tryout/catalog/table/query";
+import { TryoutSetTableContext } from "@/components/tryout/catalog/table/selection";
 import type {
   TryoutSetListArgs,
   TryoutSetPage,
@@ -72,52 +73,37 @@ export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
       state: true,
     });
   return (
-    <ConvexIsland
-      fallback={
-        <TryoutSetVisitorCatalog
-          bootstrap={bootstrap}
-          request={request}
-          select={select}
-          title={title}
-        />
-      }
+    <TryoutSetTableContext
+      value={{
+        filter: request.filter,
+        onFilter: (filter) => select({ status: filter }),
+        onSort: (sort) =>
+          select({ direction: sort.direction, sort: sort.field }),
+        sort: request.sort,
+        title,
+      }}
     >
-      <TryoutSetSignedCatalog
-        bootstrap={bootstrap}
-        request={request}
-        select={select}
-        title={title}
-      />
-    </ConvexIsland>
+      <ConvexIsland
+        fallback={
+          <TryoutSetVisitorCatalog bootstrap={bootstrap} request={request} />
+        }
+      >
+        <TryoutSetSignedCatalog bootstrap={bootstrap} request={request} />
+      </ConvexIsland>
+    </TryoutSetTableContext>
   );
 }
 
-/** The props of both variants: the server payload, the request on screen, the selection setter and the title. */
+/** The props of both variants: the server payload and the request on screen. */
 interface VariantProps {
   bootstrap: TryoutSetTableProps["bootstrap"];
   request: TryoutSetRequest;
-  select: (change: TryoutSetSelectionChange) => void;
-  title: string;
 }
 
 /** A learner's table: the page's live query, which starts from the loader's first page. */
-function TryoutSetSignedCatalog({
-  bootstrap,
-  request,
-  select,
-  title,
-}: VariantProps) {
+function TryoutSetSignedCatalog({ bootstrap, request }: VariantProps) {
   const data = useTryoutSetData({ bootstrap, request });
-  return (
-    <TryoutSetFrame
-      data={data}
-      filter={request.filter}
-      onFilter={(filter) => select({ status: filter })}
-      onSort={(sort) => select({ direction: sort.direction, sort: sort.field })}
-      sort={request.sort}
-      title={title}
-    />
-  );
+  return <TryoutSetFrame data={data} />;
 }
 
 /** Reads one window of a track for a visitor through the server function, at the server boundary. */
@@ -137,12 +123,7 @@ const readVisitorWindow = Effect.fn("www.tryout.catalog.readVisitorWindow")(
  * the table reads a window of its own only to load more. The pure state in
  * `visitor.ts` decides which response may commit.
  */
-function TryoutSetVisitorCatalog({
-  bootstrap,
-  request,
-  select,
-  title,
-}: VariantProps) {
+function TryoutSetVisitorCatalog({ bootstrap, request }: VariantProps) {
   const [stored, setStored] = useState(() => startVisitorSets(bootstrap));
   const state = syncVisitorSets(stored, bootstrap);
   if (state !== stored) {
@@ -180,11 +161,6 @@ function TryoutSetVisitorCatalog({
         rows: view.rows,
         snapshotId: view.snapshotId,
       }}
-      filter={request.filter}
-      onFilter={(filter) => select({ status: filter })}
-      onSort={(sort) => select({ direction: sort.direction, sort: sort.field })}
-      sort={request.sort}
-      title={title}
     />
   );
 }

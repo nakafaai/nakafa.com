@@ -324,7 +324,7 @@ test("an upcoming room shows as a bar in the owner's schedule, and the bar opens
   // The seed records its exam as made by the school's Owner, who must have signed in first.
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const sitting = await Effect.runPromise(
-    seedSitting(school.slug, learner, 0, true)
+    seedSitting(school.slug, learner, 0, "upcoming")
   );
   const page = await context.newPage();
 

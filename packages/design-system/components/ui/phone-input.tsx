@@ -33,8 +33,6 @@ import flags from "react-phone-number-input/flags";
 import { useTranslations } from "use-intl";
 import { VList } from "virtua";
 
-const countrySearchIcon = <HugeIcons className="size-4" icon={Search02Icon} />;
-
 type PhoneInputProps = {
   className?: string;
 } & React.ComponentProps<typeof PhoneInputPrimitive>;
@@ -152,7 +150,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
             clearLabel={t("clear-search")}
             placeholder={t("search-country-placeholder")}
             showClear
-            startAddon={countrySearchIcon}
+            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
           />
           <AutocompleteEmpty>{t("no-country-found")}</AutocompleteEmpty>
           <AutocompleteList className="p-0" scrollArea={false}>

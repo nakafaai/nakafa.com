@@ -34,7 +34,6 @@ export const Route = createFileRoute("/$locale/_main/try-out/")({
 });
 
 function TryoutHubPage() {
-  const { locale } = Route.useParams();
   const { labels, page, sourceUrl } = Route.useLoaderData();
   return (
     <LayoutMaterial>
@@ -49,7 +48,7 @@ function TryoutHubPage() {
           }}
         />
         <LayoutContent>
-          <TryoutHubClient locale={locale} page={page} />
+          <TryoutHubClient page={page} />
         </LayoutContent>
         <FooterContent>
           <RefContent githubUrl={sourceUrl} />

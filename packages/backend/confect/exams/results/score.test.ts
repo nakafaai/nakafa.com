@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import {
+  matchAnswers,
+  newChoiceAnswers,
+  tableAnswers,
+} from "@repo/backend/confect/exams/question";
 import {
   pointsOf,
   scoreResponse,
@@ -26,6 +30,22 @@ const keyOf = (
   correct: readonly [string, ...string[]],
   interaction = "choice"
 ): InteractionKey[] => [{ correct, interaction, kind: "choice" }];
+
+/** The key of the text entry `text`, accepting these texts in any case and spacing. */
+const accepting = (
+  ...acceptedAnswers: [string, ...string[]]
+): InteractionKey[] => [
+  {
+    accepted: {
+      acceptedAnswers,
+      collapseWhitespace: true,
+      ignoreCase: true,
+      kind: "text",
+    },
+    interaction: "text",
+    kind: "textEntry",
+  },
+];
 
 describe("exams/results/score", () => {
   it("scores a single-answer choice correct when its one option is the correct option", () => {
@@ -80,9 +100,123 @@ describe("exams/results/score", () => {
     ).toBe("pending");
   });
 
-  it("leaves a text answer pending, since a person judges it", () => {
-    expect(scoreResponse([text], keyOf(["option-2"]), ["option-2"])).toBe(
+  it("leaves a text answer pending when its key accepts no text for it", () => {
+    expect(scoreResponse([text], keyOf(["option-2"]), { text: "Paris" })).toBe(
       "pending"
+    );
+  });
+
+  it("scores a short answer correct when it matches an accepted answer after normalization, whatever its case and spaces", () => {
+    expect(
+      scoreResponse([text], accepting("Jakarta"), { text: "  jakarta " })
+    ).toBe("correct");
+    expect(
+      scoreResponse([text], accepting("Daerah Khusus", "DKI"), {
+        text: "daerah   khusus",
+      })
+    ).toBe("correct");
+  });
+
+  it("leaves a short answer that matches no accepted answer pending, so the teacher judges it", () => {
+    expect(
+      scoreResponse([text], accepting("Jakarta"), { text: "Batavia" })
+    ).toBe("pending");
+  });
+
+  it("scores a blank short answer incorrect, as an unanswered question", () => {
+    expect(scoreResponse([text], accepting("Jakarta"), { text: "   " })).toBe(
+      "incorrect"
+    );
+    expect(scoreResponse([text], accepting("Jakarta"), [])).toBe("incorrect");
+  });
+
+  it("leaves a written essay pending for the teacher, and scores a blank one incorrect, with or without a key", () => {
+    const essay: Interaction = {
+      id: "essay",
+      kind: "extendedText",
+      label: "Answer",
+    };
+    expect(scoreResponse([essay], null, { text: "Fotosintesis" })).toBe(
+      "pending"
+    );
+    expect(scoreResponse([essay], null, { text: "" })).toBe("incorrect");
+    expect(scoreResponse([essay], keyOf(["option-1"]), [])).toBe("incorrect");
+  });
+
+  it("scores a match correct when it makes exactly the key's pairs, and incorrect when it misses or changes one", () => {
+    const [match] = matchAnswers();
+    const key: InteractionKey[] = [
+      {
+        interaction: "match",
+        kind: "match",
+        pairs: [
+          { source: "source-1", target: "target-2" },
+          { source: "source-2", target: "target-1" },
+          { source: "source-3", target: "target-3" },
+        ],
+      },
+    ];
+    const pairs = [
+      { source: "source-2", target: "target-1" },
+      { source: "source-1", target: "target-2" },
+      { source: "source-3", target: "target-3" },
+    ];
+    expect(scoreResponse([match], key, { pairs })).toBe("correct");
+    expect(scoreResponse([match], key, { pairs: Arr.take(pairs, 2) })).toBe(
+      "incorrect"
+    );
+    expect(
+      scoreResponse([match], key, {
+        pairs: [
+          ...Arr.take(pairs, 2),
+          { source: "source-3", target: "target-1" },
+        ],
+      })
+    ).toBe("incorrect");
+    expect(scoreResponse([match], key, [])).toBe("incorrect");
+    expect(scoreResponse([match], keyOf(["option-1"]), { pairs })).toBe(
+      "pending"
+    );
+  });
+
+  it("scores a table correct when it marks every statement with the key's column, and incorrect otherwise", () => {
+    const [table] = tableAnswers(["Benar", "Salah"]);
+    const key: InteractionKey[] = [
+      {
+        answers: [
+          { column: "column-1", statement: "statement-1" },
+          { column: "column-2", statement: "statement-2" },
+          { column: "column-1", statement: "statement-3" },
+        ],
+        interaction: "matrix",
+        kind: "matrix",
+      },
+    ];
+    const cells = [
+      { column: "column-2", statement: "statement-2" },
+      { column: "column-1", statement: "statement-1" },
+      { column: "column-1", statement: "statement-3" },
+    ];
+    expect(scoreResponse([table], key, { cells })).toBe("correct");
+    expect(scoreResponse([table], key, { cells: Arr.take(cells, 2) })).toBe(
+      "incorrect"
+    );
+    expect(
+      scoreResponse([table], key, {
+        cells: [
+          ...Arr.take(cells, 2),
+          { column: "column-2", statement: "statement-3" },
+        ],
+      })
+    ).toBe("incorrect");
+    expect(scoreResponse([table], keyOf(["option-1"]), { cells })).toBe(
+      "pending"
+    );
+  });
+
+  it("scores a choice that a text response answers incorrect, as it chooses no option", () => {
+    expect(scoreResponse(single, keyOf(["option-2"]), { text: "B" })).toBe(
+      "incorrect"
     );
   });
 

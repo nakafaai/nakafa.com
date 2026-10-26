@@ -18,6 +18,7 @@ import {
   QuestionPoints,
   QuestionTemplate,
   QuestionView,
+  TemplateLabels,
 } from "@repo/backend/confect/exams/question";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -136,6 +137,7 @@ export default GroupSpec.make()
       name: "template",
       args: () => ({
         examId: Id("exams"),
+        labels: TemplateLabels,
         questionId: Id("examQuestions"),
         revision: Schema.Natural,
         slug: TenantSlug,
@@ -145,6 +147,7 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AccessDenied,
+          AnswersDoNotFit,
           DocumentTooLarge,
           ExamFrozen,
           RevisionStale,

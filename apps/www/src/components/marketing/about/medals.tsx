@@ -56,21 +56,6 @@ const RIBBON_TONES: readonly RibbonTone[] = [
  */
 const SWING_STEP = 0.35;
 
-/** Two strips that cross over the medal, as a ribbon hangs. */
-function Ribbon({ tone }: { tone: RibbonTone }) {
-  const className = ribbonFill({ tone });
-  return (
-    <svg aria-hidden="true" className="h-10 w-9" viewBox="0 0 36 40">
-      <path className={className} d="M3,0 H15 L24,40 H12 Z" />
-      <path
-        className={className}
-        d="M33,0 H21 L12,40 H24 Z"
-        fillOpacity="0.72"
-      />
-    </svg>
-  );
-}
-
 /** One school on its ribbon, its logo on the medal and its name under it. */
 function Medal({
   index,
@@ -93,7 +78,15 @@ function Medal({
           animationPlayState: paused ? "paused" : "running",
         }}
       >
-        <Ribbon tone={tone} />
+        {/* Two strips that cross over the medal, as a ribbon hangs. */}
+        <svg aria-hidden="true" className="h-10 w-9" viewBox="0 0 36 40">
+          <path className={ribbonFill({ tone })} d="M3,0 H15 L24,40 H12 Z" />
+          <path
+            className={ribbonFill({ tone })}
+            d="M33,0 H21 L12,40 H24 Z"
+            fillOpacity="0.72"
+          />
+        </svg>
         {/* The medal's face is white in every theme, so every logo reads on it. */}
         <span className="-mt-3 grid size-16 place-items-center rounded-full bg-white ring-1 ring-black/10 dark:ring-white/10">
           <Image

@@ -13,7 +13,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
 import type { MouseEvent, ReactNode } from "react";
-import { lazy, Suspense } from "react";
+import { createContext, lazy, Suspense, use } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { likeInLists, unlikeInLists } from "@/components/comments/mutation";
 import {
@@ -62,6 +62,18 @@ type RowComment = Pick<
   | "userId"
 >;
 
+/** The comment of the row around a like toggle, which both of its variants read. */
+const RowCommentContext = createContext<RowComment | null>(null);
+
+/** Reads the comment of the row around a like toggle. */
+function useRowComment() {
+  const comment = use(RowCommentContext);
+  if (comment === null) {
+    throw new Error("useRowComment must be used within RowCommentContext");
+  }
+  return comment;
+}
+
 /** The author a row shows: the picture and the name of the comment's writer. */
 type RowAuthor = Pick<CommentAuthor, "image" | "mascot" | "name" | "picture">;
 
@@ -99,13 +111,15 @@ export function CommentRow({
               {formatShortAge(comment._creationTime, now, locale)}
             </FeedAge>
             <SignedInIsland>
-              <CommentOwnerMenu comment={comment} saving={saving} />
+              <CommentOwnerMenu comment={comment} />
             </SignedInIsland>
           </FeedHeader>
           {replyTo}
           <DeferredLearnerText>{comment.text}</DeferredLearnerText>
           <FeedActions inert={saving}>
-            <CommentLikeButton comment={comment} />
+            <RowCommentContext value={comment}>
+              <CommentLikeButton />
+            </RowCommentContext>
             {replyAction}
           </FeedActions>
         </FeedBody>
@@ -115,14 +129,11 @@ export function CommentRow({
 }
 
 /** The More menu of a comment the viewer owns, which deletes it. Any other viewer sees no menu. */
-function CommentOwnerMenu({
-  comment,
-  saving,
-}: {
-  comment: RowComment;
-  saving: boolean;
-}) {
+function CommentOwnerMenu({ comment }: { comment: RowComment }) {
   const viewerId = useViewer((state) => state.account?.appUser._id);
+  const saving = useCommentDraft((draft) =>
+    HashSet.has(draft.saving, comment._id)
+  );
   if (viewerId !== comment.userId) {
     return null;
   }
@@ -146,28 +157,31 @@ function CommentOwnerMenu({
  * The like toggle of a comment. A learner's toggle changes it through the page's
  * client, and a visitor's toggle sends the visitor to sign in.
  */
-function CommentLikeButton({ comment }: { comment: RowComment }) {
+function CommentLikeButton() {
   return (
-    <ConvexIsland fallback={<VisitorCommentLikeButton comment={comment} />}>
-      <LiveCommentLikeButton comment={comment} />
+    <ConvexIsland fallback={<VisitorCommentLikeButton />}>
+      <LiveCommentLikeButton />
     </ConvexIsland>
   );
 }
 
 /** A visitor's like toggle: it asks for sign-in, and changes nothing. */
-function VisitorCommentLikeButton({ comment }: { comment: RowComment }) {
+function VisitorCommentLikeButton() {
+  const comment = useRowComment();
   const whenSignedIn = useWhenSignedIn();
   return (
     <LikeButton
-      likeCount={comment.likeCount}
       liked={comment.liked}
       onToggle={() => whenSignedIn(() => undefined)}
-    />
+    >
+      <FeedCount value={comment.likeCount} />
+    </LikeButton>
   );
 }
 
 /** A learner's like toggle, which changes the comment at once and tells the learner when the server refuses. */
-function LiveCommentLikeButton({ comment }: { comment: RowComment }) {
+function LiveCommentLikeButton() {
+  const comment = useRowComment();
   const like = useMutation(comments.mutations.likeComment).withOptimisticUpdate(
     likeInLists
   );
@@ -202,11 +216,9 @@ function LiveCommentLikeButton({ comment }: { comment: RowComment }) {
   }
 
   return (
-    <LikeButton
-      likeCount={comment.likeCount}
-      liked={comment.liked}
-      onToggle={toggle}
-    />
+    <LikeButton liked={comment.liked} onToggle={toggle}>
+      <FeedCount value={comment.likeCount} />
+    </LikeButton>
   );
 }
 

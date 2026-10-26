@@ -1,6 +1,7 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
+  needsKey,
   QUESTION_POINTS_MAX,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
@@ -18,20 +19,26 @@ import type { Node } from "@tiptap/pm/model";
 import { Array as Arr, Function as Fn, Option, Schema } from "effect";
 import { lazy, Suspense, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { AcceptedAnswers } from "@/components/tenant/exams/accepted";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
+  acceptedOf,
   changedOption,
   choiceOf,
   markedOptions,
   optionLetter,
 } from "@/components/tenant/exams/answer";
+import { TableKey } from "@/components/tenant/exams/cells";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { matchOf } from "@/components/tenant/exams/match";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
+import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
-import { useExam } from "@/components/tenant/exams/provider";
+import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
+import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
 const ExamText = lazy(() =>
@@ -203,8 +210,18 @@ interface TeacherLayerProps {
   };
   /** The place of the question in the exam, which names its rich texts for assistive technology. */
   readonly number: number;
+  /** Saves the answers a short answer accepts, which saves at once. */
+  readonly onAccept: (accepted: readonly string[]) => void;
+  /** Saves the cells of a true or false table's key, which saves at once. */
+  readonly onCells: (
+    cells: readonly { readonly column: string; readonly statement: string }[]
+  ) => void;
   /** Marks an option as the key of the question, which saves at once. */
   readonly onMark: (optionId: string) => void;
+  /** Saves the pairs of a matching question's key, which saves at once. */
+  readonly onPair: (
+    pairs: readonly { readonly source: string; readonly target: string }[]
+  ) => void;
   /** The question the layer belongs to, as the server holds it. */
   readonly question: Question;
   /** The answers, the key, and the template the page shows, so the key shows a change at once. */
@@ -213,7 +230,7 @@ interface TeacherLayerProps {
 
 /**
  * The teacher's layer of a question, in the editor's panel beside the canvas: the points, the answer
- * key, the rubric when the question's template takes one (`takesRubric`), and the explanation. The paper on the canvas is what the student reads, so the
+ * key (the marked options, or the accepted answers of a short answer), the rubric when the question's template takes one (`takesRubric`), and the explanation. The paper on the canvas is what the student reads, so the
  * layer stands on its own screen and never on the canvas. Each rich text keeps its height in both
  * states: while its editor is not mounted it is drawn from its document, as the editor draws it. A
  * frozen exam shows its values without changes.
@@ -222,14 +239,20 @@ export function TeacherLayer({
   live,
   notes,
   number,
+  onAccept,
+  onCells,
   onMark,
+  onPair,
   question,
   shown,
 }: TeacherLayerProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  // A text opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone, so the
+  // words on screen stay.
   const frozen = isLocked(exam);
-  const editable = live && !frozen;
+  const locked = useExamLocked();
+  const editable = live && !locked;
   const options = Option.match(choiceOf(shown.answers), {
     onNone: (): readonly KeyOption[] => [],
     onSome: (choice) =>
@@ -246,14 +269,51 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
-      <AnswerKey
-        editable={editable}
-        marked={markedOptions(shown.key)}
-        multiple={shown.template === "choices"}
-        number={number}
-        onMark={onMark}
-        options={options}
-      />
+      {shown.template === "short" ? (
+        <AcceptedAnswers
+          accepted={acceptedOf(shown.key)}
+          editable={editable}
+          number={number}
+          onChange={onAccept}
+        />
+      ) : null}
+      {Option.match(matchOf(shown.answers), {
+        onNone: () => null,
+        onSome: (match) => (
+          <MatchKey
+            editable={editable}
+            keyed={shown.key}
+            match={match}
+            number={number}
+            onPair={onPair}
+          />
+        ),
+      })}
+      {Option.match(tableOf(shown.answers), {
+        onNone: () => null,
+        onSome: (table) => (
+          <TableKey
+            editable={editable}
+            keyed={shown.key}
+            number={number}
+            onMark={onCells}
+            table={table}
+          />
+        ),
+      })}
+      {needsKey(shown.template) &&
+      shown.template !== "short" &&
+      shown.template !== "match" &&
+      shown.template !== "table" ? (
+        <AnswerKey
+          editable={editable}
+          marked={markedOptions(shown.key)}
+          multiple={shown.template === "choices"}
+          number={number}
+          onMark={onMark}
+          options={options}
+        />
+      ) : null}
       {takesRubric(shown.template) ? (
         <div className="grid gap-2">
           <FieldTitle>{t("rubric")}</FieldTitle>

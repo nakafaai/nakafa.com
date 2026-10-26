@@ -35,11 +35,13 @@ import {
   type RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/filter";
+import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { useLastValue } from "@/lib/data/kept";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
@@ -128,22 +130,37 @@ function ExamRoomsContent({
     preload?.summary
   );
   const examsItems = useExamsItems(tenant.canOpenExams);
+  // An exam deleted, or closed to the viewer, while its rooms are open keeps its title and says so.
+  const kept = useLastValue(summary);
 
   if (QueryResult.isFailure(summary)) {
     if (isLostAccess(summary.error)) {
       throw summary.error;
     }
-    if (isDenied(summary.error)) {
-      return (
+    if (!isDenied(summary.error)) {
+      throw summary.error;
+    }
+    return Option.match(kept, {
+      onNone: () => (
         <>
           <SchoolHeader items={examsItems} />
           <p className="p-4 text-muted-foreground text-sm md:p-6">
             {t("rooms-unavailable")}
           </p>
         </>
-      );
-    }
-    throw summary.error;
+      ),
+      onSome: (gone) => (
+        <>
+          <SchoolHeader
+            items={[...examsItems, { label: gone.title }]}
+            title={gone.title}
+          />
+          <p className="p-4 text-muted-foreground text-sm md:p-6">
+            <ExamGone />
+          </p>
+        </>
+      ),
+    });
   }
   if (!QueryResult.isSuccess(summary)) {
     return null;
@@ -274,25 +291,23 @@ function RoomsTable({
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
-  const failure = PaginatedQueryResult.isFailure(pagination) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
-  const loadMoreTrigger = PaginatedQueryResult.isCanLoadMore(pagination) ? (
-    <Intersection onIntersect={() => pagination.loadMore(ROOM_PAGE_SIZE)} />
-  ) : null;
+  const failed = PaginatedQueryResult.isFailure(pagination);
+  const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
+    ? () => pagination.loadMore(ROOM_PAGE_SIZE)
+    : null;
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failure !== null) {
-      return failure;
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
     }
     if (pagination._tag !== "Exhausted") {
-      return loadMoreTrigger;
+      return <RoomsMore loadMore={loadMore} />;
     }
     return <RoomsEmpty filter={filter} />;
   }
 
   return (
     <>
-      {failure}
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
         <TableHeader>
           <TableRow>
@@ -310,9 +325,14 @@ function RoomsTable({
           ))}
         </TableBody>
       </Table>
-      {loadMoreTrigger}
+      <RoomsMore loadMore={loadMore} />
     </>
   );
+}
+
+/** The sentinel that reads the next page of rooms as it comes into view, while the list has more. */
+function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
+  return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
 }
 
 /**

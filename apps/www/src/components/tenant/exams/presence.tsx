@@ -49,9 +49,10 @@ type Editor = typeof ExamEditor.Type;
  * it sits at the end of the title, so the title and the actions keep their places.
  */
 export function ExamPresence() {
-  const { exam, slug } = useExam();
+  const { exam, gone, slug } = useExam();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const isOpen = isSettled && !exam.archived;
+  // A gone exam has no room to stay in.
+  const isOpen = isSettled && !(exam.archived || gone);
   useExamHeartbeat(isOpen);
   const editors = useQuery(
     exams.presence.list,

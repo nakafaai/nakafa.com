@@ -13,12 +13,19 @@ import { Effect, FileSystem, Schema } from "effect";
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
 /**
+ * What a seeded sitting holds besides its exam: a room of the same exam for the next day
+ * (`upcoming`), or an essay that the student writes and the teacher grades (`essay`).
+ */
+const SittingExtra = Schema.Literals(["upcoming", "essay"]);
+
+/**
  * Seeds one proctored sitting of a keyed exam in the running local acceptance backend. The
  * learner with the address gets a student grant in the school's first active unit, and the
  * sitting opens now and closes an hour later. A `crowd` seats that many extra students with
  * attempts in progress, so a test reads a dashboard of more than one page. The exam, the
  * sitting, and its token go to `output` for a browser test to read back. Each call seeds a
- * new exam and sitting. `upcoming` also schedules a room of the same exam for the next day.
+ * new exam and sitting. `upcoming` also schedules a room of the same exam for the next day, and
+ * `essay` adds an essay to the exam, which the student writes and the teacher grades.
  */
 export const createAcceptanceSitting = Effect.fn(
   "contentAcceptance.createSitting"
@@ -28,7 +35,7 @@ export const createAcceptanceSitting = Effect.fn(
   email: string,
   output: string,
   crowd: number | undefined,
-  upcoming?: boolean
+  extra?: typeof SittingExtra.Type
 ) {
   const runtime = yield* readLocalRuntime(root);
   if (runtime === undefined) {
@@ -40,7 +47,7 @@ export const createAcceptanceSitting = Effect.fn(
     email,
     slug,
     ...(crowd === undefined ? {} : { crowd }),
-    ...(upcoming === true ? { upcoming } : {}),
+    ...(extra === undefined ? {} : { [extra]: true }),
   });
   const printed = yield* runLocalConvex(runtime, "exams/seed:sitting", [
     "run",
@@ -53,21 +60,21 @@ export const createAcceptanceSitting = Effect.fn(
   yield* fs.writeFileString(output, fixture, { flag: "wx", mode: 0o600 });
 });
 
-/** The usage of the sitting mode: the school, the learner, the file for the sitting, then the optional crowd. */
+/** The usage of the sitting mode: the school, the learner, the file for the sitting, then the optional crowd and extra. */
 const USAGE =
-  "sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming]";
+  "sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay]";
 const SittingArguments = Schema.Tuple([
   Schema.String,
   Schema.String,
   Schema.String,
   Schema.optionalKey(Schema.FiniteFromString),
-  Schema.optionalKey(Schema.Literal("upcoming")),
+  Schema.optionalKey(SittingExtra),
 ]);
 
 /**
  * The sitting mode of the acceptance command line: seeds one proctored sitting for
  * the learner that the command names, with the optional number of extra students,
- * the optional upcoming room, and writes the sitting to the file that the command names.
+ * the optional upcoming room or essay, and writes the sitting to the file that the command names.
  */
 export const sittingMode = {
   mode: "sitting",
@@ -76,7 +83,7 @@ export const sittingMode = {
     root: string,
     args: readonly string[]
   ) {
-    const [slug, email, output, crowd, upcoming] = yield* decodeModeArguments(
+    const [slug, email, output, crowd, extra] = yield* decodeModeArguments(
       USAGE,
       SittingArguments,
       args
@@ -87,7 +94,7 @@ export const sittingMode = {
       email,
       output,
       crowd,
-      upcoming === undefined ? undefined : true
+      extra
     );
   }),
 } satisfies AcceptanceMode;

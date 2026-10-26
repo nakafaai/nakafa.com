@@ -2,21 +2,29 @@ import { useMutation } from "@confect/react";
 import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
+import type {
+  ExamCell,
+  ExamPair,
+} from "@repo/backend/confect/exams/sittings/response";
 import { asTemplate } from "@repo/backend/confect/exams/template";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Match } from "effect";
 import { useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
+  acceptedKey,
   markedKey,
   markedOptions,
   toggledKey,
 } from "@/components/tenant/exams/answer";
+import { pairsKey } from "@/components/tenant/exams/match";
 import {
   answerUpdate,
   type Question,
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { cellsKey } from "@/components/tenant/exams/table";
 import {
   makeQuestionWriter,
   type QuestionDraft,
@@ -30,6 +38,7 @@ import {
  * shows the server's answer once every save of the question has settled.
  */
 export function useQuestionEditing(question: Question) {
+  const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
@@ -53,6 +62,7 @@ export function useQuestionEditing(question: Question) {
           })
         : retemplate({
             examId: exam.id,
+            labels: labelsOf(draft.template),
             questionId: question.id,
             revision: draft.revision,
             slug,
@@ -141,22 +151,63 @@ export function useQuestionEditing(question: Question) {
   };
 
   /**
-   * Gives the question another template, which saves at once: the answers take the template's bounds, and the
-   * key stays only when it still fits (`asTemplate`), as the server converts them.
+   * The labels of the options a template fixes, in the teacher's language: true and false, or the five
+   * relations of a statement and its reason. A template whose options the teacher adds fixes none.
+   */
+  function labelsOf(template: QuestionTemplate): readonly string[] {
+    return Match.value(template).pipe(
+      Match.when("truefalse", () => [
+        t("truefalse-true"),
+        t("truefalse-false"),
+      ]),
+      Match.when("table", () => [t("truefalse-true"), t("truefalse-false")]),
+      Match.when("cause", () => [
+        t("cause-related"),
+        t("cause-unrelated"),
+        t("cause-reason-false"),
+        t("cause-statement-false"),
+        t("cause-both-false"),
+      ]),
+      Match.orElse(() => [])
+    );
+  }
+
+  /**
+   * Gives the question another template, which saves at once: the answers take the template's bounds, or the
+   * options it fixes with their labels, and the key stays only when it still fits (`asTemplate`), as the server
+   * converts them.
    */
   const setTemplate = (template: QuestionTemplate) => {
     if (current().template !== template) {
       saveAnswers((base) => ({
-        ...asTemplate(template, base.answers, base.key),
+        ...asTemplate(template, base.answers, base.key, labelsOf(template)),
         template,
       }));
     }
   };
 
+  /**
+   * Sets the answers a short answer accepts, which saves at once: the key accepts the texts the teacher
+   * wrote, cleaned as the contract takes them (`acceptedKey`), and a list with no text clears the key.
+   */
+  const setAccepted = (texts: readonly string[]) =>
+    saveAnswers((base) => ({ ...base, key: acceptedKey(base.answers, texts) }));
+
+  /** Sets the pairs of a matching question's key, which saves at once once they pair every statement (`pairsKey`). */
+  const setPairs = (pairs: readonly ExamPair[]) =>
+    saveAnswers((base) => ({ ...base, key: pairsKey(base.answers, pairs) }));
+
+  /** Sets the cells of a true or false table's key, which saves at once once they mark every statement (`cellsKey`). */
+  const setCells = (cells: readonly ExamCell[]) =>
+    saveAnswers((base) => ({ ...base, key: cellsKey(base.answers, cells) }));
+
   return {
     displayed: shown ?? question,
     markOption,
     saveAnswers,
+    setAccepted,
+    setCells,
+    setPairs,
     setTemplate,
   };
 }

@@ -2,6 +2,8 @@ import { Add01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
+  fixedOptions,
+  needsKey,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -12,6 +14,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
   choiceOf,
+  entryOf,
   keyWithoutOption,
   type OptionLabel,
   optionLetter,
@@ -19,6 +22,7 @@ import {
   withOptionLabel,
   withOptionRemoved,
 } from "@/components/tenant/exams/answer";
+import { MatchColumn, TableColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import {
   type QuestionEditing,
@@ -26,6 +30,7 @@ import {
 } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
+import { matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { TeacherPortal } from "@/components/tenant/exams/panel";
@@ -34,9 +39,18 @@ import {
   PaperSketch,
   usePageDocument,
 } from "@/components/tenant/exams/preview";
-import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
+import {
+  useExam,
+  useExamLocked,
+  useExamSelection,
+} from "@/components/tenant/exams/provider";
 import { activeQuestion } from "@/components/tenant/exams/selection";
-import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
+import {
+  PaperLine,
+  PaperOptions,
+  QuestionPaper,
+} from "@/components/tenant/exams/sheet";
+import { tableOf } from "@/components/tenant/exams/table";
 import { QuestionType } from "@/components/tenant/exams/type";
 import { usePageWindow } from "@/components/tenant/exams/window";
 
@@ -91,9 +105,9 @@ function PageRow({
   template,
 }: PageRowProps) {
   const t = useTranslations("Exams");
-  const { exam } = useExam();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const editable = saved && !isLocked(exam);
+  const locked = useExamLocked();
+  const editable = saved && !locked;
   const number = index + 1;
 
   return (
@@ -112,7 +126,7 @@ function PageRow({
           onChange={onTemplate}
           template={template}
         />
-        {question.key === null ? (
+        {question.key === null && needsKey(question.template) ? (
           <span className="flex items-center gap-1 text-muted-foreground text-xs">
             <HugeIcons
               aria-hidden="true"
@@ -204,15 +218,6 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
     read: readNotes,
     saved,
   });
-  const paper = (
-    <PaperSketch
-      doc={prompt}
-      question={question}
-      selected={chosen}
-      withControls
-    />
-  );
-
   return (
     <section
       aria-label={t("question", { number })}
@@ -231,7 +236,16 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
         template={editing.displayed.template}
       />
       {live ? (
-        <Suspense fallback={paper}>
+        <Suspense
+          fallback={
+            <PaperSketch
+              doc={prompt}
+              question={question}
+              selected={chosen}
+              withControls
+            />
+          }
+        >
           <LivePaper
             chosen={chosen}
             editing={editing}
@@ -240,7 +254,12 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
           />
         </Suspense>
       ) : (
-        paper
+        <PaperSketch
+          doc={prompt}
+          question={question}
+          selected={chosen}
+          withControls
+        />
       )}
       {chosen ? (
         <TeacherPortal>
@@ -248,7 +267,10 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
             live={live}
             notes={{ explanation, rubric }}
             number={number}
+            onAccept={editing.setAccepted}
+            onCells={editing.setCells}
             onMark={editing.markOption}
+            onPair={editing.setPairs}
             question={question}
             shown={editing.displayed}
           />
@@ -277,9 +299,14 @@ function LivePaper({
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  // The prompt's editor opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone,
+  // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);
+  const locked = useExamLocked();
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
+  const match = Option.getOrNull(matchOf(displayed.answers));
+  const table = Option.getOrNull(tableOf(displayed.answers));
   // The label the server holds for an option. Its editor starts from that label, and a label the server does not
   // store goes back to it, so the editor never keeps text that is not saved. An option the server does not hold
   // yet has the label the paper shows.
@@ -299,8 +326,13 @@ function LivePaper({
         ),
     });
 
+  // A template that fixes its options keeps their number, so the teacher neither adds nor removes one.
+  const fixed = Option.isSome(fixedOptions(displayed.template));
   const canAddOption =
-    choice !== null && choice.options.length < CHOICE_OPTIONS_MAX && !frozen;
+    choice !== null &&
+    choice.options.length < CHOICE_OPTIONS_MAX &&
+    !fixed &&
+    !locked;
 
   return (
     <QuestionPaper selected={chosen}>
@@ -310,6 +342,50 @@ function LivePaper({
         label={t("question-text", { number })}
         placeholder={t("prompt-placeholder")}
       />
+      {match === null ? null : (
+        <div className="grid min-w-0 gap-6 md:grid-cols-2">
+          <MatchColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={locked}
+            match={match}
+            number={number}
+            question={question}
+            side="sources"
+          />
+          <MatchColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={locked}
+            match={match}
+            number={number}
+            question={question}
+            side="targets"
+          />
+        </div>
+      )}
+      {table === null ? null : (
+        <div className="grid min-w-0 gap-6 md:grid-cols-2">
+          <TableColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={locked}
+            number={number}
+            question={question}
+            side="statements"
+            table={table}
+          />
+          <TableColumn
+            chosen={chosen}
+            editing={editing}
+            frozen={locked}
+            number={number}
+            question={question}
+            side="columns"
+            table={table}
+          />
+        </div>
+      )}
       {choice === null ? null : (
         <PaperOptions>
           {Arr.map(choice.options, (option, index) => (
@@ -317,10 +393,10 @@ function LivePaper({
               key={option.id}
               label={savedLabel(option)}
               letter={optionLetter(index)}
-              locked={frozen}
-              number={number}
+              locked={locked}
+              name={t("option-of", { letter: optionLetter(index), number })}
               onRemove={
-                choice.options.length > CHOICE_OPTIONS_MIN
+                choice.options.length > CHOICE_OPTIONS_MIN && !fixed
                   ? () =>
                       saveAnswers((draft) => ({
                         ...draft,
@@ -338,10 +414,17 @@ function LivePaper({
                   unstored
                 )
               }
+              placeholder={t("option-placeholder")}
+              removeName={t("option-remove-of", {
+                letter: optionLetter(index),
+                number,
+              })}
             />
           ))}
         </PaperOptions>
       )}
+      {Option.isSome(entryOf(displayed.answers)) ? <PaperLine /> : null}
+      {displayed.template === "essay" ? <PaperLine essay /> : null}
       {canAddOption ? (
         <div className={chosen ? undefined : "invisible"}>
           <Button

@@ -1,4 +1,4 @@
-import { useGLTF, useTexture } from "@react-three/drei";
+import { Line, useGLTF, useTexture } from "@react-three/drei";
 import {
   BLUE_MARBLE_EARTH_TEXTURE_ASSET,
   TERRA_SATELLITE_ASSET,
@@ -10,7 +10,6 @@ import {
   type BiologyLabProps,
 } from "@repo/design-system/components/contents/biology/lab-frame";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
-import { BiologyLine } from "@repo/design-system/components/contents/biology/parts";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
@@ -74,7 +73,7 @@ function EarthIndicators() {
 function SensorSwath({ color }: { color: string }) {
   return (
     <group>
-      <BiologyLine
+      <Line
         color={color}
         lineWidth={1}
         points={[
@@ -82,7 +81,7 @@ function SensorSwath({ color }: { color: string }) {
           [0.26, 0.3, 0.9],
         ]}
       />
-      <BiologyLine
+      <Line
         color={color}
         lineWidth={1}
         points={[
