@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { SettingsReturnProvider } from "@/components/shared/settings/return";
 import { UserSettingsNav } from "@/components/user/settings/nav";
-import { SettingsReturnProvider } from "@/components/user/settings/return";
 import { useRouteMatched } from "@/lib/routing/link";
 
 /**
@@ -21,7 +21,7 @@ export function SidebarNavigation({ browse }: { browse: ReactNode }) {
   });
 
   return (
-    <SettingsReturnProvider>
+    <SettingsReturnProvider path="/$locale/user/settings">
       {isSettings ? <UserSettingsNav /> : browse}
     </SettingsReturnProvider>
   );
