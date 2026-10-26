@@ -100,7 +100,7 @@ function declaredFunction(initializer: Expression | undefined) {
 }
 
 /** Returns the name and function of a component-shaped declaration. */
-function renderDeclaration(node: Node) {
+export function renderDeclaration(node: Node) {
   if (isFunctionDeclaration(node) && returnsJsx(node)) {
     return { fn: node, name: node.name?.text ?? "an anonymous function" };
   }
