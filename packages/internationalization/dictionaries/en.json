@@ -697,6 +697,7 @@
     "client-secret-title": "New secret",
     "client-secret-description": "Copy it now, because it will not be shown again.",
     "audit-description": "Who changed what in this school, and when.",
+    "audit-footer": "Policy values are not copied into the trail.",
     "audit-view": "View trail",
     "audit-when": "When",
     "audit-who": "Who",
