@@ -1,8 +1,4 @@
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  useMutation,
-} from "@confect/react";
+import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import { MoreHorizontalIcon, SentIcon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
@@ -134,7 +130,10 @@ export function ClassGradebook({
   if (QueryResult.isFailure(scheme)) {
     throw scheme.error;
   }
-  if (!QueryResult.isSuccess(scheme) || pagination._tag === "LoadingFirstPage") {
+  if (
+    !QueryResult.isSuccess(scheme) ||
+    pagination._tag === "LoadingFirstPage"
+  ) {
     return null;
   }
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -210,7 +209,9 @@ export function ClassGradebook({
         search={{ column: "student", placeholder: t("search") }}
       />
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(GRADEBOOK_PAGE_SIZE)} />
+        <Intersection
+          onIntersect={() => pagination.loadMore(GRADEBOOK_PAGE_SIZE)}
+        />
       ) : null}
     </GradebookContext>
   );

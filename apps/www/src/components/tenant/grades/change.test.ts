@@ -40,11 +40,15 @@ const pageArgs = (forClass: typeof classId) => ({
   slug,
 });
 
+/** What the store records of one write: the page it stores. */
+type Written = Option.Option<{ readonly page: readonly SheetLine[] }>;
+
 /** A store that holds the given pages and records what is written. */
 const storeOf = (pages: unknown[]) => {
   const getAllQueries = vi.fn();
   getAllQueries.mockReturnValue(pages);
-  const setQuery = vi.fn();
+  const setQuery =
+    vi.fn<(ref: unknown, args: unknown, value: Written) => void>();
   return {
     localStore: { getAllQueries, getQuery: vi.fn(), setQuery },
     setQuery,
@@ -52,23 +56,36 @@ const storeOf = (pages: unknown[]) => {
 };
 
 /** The page that one recorded write stored. */
-const writtenPage = (setQuery: ReturnType<typeof vi.fn>) =>
-  Option.getOrThrow(setQuery.mock.calls[0]?.[2]).page;
+const writtenPage = (
+  setQuery: ReturnType<typeof storeOf>["setQuery"],
+  call = 0
+) => Option.getOrThrow(setQuery.mock.calls[call]?.[2] ?? Option.none()).page;
 
 describe("enterChange", () => {
   it("shows an entered value as a draft judged by the scheme, on the pages of its own class only", () => {
     const { localStore, setQuery } = storeOf([
       {
         args: pageArgs(classId),
-        value: Option.some({ isDone: true, page: [line(raka, null), line(sari, released)] }),
+        value: Option.some({
+          isDone: true,
+          page: [line(raka, null), line(sari, released)],
+        }),
       },
-      { args: pageArgs(otherClass), value: Option.some({ isDone: true, page: [] }) },
+      {
+        args: pageArgs(otherClass),
+        value: Option.some({ isDone: true, page: [] }),
+      },
       { args: pageArgs(classId), value: Option.none() },
     ]);
-    enterChange(scheme)(localStore, { classId, personId: raka, slug, value: 85 });
+    enterChange(scheme)(localStore, {
+      classId,
+      personId: raka,
+      slug,
+      value: 85,
+    });
     expect(setQuery).toHaveBeenCalledTimes(1);
     const [entered, kept] = writtenPage(setQuery);
-    expect(entered.grade).toMatchObject({
+    expect(entered?.grade).toMatchObject({
       band: "Baik",
       kktp: "reached",
       state: "draft",
@@ -78,34 +95,65 @@ describe("enterChange", () => {
   });
 
   it("keeps a released grade, and the ID of a draft it replaces", () => {
-    const draft = { ...released, id: gradeOf("grade-raka"), personId: raka, state: "draft" as const };
+    const draft = {
+      ...released,
+      id: gradeOf("grade-raka"),
+      personId: raka,
+      state: "draft" as const,
+    };
     const { localStore, setQuery } = storeOf([
       {
         args: pageArgs(classId),
-        value: Option.some({ isDone: true, page: [line(raka, draft), line(sari, released)] }),
+        value: Option.some({
+          isDone: true,
+          page: [line(raka, draft), line(sari, released)],
+        }),
       },
     ]);
-    enterChange(scheme)(localStore, { classId, personId: raka, slug, value: 70 });
-    enterChange(scheme)(localStore, { classId, personId: sari, slug, value: 90 });
+    enterChange(scheme)(localStore, {
+      classId,
+      personId: raka,
+      slug,
+      value: 70,
+    });
+    enterChange(scheme)(localStore, {
+      classId,
+      personId: sari,
+      slug,
+      value: 90,
+    });
     const [replaced] = writtenPage(setQuery);
-    expect(replaced.grade).toMatchObject({ id: draft.id, kktp: "notReached", value: 70 });
-    const second = Option.getOrThrow(setQuery.mock.calls[1]?.[2]).page;
-    expect(second[1]).toEqual(line(sari, released));
+    expect(replaced?.grade).toMatchObject({
+      id: draft.id,
+      kktp: "notReached",
+      value: 70,
+    });
+    expect(writtenPage(setQuery, 1)[1]).toEqual(line(sari, released));
   });
 });
 
 describe("releaseChange", () => {
   it("shows a draft as released, and leaves a line without a grade as it is", () => {
-    const draft = { ...released, id: gradeOf("grade-raka"), personId: raka, state: "draft" as const };
+    const draft = {
+      ...released,
+      id: gradeOf("grade-raka"),
+      personId: raka,
+      state: "draft" as const,
+    };
     const { localStore, setQuery } = storeOf([
       {
         args: pageArgs(classId),
-        value: Option.some({ isDone: true, page: [line(raka, draft), line(sari, null)] }),
+        value: Option.some({
+          isDone: true,
+          page: [line(raka, draft), line(sari, null)],
+        }),
       },
     ]);
     releaseChange(classId, raka)(localStore, { gradeId: draft.id, slug });
     releaseChange(classId, sari)(localStore, { gradeId: draft.id, slug });
-    expect(writtenPage(setQuery)[0].grade).toMatchObject({ state: "released" });
-    expect(Option.getOrThrow(setQuery.mock.calls[1]?.[2]).page[1]).toEqual(line(sari, null));
+    expect(writtenPage(setQuery)[0]?.grade).toMatchObject({
+      state: "released",
+    });
+    expect(writtenPage(setQuery, 1)[1]).toEqual(line(sari, null));
   });
 });
