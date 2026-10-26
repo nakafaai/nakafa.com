@@ -22,9 +22,8 @@ import { schoolExamsTarget } from "@/lib/routing/school/target";
 import type { readResultsFn } from "@/lib/tenant/exams.functions";
 
 /** The first screen of the results, which the results page's loader read on the server. */
-type ResultsPreload = Pick<
-  Awaited<ReturnType<typeof readResultsFn>>,
-  "overview" | "students"
+type ResultsPreload = Partial<
+  Pick<Awaited<ReturnType<typeof readResultsFn>>, "overview" | "students">
 >;
 
 /** The first screen of the results, which the page's loader read on the server. */
