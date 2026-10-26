@@ -33,8 +33,8 @@ export function DeleteExam({
 
   /**
    * Closes the question, leaves the editor for the exams, then deletes the exam. The editor is left
-   * first: the delete's optimistic update empties the exam that the editor reads, and an editor still
-   * on screen drew it as not available, with its error, before the exams opened.
+   * first: once the server deletes the exam, the editor's live read of it fails, and an editor still
+   * on screen drew the exam as not available, with its error, before the exams opened.
    */
   async function confirm() {
     onOpenChange(false);
