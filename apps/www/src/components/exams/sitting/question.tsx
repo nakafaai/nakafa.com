@@ -46,15 +46,12 @@ import { PlayerQuestion } from "@/components/player/question";
 export function SittingQuestion({
   attemptId,
   deviceId,
-  locked,
   question,
   sittingId,
   slug,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
   readonly deviceId: string;
-  /** Whether the paper is read-only, because the attempt is locked. */
-  readonly locked: boolean;
   readonly question: PaperQuestion;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
@@ -169,7 +166,6 @@ export function SittingQuestion({
           {Option.isSome(choice) ? (
             <SittingChoice
               choice={choice.value}
-              disabled={locked}
               labelledBy={titleId}
               onChoose={onChoose}
               response={chosenOptions(question.response ?? NO_RESPONSE)}
@@ -177,7 +173,6 @@ export function SittingQuestion({
           ) : null}
           {Option.isSome(entry) ? (
             <SittingField
-              disabled={locked}
               entry={entry.value}
               labelledBy={titleId}
               onType={(text) => onChoose({ text })}
@@ -186,7 +181,6 @@ export function SittingQuestion({
           ) : null}
           {Option.isSome(pairing) ? (
             <SittingPairs
-              disabled={locked}
               labelledBy={titleId}
               match={pairing.value}
               onPair={(pairs) => onChoose({ pairs })}
@@ -196,7 +190,6 @@ export function SittingQuestion({
           {Option.isSome(table) ? (
             <SittingTable
               cells={markedCells(question.response ?? NO_RESPONSE)}
-              disabled={locked}
               labelledBy={titleId}
               onMark={(cells) => onChoose({ cells })}
               table={table.value}
