@@ -38,6 +38,10 @@ export const integration = Kind.make("integration", "integrationClients", {
       client: Id("integrationClients"),
       type: Schema.Literal("integration.revoked"),
     }),
+    Schema.Struct({
+      client: Id("integrationClients"),
+      type: Schema.Literal("integration.authorized"),
+    }),
   ],
   published: [],
   relations: [],

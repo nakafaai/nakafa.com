@@ -296,4 +296,13 @@ export default CronJobs.make()
       internal.integrations.tokens.sweep,
       {}
     )
+  )
+  .add(
+    /** Deletes the device authorizations of the device grant that expired (ADR 0029). */
+    CronJob.make(
+      "delete expired device authorizations",
+      Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
+      internal.integrations.devices.sweep,
+      {}
+    )
   );
