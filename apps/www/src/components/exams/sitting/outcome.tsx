@@ -36,7 +36,7 @@ export function StudentOutcome({
   return (
     <>
       <SittingBar examTitle={sitting.examTitle} />
-      <SittingBody>
+      <SittingBody align="top">
         {attempt.state === "inProgress" ? null : (
           <p>{t(sentenceKeys[attempt.state])}</p>
         )}
