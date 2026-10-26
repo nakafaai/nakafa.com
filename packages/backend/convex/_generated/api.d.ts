@@ -3344,7 +3344,15 @@ export declare const api: {
             prompt: Id<"editorDocuments">;
             revision: number;
             rubric: Id<"editorDocuments">;
-            template: "choice" | "choices";
+            template:
+              | "choice"
+              | "choices"
+              | "truefalse"
+              | "cause"
+              | "short"
+              | "essay"
+              | "match"
+              | "table";
           }>;
           title: string;
         }
@@ -3676,7 +3684,15 @@ export declare const api: {
           prompt: Id<"editorDocuments">;
           revision: number;
           rubric: Id<"editorDocuments">;
-          template: "choice" | "choices";
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "essay"
+            | "match"
+            | "table";
         }
       >;
       answer: FunctionReference<
@@ -4155,7 +4171,15 @@ export declare const api: {
           prompt: Id<"editorDocuments">;
           revision: number;
           rubric: Id<"editorDocuments">;
-          template: "choice" | "choices";
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "essay"
+            | "match"
+            | "table";
         }
       >;
       copy: FunctionReference<
@@ -4399,7 +4423,15 @@ export declare const api: {
           prompt: Id<"editorDocuments">;
           revision: number;
           rubric: Id<"editorDocuments">;
-          template: "choice" | "choices";
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "essay"
+            | "match"
+            | "table";
         }
       >;
       move: FunctionReference<
@@ -4659,7 +4691,15 @@ export declare const api: {
           prompt: Id<"editorDocuments">;
           revision: number;
           rubric: Id<"editorDocuments">;
-          template: "choice" | "choices";
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "essay"
+            | "match"
+            | "table";
         }
       >;
       remove: FunctionReference<
@@ -4673,10 +4713,19 @@ export declare const api: {
         "public",
         {
           examId: Id<"exams">;
+          labels: Array<string>;
           questionId: Id<"examQuestions">;
           revision: number;
           slug: string;
-          template: "choice" | "choices";
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "essay"
+            | "match"
+            | "table";
         },
         {
           answers: Array<
@@ -4915,7 +4964,15 @@ export declare const api: {
           prompt: Id<"editorDocuments">;
           revision: number;
           rubric: Id<"editorDocuments">;
-          template: "choice" | "choices";
+          template:
+            | "choice"
+            | "choices"
+            | "truefalse"
+            | "cause"
+            | "short"
+            | "essay"
+            | "match"
+            | "table";
         }
       >;
     };
@@ -4986,8 +5043,13 @@ export declare const api: {
             page: Array<{
               attemptId: Id<"examAttempts">;
               name: string;
-              response: Array<string>;
-              verdict: "correct" | "incorrect" | "pending";
+              points: number;
+              response:
+                | Array<string>
+                | { text: string }
+                | { pairs: Array<{ source: string; target: string }> }
+                | { cells: Array<{ column: string; statement: string }> };
+              verdict: "correct" | "incorrect" | "partial" | "pending";
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
@@ -5025,6 +5087,18 @@ export declare const api: {
             splitCursor?: string | null;
           }
         >;
+        grade: FunctionReference<
+          "mutation",
+          "public",
+          {
+            attemptId: Id<"examAttempts">;
+            points: number;
+            questionId: Id<"examQuestions">;
+            sittingId: Id<"examSittings">;
+            slug: string;
+          },
+          null
+        >;
         mine: FunctionReference<
           "query",
           "public",
@@ -5035,8 +5109,14 @@ export declare const api: {
               number: number;
               optionIds: Array<string>;
               points: number;
-              response: Array<string>;
-              verdict: "correct" | "incorrect" | "pending";
+              response:
+                | Array<string>
+                | { text: string }
+                | { pairs: Array<{ source: string; target: string }> }
+                | { cells: Array<{ column: string; statement: string }> };
+              sourceIds: Array<string>;
+              targetIds: Array<string>;
+              verdict: "correct" | "incorrect" | "partial" | "pending";
             }>;
           } | null
         >;
@@ -5045,12 +5125,14 @@ export declare const api: {
           "public",
           { sittingId: Id<"examSittings">; slug: string },
           {
-            can: Array<"result.release" | "result.view">;
+            can: Array<"result.grade" | "result.release" | "result.view">;
             questions: Array<{
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
               points: number;
+              sourceIds: Array<string>;
+              targetIds: Array<string>;
             }>;
             releasedAt: number | null;
             sitting: {
@@ -5082,6 +5164,7 @@ export declare const api: {
             counted: number;
             incorrect: number;
             optionCounts: Array<{ count: number; optionId: string }>;
+            partial: number;
             pending: number;
           }
         >;
@@ -5169,7 +5252,11 @@ export declare const api: {
         {
           deviceId: string;
           questionId: Id<"examQuestions">;
-          response: Array<string>;
+          response:
+            | Array<string>
+            | { text: string }
+            | { pairs: Array<{ source: string; target: string }> }
+            | { cells: Array<{ column: string; statement: string }> };
           sittingId: Id<"examSittings">;
           slug: string;
           version: number;
@@ -5571,7 +5658,12 @@ export declare const api: {
                 }
             >;
             number: number;
-            response: Array<string> | null;
+            response:
+              | Array<string>
+              | { text: string }
+              | { pairs: Array<{ source: string; target: string }> }
+              | { cells: Array<{ column: string; statement: string }> }
+              | null;
             version: number | null;
           }>;
         }
@@ -5823,6 +5915,7 @@ export declare const api: {
             | "exam.view"
             | "sitting.proctor"
             | "sitting.view"
+            | "result.grade"
             | "result.release"
             | "result.view"
             | "invite.view"
@@ -5917,6 +6010,7 @@ export declare const api: {
               | "exam.view"
               | "sitting.proctor"
               | "sitting.view"
+              | "result.grade"
               | "result.release"
               | "result.view"
               | "invite.view"
@@ -6163,6 +6257,12 @@ export declare const api: {
                   type: "promotion.undone";
                 }
               | { type: "exam.results.released" }
+              | {
+                  attempt: Id<"examAttempts">;
+                  points: number;
+                  question: Id<"examQuestions">;
+                  type: "exam.results.graded";
+                }
               | { type: "sitting.schedule" }
               | {
                   attempt: Id<"examAttempts">;
@@ -14106,7 +14206,13 @@ export declare const internal: {
       sitting: FunctionReference<
         "mutation",
         "internal",
-        { crowd?: number; email: string; slug: string; upcoming?: boolean },
+        {
+          crowd?: number;
+          email: string;
+          essay?: boolean;
+          slug: string;
+          upcoming?: boolean;
+        },
         {
           examId: Id<"exams">;
           sittingId: Id<"examSittings">;

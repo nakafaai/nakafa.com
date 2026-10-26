@@ -5,6 +5,7 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
+import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 import type { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Struct } from "effect";
@@ -35,7 +36,7 @@ const studentRow = Effect.fn("exams.results.students.row")(function* (
   const rows = yield* attemptResults(attempt.sitting, attempt.person);
   return {
     ...base,
-    answered: Arr.filter(rows, (row) => row.response.length > 0).length,
+    answered: Arr.filter(rows, (row) => isAnswered(row.response)).length,
     pending: Arr.filter(rows, (row) => row.verdict === "pending").length,
     points: Num.sumAll(Arr.map(rows, (row) => row.points)),
   };

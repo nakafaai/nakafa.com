@@ -102,7 +102,13 @@ function SittingResultsContent({
         Arr.map(overview.value.questions, (question) => question.points)
       )
     : 0;
-  const paper = useMemo(() => ({ timeZone, total }), [timeZone, total]);
+  const canGrade =
+    QueryResult.isSuccess(overview) &&
+    Arr.contains(overview.value.can, "result.grade");
+  const paper = useMemo(
+    () => ({ canGrade, timeZone, total }),
+    [canGrade, timeZone, total]
+  );
   const [status, setStatus] = useState<StatusFilter>("all");
   const t = useTranslations("Exams");
 
@@ -126,24 +132,24 @@ function SittingResultsContent({
     sitting.state === "closed" && Arr.contains(can, "result.release");
   return (
     <ResultsScopeContext value={scope}>
-      <TableFiltersProvider>
-        <ResultsHeader
-          examId={examId}
-          examTitle={sitting.examTitle}
-          room={sitting.room}
-          sittingId={scope.sittingId}
-        >
-          <TableSearch placeholder={t("results-search")} />
-          <StudentStatusFilter onChange={setStatus} value={status} />
-          <QuestionsAction questions={questions} />
-          <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
-        </ResultsHeader>
-        <div className="flex w-full min-w-0 flex-1 flex-col">
-          <ResultsPaperContext value={paper}>
+      <ResultsPaperContext value={paper}>
+        <TableFiltersProvider>
+          <ResultsHeader
+            examId={examId}
+            examTitle={sitting.examTitle}
+            room={sitting.room}
+            sittingId={scope.sittingId}
+          >
+            <TableSearch placeholder={t("results-search")} />
+            <StudentStatusFilter onChange={setStatus} value={status} />
+            <QuestionsAction questions={questions} />
+            <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
+          </ResultsHeader>
+          <div className="flex w-full min-w-0 flex-1 flex-col">
             <StudentsTable first={preload?.students} status={status} />
-          </ResultsPaperContext>
-        </div>
-      </TableFiltersProvider>
+          </div>
+        </TableFiltersProvider>
+      </ResultsPaperContext>
     </ResultsScopeContext>
   );
 }

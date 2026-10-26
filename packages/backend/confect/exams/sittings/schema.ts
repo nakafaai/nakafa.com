@@ -1,6 +1,6 @@
-import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
@@ -97,14 +97,14 @@ export const examSittingValidator = Schema.Struct({
 
 /**
  * One student's response to one question of an attempt: the option IDs that the student
- * chose. An answer replaces the row of its question, so each question holds one row
- * (ADR 0013).
+ * chose, or the text the student typed (`ExamResponse`). An answer replaces the row of its
+ * question, so each question holds one row (ADR 0013).
  */
 export const examAnswerValidator = Schema.Struct({
   answeredAt: Schema.Finite,
   attempt: Id("examAttempts"),
   question: Id("examQuestions"),
-  response: Schema.Array(LocalIdSchema),
+  response: ExamResponse,
   tenantId: Id("tenants"),
   /** The version the learner's client numbered this answer with; a stale write never replaces it (ADR 0013). */
   version: Version,

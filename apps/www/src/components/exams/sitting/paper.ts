@@ -2,6 +2,7 @@ import type { OptimisticLocalStore } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { PaperView } from "@repo/backend/confect/exams/sittings/contract";
+import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -13,12 +14,12 @@ export type PaperQuestion = PaperValue["questions"][number];
 
 /**
  * The paper with the response of one question replaced, numbered with `version`. The screen shows a chosen
- * option with this change at once. The server's answer then replaces it, and a refused answer rolls it back.
+ * option or typed text with this change at once. The server's answer then replaces it, and a refused answer rolls it back.
  */
 export function setPaperResponse(
   paper: PaperValue,
   questionId: PaperQuestion["id"],
-  response: readonly string[],
+  response: ExamResponse,
   version: number
 ): PaperValue {
   return {
