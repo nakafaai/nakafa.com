@@ -61,7 +61,10 @@ function commitTime(page: Page, href: string) {
   }, href);
 }
 
-/** Opens each page in order, records its commit time, and asserts the owner's bar for each. */
+/**
+ * Opens each page in order and records its commit time. A page over the owner's
+ * bar fails the test without stopping the pages after it.
+ */
 async function commitEach(page: Page, paths: readonly string[], who: string) {
   for (const path of paths) {
     const elapsed = await commitTime(page, path);
@@ -69,7 +72,9 @@ async function commitEach(page: Page, paths: readonly string[], who: string) {
       description: `${who} ${path} ${Math.round(elapsed)} ms`,
       type: "commit",
     });
-    expect(elapsed, `${who} ${path}`).toBeLessThan(COMMIT_BUDGET_MILLISECONDS);
+    expect
+      .soft(elapsed, `${who} ${path}`)
+      .toBeLessThan(COMMIT_BUDGET_MILLISECONDS);
   }
 }
 
