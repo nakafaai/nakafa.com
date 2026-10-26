@@ -28,7 +28,7 @@ for (const width of [390, 1440]) {
     const teacher = await teacherContext.newPage();
     await teacher.goto(address("/exams"));
     await waitUntilTakenOver(
-      teacher.locator('[data-slot="page-header"]').getByRole("link").first()
+      teacher.locator('[data-slot="page-header"]').getByRole("button").first()
     );
 
     const ownerContext = await browser.newContext({ viewport });
