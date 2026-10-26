@@ -7,7 +7,8 @@ export const SESSION_PATH = "/api/auth/get-session";
  * The Better Auth session as Nakafa reads it.
  *
  * `hasError` marks a session request Better Auth could not complete; it keeps
- * the last known session ids, as Better Auth does for a failed refresh.
+ * the last known session ids, as Better Auth does for a failed refresh. A failed
+ * request that knew no session stays pending (`readAuthSession`).
  */
 export const AuthSession = Schema.Struct({
   hasError: Schema.Boolean,
@@ -35,18 +36,6 @@ const BetterAuthSession = Schema.Struct({
 
 const decodeBetterAuthSession = Schema.decodeUnknownOption(BetterAuthSession);
 
-/**
- * The atom while Better Auth refetches a session it holds no data for. It
- * marks such a session pending again, as on every return to the tab.
- */
-const BetterAuthRefetch = Schema.Struct({
-  data: Schema.Null,
-  isPending: Schema.Literal(true),
-  isRefetching: Schema.Literal(true),
-});
-
-const isBetterAuthRefetch = Schema.is(BetterAuthRefetch);
-
 /** A signed-out session that never asks the backend, for authoring previews. */
 export const previewAuthSession = AuthSession.make({
   hasError: false,
@@ -55,8 +44,19 @@ export const previewAuthSession = AuthSession.make({
   userId: null,
 });
 
+/** Better Auth's answer that the cookie holds no session, the one failure it settles as signed out. */
+const UnauthorizedAnswer = Schema.Struct({ status: Schema.Literal(401) });
+
+const isUnauthorizedAnswer = Schema.is(UnauthorizedAnswer);
+
 /**
  * Reads one value of Better Auth's session atom.
+ *
+ * A failed request that knew no session, a network failure or a 5xx on a page's
+ * first read, said nothing about the session, so it stays pending: Better Auth
+ * itself keeps its last session for every failure but a 401, and a reader that
+ * took it as signed out would read the school or the account without a token and
+ * flash an error until the next answer. A 401 is signed out.
  *
  * A value outside Better Auth's session contract reads as a failed session
  * request, so readers treat it like any other unavailable session.
@@ -74,7 +74,11 @@ export function readAuthSession(value: unknown) {
       onSome: ({ data, error, isPending }) =>
         AuthSession.make({
           hasError: Predicate.isNotNullish(error),
-          isPending,
+          isPending:
+            isPending ||
+            (data === null &&
+              Predicate.isNotNullish(error) &&
+              !isUnauthorizedAnswer(error)),
           sessionId: data?.session.id ?? null,
           userId: data?.user.id ?? null,
         }),
@@ -107,16 +111,19 @@ export const releaseSession = Effect.fn("www.auth.releaseSession")(
 /**
  * Follows Better Auth's session atom from the session readers already see.
  *
- * Once the session has settled, a refetch of a signed-out session keeps that
- * session until Better Auth answers, so readers never fall back to loading.
- * While the page signs its account out, readers keep the session they see
+ * Once the session has settled, a value that says nothing about it keeps that
+ * session, so readers never fall back to loading: Better Auth marks a session it
+ * holds no data for pending again while it refetches it, on every return to the
+ * tab, and a refetch that fails without an answer reads as pending too. While
+ * the page signs its account out, readers keep the session they see
  * (`holdSession`).
  */
 export function followAuthSession(previous: AuthSession, value: unknown) {
   if (MutableRef.get(signingOut)) {
     return previous;
   }
-  return !previous.isPending && isBetterAuthRefetch(value)
+  const next = readAuthSession(value);
+  return !previous.isPending && next.isPending && next.sessionId === null
     ? previous
-    : readAuthSession(value);
+    : next;
 }

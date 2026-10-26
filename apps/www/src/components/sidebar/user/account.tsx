@@ -14,11 +14,12 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
 import { ClientOnly, useNavigate } from "@tanstack/react-router";
-import { Effect, Result } from "effect";
-import { lazy, Suspense } from "react";
+import { Effect, Function as Fn, Option, Result } from "effect";
+import { lazy, Suspense, useEffect, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
+import { useLiveSession } from "@/components/providers/live";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import {
   CommunityMenuItem,
@@ -30,8 +31,15 @@ import {
   SidebarLanguageSubmenu,
   SidebarThemeSubmenu,
 } from "@/components/sidebar/menu/preference";
+import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
+import { loadKnownSession } from "@/lib/auth/known";
 import type { CurrentUser } from "@/lib/identity/client";
+import {
+  loadKnownAccountText,
+  readKnownAccount,
+  saveKnownAccount,
+} from "@/lib/identity/known";
 import { profileTarget } from "@/lib/profile/href";
 import { useCurrentLocale } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
@@ -46,22 +54,94 @@ const SidebarSchoolMenuItems = lazy(() =>
   }))
 );
 
+/** The second line of the account button: the account's plan. */
+function usePlanLabels() {
+  const t = useTranslations("Auth");
+  return { free: t("plan-free"), pro: t("plan-pro") };
+}
+
+/** What the browser keeps under a mounted footer changes only with a new page, so nothing notifies. */
+function subscribeKnown() {
+  return Fn.constVoid;
+}
+
+/** The account row the browser kept, as its stored text. */
+function readStoredAccount() {
+  return Effect.runSync(loadKnownAccountText());
+}
+
+/** The session the browser last had. */
+function readStoredSession() {
+  return Effect.runSync(loadKnownSession());
+}
+
+/** The server keeps nothing for the browser. */
+function readNothing() {
+  return null;
+}
+
+/**
+ * The account row the browser kept for the session the page holds or is about
+ * to hold, drawn while the live account loads, so the footer never waits empty
+ * for it. It is inert, so a press waits for the live row, which draws the same
+ * row once it arrives. A session that settled on another account or on none
+ * draws nothing, and so does a browser that kept no row.
+ */
+export function KnownAccountRow() {
+  const planLabels = usePlanLabels();
+  const isPending = useLiveSession((state) => state.isPending);
+  const sessionId = useLiveSession((state) => state.sessionId);
+  const text = useSyncExternalStore(
+    subscribeKnown,
+    readStoredAccount,
+    readNothing
+  );
+  const knownSession = useSyncExternalStore(
+    subscribeKnown,
+    readStoredSession,
+    readNothing
+  );
+  const account = readKnownAccount(text, isPending ? knownSession : sessionId);
+
+  if (Option.isNone(account)) {
+    return null;
+  }
+  const { mascot, name, photo, plan } = account.value;
+  return (
+    <div className="contents" inert>
+      <AccountPricing plan={plan} />
+      <AccountMenu
+        account={{ mascot, photo }}
+        description={planLabels[plan]}
+        name={name}
+        onSignOut={Fn.constVoid}
+      >
+        {null}
+      </AccountMenu>
+    </div>
+  );
+}
+
 /**
  * Renders the app account menu once authentication is confirmed. Its groups are
  * the account's schools, the account's pages, then the language, the theme and the
  * Learn more menu, which holds the About and Community links, the legal pages and
- * the privacy preference.
+ * the privacy preference. It keeps the row it shows for the next page.
  */
 export function NavUserAccount({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const tNotifications = useTranslations("Notifications");
   const navigate = useNavigate();
   const locale = useCurrentLocale();
+  const sessionId = useLiveSession((state) => state.sessionId);
   const { username } = user.appUser;
-  const planLabelByPlan = {
-    free: t("plan-free"),
-    pro: t("plan-pro"),
-  };
+  const planLabelByPlan = usePlanLabels();
+
+  useEffect(() => {
+    if (sessionId !== null) {
+      Effect.runSync(saveKnownAccount(sessionId, user));
+    }
+  }, [sessionId, user]);
 
   /**
    * Signs the user out, then opens the locale home as a full document load on

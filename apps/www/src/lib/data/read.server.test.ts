@@ -4,6 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { SessionRequired } from "@repo/backend/confect/auth/spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { isNotFound } from "@tanstack/react-router";
 import { ConvexError } from "convex/values";
@@ -61,6 +62,17 @@ const refusal = () =>
     )
   );
 
+/** The error that Convex carries when it finds no session behind the request's token. */
+const sessionRefusal = () =>
+  new ConvexError(
+    Schema.encodeSync(SessionRequired)(
+      new SessionRequired({
+        code: "UNAUTHENTICATED",
+        message: "Unauthenticated",
+      })
+    )
+  );
+
 describe("required and optional preloads", () => {
   it.effect("ends a page whose required read is refused as not found", () =>
     Effect.gen(function* () {
@@ -73,6 +85,34 @@ describe("required and optional preloads", () => {
         expect(isNotFound(Cause.squash(exit.cause))).toBe(true);
       }
     })
+  );
+
+  it.effect(
+    "fails a required read whose sent token Convex no longer accepts, so trying again reads afresh",
+    () =>
+      Effect.gen(function* () {
+        convex.query.mockRejectedValueOnce(sessionRefusal());
+        const error = yield* Effect.flip(
+          readRequired(openExam, openArgs, "token-alice")
+        );
+        expect(error).toBeInstanceOf(PreloadFailed);
+        expect(error.cause).toBeInstanceOf(SessionRequired);
+      })
+  );
+
+  it.effect(
+    "ends a required read without a token that needs a session as not found",
+    () =>
+      Effect.gen(function* () {
+        convex.query.mockRejectedValueOnce(sessionRefusal());
+        const exit = yield* Effect.exit(
+          readRequired(openExam, openArgs, undefined)
+        );
+        expect(Exit.isFailure(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
+          expect(isNotFound(Cause.squash(exit.cause))).toBe(true);
+        }
+      })
   );
 
   it.effect("keeps a real failure of a required read as the failure", () =>

@@ -58,6 +58,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
   yield* Effect.promise(async () => {
     const row = memoryRow(page, TITLE);
 
+    await waitUntilTakenOver(row.getByText(TITLE));
     await row.getByText(TITLE).click();
     await opened(page, WORDS);
     const before = changes.sent;
