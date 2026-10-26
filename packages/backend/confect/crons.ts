@@ -12,6 +12,7 @@ import { Cron, Duration } from "effect";
 const { internal } = refs;
 const BILLING_EVENT_CLEANUP_INTERVAL_HOURS = 24;
 const POLAR_RECONCILE_INTERVAL_HOURS = 24;
+const CONNECTOR_SYNC_INTERVAL_MINUTES = 10;
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
@@ -26,6 +27,14 @@ const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
  * never starts.
  */
 export default CronJobs.make()
+  .add(
+    CronJob.make(
+      "sync due connectors",
+      Duration.minutes(CONNECTOR_SYNC_INTERVAL_MINUTES),
+      internal.connectors.sync.sweep,
+      {}
+    )
+  )
   .add(
     CronJob.make(
       "sweep billing webhooks",

@@ -2577,6 +2577,17 @@
     "none": "Noch kein Konnektor",
     "none-description": "Konnektoren erscheinen hier, sobald Google sie geprüft hat.",
     "refused": "Nicht verbunden",
-    "refused-description": "Google hat nicht jeden Zugriff erlaubt, den dieser Konnektor braucht. Verbinde neu und lass jedes Häkchen gesetzt."
+    "refused-description": "Google hat nicht jeden Zugriff erlaubt, den dieser Konnektor braucht. Verbinde neu und lass jedes Häkchen gesetzt.",
+    "courses": "Kurse in Classroom",
+    "courses-description": "Die Kurse, die du in Google Classroom unterrichtest. Wähle für jeden die Klasse, und seine Aufgaben kommen als Aufgaben dieser Klasse an.",
+    "courses-hint": "Schüler treten über ihre eigene Einladung bei.",
+    "courses-show": "Kurse zeigen",
+    "courses-refresh": "Neu lesen",
+    "courses-none": "Kein aktiver Kurs in diesem Classroom-Konto.",
+    "course": "Kurs",
+    "course-students": "Schüler",
+    "course-class": "Klasse",
+    "course-unlinked": "Nicht importiert",
+    "course-name": "{name} {section}"
   }
 }

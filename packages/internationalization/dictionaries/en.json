@@ -2577,6 +2577,17 @@
     "none": "No connector yet",
     "none-description": "Connectors open here once Google has reviewed them.",
     "refused": "Not connected",
-    "refused-description": "Google did not allow every access this connector needs. Connect again and keep every box checked."
+    "refused-description": "Google did not allow every access this connector needs. Connect again and keep every box checked.",
+    "courses": "Classes in Classroom",
+    "courses-description": "The courses you teach in Google Classroom. Pick the class each one fills, and its coursework arrives as that class's tasks.",
+    "courses-hint": "Students join through their own invitation.",
+    "courses-show": "Show courses",
+    "courses-refresh": "Read again",
+    "courses-none": "No active course in this Classroom account.",
+    "course": "Course",
+    "course-students": "Students",
+    "course-class": "Class",
+    "course-unlinked": "Not imported",
+    "course-name": "{name} {section}"
   }
 }
