@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
 import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
 import babel from "@rolldown/plugin-babel";
@@ -98,6 +98,41 @@ const writeHeadersFile: Plugin = {
       ),
   },
   name: "www:write-headers-file",
+};
+
+/**
+ * The asset settings of the Worker that the Alchemy plugin runs. A deploy applies
+ * the `_headers` file of the client output to the static assets, but `vite
+ * preview` reads the rules only from these settings, so `readPreviewHeaders`
+ * fills them from the built file before the preview starts its Worker.
+ */
+const workerAssets: typeof workerSettings.assets & { headers?: string } = {
+  ...workerSettings.assets,
+};
+
+/**
+ * Gives the preview's Worker the rules of the built `_headers` file, so a local
+ * production build, the acceptance runtime included, answers a static asset with
+ * the same headers as the deploy. It runs before the Alchemy plugin starts the
+ * Worker.
+ */
+const readPreviewHeaders: Plugin = {
+  configurePreviewServer: {
+    order: "pre",
+    handler: (server) => {
+      const file = join(
+        resolve(
+          server.config.root,
+          server.config.environments.client.build.outDir
+        ),
+        "_headers"
+      );
+      if (existsSync(file)) {
+        workerAssets.headers = readFileSync(file, "utf8");
+      }
+    },
+  },
+  name: "www:read-preview-headers",
 };
 
 /**
@@ -270,7 +305,7 @@ function alchemyWorker(
       compatibilityFlags: workerSettings.compatibilityFlags,
       viteEnvironments: workerSettings.viteEnvironments,
       worker: {
-        assets: workerSettings.assets,
+        assets: workerAssets,
         bindings: Object.entries({
           ...workerEnvironment(),
           NODE_ENV: nodeEnvironment,
@@ -365,6 +400,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       babel({ presets: [reactCompilerPreset()] }),
       bundleCommonJsReactPeers,
       writeHeadersFile,
+      readPreviewHeaders,
       writeRobotsFile,
       serveRobotsFile,
       writeStaticArtifacts,
