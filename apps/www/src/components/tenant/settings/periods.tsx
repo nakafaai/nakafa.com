@@ -14,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { DatePicker } from "@repo/design-system/components/ui/date";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -365,19 +366,21 @@ function SchoolPeriodAddDialog({
         <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
           <Field>
             <FieldLabel htmlFor={`${id}-start`}>{t("period-start")}</FieldLabel>
-            <Input
+            <DatePicker
               id={`${id}-start`}
-              onChange={(event) => setStart(event.target.value)}
-              type="date"
+              max={end === "" ? undefined : end}
+              onValueChange={setStart}
+              placeholder={t("period-start-placeholder")}
               value={start}
             />
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-end`}>{t("period-end")}</FieldLabel>
-            <Input
+            <DatePicker
               id={`${id}-end`}
-              onChange={(event) => setEnd(event.target.value)}
-              type="date"
+              min={start === "" ? undefined : start}
+              onValueChange={setEnd}
+              placeholder={t("period-end-placeholder")}
               value={end}
             />
           </Field>

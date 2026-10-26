@@ -44,8 +44,6 @@ export function PageCounter({
       aria-label={t("page-jump", { total })}
       className="h-8 w-16 text-center tabular-nums"
       inputMode="numeric"
-      max={total}
-      min={1}
       onBlur={() => setTyping(null)}
       onChange={(event) => setTyping(event.currentTarget.value)}
       onFocus={(event) => event.currentTarget.select()}
@@ -64,7 +62,6 @@ export function PageCounter({
         }
       }}
       ref={focusOnMount}
-      type="number"
       value={typing}
     />
   );
