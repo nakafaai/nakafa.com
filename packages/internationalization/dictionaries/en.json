@@ -393,7 +393,6 @@
     "cell-hint": "Each statement takes one column, and the key saves once every statement has one."
   },
   "SchoolSettings": {
-    "back-to-school": "Back to {school}",
     "school": "School",
     "people": "People",
     "integrations": "Integrations",
@@ -450,6 +449,7 @@
     "invoice-pay": "Pay",
     "invoice-transfer": "Pay by transfer",
     "manage-group": "Management",
+    "back-to-school": "Back to {school}",
     "manage-settings": "Settings",
     "address-copy": "Copy address",
     "address-footer": "Copy it to share with your school.",

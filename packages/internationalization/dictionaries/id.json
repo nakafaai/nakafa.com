@@ -393,7 +393,6 @@
     "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom."
   },
   "SchoolSettings": {
-    "back-to-school": "Kembali ke {school}",
     "school": "Sekolah",
     "people": "Orang",
     "integrations": "Integrasi",
@@ -450,6 +449,7 @@
     "invoice-pay": "Bayar",
     "invoice-transfer": "Bayar lewat transfer",
     "manage-group": "Pengelolaan",
+    "back-to-school": "Kembali ke {school}",
     "manage-settings": "Pengaturan",
     "address-copy": "Salin alamat",
     "address-footer": "Salin untuk dibagikan ke sekolahmu.",

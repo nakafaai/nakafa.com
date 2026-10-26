@@ -393,7 +393,6 @@
     "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
   },
   "SchoolSettings": {
-    "back-to-school": "Zurück zu {school}",
     "school": "Schule",
     "people": "Personen",
     "integrations": "Integrationen",
@@ -450,6 +449,7 @@
     "invoice-pay": "Bezahlen",
     "invoice-transfer": "Per Überweisung zahlen",
     "manage-group": "Verwaltung",
+    "back-to-school": "Zurück zu {school}",
     "manage-settings": "Einstellungen",
     "address-copy": "Adresse kopieren",
     "address-footer": "Kopiere sie, um sie mit deiner Schule zu teilen.",
