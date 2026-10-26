@@ -329,12 +329,14 @@ export const runStudent = Effect.fn("load.student")(function* (
   yield* sleepUntil(back);
   yield* Effect.scoped(
     Effect.gen(function* () {
-      const tab = yield* openTab(input, deviceId, versions);
-      yield* timed(
+      // The resync runs from the reconnection to the last kept answer the server took.
+      const tab = yield* timed(
         "sync:reconnect",
-        Effect.forEach(kept, (answer) => write(input, tab, answer), {
-          discard: true,
-        })
+        Effect.tap(openTab(input, deviceId, versions), (reopened) =>
+          Effect.forEach(kept, (answer) => write(input, reopened, answer), {
+            discard: true,
+          })
+        )
       );
       yield* takeSteps(input, tab, versions, {
         at: entered,

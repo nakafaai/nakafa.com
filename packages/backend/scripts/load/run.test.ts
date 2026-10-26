@@ -103,6 +103,7 @@ describe("load run", () => {
         expect(report.client["mutation:answer"]?.count).toBe(4);
         expect(report.client["query:dashboard"]?.count).toBe(1);
         expect(report.server["mutation:exams/sittings:answer"]?.count).toBe(1);
+        expect(report.client["driver:lag"]?.count).toBeGreaterThan(0);
         expect(report.passed).toBe(true);
         const written = yield* fs
           .readFileString(output)

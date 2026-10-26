@@ -36,6 +36,12 @@ const LEAD = Duration.seconds(5);
 /** How long the log stream gets after the last student to print the last executions. */
 const LOG_SETTLE = Duration.seconds(5);
 
+/**
+ * How often the run checks its own event loop. Every client of the run shares one thread, so a
+ * sleep that wakes late shows the driver itself delayed what the client timings read.
+ */
+const LAG_PROBE = Duration.seconds(1);
+
 /** The most answer rows the audit reads: every answer of the largest run the plan allows, and more. */
 const STORED_LIMIT = "1000000";
 
@@ -100,6 +106,16 @@ export const runLoad = Effect.fn("load.run")(function* <E>(
     Effect.fromOption(Arr.get(seeded.rooms, index)).pipe(Effect.orDie);
   const logPath = `${directory}/functions.jsonl`;
   yield* input.capture(logPath);
+  yield* Effect.gen(function* () {
+    const before = yield* Clock.currentTimeMillis;
+    yield* Effect.sleep(LAG_PROBE);
+    const after = yield* Clock.currentTimeMillis;
+    yield* recorder.sample({
+      failed: false,
+      ms: after - before - Duration.toMillis(LAG_PROBE),
+      name: "driver:lag",
+    });
+  }).pipe(Effect.forever, Effect.forkScoped);
   const done = yield* Deferred.make<void>();
   const start = (yield* Clock.currentTimeMillis) + Duration.toMillis(LEAD);
   const proctors = yield* Effect.forkScoped(
