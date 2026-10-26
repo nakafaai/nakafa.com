@@ -106,12 +106,10 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
           keys,
           { ...NISN_BLIND, row: [person._id] },
           value
-        ).pipe(Effect.orDie);
-        const blind = yield* blindText(keys, NISN_BLIND, value).pipe(
-          Effect.orDie
         );
+        const blind = yield* blindText(keys, NISN_BLIND, value);
         return { blind, sealed };
-      }),
+      }).pipe(Effect.orDie),
   });
   const row: typeof rosterEntryValidator.Type = {
     ...(nisn === undefined ? {} : { nisn }),
@@ -146,6 +144,6 @@ export const openNisn = Effect.fn("roster.entry.open")(function* (
     keys,
     { ...NISN_BLIND, row: [entry.personId] },
     entry.nisn.sealed
-  ).pipe(Effect.orDie);
-  return Option.some(yield* Schema.decodeEffect(Nisn)(text).pipe(Effect.orDie));
-});
+  );
+  return Option.some(yield* Schema.decodeEffect(Nisn)(text));
+}, Effect.orDie);
