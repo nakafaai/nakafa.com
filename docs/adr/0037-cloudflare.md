@@ -112,6 +112,26 @@ never invoke a Worker.
    - A request without a session cookie is a visitor. The route answers it as
      signed out without a network call, so only a request with a session cookie
      reaches Convex.
+9. **Every Worker has a readable name.** `workerName` in `apps/www/deploy/stage.ts`
+   names each Worker `nakafa-<service>` in production and `nakafa-<service>-<stage>`
+   in every other stage: `nakafa-web`, `nakafa-api`, `nakafa-mcp`, `nakafa-cas`,
+   and `nakafa-cas-engine` in production, `nakafa-web-staging`, `nakafa-cas-staging`,
+   and `nakafa-cas-engine-staging` in staging. Staging's Access application takes
+   the name of its Worker. Staging's CAS pair serves the dev deployment, whose
+   `MATH_CAS_URL` is `https://nakafa-cas-staging.nakafa.workers.dev`, so Nina's
+   math tools work in staging and local development. `alchemy-state-store` is
+   Alchemy's own state store, which every deploy reads, and keeps its name.
+   - Alchemy plans a changed `name` as a create-first replacement. The new Worker
+     cannot take over a route or custom domain that the old one holds, so the
+     deploy fails before it moves any traffic. A deployed Worker is renamed in
+     place instead: `PATCH /accounts/{account}/workers/workers/{id}` with the new
+     name keeps the Worker id, its routes, custom domains, secrets, Durable Object
+     namespaces, and the bindings that other Workers hold to them, with no gap in
+     traffic (measured on 26 October 2026 on two probe Workers). Then
+     `alchemy state rm <stack>/<stage>/<id>` drops each renamed row without
+     touching the cloud, and the next deploy adopts each Worker by its
+     `alchemy:stack`, `alchemy:stage`, and `alchemy:id` tags. A Durable Object
+     namespace keeps the name it was created with; only its owning Worker changes.
 
 ## Consequences
 
