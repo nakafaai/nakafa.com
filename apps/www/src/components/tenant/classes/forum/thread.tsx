@@ -67,7 +67,7 @@ export function ForumDiscussion({
     // Below tablet width the handle steps aside and the panel takes no room, so the channel fills the
     // row and the discussion stands over it as a sheet.
     <ResizablePanelGroup
-      className="max-md:[&>[data-separator]]:hidden! min-h-0 flex-1 max-md:[&>[data-separator]~[data-panel]]:flex-none!"
+      className="max-md:[&>[data-separator]]:hidden! mx-auto min-h-0 w-full max-w-7xl flex-1 max-md:[&>[data-separator]~[data-panel]]:flex-none!"
       orientation="horizontal"
     >
       <ResizablePanel className="flex min-w-0 flex-col" minSize="30%">

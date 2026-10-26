@@ -350,13 +350,15 @@ function ClassBody({
 
   if (view._tag === "channel") {
     return (
-      <ForumChannel
-        canManage={canManage}
-        canPost={canPost}
-        channelId={view.channelId}
-        everyone={everyone}
-        jump={view.jump}
-      />
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+        <ForumChannel
+          canManage={canManage}
+          canPost={canPost}
+          channelId={view.channelId}
+          everyone={everyone}
+          jump={view.jump}
+        />
+      </div>
     );
   }
   if (view._tag === "discussion") {
@@ -423,9 +425,9 @@ function ClassBody({
 }
 
 /**
- * A body that scrolls within itself under the tabs, as wide as the page, so the header and the
- * tabs stay. A table is the whole body and runs from edge to edge, as every School table page's
- * does; other content keeps the page's margin.
+ * A body that scrolls within itself under the tabs, at the app's page width, so the header and
+ * the tabs stay. A table is the whole body and runs from edge to edge of it, as every School table
+ * page's does; other content keeps the page's margin.
  */
 function ClassScroll({
   children,
@@ -442,7 +444,7 @@ function ClassScroll({
 }
 
 /** The content of a scrolling body: a table from edge to edge, or other content within the page's margin. */
-const classBody = cva("flex w-full flex-1 flex-col", {
+const classBody = cva("mx-auto flex w-full max-w-7xl flex-1 flex-col", {
   variants: {
     table: { false: "gap-6 px-4 py-6", true: "" },
   },
