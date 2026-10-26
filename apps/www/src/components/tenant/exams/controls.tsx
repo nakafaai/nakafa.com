@@ -29,7 +29,7 @@ import type {
   Question,
   QuestionId,
 } from "@/components/tenant/exams/optimistic";
-import { useExamSelection } from "@/components/tenant/exams/provider";
+import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
 
 /**
  * The actions of a page: move up, move down, copy, add a question below, and remove. A page shows
@@ -38,14 +38,14 @@ import { useExamSelection } from "@/components/tenant/exams/provider";
  * asks first, and an exam keeps at least one question.
  */
 export function PageActions({
-  count,
   index,
   question,
 }: {
-  count: number;
   index: number;
   question: Question;
 }) {
+  const { exam } = useExam();
+  const count = exam.questions.length;
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const actions = useQuestionActions();
