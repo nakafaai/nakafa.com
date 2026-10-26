@@ -1,5 +1,6 @@
 import { expect, type Locator, test } from "@playwright/test";
 import { Effect } from "effect";
+import { readRepeatedIcons } from "@/e2e/support/icons";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -56,6 +57,19 @@ for (const viewport of [
       expect(placed.bottom).toBeGreaterThanOrEqual(
         placed.viewport - GUTTER - 1
       );
+
+      // Each value of the Filter menu draws an icon of its own, and each status cell is a toned badge.
+      await page
+        .locator("header")
+        .getByRole("button", { name: "Filter" })
+        .click();
+      const menu = page.getByRole("menu");
+      await expect(menu.getByRole("menuitemcheckbox")).not.toHaveCount(0);
+      expect(await readRepeatedIcons(menu, "[role=menuitemcheckbox]")).toEqual(
+        []
+      );
+      await page.keyboard.press("Escape");
+      await expect(card.locator('[data-slot="badge"]').first()).toBeVisible();
       await context.close();
     });
   });
