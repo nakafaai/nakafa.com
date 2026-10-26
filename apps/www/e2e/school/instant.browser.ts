@@ -39,6 +39,9 @@ function managerPages(exam: string, sitting: string) {
     "/settings/students",
     "/settings/invites",
     "/settings/audit",
+    "/settings/roster",
+    "/settings/guardians",
+    "/reports",
     "/",
   ];
 }
