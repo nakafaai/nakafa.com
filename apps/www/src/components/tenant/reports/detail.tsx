@@ -332,6 +332,7 @@ export function ReportNoteDialog({
             onClick={submit}
             type="button"
           >
+            <HugeIcons icon={PencilEdit02Icon} />
             {t("save-note")}
           </Button>
         </>
