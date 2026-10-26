@@ -29,6 +29,7 @@ import {
   readinessTimeoutMilliseconds,
   revealTimeoutMilliseconds,
 } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
@@ -472,6 +473,7 @@ test("a learner's content views store no device identifier until analytics is al
               // Declining from a page without a content view still clears it.
               yield* openPage(page, "/en");
               const preferences = usageDataTrigger(page);
+              yield* Effect.promise(() => waitUntilTakenOver(preferences));
               yield* Effect.promise(() => preferences.click());
               yield* Effect.promise(() =>
                 page.getByRole("button", { name: "Decline" }).click()
