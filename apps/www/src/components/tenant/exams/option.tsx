@@ -75,6 +75,9 @@ export function OptionRow({
 }: OptionRowProps) {
   const t = useTranslations("Exams");
   const editor = useRef<DocumentEditorInstance | null>(null);
+  // The label the editor held last with no typing of the teacher's on top: the label it started with or took from
+  // the server, or the one its last save sent. Text that differs from it waits for the quiet save.
+  const settled = useRef(label);
   // The save calls the latest `onSave`, so a save after the quiet period uses the answers and the
   // revision of the render that is on screen when it runs.
   const save = useCallbackRef(onSave);
@@ -103,6 +106,7 @@ export function OptionRow({
               });
               return;
             }
+            settled.current = edit.label;
             save(edit.label, () => restoreUnstored(edit.label));
           }),
         OPTION_SAVE_QUIET
@@ -119,6 +123,24 @@ export function OptionRow({
     Effect.runFork(saver.cancel);
     onRemove();
   };
+
+  // The editor takes a label the server holds once it changes, as a save of this option lands after the editor
+  // opened, or another editor saves it, unless the teacher has typed text here that waits for its save, which wins.
+  useEffect(() => {
+    const current = editor.current;
+    if (
+      current === null ||
+      holdsLabel(settled.current, label) ||
+      !holdsLabel(current.getJSON(), settled.current)
+    ) {
+      return;
+    }
+    settled.current = label;
+    current.commands.setContent(
+      Node.fromJSON(assessmentSchema, label).toJSON(),
+      { emitUpdate: false }
+    );
+  }, [label]);
 
   // The editor takes the lock of the option as it changes, not only when it opens.
   // A lock is not an edit, so the editor emits no change for it, and no label is saved.
@@ -164,6 +186,7 @@ export function OptionRow({
           }}
           onEditor={(next) => {
             editor.current = next;
+            settled.current = label;
             next.commands.setContent(
               Node.fromJSON(assessmentSchema, label).toJSON(),
               { emitUpdate: false }
