@@ -21,7 +21,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { roleIcon } from "@/components/tenant/role";
+import { roleIcon } from "@/components/tenant/roles";
 import { assignGrantChange } from "@/components/tenant/settings/mutation";
 import {
   type PersonId,
