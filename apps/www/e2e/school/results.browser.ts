@@ -82,24 +82,37 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
     .click();
   await proctor.getByRole("link", { name: "Results", exact: true }).click();
 
-  // The page holds two tables, the students and the answers of the first question,
-  // so the roster is the one with a Score column.
-  const students = proctor.getByRole("table").filter({
-    has: proctor.getByRole("columnheader", { name: "Score", exact: true }),
-  });
+  // The students are the page's one table; the questions open from the header in a sheet.
+  const header = proctor.locator('[data-slot="page-header"]');
+  const students = proctor.getByRole("table");
+  await expect(students).toHaveCount(1);
+  await expect(
+    students.getByRole("columnheader", { name: "Score", exact: true })
+  ).toBeVisible();
   await expect(students).toContainText(LEARNER_NAME, {
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(students.getByRole("row", { name: LEARNER_NAME })).toContainText(
     "1 / 2"
   );
-  await proctor
+  await header.getByRole("button", { name: "Questions" }).click();
+  await expect(
+    proctor.getByRole("dialog", { name: "Questions" }).getByRole("button", {
+      name: "Question 1",
+    })
+  ).toBeVisible();
+  await proctor.keyboard.press("Escape");
+  // Release results is the page's main action, in its header row; once released it says so.
+  await header
     .getByRole("button", { name: "Release results", exact: true })
     .click();
   await proctor
     .getByRole("dialog")
     .getByRole("button", { name: "Release results", exact: true })
     .click();
+  await expect(
+    header.getByRole("button", { name: "Released", exact: true })
+  ).toBeDisabled();
 
   await expect(
     student.getByText("Your teacher released these results.")

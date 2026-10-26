@@ -12,6 +12,7 @@ import {
   pointsOf,
   scoreResponse,
 } from "@repo/backend/confect/exams/results/score";
+import { integrityOf } from "@repo/backend/confect/exams/sittings/away";
 import { Effect, Option } from "effect";
 
 /**
@@ -57,8 +58,8 @@ const recordQuestion = Effect.fn("exams.results.record.question")(function* (
 });
 
 /**
- * Scores a submitted attempt: one result row for each question of its sitting's exam, written in the
- * caller's transaction with the submission. The callers run it only when the attempt moves to
+ * Scores a submitted attempt: one result row for each question of its sitting's exam, and its integrity
+ * indication, written in the caller's transaction with the submission. The callers run it only when the attempt moves to
  * submitted, and submitted is final, so a retried submission writes no second row (ADR 0031, section 8).
  */
 export const recordResults = Effect.fn("exams.results.record")(function* (
@@ -72,4 +73,26 @@ export const recordResults = Effect.fn("exams.results.record")(function* (
   yield* Effect.forEach(exam.questions, (questionId) =>
     recordQuestion(attempt, sitting, questionId)
   );
+  yield* recordIntegrity(attempt);
+});
+
+/** The most signals an attempt's integrity indication reads, so the read at submit stays bounded. */
+const INTEGRITY_SIGNAL_MAX = 1000;
+
+/**
+ * Writes the integrity indication of a submitted attempt once (K25): its exits and its seconds away in
+ * all, from its first `INTEGRITY_SIGNAL_MAX` signals in time order, so the results never read the signals.
+ */
+const recordIntegrity = Effect.fn("exams.results.record.integrity")(function* (
+  attempt: ExamAttemptsDoc
+) {
+  const signals = yield* (yield* DatabaseReader)
+    .table("examSignals")
+    .index("by_attemptId_and_at", (query) => query.eq("attempt", attempt._id))
+    .take(INTEGRITY_SIGNAL_MAX)
+    .pipe(Effect.orDie);
+  yield* (yield* DatabaseWriter)
+    .table("examAttempts")
+    .patch(attempt._id, { integrity: integrityOf(signals) })
+    .pipe(Effect.orDie);
 });

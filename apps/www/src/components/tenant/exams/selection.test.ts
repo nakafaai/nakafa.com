@@ -5,6 +5,7 @@ import { Option, Schema } from "effect";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import {
   activeQuestion,
+  afterRemoval,
   createExamSelection,
 } from "@/components/tenant/exams/selection";
 
@@ -46,6 +47,7 @@ const question = (id: string): Question => ({
 
 const first = question("q1");
 const second = question("q2");
+const third = question("q3");
 const outside = questionId("q9");
 
 describe("activeQuestion", () => {
@@ -69,6 +71,28 @@ describe("activeQuestion", () => {
 
   it("shows nothing for an exam with no question", () => {
     expect(activeQuestion([], null)).toEqual(Option.none());
+  });
+});
+
+describe("afterRemoval", () => {
+  it("moves the teacher on the removed question to the one after it, or before it at the end", () => {
+    expect(afterRemoval([first, second, third], second.id, second.id)).toEqual(
+      Option.some(third.id)
+    );
+    expect(afterRemoval([first, second, third], third.id, third.id)).toEqual(
+      Option.some(second.id)
+    );
+    // Before any choice the teacher is on the first question.
+    expect(afterRemoval([first, second], null, first.id)).toEqual(
+      Option.some(second.id)
+    );
+  });
+
+  it("keeps a teacher on another question, and has no move for the only question", () => {
+    expect(afterRemoval([first, second, third], first.id, third.id)).toEqual(
+      Option.none()
+    );
+    expect(afterRemoval([first], first.id, first.id)).toEqual(Option.none());
   });
 });
 

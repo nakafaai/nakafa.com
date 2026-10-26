@@ -38,6 +38,7 @@ const SeedArgs = Schema.fromJsonString(
     crowd: Schema.optionalKey(Schema.Finite),
     email: Schema.String,
     slug: Schema.String,
+    essay: Schema.optionalKey(Schema.Literal(true)),
     upcoming: Schema.optionalKey(Schema.Literal(true)),
   })
 );
@@ -252,6 +253,47 @@ describe("acceptance sitting", () => {
   );
 
   it.effect(
+    "seeds an essay with the sitting when the sitting mode names it",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "acceptance-sitting-test-",
+        });
+        runtimeIn(root);
+        const specs = MutableList.make<CommandSpec>();
+        mocks.command.mockImplementation((spec: CommandSpec) =>
+          Effect.gen(function* () {
+            MutableList.append(specs, spec);
+            yield* fs.writeFileString(
+              spec.stdoutPath,
+              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
+            );
+          })
+        );
+
+        yield* sittingMode.run(root, [
+          "acc-1234abcd",
+          "learner@acceptance.example.test",
+          `${root}/mode.json`,
+          "101",
+          "essay",
+        ]);
+
+        const [spec] = MutableList.toArray(specs);
+        const args = yield* Schema.decodeEffect(SeedArgs)(
+          Option.getOrThrow(Arr.last(spec?.args ?? []))
+        );
+        expect(args).toEqual({
+          crowd: 101,
+          email: "learner@acceptance.example.test",
+          slug: "acc-1234abcd",
+          essay: true,
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
     "seeds the sitting without a crowd when the sitting mode names none",
     () =>
       Effect.gen(function* () {
@@ -299,7 +341,7 @@ describe("acceptance sitting", () => {
         ).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming]",
+            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay]",
         });
         expect(mocks.read).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();
@@ -323,7 +365,7 @@ describe("acceptance sitting", () => {
         ).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming]",
+            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming|essay]",
         });
         expect(mocks.read).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();

@@ -13,7 +13,7 @@ import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
-const { copy } = refs.public.exams.questions;
+const { copy, template } = refs.public.exams.questions;
 const { open: openDocument } = refs.public.editor.documents;
 const { submit } = refs.public.editor.steps;
 const fold = refs.internal.editor.fold.fold;
@@ -181,5 +181,29 @@ describe("exams/questions/copy", () => {
         expect(questions.questions).toHaveLength(1);
         expect(yield* fixture.run(stepRows)).toHaveLength(STEP_PAGE_STEPS + 1);
       })
+  );
+
+  it.effect("copies a complex choice as a complex choice", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const teacher = fixture.as("teacher");
+      const exam = yield* teacherExam(fixture, "Salin");
+      const [question] = exam.questions;
+      yield* teacher.mutation(template, {
+        examId: exam.id,
+        labels: [],
+        questionId: question.id,
+        revision: 0,
+        slug: nf,
+        template: "choices",
+      });
+      const copied = yield* teacher.mutation(copy, {
+        examId: exam.id,
+        questionId: question.id,
+        slug: nf,
+      });
+      expect(copied).toMatchObject({ template: "choices" });
+      expect(copied.answers[0]).toMatchObject({ maxChoices: 4 });
+    })
   );
 });

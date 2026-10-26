@@ -1,11 +1,13 @@
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
+import { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import { Data, Effect, Option, Ref, Schema, Semaphore } from "effect";
 
-/** What one save writes: the answers and the key of a question. */
+/** What one save writes: the answers, the key, and the template of a question. */
 const QuestionWriteSchema = Schema.Struct({
   answers: Schema.NonEmptyArray(InteractionSchema),
   key: Schema.NullOr(Schema.NonEmptyArray(InteractionKeySchema)),
+  template: QuestionTemplate,
 });
 
 /** What one save writes, as `QuestionWriteSchema` describes it. Its revision comes from the draft it is built on. */
@@ -50,9 +52,14 @@ const startingDraft = (
  * still show the failed save's optimistic answers until React renders the rollback, so a save built on that
  * render could land the very change the server refused. A save queued after the failure starts from the render,
  * which may still lag the rollback for a moment, since the drop covers only the saves queued before the failure.
+ * `send` receives the draft it saves and the draft that save was built on, so a change of the template sends
+ * the template's call and any other change sends the answers.
  */
 export const makeQuestionWriter = <E>(
-  send: (draft: QuestionDraft) => Effect.Effect<QuestionDraft, E>,
+  send: (
+    draft: QuestionDraft,
+    base: QuestionDraft
+  ) => Effect.Effect<QuestionDraft, E>,
   rendered: Effect.Effect<QuestionDraft>
 ) =>
   Effect.gen(function* () {
@@ -71,7 +78,10 @@ export const makeQuestionWriter = <E>(
           }
           const base = startingDraft(yield* Ref.get(answered), yield* rendered);
           const next = edit(base);
-          const saved = yield* send({ ...next, revision: base.revision }).pipe(
+          const saved = yield* send(
+            { ...next, revision: base.revision },
+            base
+          ).pipe(
             Effect.tapError(() =>
               Effect.andThen(
                 Ref.set(answered, Option.none()),

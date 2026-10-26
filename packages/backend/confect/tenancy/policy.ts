@@ -1,3 +1,4 @@
+import { MAX_CREDITS_PER_RESPONSE } from "@repo/backend/confect/credits/constants";
 import {
   Array as Arr,
   Equal,
@@ -29,16 +30,29 @@ const EmailDomains = Schema.Array(EmailDomain)
   .check(Schema.isMaxLength(EMAIL_DOMAIN_LIMIT), Schema.isUnique())
   .annotate({ toEquivalence: () => sameDomains });
 
+/** The most Nina credits a school may let one member draw from its pool in a day: twenty answers at the cap. */
+const NINA_DAILY_CREDITS_LIMIT = 1000;
+
+/** What one member draws from the pool a day while the school sets no cap of its own: one answer at the cap. */
+export const DEFAULT_NINA_DAILY_CREDITS = MAX_CREDITS_PER_RESPONSE;
+
+/** The Nina credits one member may draw from the school's shared pool in a day (K46). */
+export const NinaDailyCredits = Schema.Int.check(
+  Schema.isBetween({ maximum: NINA_DAILY_CREDITS_LIMIT, minimum: 0 })
+);
+
 /**
  * The choices an Owner makes for the whole tenant. An empty list of email
  * domains admits every address into the tenant; a longer list admits only the
  * addresses on those domains, and a claim checks it before it binds a Person to
  * an account. Nina and student threads are stored for the School features that
- * they switch.
+ * they switch. `ninaDailyCredits` caps what one member draws from the school's
+ * Nina pool a day; a school that never set it draws at the default cap.
  */
 export const TenantPolicies = Schema.Struct({
   emailDomains: EmailDomains,
   nina: Schema.Boolean,
+  ninaDailyCredits: Schema.optionalKey(NinaDailyCredits),
   studentThreads: Schema.Boolean,
 });
 
@@ -63,6 +77,10 @@ const policyOf = <Key extends keyof typeof TenantPolicies.fields>(key: Key) =>
 export const Policy = Schema.Union([
   policyOf("emailDomains"),
   policyOf("nina"),
+  Schema.Struct({
+    key: Schema.Literal("ninaDailyCredits"),
+    value: NinaDailyCredits,
+  }),
   policyOf("studentThreads"),
 ]).pipe(Schema.toTaggedUnion("key"));
 
@@ -74,6 +92,7 @@ export const applyPolicy = (
   Policy.match(policy, {
     emailDomains: ({ value }) => ({ ...policies, emailDomains: value }),
     nina: ({ value }) => ({ ...policies, nina: value }),
+    ninaDailyCredits: ({ value }) => ({ ...policies, ninaDailyCredits: value }),
     studentThreads: ({ value }) => ({ ...policies, studentThreads: value }),
   });
 

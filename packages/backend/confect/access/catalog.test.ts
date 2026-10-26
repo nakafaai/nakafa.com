@@ -176,6 +176,8 @@ describe("access/catalog", () => {
           "cohort.restored",
           "assignment.created",
           "assignment.removed",
+          "billing.invoice.issued",
+          "billing.invoice.paid",
           "promotion.applied",
           "promotion.approved",
           "promotion.cancelled",
@@ -221,6 +223,7 @@ describe("access/catalog", () => {
           "sitting.cancel",
           "sitting.close",
           "exam.results.released",
+          "exam.results.graded",
         ],
         Order.String
       )
@@ -293,6 +296,8 @@ describe("access/catalog", () => {
       "exam.edit",
       "exam.rooms",
       "exam.view",
+      "billing.manage",
+      "billing.view",
     ]);
   });
 

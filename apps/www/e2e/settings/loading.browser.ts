@@ -12,6 +12,7 @@ import {
 } from "@/e2e/support/memory";
 import { holdChunks } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const PLAIN = "Prefers worked examples before the formula";
 /** A memory with a heading, a bulleted item and a bold word, typed with the Markdown shortcuts. */
@@ -76,6 +77,9 @@ const showsSavedWordsWhileLoading = Effect.fn(
     await reloadUntil(page, () =>
       expect(memoryRow(page, PLAIN)).toBeVisible({ timeout: 3000 })
     );
+    // The page's own code has to run before the chunks are held, or the press
+    // lands on the server's row and opens nothing.
+    await waitUntilTakenOver(nameOf(page, PLAIN));
   });
 
   // Every chunk of the page waits here, so the saved words are all the box shows.
@@ -117,6 +121,7 @@ const keepsFormattedWords = Effect.fn("NakafaE2E.memoryKeepsFormattedWords")(
       await reloadUntil(page, () =>
         expect(memoryRow(page, PLAN)).toBeVisible({ timeout: 3000 })
       );
+      await waitUntilTakenOver(nameOf(page, PLAN));
     });
 
     // The editor's code waits here, and the preview's code loads on the press.
@@ -163,6 +168,7 @@ const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
       await reloadUntil(page, () =>
         expect(memoryRow(page, MILK)).toBeVisible({ timeout: 3000 })
       );
+      await waitUntilTakenOver(nameOf(page, MILK));
     });
 
     // The editor's code waits here, and the preview's code loads on the press.
@@ -226,6 +232,7 @@ const showsWordsOnArrival = Effect.fn("NakafaE2E.memoryShowsWordsOnArrival")(
         expect(memoryRow(page, PLAIN)).toBeVisible({ timeout: 3000 })
       );
 
+      await waitUntilTakenOver(nameOf(page, PLAIN));
       await page.evaluate(recordArrival);
       await nameOf(page, PLAIN).click();
       await expect(editorOf(page)).toHaveText(PLAIN, {

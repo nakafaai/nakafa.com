@@ -7,29 +7,22 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { useTranslations } from "use-intl";
+import { useChatRetry } from "@/components/ai/chat/recovery";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 import { EmptyNina } from "@/components/state/empty";
 
 /**
- * The props of a chat's failure card. A declared access failure needs no retry,
- * since no retry opens a chat the viewer may not read. Any other failure offers
- * one, which runs the read again.
- */
-type ChatFailureProps =
-  | { kind: "access" }
-  | { isPending?: boolean; kind: "retry"; onRetry: () => void };
-
-/**
  * The card a chat shows in place of its content when it cannot be read. A
  * declared access failure says the chat is not available to this viewer, and a
  * signed-out viewer can sign in. Any other failure says Nakafa could not load
- * the chat. While `isPending` is true, the retry button is disabled.
+ * the chat, with the retry of the surface around it. A declared access failure
+ * needs no retry, since no retry opens a chat the viewer may not read.
  */
-export function ChatFailure(props: ChatFailureProps) {
+export function ChatFailure({ kind }: { kind: "access" | "retry" }) {
   const t = useTranslations("Ai");
 
-  if (props.kind === "access") {
+  if (kind === "access") {
     return (
       <Empty>
         <EmptyHeader>
@@ -54,15 +47,20 @@ export function ChatFailure(props: ChatFailureProps) {
         <EmptyDescription>{t("chat-failed-description")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button
-          disabled={props.isPending ?? false}
-          onClick={props.onRetry}
-          size="sm"
-          variant="outline"
-        >
-          {t("retry")}
-        </Button>
+        <ChatRetryButton />
       </EmptyContent>
     </Empty>
+  );
+}
+
+/** The retry of a failed read, disabled while the retry around it waits. */
+function ChatRetryButton() {
+  const t = useTranslations("Ai");
+  const { isPending, onRetry } = useChatRetry();
+
+  return (
+    <Button disabled={isPending} onClick={onRetry} size="sm" variant="outline">
+      {t("retry")}
+    </Button>
   );
 }

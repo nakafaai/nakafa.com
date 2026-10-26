@@ -68,3 +68,28 @@ export const CreditLotDraw = Schema.Struct({
   lotId: IdSchema("creditLots"),
   credits: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
 });
+
+/**
+ * What a school's members drew from its shared Nina pool in one calendar month
+ * (UTC), `YYYY-MM`. One row per school and month.
+ */
+export const creditPoolValidator = Schema.Struct({
+  tenantId: IdSchema("tenants"),
+  month: Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}$/u)),
+  used: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+});
+
+/** What one member drew from their school's pool on one day (UTC), `YYYY-MM-DD`, which the school's daily cap bounds. */
+export const creditPoolDayValidator = Schema.Struct({
+  tenantId: IdSchema("tenants"),
+  userId: IdSchema("users"),
+  day: Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/u)),
+  used: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+});
+
+/** The pool one reservation drew from: the school, and the month and day it counted against. */
+export const CreditPoolDraw = Schema.Struct({
+  tenantId: IdSchema("tenants"),
+  month: Schema.String,
+  day: Schema.String,
+});

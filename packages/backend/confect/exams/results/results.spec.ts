@@ -4,12 +4,18 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ResultAccess } from "@repo/backend/confect/exams/results/access";
 import {
   AnswerRow,
+  AttemptResult,
   Overview,
   QuestionStats,
   StudentResult,
   StudentRow,
 } from "@repo/backend/confect/exams/results/contract";
-import { SittingNotClosed } from "@repo/backend/confect/exams/results/errors";
+import {
+  PointsAboveWeight,
+  ResultNotFound,
+  SittingNotClosed,
+} from "@repo/backend/confect/exams/results/errors";
+import { GradePoints } from "@repo/backend/confect/exams/results/schema";
 import {
   NotInSitting,
   QuestionNotInExam,
@@ -22,8 +28,9 @@ import { Schema } from "effect";
 
 /**
  * The results of school exams. An Admin, a teacher, a principal, or the exam's author reads the overview,
- * the students' list, and a question's answers and statistics. The Admin, the exam's author, and the Owner
- * release them, once the sitting is closed. A student reads only the released result of its own attempt
+ * the students' list, and a question's answers and statistics. An Admin, a teacher, the exam's author, and
+ * the Owner grade an answer. The Admin, the exam's author, and the Owner release them, once the sitting is
+ * closed. A student reads only the released result of its own attempt
  * (ADR 0031, section 4).
  */
 export default GroupSpec.make()
@@ -80,6 +87,33 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => Schema.Union([AccessDenied, SittingNotClosed]),
     }).middleware(ResultAccess, { action: "result.release", arg: "sittingId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "attempt",
+      args: () => ({
+        attemptId: Id("examAttempts"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.NullOr(AttemptResult),
+      error: () => AccessDenied,
+    }).middleware(ResultAccess, { action: "result.view", arg: "sittingId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "grade",
+      args: () => ({
+        attemptId: Id("examAttempts"),
+        points: GradePoints,
+        questionId: Id("examQuestions"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () =>
+        Schema.Union([AccessDenied, PointsAboveWeight, ResultNotFound]),
+    }).middleware(ResultAccess, { action: "result.grade", arg: "sittingId" })
   )
   .addFunction(
     FunctionSpec.publicQuery({
