@@ -4,7 +4,7 @@ import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
-import { LayoutContent } from "@/components/shared/content/frame";
+import { SittingBody } from "@/components/exams/sitting/body";
 
 /** The copy key of each state of an attempt that takes no answers. */
 const sentenceKeys = {
@@ -36,14 +36,14 @@ export function StudentOutcome({
   return (
     <>
       <SittingBar examTitle={sitting.examTitle} />
-      <LayoutContent className="grid w-full gap-6 py-6">
+      <SittingBody>
         {attempt.state === "inProgress" ? null : (
           <p>{t(sentenceKeys[attempt.state])}</p>
         )}
         {attempt.state === "submitted" ? (
           <StudentResults sittingId={sitting.id} slug={slug} />
         ) : null}
-      </LayoutContent>
+      </SittingBody>
     </>
   );
 }

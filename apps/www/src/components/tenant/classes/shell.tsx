@@ -1,14 +1,17 @@
 import { PaginatedQueryResult, QueryResult } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
+import { PanesProvider } from "@/components/shared/panes";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 import { AddChannel } from "@/components/tenant/classes/add";
@@ -20,6 +23,10 @@ import { createChannelDrafts } from "@/components/tenant/classes/drafts";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useTenant } from "@/components/tenant/context";
+import {
+  ClassGradebook,
+  GradebookFilters,
+} from "@/components/tenant/grades/sheet";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -34,7 +41,7 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 
 /** The tabs of a class that have a page. The other tabs join with the slices that build them. */
-const ClassTab = Schema.Literals(["home", "forum"]);
+const ClassTab = Schema.Literals(["home", "forum", "grades"]);
 type ClassTab = typeof ClassTab.Type;
 
 /** The first screen of a class page, which the page's loader read on the server. */
@@ -83,16 +90,19 @@ export function ClassShell({
   );
 }
 
-/** The first screen of a class page, which its loader read on the server: the class and its first channels. */
+/**
+ * The first screen of a class page, which its loader read on the server: the class, and the
+ * first channels on the tabs that list them. The gradebook's loader reads no channel.
+ */
 type ClassPreload = Pick<
   Awaited<ReturnType<typeof readClassForumFn>>,
-  "channels" | "resolved"
->;
+  "resolved"
+> &
+  Partial<Pick<Awaited<ReturnType<typeof readClassForumFn>>, "channels">>;
 
 /**
- * The class page once the class is resolved: its header, its tabs, and the body of the tab. The
- * forum's body is its channel list, or the messages of the channel the address names, whose name
- * ends the page's path.
+ * The class page once the class is resolved: its gradebook, or its home and its forum. A class the
+ * viewer may not read shows the missing state.
  */
 function ClassPage({
   channel,
@@ -106,24 +116,12 @@ function ClassPage({
   tab: ClassTab;
 }) {
   const preload = use(ClassPreloadContext);
-  const t = useTranslations("Classroom");
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const resolved = usePreloadedQueryResult(
     classroom.classes.resolve,
     isSettled ? { classSlug, slug } : "skip",
     preload?.resolved
-  );
-  const [drafts] = useState(createChannelDrafts);
-  const shown = tab === "forum" ? channel : Option.none();
-  // The channel's name ends the path, read from the same channel list the forum shows.
-  const channels = usePaginatedPreloaded(
-    classroom.forum.channels.list,
-    QueryResult.isSuccess(resolved) && Option.isSome(shown)
-      ? { classId: resolved.value.id, slug }
-      : "skip",
-    { initialNumItems: CHANNEL_PAGE_SIZE },
-    Option.fromUndefinedOr(preload?.channels)
   );
 
   if (QueryResult.isFailure(resolved)) {
@@ -138,8 +136,94 @@ function ClassPage({
   if (!QueryResult.isSuccess(resolved)) {
     return <SchoolHeader items={[]} />;
   }
+  if (tab === "grades") {
+    return (
+      <ClassGrades classSlug={classSlug} klass={resolved.value} slug={slug} />
+    );
+  }
 
-  const klass = resolved.value;
+  return (
+    <ClassForum
+      classSlug={classSlug}
+      klass={resolved.value}
+      shown={tab === "forum" ? channel : Option.none()}
+      slug={slug}
+      tab={tab}
+    />
+  );
+}
+
+/**
+ * The gradebook of a class: the header with the gradebook's filters, the tabs, and the class's
+ * students with the open student's grade in two panes.
+ */
+function ClassGrades({
+  classSlug,
+  klass,
+  slug,
+}: {
+  classSlug: string;
+  klass: typeof ClassResolved.Type;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("Classroom");
+
+  return (
+    <TableFiltersProvider>
+      <PanesProvider>
+        <SchoolHeader
+          items={[
+            { label: klass.name, target: schoolClassTarget(slug, classSlug) },
+            { label: t("tabs-grades") },
+          ]}
+          title={klass.name}
+        >
+          <GradebookFilters />
+        </SchoolHeader>
+        {/* The header's 4rem and the tabs row's 3rem sit above the gradebook's panes. */}
+        <ClassFrame>
+          <ClassTabs
+            canGrade={Arr.contains(klass.can, "grade.list")}
+            classSlug={classSlug}
+            tab="grades"
+          />
+          <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
+            <ClassGradebook classId={klass.id} slug={slug} />
+          </div>
+        </ClassFrame>
+      </PanesProvider>
+    </TableFiltersProvider>
+  );
+}
+
+/**
+ * The home and the forum of a class: the header, whose one action is the forum's add for a viewer
+ * the server grants the forum's management, the tabs, and the channel list, or the messages of the
+ * channel the address names, whose name ends the page's path.
+ */
+function ClassForum({
+  classSlug,
+  klass,
+  shown,
+  slug,
+  tab,
+}: {
+  classSlug: string;
+  klass: typeof ClassResolved.Type;
+  shown: Option.Option<Id<"classroomChannels">>;
+  slug: TenantSlug;
+  tab: Exclude<ClassTab, "grades">;
+}) {
+  const preload = use(ClassPreloadContext);
+  const t = useTranslations("Classroom");
+  const [drafts] = useState(createChannelDrafts);
+  // The channel's name ends the path, read from the same channel list the forum shows.
+  const channels = usePaginatedPreloaded(
+    classroom.forum.channels.list,
+    Option.isSome(shown) ? { classId: klass.id, slug } : "skip",
+    { initialNumItems: CHANNEL_PAGE_SIZE },
+    Option.fromUndefinedOr(preload?.channels)
+  );
   const canManageForum = Arr.contains(klass.can, "forum.manage");
   const classItem = {
     label: klass.name,
@@ -161,46 +245,77 @@ function ClassPage({
       { label: channelLabel(found, t("general-channel")) },
     ],
   });
-  const path = tab === "home" ? [{ label: klass.name }] : forumPath;
 
   return (
     <>
-      <SchoolHeader items={path} title={klass.name}>
+      <SchoolHeader
+        items={tab === "home" ? [{ label: klass.name }] : forumPath}
+        title={klass.name}
+      >
         {tab === "forum" && Option.isNone(shown) && canManageForum ? (
           <AddChannel classId={klass.id} drafts={drafts} slug={slug} />
         ) : null}
       </SchoolHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        <ClassTabs classSlug={classSlug} tab={tab} />
-        {Option.isSome(shown) ? (
-          <ForumChannel
-            canManage={canManageForum}
-            canPost={Arr.contains(klass.can, "forum.post")}
-            channelId={shown.value}
-            classId={klass.id}
-            slug={slug}
-          />
-        ) : (
-          <ChannelList
-            classId={klass.id}
-            drafts={drafts}
-            first={Option.fromUndefinedOr(preload?.channels)}
-            slug={slug}
-          />
-        )}
-      </LayoutContent>
+      <ClassFrame>
+        <ClassTabs
+          canGrade={Arr.contains(klass.can, "grade.list")}
+          classSlug={classSlug}
+          tab={tab}
+        />
+        <div className="wrap-anywhere flex flex-col gap-6 px-4 py-6">
+          {Option.isSome(shown) ? (
+            <ForumChannel
+              canManage={canManageForum}
+              canPost={Arr.contains(klass.can, "forum.post")}
+              channelId={shown.value}
+              classId={klass.id}
+              slug={slug}
+            />
+          ) : (
+            <ChannelList
+              classId={klass.id}
+              drafts={drafts}
+              first={Option.fromUndefinedOr(preload?.channels)}
+              slug={slug}
+            />
+          )}
+        </div>
+      </ClassFrame>
     </>
   );
 }
 
-/** The tab bar of a class: its home and its forum, the current one marked as the page. */
-function ClassTabs({ classSlug, tab }: { classSlug: string; tab: ClassTab }) {
+/**
+ * The frame of every class view: the tab bar, then the tab's body, in one column capped at the
+ * app's widest content, so the tabs stand in the same place on every tab.
+ */
+function ClassFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col">
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The tab bar of a class, one 3rem row on every tab: its home, its forum, and its gradebook for a
+ * viewer who keeps the class's grades, the current one marked as the page.
+ */
+function ClassTabs({
+  canGrade,
+  classSlug,
+  tab,
+}: {
+  canGrade: boolean;
+  classSlug: string;
+  tab: ClassTab;
+}) {
   const t = useTranslations("Classroom");
   const { slug } = useTenant();
   const params = { classSlug, slug };
 
   return (
-    <nav className="flex gap-1 border-b">
+    <nav className="flex h-12 shrink-0 items-end gap-1 border-b px-4">
       <Link
         activeOptions={EXACT_ACTIVE_OPTIONS}
         className={classTab({ active: tab === "home" })}
@@ -217,6 +332,16 @@ function ClassTabs({ classSlug, tab }: { classSlug: string; tab: ClassTab }) {
       >
         {t("tabs-forum")}
       </Link>
+      {canGrade ? (
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={classTab({ active: tab === "grades" })}
+          params={params}
+          to="/school/$slug/classes/$classSlug/grades"
+        >
+          {t("tabs-grades")}
+        </Link>
+      ) : null}
     </nav>
   );
 }

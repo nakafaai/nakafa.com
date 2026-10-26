@@ -226,6 +226,11 @@ test("a teacher schedules a sitting of an exam whose question has its key, and t
 
   await reopened.getByRole("button", { name: "Schedule" }).click();
   const scheduling = reopened.getByRole("dialog");
+  await expect(scheduling.locator('input[type="datetime-local"]')).toHaveCount(
+    0
+  );
+  await expect(scheduling.getByLabel("Starts")).not.toHaveText("Choose a day");
+  await expect(reopened.locator('input[type="number"]')).toHaveCount(0);
   await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 2");
   await scheduling.getByRole("button", { name: "Schedule" }).click();
   await reopened.waitForURL(ROOMS_PATH);

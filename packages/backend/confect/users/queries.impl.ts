@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { requireAuth } from "@repo/backend/confect/auth/session";
+import { requireAuth, Session } from "@repo/backend/confect/auth/session";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { inspectUsername } from "@repo/backend/confect/users/availability";
 import {
@@ -9,6 +9,7 @@ import {
   getAppUserByUsername,
 } from "@repo/backend/confect/users/directory";
 import { photoOf } from "@repo/backend/confect/users/picture";
+import { profileAccess } from "@repo/backend/confect/users/profile";
 import spec from "@repo/backend/confect/users/queries.spec";
 import { Effect, Layer, Result } from "effect";
 
@@ -41,16 +42,23 @@ const getUserByAuthId = FunctionImpl.make(
 );
 
 /**
- * The public profile of the account that holds a username, or null when no
- * account holds it. Anyone may read it, signed in or not.
+ * The profile of the account that holds a username (ADR 0009, Who Opens A Profile).
+ * Anyone may read it and share it, unless the account belongs to a school (K15): a
+ * school member's profile answers its own account alone, and every other caller gets
+ * null, the same answer as for a name nobody holds. `shareable` says which it is.
  */
 const getProfileByUsername = FunctionImpl.make(
   databaseSchema,
   spec,
   "getProfileByUsername",
   Effect.fn("users.queries.getProfileByUsername")(function* (args) {
+    const { appUser } = yield* Session;
     const user = yield* getAppUserByUsername(args.username);
     if (user === null) {
+      return null;
+    }
+    const access = yield* profileAccess(user._id, appUser?._id ?? null);
+    if (!access.opens) {
       return null;
     }
     // The index matched this exact name, so the account holds the name asked for.
@@ -60,6 +68,7 @@ const getProfileByUsername = FunctionImpl.make(
       _id: user._id,
       mascot: user.mascot,
       name: user.name,
+      shareable: access.shareable,
       username: args.username,
       ...(user.bio === undefined ? {} : { bio: user.bio }),
       ...(photo === undefined ? {} : { image: photo }),

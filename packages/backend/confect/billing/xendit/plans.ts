@@ -1,8 +1,12 @@
 import {
   XENDIT_ORIGIN,
+  XenditRequestFailed,
   xenditRequest,
 } from "@repo/backend/confect/billing/xendit/client";
-import { XenditPlan } from "@repo/backend/confect/billing/xendit/contract";
+import {
+  XenditPlan,
+  XenditPlanRequest,
+} from "@repo/backend/confect/billing/xendit/contract";
 import { Effect } from "effect";
 import { HttpClientRequest } from "effect/http";
 
@@ -19,6 +23,31 @@ export const getPlan = Effect.fn("billing.xendit.getPlan")(function* (
     ).pipe(HttpClientRequest.setHeader("api-version", RECURRING_API_VERSION)),
     XenditPlan
   );
+});
+
+/**
+ * Opens a recurring plan on a saved payment token. Xendit charges it on the
+ * schedule's anchor and every period after, and posts each cycle by webhook.
+ */
+export const createPlan = Effect.fn("billing.xendit.createPlan")(function* (
+  body: XenditPlanRequest
+) {
+  const request = yield* HttpClientRequest.schemaBodyJson(XenditPlanRequest)(
+    HttpClientRequest.post(`${XENDIT_ORIGIN}/recurring/plans`).pipe(
+      HttpClientRequest.setHeader("api-version", RECURRING_API_VERSION)
+    ),
+    body
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new XenditRequestFailed({
+          status: 0,
+          errorCode: "REQUEST_NOT_ENCODABLE",
+          message: "The plan does not match the Xendit contract.",
+        })
+    )
+  );
+  return yield* xenditRequest(request, XenditPlan);
 });
 
 /** Turns a recurring plan off, so Xendit charges no further cycle for it. */

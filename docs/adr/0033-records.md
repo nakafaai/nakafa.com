@@ -290,9 +290,49 @@ Only the release and the lock are journaled.
 | The decision and the libraries in this ADR | Recorded by S0 |
 | `confect/records`, `gradingSchemes`, and `classGrades` (grade entry and release, `grade.released`) | Built, S1 |
 | The Admin's scheme store (`schemes.store`, `scheme.stored`) and the built-in first version | Built, S1 |
-| The gradebook screen for a class | Planned, S2 |
-| Attendance and homeroom notes | Planned, S3 |
-| Report cards, approval, and lock | Planned, S4 |
-| The report PDF with its hash and QR, and the verification page | Planned, S5 |
+| The gradebook screen for a class (the Grades tab, `records/grades:sheet` and `:scheme`) | Built, S2 |
+| Attendance | Planned, S3 |
+| Report cards, the homeroom note, hand-in, approval, and lock (`records/reports`) | Built, S4, see the amendment below |
+| The report PDF with its hash and QR (`records/prints`), and the verification page (`records/checks`, `/{locale}/verify/{hash}`) | Built, S5, see the amendment below |
 | SKL, transcript data, and the Dapodik export | Planned, S6 |
 | The import of a Dapodik upload in `confect/connectors` | Planned, ADR 0015 |
+
+## Amendment: Report Cards And Their Check, 26 October 2026
+
+S4 and S5 are built. Four rules above changed or were made concrete, and this section
+says why.
+
+1. **The hash covers the report's content, not the PDF's bytes.** A PDF cannot carry the
+   hash of its own bytes when its QR code holds that hash, because drawing the hash changes
+   the bytes. The hash is the SHA-256 of the report's content as JSON text, in a fixed
+   order of keys: the report's ID, its student, its subject lines, its note, and its
+   approval time (`records/card.ts`). The report's ID is in the text, so nobody who knows
+   a student's grades can find the student's hash. The PDF carries the hash and the QR of
+   `{SITE_ORIGIN}/{locale}/verify/{hash}`; the journal's `report.locked` holds the same
+   hash.
+2. **A report row starts at the homeroom teacher's first note, not in a prepared run.** No
+   batch with a lease is needed while a report has no attendance or description to gather:
+   the cohort's list reads its placements a page at a time and shows a student without a
+   report as not started. The prepared run joins S3, when attendance gives a report data
+   to gather before anyone writes.
+3. **The states are `draft`, `completed`, `approved`, `locked`.** `approved` holds the
+   approval while the PDF is drawn in an action (`records/prints:draw`), which stores the
+   PDF and locks the report; only the lock is journaled. The homeroom teacher takes a
+   handed-in report back while the principal has not approved it.
+4. **The check is a public mutation behind one token bucket for every caller.** A check
+   counts against the rate limit, which a query cannot write, and the page's loader calls
+   it on the server, so the answer is in the first HTML. A 256-bit hash is not guessed, so
+   the bucket keeps the check cheap rather than secret. An unknown hash and a check past
+   the limit read the same.
+
+The report shows the released grades of the student's classes in the cohort, the
+homeroom note, and the approval date. The learning description from the subject teacher,
+attendance, and the extracurricular activities join with S3. Who may act:
+
+| Action | Who |
+| --- | --- |
+| List a class group's reports, read a report | Its homeroom teacher, the principal, the Admin |
+| Write the note, hand in, take back | The homeroom teacher |
+| Approve | The principal (ADR 0012: not the Deputy) |
+| Open the report pages from the sidebar (`report.open` on a unit) | Teachers, principals, Admins |
+

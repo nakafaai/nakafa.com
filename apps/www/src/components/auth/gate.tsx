@@ -16,3 +16,16 @@ export function Unauthenticated({ children }: { children: ReactNode }) {
   );
   return isUnauthenticated ? children : null;
 }
+
+/**
+ * Renders its children unless the visitor is known to be signed out: while the
+ * session and Convex confirm it, and once they have. A view that a signed-in
+ * learner had open stays on screen through that wait, and its reads wait for
+ * the session's token.
+ */
+export function UnlessSignedOut({ children }: { children: ReactNode }) {
+  const isSignedOut = useConvexAuth(
+    (auth) => !(auth.isAuthenticated || auth.isLoading)
+  );
+  return isSignedOut ? null : children;
+}

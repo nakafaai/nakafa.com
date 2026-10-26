@@ -6,11 +6,13 @@ import {
 } from "@repo/contents/agent/search";
 import { LocaleSchema } from "@repo/contents/content";
 import { Schema } from "effect";
+import { SchoolHost, SchoolRead } from "#cli/school";
 
 export const COMMAND_NAME = {
   get: "get",
   mcp: "mcp",
   quran: "quran",
+  school: "school",
   search: "search",
   taxonomy: "taxonomy",
 } as const;
@@ -58,12 +60,20 @@ const QuranCommandSchema = Schema.Struct({
   surah: NakafaAgentQuranReferenceOptionsSchema.fields.surah,
   toVerse: Schema.optional(PositiveIntegerSchema),
 });
+/** The school commands: sign in to a school with the device grant, sign out, and read its roster. */
+const SchoolCommandSchema = Schema.Union([
+  Schema.Struct({ host: SchoolHost, kind: Schema.Literal("school-login") }),
+  Schema.Struct({ kind: Schema.Literal("school-logout") }),
+  Schema.Struct({ kind: Schema.Literal("school-read"), read: SchoolRead }),
+]);
+
 const CliCommandSchema = Schema.Union([
   SearchCommandSchema,
   GetCommandSchema,
   TaxonomyCommandSchema,
   QuranCommandSchema,
   Schema.Struct({ kind: Schema.Literal(COMMAND_NAME.mcp) }),
+  ...SchoolCommandSchema.members,
 ]);
 
 export const CliRequestSchema = Schema.Struct({

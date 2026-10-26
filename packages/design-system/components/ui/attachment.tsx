@@ -100,7 +100,10 @@ export function AttachmentTitle({
 }: ComponentProps<"span">) {
   return (
     <span
-      className={cn("block min-w-0 max-w-full truncate font-medium", className)}
+      className={cn(
+        "wrap-anywhere block min-w-0 max-w-full font-medium",
+        className
+      )}
       data-slot="attachment-title"
       {...props}
     />
@@ -114,7 +117,7 @@ export function AttachmentDescription({
   return (
     <span
       className={cn(
-        "mt-0.5 block min-w-0 max-w-full truncate text-muted-foreground text-xs group-data-[state=error]/attachment:text-destructive",
+        "wrap-anywhere mt-0.5 block min-w-0 max-w-full text-muted-foreground text-xs group-data-[state=error]/attachment:text-destructive",
         className
       )}
       data-slot="attachment-description"

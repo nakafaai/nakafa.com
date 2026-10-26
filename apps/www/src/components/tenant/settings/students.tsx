@@ -365,6 +365,7 @@ function SchoolStudentDialog({
           <Input
             id={`${id}-name`}
             onChange={(event) => setName(event.target.value)}
+            placeholder={t("student-add-name-placeholder")}
             value={name}
           />
         </Field>

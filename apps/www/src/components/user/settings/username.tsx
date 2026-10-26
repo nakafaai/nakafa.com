@@ -133,6 +133,7 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
                 maxLength={USERNAME_MAX_LENGTH}
                 name="username"
                 onChange={(event) => setTyped(event.target.value)}
+                placeholder={t("username-placeholder")}
                 spellCheck={false}
                 value={typed}
               />
