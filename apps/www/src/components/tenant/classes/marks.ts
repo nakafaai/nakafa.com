@@ -16,18 +16,17 @@ const ANIMALS = Animal.literals.length;
 export const withMarks = <A extends { readonly id: string }>(
   classes: readonly A[]
 ) => {
+  const placed = Arr.map(classes, (klass, place) => ({ klass, place }));
   const byId = Arr.sort(
-    Arr.map(classes, (klass, place) => ({ klass, place })),
-    Order.mapInput(Order.String, ({ klass }) => klass.id)
+    placed,
+    Order.mapInput(Order.String, (row: (typeof placed)[number]) => row.klass.id)
   );
   const marked = Arr.reduce(
     byId,
     {
-      rows: Arr.empty<{
-        readonly klass: A;
-        readonly mascot: typeof Mascot.Type;
-        readonly place: number;
-      }>(),
+      rows: Arr.empty<
+        (typeof placed)[number] & { readonly mascot: typeof Mascot.Type }
+      >(),
       taken: Arr.empty<typeof Animal.Type>(),
     },
     (state, row) => {
@@ -47,7 +46,10 @@ export const withMarks = <A extends { readonly id: string }>(
   return Arr.map(
     Arr.sort(
       marked.rows,
-      Order.mapInput(Order.Number, ({ place }) => place)
+      Order.mapInput(
+        Order.Number,
+        (row: (typeof marked.rows)[number]) => row.place
+      )
     ),
     ({ klass, mascot }) => ({ ...klass, mascot })
   );
