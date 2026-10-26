@@ -79,8 +79,7 @@ const submittedEssay = Effect.fn("test.grade.essay")(function* (
     sittingId: made.id,
     slug: nf,
   });
-  const rows = yield* scoredRows(fixture);
-  const [row] = rows;
+  const row = yield* Effect.fromOption(Arr.head(yield* scoredRows(fixture)));
   return { attemptId: row.attempt, questionId, sittingId: made.id };
 });
 
