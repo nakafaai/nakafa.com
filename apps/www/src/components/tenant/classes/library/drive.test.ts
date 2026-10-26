@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LIBRARY_ACCEPT } from "@repo/backend/confect/classroom/library/item";
-import { Effect, Fiber, Option } from "effect";
+import { Effect, Fiber, MutableList, Option } from "effect";
 import { pickDriveFile } from "@/components/tenant/classes/library/drive";
 
 const SCRIPT = 'script[src="https://apis.google.com/js/api.js"]';
@@ -18,17 +18,17 @@ const shown = {
 
 /** A Drive view double that records the types it offers. */
 class DocsView {
-  static readonly made: DocsView[] = [];
+  static readonly made = MutableList.make<DocsView>();
   readonly setMimeTypes = vi.fn((_types: string) => this);
 
   constructor() {
-    DocsView.made.push(this);
+    MutableList.append(DocsView.made, this);
   }
 }
 
 /** A Picker builder double that records each setting and keeps the callback. */
 class PickerBuilder {
-  static readonly last: PickerBuilder[] = [];
+  static readonly last = MutableList.make<PickerBuilder>();
   readonly addView = vi.fn((_view: unknown) => this);
   readonly build = vi.fn(() => ({
     dispose: shown.dispose,
@@ -44,7 +44,7 @@ class PickerBuilder {
   readonly setOAuthToken = vi.fn((_token: string) => this);
 
   constructor() {
-    PickerBuilder.last.push(this);
+    MutableList.append(PickerBuilder.last, this);
   }
 }
 
@@ -80,8 +80,8 @@ describe("pickDriveFile", () => {
     Reflect.deleteProperty(window, "gapi");
     Reflect.deleteProperty(window, "google");
     document.head.querySelector(SCRIPT)?.remove();
-    PickerBuilder.last.length = 0;
-    DocsView.made.length = 0;
+    MutableList.clear(PickerBuilder.last);
+    MutableList.clear(DocsView.made);
     shown.answer.mockReset();
     shown.dispose.mockReset();
     shown.setVisible.mockReset();
@@ -100,14 +100,14 @@ describe("pickDriveFile", () => {
         shown.answer({ docs: "unreadable" });
         shown.answer({ action: "picked", docs: [picked] });
         expect(yield* Fiber.join(first)).toEqual(Option.some(picked));
-        const builder = PickerBuilder.last[0];
+        const [builder] = MutableList.toArray(PickerBuilder.last);
         expect(builder?.setAppId).toHaveBeenCalledWith("972685787969");
         expect(builder?.setDeveloperKey).toHaveBeenCalledWith("key");
         expect(builder?.setOAuthToken).toHaveBeenCalledWith("access");
         expect(builder?.setLocale).toHaveBeenCalledWith("id");
-        expect(DocsView.made[0]?.setMimeTypes).toHaveBeenCalledWith(
-          LIBRARY_ACCEPT
-        );
+        expect(
+          MutableList.toArray(DocsView.made)[0]?.setMimeTypes
+        ).toHaveBeenCalledWith(LIBRARY_ACCEPT);
         expect(shown.setVisible).toHaveBeenCalledWith(true);
 
         shown.setVisible.mockReset();

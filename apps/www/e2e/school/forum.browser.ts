@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import {
   createSchool,
   hostAddress,
@@ -110,12 +110,12 @@ test("the forum page lists the class's channels in the server's HTML and in the 
   expect(await served.text()).toContain(">General<");
 
   const page = await context.newPage();
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(String(error)));
+  const errors = MutableList.make<string>();
+  page.on("pageerror", (error) => MutableList.append(errors, String(error)));
   await page.goto(address("/classes/fisika-x-1/forum"));
   const general = page.getByRole("link", { name: "General", exact: true });
   await waitUntilTakenOver(general);
   await expect(general).toBeVisible();
-  expect(errors).toEqual([]);
+  expect(MutableList.toArray(errors)).toEqual([]);
   await context.close();
 });

@@ -18,7 +18,7 @@ import {
 import { scheduledJobs, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Schema } from "effect";
 
-const { readAll } = refs.public.notifications.inbox;
+const { list, readAll } = refs.public.notifications.inbox;
 const readRun = refs.internal.notifications.read.run;
 const READ_RUN = "notifications/read:run";
 
@@ -102,7 +102,7 @@ describe("notifications/inbox readAll", () => {
   );
 
   it.effect(
-    "marks only the rows of the school a slug names, from that school's own inbox page",
+    "lists and marks only the rows of the school a slug names, from that school's own inbox page",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -123,6 +123,14 @@ describe("notifications/inbox readAll", () => {
         yield* consumeSchool(fixture, fixture.tenants.other);
         yield* claim(fixture, anaNf, ana.userId);
         yield* claim(fixture, anaOther, ana.userId);
+        // The school's own inbox page lists that school's rows alone.
+        const own = yield* ana.client.query(list, {
+          paginationOpts: { cursor: null, numItems: 10 },
+          slug: nf,
+        });
+        expect(Arr.map(own.page, (item) => item.subject)).toEqual([
+          { id: anaNf, kind: "person" },
+        ]);
         vi.setSystemTime(NOW + 4000);
         yield* ana.client.mutation(readAll, { slug: nf });
         yield* runReadRuns(fixture);

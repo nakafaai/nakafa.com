@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import { createSchool, hostAddress, inviteLearner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -31,8 +31,8 @@ for (const viewport of [
       })
     );
     const page = await context.newPage();
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(String(error)));
+    const errors = MutableList.make<string>();
+    page.on("pageerror", (error) => MutableList.append(errors, String(error)));
     await page.goto(address("/"));
 
     // The sidebar's For you group leads to the page; on a phone the sidebar opens from its trigger.
@@ -71,7 +71,7 @@ for (const viewport of [
         () => document.documentElement.scrollWidth <= window.innerWidth
       )
     ).toBe(true);
-    expect(errors).toEqual([]);
+    expect(MutableList.toArray(errors)).toEqual([]);
     await context.close();
   });
 }
