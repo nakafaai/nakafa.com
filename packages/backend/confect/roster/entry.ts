@@ -12,7 +12,10 @@ import {
   type RosterView,
   type rosterEntryValidator,
 } from "@repo/backend/confect/roster/schema";
-import { readTenantKeys } from "@repo/backend/confect/vault/keys";
+import {
+  readTenantKeys,
+  type TenantKeys,
+} from "@repo/backend/confect/vault/keys";
 import {
   blindText,
   openText,
@@ -27,8 +30,12 @@ import { Effect, Option, Schema } from "effect";
  */
 const NISN_BLIND = { field: "nisn", table: "rosterEntries" };
 
-/** The keys of a student's school. A school without keys is a defect in its data (ADR 0030). */
-const schoolKeys = (tenantId: GenericId.GenericId<"tenants">) =>
+/**
+ * The keys of a student's school. A school without keys is a defect in its data (ADR 0030).
+ * Deriving them is the costly part of every NISN step, so each function reads them once and
+ * hands them to every blind, seal, and open it makes.
+ */
+export const schoolKeys = (tenantId: GenericId.GenericId<"tenants">) =>
   readTenantKeys(tenantId).pipe(Effect.orDie);
 
 /** The roster row of one student, if the school wrote one. */
@@ -56,10 +63,9 @@ export const countsUnderAge = (
 
 /** The blind of a NISN under the school key, which a stored row is compared by. */
 export const blindNisn = Effect.fn("roster.entry.blind")(function* (
-  tenantId: GenericId.GenericId<"tenants">,
+  keys: TenantKeys,
   nisn: typeof Nisn.Type
 ) {
-  const keys = yield* schoolKeys(tenantId);
   return yield* blindText(keys, NISN_BLIND, nisn).pipe(Effect.orDie);
 });
 
@@ -84,6 +90,7 @@ export const rosterViewOf = (
  * the one on file, so setting the flag alone never drops it.
  */
 export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
+  keys: TenantKeys,
   person: TenantPeopleDoc,
   facts: {
     readonly nisn: Option.Option<typeof Nisn.Type>;
@@ -95,7 +102,6 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
     onNone: () => Effect.succeed(Option.getOrUndefined(existing)?.nisn),
     onSome: (value) =>
       Effect.gen(function* () {
-        const keys = yield* schoolKeys(person.tenantId);
         const sealed = yield* sealText(
           keys,
           { ...NISN_BLIND, row: [person._id] },
@@ -130,12 +136,12 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
  * A sealed NISN that does not open is a defect in the school's data (ADR 0030).
  */
 export const openNisn = Effect.fn("roster.entry.open")(function* (
+  keys: TenantKeys,
   entry: RosterEntriesDoc
 ) {
   if (entry.nisn === undefined) {
     return Option.none<typeof Nisn.Type>();
   }
-  const keys = yield* schoolKeys(entry.tenantId);
   const text = yield* openText(
     keys,
     { ...NISN_BLIND, row: [entry.personId] },

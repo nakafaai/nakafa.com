@@ -99,15 +99,15 @@ export const readLearnerKeys = Effect.fn("vault.keys.read")(function* (
   return { ...(yield* deriveKeys(key)), userId };
 });
 
+/** The keys of one learner, as `readLearnerKeys` and `ensureLearnerKeys` return them. */
+export type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
+
 /**
  * Reads a school's keys to open and seal its text, from its newest generation.
  * It fails with reason `key` when the school has no key. Provisioning writes the
  * first key together with the school, so a school without one is a defect in
  * its data (ADR 0030).
  */
-/** The keys of one learner, as `readLearnerKeys` and `ensureLearnerKeys` return them. */
-export type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
-
 export const readTenantKeys = Effect.fn("vault.keys.readTenant")(function* (
   tenantId: TenantId
 ) {
@@ -124,6 +124,9 @@ export const readTenantKeys = Effect.fn("vault.keys.readTenant")(function* (
   );
   return { ...(yield* deriveKeys(key)), generation, tenantId };
 });
+
+/** The keys of one school, as `readTenantKeys` returns them. */
+export type TenantKeys = Effect.Success<ReturnType<typeof readTenantKeys>>;
 
 /**
  * Reads a learner's keys to seal values, and creates the key on first use: 32
