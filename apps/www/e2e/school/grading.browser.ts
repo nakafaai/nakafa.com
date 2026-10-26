@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
   hostAddress,
@@ -76,13 +77,7 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   await teacher.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await teacher
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
-  await teacher
-    .getByRole("dialog")
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
+  await closeSitting(teacher);
   await teacher.getByRole("link", { name: "Results", exact: true }).click();
   await teacher
     .getByRole("button", { name: "Question 3", exact: true })

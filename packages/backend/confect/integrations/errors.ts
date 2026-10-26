@@ -21,3 +21,22 @@ export class ActionClosed extends Schema.TaggedError<ActionClosed>()(
     ),
   }
 ) {}
+
+const deviceUnknown = Schema.Literal("DEVICE_UNKNOWN");
+
+/** A user code that names no pending device of the school: mistyped, expired, or already decided. */
+export class DeviceUnknown extends Schema.TaggedError<DeviceUnknown>()(
+  "DeviceUnknown",
+  {
+    code: deviceUnknown.pipe(
+      Schema.withConstructorDefault(Effect.succeed(deviceUnknown.literal))
+    ),
+    message: Schema.String.pipe(
+      Schema.withConstructorDefault(
+        Effect.succeed(
+          "No device waits with this code. Check the code on the device."
+        )
+      )
+    ),
+  }
+) {}

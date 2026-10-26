@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
   hostAddress,
@@ -112,12 +113,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
     student.getByRole("heading", { name: "Question 1" })
   ).toBeVisible();
 
-  await proctor
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
-  await dialog
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
+  await closeSitting(proctor);
   // The close moves the attempt to closing, and the student's screen says so at once; the
   // server submits it 75 seconds after its deadline, past what this test waits for.
   await expect(
