@@ -84,6 +84,7 @@ describe("classroom/forum mentions", () => {
               classSlug: "fisika-x-1",
               discussion: null,
               messageId: sent.id,
+              task: null,
             },
             subject: { id: forum.classId, kind: "class" },
           }),

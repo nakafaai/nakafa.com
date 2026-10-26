@@ -44,29 +44,38 @@ const AnnouncementRow = Schema.Struct({
   postId: Id("classroomPosts"),
 });
 
+/** The row of one new task of a class for one member of the class. Its subject is the class. */
+const AssignmentRow = Schema.Struct({
+  ...rowFields,
+  changeType: Schema.Literal("assignment.published"),
+  taskId: Id("classroomTasks"),
+});
+
 /**
- * One inbox row: one recipient Person and one invitation, mention, or
- * announcement, told apart by `changeType`. It holds IDs and codes only, and its
+ * One inbox row: one recipient Person and one invitation, mention,
+ * announcement, or new task, told apart by `changeType`. It holds IDs and codes only, and its
  * text is read from its subject when it is opened (ADR 0027).
  */
 export const Notification = Schema.Union([
   InvitationRow,
   MentionRow,
   AnnouncementRow,
+  AssignmentRow,
 ]);
 
-/** What a row tells: an invitation, a mention, or an announcement. */
+/** What a row tells: an invitation, a mention, an announcement, or a new task. */
 export const NotificationType = Schema.Literals([
   "person.invited",
   "forum.mentioned",
   "announcement.posted",
+  "assignment.published",
 ]);
 
 /**
  * The place a class row opens, read from its source when the row is read, while
  * the recipient still reads the class: who did it, the class, and where in the
  * class. A mention opens its message in its channel, or in its discussion; an
- * announcement opens the class home.
+ * announcement opens the class home; a task opens its own page.
  */
 export const ClassDetail = Schema.Struct({
   actor: Schema.String,
@@ -75,6 +84,7 @@ export const ClassDetail = Schema.Struct({
   classSlug: Schema.String,
   discussion: Schema.NullOr(Schema.Int),
   messageId: Schema.NullOr(Id("classroomMessages")),
+  task: Schema.NullOr(Schema.String),
 });
 
 /**

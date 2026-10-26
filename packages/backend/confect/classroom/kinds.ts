@@ -57,6 +57,16 @@ export const classKind = Kind.make("class", "classes", {
       grantedBy: "relations",
       relations: ["subjectTeacher"],
     },
+    "task.manage": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["subjectTeacher"],
+    },
+    "task.submit": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["classMember"],
+    },
   },
   changes: [
     Schema.Struct({ type: Schema.Literal("class.created") }),
@@ -78,8 +88,20 @@ export const classKind = Kind.make("class", "classes", {
       post: Id("classroomPosts"),
       type: Schema.Literal("announcement.posted"),
     }),
+    Schema.Struct({
+      task: Id("classroomTasks"),
+      type: Schema.Literal("assignment.published"),
+    }),
+    Schema.Struct({
+      task: Id("classroomTasks"),
+      type: Schema.Literal("assignment.deadlineChanged"),
+    }),
   ],
-  published: ["announcement.posted"],
+  published: [
+    "announcement.posted",
+    "assignment.published",
+    "assignment.deadlineChanged",
+  ],
   relations: ["classMember", "subjectTeacher"],
 });
 

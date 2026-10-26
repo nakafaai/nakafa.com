@@ -86,6 +86,7 @@ describe("notifications/fanout", () => {
               classSlug: "fisika-x-1",
               discussion: null,
               messageId: null,
+              task: null,
             },
           }),
         ]);

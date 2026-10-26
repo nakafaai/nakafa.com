@@ -291,6 +291,53 @@ sitting does not show.
   welcome email has one (`idempotencyKey` in `emails/welcome/internal.ts`).
 - WhatsApp is the next channel and follows the same rules. It is planned.
 
+## Decided With The First Build (26 October 2026)
+
+- **Rows of a class.** `notifications` holds three kinds of row, told apart by
+  `changeType`: an invitation (`person.invited`, with its invite and journal
+  entry), a mention (`forum.mentioned`, with its message), and an announcement
+  (`announcement.posted`, with its post). The subject of a class row is the class.
+  The list reads each row's detail from its source when it is read, through the
+  recipient's own access check: who did it, the class, and where in the class. A
+  row whose source is gone, or whose class the recipient no longer reads, keeps its
+  place without the detail.
+- **Announcements fan out from their own transaction.** The post records
+  `announcement.posted` in the journal and schedules the fan-out in the same
+  transaction, the path that `@all` takes: one run writes the rows of one batch of
+  100 Persons of the class roster, the students placed in its cohort and then its
+  subject teachers, and schedules the next. Convex schedules the first run only if
+  the post commits, so a failed post leaves no row. The journal entry stays for
+  other consumers; the inbox does not read it, which saves a cursor and a second
+  read of every post.
+- **The push sender is Effect over Web Crypto** (`confect/notifications/webpush.ts`):
+  RFC 8291 payload encryption in one aes128gcm record and an RFC 8292 VAPID token
+  signed with ES256, sent once through `HttpClient` with the ten second deadline of
+  ADR 0020 and never repeated, since no answer proves the push service did not
+  queue it. A 2xx answer delivers, 404 and 410 forget the subscription, and any
+  other answer or none is logged and dropped. The test decrypts the body as the
+  browser does. No `web-push` package is added.
+- **What a push carries.** The row's id, the title Nakafa, one general sentence of
+  its kind in the language of the school's unit, and the address of the inbox. A
+  push is scheduled only for a recipient whose account has a browser subscribed
+  (`pushSubscriptions`, at most ten per account, the oldest dropped).
+- **Quiet hours.** A recipient who holds a student grant has the push of a row
+  held until 06:00 on the clock of the class's unit when the row comes between
+  21:00 and 06:00 there; the row is in the inbox at once. A held push whose row is
+  read by then is not sent.
+- **The announcement email** goes to the recipients of each batch whose account
+  has a real address, when the teacher chose email: one render in the Node runtime
+  for the batch, then one message for each recipient keyed by the post and the
+  recipient, so a repeated batch sends nothing twice. It carries the class's
+  address on the school host and a general sentence (`packages/email/templates/notice`).
+- **Operator secrets.** `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` (the
+  private scalar, Base64Url) and `WEB_PUSH_SUBJECT` (a `mailto:` address) on the
+  Convex deployment, and `VITE_WEB_PUSH_PUBLIC_KEY`, the same public key, in the
+  web build. Without them no browser is offered push and nothing is sent.
+- **The browser.** `apps/www/public/sw.js` shows a push and opens the inbox on a
+  press. The inbox offers push under its list after the person's tap, and an
+  iPhone or iPad tab outside the Home Screen shows the Home Screen step in place
+  of the offer.
+
 ## What Stays Open
 
 - The sender of Web Push: the `web-push` package 3.6.7 (MPL-2.0), or RFC 8291 and
@@ -345,13 +392,16 @@ sitting does not show.
 | The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built |
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
 | The minute sweep that starts a run for each pending journal cursor | Built |
-| `notificationPreferences`, `notificationReminders`, and `pushSubscriptions` | Planned, program wave B |
+| `pushSubscriptions`, subscribe and unsubscribe, the push sender, and the push of mention and announcement rows held by quiet hours | Built; live once the operator sets the VAPID keys |
+| `notificationPreferences` and `notificationReminders` | Planned, program wave B |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
 | The channel table as data, `confect/notifications/rules.ts`: the routes of each kind and relation | Called: the inbox consumer asks `deliveriesOf`, which reads `routeOf`, for the invitee's inbox row. `recipientsOf` and `canSwitchOff` wait for the preferences (program wave B) |
 | The sends of a notice, `confect/notifications/delivery.ts`: `deliveriesOf` and `deliveryInstant` | `deliveriesOf` is called by the inbox consumer. `deliveryInstant` waits for the reminders, which need the zone of their school (program wave B) |
 | The zone that carries a notice, `confect/notifications/zone.ts` | Built as pure functions, not called yet (program wave B) |
 | The zone clock, `confect/notifications/clock.ts`: quiet hours, the 17:00 digest, and local send times in an IANA zone | Built as pure functions, not called yet (program wave B) |
-| A service worker and Web Push | Planned, program wave B |
+| A service worker and Web Push | Built: `apps/www/public/sw.js` and the inbox's push offer with the Home Screen step |
+| Mention rows written with their message, and announcement rows written by the fan-out, with their detail in the inbox | Built |
+| The announcement email when the teacher chooses it | Built |
 | The inbox panel and `nakafa.com/id/notifications`, the next reader of `notifications:list`, `notifications:read`, and `notifications:readAll` | Planned, program wave B |
 | WhatsApp | Planned, after the first channels |

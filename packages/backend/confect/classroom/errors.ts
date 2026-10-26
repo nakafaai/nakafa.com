@@ -78,3 +78,15 @@ export class PersonNotTeacher extends Schema.TaggedError<PersonNotTeacher>()(
     "Only a teacher of this unit can teach one of its classes."
   )
 ) {}
+
+/** Work handed in after the deadline of a task that closes at its deadline. */
+export class TaskClosed extends Schema.TaggedError<TaskClosed>()(
+  "TaskClosed",
+  refusal("TASK_CLOSED", "This task closed at its deadline.")
+) {}
+
+/** Points beyond the points a task is worth. */
+export class ScoreOutOfRange extends Schema.TaggedError<ScoreOutOfRange>()(
+  "ScoreOutOfRange",
+  refusal("SCORE_OUT_OF_RANGE", "The points are more than this task is worth.")
+) {}

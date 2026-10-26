@@ -9,16 +9,19 @@ import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 const SENTENCES = {
   de: {
     "announcement.posted": "In deiner Klasse gibt es eine neue Ankündigung.",
+    "assignment.published": "In deiner Klasse gibt es eine neue Aufgabe.",
     "forum.mentioned": "Jemand hat dich in deiner Klasse erwähnt.",
     "person.invited": "Du wurdest an eine Schule eingeladen.",
   },
   en: {
     "announcement.posted": "There is a new announcement in your class.",
+    "assignment.published": "There is a new task in your class.",
     "forum.mentioned": "Someone mentioned you in your class.",
     "person.invited": "You have been invited to a school.",
   },
   id: {
     "announcement.posted": "Ada pengumuman baru di kelasmu.",
+    "assignment.published": "Ada tugas baru di kelasmu.",
     "forum.mentioned": "Seseorang menyebutmu di kelas.",
     "person.invited": "Kamu diundang ke sebuah sekolah.",
   },

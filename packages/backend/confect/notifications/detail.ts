@@ -82,6 +82,30 @@ export const detailOf = Effect.fn("notifications.detail")(function* (
             channelId: null,
             discussion: null,
             messageId: null,
+            task: null,
+          }));
+        }),
+      "assignment.published": (assignment) =>
+        Effect.gen(function* () {
+          const task = yield* reader
+            .table("classroomTasks")
+            .get(assignment.taskId)
+            .pipe(Effect.option);
+          if (Option.isNone(task)) {
+            return Option.none();
+          }
+          const part = yield* classPart(
+            task.value.classId,
+            task.value.authorId,
+            person,
+            tenant
+          );
+          return Option.map(part, (found) => ({
+            ...found,
+            channelId: null,
+            discussion: null,
+            messageId: null,
+            task: task.value.slug,
           }));
         }),
       "forum.mentioned": (mention) =>
@@ -114,6 +138,7 @@ export const detailOf = Effect.fn("notifications.detail")(function* (
               onSome: (discussion) => discussion.number,
             }),
             messageId: message.value._id,
+            task: null,
           }));
         }),
       "person.invited": () => Effect.succeed(Option.none()),

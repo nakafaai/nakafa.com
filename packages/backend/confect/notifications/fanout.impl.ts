@@ -55,6 +55,18 @@ const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
           named: [],
         }))
       ),
+    task: ({ taskId }) =>
+      Effect.map(
+        reader.table("classroomTasks").get(taskId).pipe(Effect.option),
+        Option.map((task) => ({
+          authorId: task.authorId,
+          classId: task.classId,
+          createdAt: task.createdAt,
+          email: false,
+          fields: { changeType: "assignment.published" as const, taskId },
+          named: [],
+        }))
+      ),
   });
 });
 
