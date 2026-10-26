@@ -2,7 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { PRESENCE_INTERVAL } from "@repo/backend/confect/exams/presence";
 import { Data, Deferred, Effect, Exit, Fiber, MutableList } from "effect";
 import { TestClock } from "effect/testing";
-import { makeHeartbeat } from "@/components/tenant/exams/heartbeat";
+import {
+  makeHeartbeat,
+  RETURN_DELAY,
+} from "@/components/tenant/exams/heartbeat";
 
 /** A join that the server refused. */
 class JoinRefused extends Data.TaggedError("JoinRefused") {}
@@ -60,7 +63,7 @@ describe("tenant/exams/heartbeat makeHeartbeat", () => {
   );
 
   it.effect(
-    "leaves at the first beat the tab is hidden, and joins again at once when it shows",
+    "leaves at the first beat the tab is hidden, and joins again once it has shown for the return delay",
     () =>
       Effect.gen(function* () {
         const { calls, heartbeat, tab } = room();
@@ -72,9 +75,31 @@ describe("tenant/exams/heartbeat makeHeartbeat", () => {
         yield* TestClock.adjust(PRESENCE_INTERVAL);
         expect(calls()).toEqual(["join 36", "leave token-1"]);
         tab.visible = true;
-        yield* presence.returned;
-        yield* presence.returned;
+        yield* Effect.forkChild(presence.returned);
+        yield* Effect.forkChild(presence.returned);
+        yield* Effect.yieldNow;
+        expect(calls()).toEqual(["join 36", "leave token-1"]);
+        yield* TestClock.adjust(RETURN_DELAY);
         expect(calls()).toEqual(["join 36", "leave token-1", "join 36"]);
+      })
+  );
+
+  it.effect(
+    "joins nothing for a tab that shows and hides again within the return delay, as one shown only to be closed",
+    () =>
+      Effect.gen(function* () {
+        const { calls, heartbeat, tab } = room();
+        const presence = yield* heartbeat;
+        yield* Effect.forkChild(presence.run);
+        yield* Effect.yieldNow;
+        tab.visible = false;
+        yield* TestClock.adjust(PRESENCE_INTERVAL);
+        tab.visible = true;
+        yield* Effect.forkChild(presence.returned);
+        yield* Effect.yieldNow;
+        tab.visible = false;
+        yield* TestClock.adjust(RETURN_DELAY);
+        expect(calls()).toEqual(["join 36", "leave token-1"]);
       })
   );
 
@@ -114,7 +139,8 @@ describe("tenant/exams/heartbeat makeHeartbeat", () => {
         expect(Exit.isFailure(exit)).toBe(true);
         expect(calls()).toEqual(["join 36", "leave token-1"]);
         tab.refuses = false;
-        yield* presence.returned;
+        yield* Effect.forkChild(presence.returned);
+        yield* TestClock.adjust(RETURN_DELAY);
         expect(calls()).toEqual(["join 36", "leave token-1"]);
       })
   );
