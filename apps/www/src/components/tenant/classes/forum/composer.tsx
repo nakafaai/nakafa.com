@@ -1,6 +1,5 @@
 import { useMutation } from "@confect/react";
 import { ArrowUp02Icon } from "@hugeicons/core-free-icons";
-import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { MessageText } from "@repo/backend/confect/classroom/forum/message";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -13,15 +12,12 @@ import {
 } from "@repo/design-system/components/ui/input-group";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Clock, Effect, Option, Schema, String as Str } from "effect";
+import { Effect, Option, Schema, String as Str } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  forumCall,
-  runForumCall,
-} from "@/components/tenant/classes/forum/call";
-import { sendUpdate } from "@/components/tenant/classes/forum/optimistic";
+import { runForumCall } from "@/components/tenant/classes/forum/call";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
+import { sendMessage } from "@/components/tenant/classes/forum/send";
 import { useViewerQuery } from "@/components/tenant/context";
 
 /** A message the server refused, kept with its key so Try again never posts it twice. */
@@ -40,12 +36,14 @@ export function ForumComposer() {
   const send = useMutation(classroom.forum.messages.send);
   const viewer = useViewerQuery();
   const [text, setText] = useState("");
-  const [unsent, setUnsent] = useState(Option.none<typeof Unsent.Type>());
+  const [unsent, setUnsent] = useState<Option.Option<typeof Unsent.Type>>(
+    Option.none
+  );
   const body = Str.trim(text);
   const ready = Schema.is(MessageText)(body) && viewer._tag === "Success";
 
   /** Sends `message` under `clientKey`, showing it at once, and keeps it when the send fails. */
-  const sendMessage = (message: string, clientKey: string) => {
+  const post = (message: string, clientKey: string) => {
     if (viewer._tag !== "Success") {
       return;
     }
@@ -53,25 +51,11 @@ export function ForumComposer() {
     setText("");
     setUnsent(Option.none());
     runForumCall(
-      Effect.gen(function* () {
-        const createdAt = yield* Clock.currentTimeMillis;
-        const id = yield* Schema.decodeUnknownEffect(Id("classroomMessages"))(
-          clientKey
-        );
-        yield* forumCall(() =>
-          send.withOptimisticUpdate(
-            sendUpdate({
-              author: { id: person.id, name: person.name },
-              clientKey,
-              createdAt,
-              editedAt: null,
-              id,
-              mine: true,
-              text: message,
-            })
-          )({ channelId, classId, clientKey, slug, text: message })
-        );
-      }),
+      sendMessage(
+        (update, args) => send.withOptimisticUpdate(update)(args),
+        { id: person.id, name: person.name },
+        { channelId, classId, clientKey, slug, text: message }
+      ),
       () => {
         setText((current) => (current === "" ? message : current));
         setUnsent(Option.some({ clientKey, text: message }));
@@ -85,26 +69,18 @@ export function ForumComposer() {
       return;
     }
     runForumCall(
-      Effect.map(randomUuid, (clientKey) => sendMessage(body, clientKey)),
+      Effect.map(randomUuid, (clientKey) => post(body, clientKey)),
       () => undefined
     );
   };
 
   return (
-    <form
-      className="flex w-full min-w-0 flex-col gap-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        submit();
-      }}
-    >
+    <form action={submit} className="flex w-full min-w-0 flex-col gap-2">
       {Option.isSome(unsent) ? (
         <div className="flex items-center justify-between gap-2 text-destructive text-sm">
           <span>{t("send-failed")}</span>
           <Button
-            onClick={() =>
-              sendMessage(unsent.value.text, unsent.value.clientKey)
-            }
+            onClick={() => post(unsent.value.text, unsent.value.clientKey)}
             size="sm"
             type="button"
             variant="outline"

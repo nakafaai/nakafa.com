@@ -15,10 +15,10 @@ import { AddChannel } from "@/components/tenant/classes/add";
 import {
   CHANNEL_PAGE_SIZE,
   ChannelList,
-  channelLabel,
 } from "@/components/tenant/classes/channels";
 import { createChannelDrafts } from "@/components/tenant/classes/drafts";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
+import { channelLabel } from "@/components/tenant/classes/label";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";

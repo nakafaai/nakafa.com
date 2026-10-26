@@ -21,6 +21,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
+import { channelLabel } from "@/components/tenant/classes/label";
 import { useTenant } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
@@ -166,7 +167,3 @@ function ChannelRow({ channel }: { channel: Channel }) {
     </TableRow>
   );
 }
-
-/** The name a channel shows: the general channel's translated label, or a topic's own name. */
-export const channelLabel = (channel: Channel, general: string) =>
-  channel.kind === "general" ? general : channel.name;

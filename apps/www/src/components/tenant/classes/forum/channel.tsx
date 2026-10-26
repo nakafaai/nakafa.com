@@ -129,7 +129,14 @@ function ChannelMessages() {
                 {index === 0 && loadOlder ? (
                   <Intersection onIntersect={loadOlder} />
                 ) : null}
-                <ForumMessageRow message={message} />
+                <ForumMessageRow
+                  message={message}
+                  opens={Option.match(Arr.get(messages, index - 1), {
+                    onNone: () => true,
+                    onSome: (previous) =>
+                      previous.author.id !== message.author.id,
+                  })}
+                />
               </MessageScrollerItem>
             ))}
           </MessageScrollerContent>

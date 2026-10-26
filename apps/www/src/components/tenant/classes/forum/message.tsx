@@ -43,23 +43,22 @@ import { useChannelScope } from "@/components/tenant/classes/forum/scope";
 
 /**
  * One message of a channel. The viewer's own messages stand at the end of the row, and another
- * member's show the author's name above them. The footer says when the message was written, and
- * that it was edited. A message a teacher hid keeps its place with a sentence that says so and no
- * text. The menu holds Edit on the viewer's own message and Hide for whoever manages the forum.
+ * member's show the author's name above the first message of a run by the same author (`opens`).
+ * The viewer's own message turns into its edit field in place.
  */
-export function ForumMessageRow({ message }: { message: ForumMessage }) {
-  const t = useTranslations("Classroom");
-  const format = useFormatter();
+export function ForumMessageRow({
+  message,
+  opens,
+}: {
+  message: ForumMessage;
+  opens: boolean;
+}) {
   const [editing, setEditing] = useState(false);
-  const written = format.dateTime(
-    DateTime.toDateUtc(DateTime.makeUnsafe(message.createdAt)),
-    { dateStyle: "medium", timeStyle: "short" }
-  );
 
   return (
     <Message align={message.mine ? "end" : "start"}>
       <MessageContent>
-        {message.mine ? null : (
+        {message.mine || !opens ? null : (
           <MessageHeader dir="auto">{message.author.name}</MessageHeader>
         )}
         {editing && message.text !== null ? (
@@ -69,31 +68,72 @@ export function ForumMessageRow({ message }: { message: ForumMessage }) {
             text={message.text}
           />
         ) : (
-          <Bubble
-            align={message.mine ? "end" : "start"}
-            variant={message.mine ? "default" : "muted"}
-          >
-            <BubbleContent
-              className={
-                message.text === null ? "italic" : "whitespace-pre-wrap"
-              }
-              dir="auto"
-            >
-              {message.text ?? t("message-hidden")}
-            </BubbleContent>
-          </Bubble>
+          <MessageBubble message={message} />
         )}
-        <MessageFooter className="gap-1 px-3">
-          <span>{written}</span>
-          {message.editedAt === null || message.text === null ? null : (
-            <span>{t("message-edited")}</span>
-          )}
-          {message.text === null || editing ? null : (
-            <MessageActions message={message} onEdit={() => setEditing(true)} />
-          )}
-        </MessageFooter>
+        <MessageMeta
+          editing={editing}
+          message={message}
+          onEdit={() => setEditing(true)}
+        />
       </MessageContent>
     </Message>
+  );
+}
+
+/**
+ * The body of a message: its text in the author's colour for the viewer's own message, and muted
+ * for another member's. A message a teacher hid keeps its place with a sentence that says so.
+ */
+function MessageBubble({ message }: { message: ForumMessage }) {
+  const t = useTranslations("Classroom");
+  const own = message.mine && message.text !== null;
+
+  return (
+    <Bubble
+      align={message.mine ? "end" : "start"}
+      variant={own ? "default" : "muted"}
+    >
+      <BubbleContent
+        className={message.text === null ? "italic" : "whitespace-pre-wrap"}
+        dir="auto"
+      >
+        {message.text ?? t("message-hidden")}
+      </BubbleContent>
+    </Bubble>
+  );
+}
+
+/**
+ * The footer of a message: when it was written, that it was edited, and its menu, which a hidden
+ * message and one in its edit field do not show.
+ */
+function MessageMeta({
+  editing,
+  message,
+  onEdit,
+}: {
+  editing: boolean;
+  message: ForumMessage;
+  onEdit: () => void;
+}) {
+  const t = useTranslations("Classroom");
+  const format = useFormatter();
+  const written = format.dateTime(
+    DateTime.toDateUtc(DateTime.makeUnsafe(message.createdAt)),
+    { dateStyle: "medium", timeStyle: "short" }
+  );
+  const live = message.text !== null;
+
+  return (
+    <MessageFooter className="gap-1 px-3">
+      <span>{written}</span>
+      {live && message.editedAt !== null ? (
+        <span>{t("message-edited")}</span>
+      ) : null}
+      {live && !editing ? (
+        <MessageActions message={message} onEdit={onEdit} />
+      ) : null}
+    </MessageFooter>
   );
 }
 
@@ -149,8 +189,8 @@ function MessageActions({
 
 /**
  * The field that edits the viewer's own message in its place. Save shows the new text at once,
- * and a refusal brings the old text back with the toast every School action uses. Escape keeps
- * the message as it was.
+ * and a refusal brings the old text back with the toast every School action uses. A text that is
+ * unchanged or not a message keeps the message as it was, and so does Escape.
  */
 function MessageEditor({
   message,
@@ -165,13 +205,11 @@ function MessageEditor({
   const scope = useChannelScope();
   const common = useTranslations("Common");
   const edit = useMutation(classroom.forum.messages.edit);
-  const [draft, setDraft] = useState(text);
-  const body = Str.trim(draft);
-  const ready = Schema.is(MessageText)(body) && body !== text;
 
-  const save = () => {
+  const save = (draft: FormDataEntryValue | null) => {
     onDone();
-    if (!ready) {
+    const body = Str.trim(typeof draft === "string" ? draft : "");
+    if (!Schema.is(MessageText)(body) || body === text) {
       return;
     }
     runForumCall(
@@ -191,29 +229,26 @@ function MessageEditor({
 
   return (
     <form
+      action={(form) => save(form.get("text"))}
       className="flex w-full min-w-0 flex-col gap-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        save();
-      }}
     >
       <Textarea
         aria-label={t("message-edit")}
         autoFocus
+        defaultValue={text}
         dir="auto"
-        onChange={(event) => setDraft(event.target.value)}
+        name="text"
         onKeyDown={(event) => {
           if (event.key === "Escape") {
             onDone();
           }
         }}
-        value={draft}
       />
       <div className="flex justify-end gap-2">
         <Button onClick={onDone} size="sm" type="button" variant="outline">
           {common("cancel")}
         </Button>
-        <Button disabled={!ready} size="sm" type="submit">
+        <Button size="sm" type="submit">
           {t("message-save")}
         </Button>
       </div>
