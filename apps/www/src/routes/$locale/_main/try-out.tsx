@@ -22,11 +22,13 @@ const readSignedInHint = createIsomorphicFn()
  * functions, and each Convex leaf islands itself. A learner's running attempt
  * renders its player on the server, which needs the client during that render, so
  * the server decides from the hint cookie and the first HTML and the client agree.
+ *
+ * Every navigation reads the hint again. The catalog's first pages are
+ * prerendered, so the answer that their HTML carries is the build's, which no
+ * visitor's cookie decided, and a learner who opens one and presses into a running
+ * attempt needs the client there.
  */
 export const Route = createFileRoute("/$locale/_main/try-out")({
-  // The hint changes only with a full document visit, so a navigation between
-  // try-out pages reads it once rather than on every change of page.
-  staleTime: Number.POSITIVE_INFINITY,
   loader: () => readSignedInHint(),
   component: TryoutLayout,
 });
@@ -38,17 +40,23 @@ const RouteConvexProvider = lazy(() =>
   }))
 );
 
-/** Mounts the one client that a signed-in learner's try-out pages read. */
+/**
+ * Mounts the one client that a signed-in learner's try-out pages read. The
+ * boundary stands for a visitor too, so when a navigation finds the hint and the
+ * provider's module loads, the router's transition keeps the page that is on
+ * screen instead of showing an empty frame.
+ */
 function TryoutLayout() {
   const signedIn = Route.useLoaderData();
-  if (!signedIn) {
-    return <Outlet />;
-  }
   return (
     <Suspense fallback={null}>
-      <RouteConvexProvider>
+      {signedIn ? (
+        <RouteConvexProvider>
+          <Outlet />
+        </RouteConvexProvider>
+      ) : (
         <Outlet />
-      </RouteConvexProvider>
+      )}
     </Suspense>
   );
 }

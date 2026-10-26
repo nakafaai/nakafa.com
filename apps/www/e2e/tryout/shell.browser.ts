@@ -126,6 +126,8 @@ const verifyPrefetchedHeadings = Effect.fn(
   "NakafaE2E.verifyPrefetchedTryoutHeadings"
 )(function* (page: Page, hasTouch: boolean) {
   yield* seedAnalyticsConsent(page, "denied");
+  // Each press reads the frames that the recorder keeps, so it starts with the page.
+  yield* observeShell(page);
   const requested = recordServerFunctionCalls(page);
   yield* openHub(page);
   yield* openTrack(page, hasTouch);
