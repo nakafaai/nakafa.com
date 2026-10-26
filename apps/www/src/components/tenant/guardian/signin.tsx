@@ -2,7 +2,6 @@ import { useMutation } from "@confect/react";
 import { Login03Icon, MailSend01Icon } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -12,6 +11,7 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { getRouteApi } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
 import { type FormEvent, useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -26,23 +26,27 @@ import { pageDeviceIdOf } from "@/components/tenant/signin";
 import { clientEnv } from "@/env.public";
 import { readAuthClient } from "@/lib/auth/client";
 
+/** The school layout's route, whose parsed address holds the school's slug. */
+const schoolRoute = getRouteApi("/school/$slug");
+
 /**
  * A parent's sign-in on the school host (ADR 0009, ADR 0034): the address the school
  * linked, then the six-digit code that the school mails to it. The answer is the same for
  * every address, so the form never tells whether the school links one. The signed-out school
  * tree mounts no Convex provider, so the form mounts one for its code request.
  */
-export function TenantGuardianSignIn({ slug }: { slug: TenantSlug }) {
+export function TenantGuardianSignIn() {
   return (
     <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
-      <GuardianSignInForm slug={slug} />
+      <GuardianSignInForm />
     </ConvexProvider>
   );
 }
 
 /** The form under the provider of `TenantGuardianSignIn`, one step at a time. */
-function GuardianSignInForm({ slug }: { slug: TenantSlug }) {
+function GuardianSignInForm() {
   const t = useTranslations("SchoolGuardians");
+  const slug = schoolRoute.useParams({ select: (params) => params.slug });
   const locale = Schema.decodeOption(ActiveAppLocaleCodeSchema)(useLocale());
   const id = useId();
   const send = useMutation(guardians.codes.send);

@@ -5,7 +5,6 @@ import {
   UserRemove01Icon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -43,6 +42,7 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import {
   type ChildItem,
   withdrawChange,
@@ -68,12 +68,11 @@ const childColumns = createColumnHelper<typeof dataTableFeatures, ChildItem>();
  */
 export function GuardianHome({
   first,
-  slug,
 }: {
   first: readonly ChildItem[] | undefined;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolGuardians");
+  const { slug } = useTenant();
   const children = usePreloadedQueryResult(
     guardians.family.children,
     { slug },
@@ -89,7 +88,7 @@ export function GuardianHome({
         />
         <div className="flex w-full min-w-0 flex-1 flex-col">
           {QueryResult.isSuccess(children) ? (
-            <GuardianChildren items={children.value} slug={slug} />
+            <GuardianChildren items={children.value} />
           ) : null}
         </div>
       </PanesProvider>
@@ -98,13 +97,7 @@ export function GuardianHome({
 }
 
 /** The children beside the open child, or the empty state while no child is linked. */
-function GuardianChildren({
-  items,
-  slug,
-}: {
-  items: readonly ChildItem[];
-  slug: TenantSlug;
-}) {
+function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
   const t = useTranslations("SchoolGuardians");
   if (Arr.isReadonlyArrayEmpty(items)) {
     return (
@@ -149,20 +142,14 @@ function GuardianChildren({
         />
       </PanesList>
       <PanesDetail empty={t("child-detail-empty")} label={t("child-detail")}>
-        <GuardianChild items={items} slug={slug} />
+        <GuardianChild items={items} />
       </PanesDetail>
     </Panes>
   );
 }
 
 /** The open child, by the state of its link. A child the list no longer holds closes. */
-function GuardianChild({
-  items,
-  slug,
-}: {
-  items: readonly ChildItem[];
-  slug: TenantSlug;
-}) {
+function GuardianChild({ items }: { items: readonly ChildItem[] }) {
   const t = useTranslations("SchoolGuardians");
   const open = usePanes((state) => state.open);
   const child = Option.flatMap(open, (id) =>
@@ -178,7 +165,7 @@ function GuardianChild({
           title={found.student.name}
         />
         {found.status === "pending" && !found.staffCheck ? (
-          <GuardianConfirm child={found} slug={slug} />
+          <GuardianConfirm child={found} />
         ) : null}
         {found.status === "pending" && found.staffCheck ? (
           <PaneBody>
@@ -187,9 +174,7 @@ function GuardianChild({
             </p>
           </PaneBody>
         ) : null}
-        {found.status === "verified" ? (
-          <GuardianGrades child={found} slug={slug} />
-        ) : null}
+        {found.status === "verified" ? <GuardianGrades child={found} /> : null}
         {found.status !== "pending" && found.status !== "verified" ? (
           <PaneBody>
             <p className="text-muted-foreground text-sm">
@@ -206,14 +191,9 @@ function GuardianChild({
  * The second check of a pending link: the child's NISN. The server compares it with the
  * roster and answers verified or refused; a refusal reads as a wrong code would.
  */
-function GuardianConfirm({
-  child,
-  slug,
-}: {
-  child: ChildItem;
-  slug: TenantSlug;
-}) {
+function GuardianConfirm({ child }: { child: ChildItem }) {
   const t = useTranslations("SchoolGuardians");
+  const { slug } = useTenant();
   const id = useId();
   const confirm = useMutation(guardians.family.confirm);
   const [isPending, startTransition] = useTransition();
@@ -265,14 +245,9 @@ function GuardianConfirm({
 }
 
 /** The released grades of a child of a verified link, and the way to withdraw consent. */
-function GuardianGrades({
-  child,
-  slug,
-}: {
-  child: ChildItem;
-  slug: TenantSlug;
-}) {
+function GuardianGrades({ child }: { child: ChildItem }) {
   const t = useTranslations("SchoolGuardians");
+  const { slug } = useTenant();
   const common = useTranslations("Common");
   const grades = useQuery(guardians.family.grades, {
     linkId: child.linkId,
