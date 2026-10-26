@@ -1,6 +1,12 @@
 import type { GenericId } from "@confect/core";
 import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
@@ -14,6 +20,7 @@ import {
   CloseSittingDialog,
 } from "@/components/exams/sitting/dialogs";
 import { SittingFilterMenu } from "@/components/exams/sitting/toolbar";
+import { SplitMenuTrigger } from "@/components/shared/split";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { Link } from "@/lib/routing/link";
@@ -25,7 +32,7 @@ import {
 /**
  * The one header of the dashboard: the sidebar's trigger, the path from the exams through the
  * exam, whose link returns to the exam's rooms, to the sitting's room, and at its end the token
- * with the action that changes it, then the action that closes the sitting. The exams crumb is
+ * with the proctor's actions: Change token, with Close sitting in its menu. The exams crumb is
  * left out for a viewer who may not open the exam list. The page carries the token only for a
  * proctor, and the actions show only when the page lists them. On a phone each action shows its
  * icon alone, named for assistive technology, so the header stays one row beside the folded path.
@@ -79,26 +86,7 @@ export function SittingHeader({
           {t("results-title")}
         </Link>
       ) : null}
-      {mayProctor ? (
-        <>
-          <Button
-            onClick={() => setDialog("token")}
-            type="button"
-            variant="outline"
-          >
-            <HugeIcons icon={Key01Icon} />
-            <span className="max-sm:sr-only">{t("change-token")}</span>
-          </Button>
-          <Button
-            onClick={() => setDialog("close")}
-            type="button"
-            variant="destructive"
-          >
-            <HugeIcons icon={CancelCircleIcon} />
-            <span className="max-sm:sr-only">{t("close-sitting")}</span>
-          </Button>
-        </>
-      ) : null}
+      {mayProctor ? <SittingProctorActions onOpen={setDialog} /> : null}
       <ChangeTokenDialog
         onOpenChange={(open) => setDialog(open ? "token" : null)}
         open={dialog === "token"}
@@ -108,5 +96,40 @@ export function SittingHeader({
         open={dialog === "close"}
       />
     </SchoolHeader>
+  );
+}
+
+/**
+ * The proctor's actions as one group: Change token beside the token it changes, and a menu with
+ * Close sitting, which ends the sitting once, at its end. On a phone the button shows its icon
+ * alone, named for assistive technology.
+ */
+function SittingProctorActions({
+  onOpen,
+}: {
+  readonly onOpen: (dialog: "close" | "token") => void;
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <ButtonGroup>
+      <Button onClick={() => onOpen("token")} type="button" variant="outline">
+        <HugeIcons icon={Key01Icon} />
+        <span className="max-sm:sr-only">{t("change-token")}</span>
+      </Button>
+      <DropdownMenu>
+        <SplitMenuTrigger />
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => onOpen("close")}
+            variant="destructive"
+          >
+            <HugeIcons icon={CancelCircleIcon} />
+            {t("close-sitting")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </ButtonGroup>
   );
 }

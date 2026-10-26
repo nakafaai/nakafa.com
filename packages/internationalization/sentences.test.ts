@@ -41,11 +41,21 @@ function isOneSentence(text: string) {
   return SENTENCE_END.test(text) && !SENTENCE_START.test(prose);
 }
 
-/** The text under a dotted key, such as `Memory.empty-description`, or none when the dictionary has no text there. */
+/** Whether a dictionary value is a group of messages by key. */
+const isGroup = Schema.is(Schema.Record(Schema.String, Schema.Unknown));
+
+/**
+ * The text under a dotted key, such as `Memory.empty-description` or
+ * `Ai.failures.unknown`, or none when the dictionary has no text there.
+ */
 function messageOf(messages: Messages, key: string) {
-  const [namespace = "", name = ""] = Str.split(key, ".");
-  return Rec.get(messages, namespace).pipe(
-    Option.flatMap((entries) => Rec.get(entries, name)),
+  return pipe(
+    Str.split(key, "."),
+    Arr.reduce(Option.some<unknown>(messages), (value, name) =>
+      Option.flatMap(Option.filter(value, isGroup), (group) =>
+        Rec.get(group, name)
+      )
+    ),
     Option.filter(Schema.is(Schema.String))
   );
 }
