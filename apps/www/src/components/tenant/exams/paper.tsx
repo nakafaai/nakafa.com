@@ -1,4 +1,4 @@
-import { Add01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
+import { Alert02Icon, ListPlusIcon } from "@hugeicons/core-free-icons";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
@@ -111,8 +111,8 @@ function PageRow({
   const number = index + 1;
 
   return (
-    <div className="flex min-h-9 items-center justify-between gap-2">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         {editable ? (
           <QuestionGrip number={number} questionId={question.id} />
         ) : (
@@ -438,7 +438,7 @@ function LivePaper({
             type="button"
             variant="ghost"
           >
-            <HugeIcons aria-hidden="true" icon={Add01Icon} />
+            <HugeIcons aria-hidden="true" icon={ListPlusIcon} />
             {t("option-add")}
           </Button>
         </div>

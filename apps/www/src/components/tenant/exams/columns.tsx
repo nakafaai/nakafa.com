@@ -1,4 +1,5 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { AddToListIcon, ListPlusIcon } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import {
   CHOICE_OPTIONS_MAX,
@@ -40,8 +41,16 @@ type Part = Pick<
 
 /** The props of one column of parts on a question's paper. */
 interface PartColumnProps {
-  /** The action that adds a part and its name, or none while the column holds the most it may. */
-  readonly add: { readonly label: string; readonly run: () => void } | null;
+  /**
+   * The action that adds a part, with its own icon and its name, or none while the column holds the
+   * most it may. Statements and answers add with icons of their own, so the two columns of a match
+   * never draw the same one.
+   */
+  readonly add: {
+    readonly icon: IconSvgElement;
+    readonly label: string;
+    readonly run: () => void;
+  } | null;
   /** Whether the page is the chosen one, which shows the action that adds a part. */
   readonly chosen: boolean;
   /** Whether the exam is locked, so the parts take no change. */
@@ -118,7 +127,7 @@ function PartColumn({
       {add === null || frozen ? null : (
         <div className={chosen ? undefined : "invisible"}>
           <Button onClick={add.run} size="sm" type="button" variant="ghost">
-            <HugeIcons aria-hidden="true" icon={Add01Icon} />
+            <HugeIcons aria-hidden="true" icon={add.icon} />
             {add.label}
           </Button>
         </div>
@@ -168,6 +177,7 @@ export function MatchColumn({
       add={
         parts.length < CHOICE_OPTIONS_MAX
           ? {
+              icon: statements ? ListPlusIcon : AddToListIcon,
               label: t(statements ? "statement-add" : "match-answer-add"),
               run: () =>
                 props.editing.saveAnswers((draft) => {
@@ -251,6 +261,7 @@ export function TableColumn({
       add={
         statements && parts.length < CHOICE_OPTIONS_MAX
           ? {
+              icon: ListPlusIcon,
               label: t("statement-add"),
               run: () =>
                 props.editing.saveAnswers((draft) => {
