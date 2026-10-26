@@ -10,18 +10,21 @@ import {
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { blindGoogleAccount } from "@repo/backend/confect/connectors/account";
-import { connect, disconnect } from "@repo/backend/confect/connectors/connection";
+import {
+  connect,
+  disconnect,
+} from "@repo/backend/confect/connectors/connection";
 import {
   ConnectorOff,
   ConnectStateInvalid,
   ScopesMissing,
 } from "@repo/backend/confect/connectors/errors";
 import {
-  CALLBACK_PATH,
   readGoogleClient,
   readOfferedConnectors,
 } from "@repo/backend/confect/connectors/google/client";
 import {
+  CALLBACK_PATH,
   GOOGLE_MANIFEST,
   type GoogleConnector,
   requestedScopes,
@@ -221,10 +224,13 @@ const claim = FunctionImpl.make(
     const base = yield* Space.match(row.owner, {
       personal: () => Effect.succeed(site.href),
       tenant: ({ tenantId }) =>
-        reader.table("tenants").get(tenantId).pipe(
-          Effect.flatMap((tenant) => schoolAddress(site, tenant.slug)),
-          Effect.orDie
-        ),
+        reader
+          .table("tenants")
+          .get(tenantId)
+          .pipe(
+            Effect.flatMap((tenant) => schoolAddress(site, tenant.slug)),
+            Effect.orDie
+          ),
     });
     return {
       connector: row.connector,
@@ -242,36 +248,34 @@ const claim = FunctionImpl.make(
  * code, checks that every scope of the connector was granted, and stores the
  * connection.
  */
-const connectClaimed = Effect.fn("connectors.google.connectClaimed")(
-  function* (
-    claimed: NonNullable<
-      Ref.Returns<typeof refs.internal.connectors.google.claim>
-    >,
-    code: string,
-    userId: GenericId.GenericId<"users">
-  ) {
-    const client = yield* readGoogleClient(claimed.connector);
-    const grant = yield* exchangeCode(client, {
-      code,
-      redirectUri: claimed.redirectUri,
-      verifier: claimed.verifier,
-    }).pipe(Effect.provide(FetchClient));
-    const needed = requestedScopes(claimed.connector);
-    if (!Arr.every(needed, (scope) => Arr.contains(grant.scopes, scope))) {
-      return yield* new ScopesMissing();
-    }
-    const { runMutation } = yield* MutationRunner;
-    yield* runMutation(refs.internal.connectors.google.store, {
-      connector: claimed.connector,
-      owner: claimed.owner,
-      personId: claimed.personId,
-      refreshToken: grant.refreshToken,
-      scopes: needed,
-      subject: grant.subject,
-      userId,
-    }).pipe(Effect.orDie);
+const connectClaimed = Effect.fn("connectors.google.connectClaimed")(function* (
+  claimed: NonNullable<
+    Ref.Returns<typeof refs.internal.connectors.google.claim>
+  >,
+  code: string,
+  userId: GenericId.GenericId<"users">
+) {
+  const client = yield* readGoogleClient(claimed.connector);
+  const grant = yield* exchangeCode(client, {
+    code,
+    redirectUri: claimed.redirectUri,
+    verifier: claimed.verifier,
+  }).pipe(Effect.provide(FetchClient));
+  const needed = requestedScopes(claimed.connector);
+  if (!Arr.every(needed, (scope) => Arr.contains(grant.scopes, scope))) {
+    return yield* new ScopesMissing();
   }
-);
+  const { runMutation } = yield* MutationRunner;
+  yield* runMutation(refs.internal.connectors.google.store, {
+    connector: claimed.connector,
+    owner: claimed.owner,
+    personId: claimed.personId,
+    refreshToken: grant.refreshToken,
+    scopes: needed,
+    subject: grant.subject,
+    userId,
+  }).pipe(Effect.orDie);
+});
 
 /**
  * Finishes a connect from Google's callback. The state is taken first, so it

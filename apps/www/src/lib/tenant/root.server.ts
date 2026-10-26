@@ -18,6 +18,7 @@ const SCHOOL_NAMESPACES = [
   "Auth",
   "Classroom",
   "Common",
+  "Connectors",
   "DataTable",
   "Editor",
   "Error",

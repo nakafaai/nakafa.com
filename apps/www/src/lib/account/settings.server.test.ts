@@ -7,6 +7,7 @@ import nina from "@repo/backend/confect/_generated/refs/nina";
 import { isNotFound } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
 import {
+  connectorsScreenHandler,
   learningScreenHandler,
   memoryScreenHandler,
   settingsScreenHandler,
@@ -164,6 +165,16 @@ describe("memoryScreenHandler", () => {
       memoryScreenHandler({ data: { locale: "en" } })
     );
     expect(isNotFound(cause)).toBe(true);
+  });
+});
+
+describe("connectorsScreenHandler", () => {
+  it("answers the private head of the account's connectors", async () => {
+    sessionWith(Option.some("token"));
+    const screen = await connectorsScreenHandler({ data: { locale: "en" } });
+    expect(screen).toMatchObject({
+      seo: { canonicalPath: "/en", indexable: false, title: "Connectors" },
+    });
   });
 });
 

@@ -1523,6 +1523,8 @@
     "curriculum-placeholder": "Pilih kurikulum",
     "memory": "Memori",
     "memory-description": "Hal tentang kamu yang Nina tahu dan pakai di setiap obrolan.",
+    "connectors": "Konektor",
+    "connectors-description": "Google Drive dan Calendar yang dibaca Nina hanya untukmu.",
     "delete-account": "Hapus akun",
     "delete-account-description": "Hapus profil dan data pribadimu dari Nakafa secara permanen.",
     "delete-account-footer": "Tindakan ini tidak bisa dibatalkan.",
@@ -2556,5 +2558,25 @@
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Qur'an.",
       "keywords": "Surat {name}, Al-Qur'an{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
+  },
+  "Connectors": {
+    "drive": "Google Drive",
+    "drive-description": "File yang kamu pilih di Google Drive, untuk catatan dan impor.",
+    "calendar": "Google Calendar",
+    "calendar-description": "Acara mendatangmu, supaya Nina bisa menjawab apa yang ada minggu ini.",
+    "classroom": "Google Classroom",
+    "classroom-description": "Kelas Classroom-mu, siswanya, dan tugasnya, untuk dibawa ke sekolah.",
+    "connect": "Hubungkan",
+    "reconnect": "Hubungkan lagi",
+    "reconnect-hint": "Google tidak lagi menerima koneksi ini.",
+    "connected": "Terhubung.",
+    "not-connected": "Belum terhubung.",
+    "disconnect": "Putuskan",
+    "disconnect-title": "Putuskan {name}",
+    "disconnect-description": "Nakafa langsung berhenti membacanya. Hapus Nakafa di akun Google-mu supaya aksesnya juga berakhir di sana.",
+    "none": "Belum ada konektor",
+    "none-description": "Konektor terbuka di sini setelah Google meninjaunya.",
+    "refused": "Tidak terhubung",
+    "refused-description": "Google tidak mengizinkan semua akses yang dibutuhkan konektor ini. Hubungkan lagi dan biarkan semua kotak tercentang."
   }
 }

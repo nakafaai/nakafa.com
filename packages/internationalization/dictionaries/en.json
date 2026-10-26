@@ -1523,6 +1523,8 @@
     "curriculum-placeholder": "Select a curriculum",
     "memory": "Memory",
     "memory-description": "What Nina knows about you and uses in every chat.",
+    "connectors": "Connectors",
+    "connectors-description": "Google Drive and Calendar that Nina reads for you alone.",
     "delete-account": "Delete account",
     "delete-account-description": "Permanently delete your profile and personal data from Nakafa.",
     "delete-account-footer": "This action cannot be undone.",
@@ -2556,5 +2558,25 @@
       "description": "Read Surah {name} ({transliteration}) with verse-by-verse translation. {numberOfVerses} verses from the Holy Quran.",
       "keywords": "Surah {name}, Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}"
     }
+  },
+  "Connectors": {
+    "drive": "Google Drive",
+    "drive-description": "Files you pick in Google Drive, for your notes and imports.",
+    "calendar": "Google Calendar",
+    "calendar-description": "Your upcoming events, so Nina can answer what is coming this week.",
+    "classroom": "Google Classroom",
+    "classroom-description": "Your Classroom classes, their students and their tasks, to bring into the school.",
+    "connect": "Connect",
+    "reconnect": "Connect again",
+    "reconnect-hint": "Google stopped accepting this connection.",
+    "connected": "Connected.",
+    "not-connected": "Not connected.",
+    "disconnect": "Disconnect",
+    "disconnect-title": "Disconnect {name}",
+    "disconnect-description": "Nakafa stops reading it at once. Remove Nakafa in your Google account to end its access there too.",
+    "none": "No connector yet",
+    "none-description": "Connectors open here once Google has reviewed them.",
+    "refused": "Not connected",
+    "refused-description": "Google did not allow every access this connector needs. Connect again and keep every box checked."
   }
 }

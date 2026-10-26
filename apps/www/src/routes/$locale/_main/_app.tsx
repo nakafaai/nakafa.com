@@ -14,6 +14,7 @@ import { readRouteMessages } from "@/lib/i18n/messages.functions";
  */
 const APP_NAMESPACES = [
   "Comments",
+  "Connectors",
   "Editor",
   "Memory",
   "Posts",
