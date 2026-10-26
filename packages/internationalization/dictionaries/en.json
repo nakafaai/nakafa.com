@@ -65,6 +65,8 @@
     "all-exams": "All exams"
   },
   "SchoolEntry": {
+    "username-placeholder": "ayu.lestari",
+    "password-placeholder": "Your password",
     "card-code-label": "Card code",
     "card-code-placeholder": "First sign-in or a new card",
     "card-expired": "This card has expired. Ask your teacher or admin for a new card.",
@@ -88,6 +90,7 @@
     "outsider-check-again": "Check again"
   },
   "Exams": {
+    "minutes-placeholder": "10",
     "token": "Token",
     "change-token": "Change token",
     "close-sitting": "Close sitting",
@@ -393,6 +396,12 @@
     "cell-hint": "Each statement takes one column, and the key saves once every statement has one."
   },
   "SchoolSettings": {
+    "student-add-name-placeholder": "Ayu Lestari",
+    "invite-name-placeholder": "Budi Santoso",
+    "invite-email-placeholder": "budi@example.com",
+    "unit-add-name-placeholder": "SMA Harapan Bangsa",
+    "address-placeholder": "harapan-bangsa",
+    "name-placeholder": "Harapan Bangsa",
     "school": "School",
     "people": "People",
     "integrations": "Integrations",
