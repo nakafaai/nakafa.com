@@ -12,6 +12,7 @@ import rsc from "@vitejs/plugin-rsc";
 import { Result, Schema } from "effect";
 import { defineConfig, type Plugin, type PluginOption } from "vite";
 import {
+  deferStaticPageScripts,
   notFoundPages,
   verifyPrerenderedPages,
   writeNotFoundPages,
@@ -369,6 +370,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       serveRobotsFile,
       writeStaticArtifacts,
       writeStaticAnswers(prerenderedPages),
+      deferStaticPageScripts(prerenderedPages),
       writeNotFoundPages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),
       // `vite dev` runs the Worker as Node runs a development server. `vite build`
