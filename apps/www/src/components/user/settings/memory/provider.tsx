@@ -23,7 +23,7 @@ const StoreContext = createContext<MemoryStoreApi | null>(null);
  * The time the server read never changes after hydration, and neither does
  * the store this provider creates once for what the learner is doing, such as
  * the search and the open editor, so the page never reads one learner's state
- * for another. The memories themselves come from `MemoryReader`.
+ * for another. It reads the memories once for the page.
  */
 export function MemoryProvider({
   children,
@@ -37,43 +37,23 @@ export function MemoryProvider({
   paused: boolean;
 }) {
   const [store] = useState(createMemoryStore);
+  // The learner's own choice stands in for what the page read, until the state
+  // is read: the reading uses the state once Convex answers with it.
+  const choice = useStore(store, (state) => state.paused);
+  const reading = useMemoryReading(first, choice ?? paused, now);
 
+  // The memories change as Convex answers, which is where ADR 0017 puts the
+  // result of a Confect hook. A second hook would load and subscribe to its own
+  // pages, so one reading serves every component. The change is safe after
+  // hydration because no Suspense boundary below can still be streaming: the
+  // editor's mounts in the browser when the learner opens it.
   return (
     <StoreContext value={store}>
       <NowContext value={now}>
-        <MemoryReader first={first} now={now} paused={paused}>
-          {children}
-        </MemoryReader>
+        <ReadingContext value={reading}>{children}</ReadingContext>
       </NowContext>
     </StoreContext>
   );
-}
-
-/**
- * Reads the memories once for the page and shares them in a context that
- * changes as Convex answers, which is where ADR 0017 puts the result of a
- * Confect hook. A second hook would load and subscribe to its own pages, so one
- * reader serves every component. The change is safe after hydration because no
- * Suspense boundary below this reader can still be streaming: the editor's
- * mounts in the browser when the learner opens it.
- */
-function MemoryReader({
-  children,
-  first,
-  now,
-  paused,
-}: {
-  children: ReactNode;
-  first: MemoryPage;
-  now: number;
-  paused: boolean;
-}) {
-  // The learner's own choice stands in for what the page read, until the state
-  // is read: the reading uses the state once Convex answers with it.
-  const choice = useMemoryPage((state) => state.paused);
-  const reading = useMemoryReading(first, choice ?? paused, now);
-
-  return <ReadingContext value={reading}>{children}</ReadingContext>;
 }
 
 /**

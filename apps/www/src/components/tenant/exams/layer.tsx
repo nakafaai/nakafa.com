@@ -37,7 +37,7 @@ import {
 } from "@/components/tenant/exams/optimistic";
 import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
-import { useExam } from "@/components/tenant/exams/provider";
+import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
 import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
@@ -248,8 +248,11 @@ export function TeacherLayer({
 }: TeacherLayerProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  // A text opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone, so the
+  // words on screen stay.
   const frozen = isLocked(exam);
-  const editable = live && !frozen;
+  const locked = useExamLocked();
+  const editable = live && !locked;
   const options = Option.match(choiceOf(shown.answers), {
     onNone: (): readonly KeyOption[] => [],
     onSome: (choice) =>

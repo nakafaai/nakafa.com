@@ -10,6 +10,8 @@ import { createTranslator } from "use-intl/core";
 import { Closing } from "@/components/marketing/about/closing";
 import { Community } from "@/components/marketing/about/community";
 import { Curricula } from "@/components/marketing/about/curricula";
+import { CurriculumList } from "@/components/marketing/about/curricula/list";
+import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { Faq } from "@/components/marketing/about/faq/landing";
 import { Hero } from "@/components/marketing/about/hero";
 import { Lesson } from "@/components/marketing/about/lesson";
@@ -170,12 +172,16 @@ function HomePage() {
         <NinaSection />
         <Memory />
         <Privacy />
-        <Curricula curricula={curricula} />
+        <Curricula>
+          <CurriculumList curricula={curricula} />
+        </Curricula>
         <Letter />
         <Medals />
         <Pricing />
         <Schools herd={CLASS_HERD} />
-        <Faq faqs={faqs} />
+        <Faq>
+          <FaqAccordion faqs={faqs} openFirst />
+        </Faq>
         <Community />
         <Closing />
         <HomeToys />

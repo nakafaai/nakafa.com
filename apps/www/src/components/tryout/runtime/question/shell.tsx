@@ -24,14 +24,16 @@ export function TryoutActiveQuestionShell({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
+  const ids = getTryoutQuestionIds(questionOrder);
+
   return (
     <Collapsible disabled>
-      <TryoutQuestionArticle questionOrder={questionOrder}>
+      <article aria-labelledby={ids.title} id={ids.article}>
         <TryoutQuestionHeader questionOrder={questionOrder}>
           <TryoutExplanationTrigger />
         </TryoutQuestionHeader>
         {children}
-      </TryoutQuestionArticle>
+      </article>
     </Collapsible>
   );
 }
@@ -43,10 +45,11 @@ export function TryoutReviewQuestionShell({
   questionOrder,
 }: TryoutQuestionShellProps & { readonly action?: ReactNode }) {
   const tTryouts = useTranslations("Tryouts");
+  const ids = getTryoutQuestionIds(questionOrder);
 
   return (
     <Collapsible>
-      <TryoutQuestionArticle questionOrder={questionOrder}>
+      <article aria-labelledby={ids.title} id={ids.article}>
         <TryoutQuestionHeader questionOrder={questionOrder}>
           <ButtonGroup
             aria-label={tTryouts("number-count", { count: questionOrder })}
@@ -57,7 +60,7 @@ export function TryoutReviewQuestionShell({
           </ButtonGroup>
         </TryoutQuestionHeader>
         {children}
-      </TryoutQuestionArticle>
+      </article>
     </Collapsible>
   );
 }
@@ -67,14 +70,16 @@ export function TryoutLockedQuestionShell({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
+  const ids = getTryoutQuestionIds(questionOrder);
+
   return (
     <Collapsible defaultOpen disabled>
-      <TryoutQuestionArticle questionOrder={questionOrder}>
+      <article aria-labelledby={ids.title} id={ids.article}>
         <TryoutQuestionHeader questionOrder={questionOrder}>
           <TryoutExplanationTrigger />
         </TryoutQuestionHeader>
         {children}
-      </TryoutQuestionArticle>
+      </article>
     </Collapsible>
   );
 }
@@ -97,20 +102,6 @@ export function TryoutReviewQuestionExplanation({
         {children}
       </section>
     </CollapsiblePanel>
-  );
-}
-
-/** Owns the stable article identity shared by both explicit variants. */
-function TryoutQuestionArticle({
-  children,
-  questionOrder,
-}: TryoutQuestionShellProps) {
-  const ids = getTryoutQuestionIds(questionOrder);
-
-  return (
-    <article aria-labelledby={ids.title} id={ids.article}>
-      {children}
-    </article>
   );
 }
 

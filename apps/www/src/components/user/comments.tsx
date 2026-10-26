@@ -56,25 +56,36 @@ export function UserComments({
 }) {
   return (
     <ProfileAuthorContext value={author}>
-      <ConvexIsland
-        fallback={<VisitorComments first={first} username={username} />}
-      >
-        <LiveComments first={first} userId={userId} />
-      </ConvexIsland>
+      <ProfileCommentsContext value={{ first, userId, username }}>
+        <ConvexIsland fallback={<VisitorComments />}>
+          <LiveComments />
+        </ConvexIsland>
+      </ProfileCommentsContext>
     </ProfileAuthorContext>
   );
 }
 
-/** A visitor's comments: the loader's first page, then the next pages the server reads by their cursor. */
-function VisitorComments({
-  first,
-  username,
-}: {
+/** The profile whose comments the list shows, and the loader's first page of them, which both variants read. */
+const ProfileCommentsContext = createContext<{
   first: Option.Option<
     Ref.Returns<typeof comments.queries.getCommentsByUserId>
   >;
+  userId: Id<"users">;
   username: string;
-}) {
+} | null>(null);
+
+/** Reads the profile comments around a variant of the list. */
+function useProfileComments() {
+  const value = use(ProfileCommentsContext);
+  if (value === null) {
+    throw new Error("useProfileComments must be used within UserComments");
+  }
+  return value;
+}
+
+/** A visitor's comments: the loader's first page, then the next pages the server reads by their cursor. */
+function VisitorComments() {
+  const { first, username } = useProfileComments();
   const locale = useLocale();
   const { list, loadMore } = useVisitorList({
     first: Option.getOrUndefined(first),
@@ -91,15 +102,8 @@ function VisitorComments({
 }
 
 /** A learner's comments: the live list, which starts from the loader's first page. */
-function LiveComments({
-  first,
-  userId,
-}: {
-  first: Option.Option<
-    Ref.Returns<typeof comments.queries.getCommentsByUserId>
-  >;
-  userId: Id<"users">;
-}) {
+function LiveComments() {
+  const { first, userId } = useProfileComments();
   const pagination = usePaginatedPreloaded(
     comments.queries.getCommentsByUserId,
     { userId },

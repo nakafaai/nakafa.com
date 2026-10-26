@@ -4,7 +4,7 @@ import { DeferredLearnerText } from "@repo/design-system/components/markdown/def
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
-import { lazy, Suspense } from "react";
+import { createContext, lazy, Suspense, use } from "react";
 import { useLocale } from "use-intl";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";
@@ -14,6 +14,7 @@ import {
   FeedAge,
   FeedAvatar,
   FeedBody,
+  FeedCount,
   FeedEnd,
   FeedHeader,
   FeedName,
@@ -74,7 +75,9 @@ export function PostRow({ post }: { post: ListPost }) {
         </FeedHeader>
         <DeferredLearnerText>{post.text}</DeferredLearnerText>
         <FeedActions inert={pending}>
-          <PostLikeButton post={post} />
+          <RowPostContext value={post}>
+            <PostLikeButton />
+          </RowPostContext>
         </FeedActions>
       </FeedBody>
     </FeedRow>
@@ -85,28 +88,43 @@ export function PostRow({ post }: { post: ListPost }) {
  * The like toggle of a post. A learner's toggle changes the post through the
  * page's client, and a visitor's toggle sends the visitor to sign in.
  */
-function PostLikeButton({ post }: { post: ListPost }) {
+function PostLikeButton() {
   return (
-    <ConvexIsland fallback={<VisitorPostLikeButton post={post} />}>
-      <LivePostLikeButton post={post} />
+    <ConvexIsland fallback={<VisitorPostLikeButton />}>
+      <LivePostLikeButton />
     </ConvexIsland>
   );
 }
 
+/** The post of the row around a like toggle, which both of its variants read. */
+const RowPostContext = createContext<ListPost | null>(null);
+
+/** Reads the post of the row around a like toggle. */
+function useRowPost() {
+  const post = use(RowPostContext);
+  if (post === null) {
+    throw new Error("useRowPost must be used within RowPostContext");
+  }
+  return post;
+}
+
 /** A visitor's like toggle: it asks for sign-in, and changes nothing. */
-function VisitorPostLikeButton({ post }: { post: ListPost }) {
+function VisitorPostLikeButton() {
+  const post = useRowPost();
   const whenSignedIn = useWhenSignedIn();
   return (
     <LikeButton
-      likeCount={post.likeCount}
       liked={post.liked}
       onToggle={() => whenSignedIn(() => undefined)}
-    />
+    >
+      <FeedCount value={post.likeCount} />
+    </LikeButton>
   );
 }
 
 /** A learner's like toggle, which changes the post at once and tells the learner when the server refuses. */
-function LivePostLikeButton({ post }: { post: ListPost }) {
+function LivePostLikeButton() {
+  const post = useRowPost();
   const like = useMutation(posts.mutations.like).withOptimisticUpdate(
     likeInLists
   );
@@ -141,10 +159,8 @@ function LivePostLikeButton({ post }: { post: ListPost }) {
   }
 
   return (
-    <LikeButton
-      likeCount={post.likeCount}
-      liked={post.liked}
-      onToggle={toggle}
-    />
+    <LikeButton liked={post.liked} onToggle={toggle}>
+      <FeedCount value={post.likeCount} />
+    </LikeButton>
   );
 }

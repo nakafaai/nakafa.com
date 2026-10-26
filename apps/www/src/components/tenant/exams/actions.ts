@@ -5,7 +5,7 @@ import {
   NEW_QUESTION_TEMPLATE,
   newChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
-import { Effect, Function as Fn } from "effect";
+import { Effect, Function as Fn, Option } from "effect";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   addQuestionUpdate,
@@ -25,6 +25,7 @@ import {
   useExamSelection,
   useExamSelectionStore,
 } from "@/components/tenant/exams/provider";
+import { afterRemoval } from "@/components/tenant/exams/selection";
 
 /** Runs an action of a page from a browser event, without any handler of its own. */
 const act = <A, E>(action: Effect.Effect<A, E>) =>
@@ -141,9 +142,33 @@ export function useQuestionActions() {
   const moveQuestion = (questionId: QuestionId, index: number) =>
     act(sentAction(() => move({ examId: exam.id, index, questionId, slug })));
 
-  /** Removes a question, once the teacher confirmed it. */
-  const removeQuestion = (questionId: QuestionId) =>
-    act(sentAction(() => remove({ examId: exam.id, questionId, slug })));
+  /**
+   * Removes a question, once the teacher confirmed it. A teacher on that question moves to its neighbour at
+   * once (`afterRemoval`), and back to it when the server refuses the removal, unless the teacher chose another.
+   */
+  const removeQuestion = (questionId: QuestionId) => {
+    const next = afterRemoval(
+      exam.questions,
+      selection.getState().selected,
+      questionId
+    );
+    if (Option.isSome(next)) {
+      select(next.value);
+    }
+    act(
+      sentAction(() => remove({ examId: exam.id, questionId, slug })).pipe(
+        Effect.tapError(() =>
+          Effect.sync(() => {
+            if (
+              Option.exists(next, (id) => id === selection.getState().selected)
+            ) {
+              select(questionId);
+            }
+          })
+        )
+      )
+    );
+  };
 
   return { addQuestion, copyQuestion, moveQuestion, removeQuestion };
 }

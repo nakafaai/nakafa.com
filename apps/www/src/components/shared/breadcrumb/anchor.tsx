@@ -9,16 +9,11 @@ import { type LinkTarget, TargetLink } from "@/lib/routing/link";
  */
 export function BreadcrumbAnchor({
   children,
-  className,
-  target,
+  ...link
 }: {
   children?: ReactNode;
   className?: string;
   target: LinkTarget;
 }) {
-  return (
-    <TargetLink className={className} target={target}>
-      {children}
-    </TargetLink>
-  );
+  return <TargetLink {...link}>{children}</TargetLink>;
 }
