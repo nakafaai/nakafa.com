@@ -2016,6 +2016,9 @@
     "audit-export-error": {
       "title": "Export fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
+    "school-own-role-ended": {
+      "title": "Deine Rolle ist beendet."
     }
   },
   "Ai": {

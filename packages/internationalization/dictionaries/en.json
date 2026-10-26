@@ -2016,6 +2016,9 @@
     "audit-export-error": {
       "title": "We could not export the trail.",
       "description": "Check your connection, then try again."
+    },
+    "school-own-role-ended": {
+      "title": "Your role has ended."
     }
   },
   "Ai": {

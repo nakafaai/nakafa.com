@@ -2016,6 +2016,9 @@
     "audit-export-error": {
       "title": "Jejak audit gagal diekspor.",
       "description": "Periksa koneksi, lalu coba lagi."
+    },
+    "school-own-role-ended": {
+      "title": "Peranmu sudah berakhir."
     }
   },
   "Ai": {
