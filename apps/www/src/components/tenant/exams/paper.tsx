@@ -45,7 +45,7 @@ import {
   PaperSketch,
   usePageDocument,
 } from "@/components/tenant/exams/preview";
-import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
+import { useExam, useExamLocked, useExamSelection } from "@/components/tenant/exams/provider";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
 import { usePageWindow } from "@/components/tenant/exams/window";
@@ -192,7 +192,7 @@ type QuestionEditing = ReturnType<typeof useQuestionEditing>;
 export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
-  const frozen = isLocked(exam);
+  const frozen = useExamLocked();
   // Each page reads a boolean for its own choice, so a change of the choice renders only the two pages it moves between.
   const awaiting = useExamSelection((state) =>
     Arr.contains(state.pending, question.id)
@@ -347,7 +347,10 @@ function LivePaper({
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  // The prompt's editor opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone,
+  // so the words the teacher typed stay on screen.
   const frozen = isLocked(exam);
+  const locked = useExamLocked();
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
   // The label the server holds for an option. Its editor starts from that label, and a label the server does not
@@ -370,7 +373,7 @@ function LivePaper({
     });
 
   const canAddOption =
-    choice !== null && choice.options.length < CHOICE_OPTIONS_MAX && !frozen;
+    choice !== null && choice.options.length < CHOICE_OPTIONS_MAX && !locked;
 
   return (
     <QuestionPaper selected={chosen}>
@@ -387,7 +390,7 @@ function LivePaper({
               key={option.id}
               label={savedLabel(option)}
               letter={optionLetter(index)}
-              locked={frozen}
+              locked={locked}
               number={number}
               onRemove={
                 choice.options.length > CHOICE_OPTIONS_MIN

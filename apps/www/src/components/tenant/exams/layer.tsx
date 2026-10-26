@@ -21,13 +21,13 @@ import {
   markedOption,
   optionLetter,
 } from "@/components/tenant/exams/answer";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import {
   pointsUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
 import { PreviewProse } from "@/components/tenant/exams/preview";
-import { useExam } from "@/components/tenant/exams/provider";
+import { isLocked } from "@/components/tenant/exams/freeze";
+import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
 const ExamText = lazy(() =>
@@ -204,8 +204,11 @@ export function TeacherLayer({
 }: TeacherLayerProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
+  // A text opens anew when its exam locks or unlocks, and takes a lock in place when the exam is gone, so the
+  // words on screen stay.
   const frozen = isLocked(exam);
-  const editable = live && !frozen;
+  const locked = useExamLocked();
+  const editable = live && !locked;
   const options = Option.match(choiceOf(shown.answers), {
     onNone: (): readonly KeyOption[] => [],
     onSome: (choice) =>

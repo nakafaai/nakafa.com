@@ -10,13 +10,12 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option } from "effect";
 import { useCallback } from "react";
 import type { PendingPicture } from "@/components/tenant/exams/editing";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import { storeExamImage } from "@/components/tenant/exams/image";
 import {
   queuePictureFile,
   refuseFile,
 } from "@/components/tenant/exams/picture";
-import { useExam, useExamEditing } from "@/components/tenant/exams/provider";
+import { useExam, useExamEditing, useExamLocked } from "@/components/tenant/exams/provider";
 import { reportClientException } from "@/lib/analytics/client";
 import { useDocumentLabels } from "@/lib/editor/labels";
 
@@ -42,7 +41,7 @@ const refuseOtherPicture = () => Effect.sync(() => refuseFile("type"));
 export function ExamToolbar() {
   const labels = useDocumentLabels();
   const { exam, slug } = useExam();
-  const frozen = isLocked(exam);
+  const frozen = useExamLocked();
   const active = useExamEditing((state) => state.active);
   const pictures = useExamEditing((state) => state.pictures);
   const queuePicture = useExamEditing((state) => state.queuePicture);

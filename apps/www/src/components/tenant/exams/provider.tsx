@@ -8,6 +8,7 @@ import {
   type ExamEditing,
 } from "@/components/tenant/exams/editing";
 import { createExamLive, type ExamLive } from "@/components/tenant/exams/live";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import type { ExamView } from "@/components/tenant/exams/optimistic";
 import {
   activeQuestion,
@@ -16,8 +17,15 @@ import {
 } from "@/components/tenant/exams/selection";
 import { createExamZoom, type ExamZoom } from "@/components/tenant/exams/zoom";
 
-/** The exam the editor shows and the school it belongs to. */
-const ExamValue = Schema.Struct({ exam: ExamViewSchema, slug: TenantSlug });
+/**
+ * The exam the editor shows and the school it belongs to. An exam deleted, or closed to the teacher, while its
+ * editor is open is `gone`: the editor keeps the last exam it read on screen, locked, and says so.
+ */
+const ExamValue = Schema.Struct({
+  exam: ExamViewSchema,
+  gone: Schema.Boolean,
+  slug: TenantSlug,
+});
 
 type SelectionStore = ReturnType<typeof createExamSelection>;
 type LiveStore = ReturnType<typeof createExamLive>;
@@ -39,11 +47,14 @@ const ZoomContext = createContext<ZoomStore | null>(null);
 export function ExamProvider({
   children,
   exam,
+  gone,
   prompt,
   slug,
 }: {
   children: ReactNode;
   exam: ExamView;
+  /** Whether the exam was deleted, or closed to the teacher, after the editor read it. */
+  gone: boolean;
   /** The first question's prompt as the loader read it, which the live prompts start from. */
   prompt: Parameters<typeof createExamLive>[0];
   slug: TenantSlug;
@@ -54,7 +65,7 @@ export function ExamProvider({
   const [zoom] = useState(createExamZoom);
 
   return (
-    <ExamContext value={{ exam, slug }}>
+    <ExamContext value={{ exam, gone, slug }}>
       <SelectionContext value={selection}>
         <LiveContext value={live}>
           <EditingContext value={editing}>
@@ -75,6 +86,15 @@ export function useExam() {
   }
 
   return value;
+}
+
+/**
+ * Whether the editor takes no change: its exam is locked (`isLocked`), or it is gone. A text whose editor is open
+ * takes the lock in place, so the words on screen stay there.
+ */
+export function useExamLocked() {
+  const { exam, gone } = useExam();
+  return gone || isLocked(exam);
 }
 
 /** Reads one selected slice of the teacher's selection. */

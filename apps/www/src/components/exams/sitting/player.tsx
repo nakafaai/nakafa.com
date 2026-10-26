@@ -19,7 +19,10 @@ import {
 } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
 import { serverTime } from "@/components/exams/sitting/clock";
-import { sittingFailureMessage } from "@/components/exams/sitting/entry";
+import {
+  isRetiredDevice,
+  sittingFailureMessage,
+} from "@/components/exams/sitting/entry";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
@@ -108,6 +111,9 @@ export function StudentPlayer({
     );
   }
 
+  // A retired device holds the attempt no more, so its bar keeps the time and offers no Finish.
+  const retired = QueryResult.isFailure(paper) && isRetiredDevice(paper.error);
+
   return (
     <PlayerProvider keys={[]} mode={mode}>
       <SittingBar examTitle={sitting.examTitle}>
@@ -117,13 +123,15 @@ export function StudentPlayer({
               clockOffset={clockOffset}
               deadline={attempt.deadline}
             />
-            <StudentFinish
-              attempt={attempt}
-              deviceId={deviceId}
-              locked={!takesAnswers(attempt.state)}
-              sittingId={sittingId}
-              slug={slug}
-            />
+            {retired ? null : (
+              <StudentFinish
+                attempt={attempt}
+                deviceId={deviceId}
+                locked={!takesAnswers(attempt.state)}
+                sittingId={sittingId}
+                slug={slug}
+              />
+            )}
           </>
         ) : null}
       </SittingBar>

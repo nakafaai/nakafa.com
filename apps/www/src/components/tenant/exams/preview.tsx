@@ -19,10 +19,9 @@ import {
   type OptionLabel,
   optionLetter,
 } from "@/components/tenant/exams/answer";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
-import { useExam, useExamLive } from "@/components/tenant/exams/provider";
+import { useExam, useExamLive, useExamLocked } from "@/components/tenant/exams/provider";
 import {
   ControlRoom,
   OptionAddRoom,
@@ -30,6 +29,7 @@ import {
   PaperOptions,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
+import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
 import { PREVIEW_CLIENT } from "@/lib/tenant/exams";
@@ -76,19 +76,25 @@ export function usePageDocument({
       ? "skip"
       : { clientId: PREVIEW_CLIENT, documentId, slug }
   );
+  // A document removed with its exam fails its read, and the drawing keeps the text the server last answered.
+  const kept = useLastValue(reply);
+  // A skipped or loading read draws no server document, so the drawing takes the editor's.
+  const stored = QueryResult.isLoading(reply)
+    ? undefined
+    : Option.getOrUndefined(kept);
   // A document this build cannot read leaves its drawing without a prompt; the editor reports the
   // failure when the question opens. The stored steps are folded once per answer of the server.
   const served = useMemo(
     () =>
-      QueryResult.isSuccess(reply)
-        ? Effect.runSync(
-            foldedDocument(assessmentSchema, reply.value).pipe(
+      stored === undefined
+        ? Option.none()
+        : Effect.runSync(
+            foldedDocument(assessmentSchema, stored).pipe(
               Effect.asSome,
               Effect.catchTag("SyncFailed", () => Effect.succeedNone)
             )
-          )
-        : Option.none(),
-    [reply]
+          ),
+    [stored]
   );
   return open
     ? Option.orElse(live, () => served)
@@ -219,11 +225,11 @@ export function PaperSketch({
   selected?: boolean;
   withControls?: boolean;
 }) {
-  const { exam } = useExam();
+  const locked = useExamLocked();
   const choice = choiceOf(question.answers);
   const addsOption =
     withControls &&
-    !isLocked(exam) &&
+    !locked &&
     Option.exists(
       choice,
       (current) => current.options.length < CHOICE_OPTIONS_MAX

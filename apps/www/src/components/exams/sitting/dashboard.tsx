@@ -2,6 +2,7 @@ import type { GenericId, Ref } from "@confect/core";
 import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -13,12 +14,15 @@ import {
 } from "@/components/exams/sitting/context";
 import { SittingHeader } from "@/components/exams/sitting/header";
 import { SittingPanel } from "@/components/exams/sitting/panel";
+import { SittingRetry } from "@/components/exams/sitting/retry";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingToolbar } from "@/components/exams/sitting/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { Link } from "@/lib/routing/link";
 
 /**
  * The proctor's dashboard of one sitting: the page's header with the room and the token, the
@@ -48,13 +52,24 @@ export function SittingDashboard({
   );
 
   if (QueryResult.isFailure(state)) {
-    return <SittingRefusal message={t("sitting-unavailable")} />;
+    if (isLostAccess(state.error)) {
+      throw state.error;
+    }
+    // A room cancelled, or an exam deleted, elsewhere is refused like a foreign one, and leads back to the exam's
+    // rooms. Any other failure is one a reload may fix.
+    return isDenied(state.error) ? (
+      <SittingRefusal examId={examId} message={t("sitting-unavailable")} />
+    ) : (
+      <SittingDashboardRetry error={state.error} />
+    );
   }
   if (!QueryResult.isSuccess(state)) {
     return null;
   }
   if (state.value.sitting.examId !== examId) {
-    return <SittingRefusal message={t("sitting-not-in-exam")} />;
+    return (
+      <SittingRefusal examId={examId} message={t("sitting-not-in-exam")} />
+    );
   }
 
   const data: SittingData = {
@@ -80,10 +95,16 @@ export function SittingDashboard({
 }
 
 /**
- * The page when the dashboard cannot show the sitting: the header with the way back to the exams
- * for a viewer who may open them, and why.
+ * The page when the proctor may not view the sitting: the school's header, why, and the way to the exam's rooms,
+ * which a viewer who may open the exams has.
  */
-function SittingRefusal({ message }: { readonly message: string }) {
+function SittingRefusal({
+  examId,
+  message,
+}: {
+  readonly examId: GenericId.GenericId<"exams">;
+  readonly message: string;
+}) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const examsItems = tenant.canOpenExams
@@ -93,7 +114,30 @@ function SittingRefusal({ message }: { readonly message: string }) {
   return (
     <>
       <SchoolHeader items={examsItems} />
-      <p className="p-4 text-muted-foreground text-sm md:p-6">{message}</p>
+      <div className="grid justify-items-start gap-4 p-4 md:p-6">
+        <p className="text-muted-foreground text-sm">{message}</p>
+        {tenant.canOpenExams ? (
+          <Link
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            params={{ exam: examId, slug: tenant.slug }}
+            to="/school/$slug/exams/$exam"
+          >
+            {t("rooms-title")}
+          </Link>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+/** The page when the dashboard could not be read for a reason a reload may fix: the header, why, and the retry. */
+function SittingDashboardRetry({ error }: { readonly error: unknown }) {
+  return (
+    <>
+      <SchoolHeader items={[]} />
+      <div className="grid justify-items-start gap-4 p-4 text-sm md:p-6">
+        <SittingRetry error={error} />
+      </div>
     </>
   );
 }
