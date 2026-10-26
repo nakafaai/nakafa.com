@@ -24,7 +24,7 @@ import { imageTypeOf } from "@repo/backend/confect/exams/image";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
-import { Clock, Effect, Layer, Option } from "effect";
+import { Clock, Duration, Effect, Layer, Option } from "effect";
 
 /** The ID of an uploaded file in Convex storage. */
 const storageIdSchema = Id("_storage");
@@ -197,12 +197,52 @@ const urls = FunctionImpl.make(
   })
 );
 
+/**
+ * Deletes the images of a deleted exam a page at a time: each file, then its row. A call that
+ * fills a page starts the next one, so no call deletes more than `MAX_ASSET_READS` images.
+ */
+const sweep = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "sweep",
+  Effect.fn("exams.assets.sweep")(function* ({ examId }) {
+    const assets = yield* (yield* DatabaseReader)
+      .table("examAssets")
+      .index("by_examId", (query) => query.eq("examId", examId))
+      .take(MAX_ASSET_READS)
+      .pipe(Effect.orDie);
+    const storage = yield* StorageWriter;
+    const writer = yield* DatabaseWriter;
+    yield* Effect.forEach(
+      assets,
+      (asset) =>
+        storage
+          .delete(asset.storageId)
+          .pipe(
+            Effect.andThen(writer.table("examAssets").delete(asset._id)),
+            Effect.orDie
+          ),
+      { discard: true }
+    );
+    if (assets.length < MAX_ASSET_READS) {
+      return { done: true };
+    }
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      refs.internal.exams.assets.sweep,
+      { examId }
+    );
+    return { done: false };
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(uploadUrl),
   Layer.provide(canAdd),
   Layer.provide(register),
   Layer.provide(commit),
   Layer.provide(discard),
+  Layer.provide(sweep),
   Layer.provide(stored),
   Layer.provide(urls),
   Layer.provide(session),

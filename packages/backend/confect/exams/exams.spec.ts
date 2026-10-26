@@ -9,6 +9,7 @@ import {
   ExamTitle,
   ExamView,
 } from "@repo/backend/confect/exams/exam";
+import { ExamFrozen } from "@repo/backend/confect/exams/errors";
 import { HomeView } from "@repo/backend/confect/exams/home/contract";
 import {
   ScheduleCohort,
@@ -29,8 +30,9 @@ import { Schema } from "effect";
 
 /**
  * The school exams. A Teacher, an Admin, or the Owner creates an exam in a scope
- * they may edit, lists and opens the exams they may view, and renames an exam they
- * may edit. Each exam starts with one question, so an exam is never empty.
+ * they may edit, lists and opens the exams they may view, and renames or deletes an
+ * exam they may edit; a scheduled exam is frozen and cannot be deleted. Each exam
+ * starts with one question, so an exam is never empty.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -80,6 +82,14 @@ export default GroupSpec.make()
       }),
       returns: () => ExamSummary,
       error: () => AccessDenied,
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "remove",
+      args: () => ({ examId: Id("exams"), slug: TenantSlug }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, ExamFrozen]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(
