@@ -12,6 +12,7 @@ export default {
 ["byQuestion"]: RegisteredConvexFunction.register({ ...definitions["byQuestion"], handler: forward(definitions["byQuestion"].handler) }),
 ["questionStats"]: RegisteredConvexFunction.register({ ...definitions["questionStats"], handler: forward(definitions["questionStats"].handler) }),
 ["release"]: RegisteredConvexFunction.register({ ...definitions["release"], handler: forward(definitions["release"].handler) }),
+["attempt"]: RegisteredConvexFunction.register({ ...definitions["attempt"], handler: forward(definitions["attempt"].handler) }),
 ["grade"]: RegisteredConvexFunction.register({ ...definitions["grade"], handler: forward(definitions["grade"].handler) }),
 ["mine"]: RegisteredConvexFunction.register({ ...definitions["mine"], handler: forward(definitions["mine"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../exams/results/results.spec")["default"]>;
