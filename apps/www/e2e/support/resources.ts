@@ -1,10 +1,11 @@
-import type { Browser, Page, Request } from "@playwright/test";
+import type { Browser, BrowserContext, Page, Request } from "@playwright/test";
 import {
   Array as Arr,
   Clock,
   Duration,
   Effect,
   MutableList,
+  Number as Num,
   Option,
   Schema,
 } from "effect";
@@ -43,6 +44,11 @@ const createResourceRequestClassifier = (applicationOrigin: string) =>
     }
   };
 
+/**
+ * The JavaScript one page loaded: its scripts' bytes as the page reads them
+ * (`decodedBodySize`), the same scripts gzip-compressed (`encodedBodySize`),
+ * how many there are, and their addresses.
+ */
 const JavascriptRunSchema = Schema.Struct({
   decodedBodySize: Schema.Finite,
   encodedBodySize: Schema.Finite,
@@ -51,6 +57,12 @@ const JavascriptRunSchema = Schema.Struct({
 });
 
 type JavascriptRun = typeof JavascriptRunSchema.Type;
+
+/** What the page itself reports of its scripts, before their compressed size is known. */
+type LoadedJavascript = Omit<JavascriptRun, "encodedBodySize">;
+
+/** How many scripts are compressed at once while their sizes are read. */
+const COMPRESSION_CONCURRENCY = 8;
 
 /** A route did not return one successful document response. */
 class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
@@ -133,10 +145,6 @@ const readJavascriptRun = Effect.fn("NakafaE2E.readJavascriptRun")(function* (
           (total, entry) => total + entry.decodedBodySize,
           0
         ),
-        encodedBodySize: entries.reduce(
-          (total, entry) => total + entry.encodedBodySize,
-          0
-        ),
         resourceCount: entries.length,
         urls: [...uniqueResources.keys()].sort(),
       };
@@ -158,7 +166,7 @@ const readStableJavascriptRun = Effect.fn("NakafaE2E.readStableJavascriptRun")(
     return requestTracker.pendingCount === 0 &&
       requestTracker.revision === snapshotRevision
       ? Option.some(javascriptRun)
-      : Option.none<JavascriptRun>();
+      : Option.none<LoadedJavascript>();
   }
 );
 
@@ -210,6 +218,40 @@ const readSettledJavascriptRun = Effect.fn(
     yield* Effect.sleep(Duration.millis(RESOURCE_POLL_MILLISECONDS));
   }
 });
+
+/**
+ * The size of one script gzip-compressed. Cloudflare compresses every script it
+ * sends, and the local preview sends each one as it is, so there the browser's
+ * own encoded size equals the decoded one. The body is read through the
+ * context's request client, which the page's request tracker does not see.
+ */
+const readGzipBytes = Effect.fn("NakafaE2E.readGzipBytes")(function* (
+  context: BrowserContext,
+  url: string
+) {
+  const response = yield* Effect.promise(() => context.request.get(url));
+  const body = yield* Effect.promise(() => response.body());
+  const compressed = yield* Effect.promise(() =>
+    new Response(
+      new Blob([new Uint8Array(body)])
+        .stream()
+        .pipeThrough(new CompressionStream("gzip"))
+    ).arrayBuffer()
+  );
+  return compressed.byteLength;
+});
+
+/** Adds the gzip-compressed size of the scripts that one page loaded. */
+const compressJavascriptRun = Effect.fn("NakafaE2E.compressJavascriptRun")(
+  function* (context: BrowserContext, loaded: LoadedJavascript) {
+    const sizes = yield* Effect.forEach(
+      loaded.urls,
+      (url) => readGzipBytes(context, url),
+      { concurrency: COMPRESSION_CONCURRENCY }
+    );
+    return { ...loaded, encodedBodySize: Num.sumAll(sizes) };
+  }
+);
 
 /**
  * Measures one route in three isolated, uncached Chromium contexts. A route
@@ -273,11 +315,12 @@ export const measureRouteJavascript = Effect.fn(
                   });
                 }
 
-                return yield* readSettledJavascriptRun(
+                const loaded = yield* readSettledJavascriptRun(
                   page,
                   href,
                   requestTracker
                 );
+                return yield* compressJavascriptRun(context, loaded);
               })
           );
         })

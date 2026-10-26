@@ -65,12 +65,18 @@ describe("dependency policy sources", () => {
     Effect.gen(function* () {
       const root = yield* makeRepository({
         "apps/web/package.json": "{}",
+        "bun.lock":
+          '{ "packages": { "hono": ["hono@4.13.13", "", {}, "sha512-b"] } }',
         "package.json": `{ "packageManager": "pnpm@11.26.0", "workspaces": { "packages": ["apps/*", "packages/*"] } }`,
         "packages/core/package.json": "{}",
       });
 
       const problems = yield* inspectDependencyPolicy(root);
       assert.include(problems, `packageManager must be ${PACKAGE_MANAGER}.`);
+      assert.include(
+        problems,
+        "bun.lock resolves the retired package hono; the Confect router with Effect HttpApi (ADR 0029) replaces it."
+      );
       assert.include(
         problems,
         "react has 0 declarations; expected at least 1."
@@ -109,6 +115,10 @@ describe("dependency policy sources", () => {
         {
           files: { "package.json": WORKSPACE_MANIFEST },
           message: "Unable to read {root}/apps.",
+        },
+        {
+          files: { ...layout, "package.json": WORKSPACE_MANIFEST },
+          message: "Unable to read {root}/bun.lock.",
         },
       ];
 
