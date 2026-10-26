@@ -54,10 +54,8 @@ const request = {
 function openedSession(overrides: Record<string, unknown> = {}) {
   return {
     expires_at: DateTime.makeUnsafe(FAR_FUTURE),
-    payment_id: null,
     payment_link_url: "https://dev.xen.to/session-1",
     payment_session_id: "ps-1",
-    payment_token_id: null,
     recurring_plan_id: "repl-1",
     reference_id: "reference-1",
     session_type: "SUBSCRIPTION" as const,
