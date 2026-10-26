@@ -1,3 +1,4 @@
+import { NETWORK_RETRY_SCHEDULE } from "@repo/backend/client/network";
 import type { ConvexReactClient } from "convex/react";
 import {
   Cache,
@@ -9,6 +10,7 @@ import {
   Option,
   Predicate,
   Schema,
+  Stream,
 } from "effect";
 import { createContext } from "react";
 import { createStore } from "zustand";
@@ -45,10 +47,14 @@ export type ConvexAuthStore = ReturnType<typeof createConvexAuthStore>;
 /** Carries one page's Convex authentication store, which never changes after mount. */
 export const ConvexAuthContext = createContext<ConvexAuthStore | null>(null);
 
-/** A Better Auth token request that produced no usable Convex credential. */
+/**
+ * A Better Auth token request that produced no usable Convex credential.
+ * `retryable` says whether asking again can answer otherwise: a request that
+ * failed on its way or a server failure can, a refused session cannot.
+ */
 export class ConvexTokenReadError extends Schema.TaggedError<ConvexTokenReadError>()(
   "ConvexTokenReadError",
-  { detail: Schema.String }
+  { detail: Schema.String, retryable: Schema.Boolean }
 ) {}
 
 /** The part of Convex's React client that authentication drives. */
@@ -66,6 +72,11 @@ type ConvexAuthTarget = typeof ConvexAuthTarget.Type;
 const loadingConvexAuth = ConvexAuth.make({
   isAuthenticated: false,
   isLoading: true,
+});
+
+const authenticatedConvexAuth = ConvexAuth.make({
+  isAuthenticated: true,
+  isLoading: false,
 });
 
 const signedOutConvexAuth = ConvexAuth.make({
@@ -132,8 +143,12 @@ export function releaseConvexAuth(client: ConvexAuthClient) {
 /**
  * Derives the Convex authentication a reader sees, the way
  * `ConvexProviderWithAuth` does while it renders: loading while the session is
- * pending or Convex has not answered for it, signed out without a session, and
- * Convex's answer once it has confirmed this session's credentials.
+ * pending or Convex has not confirmed it, signed out without a session, and
+ * authenticated once Convex has confirmed this session's credentials.
+ *
+ * A signed-in session whose credentials Convex refused stays loading, so no
+ * reader asks Convex as a visitor and shows the refusal of a page the learner
+ * may open. `authenticateConvex` asks again when the reader comes back.
  *
  * Because the session decides it during render, every reader switches its
  * authenticated queries off in the same commit that ends a session.
@@ -151,7 +166,7 @@ export function readConvexAuth(
         Option.match({
           onNone: () => loadingConvexAuth,
           onSome: ({ isAuthenticated }) =>
-            ConvexAuth.make({ isAuthenticated, isLoading: false }),
+            isAuthenticated ? authenticatedConvexAuth : loadingConvexAuth,
         })
       ),
     SignedOut: () => signedOutConvexAuth,
@@ -162,9 +177,10 @@ export function readConvexAuth(
  * Builds Convex's token fetcher for one session.
  *
  * Concurrent requests join the one read in flight, and its token is kept until
- * Convex asks for a fresh one. A failed read is kept for no time, so every
- * request waiting on it sees the failure and the next request reads again.
- * Convex receives `null` when no token can be read, as its contract requires.
+ * Convex asks for a fresh one. A read that fails retryably is tried again on the
+ * shared network schedule. A failed read is kept for no time, so every request
+ * waiting on it sees the failure and the next request reads again. Convex
+ * receives `null` when no token can be read, as its contract requires.
  * https://docs.convex.dev/api/classes/react.ConvexReactClient#setauth
  */
 const makeTokenFetcher = Effect.fnUntraced(function* (
@@ -172,7 +188,13 @@ const makeTokenFetcher = Effect.fnUntraced(function* (
   sessionId: string
 ) {
   const services = yield* Effect.context<never>();
-  const tokens = yield* Cache.makeWith(() => readToken, {
+  const read = readToken.pipe(
+    Effect.retry({
+      schedule: NETWORK_RETRY_SCHEDULE,
+      while: (error) => error.retryable,
+    })
+  );
+  const tokens = yield* Cache.makeWith(() => read, {
     capacity: 1,
     timeToLive: Exit.match({
       onFailure: () => Duration.zero,
@@ -192,8 +214,29 @@ const makeTokenFetcher = Effect.fnUntraced(function* (
 });
 
 /**
+ * Each time the reader comes back to the page: the tab shows again, or the
+ * network returns. Better Auth reads the session again at the same moments.
+ */
+export const pageReturns = Stream.suspend(() =>
+  Stream.merge(
+    Stream.fromEventListener(document, "visibilitychange").pipe(
+      Stream.filter(() => document.visibilityState === "visible")
+    ),
+    Stream.fromEventListener(window, "online")
+  )
+);
+
+/** Whether Convex refused the credentials of the session it last answered for. */
+function isRefused(confirmation: Option.Option<ConvexAuthConfirmation>) {
+  return Option.exists(confirmation, (answer) => !answer.isAuthenticated);
+}
+
+/**
  * Hands Convex the credentials of one signed-in session for the life of the
  * surrounding scope, and records Convex's answers in the provider's store.
+ *
+ * Convex asks for a token once more after a failed one and then gives up, so a
+ * refused session is handed to Convex again each time `returns` emits.
  *
  * Closing the scope stops reporting and forgets the answer, so a session that
  * returns later waits for Convex again. It leaves Convex's credentials in
@@ -204,34 +247,38 @@ export const authenticateConvex = Effect.fn("NakafaAuth.authenticateConvex")(
   function* ({
     client,
     readToken,
+    returns,
     sessionId,
     store,
   }: {
     readonly client: ConvexAuthClient;
     readonly readToken: Effect.Effect<string, ConvexTokenReadError>;
+    readonly returns: Stream.Stream<unknown>;
     readonly sessionId: string;
     readonly store: ConvexAuthStore;
   }) {
     const fetchToken = yield* makeTokenFetcher(readToken, sessionId);
-    yield* Effect.acquireRelease(
+    const isCurrent = MutableRef.make(true);
+    const authenticate = () =>
+      client.setAuth(fetchToken, (isAuthenticated) => {
+        if (MutableRef.get(isCurrent)) {
+          store.setState({
+            confirmation: Option.some(
+              ConvexAuthConfirmation.make({ isAuthenticated, sessionId })
+            ),
+          });
+        }
+      });
+    yield* Effect.acquireRelease(Effect.sync(authenticate), () =>
       Effect.sync(() => {
-        const isCurrent = MutableRef.make(true);
-        client.setAuth(fetchToken, (isAuthenticated) => {
-          if (MutableRef.get(isCurrent)) {
-            store.setState({
-              confirmation: Option.some(
-                ConvexAuthConfirmation.make({ isAuthenticated, sessionId })
-              ),
-            });
-          }
-        });
-        return isCurrent;
-      }),
-      (isCurrent) =>
-        Effect.sync(() => {
-          MutableRef.set(isCurrent, false);
-          store.setState({ confirmation: Option.none() });
-        })
+        MutableRef.set(isCurrent, false);
+        store.setState({ confirmation: Option.none() });
+      })
+    );
+    yield* returns.pipe(
+      Stream.filter(() => isRefused(store.getState().confirmation)),
+      Stream.runForEach(() => Effect.sync(authenticate)),
+      Effect.forkScoped
     );
   }
 );
