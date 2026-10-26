@@ -109,7 +109,7 @@ export function PanesDetail({
     <>
       <aside
         aria-label={label}
-        className="hidden w-80 shrink-0 flex-col border-l bg-background md:flex lg:w-96"
+        className="sticky top-16 hidden h-[calc(100svh-4rem)] w-80 shrink-0 flex-col self-start border-l bg-background md:flex lg:w-96"
       >
         {wide && isOpen ? (
           <PaneModeContext value="aside">{children}</PaneModeContext>
