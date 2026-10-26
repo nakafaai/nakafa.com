@@ -1,17 +1,24 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect, MutableList } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SESSION_READ = "/api/auth/get-session";
 const TRACK_PATH = "/en/try-out/indonesia/snbt/2027";
 
 /**
  * A visitor's try-out track opens no WebSocket and sends no session read. Its
- * first rows come from the loader, and a window it grows reads through the server
- * function, so the only browser request for rows is that server function.
+ * first rows come from the loader, and a new order reads them again through the
+ * server function, so the only browser request for rows is that server function.
+ * The window that a scroll grows reads through the same function
+ * (components/tryout/catalog/table/visitor.ts), but every acceptance track holds
+ * one set, fewer than a page, so the order is the read this content can show.
  */
-test("a visitor's try-out track opens no socket, sends no session read, and loads more rows through the server function", async ({
+test("a visitor's try-out track opens no socket, sends no session read, and reads a new order of its rows through the server function", async ({
   page,
 }) => {
   const sockets = MutableList.make<string>();
@@ -44,7 +51,7 @@ test("a visitor's try-out track opens no socket, sends no session read, and load
         const loadedCalls = yield* Effect.sync(
           () => MutableList.toArray(serverCalls).length
         );
-        yield* Effect.promise(() => scrollRows(page));
+        yield* Effect.promise(() => sortRows(page));
         yield* Effect.promise(() =>
           expect
             .poll(() => MutableList.toArray(serverCalls).length)
@@ -59,8 +66,19 @@ test("a visitor's try-out track opens no socket, sends no session read, and load
   );
 });
 
-/** Scrolls the table to its end, where the intersection trigger loads the next window. */
-async function scrollRows(page: Page) {
-  await page.getByRole("table").first().hover();
-  await page.mouse.wheel(0, 4000);
+/** Orders the sets by name from Z to A, which reads the rows again. */
+async function sortRows(page: Page) {
+  const sort = page.getByRole("button", {
+    name: en.Tryouts["set-sort-label"].replace(
+      "{column}",
+      en.Tryouts["set-column-name"]
+    ),
+  });
+  await waitUntilTakenOver(sort);
+  await sort.click();
+  await page
+    .getByRole("menuitemradio", {
+      name: en.Tryouts["set-sort-name-descending"],
+    })
+    .click();
 }

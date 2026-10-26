@@ -4,6 +4,7 @@ import { openMemoryPage } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readPlaceholder } from "@/e2e/support/placeholder";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 import {
   controlCard,
   listCard,
@@ -263,7 +264,9 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
     await expect(search).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     // Next to the editor's panel the card is as narrow as the page lets it be.
     if ((page.viewportSize()?.width ?? 0) >= WIDE) {
-      await page.getByRole("button", { name: "Erinnerung hinzufügen" }).click();
+      const add = page.getByRole("button", { name: "Erinnerung hinzufügen" });
+      await waitUntilTakenOver(add);
+      await add.click();
       await expect(page.locator("aside")).toBeVisible();
     }
   });
