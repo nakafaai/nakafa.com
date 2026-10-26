@@ -4,6 +4,7 @@ import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
+import { HomeTitle } from "@/components/ai/home/title";
 import { NinaInput } from "@/components/ai/input";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
@@ -15,25 +16,19 @@ import { useCurrentLocale } from "@/lib/routing/link";
  * a signed-in learner's composer reads Convex, so a visitor's composer loads no
  * admission code and opens no client. A visitor's composer sends to sign-in.
  */
-export function ChatNew({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: ReactNode;
-}) {
+export function ChatNew({ children }: { children: ReactNode }) {
   const isSessionPending = useLiveSession((state) => state.isPending);
   return (
     <ConvexIsland
       fallback={
         isSessionPending ? (
-          <PendingChatNew title={title}>{children}</PendingChatNew>
+          <PendingChatNew>{children}</PendingChatNew>
         ) : (
-          <VisitorChatNew title={title}>{children}</VisitorChatNew>
+          <VisitorChatNew>{children}</VisitorChatNew>
         )
       }
     >
-      <SignedInChatNew title={title}>{children}</SignedInChatNew>
+      <SignedInChatNew>{children}</SignedInChatNew>
     </ConvexIsland>
   );
 }
@@ -43,12 +38,10 @@ function NewChatLayout({
   children,
   composer,
   prompt,
-  title,
 }: {
   children: ReactNode;
   composer: ReactNode;
   prompt?: ComponentProps<typeof StartPrompt>["prompt"];
-  title: ReactNode;
 }) {
   return (
     <div
@@ -70,7 +63,9 @@ function NewChatLayout({
       {prompt ? (
         <StartPrompt className="mx-auto w-full max-w-3xl p-6" prompt={prompt} />
       ) : (
-        <div className="relative mx-auto w-full max-w-xl px-6">{title}</div>
+        <div className="relative mx-auto w-full max-w-xl px-6">
+          <HomeTitle />
+        </div>
       )}
       <div
         className={cn(
@@ -89,13 +84,7 @@ function NewChatLayout({
 }
 
 /** A learner's composer, whose admission and submission run on the page's client. */
-function SignedInChatNew({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: ReactNode;
-}) {
+function SignedInChatNew({ children }: { children: ReactNode }) {
   const locale = useCurrentLocale();
   const navigate = useNavigate();
   const { disabled, prompt, submit } = useStartChat({
@@ -107,7 +96,6 @@ function SignedInChatNew({
     <NewChatLayout
       composer={<NinaInput disabled={disabled} onSubmit={submit} />}
       prompt={prompt}
-      title={title}
     >
       {children}
     </NewChatLayout>
@@ -115,13 +103,7 @@ function SignedInChatNew({
 }
 
 /** A visitor's composer: its attach button and its send both ask for sign-in. */
-function VisitorChatNew({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: ReactNode;
-}) {
+function VisitorChatNew({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
 
@@ -139,7 +121,6 @@ function VisitorChatNew({
           onSubmit={signIn}
         />
       }
-      title={title}
     >
       {children}
     </NewChatLayout>
@@ -147,19 +128,12 @@ function VisitorChatNew({
 }
 
 /** A composer while the session loads: its send waits for the session, so it offers neither sign-in nor a send. */
-function PendingChatNew({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: ReactNode;
-}) {
+function PendingChatNew({ children }: { children: ReactNode }) {
   return (
     <NewChatLayout
       composer={
         <NinaInput attachments={false} disabled onSubmit={() => false} />
       }
-      title={title}
     >
       {children}
     </NewChatLayout>

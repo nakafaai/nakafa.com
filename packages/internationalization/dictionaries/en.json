@@ -108,6 +108,15 @@
     "signals-empty": "No signal has been recorded.",
     "signal-exit": "Left the exam",
     "signal-return": "Came back to the exam",
+    "screen-title": "Student screen",
+    "screen-none": "The student has not opened a question yet.",
+    "results-away": "Left the exam",
+    "results-student-answers": "Student's answers",
+    "results-not-submitted": "The student has not submitted the exam yet.",
+    "results-away-seconds": "{count, plural, one {Once} other {# times}} for {seconds} s",
+    "results-away-minutes": "{count, plural, one {Once} other {# times}} for {minutes} min {seconds} s",
+    "signal-away-seconds": "Left the exam for {seconds} s",
+    "signal-away-minutes": "Left the exam for {minutes} min {seconds} s",
     "signal-blur": "Left the window",
     "signal-fullscreenExit": "Left full screen",
     "signal-copy": "Copied text",
@@ -175,6 +184,7 @@
     "unavailable": "This exam is not available.",
     "frozen-note": "This exam is scheduled, so its questions are fixed.",
     "archived-note": "This school is archived, so its exams are read-only until it is restored.",
+    "gone-note": "This exam was deleted or closed to you, so nothing you change here is saved.",
     "room-cancel": "Cancel room",
     "room-cancel-title": "Cancel this room?",
     "room-cancel-description": "Students cannot enter it. The exam's questions can change again once no room of it remains.",
@@ -230,7 +240,7 @@
     "student-results-title": "Your result",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
-    "student-answer": "Your answer: {letters}",
+    "student-answer": "Your answer: {answer}",
     "student-answers": "Your answers",
     "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",
@@ -332,7 +342,55 @@
     "import-drop": "Drop a Word or PDF file here, or choose one.",
     "import-remove": "Remove file",
     "presence-editor": "{name} is editing",
-    "presence-more": "{names} are editing"
+    "presence-more": "{names} are editing",
+    "template-choice": "Multiple choice",
+    "template-choices": "Complex multiple choice",
+    "template-label": "Question type: {type}",
+    "template-truefalse": "True or false",
+    "template-cause": "Cause and effect",
+    "truefalse-true": "True",
+    "truefalse-false": "False",
+    "cause-related": "The statement and the reason are true and related",
+    "cause-unrelated": "The statement and the reason are true but not related",
+    "cause-reason-false": "The statement is true and the reason is false",
+    "cause-statement-false": "The statement is false and the reason is true",
+    "cause-both-false": "The statement and the reason are false",
+    "template-short": "Short answer",
+    "short-placeholder": "Type your answer",
+    "short-line": "Answer line",
+    "accepted-answers": "Accepted answers",
+    "accepted-of": "Accepted answer {index} of question {number}",
+    "accepted-remove-of": "Remove accepted answer {index} of question {number}",
+    "accepted-add": "Add answer",
+    "accepted-hint": "Case and extra spaces do not count, and any other answer waits for you to mark.",
+    "template-essay": "Essay",
+    "essay-placeholder": "Write your answer",
+    "essay-area": "Answer area",
+    "verdict-partial": "Partly correct",
+    "results-points": "Points",
+    "grade-of": "Points of {name}",
+    "template-match": "Matching",
+    "match-statements": "Statements",
+    "match-answers": "Answers",
+    "statement-of": "Question {number}, statement {name}",
+    "answer-of": "Question {number}, answer {name}",
+    "statement-placeholder": "Statement",
+    "answer-placeholder": "Answer",
+    "statement-remove-of": "Remove statement {name} of question {number}",
+    "answer-remove-of": "Remove answer {name} of question {number}",
+    "statement-add": "Add statement",
+    "match-answer-add": "Add an answer",
+    "statement-number": "Statement {name}",
+    "pair-of": "Answer for statement {name} of question {number}",
+    "pair-choose": "Choose",
+    "pair-hint": "Each answer pairs one statement, and the key saves once every statement has one.",
+    "pair-statement": "Answer for statement {number}",
+    "template-table": "True or false table",
+    "table-columns": "Columns",
+    "column-of": "Question {number}, column {name}",
+    "column-placeholder": "Column",
+    "cell-of": "Column for statement {name} of question {number}",
+    "cell-hint": "Each statement takes one column, and the key saves once every statement has one."
   },
   "SchoolSettings": {
     "school": "School",
@@ -349,6 +407,47 @@
     "clients": "API clients",
     "policies": "Policies",
     "audit": "Audit trail",
+    "billing": "Billing",
+    "billing-free-title": "Free",
+    "billing-free-description": "Up to {limit} students, with every School feature.",
+    "billing-school-title": "School",
+    "billing-school-description": "Every student has Pro until {date}.",
+    "billing-students": "Students",
+    "billing-limit": "Free limit",
+    "billing-paid": "Paid students",
+    "billing-nina": "Nina credits this month",
+    "billing-nina-used": "{used} of {total} used",
+    "billing-upgrade": "Upgrade",
+    "billing-add": "Pay for new students",
+    "billing-free-footer": "Upgrade to enroll more than {limit} students and give every student Pro.",
+    "billing-add-footer": "New students are billed for the rest of the term.",
+    "billing-free-empty": "Enroll students to upgrade the school to School.",
+    "billing-school-footer": "Every student is paid for.",
+    "billing-dialog-title": "Choose a term",
+    "billing-dialog-description": "Pay per enrolled student for the days left in the term.",
+    "billing-dialog-seats": "Pay per enrolled student. Seats renew until you cancel them.",
+    "billing-term-semester": "This semester",
+    "billing-term-year": "This school year",
+    "billing-offer-month": "Every month",
+    "billing-offer-year": "Every year",
+    "billing-term-dates": "{start} to {end}",
+    "billing-quote": "{price} per student, {total} for {seats} students",
+    "billing-issue": "Issue invoice",
+    "billing-invoices": "Invoices",
+    "billing-invoices-description": "Every invoice the school was issued.",
+    "billing-invoices-footer": "Pay an open invoice before its due date.",
+    "billing-invoices-empty": "The school has no invoice yet.",
+    "invoice-number": "Invoice",
+    "invoice-term": "Term",
+    "invoice-students": "Students",
+    "invoice-total": "Total",
+    "invoice-status": "Status",
+    "invoice-draft": "Draft",
+    "invoice-open": "Open",
+    "invoice-paid": "Paid",
+    "invoice-void": "Void",
+    "invoice-pay": "Pay",
+    "invoice-transfer": "Pay by transfer",
     "manage-group": "Management",
     "manage-settings": "Settings",
     "address-copy": "Copy address",
@@ -373,6 +472,9 @@
     "policy-students-footer": "Every policy change is recorded in the audit trail.",
     "policy-nina": "Nina for students",
     "policy-nina-description": "Students may ask Nina for help in this school.",
+    "policy-nina-credits": "Nina credits a day",
+    "policy-nina-credits-description": "What one student may use from the school credits each day.",
+    "policy-nina-credits-value": "{count, number} credits",
     "policy-threads": "Student threads",
     "policy-threads-description": "Students may open threads in this school.",
     "policy-domains": "Email domains",
@@ -491,12 +593,19 @@
     "audit-change": "Change",
     "audit-empty": "Nothing has changed yet.",
     "audit-search": "Find a change",
+    "audit-export": "Export",
     "audit-operator": "Nakafa staff",
     "audit-system": "System",
     "audit-label": {
       "assignment": {
         "created": "Homeroom teacher assigned",
         "removed": "Homeroom teacher removed"
+      },
+      "billing": {
+        "invoice": {
+          "issued": "Invoice issued",
+          "paid": "Invoice paid"
+        }
       },
       "card": {
         "issued": "Login card issued",
@@ -590,7 +699,8 @@
       },
       "exam": {
         "results": {
-          "released": "Exam results released"
+          "released": "Exam results released",
+          "graded": "Exam answer graded"
         }
       },
       "tenant": {
@@ -1403,6 +1513,8 @@
     "credits-used": "{percent, number}% used",
     "credits-resets": "Resets {date}",
     "credits-left": "{left, number} of {total, number} credits left",
+    "school-credits": "School credits today",
+    "school-credits-footer": "Your school gives you these credits every day.",
     "plan-free": "Free",
     "plan-pro": "Pro",
     "name": "Name",
@@ -1916,6 +2028,14 @@
       "title": "This person holds enough roles.",
       "description": "Remove one role before you give another."
     },
+    "school-refusal-seat-limit": {
+      "title": "The free plan is full.",
+      "description": "Upgrade to School in billing to add more students."
+    },
+    "school-refusal-seats-paid": {
+      "title": "Every student is paid for.",
+      "description": "New students can be billed once they enroll."
+    },
     "school-refusal-person-inactive": {
       "title": "This person is no longer active.",
       "description": "Invite the person again to restore access."
@@ -2011,6 +2131,13 @@
     "import-encrypted": {
       "title": "This PDF has a password.",
       "description": "Save it without the password first."
+    },
+    "audit-export-error": {
+      "title": "We could not export the trail.",
+      "description": "Check your connection, then try again."
+    },
+    "school-own-role-ended": {
+      "title": "Your role has ended."
     }
   },
   "Ai": {

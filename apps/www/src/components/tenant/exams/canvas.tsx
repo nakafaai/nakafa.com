@@ -8,12 +8,12 @@ import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { useQuestionReorder } from "@/components/tenant/exams/drag";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import { pageAt } from "@/components/tenant/exams/pages";
 import { ExamPage } from "@/components/tenant/exams/paper";
 import {
   useEditorView,
   useExam,
+  useExamLocked,
   useExamSelectionStore,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
@@ -101,7 +101,7 @@ export function ExamCanvas({
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
-  const frozen = isLocked(exam);
+  const frozen = useExamLocked();
   // The canvas reads the selection from its store when it runs, so a change of the choice draws no page.
   const selection = useExamSelectionStore();
   const actions = useQuestionActions();

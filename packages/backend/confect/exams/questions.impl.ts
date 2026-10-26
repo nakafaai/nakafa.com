@@ -13,6 +13,7 @@ import {
   readQuestion,
 } from "@repo/backend/confect/exams/questions/read";
 import { removeQuestion } from "@repo/backend/confect/exams/questions/remove";
+import { switchTemplate } from "@repo/backend/confect/exams/questions/template";
 import spec from "@repo/backend/confect/exams/questions.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -104,7 +105,26 @@ const answer = FunctionImpl.make(
   })
 );
 
-/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, answer, and points. */
+/** Gives a question of the exam another template at the revision the editor saw, and returns the question. */
+const template = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "template",
+  Effect.fn("exams.questions.template")(function* ({
+    labels,
+    questionId,
+    revision,
+    template,
+  }) {
+    const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
+    const question = yield* questionOf(exam, questionId);
+    yield* switchTemplate(question, { labels, revision, template });
+    return yield* readQuestion(questionId);
+  })
+);
+
+/** Implements the questions group of `questions.spec.ts`: add, copy, remove, move, answer, points, and template. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(add),
   Layer.provide(copy),
@@ -112,6 +132,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(move),
   Layer.provide(answer),
   Layer.provide(points),
+  Layer.provide(template),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(examAccess),

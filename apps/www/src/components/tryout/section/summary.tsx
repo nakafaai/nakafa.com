@@ -1,6 +1,7 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
 import { useTranslations } from "use-intl";
+import { PlayerDigits } from "@/components/player/timer";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import { TryoutScoreStatus } from "@/components/tryout/score/status";
 import {
@@ -9,10 +10,7 @@ import {
   TryoutPartSummary,
 } from "@/components/tryout/section/card";
 import type { TryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
-import {
-  TryoutMetricNumber,
-  TryoutMetricTime,
-} from "@/components/tryout/section/metrics";
+import { TryoutMetricNumber } from "@/components/tryout/section/metrics";
 import { TryoutStatus } from "@/components/tryout/status";
 
 const TryoutSummarySectionSchema = Schema.Struct({
@@ -112,7 +110,10 @@ function TryoutSectionMetrics({
       </TryoutPartStat>
 
       <TryoutPartStat label={tTryouts("part-time-label")}>
-        <TryoutMetricTime totalSeconds={section.timeLimitSeconds} />
+        <PlayerDigits
+          className="font-light text-5xl"
+          seconds={section.timeLimitSeconds}
+        />
       </TryoutPartStat>
     </TryoutPartStats>
   );

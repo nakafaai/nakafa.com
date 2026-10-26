@@ -67,6 +67,32 @@ describe("billing/polar/live", () => {
       })
   );
 
+  it.effect(
+    "buys a school's seats as a business, naming the school in the checkout's metadata",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(
+          reply(201, { url: "https://checkout.polar.sh/school" })
+        );
+        yield* polarGateway.createCheckoutSession({
+          customerId: "cust_1",
+          customerIpAddress: null,
+          locale: "de",
+          productIds: ["product_school"],
+          school: { seats: 340, tenantId: "tenant_1" },
+          successUrl: "https://nakafa.com/school/harapan/settings/billing",
+        });
+        expect(
+          yield* Effect.promise(() => sentRequest(0).json())
+        ).toMatchObject({
+          is_business_customer: true,
+          metadata: { tenantId: "tenant_1" },
+          products: ["product_school"],
+          seats: 340,
+        });
+      })
+  );
+
   it.effect("maps a failed checkout to the checkout error", () =>
     Effect.gen(function* () {
       polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
