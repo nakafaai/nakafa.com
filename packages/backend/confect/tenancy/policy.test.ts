@@ -58,8 +58,9 @@ describe("tenancy/policy", () => {
   });
 
   it("admits every account by its Google sign-ins while the list of email domains is empty", () => {
-    const admitted = Arr.map([[], [null], ["harapan.example.test"]], (domains) =>
-      admitsHostedDomains(allowing([]), domains)
+    const admitted = Arr.map(
+      [[], [null], ["harapan.example.test"]],
+      (domains) => admitsHostedDomains(allowing([]), domains)
     );
 
     expect(admitted).toEqual(Arr.replicate(true, 3));

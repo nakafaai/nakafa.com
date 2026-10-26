@@ -114,11 +114,14 @@ describe("tenancy/claims after a hosted domain", () => {
         const account = yield* fixture.account("guru", address, true);
         yield* fixture.run(invitePerson(fixture.tenants.nf, address));
         yield* fixture.run(
-          Effect.all([
-            claimAfterHostedDomain(account.authUserId, null, undefined),
-            claimAfterHostedDomain(account.authUserId, domain, domain),
-            claimAfterHostedDomain("unknown-auth-user", domain, undefined),
-          ])
+          Effect.all(
+            [
+              claimAfterHostedDomain(account.authUserId, null, undefined),
+              claimAfterHostedDomain(account.authUserId, domain, domain),
+              claimAfterHostedDomain("unknown-auth-user", domain, undefined),
+            ],
+            { discard: true }
+          )
         );
         expect(yield* fixture.run(claimJobs)).toEqual([]);
       })

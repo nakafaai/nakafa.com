@@ -428,7 +428,9 @@ describe("tenancy/claims run", () => {
         const domain = "harapan.example.test";
         const account = yield* fixture.account("guru", address, true, domain);
         const personal = yield* fixture.account("lain", other, true, null);
-        yield* fixture.run(admitOnly(fixture.tenants.nf, ["belajar.id", domain]));
+        yield* fixture.run(
+          admitOnly(fixture.tenants.nf, ["belajar.id", domain])
+        );
         const { inviteId, personId } = yield* fixture.run(
           invitePerson(fixture.tenants.nf, address)
         );

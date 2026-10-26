@@ -32,7 +32,11 @@ async function seedInvite(
     currency: "IDR",
     kind: "school",
     name: "Sekolah Harapan",
-    policies: { emailDomains: [...emailDomains], nina: false, studentThreads: false },
+    policies: {
+      emailDomains: [...emailDomains],
+      nina: false,
+      studentThreads: false,
+    },
     slug: "harapan",
     status: "active",
   });
