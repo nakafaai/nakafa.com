@@ -419,7 +419,7 @@ describe("exams/results", () => {
   );
 
   it.effect(
-    "shows the release only to the exam's author and the Admin, and refuses it to a teacher who did not write the exam",
+    "shows the release only to the exam's author and the Admin, and refuses it to a teacher who did not write the exam, who still grades",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -437,7 +437,7 @@ describe("exams/results", () => {
           sittingId: made.id,
           slug: nf,
         });
-        expect(overview.can).toEqual(["result.view"]);
+        expect(overview.can).toEqual(["result.view", "result.grade"]);
         expect(
           yield* teacher
             .mutation(results.release, { sittingId: made.id, slug: nf })

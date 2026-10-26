@@ -4,6 +4,7 @@ import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import {
   AttemptState,
   RoomName,
@@ -15,7 +16,6 @@ import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /**
  * The wire contracts of the sitting functions. A spec imports them, so this module holds

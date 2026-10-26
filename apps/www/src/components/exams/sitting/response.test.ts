@@ -7,8 +7,8 @@ import {
   pairedWith,
   pairingOf,
   tableOf,
-  writtenOf,
   toggleOption,
+  writtenOf,
 } from "@/components/exams/sitting/response";
 
 const decodeInteraction = Schema.decodeUnknownSync(InteractionSchema);
@@ -86,6 +86,7 @@ describe("toggleOption", () => {
       toggleOption(["option-1", "option-2"], "option-1", false, 2)
     ).toEqual(["option-2"]);
   });
+});
 
 describe("writtenOf", () => {
   /** A short answer's text entry, which a student types into. */

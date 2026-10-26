@@ -147,7 +147,10 @@ export const removeUpdate: OptimisticUpdate<typeof exams.questions.remove> = (
 const templatedQuestion = (
   view: ExamView,
   questionId: QuestionId,
-  change: { readonly labels: readonly string[]; readonly template: Question["template"] }
+  change: {
+    readonly labels: readonly string[];
+    readonly template: Question["template"];
+  }
 ): ExamView => ({
   ...view,
   questions: Arr.map(view.questions, (question) =>
@@ -168,11 +171,12 @@ const templatedQuestion = (
 });
 
 /** Shows a question in its new template in the store while the server converts it. */
-export const templateUpdate: OptimisticUpdate<typeof exams.questions.template> =
-  (localStore, args) =>
-    changeExam(localStore, examQuery(args), (view) =>
-      templatedQuestion(view, args.questionId, args)
-    );
+export const templateUpdate: OptimisticUpdate<
+  typeof exams.questions.template
+> = (localStore, args) =>
+  changeExam(localStore, examQuery(args), (view) =>
+    templatedQuestion(view, args.questionId, args)
+  );
 
 /** Shows a saved answer of a question in the store while the server saves it. */
 export const answerUpdate: OptimisticUpdate<typeof exams.questions.answer> = (

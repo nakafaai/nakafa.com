@@ -31,11 +31,11 @@ import {
   SittingLocked,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { heldOf, readSitting } from "@repo/backend/confect/exams/sittings/held";
+import type { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import { cancelPending } from "@repo/backend/confect/exams/sittings/timers";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 
 /** The question that a learner answers or flags, in the sitting the attempt belongs to. */
 const AnswerTarget = Schema.Struct({

@@ -23,6 +23,12 @@ const PairsResponse = Schema.Struct({
   ).check(Schema.isMaxLength(CHOICE_OPTIONS_MAX)),
 });
 
+/** One pair a student made in a match: a statement and the answer it took. */
+export type ExamPair = (typeof PairsResponse.Type)["pairs"][number];
+
+/** One cell a student marked in a table: a statement and the column it took. */
+export type ExamCell = (typeof CellsResponse.Type)["cells"][number];
+
 /**
  * One student's response to one question (ADR 0013): the option IDs the student chose in a choice, or
  * the text the student typed in a text entry or wrote in an essay, or the pairs the student made in a
@@ -46,6 +52,9 @@ export type ExamResponse = typeof ExamResponse.Type;
 
 /** A response that answers nothing yet, as an unanswered choice is scored. */
 export const NO_RESPONSE: ExamResponse = [];
+
+/** Whether a response is the options a student chose. */
+export const isChoiceResponse = Schema.is(ChoiceResponse);
 
 /** Whether a response is typed text rather than chosen options. */
 export const isTextResponse = Schema.is(TextResponse);
@@ -79,9 +88,7 @@ export const chosenOptions = (response: ExamResponse): readonly string[] =>
     : response;
 
 /** The pairs a response made: the pairs of a match response, and none of any other. */
-export const madePairs = (
-  response: ExamResponse
-): readonly { readonly source: string; readonly target: string }[] =>
+export const madePairs = (response: ExamResponse): readonly ExamPair[] =>
   isPairsResponse(response) ? response.pairs : [];
 
 /** The text a response typed: the text of a text response, and none of a choice response. */
@@ -89,7 +96,5 @@ export const typedText = (response: ExamResponse): string =>
   isTextResponse(response) ? response.text : "";
 
 /** The cells a response marked: the cells of a table response, and none of any other. */
-export const markedCells = (
-  response: ExamResponse
-): readonly { readonly column: string; readonly statement: string }[] =>
+export const markedCells = (response: ExamResponse): readonly ExamCell[] =>
   isCellsResponse(response) ? response.cells : [];

@@ -26,7 +26,6 @@ import {
 } from "@/components/tenant/exams/answer";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
-import { tableOf } from "@/components/tenant/exams/table";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
@@ -38,6 +37,7 @@ import {
   PaperOptions,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
+import { tableOf } from "@/components/tenant/exams/table";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
 import { PREVIEW_CLIENT } from "@/lib/tenant/exams";

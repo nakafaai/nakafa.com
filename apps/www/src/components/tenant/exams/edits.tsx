@@ -2,6 +2,10 @@ import { useMutation } from "@confect/react";
 import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
+import type {
+  ExamCell,
+  ExamPair,
+} from "@repo/backend/confect/exams/sittings/response";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Effect, Match } from "effect";
 import { useRef, useState } from "react";
@@ -13,14 +17,14 @@ import {
   markedOptions,
   toggledKey,
 } from "@/components/tenant/exams/answer";
+import { pairsKey } from "@/components/tenant/exams/match";
 import {
   answerUpdate,
   type Question,
   templateUpdate,
 } from "@/components/tenant/exams/optimistic";
-import { pairsKey } from "@/components/tenant/exams/match";
-import { cellsKey } from "@/components/tenant/exams/table";
 import { useExam } from "@/components/tenant/exams/provider";
+import { cellsKey } from "@/components/tenant/exams/table";
 import {
   makeQuestionWriter,
   type QuestionDraft,
@@ -152,7 +156,10 @@ export function useQuestionEditing(question: Question) {
    */
   function labelsOf(template: QuestionTemplate): readonly string[] {
     return Match.value(template).pipe(
-      Match.when("truefalse", () => [t("truefalse-true"), t("truefalse-false")]),
+      Match.when("truefalse", () => [
+        t("truefalse-true"),
+        t("truefalse-false"),
+      ]),
       Match.when("table", () => [t("truefalse-true"), t("truefalse-false")]),
       Match.when("cause", () => [
         t("cause-related"),
@@ -187,15 +194,11 @@ export function useQuestionEditing(question: Question) {
     saveAnswers((base) => ({ ...base, key: acceptedKey(base.answers, texts) }));
 
   /** Sets the pairs of a matching question's key, which saves at once once they pair every statement (`pairsKey`). */
-  const setPairs = (
-    pairs: readonly { readonly source: string; readonly target: string }[]
-  ) =>
+  const setPairs = (pairs: readonly ExamPair[]) =>
     saveAnswers((base) => ({ ...base, key: pairsKey(base.answers, pairs) }));
 
   /** Sets the cells of a true or false table's key, which saves at once once they mark every statement (`cellsKey`). */
-  const setCells = (
-    cells: readonly { readonly column: string; readonly statement: string }[]
-  ) =>
+  const setCells = (cells: readonly ExamCell[]) =>
     saveAnswers((base) => ({ ...base, key: cellsKey(base.answers, cells) }));
 
   return {

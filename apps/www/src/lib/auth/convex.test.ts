@@ -6,8 +6,10 @@ import {
   ConvexAuthConfirmation,
   ConvexTokenReadError,
   createConvexAuthStore,
+  hasSettledSignedOut,
   readConvexAuth,
   readConvexSessionId,
+  releaseConvexAuth,
 } from "@/lib/auth/convex";
 import { type AuthSession, previewAuthSession } from "@/lib/auth/session";
 
@@ -122,6 +124,24 @@ describe("Convex authentication", () => {
       expect(readConvexAuth(session, confirmation)).toStrictEqual(expected);
     }
   );
+
+  it.each([
+    [pending, false],
+    [signedIn("session-1"), false],
+    [previewAuthSession, true],
+  ])("knows a session that settled on none", (session, settled) => {
+    expect(hasSettledSignedOut(session)).toBe(settled);
+  });
+
+  it("releases the client's hold with a token request that answers none", async () => {
+    const client = makeClient();
+
+    releaseConvexAuth(client);
+
+    const [fetchToken] = client.setAuth.mock.calls[0] ?? [];
+    expect(client.setAuth).toHaveBeenCalledOnce();
+    expect(await fetchToken?.({ forceRefreshToken: true })).toBeNull();
+  });
 
   it("starts without an answer, as the server renders it", () => {
     expect(createConvexAuthStore().getState().confirmation).toStrictEqual(

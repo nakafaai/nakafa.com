@@ -8,7 +8,10 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-import { type OptionLabel, optionLetter } from "@/components/tenant/exams/answer";
+import {
+  type OptionLabel,
+  optionLetter,
+} from "@/components/tenant/exams/answer";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import {
   keyPairs,
@@ -48,9 +51,16 @@ interface PartColumnProps {
   /** The letter or number that names a part by its place. */
   readonly letterOf: (index: number) => string;
   /** The name of a part's editor and of its remove control, by the part's letter. */
-  readonly namesOf: (letter: string) => { readonly editor: string; readonly remove: string };
+  readonly namesOf: (letter: string) => {
+    readonly editor: string;
+    readonly remove: string;
+  };
   /** Saves the label a part's editor holds. Calls `unstored` when the server does not store it. */
-  readonly onLabel: (partId: string, label: OptionLabel, unstored: () => void) => void;
+  readonly onLabel: (
+    partId: string,
+    label: OptionLabel,
+    unstored: () => void
+  ) => void;
   /** Removes a part, or none while the column holds the fewest it may. */
   readonly onRemove: ((partId: string) => void) | null;
   /** The parts as the page shows them, with every change the teacher made. */
@@ -208,7 +218,9 @@ export function MatchColumn({
           : null
       }
       parts={parts}
-      placeholder={t(statements ? "statement-placeholder" : "answer-placeholder")}
+      placeholder={t(
+        statements ? "statement-placeholder" : "answer-placeholder"
+      )}
       saved={Arr.flatMap(props.question.answers, (answer) =>
         answer.kind === "match" ? answer[side] : []
       )}
@@ -292,7 +304,9 @@ export function TableColumn({
           : null
       }
       parts={parts}
-      placeholder={t(statements ? "statement-placeholder" : "column-placeholder")}
+      placeholder={t(
+        statements ? "statement-placeholder" : "column-placeholder"
+      )}
       saved={Arr.flatMap(props.question.answers, (answer) =>
         answer.kind === "matrix" ? answer[side] : []
       )}

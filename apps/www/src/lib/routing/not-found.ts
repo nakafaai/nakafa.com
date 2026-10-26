@@ -6,6 +6,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { isNotFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
+import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 
 /** The request header in which the server names the locale of the standalone not-found page. */
 export const NOT_FOUND_LOCALE_HEADER = "x-nakafa-locale";
@@ -13,8 +14,14 @@ export const NOT_FOUND_LOCALE_HEADER = "x-nakafa-locale";
 /** The address of the standalone not-found page, which the server renders for a refused or missing address. */
 export const NOT_FOUND_PATH = "/_missing";
 
-/** The data that the standalone page's not-found error carries: the locale that the page renders in. */
-export const NotFoundPageData = Schema.Struct({ locale: LocaleSchema });
+/**
+ * The data that the standalone page's not-found error carries: the locale that the
+ * page renders in, and whether the request came to a school host.
+ */
+export const NotFoundPageData = Schema.Struct({
+  locale: LocaleSchema,
+  school: Schema.Boolean,
+});
 
 /** The locale of the standalone not-found page, as its not-found error names it, or none for any other error. */
 export function readNotFoundPageLocale(error: unknown): Option.Option<Locale> {
@@ -27,12 +34,22 @@ export function readNotFoundPageLocale(error: unknown): Option.Option<Locale> {
   );
 }
 
-/** The locale that the request names for the standalone not-found page, or the default locale when it names none. */
-export function readNotFoundLocale(headers: Headers): Locale {
-  return Option.getOrElse(
-    decodeLocale(headers.get(NOT_FOUND_LOCALE_HEADER)),
-    () => DEFAULT_LOCALE
-  );
+/**
+ * What the request names for the standalone not-found page: its locale, or the
+ * default locale when it names none, and whether it came to a school host.
+ */
+export function readNotFoundPage(
+  headers: Headers
+): typeof NotFoundPageData.Type {
+  return {
+    locale: Option.getOrElse(
+      decodeLocale(headers.get(NOT_FOUND_LOCALE_HEADER)),
+      () => DEFAULT_LOCALE
+    ),
+    school: Option.isSome(
+      Option.flatMap(readRequestHostname(headers), readSchoolSlug)
+    ),
+  };
 }
 
 /**

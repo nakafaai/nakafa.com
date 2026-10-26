@@ -7,10 +7,10 @@ import { ResultSitting } from "@repo/backend/confect/exams/results/access";
 import { attemptAnswers } from "@repo/backend/confect/exams/results/mine";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
 import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
+import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 import type { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Struct } from "effect";
-import { isAnswered } from "@repo/backend/confect/exams/sittings/response";
 
 /** The most students that one page of the students' list holds. A larger request is clamped to it. */
 const STUDENT_PAGE_SIZE = 100;

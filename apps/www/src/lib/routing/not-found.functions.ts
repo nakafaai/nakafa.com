@@ -1,11 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 
-/** Reads the locale of the standalone not-found page on the server, for the route's loader. */
-export const readNotFoundLocaleFn = createServerFn({ method: "GET" }).handler(
+/** Reads what the request names for the standalone not-found page on the server, for the route's loader. */
+export const readNotFoundPageFn = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { readNotFoundLocaleHandler } = await import(
+    const { readNotFoundPageHandler } = await import(
       "@/lib/routing/not-found.server"
     );
-    return readNotFoundLocaleHandler();
+    return readNotFoundPageHandler();
   }
 );

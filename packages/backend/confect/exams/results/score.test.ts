@@ -32,7 +32,9 @@ const keyOf = (
 ): InteractionKey[] => [{ correct, interaction, kind: "choice" }];
 
 /** The key of the text entry `text`, accepting these texts in any case and spacing. */
-const accepting = (...acceptedAnswers: [string, ...string[]]): InteractionKey[] => [
+const accepting = (
+  ...acceptedAnswers: [string, ...string[]]
+): InteractionKey[] => [
   {
     accepted: {
       acceptedAnswers,
@@ -105,9 +107,9 @@ describe("exams/results/score", () => {
   });
 
   it("scores a short answer correct when it matches an accepted answer after normalization, whatever its case and spaces", () => {
-    expect(scoreResponse([text], accepting("Jakarta"), { text: "  jakarta " })).toBe(
-      "correct"
-    );
+    expect(
+      scoreResponse([text], accepting("Jakarta"), { text: "  jakarta " })
+    ).toBe("correct");
     expect(
       scoreResponse([text], accepting("Daerah Khusus", "DKI"), {
         text: "daerah   khusus",
@@ -116,9 +118,9 @@ describe("exams/results/score", () => {
   });
 
   it("leaves a short answer that matches no accepted answer pending, so the teacher judges it", () => {
-    expect(scoreResponse([text], accepting("Jakarta"), { text: "Batavia" })).toBe(
-      "pending"
-    );
+    expect(
+      scoreResponse([text], accepting("Jakarta"), { text: "Batavia" })
+    ).toBe("pending");
   });
 
   it("scores a blank short answer incorrect, as an unanswered question", () => {
@@ -165,7 +167,10 @@ describe("exams/results/score", () => {
     );
     expect(
       scoreResponse([match], key, {
-        pairs: [...Arr.take(pairs, 2), { source: "source-3", target: "target-1" }],
+        pairs: [
+          ...Arr.take(pairs, 2),
+          { source: "source-3", target: "target-1" },
+        ],
       })
     ).toBe("incorrect");
     expect(scoreResponse([match], key, [])).toBe("incorrect");
