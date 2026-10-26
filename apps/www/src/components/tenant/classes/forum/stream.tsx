@@ -29,7 +29,9 @@ import {
 } from "@/components/tenant/classes/forum/call";
 import {
   firstUnread,
+  headToKeep,
   newestSeen,
+  opensRun,
 } from "@/components/tenant/classes/forum/marks";
 import { ForumMessageRow } from "@/components/tenant/classes/forum/message";
 import {
@@ -75,6 +77,13 @@ export function MessageStream({
   // divider stays there while the reader reads. A message that arrives later is never the anchor,
   // so it never moves a reader who is not at the newest edge.
   const [unread] = useState(() => firstUnread(messages, at));
+  // The oldest loaded message keeps its author line when older history arrives, as React keeps state
+  // from the previous render, so the message the reader looks at never moves by that line.
+  const [kept, setKept] = useState<readonly string[]>([]);
+  const head = headToKeep(messages, loadOlder !== undefined, kept);
+  if (Option.isSome(head)) {
+    setKept(Arr.append(kept, head.value));
+  }
   // The divider marks where unread messages start, so it shows only once the message before it is
   // loaded, or when the place holds nothing older.
   const divided = Option.filter(
@@ -117,11 +126,7 @@ export function MessageStream({
                 ) : null}
                 <ForumMessageRow
                   message={message}
-                  opens={Option.match(Arr.get(messages, index - 1), {
-                    onNone: () => true,
-                    onSome: (previous) =>
-                      previous.author.id !== message.author.id,
-                  })}
+                  opens={opensRun(messages, index, kept)}
                 />
               </MessageScrollerItem>
             ))}

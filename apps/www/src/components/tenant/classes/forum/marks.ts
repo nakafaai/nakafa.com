@@ -50,3 +50,41 @@ export const newestSeen = (
         ),
     }
   );
+
+/**
+ * The client key of the oldest loaded message while older history may still
+ * load, when the stream does not keep its author line yet. Once kept, the line
+ * stays when the older page arrives, so the message the reader looks at does not
+ * move by the height of that line.
+ */
+export const headToKeep = (
+  messages: readonly ForumMessage[],
+  older: boolean,
+  kept: readonly string[]
+) =>
+  older
+    ? Option.filter(
+        Option.map(Arr.head(messages), (message) => message.clientKey),
+        (key) => !Arr.contains(kept, key)
+      )
+    : Option.none();
+
+/**
+ * Whether a message shows its author's line: the oldest loaded, one after
+ * another author's, or one that once stood oldest and keeps its line.
+ */
+export const opensRun = (
+  messages: readonly ForumMessage[],
+  index: number,
+  kept: readonly string[]
+) =>
+  Option.match(Arr.get(messages, index - 1), {
+    onNone: () => true,
+    onSome: (previous) =>
+      Option.exists(
+        Arr.get(messages, index),
+        (message) =>
+          previous.author.id !== message.author.id ||
+          Arr.contains(kept, message.clientKey)
+      ),
+  });

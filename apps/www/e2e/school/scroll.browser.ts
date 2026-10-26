@@ -64,17 +64,56 @@ for (const viewport of [
     await expect(newest).toBeVisible();
     expect(Math.abs((await topOf(page, "Pesan 31")) - before)).toBeLessThan(2);
 
-    // Older history loads upward without moving the message the reader looks at.
+    // Older history loads upward without moving the message the reader looks at. The reader
+    // scrolls with the wheel, as a person does, since a scroll by the page itself is not theirs.
+    // The page records where the oldest loaded message stood at the last scroll before the older
+    // page arrived, and where it stands once that page is in place.
     const log = page.getByRole("region", { name: "Messages" });
     await log.evaluate((element) => {
-      element.scrollTop = 0;
+      const content = element.querySelector('[role="log"]');
+      const topOfOldest = () =>
+        Array.from(element.querySelectorAll("p, span, div"))
+          .find(
+            (node) =>
+              node.childElementCount === 0 && node.textContent === "Pesan 21"
+          )
+          ?.getBoundingClientRect().top ?? null;
+      const prepend: { after: number | null; before: number | null } = {
+        after: null,
+        before: null,
+      };
+      Reflect.set(window, "__prepend", prepend);
+      element.addEventListener("scroll", () => {
+        if (prepend.after === null) {
+          prepend.before = topOfOldest();
+        }
+      });
+      if (content !== null) {
+        new MutationObserver(() => {
+          const arrived = Array.from(
+            element.querySelectorAll("p, span, div")
+          ).some(
+            (node) =>
+              node.childElementCount === 0 && node.textContent === "Pesan 20"
+          );
+          if (arrived && prepend.after === null) {
+            prepend.after = topOfOldest();
+          }
+        }).observe(content, { childList: true });
+      }
     });
-    await expect(page.getByText("Pesan 21", { exact: true })).toBeInViewport();
-    const oldest = await topOf(page, "Pesan 21");
-    await expect(page.getByText("Pesan 20", { exact: true })).toBeAttached({
-      timeout: readinessTimeoutMilliseconds,
+    await log.hover();
+    await expect(async () => {
+      await page.mouse.wheel(0, -1500);
+      await expect(page.getByText("Pesan 20", { exact: true })).toBeAttached({
+        timeout: 1000,
+      });
+    }).toPass({ timeout: readinessTimeoutMilliseconds });
+    const shift = await page.evaluate(() => {
+      const prepend = Reflect.get(window, "__prepend");
+      return Math.abs((prepend.after ?? 0) - (prepend.before ?? Number.NaN));
     });
-    expect(Math.abs((await topOf(page, "Pesan 21")) - oldest)).toBeLessThan(2);
+    expect(shift).toBeLessThan(2);
 
     // The newest message is one press away, and the reader at the bottom follows new messages.
     await newest.click();
