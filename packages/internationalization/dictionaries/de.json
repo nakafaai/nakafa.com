@@ -1997,6 +1997,9 @@
     "import-encrypted": {
       "title": "Dieses PDF hat ein Passwort.",
       "description": "Speichere es zuerst ohne Passwort."
+    },
+    "school-own-role-ended": {
+      "title": "Deine Rolle ist beendet."
     }
   },
   "Ai": {

@@ -1997,6 +1997,9 @@
     "import-encrypted": {
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
+    },
+    "school-own-role-ended": {
+      "title": "Peranmu sudah berakhir."
     }
   },
   "Ai": {
