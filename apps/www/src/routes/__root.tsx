@@ -9,12 +9,14 @@ import {
   createRootRoute,
   type ErrorComponentProps,
   HeadContent,
+  type NotFoundRouteProps,
+  notFound,
   Scripts,
   useMatch,
   useParams,
 } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Option } from "effect";
+import { Option, Schema } from "effect";
 import { MotionConfig } from "motion/react";
 import type { ReactNode } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
@@ -27,12 +29,28 @@ import {
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
-import { readNotFoundPageLocale } from "@/lib/routing/not-found";
+import {
+  NotFoundPageData,
+  readNotFoundContext,
+  readNotFoundPageLocale,
+} from "@/lib/routing/not-found";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 import appCss from "@/styles/globals.css?url";
 
 export const Route = createRootRoute({
+  /**
+   * A request that the server answers not found (ADR 0026) names its not-found
+   * page in the server context, so the root answers not found at the visitor's
+   * own address. The browser never has that context and hydrates the root's
+   * not-found match as the server sent it.
+   */
+  beforeLoad: ({ serverContext }) => {
+    const page = readNotFoundContext(serverContext);
+    if (Option.isSome(page)) {
+      throw notFound({ data: page.value });
+    }
+  },
   /**
    * The local preview revision is read once per document: with an infinite stale
    * time, a client navigation keeps the loader data of the first document, so the
@@ -69,9 +87,9 @@ export const Route = createRootRoute({
 
 /**
  * The document of every route, and of the error and not-found states, which the
- * router renders inside it. Its language and direction follow the locale param
- * of the route on screen, then the language a school page renders in, then the
- * locale of the standalone not-found page, and the default locale answers a path
+ * router renders inside it. Its language and direction follow the not-found page
+ * that the server answered, then the locale param of the route on screen, then
+ * the language a school page renders in, and the default locale answers a path
  * without one. The pre-paint scripts set the theme, the pricing currency and the
  * signed-in hint before the first frame, so nothing changes after paint. The
  * theme is mounted here once, for every route below.
@@ -80,18 +98,15 @@ function RootDocument({ children }: { children: ReactNode }) {
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
   });
-  const notFoundMatch = useMatch({ from: "/_missing", shouldThrow: false });
-  const preview = useMatch({
-    from: "__root__",
-    shouldThrow: false,
-  })?.loaderData;
+  const root = useMatch({ from: "__root__", shouldThrow: false });
+  const preview = root?.loaderData;
   const schoolMatch = useMatch({ from: "/school", shouldThrow: false });
   const locale = Option.getOrElse(
     Option.orElse(
-      Option.orElse(decodeLocale(params.locale), () =>
-        Option.fromNullishOr(schoolMatch?.loaderData?.locale)
+      Option.orElse(readNotFoundPageLocale(root?.error), () =>
+        decodeLocale(params.locale)
       ),
-      () => readNotFoundPageLocale(notFoundMatch?.error)
+      () => Option.fromNullishOr(schoolMatch?.loaderData?.locale)
     ),
     () => DEFAULT_LOCALE
   );
@@ -133,11 +148,22 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 /**
- * A path outside every locale answers the not-found state in the default locale,
- * inside the document of RootDocument.
+ * The not-found state inside the document of RootDocument: the page that the
+ * server answered not found names its locale and host, and a path outside every
+ * locale speaks the default locale. Search engines are asked not to index the
+ * address while the state is shown.
  */
-function RootNotFound() {
-  return <LocalizedNotFound locale={DEFAULT_LOCALE} />;
+function RootNotFound({ data }: NotFoundRouteProps) {
+  const page = Option.getOrElse(
+    Schema.decodeUnknownOption(NotFoundPageData)(data),
+    () => ({ locale: DEFAULT_LOCALE, school: false })
+  );
+  return (
+    <>
+      <meta content="noindex,nofollow" name="robots" />
+      <LocalizedNotFound locale={page.locale} school={page.school} />
+    </>
+  );
 }
 
 /**

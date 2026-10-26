@@ -35,21 +35,16 @@ type Locale = keyof typeof dictionaries;
 /**
  * An address that no page owns: a Quran surah that does not exist. The proxy
  * rejects it with a 404 whatever the content store holds, so the address needs
- * no data, and rewrites the request to the standalone page.
+ * no data.
  */
 const HARD_ADDRESS = "quran/999";
 
 /**
- * Where the standalone page itself answers, and the request header in which
- * the proxy names the language when it rewrites an address to it. The rewrite
- * reaches the page. The server of a local production build, which
- * these tests run against, draws the app's own document only at this address
- * and answers the rewrite with the framework's built-in page; `main` did the
- * same when this was measured on 13 October 2026. So the tests ask for the
- * address itself, with the header that the proxy would set.
+ * An address that the Worker answers not found before any route renders: the
+ * school tree on the main host. The Worker renders the app's not-found page at
+ * the address itself, in the locale that its path names.
  */
-const STANDALONE_ADDRESS = "/_missing";
-const LOCALE_HEADER = "x-nakafa-locale";
+const SCHOOL_TREE_ADDRESS = "school/anything";
 
 /**
  * Where a page calls `notFound()` inside the app: a pagination query with only a
@@ -108,22 +103,32 @@ const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
   );
 });
 
-/** Opens the standalone page as the proxy's rewrite does, in one language. */
+/**
+ * Opens the not-found page that the Worker answers, in one language, and waits
+ * until React has taken it over: the browser hydrates the page that the server
+ * sent at the same address, so a page drawn for another address would fail with
+ * React #418 there.
+ */
 const openStandalone = Effect.fn("NakafaE2E.openStandalone")(function* (
   page: Page,
   locale: Locale
 ) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* holdWebFont(page);
-  yield* Effect.promise(() =>
-    page.setExtraHTTPHeaders({ [LOCALE_HEADER]: locale })
-  );
   const response = yield* Effect.promise(() =>
-    page.goto(STANDALONE_ADDRESS, { waitUntil: "domcontentloaded" })
+    page.goto(`/${locale}/${SCHOOL_TREE_ADDRESS}`, {
+      waitUntil: "domcontentloaded",
+    })
   );
-  // Only the document carries the header: what the page asks for next does not.
-  yield* Effect.promise(() => page.setExtraHTTPHeaders({}));
   yield* Effect.sync(() => expect(response?.status()).toBe(404));
+  yield* Effect.promise(() =>
+    waitUntilTakenOver(
+      page.getByRole("link", {
+        exact: true,
+        name: dictionaries[locale].State["home-button"],
+      })
+    )
+  );
 });
 
 /**
@@ -312,12 +317,11 @@ const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
 });
 
 /**
- * The addresses that the proxy answers with 404 before any page renders: a school
- * tree address on the main host, a removed route, and an unsupported system
- * resource. The proxy rewrites each to the app's not-found page,
- * which `proxy.test.ts` checks; a local production build draws the framework's
- * page for a rewrite, as `STANDALONE_ADDRESS` explains, so here only the status
- * is checked, and the tests above check the page that the rewrite reaches.
+ * The addresses that the Worker answers with 404 before any route renders: a
+ * school tree address on the main host, a removed route, and an unsupported
+ * system resource. `answer.server.test.ts` checks which page answers each, and
+ * the tests above check the not-found page itself, so here only the status is
+ * checked.
  */
 const PROXY_ANSWERS = [
   "/school",

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Data, Effect } from "effect";
+import { Data, Effect, Option } from "effect";
 import { answerRequest, type RouterHandler } from "@/lib/routing/answer.server";
 
 /** A failure that one of the readers of the server entry reports. */
@@ -30,7 +30,6 @@ vi.mock("@/lib/routing/rendered", async () => {
     "/$locale/chat/$id",
     "/$locale/search",
     "/$locale/try-out/$country/$exam/$track",
-    "/_missing",
     "/api/weather",
     "/school/$slug/exams",
   ];
@@ -146,6 +145,12 @@ function routedRequest(handle: ReturnType<typeof router>) {
   return request;
 }
 
+/** The not-found page that the router received with its single call, if any. */
+function routedNotFound(handle: ReturnType<typeof router>) {
+  const [, notFound] = handle.mock.calls[0] ?? [];
+  return notFound;
+}
+
 beforeEach(() => {
   release.hasStaticRelease = true;
   assets.fetch.mockReset();
@@ -208,8 +213,10 @@ describe("decisions before the router", () => {
       const { handle, response } = yield* served("/en/tryout/old");
 
       expect(response.headers.get("content-language")).toBe("en");
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
-      expect(routedRequest(handle).headers.get("x-nakafa-locale")).toBe("en");
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/tryout/old`);
+      expect(routedNotFound(handle)).toStrictEqual(
+        Option.some({ locale: "en", school: false })
+      );
     })
   );
 
@@ -274,7 +281,8 @@ describe("decisions before the router", () => {
         const { handle, response } = yield* served("/en/search");
 
         expect(response.headers.get("content-language")).toBe("en");
-        expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
+        expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/search`);
+        expect(Option.isSome(routedNotFound(handle))).toBe(true);
       })
   );
 
@@ -300,6 +308,7 @@ describe("decisions before the router", () => {
 
       expect(response.status).toBe(200);
       expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/chat`);
+      expect(Option.isNone(routedNotFound(handle))).toBe(true);
     })
   );
 
@@ -310,7 +319,8 @@ describe("decisions before the router", () => {
         for (const address of ["/en/school/harapan", "/en/user/abc123"]) {
           const { handle } = yield* served(address, { accept: "text/html" });
 
-          expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
+          expect(routedRequest(handle).url).toBe(`${ORIGIN}${address}`);
+          expect(Option.isSome(routedNotFound(handle))).toBe(true);
         }
       })
   );
@@ -323,8 +333,10 @@ describe("decisions before the router", () => {
         accept: "text/html",
       });
 
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
-      expect(routedRequest(handle).headers.get("x-nakafa-locale")).toBe("id");
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/articles/belajar`);
+      expect(routedNotFound(handle)).toStrictEqual(
+        Option.some({ locale: "id", school: false })
+      );
     })
   );
 
@@ -338,13 +350,16 @@ describe("decisions before the router", () => {
 
       const response = yield* answerRequest(
         new Request("https://harapan.nakafa.com/en/user/abc123/chat", {
-          headers: { accept: "text/html" },
+          headers: { accept: "text/html", host: "harapan.nakafa.com" },
         }),
         handle
       );
 
       expect(routedRequest(handle).url).toBe(
-        "https://harapan.nakafa.com/_missing"
+        "https://harapan.nakafa.com/en/user/abc123/chat"
+      );
+      expect(routedNotFound(handle)).toStrictEqual(
+        Option.some({ locale: "id", school: true })
       );
       expect(response.headers.get("content-language")).toBe("id");
       expect(migration.read).not.toHaveBeenCalled();

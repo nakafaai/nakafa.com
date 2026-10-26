@@ -5,7 +5,8 @@ import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readProfileGate } from "@/lib/profile/gate";
 import {
-  createNotFoundRequest,
+  type NotFoundPage,
+  notFoundPageOf,
   withContentLanguage,
 } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
@@ -25,8 +26,15 @@ import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
 
-/** The router's answer to one request, which may fail with the error Start throws. */
-export type RouterHandler = (request: Request) => Promise<Response>;
+/**
+ * The router's answer to one request, which may fail with the error Start throws.
+ * A request that the server answers not found names its not-found page, which
+ * the router reads from its server context.
+ */
+export type RouterHandler = (
+  request: Request,
+  notFound: Option.Option<NotFoundPage>
+) => Promise<Response>;
 
 /** An error that escaped a decision of the server entry, kept with its original cause. */
 export class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
@@ -48,10 +56,11 @@ function toUncaughtRequestError(cause: unknown) {
  */
 const answerRouted = Effect.fn("www.routing.answer.routed")(function* (
   request: Request,
-  route: RouterHandler
+  route: RouterHandler,
+  notFound: Option.Option<NotFoundPage> = Option.none()
 ) {
   return yield* Effect.tryPromise({
-    try: () => route(request),
+    try: () => route(request, notFound),
     catch: (cause) => new UncaughtRequestError({ cause }),
   }).pipe(
     Effect.catchTag("UncaughtRequestError", (error) =>
@@ -62,15 +71,21 @@ const answerRouted = Effect.fn("www.routing.answer.routed")(function* (
   );
 });
 
-/** Answers the app's own not-found page, in the locale that the address names. */
+/**
+ * Answers the app's own not-found page at the visitor's address, in the locale
+ * that the address names. The router renders the address with the page in its
+ * server context, so the root route answers not found and the browser hydrates
+ * the same root match at the same address.
+ */
 const answerNotFound = Effect.fn("www.routing.answer.notFound")(function* (
   request: Request,
   locale: Locale,
   route: RouterHandler
 ) {
   const response = yield* answerRouted(
-    createNotFoundRequest(request, locale),
-    route
+    request,
+    route,
+    Option.some(notFoundPageOf(request, locale))
   );
   return withContentLanguage(response, locale);
 });
