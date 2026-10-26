@@ -2000,7 +2000,7 @@
       "description": "Speichere es zuerst ohne Passwort."
     },
     "audit-export-error": {
-      "title": "Das Protokoll konnte nicht exportiert werden.",
+      "title": "Export fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
     }
   },

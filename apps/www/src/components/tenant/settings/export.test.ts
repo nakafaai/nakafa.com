@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { TestClock } from "effect/testing";
 import {
   auditFileName,
@@ -42,7 +42,7 @@ describe("components/tenant/settings/export", () => {
           page: [entry("e2", 1)],
         });
       const entries = yield* readAuditTrail(slug);
-      expect(entries.map((read) => read.id)).toEqual(["e1", "e2"]);
+      expect(Arr.map(entries, (read) => read.id)).toEqual(["e1", "e2"]);
       expect(client.query).toHaveBeenNthCalledWith(
         2,
         expect.anything(),
