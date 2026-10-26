@@ -72,10 +72,9 @@
     "card-used": "Diese Karte wurde schon benutzt. Bitte deine Lehrkraft oder einen Admin um eine neue Karte.",
     "failed": "Anmeldung fehlgeschlagen. Versuche es erneut.",
     "outsider-card": "Mit Karte anmelden",
-    "outsider-description": "{account} ist kein Mitglied von {school}.",
-    "outsider-card-hint": "Keine Google-Adresse? Frag den Admin deiner Schule, wie du dich anmeldest.",
+    "outsider-description": "Du bist als {account} angemeldet, und dieses Konto hat hier noch keine Einladung.",
     "outsider-switch": "Konto wechseln",
-    "outsider-title": "Kein Mitglied",
+    "outsider-title": "Kein Mitglied von {school}",
     "password-label": "Passwort",
     "password-too-long": "Das Passwort ist zu lang.",
     "password-too-short": "Das Passwort ist zu kurz.",
@@ -83,7 +82,6 @@
     "submit": "Anmelden",
     "username-action": "Mit Benutzername anmelden",
     "username-label": "Schul-Benutzername",
-    "outsider-hint": "Wenn ein Admin diese Adresse eingeladen hat, kann die Einladung einen Moment brauchen. Prüfe erneut, oder bitte einen Admin, sie noch einmal zu senden. Wurde die Einladung an eine andere Adresse geschickt, melde dich mit dieser an.",
     "outsider-check-again": "Erneut prüfen"
   },
   "Exams": {
