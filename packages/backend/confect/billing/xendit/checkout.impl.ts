@@ -7,7 +7,12 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
+import {
+  accountUnavailableCode,
+  accountUnavailableMessage,
+} from "@repo/backend/confect/auth/spec";
 import { ensureAccount } from "@repo/backend/confect/billing/accounts";
+import { CheckoutUnavailable } from "@repo/backend/confect/billing/spec";
 import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import spec from "@repo/backend/confect/billing/xendit/checkout.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
@@ -19,7 +24,7 @@ const REOPEN_MARGIN_MS = Duration.toMillis(Duration.minutes(10));
 /** The most open checkouts of one account read at once. A learner opens a few at most, and each closes within the hour. */
 const OPEN_CHECKOUT_LIMIT = 10;
 
-/** The user a checkout is for, while the account may still buy. */
+/** The user a checkout is for, while the account may still buy: one being deleted or gone withholds it. */
 const readBuyer = Effect.fn("billing.xendit.checkout.readBuyer")(function* (
   userId: Docs["users"]["_id"]
 ) {
@@ -30,7 +35,13 @@ const readBuyer = Effect.fn("billing.xendit.checkout.readBuyer")(function* (
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
       Effect.orDie
     );
-  return user === null || isAccountDeletionPending(user) ? null : user;
+  if (user === null || isAccountDeletionPending(user)) {
+    return yield* new CheckoutUnavailable({
+      code: accountUnavailableCode,
+      message: accountUnavailableMessage,
+    });
+  }
+  return user;
 });
 
 const prepare = FunctionImpl.make(
@@ -39,9 +50,6 @@ const prepare = FunctionImpl.make(
   "prepare",
   Effect.fn("billing.xendit.checkout.prepare")(function* (args) {
     const user = yield* readBuyer(args.userId);
-    if (user === null) {
-      return { kind: "unavailable" as const };
-    }
     const reader = yield* DatabaseReader;
     const accountId = yield* ensureAccount({
       owner: { kind: "personal", userId: args.userId },
@@ -69,7 +77,6 @@ const prepare = FunctionImpl.make(
         checkout.expiresAt - now >= REOPEN_MARGIN_MS
     );
     return {
-      kind: "open" as const,
       accountId,
       authId: user.authId,
       email: user.email,
@@ -92,9 +99,7 @@ const admit = FunctionImpl.make(
   spec,
   "admit",
   Effect.fn("billing.xendit.checkout.admit")(function* (args) {
-    if ((yield* readBuyer(args.userId)) === null) {
-      return { kind: "unavailable" as const };
-    }
+    yield* readBuyer(args.userId);
     const now = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
       .table("billingCheckouts")
@@ -132,7 +137,7 @@ const admit = FunctionImpl.make(
       event: args.event,
       timestamp: now,
     });
-    return { kind: "admitted" as const };
+    return null;
   })
 );
 

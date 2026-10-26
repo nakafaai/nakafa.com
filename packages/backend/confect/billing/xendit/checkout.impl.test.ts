@@ -1,4 +1,5 @@
-import { assert, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
+import { accountUnavailableCode } from "@repo/backend/confect/auth/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -70,12 +71,10 @@ describe("billing/xendit/checkout internal steps", () => {
       accountId: expect.any(String),
       authId: "auth-xendit-checkout-active",
       email: "xendit-checkout@example.com",
-      kind: "open",
       name: "Xendit Checkout",
       openUrl: null,
       providerCustomerId: null,
     });
-    assert(first.kind === "open");
     await t.mutation(async (ctx) => {
       await insertOpenCheckout(ctx, first.accountId, "pro.pass.1", FAR_FUTURE);
       await insertOpenCheckout(ctx, first.accountId, "pro.monthly", FAR_PAST);
@@ -115,9 +114,9 @@ describe("billing/xendit/checkout internal steps", () => {
       return id;
     });
     for (const userId of [deleting, missing]) {
-      expect(
-        await t.mutation(steps.prepare, { offer: "pro.pass.1", userId })
-      ).toEqual({ kind: "unavailable" });
+      await expect(
+        t.mutation(steps.prepare, { offer: "pro.pass.1", userId })
+      ).rejects.toThrow(accountUnavailableCode);
     }
     expect(
       await t.run((ctx) => ctx.db.query("billingAccounts").collect())
@@ -131,7 +130,6 @@ describe("billing/xendit/checkout internal steps", () => {
       offer: "pro.monthly",
       userId,
     });
-    assert(prepared.kind === "open");
     const subscription = await t.mutation(steps.admit, {
       accountId: prepared.accountId,
       event,
@@ -156,8 +154,8 @@ describe("billing/xendit/checkout internal steps", () => {
       },
       userId,
     });
-    expect(subscription).toEqual({ kind: "admitted" });
-    expect(pass).toEqual({ kind: "admitted" });
+    expect(subscription).toBeNull();
+    expect(pass).toBeNull();
     const rows = await t.run(async (ctx) => ({
       checkouts: await ctx.db.query("billingCheckouts").collect(),
       subscriptions: await ctx.db.query("billingSubscriptions").collect(),
@@ -186,12 +184,11 @@ describe("billing/xendit/checkout internal steps", () => {
       offer: "pro.monthly",
       userId,
     });
-    assert(prepared.kind === "open");
     await t.mutation((ctx) =>
       ctx.db.patch(userId, { deletionPreparedAt: NOW })
     );
-    expect(
-      await t.mutation(steps.admit, {
+    await expect(
+      t.mutation(steps.admit, {
         accountId: prepared.accountId,
         event,
         offer: "pro.monthly",
@@ -203,7 +200,7 @@ describe("billing/xendit/checkout internal steps", () => {
         },
         userId,
       })
-    ).toEqual({ kind: "unavailable" });
+    ).rejects.toThrow(accountUnavailableCode);
     const rows = await t.run(async (ctx) => ({
       checkouts: await ctx.db.query("billingCheckouts").collect(),
       subscriptions: await ctx.db.query("billingSubscriptions").collect(),

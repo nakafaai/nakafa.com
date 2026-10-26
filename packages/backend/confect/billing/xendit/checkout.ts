@@ -2,14 +2,9 @@ import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
-import {
-  accountUnavailableCode,
-  accountUnavailableMessage,
-} from "@repo/backend/confect/auth/spec";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { getXenditCheckoutLocale } from "@repo/backend/confect/billing/locale";
 import {
-  CheckoutUnavailable,
   type ProCheckoutOffer,
   XenditCheckoutError,
   xenditCheckoutErrorCode,
@@ -134,12 +129,6 @@ function xenditCheckoutFailure(cause: { readonly message: string }) {
   );
 }
 
-const unavailable = () =>
-  new CheckoutUnavailable({
-    code: accountUnavailableCode,
-    message: accountUnavailableMessage,
-  });
-
 /**
  * Starts one Xendit hosted checkout for a learner's personal Xendit account. The
  * learner's Xendit customer is found or made first, and a session for the same
@@ -159,10 +148,7 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
     const prepared = yield* runMutation(
       refs.internal.billing.xendit.checkout.prepare,
       { offer: input.offer, userId: input.appUserId }
-    ).pipe(Effect.orDie);
-    if (prepared.kind === "unavailable") {
-      return yield* unavailable();
-    }
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
     if (prepared.openUrl !== null) {
       return { url: prepared.openUrl };
     }
@@ -197,34 +183,28 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
         message: `Session ${session.payment_session_id} has no payment link.`,
       });
     }
-    const admission = yield* runMutation(
-      refs.internal.billing.xendit.checkout.admit,
-      {
-        accountId: prepared.accountId,
-        event: {
-          name: "checkout started",
-          properties: {
-            checkout_locale: getXenditCheckoutLocale(input.locale),
-            customer_ip_available: false,
-            locale: input.locale,
-            product_count: 1,
-            product_id: input.offer,
-            rail: "xendit",
-          },
+    yield* runMutation(refs.internal.billing.xendit.checkout.admit, {
+      accountId: prepared.accountId,
+      event: {
+        name: "checkout started",
+        properties: {
+          checkout_locale: getXenditCheckoutLocale(input.locale),
+          customer_ip_available: false,
+          locale: input.locale,
+          product_count: 1,
+          product_id: input.offer,
+          rail: "xendit",
         },
-        offer: input.offer,
-        session: {
-          sessionId: session.payment_session_id,
-          url: session.payment_link_url,
-          expiresAt: DateTime.toEpochMillis(session.expires_at),
-          planId: session.recurring_plan_id,
-        },
-        userId: input.appUserId,
-      }
-    ).pipe(Effect.orDie);
-    if (admission.kind === "unavailable") {
-      return yield* unavailable();
-    }
+      },
+      offer: input.offer,
+      session: {
+        sessionId: session.payment_session_id,
+        url: session.payment_link_url,
+        expiresAt: DateTime.toEpochMillis(session.expires_at),
+        planId: session.recurring_plan_id,
+      },
+      userId: input.appUserId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     return { url: session.payment_link_url };
   },
   Effect.scoped,
