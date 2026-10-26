@@ -295,7 +295,7 @@ export function OnboardingQuestionnaire({
         <QuestionnaireDescription>
           {t("onboarding.region-description")}
         </QuestionnaireDescription>
-        <QuestionnaireChoices className="sm:grid-cols-2">
+        <QuestionnaireChoices>
           {Arr.map(regionOptions, (option) => (
             <QuestionnaireChoice
               checked={answers.region === option.value}
