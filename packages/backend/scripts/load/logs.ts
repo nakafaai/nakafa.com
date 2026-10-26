@@ -3,11 +3,11 @@ import {
   localConvexEnvironment,
   makeConvexTemporaryRoot,
 } from "@repo/backend/scripts/content/acceptance/process";
-import type { Sample } from "@repo/backend/scripts/load/stats";
+import { Sample } from "@repo/backend/scripts/load/stats";
 import {
-  Array as Arr,
   Effect,
   FileSystem,
+  MutableList,
   Option,
   Schema,
   Stream,
@@ -52,11 +52,11 @@ const decodeCompletion = Schema.decodeUnknownOption(
  * (a cached answer apart, since it runs nothing), the documents each read, and one sample for each
  * write conflict that Convex retried, named by the function and the table it conflicted on.
  */
-export interface ServerRun {
-  readonly conflicts: readonly Sample[];
-  readonly reads: readonly Sample[];
-  readonly timings: readonly Sample[];
-}
+export const ServerRun = Schema.Struct({
+  conflicts: Schema.Array(Sample),
+  reads: Schema.Array(Sample),
+  timings: Schema.Array(Sample),
+});
 
 /** The name of an execution's function: its kind, its component, and its path, such as `mutation:exams/sittings:answer`. */
 const nameOf = (completion: Completion) =>
@@ -65,46 +65,62 @@ const nameOf = (completion: Completion) =>
     { onNone: () => "", onSome: (path) => `${path}/` }
   )}${Str.replace(".js", "")(completion.identifier)}`;
 
-/** Every completion of the log text, in the order the stream printed them. */
-const completionsOf = (text: string) =>
-  Arr.getSomes(
-    Arr.map(Str.split(text, "\n"), (line) =>
-      Option.flatMap(decodeEvent(line), (event) =>
-        event.kind === "Completion" ? decodeCompletion(line) : Option.none()
-      )
-    )
+/** The completion that one line of the log stream prints, or none for any other line. */
+const completionOf = (line: string) =>
+  Option.flatMap(decodeEvent(line), (event) =>
+    event.kind === "Completion" ? decodeCompletion(line) : Option.none()
   );
 
-/** The backend's own measures of every execution in the log text that `captureLogs` wrote. */
-export const serverRun = (text: string): ServerRun => {
-  const completions = completionsOf(text);
-  const failed = (completion: Completion) =>
-    Option.isSome(Option.fromNullishOr(completion.error));
+/**
+ * The backend's own measures of every execution in the log file that `captureLogs` wrote. The
+ * file of a full run holds hundreds of megabytes, so it is read line by line, and only the
+ * measures stay in memory.
+ */
+export const readServerRun = Effect.fn("load.logs.read")(function* (
+  path: string
+) {
+  const conflicts = MutableList.make<Sample>();
+  const reads = MutableList.make<Sample>();
+  const timings = MutableList.make<Sample>();
+  yield* (yield* FileSystem.FileSystem).stream(path).pipe(
+    Stream.decodeText(),
+    Stream.splitLines,
+    Stream.runForEach((line) =>
+      Effect.sync(() => {
+        const found = completionOf(line);
+        if (Option.isNone(found)) {
+          return;
+        }
+        const completion = found.value;
+        const name = nameOf(completion);
+        const failed = Option.isSome(Option.fromNullishOr(completion.error));
+        const occ = Option.fromNullishOr(completion.occInfo);
+        if (Option.isSome(occ)) {
+          MutableList.append(conflicts, {
+            failed: true,
+            name: `${name} on ${occ.value.tableName ?? "an unnamed table"}`,
+            value: 1,
+          });
+        }
+        MutableList.append(reads, {
+          failed,
+          name,
+          value: completion.usageStats.databaseReadDocuments,
+        });
+        MutableList.append(timings, {
+          failed,
+          name: completion.cachedResult === true ? `${name} (cached)` : name,
+          value: completion.executionTime * 1000,
+        });
+      })
+    )
+  );
   return {
-    conflicts: Arr.getSomes(
-      Arr.map(completions, (completion) =>
-        Option.map(Option.fromNullishOr(completion.occInfo), (occ) => ({
-          failed: true,
-          name: `${nameOf(completion)} on ${occ.tableName ?? "an unnamed table"}`,
-          value: 1,
-        }))
-      )
-    ),
-    reads: Arr.map(completions, (completion) => ({
-      failed: failed(completion),
-      name: nameOf(completion),
-      value: completion.usageStats.databaseReadDocuments,
-    })),
-    timings: Arr.map(completions, (completion) => ({
-      failed: failed(completion),
-      name:
-        completion.cachedResult === true
-          ? `${nameOf(completion)} (cached)`
-          : nameOf(completion),
-      value: completion.executionTime * 1000,
-    })),
-  };
-};
+    conflicts: MutableList.toArray(conflicts),
+    reads: MutableList.toArray(reads),
+    timings: MutableList.toArray(timings),
+  } satisfies typeof ServerRun.Type;
+});
 
 /**
  * Streams the local backend's function log into `path` for as long as the scope lasts, every

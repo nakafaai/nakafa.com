@@ -2,7 +2,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { audit, StoredAnswer } from "@repo/backend/scripts/load/ledger";
-import { serverRun } from "@repo/backend/scripts/load/logs";
+import { readServerRun } from "@repo/backend/scripts/load/logs";
 import { type LoadPlan, scriptOf } from "@repo/backend/scripts/load/plan";
 import { runProctor } from "@repo/backend/scripts/load/proctor";
 import { Recorder, timed } from "@repo/backend/scripts/load/recorder";
@@ -175,7 +175,7 @@ export const runLoad = Effect.fn("load.run")(function* <E>(
     Arr.filter(stored, (row) => HashSet.has(attempts, row.attempt))
   );
   const client = spreadByName(yield* recorder.samples);
-  const server = serverRun(yield* fs.readFileString(logPath));
+  const server = yield* readServerRun(logPath);
   const report = LoadReport.make({
     audit: checked,
     client,
