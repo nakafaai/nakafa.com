@@ -1,20 +1,26 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import {
-  answerSchoolShell,
-  isSchoolPageRequest,
-} from "@/lib/routing/school/shell.server";
+import { answerSchoolPage } from "@/lib/routing/school/shell.server";
 
 const assets = vi.hoisted(() => ({
   fetch: vi.fn<(request: Request) => Promise<Response>>(),
 }));
 
+const release = vi.hoisted(() => ({ bound: true }));
+
 vi.mock("cloudflare:workers", () => ({
-  /** The platform's assets binding, which holds the release's school shell. */
-  env: { ASSETS: assets },
+  /** The platform's assets binding, which holds the release's school shell, and which a prerender does not bind. */
+  env: {
+    get ASSETS() {
+      return release.bound ? assets : undefined;
+    },
+  },
 }));
+
+/** The answer of every request that the shell does not answer. */
+const OTHERWISE = new Response("<html>page</html>");
 
 /** A request to a school host, or to another host, as the platform passes it on. */
 function request(address: string, method = "GET") {
@@ -22,48 +28,26 @@ function request(address: string, method = "GET") {
   return new Request(url, { headers: { host: url.host }, method });
 }
 
-describe("isSchoolPageRequest", () => {
-  it("reads a page of a school host", () => {
-    expect(isSchoolPageRequest(request("https://harapan.nakafa.com/"))).toBe(
-      true
-    );
-    expect(
-      isSchoolPageRequest(request("https://harapan.nakafa.com/exams", "HEAD"))
-    ).toBe(true);
-  });
-
-  it("leaves a write, a shared route, a file and another host to their own answers", () => {
-    expect(
-      isSchoolPageRequest(request("https://harapan.nakafa.com/exams", "POST"))
-    ).toBe(false);
-    expect(
-      isSchoolPageRequest(
-        request("https://harapan.nakafa.com/api/auth/get-session")
+beforeEach(() => {
+  release.bound = true;
+  assets.fetch
+    .mockReset()
+    .mockImplementation(() =>
+      Promise.resolve(
+        new Response("<html>shell</html>", { headers: { etag: '"shell"' } })
       )
-    ).toBe(false);
-    expect(
-      isSchoolPageRequest(request("https://harapan.nakafa.com/assets/old.js"))
-    ).toBe(false);
-    expect(isSchoolPageRequest(request("https://nakafa.com/en/exams"))).toBe(
-      false
     );
-  });
 });
 
-describe("answerSchoolShell", () => {
+describe("answerSchoolPage", () => {
   it.effect(
-    "answers the release's shell at the visitor's address, with its headers and the given status",
+    "answers a school page with the release's shell at the visitor's address, its headers and the given status",
     () =>
       Effect.gen(function* () {
-        assets.fetch.mockResolvedValueOnce(
-          new Response("<html>shell</html>", {
-            headers: { etag: '"shell"' },
-          })
-        );
-
-        const response = yield* answerSchoolShell(
+        const response = yield* answerSchoolPage(
           request("https://harapan.nakafa.com/exams"),
-          404
+          404,
+          Effect.succeed(OTHERWISE)
         );
 
         const [shell] = assets.fetch.mock.calls[0] ?? [];
@@ -79,17 +63,51 @@ describe("answerSchoolShell", () => {
       })
   );
 
-  it.effect("answers a HEAD request with no body", () =>
+  it.effect("answers a HEAD request for a school page with no body", () =>
     Effect.gen(function* () {
-      assets.fetch.mockResolvedValueOnce(new Response("<html>shell</html>"));
-
-      const response = yield* answerSchoolShell(
+      const response = yield* answerSchoolPage(
         request("https://harapan.nakafa.com/", "HEAD"),
-        200
+        200,
+        Effect.succeed(OTHERWISE)
       );
 
       expect(response.status).toBe(200);
       expect(response.body).toBeNull();
     })
+  );
+
+  it.effect(
+    "leaves a write, a shared route, a file and another host to their own answer",
+    () =>
+      Effect.gen(function* () {
+        for (const other of [
+          request("https://harapan.nakafa.com/exams", "POST"),
+          request("https://harapan.nakafa.com/api/auth/get-session"),
+          request("https://harapan.nakafa.com/assets/old.js"),
+          request("https://nakafa.com/en/exams"),
+        ]) {
+          expect(
+            yield* answerSchoolPage(other, 200, Effect.succeed(OTHERWISE))
+          ).toBe(OTHERWISE);
+        }
+        expect(assets.fetch).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "leaves a school page to the router when no release is bound, as in a prerender",
+    () =>
+      Effect.gen(function* () {
+        release.bound = false;
+
+        const response = yield* answerSchoolPage(
+          request("https://harapan.nakafa.com/exams"),
+          200,
+          Effect.succeed(OTHERWISE)
+        );
+
+        expect(response).toBe(OTHERWISE);
+        expect(assets.fetch).not.toHaveBeenCalled();
+      })
   );
 });

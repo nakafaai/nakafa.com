@@ -15,7 +15,6 @@ import {
   readSlashRedirectResponse,
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
-import { hasStaticRelease } from "@/lib/routing/release";
 import { isBareRoutePath, isRenderedRoutePath } from "@/lib/routing/rendered";
 import {
   answerRouted,
@@ -23,10 +22,7 @@ import {
   UncaughtRequestError,
 } from "@/lib/routing/routed.server";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
-import {
-  answerSchoolShell,
-  isSchoolPageRequest,
-} from "@/lib/routing/school/shell.server";
+import { answerSchoolPage } from "@/lib/routing/school/shell.server";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
 
@@ -72,15 +68,6 @@ const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
 });
 
 /**
- * Whether a request reads a school page that the release's static school shell
- * answers. A prerender and a development server bind no release, so their router
- * renders the school's root document instead.
- */
-function readsSchoolShell(request: Request) {
-  return hasStaticRelease() && isSchoolPageRequest(request);
-}
-
-/**
  * Answers a request that no address decision answered: the not-found page of a
  * document that the projection does not own, then the root's locale redirect, then
  * the locale redirect of a bare page address, then the static shell of a school
@@ -113,10 +100,7 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
   if (!isRenderedRoutePath(url)) {
     return yield* answerUnmatchedRequest(request);
   }
-  if (readsSchoolShell(request)) {
-    return yield* answerSchoolShell(request, 200);
-  }
-  return yield* answerRouted(request, route);
+  return yield* answerSchoolPage(request, 200, answerRouted(request, route));
 });
 
 /**
@@ -161,10 +145,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
 
   const refused = yield* readSchoolRefusal(request);
   if (Option.isSome(refused)) {
-    // The shell's gate draws the refusal in the browser, so the Worker renders nothing.
-    return readsSchoolShell(request)
-      ? yield* answerSchoolShell(request, 404)
-      : yield* answerNotFound(request, refused.value, route);
+    return yield* answerSchoolPage(
+      request,
+      404,
+      answerNotFound(request, refused.value, route)
+    );
   }
 
   const removed = yield* readRemovedAddressNotFound(request).pipe(

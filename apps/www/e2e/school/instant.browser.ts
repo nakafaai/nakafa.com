@@ -68,7 +68,8 @@ function commitTime(page: Page, href: string) {
 async function commitEach(page: Page, paths: readonly string[], who: string) {
   for (const path of paths) {
     const elapsed = await commitTime(page, path);
-    test.info().annotations.push({
+    const info = test.info();
+    info.annotations = Arr.append(info.annotations, {
       description: `${who} ${path} ${Math.round(elapsed)} ms`,
       type: "commit",
     });
