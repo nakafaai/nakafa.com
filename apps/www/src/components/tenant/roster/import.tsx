@@ -14,7 +14,6 @@ import {
   IMPORT_BATCH,
   type RosterLine,
 } from "@repo/backend/confect/roster/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -32,6 +31,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   EXPORT_HEADER,
@@ -106,7 +106,9 @@ const writeFile = (lines: readonly (typeof RosterLine.Type)[]) =>
  * unit's active period, or cancels and nothing is written. Export writes the period's
  * students back into a file to compare with Dapodik.
  */
-export function RosterImportSettings({ slug }: { slug: TenantSlug }) {
+export function RosterImportSettings() {
+  const { slug } = useTenant();
+
   return (
     <TableFiltersProvider>
       <RosterUnitProvider>
@@ -116,7 +118,7 @@ export function RosterImportSettings({ slug }: { slug: TenantSlug }) {
           )}
           read={{ args: { slug }, ref: tenancy.viewer.get }}
         >
-          <RosterImportContent slug={slug} />
+          <RosterImportContent />
         </ReadBoundary>
       </RosterUnitProvider>
     </TableFiltersProvider>
@@ -124,7 +126,7 @@ export function RosterImportSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /** The import of the chosen unit, once the viewer's units are in. */
-function RosterImportContent({ slug }: { slug: TenantSlug }) {
+function RosterImportContent() {
   const read = useRosterUnit();
 
   if (read === undefined) {
@@ -138,23 +140,14 @@ function RosterImportContent({ slug }: { slug: TenantSlug }) {
     );
   }
   return (
-    <RosterImportOfUnit
-      key={read.unit.value.id}
-      slug={slug}
-      unitId={read.unit.value.id}
-    />
+    <RosterImportOfUnit key={read.unit.value.id} unitId={read.unit.value.id} />
   );
 }
 
 /** The import into one unit's active period, or the state of a unit that has none. */
-function RosterImportOfUnit({
-  slug,
-  unitId,
-}: {
-  slug: TenantSlug;
-  unitId: UnitId;
-}) {
+function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   const t = useTranslations("SchoolRoster");
+  const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const active = useQuery(
     tenancy.cohorts.activePeriod,
@@ -183,7 +176,7 @@ function RosterImportOfUnit({
       </SettingsTablePage>
     );
   }
-  return <RosterImportOfPeriod periodId={periodId} slug={slug} />;
+  return <RosterImportOfPeriod periodId={periodId} />;
 }
 
 /**
@@ -195,12 +188,12 @@ function RosterImportOfUnit({
  */
 function RosterImportOfPeriod({
   periodId,
-  slug,
 }: {
   periodId: GenericId.GenericId<"tenantPeriods">;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolRoster");
+  const { slug } = useTenant();
+  const columns = usePreviewColumns();
   const apply = useMutation(roster.imports.apply);
   const exportLines = useAction(roster.exports.lines);
   const input = useRef<HTMLInputElement>(null);
@@ -321,7 +314,12 @@ function RosterImportOfPeriod({
           </>
         }
       >
-        <RosterPreview rows={preview} />
+        <DataTable
+          columns={columns}
+          data={preview}
+          rowId={(row) => String(row.line)}
+          search="name"
+        />
       </SettingsTablePage>
     );
   }
@@ -383,10 +381,11 @@ function RosterImportOfPeriod({
   );
 }
 
-/** Every read row of the file with its status, so the Admin sees each row a problem keeps out. */
-function RosterPreview({ rows }: { rows: readonly (typeof ReadRow.Type)[] }) {
+/** The preview's columns: each read row and its status, which shows the rows a problem keeps out. */
+function usePreviewColumns() {
   const t = useTranslations("SchoolRoster");
-  const columns = rowColumns.columns([
+
+  return rowColumns.columns([
     rowColumns.accessor((row) => row.line, {
       header: t("line"),
       id: "line",
@@ -421,13 +420,4 @@ function RosterPreview({ rows }: { rows: readonly (typeof ReadRow.Type)[] }) {
       id: "status",
     }),
   ]);
-
-  return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      rowId={(row) => String(row.line)}
-      search="name"
-    />
-  );
 }

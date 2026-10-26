@@ -53,7 +53,7 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   if (guardian) {
     return (
       <Suspense fallback={null}>
-        <TenantGuardianSignIn slug={slug} />
+        <TenantGuardianSignIn />
       </Suspense>
     );
   }

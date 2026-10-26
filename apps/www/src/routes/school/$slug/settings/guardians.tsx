@@ -16,7 +16,6 @@ export const Route = createFileRoute("/school/$slug/settings/guardians")({
 });
 
 function SchoolGuardiansPage(): ReactElement {
-  const { slug } = Route.useRouteContext();
   const first = Route.useLoaderData();
-  return <GuardianLinksSettings first={first} slug={slug} />;
+  return <GuardianLinksSettings first={first} />;
 }
