@@ -27,8 +27,8 @@ const SCHOOL_HEADERS = {
  */
 export const Route = createFileRoute("/school")({
   ssr: false,
-  headers: () => SCHOOL_HEADERS,
   loader: () => Effect.runPromise(readSchoolRoot()),
+  headers: () => SCHOOL_HEADERS,
   component: SchoolRoot,
 });
 
