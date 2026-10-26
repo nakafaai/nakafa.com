@@ -22,7 +22,7 @@ export function PaneHeader({
   description,
   title,
 }: {
-  description?: string;
+  description?: string | undefined;
   title: string;
 }) {
   const t = useTranslations("Common");
