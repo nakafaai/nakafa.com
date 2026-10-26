@@ -20,7 +20,9 @@ export const TaskText = Schema.String.check(
 );
 
 /** The points a task is worth, from 0 to 1,000. */
-export const TaskPoints = Schema.Int.check(Schema.isBetween({ maximum: 1000, minimum: 0 }));
+export const TaskPoints = Schema.Int.check(
+  Schema.isBetween({ maximum: 1000, minimum: 0 })
+);
 
 /**
  * What happens to work handed in after the deadline: it is taken and marked
@@ -79,7 +81,11 @@ export const TaskView = Schema.Struct({
   id: Id("classroomTasks"),
   latePolicy: LatePolicy,
   mine: Schema.NullOr(
-    Schema.Struct({ late: Schema.Boolean, score: Schema.NullOr(Schema.Int), updatedAt: Schema.Finite })
+    Schema.Struct({
+      late: Schema.Boolean,
+      score: Schema.NullOr(Schema.Int),
+      updatedAt: Schema.Finite,
+    })
   ),
   points: TaskPoints,
   slug: TaskAddress,

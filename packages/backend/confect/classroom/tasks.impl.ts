@@ -19,7 +19,6 @@ import {
   TaskClosed,
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import spec from "@repo/backend/confect/classroom/tasks.spec";
 import {
   submissionField,
   taskField,
@@ -29,6 +28,7 @@ import {
   ownSubmission,
   taskView,
 } from "@repo/backend/confect/classroom/tasks/views";
+import spec from "@repo/backend/confect/classroom/tasks.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -222,10 +222,11 @@ const submit = FunctionImpl.make(
         .table("classroomSubmissions")
         .replace(
           existing.value._id,
-          Struct.assign(
-            Struct.omit(existing.value, ["_creationTime", "_id"]),
-            { late, sealedText, updatedAt: now }
-          )
+          Struct.assign(Struct.omit(existing.value, ["_creationTime", "_id"]), {
+            late,
+            sealedText,
+            updatedAt: now,
+          })
         )
         .pipe(Effect.orDie);
       return yield* taskView(found);
@@ -260,13 +261,19 @@ const submissionViews = Effect.fn("classroom.tasks.submissionViews")(function* (
   const keys = yield* schoolKeys(row.tenantId);
   return yield* Effect.forEach(rows, (submission) =>
     Effect.gen(function* () {
-      const person = yield* reader.table("tenantPeople").get(submission.personId);
+      const person = yield* reader
+        .table("tenantPeople")
+        .get(submission.personId);
       return {
         id: submission._id,
         late: submission.late,
         person: { id: person._id, name: person.name },
         score: submission.score ?? null,
-        text: yield* openText(keys, submissionField(submission), submission.sealedText),
+        text: yield* openText(
+          keys,
+          submissionField(submission),
+          submission.sealedText
+        ),
         updatedAt: submission.updatedAt,
       };
     }).pipe(Effect.orDie)
@@ -278,7 +285,10 @@ const submissions = FunctionImpl.make(
   databaseSchema,
   spec,
   "submissions",
-  Effect.fn("classroom.tasks.submissions")(function* ({ paginationOpts, task }) {
+  Effect.fn("classroom.tasks.submissions")(function* ({
+    paginationOpts,
+    task,
+  }) {
     const found = yield* classTask(task, "task.manage");
     const page = yield* (yield* DatabaseReader)
       .table("classroomSubmissions")
@@ -302,7 +312,10 @@ const score = FunctionImpl.make(
       .get(submissionId)
       .pipe(Effect.option);
     if (Option.isNone(submission) || submission.value.classId !== row._id) {
-      return yield* new AccessDenied({ action: "task.manage", reason: "resource" });
+      return yield* new AccessDenied({
+        action: "task.manage",
+        reason: "resource",
+      });
     }
     const task = yield* reader
       .table("classroomTasks")

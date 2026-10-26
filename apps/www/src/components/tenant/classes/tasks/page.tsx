@@ -7,12 +7,14 @@ import { Clock, DateTime, Effect, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { ClassMissingBody } from "@/components/tenant/classes/missing";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import {
   forumCall,
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { TaskStanding } from "@/components/tenant/classes/tasks/list";
 import {
@@ -20,8 +22,6 @@ import {
   submitUpdate,
 } from "@/components/tenant/classes/tasks/optimistic";
 import { TaskWorkTable } from "@/components/tenant/classes/tasks/work";
-import { DataFailure } from "@/components/shared/failure";
-import { reloadPage } from "@/components/shared/reload";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
@@ -80,10 +80,13 @@ function TaskDetails({ task, teacher }: { task: ClassTask; teacher: boolean }) {
       <dl className="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-6">
         <dt className="text-muted-foreground">{t("task-deadline")}</dt>
         <dd>
-          {format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(task.deadline)), {
-            dateStyle: "full",
-            timeStyle: "short",
-          })}
+          {format.dateTime(
+            DateTime.toDateUtc(DateTime.makeUnsafe(task.deadline)),
+            {
+              dateStyle: "full",
+              timeStyle: "short",
+            }
+          )}
         </dd>
         <dt className="text-muted-foreground">{t("task-points")}</dt>
         <dd>{task.points}</dd>

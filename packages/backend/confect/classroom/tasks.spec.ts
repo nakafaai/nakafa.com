@@ -69,7 +69,11 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "reschedule",
-      args: () => ({ ...classArgs, deadline: Schema.Finite, task: TaskAddress }),
+      args: () => ({
+        ...classArgs,
+        deadline: Schema.Finite,
+        task: TaskAddress,
+      }),
       returns: () => TaskView,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })

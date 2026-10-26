@@ -23,7 +23,14 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, Effect, Number as Num, Option, Schema, String as Str } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Number as Num,
+  Option,
+  Schema,
+  String as Str,
+} from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -49,7 +56,8 @@ export function NewTask() {
   const [text, setText] = useState("");
   const [deadline, setDeadline] = useState("");
   const [points, setPoints] = useState("100");
-  const [latePolicy, setLatePolicy] = useState<typeof LatePolicy.Type>("accept");
+  const [latePolicy, setLatePolicy] =
+    useState<typeof LatePolicy.Type>("accept");
   const id = useId();
   const policies = Arr.map(LatePolicy.literals, (policy) => ({
     label: t(`task-late-${policy}`),

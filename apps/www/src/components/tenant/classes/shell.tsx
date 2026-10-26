@@ -24,9 +24,6 @@ import { StartDiscussion } from "@/components/tenant/classes/forum/start";
 import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
 import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { ClassHome } from "@/components/tenant/classes/home/home";
-import { NewTask } from "@/components/tenant/classes/tasks/create";
-import { TaskList } from "@/components/tenant/classes/tasks/list";
-import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
@@ -34,6 +31,9 @@ import {
   ClassScopeContext,
   useClassScope,
 } from "@/components/tenant/classes/scope";
+import { NewTask } from "@/components/tenant/classes/tasks/create";
+import { TaskList } from "@/components/tenant/classes/tasks/list";
+import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import type { ClassView } from "@/components/tenant/classes/view";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";

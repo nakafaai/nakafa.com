@@ -19,7 +19,10 @@ const none = Option.none();
 describe("class page path", () => {
   it("names the tasks after the class, and a task's title after a link to the tasks", () => {
     expect(
-      Arr.map(classPath({ _tag: "tasks" }, root, none, none), (item) => item.label)
+      Arr.map(
+        classPath({ _tag: "tasks" }, root, none, none),
+        (item) => item.label
+      )
     ).toEqual(["Fisika X-1", "Tasks"]);
     const task = classPath(
       { _tag: "task", task: "latihan" },
@@ -34,7 +37,9 @@ describe("class page path", () => {
     ]);
     expect(Arr.get(task, 1).pipe(Option.map((item) => item.target))).toEqual(
       Option.some(
-        expect.objectContaining({ to: "/school/$slug/classes/$classSlug/tasks" })
+        expect.objectContaining({
+          to: "/school/$slug/classes/$classSlug/tasks",
+        })
       )
     );
   });

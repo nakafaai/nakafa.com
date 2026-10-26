@@ -44,10 +44,24 @@ describe("classroom/tasks", () => {
             text: "Kerjakan soal 1 sampai 10.",
             title,
           });
-        const first = yield* publish("first-task", "Latihan Gerak Lurus", TENANCY_NOW + 2 * DAY);
-        const second = yield* publish("second-task", "Latihan Gerak Lurus", TENANCY_NOW + DAY);
-        const symbols = yield* publish("third-task", "!!!", TENANCY_NOW + 3 * DAY);
-        expect(yield* publish("first-task", "Latihan Gerak Lurus", 0)).toEqual(first);
+        const first = yield* publish(
+          "first-task",
+          "Latihan Gerak Lurus",
+          TENANCY_NOW + 2 * DAY
+        );
+        const second = yield* publish(
+          "second-task",
+          "Latihan Gerak Lurus",
+          TENANCY_NOW + DAY
+        );
+        const symbols = yield* publish(
+          "third-task",
+          "!!!",
+          TENANCY_NOW + 3 * DAY
+        );
+        expect(yield* publish("first-task", "Latihan Gerak Lurus", 0)).toEqual(
+          first
+        );
         expect([first.slug, second.slug, symbols.slug]).toEqual([
           "latihan-gerak-lurus",
           "latihan-gerak-lurus-2",
@@ -55,7 +69,11 @@ describe("classroom/tasks", () => {
         ]);
         const listed = yield* fixture
           .as("student")
-          .query(tasks.list, { ...firstPage, classId: forum.classId, slug: nf });
+          .query(tasks.list, {
+            ...firstPage,
+            classId: forum.classId,
+            slug: nf,
+          });
         expect(Arr.map(listed.page, (task) => task.slug)).toEqual([
           "latihan-gerak-lurus-2",
           "latihan-gerak-lurus",
@@ -230,7 +248,11 @@ describe("classroom/tasks", () => {
             })
             .pipe(Effect.flip),
           teacher
-            .query(tasks.get, { classId: forum.classId, slug: nf, task: "lain" })
+            .query(tasks.get, {
+              classId: forum.classId,
+              slug: nf,
+              task: "lain",
+            })
             .pipe(Effect.flip),
         ]);
         expect(refusals).toMatchObject([

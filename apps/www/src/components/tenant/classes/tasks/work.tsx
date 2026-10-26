@@ -136,7 +136,9 @@ function WorkRow({ points, work }: { points: number; work: TaskWork }) {
           {work.text}
         </p>
         {work.late ? (
-          <p className="text-muted-foreground text-xs">{t("task-handed-in-late")}</p>
+          <p className="text-muted-foreground text-xs">
+            {t("task-handed-in-late")}
+          </p>
         ) : null}
       </TableCell>
       <TableCell className="align-top">

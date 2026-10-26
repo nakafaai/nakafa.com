@@ -105,10 +105,13 @@ function TaskRow({ task, teacher }: { task: ClassTask; teacher: boolean }) {
         </TargetLink>
       </TableCell>
       <TableCell className="text-muted-foreground">
-        {format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(task.deadline)), {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })}
+        {format.dateTime(
+          DateTime.toDateUtc(DateTime.makeUnsafe(task.deadline)),
+          {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }
+        )}
       </TableCell>
       <TableCell className="text-muted-foreground">
         <TaskStanding task={task} teacher={teacher} />

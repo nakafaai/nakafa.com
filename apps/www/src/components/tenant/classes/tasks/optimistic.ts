@@ -24,7 +24,11 @@ const changeTask = (
 ) => {
   for (const query of localStore.getAllQueries(get)) {
     if (Option.isSome(query.value) && query.args.task === slug) {
-      localStore.setQuery(get, query.args, Option.some(change(query.value.value)));
+      localStore.setQuery(
+        get,
+        query.args,
+        Option.some(change(query.value.value))
+      );
     }
   }
   for (const query of localStore.getAllQueries(list)) {
@@ -90,7 +94,9 @@ export const scoreUpdate: OptimisticUpdate<typeof classroom.tasks.score> = (
         Option.some({
           ...query.value.value,
           page: Arr.map(query.value.value.page, (work) =>
-            work.id === args.submissionId ? { ...work, score: args.points } : work
+            work.id === args.submissionId
+              ? { ...work, score: args.points }
+              : work
           ),
         })
       );
