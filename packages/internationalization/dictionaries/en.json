@@ -1710,6 +1710,7 @@
     "picture-footer-photo": "Your Google photo shows wherever your name does.",
     "animal-shuffle": "Shuffle animal",
     "username": "Username",
+    "username-placeholder": "alex_rivera",
     "username-description": "Your address on Nakafa: {address}.",
     "username-footer": "The old address stops working when you save.",
     "username-available": "Available.",
