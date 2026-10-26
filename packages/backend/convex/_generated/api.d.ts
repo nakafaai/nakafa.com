@@ -426,6 +426,7 @@ export declare const api: {
             | "forum.manage"
             | "forum.post"
             | "forum.read"
+            | "library.manage"
             | "post.publish"
             | "task.manage"
             | "task.submit"
@@ -819,6 +820,107 @@ export declare const api: {
           }
         >;
       };
+    };
+    library: {
+      addLink: FunctionReference<
+        "mutation",
+        "public",
+        {
+          address: string;
+          classId: Id<"classes">;
+          clientKey: string;
+          slug: string;
+          title: string;
+        },
+        {
+          address: string | null;
+          author: string;
+          byteSize: number | null;
+          clientKey: string;
+          createdAt: number;
+          id: Id<"classroomLibrary">;
+          kind: "link" | "pdf" | "image";
+          title: string;
+        }
+      >;
+      canAdd: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        { authorId: Id<"tenantPeople"> }
+      >;
+      importDrive: FunctionReference<
+        "action",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          fileId: string;
+          slug: string;
+          title: string;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            address: string | null;
+            author: string;
+            byteSize: number | null;
+            clientKey: string;
+            createdAt: number;
+            id: Id<"classroomLibrary">;
+            kind: "link" | "pdf" | "image";
+            title: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          slug: string;
+          storageId: Id<"_storage">;
+          title: string;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        null
+      >;
+      uploadUrl: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        string
+      >;
     };
     posts: {
       edit: FunctionReference<
@@ -1282,6 +1384,36 @@ export declare const api: {
     };
   };
   connectors: {
+    classroom: {
+      canImport: FunctionReference<"query", "public", { slug: string }, {}>;
+      link: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes"> | null;
+          connectionId: Id<"connectorConnections">;
+          courseId: string;
+          slug: string;
+        },
+        null
+      >;
+      preview: FunctionReference<
+        "action",
+        "public",
+        { slug: string },
+        {
+          classes: Array<{ id: Id<"classes">; name: string }>;
+          connectionId: Id<"connectorConnections">;
+          courses: Array<{
+            classId: Id<"classes"> | null;
+            courseId: string;
+            name: string;
+            section: string | null;
+            students: number;
+          }>;
+        } | null
+      >;
+    };
     connections: {
       disconnectOwn: FunctionReference<
         "mutation",
@@ -1365,6 +1497,49 @@ export declare const api: {
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+    };
+    drive: {
+      pickerToken: FunctionReference<
+        "action",
+        "public",
+        {},
+        { accessToken: string; apiKey: string; appId: string } | null
+      >;
+    };
+    google: {
+      finish: FunctionReference<
+        "action",
+        "public",
+        { code: string | null; state: string },
+        { location: string; outcome: "connected" | "cancelled" | "refused" }
+      >;
+      offered: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<"drive" | "calendar" | "classroom">
+      >;
+      startPersonal: FunctionReference<
+        "mutation",
+        "public",
+        {
+          connector: "drive" | "calendar" | "classroom";
+          redirectUri: string;
+          returnPath: string;
+        },
+        { url: string }
+      >;
+      startSchool: FunctionReference<
+        "mutation",
+        "public",
+        {
+          connector: "drive" | "calendar" | "classroom";
+          redirectUri: string;
+          returnPath: string;
+          slug: string;
+        },
+        { url: string }
       >;
     };
   };
@@ -6074,6 +6249,7 @@ export declare const api: {
             | "forum.manage"
             | "forum.post"
             | "forum.read"
+            | "library.manage"
             | "post.publish"
             | "task.manage"
             | "task.submit"
@@ -6101,6 +6277,7 @@ export declare const api: {
             | "integration.manage"
             | "integration.view"
             | "integration.manage"
+            | "connection.create"
             | "connection.view"
             | "class.create"
             | "class.list"
@@ -6171,6 +6348,7 @@ export declare const api: {
               | "forum.manage"
               | "forum.post"
               | "forum.read"
+              | "library.manage"
               | "post.publish"
               | "task.manage"
               | "task.submit"
@@ -6198,6 +6376,7 @@ export declare const api: {
               | "integration.manage"
               | "integration.view"
               | "integration.manage"
+              | "connection.create"
               | "connection.view"
               | "class.create"
               | "class.list"
@@ -7004,6 +7183,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          slug?: string;
         },
         {
           continueCursor: string;
@@ -7107,9 +7287,10 @@ export declare const api: {
           };
         }
       >;
-      readAll: FunctionReference<"mutation", "public", {}, null>;
+      readAll: FunctionReference<"mutation", "public", { slug?: string }, null>;
     };
     push: {
+      publicKey: FunctionReference<"query", "public", {}, string | null>;
       subscribe: FunctionReference<
         "mutation",
         "public",
@@ -12275,6 +12456,27 @@ export declare const internal: {
         >;
       };
     };
+    library: {
+      commit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          authorId: Id<"tenantPeople">;
+          byteSize: number;
+          classId: Id<"classes">;
+          clientKey: string;
+          contentType:
+            | "image/png"
+            | "image/jpeg"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf";
+          storageId: Id<"_storage">;
+          title: string;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+    };
     seed: {
       teacher: FunctionReference<
         "mutation",
@@ -12292,6 +12494,149 @@ export declare const internal: {
           periodId: Id<"tenantPeriods">;
           person: Id<"tenantPeople">;
         }
+      >;
+    };
+  };
+  connectors: {
+    classroom: {
+      links: FunctionReference<
+        "query",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        Array<{ courseId: string }>
+      >;
+      storeWork: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          connectionId: Id<"connectorConnections">;
+          courseId: string;
+          works: Array<{
+            deadline: number;
+            points: number;
+            text: string;
+            title: string;
+            workId: string;
+          }>;
+        },
+        { changed: boolean }
+      >;
+      target: FunctionReference<
+        "query",
+        "internal",
+        { slug: string },
+        {
+          classes: Array<{ id: Id<"classes">; name: string }>;
+          connectionId: Id<"connectorConnections">;
+          links: Array<{ classId: Id<"classes">; courseId: string }>;
+          refreshToken: string;
+        } | null
+      >;
+    };
+    drive: {
+      ownTarget: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        {
+          connectionId: Id<"connectorConnections">;
+          refreshToken: string;
+        } | null
+      >;
+    };
+    events: {
+      upcoming: FunctionReference<
+        "query",
+        "internal",
+        { from: number; until: number; userId: Id<"users"> },
+        Array<{ allDay: boolean; end: number; start: number; title: string }>
+      >;
+    };
+    google: {
+      claim: FunctionReference<
+        "mutation",
+        "internal",
+        { state: string; userId: Id<"users"> },
+        {
+          connector: "drive" | "calendar" | "classroom";
+          location: string;
+          owner:
+            | { kind: "personal"; userId: Id<"users"> }
+            | { kind: "tenant"; tenantId: Id<"tenants"> };
+          personId: Id<"tenantPeople"> | null;
+          redirectUri: string;
+          verifier: string;
+        } | null
+      >;
+      store: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          connector: "drive" | "calendar" | "classroom";
+          owner:
+            | { kind: "personal"; userId: Id<"users"> }
+            | { kind: "tenant"; tenantId: Id<"tenants"> };
+          personId: Id<"tenantPeople"> | null;
+          refreshToken: string;
+          scopes: Array<string>;
+          subject: string;
+          userId: Id<"users">;
+        },
+        Id<"connectorConnections">
+      >;
+    };
+    sync: {
+      reconnect: FunctionReference<
+        "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      run: FunctionReference<
+        "action",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      settle: FunctionReference<
+        "mutation",
+        "internal",
+        { changed: boolean; connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      storeEvents: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          connectionId: Id<"connectorConnections">;
+          events: Array<{
+            allDay: boolean;
+            end: number;
+            eventId: string;
+            start: number;
+            title: string;
+          }>;
+        },
+        null
+      >;
+      sweep: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        { scheduled: number }
+      >;
+      target: FunctionReference<
+        "query",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        {
+          connector:
+            "drive" | "forms" | "classroom" | "calendar" | "gmail" | "dapodik";
+          owner:
+            | { kind: "personal"; userId: Id<"users"> }
+            | { kind: "tenant"; tenantId: Id<"tenants"> };
+          refreshToken: string;
+        } | null
       >;
     };
   };
@@ -14544,6 +14889,109 @@ export declare const internal: {
       >;
     };
   };
+  integrations: {
+    reads: {
+      cohorts: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              grade: number;
+              id: string;
+              name: string;
+              periodId: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      people: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          status: "active" | "suspended" | "removed";
+        },
+        | {
+            data: Array<{
+              account: "claimed" | "unclaimed";
+              id: string;
+              name: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      periods: FunctionReference<
+        "query",
+        "internal",
+        { clientId: Id<"integrationClients"> },
+        | {
+            data: Array<{
+              end: string;
+              id: string;
+              name: string;
+              start: string;
+              status: string;
+              unitId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      placements: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              cohortId: string;
+              periodId: string;
+              personId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+    };
+    tokens: {
+      check: FunctionReference<
+        "mutation",
+        "internal",
+        { resource: "api" | "mcp"; token: string },
+        | { clientId: Id<"integrationClients">; outcome: "allowed" }
+        | { outcome: "unauthorized" }
+        | { outcome: "limited"; retryAfter: number }
+      >;
+      issue: FunctionReference<
+        "mutation",
+        "internal",
+        { clientId: string; resource?: string; secret: string },
+        | { expiresIn: number; outcome: "issued"; token: string }
+        | { error: "invalid_client" | "invalid_target"; outcome: "refused" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+  };
   nina: {
     brief: {
       read: FunctionReference<
@@ -14558,6 +15006,7 @@ export declare const internal: {
           userId: Id<"users">;
         },
         {
+          calendar: boolean;
           learner: {
             paused: boolean;
             portrait?: string;
