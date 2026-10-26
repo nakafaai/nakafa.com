@@ -1,0 +1,97 @@
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { documentRows, nf } from "@repo/backend/test/editor";
+import {
+  examImage,
+  examRows,
+  questionRows,
+  teacherExam,
+} from "@repo/backend/test/exams";
+import { storageUrl } from "@repo/backend/test/logo";
+import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import { Effect } from "effect";
+
+const { remove } = refs.public.exams.exams;
+const { add } = refs.public.exams.questions;
+
+/** Every row of the images, so a test reads what the deletion left. */
+const assetRows = Effect.flatMap(DatabaseReader, (reader) =>
+  reader.table("examAssets").index("by_creation_time").take(100)
+);
+
+describe("exams/remove", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(TENANCY_NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it.effect(
+    "deletes a draft exam with its questions at once, and their documents and its images once the scheduled deletions run",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Hapus ujian");
+        yield* teacher.mutation(add, {
+          after: exam.questions[0].id,
+          examId: exam.id,
+          slug: nf,
+        });
+        const image = yield* examImage(fixture, exam.id);
+        const { storageId } = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("examAssets").get(image.id).pipe(Effect.orDie)
+          )
+        );
+        expect(
+          yield* teacher.mutation(remove, { examId: exam.id, slug: nf })
+        ).toBeNull();
+        expect(yield* fixture.run(examRows)).toEqual([]);
+        expect(yield* fixture.run(questionRows)).toEqual([]);
+        yield* fixture.finishScheduled();
+        expect(yield* fixture.run(documentRows)).toEqual([]);
+        expect(yield* fixture.run(assetRows)).toEqual([]);
+        expect(yield* storageUrl(fixture.convex, storageId)).toBeNull();
+      })
+  );
+
+  it.effect(
+    "refuses a student and a scheduled exam, and keeps the exam with its questions",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exam = yield* teacherExam(fixture, "Terjadwal");
+        const student = yield* fixture
+          .as("student")
+          .mutation(remove, { examId: exam.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(student).toMatchObject({ _tag: "AccessDenied" });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("exams")
+              .patch(exam.id, { frozenAt: TENANCY_NOW })
+              .pipe(Effect.orDie)
+          )
+        );
+        const frozen = yield* fixture
+          .as("teacher")
+          .mutation(remove, { examId: exam.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(frozen).toMatchObject({
+          _tag: "ExamFrozen",
+          code: "EXAM_FROZEN",
+        });
+        expect(yield* fixture.run(examRows)).toHaveLength(1);
+        expect(yield* fixture.run(questionRows)).toHaveLength(1);
+      })
+  );
+});

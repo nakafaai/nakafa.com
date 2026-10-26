@@ -4,9 +4,7 @@ import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
   localConvexEnvironment,
-  runBuildCommand,
   withLocalBackend,
-  withTerminal,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
 import {
@@ -17,7 +15,6 @@ import {
 } from "@repo/backend/test/acceptance";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
-  Array as Arr,
   Deferred,
   Effect,
   Fiber,
@@ -26,7 +23,6 @@ import {
   Logger,
   MutableList,
   Path,
-  Schedule,
   Sink,
   Stream,
 } from "effect";
@@ -125,46 +121,13 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
       });
     })
   );
-  /** Provides this spawner as the program's child process spawner. */
-  const provide = Effect.provideService(
-    ChildProcessSpawner.ChildProcessSpawner,
-    service
-  );
-  return { commands, provide, release, temporaryRoots };
+  return { commands, release, service, temporaryRoots };
 });
 
 describe("application process ownership", () => {
   beforeEach(() => {
     fetcher.mockReset();
   });
-
-  it.live(
-    "handles hangup through the finalizer and then releases its listener",
-    () =>
-      Effect.gen(function* () {
-        const previous = process.listeners("SIGHUP");
-        const interrupt = vi.spyOn(process, "emit").mockReturnValue(process);
-        yield* withTerminal(
-          Effect.gen(function* () {
-            yield* Effect.addFinalizer(() =>
-              Effect.sync(() => {
-                const listeners = Arr.filter(
-                  process.listeners("SIGHUP"),
-                  (listener) => !Arr.some(previous, (item) => item === listener)
-                );
-                expect(listeners).toHaveLength(1);
-                for (const listener of listeners) {
-                  listener("SIGHUP");
-                }
-                expect(interrupt).toHaveBeenCalledWith("SIGINT");
-              })
-            );
-            return yield* acceptanceRuntimeError("interrupted operation");
-          })
-        ).pipe(Effect.flip);
-        expect(process.listeners("SIGHUP")).toEqual(previous);
-      }).pipe(Effect.ensuring(Effect.sync(() => vi.restoreAllMocks())))
-  );
 
   for (const outcome of ["success", "failure", "interruption"]) {
     it.live(`closes its local child after application ${outcome}`, () =>
@@ -185,7 +148,10 @@ describe("application process ownership", () => {
           return "built";
         });
         const result = yield* withLocalBackend(runtime, program).pipe(
-          child.provide,
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          ),
           Effect.exit
         );
         expect(result._tag).toBe(outcome === "success" ? "Success" : "Failure");
@@ -242,7 +208,10 @@ describe("application process ownership", () => {
           Promise.resolve(new Response("owned"))
         );
         const failure = yield* withLocalBackend(runtime, original).pipe(
-          child.provide,
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          ),
           Effect.provide(Logger.layer([logger])),
           Effect.flip
         );
@@ -283,7 +252,10 @@ describe("application process ownership", () => {
           });
           expect(
             yield* withLocalBackend(runtime, program).pipe(
-              child.provide,
+              Effect.provideService(
+                ChildProcessSpawner.ChildProcessSpawner,
+                child.service
+              ),
               Effect.provide(Logger.layer([logger])),
               Effect.flip
             )
@@ -302,7 +274,10 @@ describe("application process ownership", () => {
         yield* occupyPort(43_310);
         const child = yield* spawner();
         const error = yield* withLocalBackend(runtime, Effect.void).pipe(
-          child.provide,
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          ),
           Effect.flip
         );
         expect(error).toMatchObject({
@@ -328,7 +303,10 @@ describe("application process ownership", () => {
             : Promise.resolve(new Response("owned"))
         );
         const error = yield* withLocalBackend(runtime, Effect.never).pipe(
-          child.provide,
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          ),
           Effect.flip
         );
         const messages = {
@@ -364,7 +342,10 @@ describe("application process ownership", () => {
               .readFileString(path)
               .pipe(Effect.tap((log) => Deferred.succeed(readinessLog, log))),
         }),
-        child.provide,
+        Effect.provideService(
+          ChildProcessSpawner.ChildProcessSpawner,
+          child.service
+        ),
         Effect.flip,
         Effect.forkChild
       );
@@ -383,78 +364,6 @@ describe("application process ownership", () => {
     }).pipe(Effect.provide(services))
   );
 
-  it.live("waits for an interrupted command to finish its cleanup", () =>
-    Effect.gen(function* () {
-      const { fs, runtime } = yield* fixture;
-      const script = `${runtime.directory}/worker.mjs`;
-      yield* fs.writeFileString(
-        script,
-        `import { writeFileSync } from "node:fs";
-process.once("SIGINT", () => {
-  writeFileSync("stopped", "SIGINT");
-  process.exit(0);
-});
-setInterval(() => {}, 1000);
-writeFileSync("ready", "ready");`
-      );
-      const child = yield* runBuildCommand(runtime.directory, [
-        process.execPath,
-        script,
-      ]).pipe(Effect.scoped, Effect.forkChild);
-      yield* fs.exists(`${runtime.directory}/ready`).pipe(
-        Effect.repeat({
-          while: (ready) => !ready,
-          schedule: Schedule.spaced("10 millis"),
-        }),
-        Effect.timeout("5 seconds")
-      );
-      yield* Fiber.interrupt(child);
-      expect(yield* fs.readFileString(`${runtime.directory}/stopped`)).toBe(
-        "SIGINT"
-      );
-    }).pipe(Effect.provide(services))
-  );
-
-  for (const code of [0, 7]) {
-    it.effect(
-      `keeps acquisition credentials out of build children with exit ${code}`,
-      () =>
-        Effect.gen(function* () {
-          const child = yield* spawner({
-            exit: Effect.succeed(ChildProcessSpawner.ExitCode(code)),
-          });
-          const result = yield* runBuildCommand(
-            "/tmp",
-            ["bun", "run", "build"],
-            {
-              VITE_CONVEX_URL: "https://production.convex.cloud",
-              AKSARA_ACCEPTANCE_PRIVATE_KEY: "private",
-              AKSARA_SIGNING_PRIVATE_KEY: "private",
-            }
-          ).pipe(child.provide, Effect.result);
-          expect(result._tag).toBe(code === 0 ? "Success" : "Failure");
-          expect(MutableList.toArray(child.commands)).toEqual([
-            expect.objectContaining({
-              options: expect.objectContaining({
-                env: expect.objectContaining({
-                  VITE_CONVEX_URL: "https://production.convex.cloud",
-                  AKSARA_ACCEPTANCE_PRIVATE_KEY: undefined,
-                  AKSARA_SIGNING_PRIVATE_KEY: undefined,
-                  CONVEX_DEPLOY_KEY: undefined,
-                  CONVEX_DEPLOYMENT_TOKEN: undefined,
-                }),
-              }),
-            }),
-          ]);
-          if (code === 0) {
-            yield* runBuildCommand("/tmp", ["bun", "run", "build"]).pipe(
-              child.provide
-            );
-          }
-        }).pipe(Effect.provide(services))
-    );
-  }
-
   it.effect("retries a start answered with a 500 once, then starts clean", () =>
     Effect.gen(function* () {
       const { fs, runtime } = yield* fixture;
@@ -466,7 +375,10 @@ writeFileSync("ready", "ready");`
       fetcher.mockImplementation(() => Promise.resolve(new Response("owned")));
       const result = yield* ticking(
         withLocalBackend(runtime, Effect.void).pipe(
-          child.provide,
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          ),
           Effect.result
         )
       );

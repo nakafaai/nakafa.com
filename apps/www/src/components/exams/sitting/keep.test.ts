@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, MutableRef, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import {
   confirmAnswer,
@@ -10,6 +10,7 @@ import {
   keepAnswerIn,
   keptAnswersFor,
   readKept,
+  settleSent,
   submittedKeysOf,
 } from "@/components/exams/sitting/keep";
 
@@ -140,5 +141,58 @@ describe("the browser's kept state of an attempt", () => {
         expect(yield* readKept(SITTING, ATTEMPT)).toEqual(NOTHING);
       })
     )
+  );
+});
+
+describe("settleSent", () => {
+  /** Settles one send with a confirm that counts its runs, and returns the outcome and the count. */
+  const settled = Effect.fn("test.keep.settled")(function* <E>(
+    sent: Effect.Effect<unknown, E>
+  ) {
+    const confirmed = MutableRef.make(0);
+    const outcome = yield* settleSent(
+      sent,
+      Effect.sync(() => MutableRef.increment(confirmed))
+    );
+    return { confirmed: MutableRef.get(confirmed), outcome };
+  });
+
+  it.effect(
+    "confirms the kept answer the server took, and tells of no failure",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* settled(Effect.succeed("saved"))).toEqual({
+          confirmed: 1,
+          outcome: Option.none(),
+        });
+      })
+  );
+
+  it.effect(
+    "confirms the kept answer on a final refusal, and tells of the refusal",
+    () =>
+      Effect.gen(function* () {
+        const stale = { _tag: "StaleAnswer" };
+        expect(yield* settled(Effect.fail(stale))).toEqual({
+          confirmed: 1,
+          outcome: Option.some(stale),
+        });
+      })
+  );
+
+  it.effect(
+    "keeps the answer on a lock or another failure, and tells of it",
+    () =>
+      Effect.gen(function* () {
+        for (const failure of [
+          { _tag: "SittingLocked" },
+          new Error("offline"),
+        ]) {
+          expect(yield* settled(Effect.fail(failure))).toEqual({
+            confirmed: 0,
+            outcome: Option.some(failure),
+          });
+        }
+      })
   );
 });

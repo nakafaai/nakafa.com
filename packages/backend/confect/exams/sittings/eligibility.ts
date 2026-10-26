@@ -3,6 +3,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { covers } from "@repo/backend/confect/access/decision";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
+  cohortLocked,
   placementOf,
   scopePlace,
 } from "@repo/backend/confect/tenancy/authority";
@@ -36,12 +37,39 @@ export const mayEnter = Effect.fn("exams.sittings.mayEnter")(function* (
 });
 
 /**
- * Whether a sitting is locked for its entries and its signals (ADR 0013). Its school is
- * suspended, which refuses every write, or its unit is archived, which locks every row
- * placed in it.
+ * Whether the cohort of a cohort sitting is locked: its own archive, its period's, or its
+ * unit's locks the sitting too. A unit sitting holds no cohort, so no cohort locks it.
+ */
+export const cohortSittingLocked = Effect.fn("exams.sittings.cohortLocked")(
+  function* (row: Pick<ExamSittingsDoc, "cohortId">) {
+    if (row.cohortId === null) {
+      return false;
+    }
+    const reader = yield* DatabaseReader;
+    const cohort = yield* reader
+      .table("tenantCohorts")
+      .get(row.cohortId)
+      .pipe(Effect.orDie);
+    const period = yield* reader
+      .table("tenantPeriods")
+      .get(cohort.periodId)
+      .pipe(Effect.orDie);
+    const unit = yield* reader
+      .table("tenantUnits")
+      .get(cohort.unitId)
+      .pipe(Effect.orDie);
+    return cohortLocked(cohort, period, unit);
+  }
+);
+
+/**
+ * Whether a sitting is locked for its entries and its learner writes (ADR 0013). Its school is
+ * suspended, which refuses every write; its unit is archived, which locks every row placed in it;
+ * or it is a cohort sitting whose cohort or period is archived (`cohortSittingLocked`), as the
+ * sitting's authority locks it for its staff.
  */
 export const sittingLocked = Effect.fn("exams.sittings.locked")(function* (
-  sitting: Pick<ExamSittingsDoc, "tenantId" | "unitId">
+  sitting: Pick<ExamSittingsDoc, "cohortId" | "tenantId" | "unitId">
 ) {
   const tenant = yield* (yield* DatabaseReader)
     .table("tenants")
@@ -51,5 +79,8 @@ export const sittingLocked = Effect.fn("exams.sittings.locked")(function* (
     return true;
   }
   const place = yield* scopePlace({ kind: "unit", unitId: sitting.unitId });
-  return place.locked;
+  if (place.locked) {
+    return true;
+  }
+  return yield* cohortSittingLocked(sitting);
 });
