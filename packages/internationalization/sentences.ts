@@ -60,8 +60,6 @@ export const SentenceKeySchema = Schema.Literals([
   "Comments.delete-description",
   "Error.description",
   "Exams.release-description",
-  "Exams.release-footer",
-  "Exams.released-footer",
   "Exams.results-counted",
   "Exams.results-empty",
   "Exams.results-incomplete",

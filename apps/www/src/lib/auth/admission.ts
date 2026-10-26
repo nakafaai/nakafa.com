@@ -300,7 +300,9 @@ export function getPostAuthProviderErrorHref(
 /**
  * The typed search of the generic retry on the sign-in page, after provider
  * diagnostics are discarded. The route hands it to its typed redirect, so the
- * search keys stay the sign-in route's own schema.
+ * search keys stay the sign-in route's own schema. The router writes the keys in
+ * this order, so the retry's address starts with the redirect, as every other
+ * sign-in address does.
  */
 export function getPostAuthProviderRetrySearch(
   resolution: PostAuthIntentResolution
@@ -309,8 +311,8 @@ export function getPostAuthProviderRetrySearch(
     return { [PROVIDER_ERROR_PARAM]: PROVIDER_ERROR_VALUE };
   }
   return {
-    [PROVIDER_ERROR_PARAM]: PROVIDER_ERROR_VALUE,
     [REDIRECT_PARAM]: resolution.intent,
+    [PROVIDER_ERROR_PARAM]: PROVIDER_ERROR_VALUE,
   };
 }
 

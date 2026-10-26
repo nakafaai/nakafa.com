@@ -110,13 +110,20 @@ export const polarGateway = {
           allow_trial: true,
           customer_id: input.customerId,
           customer_ip_address: input.customerIpAddress,
-          // Checkout is for individuals, so the billing name and address are not required.
-          is_business_customer: false,
+          // A learner buys as a person; a school buys as a business, which names itself on the invoice.
+          is_business_customer: input.school !== undefined,
           locale: input.locale,
           products: [...input.productIds],
           // Only the country is required at checkout; US customers still enter the full address.
           require_billing_address: false,
           success_url: input.successUrl,
+          // A School checkout buys one seat per enrolled student and names the school it pays for.
+          ...(input.school === undefined
+            ? {}
+            : {
+                metadata: { tenantId: input.school.tenantId },
+                seats: input.school.seats,
+              }),
         }),
       decodePolarCheckout
     ).pipe(

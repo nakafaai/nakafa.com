@@ -1,12 +1,16 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { CreditLotDraw } from "@repo/backend/confect/credits/schema";
+import {
+  CreditLotDraw,
+  CreditPoolDraw,
+} from "@repo/backend/confect/credits/schema";
 import { Schema } from "effect";
 
 /**
  * The active Agent turn owns its refundable credit reservation. `lots` names the
  * top-up packs the reservation drew from, in the order it drew them. The rest of
  * `credits` came from the allowance. A turn reserved before packs existed has
- * none, so the whole reservation came from the allowance.
+ * none, so the whole reservation came from the allowance. `pool` names the
+ * school pool a member's whole reservation came from instead (K46).
  */
 export const NinaCreditHold = Schema.Struct({
   userId: Id("users"),
@@ -15,6 +19,7 @@ export const NinaCreditHold = Schema.Struct({
   planCreditGrantId: Schema.optionalKey(Id("creditTransactions")),
   transactionId: Id("creditTransactions"),
   lots: Schema.optionalKey(Schema.Array(CreditLotDraw)),
+  pool: Schema.optionalKey(CreditPoolDraw),
 });
 
 export class NinaCreditError extends Schema.TaggedError<NinaCreditError>()(

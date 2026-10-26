@@ -65,6 +65,21 @@ describe("ai/store/create", () => {
     });
   });
 
+  it("lets the sheet's chat go when it is the deleted one, and shows it again after a refused delete unless another chat opened since", () => {
+    const store = createAiStore();
+    store.getState().setActiveChatId(chatId);
+
+    expect(store.getState().forgetChat(otherChatId)).toBe(false);
+    expect(store.getState().forgetChat(chatId)).toBe(true);
+    expect(store.getState().activeChatId).toBeNull();
+    store.getState().recallChat(chatId);
+    expect(store.getState().activeChatId).toBe(chatId);
+
+    store.getState().setActiveChatId(otherChatId);
+    store.getState().recallChat(chatId);
+    expect(store.getState().activeChatId).toBe(otherChatId);
+  });
+
   it("admits one ask at a time and opens the sheet for it", () => {
     const store = createAiStore();
 
@@ -110,8 +125,9 @@ describe("ai/store/create", () => {
     expect(next.text).toBe(text);
   });
 
-  it("prepends composer drafts and removes them by key", () => {
+  it("prepends composer drafts, removes them by key, and changes nothing for a draft that is not pending", () => {
     const store = createAiStore();
+    const listener = vi.fn();
 
     store.getState().addChatDraft("draft-1");
     store.getState().addChatDraft("draft-2");
@@ -120,19 +136,9 @@ describe("ai/store/create", () => {
     store.getState().removeChatDraft("draft-2");
     expect(store.getState().chatDrafts).toEqual(["draft-1"]);
 
-    store.getState().removeChatDraft("missing");
-    expect(store.getState().chatDrafts).toEqual(["draft-1"]);
-  });
-
-  it("changes nothing when the removed draft is not pending", () => {
-    const store = createAiStore();
-    store.getState().addChatDraft("draft-1");
     const before = store.getState();
-    const listener = vi.fn();
     store.subscribe(listener);
-
     store.getState().removeChatDraft("missing");
-
     expect(store.getState()).toBe(before);
     expect(listener).not.toHaveBeenCalled();
   });
@@ -169,26 +175,19 @@ describe("ai/store/create", () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it("opens the admitted chat only while no other chat is active", () => {
+  it("opens the admitted chat only while no other chat is active, and no chat for an ask without one", () => {
     const store = createAiStore();
     store.getState().openAsk({ id: "ask-1", text: "Explain" });
+    store.getState().resolveAsk("ask-1", null);
+    expect(store.getState()).toMatchObject({ activeChatId: null, ask: null });
+
+    store.getState().openAsk({ id: "ask-2", text: "Explain" });
     store.getState().setActiveChatId(otherChatId);
-
-    store.getState().resolveAsk("ask-1", chatId);
-
+    store.getState().resolveAsk("ask-2", chatId);
     expect(store.getState()).toMatchObject({
       activeChatId: otherChatId,
       ask: null,
     });
-  });
-
-  it("resolves an ask without a chat id and opens no chat", () => {
-    const store = createAiStore();
-    store.getState().openAsk({ id: "ask-1", text: "Explain" });
-
-    store.getState().resolveAsk("ask-1", null);
-
-    expect(store.getState()).toMatchObject({ activeChatId: null, ask: null });
   });
 
   it("moves a resolved composer draft into the chat that is opening", () => {

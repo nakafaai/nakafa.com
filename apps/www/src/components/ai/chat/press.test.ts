@@ -59,12 +59,15 @@ function client(connected: boolean) {
 function pressOn(
   convex: Client,
   deleteChat: Deletion["deleteChat"],
-  stillOnChat: () => boolean = () => true
+  stillOnChat: () => boolean = () => true,
+  inSheet = true
 ) {
   const page = {
     close: vi.fn(),
     deleted: vi.fn(),
+    forget: vi.fn(() => inSheet),
     leave: vi.fn(),
+    recall: vi.fn(),
     refused: vi.fn(),
   };
   return {
@@ -132,9 +135,11 @@ describe("deleteOnPress", () => {
       yield* deleteOnPress(deletion);
 
       expect(page.leave).toHaveBeenCalledOnce();
+      expect(page.forget).toHaveBeenCalledOnce();
       expect(deleteChat).toHaveBeenCalledExactlyOnceWith({ chatId });
       expect(page.deleted).toHaveBeenCalledOnce();
       expect(page.refused).not.toHaveBeenCalled();
+      expect(page.recall).not.toHaveBeenCalled();
     })
   );
 
@@ -156,9 +161,37 @@ describe("deleteOnPress", () => {
         yield* deleteOnPress(deletion);
 
         expect(page.leave).toHaveBeenCalledOnce();
+        expect(page.recall).toHaveBeenCalledOnce();
         expect(page.refused).toHaveBeenCalledOnce();
         expect(page.deleted).not.toHaveBeenCalled();
         expect(mocks.report).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "shows nothing again in the sheet when it did not show the chat the server refused to delete",
+    () =>
+      Effect.gen(function* () {
+        const deleteChat = vi.fn<Deletion["deleteChat"]>();
+        deleteChat.mockResolvedValue(
+          Result.fail(
+            new ChatAccessError({
+              code: "CHAT_NOT_FOUND",
+              message: "Refused by the test.",
+            })
+          )
+        );
+        const { deletion, page } = pressOn(
+          client(true),
+          deleteChat,
+          () => true,
+          false
+        );
+
+        yield* deleteOnPress(deletion);
+
+        expect(page.recall).not.toHaveBeenCalled();
+        expect(page.refused).toHaveBeenCalledOnce();
       })
   );
 

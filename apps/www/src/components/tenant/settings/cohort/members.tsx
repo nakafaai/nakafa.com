@@ -127,7 +127,7 @@ export function SchoolCohortMembers({
         columns={columns}
         data={pagination.results}
         rowId={(member) => member.id}
-        search={{ column: "name", placeholder: t("cohort-members-search") }}
+        search="name"
       />
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />

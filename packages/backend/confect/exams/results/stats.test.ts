@@ -1,8 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import {
+  matchAnswers,
+  newChoiceAnswers,
+  tableAnswers,
+} from "@repo/backend/confect/exams/question";
 import {
   optionIdsOf,
+  pairIdsOf,
   type ScoredAnswer,
   tallyAnswers,
 } from "@repo/backend/confect/exams/results/stats";
@@ -20,6 +25,24 @@ describe("exams/results/stats", () => {
     };
     expect(optionIdsOf(newChoiceAnswers())).toEqual(options);
     expect(optionIdsOf([text])).toEqual([]);
+  });
+
+  it("lists the statements and the answers of a match in their order, and none for a choice", () => {
+    expect(pairIdsOf(matchAnswers())).toEqual({
+      sourceIds: ["source-1", "source-2", "source-3"],
+      targetIds: ["target-1", "target-2", "target-3"],
+    });
+    expect(pairIdsOf(newChoiceAnswers())).toEqual({
+      sourceIds: [],
+      targetIds: [],
+    });
+  });
+
+  it("lists the statements and the columns of a table in their order", () => {
+    expect(pairIdsOf(tableAnswers(["Benar", "Salah"]))).toEqual({
+      sourceIds: ["statement-1", "statement-2", "statement-3"],
+      targetIds: ["column-1", "column-2"],
+    });
   });
 
   it("tallies the answered count, the verdicts, and how many answers chose each option", () => {
@@ -40,6 +63,24 @@ describe("exams/results/stats", () => {
         { count: 1, optionId: "option-3" },
         { count: 1, optionId: "option-4" },
       ],
+      partial: 0,
+      pending: 1,
+    });
+  });
+
+  it("counts a typed answer as answered and a blank one as not, and neither chooses an option", () => {
+    const answers: ScoredAnswer[] = [
+      { response: { pairs: [] }, verdict: "incorrect" },
+      { response: { text: "Jakarta" }, verdict: "correct" },
+      { response: { text: "Batavia" }, verdict: "pending" },
+      { response: { text: "  " }, verdict: "incorrect" },
+    ];
+    expect(tallyAnswers(answers, [])).toEqual({
+      answered: 2,
+      correct: 1,
+      incorrect: 2,
+      optionCounts: [],
+      partial: 0,
       pending: 1,
     });
   });
@@ -50,6 +91,7 @@ describe("exams/results/stats", () => {
       correct: 0,
       incorrect: 0,
       optionCounts: Arr.map(options, (optionId) => ({ count: 0, optionId })),
+      partial: 0,
       pending: 0,
     });
   });

@@ -4,6 +4,7 @@ import {
   QueryResult,
   useMutation,
 } from "@confect/react";
+import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -26,6 +27,11 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFilter,
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
@@ -33,7 +39,7 @@ import {
   SchoolPeriodRestore,
 } from "@/components/tenant/settings/period";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { createPeriodChange } from "@/components/tenant/settings/terms";
 import {
   SchoolUnitChoice,
@@ -71,9 +77,9 @@ const PeriodsPreloadContext = createContext<PeriodsPreload | undefined>(
 );
 
 /**
- * Renders the periods of the school's unit: Add period in the header once a unit is
- * known, the unit choice above the table when the school has more than one unit, and
- * the periods in a data table with their row menus.
+ * Renders the periods of the school's unit as the page's table, with their row menus. The
+ * header row holds the unit choice when the school has more than one unit, the search, the
+ * status filter, and Add period once a unit is known.
  */
 export function SchoolPeriodsSettings({
   preload,
@@ -83,14 +89,16 @@ export function SchoolPeriodsSettings({
   slug: TenantSlug;
 }) {
   return (
-    <ReadBoundary
-      fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
-      read={{ args: { slug }, ref: tenancy.viewer.get }}
-    >
-      <PeriodsPreloadContext value={preload}>
-        <SchoolPeriodsContent slug={slug} />
-      </PeriodsPreloadContext>
-    </ReadBoundary>
+    <TableFiltersProvider>
+      <ReadBoundary
+        fallback={(failure) => <SettingsTablePage>{failure}</SettingsTablePage>}
+        read={{ args: { slug }, ref: tenancy.viewer.get }}
+      >
+        <PeriodsPreloadContext value={preload}>
+          <SchoolPeriodsContent slug={slug} />
+        </PeriodsPreloadContext>
+      </ReadBoundary>
+    </TableFiltersProvider>
   );
 }
 
@@ -109,7 +117,7 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
     throw viewer.error;
   }
   if (!QueryResult.isSuccess(viewer)) {
-    return <SettingsPage>{null}</SettingsPage>;
+    return <SettingsTablePage>{null}</SettingsTablePage>;
   }
   const units = viewer.value.units;
   const unit = Option.getOrUndefined(
@@ -121,12 +129,35 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
   );
 
   return (
-    <SettingsPage
+    <SettingsTablePage
       actions={
         unit === undefined ? undefined : (
-          <Button onClick={() => setIsAdding(true)} type="button">
-            {t("period-add")}
-          </Button>
+          <>
+            {units.length > 1 ? (
+              <SchoolUnitChoice
+                onChoose={setChosenUnit}
+                unitId={unit.id}
+                units={units}
+              />
+            ) : null}
+            <TableSearch placeholder={t("periods-search")} />
+            <TableFilter
+              facets={[
+                {
+                  column: "status",
+                  icon: Calendar03Icon,
+                  options: Arr.map(PeriodStatus.literals, (status) => ({
+                    label: t(`period-${status}`),
+                    value: status,
+                  })),
+                  title: t("period-status"),
+                },
+              ]}
+            />
+            <Button onClick={() => setIsAdding(true)} type="button">
+              {t("period-add")}
+            </Button>
+          </>
         )
       }
     >
@@ -134,13 +165,6 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
         <NoActiveUnit />
       ) : (
         <>
-          {units.length > 1 ? (
-            <SchoolUnitChoice
-              onChoose={setChosenUnit}
-              unitId={unit.id}
-              units={units}
-            />
-          ) : null}
           <ReadBoundary>
             <SchoolPeriodTable
               first={unit.id === preload?.unitId ? preload.page : undefined}
@@ -156,7 +180,7 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
           />
         </>
       )}
-    </SettingsPage>
+    </SettingsTablePage>
   );
 }
 
@@ -240,18 +264,8 @@ function SchoolPeriodTable({
       <DataTable
         columns={columns}
         data={pagination.results}
-        facets={[
-          {
-            column: "status",
-            options: Arr.map(PeriodStatus.literals, (status) => ({
-              label: t(`period-${status}`),
-              value: status,
-            })),
-            title: t("period-status"),
-          },
-        ]}
         rowId={(period) => period.id}
-        search={{ column: "name", placeholder: t("periods-search") }}
+        search="name"
       />
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />

@@ -54,6 +54,36 @@ const isXenditConfigured = Effect.fn("billing.route.isXenditConfigured")(
   }
 );
 
+/**
+ * Whether Indonesian buyers pay through Xendit now: the switch names Xendit and
+ * this deployment holds the Xendit key. A switch that names no rail is logged and
+ * keeps Indonesia where it was, on Polar.
+ */
+export const xenditTakesIndonesia = Effect.fn(
+  "billing.route.xenditTakesIndonesia"
+)(function* () {
+  const rail = yield* readIndonesiaRail.pipe(
+    Effect.catchTag("ConfigError", (error) =>
+      Effect.logError("BILLING_INDONESIA_RAIL names no rail", {
+        message: error.message,
+      }).pipe(Effect.as("polar" as const))
+    )
+  );
+  return rail === "xendit" && (yield* isXenditConfigured());
+});
+
+/** The country Nakafa holds when it does not know the buyer's, because Polar decides it at checkout. */
+export const UNKNOWN_COUNTRY = "ZZ";
+
+/**
+ * The country a learner checkout routes as, from the currency of the price the
+ * learner was shown: rupiah is shown only in Indonesia, and any other currency
+ * is a country Polar prices by the buyer's IP.
+ */
+export function checkoutCountryFor(currency: BillingCurrency): string {
+  return currency === "IDR" ? "ID" : UNKNOWN_COUNTRY;
+}
+
 /** The currency an account in `country` bills in: IDR in Indonesia, EUR in the euro territories, USD elsewhere. */
 export function billingCurrencyFor(country: string): BillingCurrency {
   if (country === "ID") {

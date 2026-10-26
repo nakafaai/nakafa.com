@@ -11,6 +11,7 @@ import {
   EMPTY_PROMPT_TEXT,
   encodeAnswers,
   NEW_QUESTION_POINTS,
+  NEW_QUESTION_TEMPLATE,
   newChoiceAnswers,
   type questionValidator,
 } from "@repo/backend/confect/exams/question";
@@ -22,7 +23,13 @@ type ExamPlace = Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">;
 /** The fields of a question row that placing it writes, with the documents the question owns. */
 type QuestionFields = Pick<
   typeof questionValidator.Type,
-  "answers" | "explanation" | "key" | "points" | "prompt" | "rubric"
+  | "answers"
+  | "explanation"
+  | "key"
+  | "points"
+  | "prompt"
+  | "rubric"
+  | "template"
 >;
 
 /**
@@ -56,7 +63,7 @@ export const placeQuestion = Effect.fn("exams.question.place")(function* (
       prompt: fields.prompt,
       revision: 0,
       rubric: fields.rubric,
-      template: "choice",
+      template: fields.template,
       tenantId: exam.tenantId,
       updatedAt: at,
     })
@@ -101,5 +108,6 @@ export const addQuestion = Effect.fn("exams.question.add")(function* (
     points: NEW_QUESTION_POINTS,
     prompt,
     rubric,
+    template: NEW_QUESTION_TEMPLATE,
   });
 });

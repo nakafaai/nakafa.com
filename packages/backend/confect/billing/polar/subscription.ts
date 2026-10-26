@@ -7,7 +7,7 @@ import { polarOfferOf } from "@repo/backend/confect/billing/polar/catalog";
 import type { PolarSubscriptionSource } from "@repo/backend/confect/billing/polar/payload";
 import type { billingSubscriptionStatusValidator } from "@repo/backend/confect/billing/schema";
 import type { BillingSubscriptionState } from "@repo/backend/confect/billing/subscriptions";
-import { Match, Option, Schema } from "effect";
+import { Match, Option, Predicate, Schema } from "effect";
 
 type BillingSubscriptionStatus = typeof billingSubscriptionStatusValidator.Type;
 
@@ -29,39 +29,52 @@ function statusOf(
 
 /**
  * The catalog offer of a Polar subscription: the offer its product sells, on
- * either server, when that offer is Pro and bills on the subscription's
- * interval. A School seat, a one-time product, an unknown product, or an
- * interval the offer does not bill sells no personal offer.
+ * either server, when that offer belongs to `product` and bills on the
+ * subscription's interval. A one-time product, an unknown product, an offer of
+ * another product, or an interval the offer does not bill sells nothing here.
  */
 function offerOf(
-  subscription: PolarSubscriptionSource
+  subscription: PolarSubscriptionSource,
+  product: "pro" | "school"
 ): BillingOfferKey | null {
   return polarOfferOf(subscription.productId).pipe(
     Option.filter((offer) => {
-      const { interval, product } = billingOffer(offer);
-      return product === "pro" && interval === subscription.recurringInterval;
+      const sold = billingOffer(offer);
+      return (
+        sold.product === product &&
+        sold.interval === subscription.recurringInterval
+      );
     }),
     Option.getOrNull
   );
 }
 
-/**
- * Maps one Polar subscription onto the billing model for the account that owns
- * its customer. A subscription whose product or interval Nakafa does not sell
- * maps to nothing, so it is never guessed at.
- */
-export function polarSubscriptionState(
-  accountId: Docs["billingAccounts"]["_id"],
-  subscription: PolarSubscriptionSource
-): Option.Option<BillingSubscriptionState> {
-  const offer = offerOf(subscription);
-  if (offer === null) {
-    return Option.none();
+/** The school a Polar subscription pays seats for, with its School offer: a School product whose checkout named the school. */
+export function polarSchoolOf(subscription: PolarSubscriptionSource) {
+  const offer = offerOf(subscription, "school");
+  const tenantId = subscription.metadata?.tenantId;
+  if (offer === null || !Predicate.isString(tenantId)) {
+    return Option.none<{ offer: BillingOfferKey; tenantId: string }>();
   }
-  return Option.some({
+  return Option.some({ offer, tenantId });
+}
+
+/**
+ * One Polar subscription as the billing model holds it, for the account that pays
+ * it and the offer it sells: one seat for Pro, one per enrolled student for School.
+ */
+export function polarStateOf(
+  accountId: Docs["billingAccounts"]["_id"],
+  subscription: PolarSubscriptionSource,
+  offer: BillingOfferKey
+): BillingSubscriptionState {
+  return {
     accountId,
     offer,
-    quantity: 1,
+    quantity:
+      billingOffer(offer).product === "school"
+        ? Math.max(subscription.seats ?? 1, 1)
+        : 1,
     status: statusOf(subscription),
     currentPeriodStart: subscription.currentPeriodStart.getTime(),
     currentPeriodEnd: subscription.currentPeriodEnd?.getTime() ?? null,
@@ -76,7 +89,22 @@ export function polarSubscriptionState(
     providerUpdatedAt: (
       subscription.modifiedAt ?? subscription.createdAt
     ).getTime(),
-  });
+  };
+}
+
+/**
+ * Maps one Polar Pro subscription onto the billing model for the learner's
+ * account. A subscription whose product or interval Nakafa does not sell as Pro
+ * maps to nothing, so it is never guessed at.
+ */
+export function polarSubscriptionState(
+  accountId: Docs["billingAccounts"]["_id"],
+  subscription: PolarSubscriptionSource
+): Option.Option<BillingSubscriptionState> {
+  return Option.map(
+    Option.fromNullishOr(offerOf(subscription, "pro")),
+    (offer) => polarStateOf(accountId, subscription, offer)
+  );
 }
 
 /**

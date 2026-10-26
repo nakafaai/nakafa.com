@@ -11,6 +11,7 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import assessmentFlags from "./tables/assessmentFlags";
 import billingAccounts from "./tables/billingAccounts";
+import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
 import billingGrants from "./tables/billingGrants";
@@ -47,6 +48,8 @@ import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
 import creditLots from "./tables/creditLots";
+import creditPoolDays from "./tables/creditPoolDays";
+import creditPools from "./tables/creditPools";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
@@ -59,11 +62,13 @@ import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
 import examQuestions from "./tables/examQuestions";
 import examResults from "./tables/examResults";
+import examScreens from "./tables/examScreens";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
 import integrationClients from "./tables/integrationClients";
+import integrationTokens from "./tables/integrationTokens";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -137,6 +142,7 @@ export default $defineSchema({
   articleCategories: $Table.tableDefinition(articleCategories),
   assessmentFlags: $Table.tableDefinition(assessmentFlags),
   billingAccounts: $Table.tableDefinition(billingAccounts),
+  billingCheckouts: $Table.tableDefinition(billingCheckouts),
   billingCounters: $Table.tableDefinition(billingCounters),
   billingEvents: $Table.tableDefinition(billingEvents),
   billingGrants: $Table.tableDefinition(billingGrants),
@@ -173,6 +179,8 @@ export default $defineSchema({
   contentSnapshots: $Table.tableDefinition(contentSnapshots),
   contentState: $Table.tableDefinition(contentState),
   creditLots: $Table.tableDefinition(creditLots),
+  creditPoolDays: $Table.tableDefinition(creditPoolDays),
+  creditPools: $Table.tableDefinition(creditPools),
   creditResetPeriods: $Table.tableDefinition(creditResetPeriods),
   creditTransactions: $Table.tableDefinition(creditTransactions),
   curriculumRoutes: $Table.tableDefinition(curriculumRoutes),
@@ -185,11 +193,13 @@ export default $defineSchema({
   examAttempts: $Table.tableDefinition(examAttempts),
   examQuestions: $Table.tableDefinition(examQuestions),
   examResults: $Table.tableDefinition(examResults),
+  examScreens: $Table.tableDefinition(examScreens),
   examSignals: $Table.tableDefinition(examSignals),
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),
   gradingSchemes: $Table.tableDefinition(gradingSchemes),
   integrationClients: $Table.tableDefinition(integrationClients),
+  integrationTokens: $Table.tableDefinition(integrationTokens),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),

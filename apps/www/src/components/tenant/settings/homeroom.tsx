@@ -1,24 +1,17 @@
 import { useMutation } from "@confect/react";
+import { TeacherIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 import {
   assignHomeroomChange,
   unassignHomeroomChange,
@@ -32,7 +25,7 @@ import type { CohortDetail } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/homeroom";
 
-/** The message that says what the card's action does, or what stops it. */
+/** The sentence that says what the dialog's action does, or what stops it. */
 function hintKeyOf(
   cohort: CohortDetail
 ): "homeroom-archived" | "homeroom-footer" | "homeroom-remove-footer" {
@@ -45,11 +38,13 @@ function hintKeyOf(
 }
 
 /**
- * The homeroom teacher of a cohort. While the cohort has none, the card picks a teacher
- * and saves them; once it has one, the card shows the teacher and removes them. An
- * archived cohort shows its teacher and offers no change.
+ * The homeroom teacher of a cohort, as a button in the cohort page's header row that opens
+ * its dialog. While the cohort has none, the dialog picks a teacher and saves them; once it
+ * has one, the dialog shows the teacher and removes them. An archived cohort shows its
+ * teacher and offers no change. On a phone the button keeps its icon, so the page's name
+ * keeps its room.
  */
-export function SchoolHomeroomCard({
+export function SchoolHomeroomAction({
   cohort,
   slug,
 }: {
@@ -57,6 +52,7 @@ export function SchoolHomeroomCard({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const id = useId();
   const assign = useMutation(tenancy.assignments.assign).withOptimisticUpdate(
     assignHomeroomChange
@@ -64,6 +60,7 @@ export function SchoolHomeroomCard({
   const unassign = useMutation(
     tenancy.assignments.unassign
   ).withOptimisticUpdate(unassignHomeroomChange);
+  const [open, setOpen] = useState(false);
   const [teacherId, setTeacherId] = useState<PersonId | undefined>(undefined);
   const isArchived = cohort.status === "archived";
 
@@ -71,6 +68,7 @@ export function SchoolHomeroomCard({
     if (teacherId === undefined) {
       return;
     }
+    setOpen(false);
     startTransition(() =>
       saveSchool(
         () => assign({ cohortId: cohort.id, personId: teacherId, slug }),
@@ -80,17 +78,59 @@ export function SchoolHomeroomCard({
     );
   };
 
-  const remove = () =>
+  const remove = () => {
+    setOpen(false);
     startTransition(() =>
       saveSchool(() => unassign({ cohortId: cohort.id, slug }), SOURCE)
     );
+  };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("homeroom-title")}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <>
+      <Button onClick={() => setOpen(true)} type="button" variant="outline">
+        <HugeIcons icon={TeacherIcon} />
+        <span className="max-sm:sr-only">{t("homeroom-title")}</span>
+      </Button>
+      <ResponsiveDialog
+        description={t(hintKeyOf(cohort))}
+        footer={
+          isArchived ? (
+            <Button
+              onClick={() => setOpen(false)}
+              type="button"
+              variant="outline"
+            >
+              {common("close")}
+            </Button>
+          ) : (
+            <>
+              <Button
+                onClick={() => setOpen(false)}
+                type="button"
+                variant="outline"
+              >
+                {common("cancel")}
+              </Button>
+              {cohort.homeroom === null ? (
+                <Button
+                  disabled={teacherId === undefined}
+                  onClick={save}
+                  type="button"
+                >
+                  {t("homeroom-save")}
+                </Button>
+              ) : (
+                <Button onClick={remove} type="button" variant="destructive">
+                  {t("homeroom-remove")}
+                </Button>
+              )}
+            </>
+          )
+        }
+        open={open}
+        setOpen={setOpen}
+        title={t("homeroom-title")}
+      >
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor={`${id}-teacher`}>
@@ -112,32 +152,7 @@ export function SchoolHomeroomCard({
             )}
           </Field>
         </FieldGroup>
-      </CardContent>
-      <CardSectionFooter hint={t(hintKeyOf(cohort))}>
-        {isArchived ? null : (
-          <CardSectionActions>
-            {cohort.homeroom === null ? (
-              <Button
-                disabled={teacherId === undefined}
-                onClick={save}
-                size="sm"
-                type="button"
-              >
-                {t("homeroom-save")}
-              </Button>
-            ) : (
-              <Button
-                onClick={remove}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                {t("homeroom-remove")}
-              </Button>
-            )}
-          </CardSectionActions>
-        )}
-      </CardSectionFooter>
-    </CardSection>
+      </ResponsiveDialog>
+    </>
   );
 }

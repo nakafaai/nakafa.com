@@ -9,6 +9,7 @@ import {
   SURAH_SIDEBAR_TRIGGER,
 } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const verifyCompactReferenceSheet = Effect.fn(
   "NakafaE2E.verifyCompactReferenceSheet"
@@ -29,7 +30,10 @@ const verifyCompactReferenceSheet = Effect.fn(
     .getByRole("button", { exact: true, name: "Pada halaman ini" })
     .or(page.locator(SURAH_SIDEBAR_TRIGGER))
     .filter({ visible: true });
+  // The router can start before React takes the page over, and a press before
+  // then opens nothing.
   if (width < 1280) {
+    yield* Effect.promise(() => waitUntilTakenOver(sidebarTrigger));
     yield* Effect.promise(() => sidebarTrigger.click());
   }
 
@@ -38,6 +42,7 @@ const verifyCompactReferenceSheet = Effect.fn(
     name: "Daftar pustaka",
   });
   yield* Effect.promise(() => expect(trigger).toBeVisible());
+  yield* Effect.promise(() => waitUntilTakenOver(trigger));
   yield* Effect.promise(() => trigger.click());
 
   const sheet = page.locator(SHEET_POPUP);

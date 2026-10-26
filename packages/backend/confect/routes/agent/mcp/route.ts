@@ -2,7 +2,10 @@ import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { nakafaMcpEngine } from "@repo/backend/agent/mcp/server";
 import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { enforceAgentReadLimit } from "@repo/backend/confect/routes/agent/limit";
-import { withDiscoveryCapabilities } from "@repo/backend/confect/routes/agent/mcp/discovery";
+import {
+  NAKAFA_CAPABILITIES,
+  withDiscoveryCapabilities,
+} from "@repo/backend/confect/routes/agent/mcp/discovery";
 import { guardMcpOrigin } from "@repo/backend/confect/routes/agent/mcp/guard";
 import { readMcpRequest } from "@repo/backend/confect/routes/agent/mcp/input";
 import {
@@ -105,7 +108,8 @@ const handleMcp = Effect.gen(function* () {
   );
   const answered = yield* withDiscoveryCapabilities(
     parsedBody,
-    HttpServerResponse.toWeb(response)
+    HttpServerResponse.toWeb(response),
+    NAKAFA_CAPABILITIES
   );
   return withMcpResponseHeaders(answered, request);
 }).pipe(Effect.map(HttpServerResponse.fromWeb));

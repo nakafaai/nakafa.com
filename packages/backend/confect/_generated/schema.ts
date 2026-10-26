@@ -10,6 +10,7 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import assessmentFlags from "./tables/assessmentFlags";
 import billingAccounts from "./tables/billingAccounts";
+import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
 import billingGrants from "./tables/billingGrants";
@@ -46,6 +47,8 @@ import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
 import creditLots from "./tables/creditLots";
+import creditPoolDays from "./tables/creditPoolDays";
+import creditPools from "./tables/creditPools";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
@@ -58,11 +61,13 @@ import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
 import examQuestions from "./tables/examQuestions";
 import examResults from "./tables/examResults";
+import examScreens from "./tables/examScreens";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
 import integrationClients from "./tables/integrationClients";
+import integrationTokens from "./tables/integrationTokens";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -136,6 +141,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleCategories: typeof articleCategories;
   readonly assessmentFlags: typeof assessmentFlags;
   readonly billingAccounts: typeof billingAccounts;
+  readonly billingCheckouts: typeof billingCheckouts;
   readonly billingCounters: typeof billingCounters;
   readonly billingEvents: typeof billingEvents;
   readonly billingGrants: typeof billingGrants;
@@ -172,6 +178,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly contentSnapshots: typeof contentSnapshots;
   readonly contentState: typeof contentState;
   readonly creditLots: typeof creditLots;
+  readonly creditPoolDays: typeof creditPoolDays;
+  readonly creditPools: typeof creditPools;
   readonly creditResetPeriods: typeof creditResetPeriods;
   readonly creditTransactions: typeof creditTransactions;
   readonly curriculumRoutes: typeof curriculumRoutes;
@@ -184,11 +192,13 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly examAttempts: typeof examAttempts;
   readonly examQuestions: typeof examQuestions;
   readonly examResults: typeof examResults;
+  readonly examScreens: typeof examScreens;
   readonly examSignals: typeof examSignals;
   readonly examSittings: typeof examSittings;
   readonly exams: typeof exams;
   readonly gradingSchemes: typeof gradingSchemes;
   readonly integrationClients: typeof integrationClients;
+  readonly integrationTokens: typeof integrationTokens;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
@@ -261,6 +271,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleCategories,
   assessmentFlags,
   billingAccounts,
+  billingCheckouts,
   billingCounters,
   billingEvents,
   billingGrants,
@@ -297,6 +308,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   contentSnapshots,
   contentState,
   creditLots,
+  creditPoolDays,
+  creditPools,
   creditResetPeriods,
   creditTransactions,
   curriculumRoutes,
@@ -309,11 +322,13 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   examAttempts,
   examQuestions,
   examResults,
+  examScreens,
   examSignals,
   examSittings,
   exams,
   gradingSchemes,
   integrationClients,
+  integrationTokens,
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
