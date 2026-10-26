@@ -106,6 +106,6 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
     detail.getByRole("heading", { name: "Acceptance Learner" })
   ).toBeVisible();
   await expect(detail.getByRole("textbox")).toHaveValue("82");
-  await expect(detail.getByText("KKTP")).toBeVisible();
+  await expect(detail.getByText("KKTP", { exact: true })).toBeVisible();
   await teacher.close();
 });
