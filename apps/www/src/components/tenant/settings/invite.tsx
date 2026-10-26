@@ -17,6 +17,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -31,7 +32,9 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { useViewerQuery } from "@/components/tenant/context";
+import { roleIcon } from "@/components/tenant/roles";
 import { addMemberChange } from "@/components/tenant/settings/accounts";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save";
@@ -43,11 +46,33 @@ const localeItems = Arr.map(
   Arr.filter(languages, (language) =>
     Arr.contains(ACTIVE_APP_LOCALE_CODES, language.value)
   ),
-  (language) => ({ label: language.label, value: language.value })
+  (language) => ({
+    countryCode: language.countryCode,
+    label: language.label,
+    value: language.value,
+  })
 );
 
 /** The roles an invite gives, each with the label the school shows for it. */
 type InvitedRoleValue = typeof InvitedRole.Type;
+
+/**
+ * Invite, the main action of the members and the invitations: its button in the page's header row, and the dialog
+ * it opens.
+ */
+export function SchoolInviteAction({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)} type="button">
+        {t("invite-action")}
+      </Button>
+      <SchoolInviteDialog open={open} setOpen={setOpen} slug={slug} />
+    </>
+  );
+}
 
 /**
  * Renders the dialog that adds a teacher or an Admin: the name, the email, the role,
@@ -56,7 +81,7 @@ type InvitedRoleValue = typeof InvitedRole.Type;
  * invite are written in one step, and the row shows in the members and the invitations
  * at once.
  */
-export function SchoolInviteDialog({
+function SchoolInviteDialog({
   open,
   setOpen,
   slug,
@@ -202,6 +227,7 @@ export function SchoolInviteDialog({
               <SelectGroup>
                 {Arr.map(roleItems, (item) => (
                   <SelectItem key={item.value} value={item.value}>
+                    <HugeIcons icon={roleIcon(item.value)} />
                     {item.label}
                   </SelectItem>
                 ))}
@@ -230,6 +256,7 @@ export function SchoolInviteDialog({
               <SelectGroup>
                 {Arr.map(localeItems, (item) => (
                   <SelectItem key={item.value} value={item.value}>
+                    <CountryFlagIcon countryCode={item.countryCode} />
                     {item.label}
                   </SelectItem>
                 ))}

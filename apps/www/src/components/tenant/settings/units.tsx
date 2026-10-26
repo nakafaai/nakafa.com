@@ -35,6 +35,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { CountryFlagIcon } from "@/components/shared/flag";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   languageItems,
@@ -305,6 +306,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
                   <SelectGroup>
                     {Arr.map(languageItems, (item) => (
                       <SelectItem key={item.value} value={item.value}>
+                        <CountryFlagIcon countryCode={item.countryCode} />
                         {item.label}
                       </SelectItem>
                     ))}

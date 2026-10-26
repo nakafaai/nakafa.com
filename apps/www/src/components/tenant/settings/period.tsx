@@ -1,5 +1,10 @@
 import { useMutation } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  Archive02Icon,
+  CheckmarkCircle02Icon,
+  MoreHorizontalIcon,
+  PencilEdit02Icon,
+} from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodName } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -122,6 +127,7 @@ export function SchoolPeriodMenu({
               setIsRenaming(true);
             }}
           >
+            <HugeIcons icon={PencilEdit02Icon} />
             {t("period-rename")}
           </DropdownMenuItem>
           {period.status === "planned" ? (
@@ -132,6 +138,7 @@ export function SchoolPeriodMenu({
                 )
               }
             >
+              <HugeIcons icon={CheckmarkCircle02Icon} />
               {t("period-open")}
             </DropdownMenuItem>
           ) : null}
@@ -162,6 +169,7 @@ export function SchoolPeriodMenu({
                 )
               }
             >
+              <HugeIcons icon={Archive02Icon} />
               {t("period-archive")}
             </DropdownMenuItem>
           ) : null}

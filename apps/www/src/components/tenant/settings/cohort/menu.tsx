@@ -1,5 +1,9 @@
 import { useMutation } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  Archive02Icon,
+  MoreHorizontalIcon,
+  PencilEdit02Icon,
+} from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -116,6 +120,7 @@ export function SchoolCohortMenu({
               setIsRenaming(true);
             }}
           >
+            <HugeIcons icon={PencilEdit02Icon} />
             {t("cohort-rename")}
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -144,6 +149,7 @@ export function SchoolCohortMenu({
               )
             }
           >
+            <HugeIcons icon={Archive02Icon} />
             {t("cohort-archive")}
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Saring",
     "no-results": "Tidak ada hasil.",
     "reset": "Atur ulang"
   },
@@ -225,9 +226,7 @@
     "release-title": "Rilis hasil kepada siswa?",
     "release-description": "Setiap siswa melihat skor dan jawabannya sendiri setelah kamu merilisnya.",
     "release-action": "Rilis hasil",
-    "release-footer": "Siswa melihat hasilnya setelah kamu merilisnya.",
-    "release-wait-footer": "Penulis ujian atau Admin merilis hasilnya setelah sesi ditutup.",
-    "released-footer": "Siswa sudah dapat melihat hasilnya.",
+    "released": "Dirilis",
     "student-results-title": "Hasilmu",
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
@@ -247,9 +246,9 @@
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
     "schedule-past": "Pilih waktu mulai yang belum lewat.",
     "rooms-title": "Ruang",
+    "edit-action": "Ubah ujian",
     "rooms-empty": "Belum ada ruang",
     "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",
-    "rooms-empty-action": "Buka ujian",
     "rooms-filter-empty": "Tidak ada ruang dengan status ini",
     "rooms-filter-empty-description": "Pilih status lain untuk melihat ruang yang lain.",
     "rooms-unavailable": "Anda tidak dapat melihat ruang ujian ini.",
@@ -486,7 +485,6 @@
     "client-secret-title": "Rahasia baru",
     "client-secret-description": "Salin sekarang, karena rahasia ini tidak akan ditampilkan lagi.",
     "audit-description": "Siapa mengubah apa di sekolah ini, dan kapan.",
-    "audit-footer": "Nilai kebijakan tidak disalin ke jejak.",
     "audit-view": "Lihat jejak",
     "audit-when": "Kapan",
     "audit-who": "Siapa",
@@ -751,7 +749,6 @@
     "no-unit-description": "Pulihkan atau tambahkan unit dulu, karena periode dan kelompok berada di dalam unit.",
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
-    "members-empty-action": "Buka undangan",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
     "policy-domains-invalid": "Periksa domain ini, satu di setiap baris: {domains}.",
     "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."

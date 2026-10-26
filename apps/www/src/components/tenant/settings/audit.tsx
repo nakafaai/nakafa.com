@@ -3,6 +3,7 @@ import {
   PaginatedQueryResult,
   QueryResult,
 } from "@confect/react";
+import { UserIcon } from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -16,8 +17,13 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFilter,
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SettingsPage } from "@/components/tenant/settings/section";
+import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -52,7 +58,10 @@ const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 /** The audit's first screen, which the page's loader read on the server. */
 const AuditPreloadContext = createContext<AuditPreload | undefined>(undefined);
 
-/** The section in the settings page frame, whose header shows while its body loads. */
+/**
+ * The audit trail as the page's table. The header row searches the changes and filters them
+ * by who made them, and shows while the body loads.
+ */
 export function SchoolAuditSettings({
   preload,
   slug,
@@ -60,22 +69,72 @@ export function SchoolAuditSettings({
   preload: AuditPreload | undefined;
   slug: TenantSlug;
 }) {
+  const t = useTranslations("SchoolSettings");
+
   return (
-    <SettingsPage>
-      <ReadBoundary>
-        <AuditPreloadContext value={preload}>
-          <SchoolAuditBody slug={slug} />
-        </AuditPreloadContext>
-      </ReadBoundary>
-    </SettingsPage>
+    <TableFiltersProvider>
+      <SettingsTablePage
+        actions={
+          <>
+            <TableSearch placeholder={t("audit-search")} />
+            <AuditFilter people={preload?.people} slug={slug} />
+          </>
+        }
+      >
+        <ReadBoundary>
+          <AuditPreloadContext value={preload}>
+            <SchoolAuditBody slug={slug} />
+          </AuditPreloadContext>
+        </ReadBoundary>
+      </SettingsTablePage>
+    </TableFiltersProvider>
+  );
+}
+
+/**
+ * The audit's Filter menu, by who made each change. It lists every active member of the
+ * school, so an actor on a later page is offered before that page loads, beside the staff
+ * and the system that the journal also records.
+ */
+function AuditFilter({
+  people: preloaded,
+  slug,
+}: {
+  people: AuditPreload["people"] | undefined;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const people = usePreloadedQueryResult(
+    journal.audit.actors,
+    { slug },
+    preloaded
+  );
+  const actors = Arr.dedupe([
+    ...(QueryResult.isSuccess(people)
+      ? Arr.map(people.value, (person) => person.name)
+      : []),
+    t("audit-operator"),
+    t("audit-system"),
+  ]);
+
+  return (
+    <TableFilter
+      facets={[
+        {
+          column: "who",
+          icon: UserIcon,
+          options: Arr.map(actors, (name) => ({ label: name, value: name })),
+          title: t("audit-who"),
+        },
+      ]}
+    />
   );
 }
 
 /**
  * Renders the audit log of the school, newest first, in a data table that filters by who
  * made each change and searches the changes, and loads more rows as its end comes into
- * view, with the policy note under it. The rows hold no policy value and no secret, so the
- * page shows none. The body waits for the first page, and an empty school shows the empty
+ * view. The rows hold no policy value and no secret, so the page shows none. The body waits for the first page, and an empty school shows the empty
  * state alone.
  */
 function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
@@ -94,11 +153,6 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE },
     Option.fromUndefinedOr(first)
-  );
-  const people = usePreloadedQueryResult(
-    journal.audit.actors,
-    { slug },
-    preload?.people
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -148,41 +202,18 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
       sortFn: "text",
     }),
   ]);
-  // The filter lists every active member of the school, so an actor on a later page is offered
-  // before that page loads, beside the staff and the system that the journal also records.
-  const actors = Arr.dedupe([
-    ...(QueryResult.isSuccess(people)
-      ? Arr.map(people.value, (person) => person.name)
-      : []),
-    t("audit-operator"),
-    t("audit-system"),
-  ]);
-
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <div>
-        <DataTable
-          columns={columns}
-          data={pagination.results}
-          facets={[
-            {
-              column: "who",
-              options: Arr.map(actors, (name) => ({
-                label: name,
-                value: name,
-              })),
-              title: t("audit-who"),
-            },
-          ]}
-          rowId={(entry) => entry.id}
-          search={{ column: "change", placeholder: t("audit-search") }}
-        />
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
-      </div>
-      <p className="text-muted-foreground text-sm">{t("audit-footer")}</p>
+      <DataTable
+        columns={columns}
+        data={pagination.results}
+        rowId={(entry) => entry.id}
+        search="change"
+      />
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
     </>
   );
 }

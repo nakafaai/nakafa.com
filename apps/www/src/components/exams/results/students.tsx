@@ -1,5 +1,12 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
+import {
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  HourglassIcon,
+  SquareLock01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -13,18 +20,20 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, DateTime, Option, Schema } from "effect";
-import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   useResultsPaper,
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { TableSearch, TableToggle } from "@/components/exams/results/filter";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
+import {
+  TableChoice,
+  useTableFilters,
+} from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
@@ -50,7 +59,7 @@ const stateKeys = {
 
 /** The status that the list shows: every attempt, or only the attempts in one state. */
 const StatusFilter = Schema.Union([Schema.Literal("all"), AttemptState]);
-type StatusFilter = typeof StatusFilter.Type;
+export type StatusFilter = typeof StatusFilter.Type;
 
 /** One student's row: the name, the state, and the scores of a submitted attempt, with the time it was submitted. */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
@@ -83,45 +92,40 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   );
 }
 
-/** The filters of the students' list: the state of the attempt, and the name that the rows must hold. */
-function StudentFilters({
-  onSearch,
-  onStatus,
-  search,
-  status,
+/**
+ * The students' Filter menu, in the results page's header row: every attempt, or only the attempts in one
+ * state, which the server reads. Each value carries the icon of its state.
+ */
+export function StudentStatusFilter({
+  onChange,
+  value,
 }: {
-  readonly onSearch: (search: string) => void;
-  readonly onStatus: (status: StatusFilter) => void;
-  readonly search: string;
-  readonly status: StatusFilter;
+  readonly onChange: (status: StatusFilter) => void;
+  readonly value: StatusFilter;
 }) {
   const t = useTranslations("Exams");
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <TableToggle
-        choices={[
-          { label: t("filter-all"), value: "all" },
-          { label: t(stateKeys.inProgress), value: "inProgress" },
-          { label: t(stateKeys.closing), value: "closing" },
-          { label: t(stateKeys.locked), value: "locked" },
-          { label: t(stateKeys.submitted), value: "submitted" },
-        ]}
-        label={t("filter-label")}
-        onChange={(next) => {
-          if (Schema.is(StatusFilter)(next)) {
-            onStatus(next);
-          }
-        }}
-        value={status}
-      />
-      <TableSearch
-        label={t("results-search")}
-        onChange={onSearch}
-        placeholder={t("results-search")}
-        value={search}
-      />
-    </div>
+    <TableChoice
+      onChange={onChange}
+      options={[
+        { icon: UserGroupIcon, label: t("filter-all"), value: "all" },
+        {
+          icon: Clock01Icon,
+          label: t(stateKeys.inProgress),
+          value: "inProgress",
+        },
+        { icon: HourglassIcon, label: t(stateKeys.closing), value: "closing" },
+        { icon: SquareLock01Icon, label: t(stateKeys.locked), value: "locked" },
+        {
+          icon: CheckmarkCircle02Icon,
+          label: t(stateKeys.submitted),
+          value: "submitted",
+        },
+      ]}
+      title={t("filter-label")}
+      value={value}
+    />
   );
 }
 
@@ -134,25 +138,23 @@ function StudentTable({
   const t = useTranslations("Exams");
 
   return (
-    <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("results-name")}</TableHead>
-            <TableHead>{t("results-status")}</TableHead>
-            <TableHead>{t("results-score")}</TableHead>
-            <TableHead>{t("results-answered")}</TableHead>
-            <TableHead>{t("results-pending")}</TableHead>
-            <TableHead>{t("results-finished")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(rows, (row) => (
-            <StudentRow key={row.attemptId} row={row} />
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+    <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("results-name")}</TableHead>
+          <TableHead>{t("results-status")}</TableHead>
+          <TableHead>{t("results-score")}</TableHead>
+          <TableHead>{t("results-answered")}</TableHead>
+          <TableHead>{t("results-pending")}</TableHead>
+          <TableHead>{t("results-finished")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Arr.map(rows, (row) => (
+          <StudentRow key={row.attemptId} row={row} />
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -164,13 +166,15 @@ function StudentTable({
  */
 export function StudentsTable({
   first,
+  status,
 }: {
   first: StudentsFirstPage | undefined;
+  /** The state the header's Filter menu chose, which the server reads. */
+  status: StatusFilter;
 }) {
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const [search, setSearch] = useState("");
+  const search = useTableFilters((state) => state.search);
   const scope =
     status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
   // The loader's first page is the page of every student, so a filtered list waits for its own first page.
@@ -187,33 +191,22 @@ export function StudentsTable({
   ) {
     throw students.error;
   }
-  const filters = (
-    <StudentFilters
-      onSearch={setSearch}
-      onStatus={setStatus}
-      search={search}
-      status={status}
-    />
-  );
   if (PaginatedQueryResult.isLoadingFirstPage(students)) {
-    return status !== "all" || search.trim() !== "" ? filters : null;
+    return null;
   }
   return (
-    <>
-      {filters}
-      <StudentRowsSection
-        exhausted={PaginatedQueryResult.isExhausted(students)}
-        failed={PaginatedQueryResult.isFailure(students)}
-        filtering={status !== "all" || search.trim() !== ""}
-        loadMore={
-          PaginatedQueryResult.isCanLoadMore(students)
-            ? () => students.loadMore(STUDENT_PAGE_SIZE)
-            : null
-        }
-        rows={students.results}
-        search={search}
-      />
-    </>
+    <StudentRowsSection
+      exhausted={PaginatedQueryResult.isExhausted(students)}
+      failed={PaginatedQueryResult.isFailure(students)}
+      filtering={status !== "all" || search.trim() !== ""}
+      loadMore={
+        PaginatedQueryResult.isCanLoadMore(students)
+          ? () => students.loadMore(STUDENT_PAGE_SIZE)
+          : null
+      }
+      rows={students.results}
+      search={search}
+    />
   );
 }
 
