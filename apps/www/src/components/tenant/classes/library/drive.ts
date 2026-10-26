@@ -36,7 +36,7 @@ declare global {
   /** What Google's script defines on the page: its loader, then the Picker it loads. */
   interface Window {
     gapi?: { load: (library: "picker", loaded: () => void) => void };
-    google?: { picker?: GooglePicker };
+    google?: Partial<Record<"picker", GooglePicker>>;
   }
 }
 
