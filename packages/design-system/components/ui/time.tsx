@@ -38,7 +38,7 @@ function TimeSelect({
   /** What the select shows while no time is chosen: an example time or a short hint. */
   readonly placeholder: string;
   /** The minutes between two times that the select offers. */
-  readonly step?: number;
+  readonly step?: number | undefined;
   /** The chosen time of day as `HH:mm`, or an empty text while none is chosen. */
   readonly value: string;
 }) {
