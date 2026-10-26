@@ -1,10 +1,8 @@
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { polarGateway } from "@repo/backend/confect/billing/polar/live";
+import { UNKNOWN_COUNTRY } from "@repo/backend/confect/billing/route";
 import { Effect } from "effect";
-
-/** The billing country of a Polar customer Polar holds no billing address for: unknown, as the checkout account is. */
-const UNKNOWN_BILLING_COUNTRY = "ZZ";
 
 /**
  * Links the Polar customer one event or listed subscription names to the Nakafa
@@ -27,7 +25,8 @@ export const resolvePolarCustomer = Effect.fn("billing.polar.resolveCustomer")(
       refs.internal.billing.accounts.linkPolarCustomer,
       {
         authId: customer.externalId,
-        country: customer.billingCountry ?? UNKNOWN_BILLING_COUNTRY,
+        // Polar holds no billing address for this customer, so its country is unknown, as the checkout account's is.
+        country: customer.billingCountry ?? UNKNOWN_COUNTRY,
         providerCustomerId: customer.id,
       }
     ).pipe(Effect.orDie);

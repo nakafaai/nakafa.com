@@ -94,6 +94,22 @@ export function currencyForTimeZone(timeZone: string): PricingCurrency {
   );
 }
 
+/**
+ * The currency of the prices a page shows, which the inline script set on the
+ * root element before the first paint: the dollar price when it set none. The
+ * checkout sends it, so a buyer pays in the currency the page showed.
+ */
+export function readShownCurrency(
+  root: Pick<Element, "getAttribute">
+): PricingCurrency {
+  return Option.getOrElse(
+    Schema.decodeUnknownOption(PricingCurrencySchema)(
+      root.getAttribute(PRICING_CURRENCY_ATTRIBUTE)
+    ),
+    () => FALLBACK_CURRENCY
+  );
+}
+
 /** The currency that a request's cookie chose, or none when the cookie is absent or unknown. */
 export function readCurrencyCookie(
   headers: Headers
