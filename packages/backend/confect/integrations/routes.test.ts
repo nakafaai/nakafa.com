@@ -15,6 +15,9 @@ beforeEach(() => {
   vi.setSystemTime(TENANCY_NOW);
 });
 
+/** The access token of an issued token answer. */
+const IssuedToken = Schema.Struct({ access_token: Schema.String });
+
 /** One JSON body of a response, as text the test decodes. */
 const json = (response: Response) =>
   Effect.promise(() => response.text()).pipe(
@@ -114,9 +117,9 @@ describe("school API over HTTP", () => {
           client_secret: client.secret,
           grant_type: "client_credentials",
         }).pipe(Effect.flatMap(json));
-        const token = Schema.decodeUnknownSync(
-          Schema.Struct({ access_token: Schema.String })
-        )(issued).access_token;
+        const { access_token: token } = yield* Schema.decodeUnknownEffect(
+          IssuedToken
+        )(issued);
         expect((yield* read(fixture, "/people", token)).status).toBe(403);
       })
   );

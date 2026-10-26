@@ -39,9 +39,10 @@ describe("lib/tenant/api", () => {
     expect(sent.get("authorization")).toBe("Bearer t");
     expect(sent.get("cookie")).toBeNull();
     expect(sent.get("accept")).toBeNull();
-    const answered = forwardedResponseHeaders(
-      new Headers({ "retry-after": "3", "set-cookie": "x=y" })
-    );
+    const answered = forwardedResponseHeaders({
+      "retry-after": "3",
+      "set-cookie": "x=y",
+    });
     expect(answered.get("retry-after")).toBe("3");
     expect(answered.get("set-cookie")).toBeNull();
   });

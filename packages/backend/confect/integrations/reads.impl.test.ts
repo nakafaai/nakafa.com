@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { cohort, nf, period } from "@repo/backend/test/classroom";
 import { createClient } from "@repo/backend/test/api";
-import { foreignCohort, tenancyFixture } from "@repo/backend/test/tenancy";
+import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const reads = refs.internal.integrations.reads;
@@ -130,9 +130,17 @@ describe("integrations/reads", () => {
             period: term.id,
           })
         ).toEqual(forbidden);
-        const other = yield* foreignCohort(fixture);
+        const other = yield* fixture
+          .as("otherOwner")
+          .mutation(refs.public.tenancy.periods.create, {
+            end: "2026-12-19",
+            name: "Ganjil",
+            slug: slugOf("other"),
+            start: "2026-07-13",
+            unitId: fixture.units.sd,
+          });
         const all = yield* createClient(fixture);
-        for (const periodId of [other.periodId, "not-an-id"]) {
+        for (const periodId of [other.id, "not-an-id"]) {
           expect(
             yield* fixture.internal.query(reads.cohorts, {
               clientId: all.id,

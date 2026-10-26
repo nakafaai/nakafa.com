@@ -1,5 +1,5 @@
 import { SCHOOL_API_PATH } from "@repo/backend/confect/integrations/api";
-import { Array as Arr, Option, Tuple } from "effect";
+import { Array as Arr, Option, Record as Rec, Tuple } from "effect";
 import {
   readRequestHostname,
   readSchoolSlug,
@@ -50,11 +50,16 @@ export function forwardedRequestHeaders(headers: Headers) {
   );
 }
 
-/** The headers of a forwarded answer: the ones a caller reads, and never a cookie. */
-export function forwardedResponseHeaders(headers: Headers) {
+/**
+ * The headers of a forwarded answer: the ones a caller reads, and never a cookie. The
+ * answer comes from Effect's HTTP client, whose headers are a record of lowercase names.
+ */
+export function forwardedResponseHeaders(
+  headers: Readonly<Record<string, string>>
+) {
   return new Headers(
     Arr.flatMap(RESPONSE_HEADERS, (name) =>
-      Option.match(Option.fromNullOr(headers.get(name)), {
+      Option.match(Rec.get(headers, name), {
         onNone: () => [],
         onSome: (value) => [Tuple.make(name, value)],
       })

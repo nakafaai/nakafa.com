@@ -10,9 +10,9 @@ import {
   SCHOOL_API_PATH,
   SchoolApi,
   SchoolApiBearer,
-  SchoolApiCaller,
   SchoolApiForbidden,
   SchoolApiRateLimited,
+  SchoolApiToken,
   SchoolApiUnauthorized,
 } from "@repo/backend/confect/integrations/api";
 import { Effect, Layer, Redacted } from "effect";
@@ -78,8 +78,31 @@ const forbidden = () =>
     message: "This client may not read it.",
   });
 
-/** The client that the bearer check verified, as the reads take it. */
-const callerId = Effect.map(SchoolApiCaller, (caller) => caller.clientId);
+/**
+ * The client of the request's bearer token: the token must be live and issued for the REST
+ * API, and the request is counted against its client's limit. A refused token answers 401,
+ * and a client past its limit 429 with the seconds to wait.
+ */
+const callerId = Effect.gen(function* () {
+  const { token } = yield* SchoolApiToken;
+  const { runMutation } = yield* MutationRunner;
+  const check = yield* runMutation(refs.internal.integrations.tokens.check, {
+    resource: "api",
+    token,
+  }).pipe(Effect.orDie);
+  if (check.outcome === "unauthorized") {
+    return yield* new SchoolApiUnauthorized({
+      message: "The bearer token is missing, unknown, or expired.",
+    });
+  }
+  if (check.outcome === "limited") {
+    return yield* new SchoolApiRateLimited({
+      message: "This client sent too many requests.",
+      retryAfter: check.retryAfter,
+    });
+  }
+  return check.clientId;
+});
 
 /** The roster reads, each one internal query for the verified client. */
 const rosterHandlers = HttpApiBuilder.group(
@@ -153,35 +176,14 @@ const rosterHandlers = HttpApiBuilder.group(
   })
 );
 
-/**
- * The bearer check: the token must be live and issued for the REST API, and the request is
- * counted against its client's limit. The verified client reaches the handler; a refused
- * token answers 401, and a client past its limit 429 with the seconds to wait.
- */
+/** The bearer security: the token of the request, which each read checks with `callerId`. */
 const bearer = Layer.succeed(
   SchoolApiBearer,
   SchoolApiBearer.of({
-    bearer: Effect.fn(function* (httpEffect, { credential }) {
-      const { runMutation } = yield* MutationRunner;
-      const check = yield* runMutation(refs.internal.integrations.tokens.check, {
-        resource: "api",
+    bearer: (httpEffect, { credential }) =>
+      Effect.provideService(httpEffect, SchoolApiToken, {
         token: Redacted.value(credential),
-      }).pipe(Effect.orDie);
-      if (check.outcome === "unauthorized") {
-        return yield* new SchoolApiUnauthorized({
-          message: "The bearer token is missing, unknown, or expired.",
-        });
-      }
-      if (check.outcome === "limited") {
-        return yield* new SchoolApiRateLimited({
-          message: "This client sent too many requests.",
-          retryAfter: check.retryAfter,
-        });
-      }
-      return yield* Effect.provideService(httpEffect, SchoolApiCaller, {
-        clientId: check.clientId,
-      });
-    }),
+      }),
   })
 );
 

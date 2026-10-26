@@ -1,4 +1,3 @@
-import type { MutationRunner } from "@confect/server";
 import { Context, Schema } from "effect";
 import {
   HttpApi,
@@ -45,25 +44,31 @@ export class SchoolApiForbidden extends Schema.TaggedError<SchoolApiForbidden>()
   { httpApiStatus: 403 }
 ) {}
 
-/** The client behind the bearer token of one request, which the token check provides. */
-export class SchoolApiCaller extends Context.Service<
-  SchoolApiCaller,
-  { readonly clientId: string }
->()("@repo/backend/confect/integrations/api/SchoolApiCaller") {}
+/** The bearer token of one request, which the handler checks before it reads anything. */
+export class SchoolApiToken extends Context.Service<
+  SchoolApiToken,
+  { readonly token: string }
+>()("@repo/backend/confect/integrations/api/SchoolApiToken") {}
 
 /**
- * The bearer check of every school API read. It verifies the token, counts the request
- * against the client's limit, and provides the client to the handler, so no handler runs
- * without one.
+ * The bearer security of every school API read. It hands the token to the handler, which
+ * checks it and counts the request in the same request, because the Convex runners a check
+ * needs reach a handler and never a middleware layer.
  */
 export class SchoolApiBearer extends HttpApiMiddleware.Service<
   SchoolApiBearer,
-  { provides: SchoolApiCaller; requires: MutationRunner.MutationRunner }
+  { provides: SchoolApiToken }
 >()("@repo/backend/confect/integrations/api/SchoolApiBearer", {
-  error: Schema.Union([SchoolApiUnauthorized, SchoolApiRateLimited]),
   requiredForClient: true,
   security: { bearer: HttpApiSecurity.bearer },
 }) {}
+
+/** The refusals every roster read may answer: a closed read, a refused token, and a client past its limit. */
+const ROSTER_ERRORS = [
+  SchoolApiForbidden,
+  SchoolApiUnauthorized,
+  SchoolApiRateLimited,
+];
 
 /** The OAuth 2.0 error codes the token endpoint answers (RFC 6749 section 5.2, RFC 8707). */
 const OAuthErrorCode = Schema.Literals([
@@ -159,17 +164,17 @@ export class OAuthGroup extends HttpApiGroup.make("oauth").add(
 export class RosterGroup extends HttpApiGroup.make("roster")
   .add(
     HttpApiEndpoint.get("periods", "/periods", {
-      error: SchoolApiForbidden,
+      error: ROSTER_ERRORS,
       query: PageQuery,
       success: pageOf(ApiPeriod),
     }),
     HttpApiEndpoint.get("cohorts", "/cohorts", {
-      error: SchoolApiForbidden,
+      error: ROSTER_ERRORS,
       query: { ...PageQuery, period: Schema.String },
       success: pageOf(ApiCohort),
     }),
     HttpApiEndpoint.get("people", "/people", {
-      error: SchoolApiForbidden,
+      error: ROSTER_ERRORS,
       query: {
         ...PageQuery,
         status: Schema.optional(Schema.Literals(["active", "suspended", "removed"])),
@@ -177,7 +182,7 @@ export class RosterGroup extends HttpApiGroup.make("roster")
       success: pageOf(ApiPerson),
     }),
     HttpApiEndpoint.get("placements", "/placements", {
-      error: SchoolApiForbidden,
+      error: ROSTER_ERRORS,
       query: { ...PageQuery, period: Schema.String },
       success: pageOf(ApiPlacement),
     })
