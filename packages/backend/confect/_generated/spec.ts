@@ -30,6 +30,7 @@ import classroom_forum_messages from "../classroom/forum/messages.spec";
 import classroom_forum_reads from "../classroom/forum/reads.spec";
 import classroom_forum_seed from "../classroom/forum/seed.spec";
 import classroom_forum_threads from "../classroom/forum/threads.spec";
+import classroom_posts from "../classroom/posts.spec";
 import classroom_seed from "../classroom/seed.spec";
 import classroom_teachers from "../classroom/teachers.spec";
 import comments_mutations from "../comments/mutations.spec";
@@ -210,7 +211,7 @@ const spec: Spec.Spec<{
   readonly auth: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "auth", never, GroupSpec.NamedAt<typeof auth_actions, "actions"> | GroupSpec.NamedAt<typeof auth_cleanup, "cleanup"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof auth_deletion, GroupSpec.NamedAt<typeof auth_deletion_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof auth_deletion_recovery, "recovery"> | GroupSpec.NamedAt<typeof auth_deletion_verification, "verification"> | GroupSpec.NamedAt<typeof auth_deletion_workflow, "workflow">>, "deletion"> | GroupSpec.NamedAt<typeof auth_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof auth_queries, "queries">>, "auth">;
   readonly billing: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "billing", never, GroupSpec.NamedAt<typeof billing_accounts, "accounts"> | GroupSpec.NamedAt<typeof billing_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_contracts, "contracts"> | GroupSpec.NamedAt<typeof billing_deletion, "deletion"> | GroupSpec.NamedAt<typeof billing_events, "events"> | GroupSpec.NamedAt<typeof billing_grants, "grants"> | GroupSpec.NamedAt<typeof billing_queries, "queries"> | GroupSpec.NamedAt<typeof billing_reconcile, "reconcile"> | GroupSpec.NamedAt<typeof billing_sessions, "sessions"> | GroupSpec.NamedAt<typeof billing_topup, "topup">>, "billing">;
   readonly chats: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof chats_mutations, "mutations"> | GroupSpec.NamedAt<typeof chats_queries, "queries">>, "chats">;
-  readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "forum", never, GroupSpec.NamedAt<typeof classroom_forum_channels, "channels"> | GroupSpec.NamedAt<typeof classroom_forum_messages, "messages"> | GroupSpec.NamedAt<typeof classroom_forum_reads, "reads"> | GroupSpec.NamedAt<typeof classroom_forum_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_forum_threads, "threads">>, "forum"> | GroupSpec.NamedAt<typeof classroom_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
+  readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "forum", never, GroupSpec.NamedAt<typeof classroom_forum_channels, "channels"> | GroupSpec.NamedAt<typeof classroom_forum_messages, "messages"> | GroupSpec.NamedAt<typeof classroom_forum_reads, "reads"> | GroupSpec.NamedAt<typeof classroom_forum_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_forum_threads, "threads">>, "forum"> | GroupSpec.NamedAt<typeof classroom_posts, "posts"> | GroupSpec.NamedAt<typeof classroom_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
   readonly comments: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof comments_mutations, "mutations"> | GroupSpec.NamedAt<typeof comments_queries, "queries">>, "comments">;
   readonly connectors: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "connectors", never, GroupSpec.NamedAt<typeof connectors_connections, "connections">>, "connectors">;
   readonly consents: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "consents", never, GroupSpec.NamedAt<typeof consents_current, "current">>, "consents">;
@@ -286,6 +287,7 @@ const spec: Spec.Spec<{
       ["seed"]: classroom_forum_seed,
       ["threads"]: classroom_forum_threads,
     }),
+    ["posts"]: classroom_posts,
     ["seed"]: classroom_seed,
     ["teachers"]: classroom_teachers,
   }),

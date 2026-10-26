@@ -24,6 +24,8 @@ import {
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { StartDiscussion } from "@/components/tenant/classes/forum/start";
 import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
+import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
+import { ClassHome } from "@/components/tenant/classes/home/home";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { classPath } from "@/components/tenant/classes/path";
 import {
@@ -228,8 +230,9 @@ function ResolvedClass({
 }
 
 /**
- * The header's one action, the forum's: Add channel on the channel list for whoever manages the
- * forum, and New discussion in a channel for whoever the server lets open one there.
+ * The header's one action: New announcement on the class home for its subject teachers, Add
+ * channel on the channel list for whoever manages the forum, and New discussion in a channel for
+ * whoever the server lets open one there.
  */
 function ForumAction({
   klass,
@@ -241,6 +244,9 @@ function ForumAction({
   const { slug } = useClassScope();
   const drafts = useDrafts();
 
+  if (view._tag === "home" && Arr.contains(klass.can, "post.publish")) {
+    return <NewAnnouncement />;
+  }
   if (view._tag === "forum" && Arr.contains(klass.can, "forum.manage")) {
     return <AddChannel classId={klass.id} drafts={drafts} slug={slug} />;
   }
@@ -250,7 +256,7 @@ function ForumAction({
   return null;
 }
 
-/** The body of the view: the channel list, one channel, or one discussion beside its channel. */
+/** The body of the view: the class's announcements, its channel list, one channel, or one discussion beside its channel. */
 function ClassBody({
   found,
   klass,
@@ -287,6 +293,9 @@ function ClassBody({
         />
       ),
     });
+  }
+  if (view._tag === "home") {
+    return <ClassHome />;
   }
   return (
     <ChannelList

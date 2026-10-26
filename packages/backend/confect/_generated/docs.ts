@@ -24,6 +24,7 @@ export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "class
 export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type ClassroomChannelsDoc = Document.Document<typeof schemaDefinition, "classroomChannels">;
 export type ClassroomMessagesDoc = Document.Document<typeof schemaDefinition, "classroomMessages">;
+export type ClassroomPostsDoc = Document.Document<typeof schemaDefinition, "classroomPosts">;
 export type ClassroomReadsDoc = Document.Document<typeof schemaDefinition, "classroomReads">;
 export type ClassroomThreadsDoc = Document.Document<typeof schemaDefinition, "classroomThreads">;
 export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
@@ -152,6 +153,7 @@ export interface Docs {
   classes: ClassesDoc;
   classroomChannels: ClassroomChannelsDoc;
   classroomMessages: ClassroomMessagesDoc;
+  classroomPosts: ClassroomPostsDoc;
   classroomReads: ClassroomReadsDoc;
   classroomThreads: ClassroomThreadsDoc;
   commentLikes: CommentLikesDoc;

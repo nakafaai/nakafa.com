@@ -52,6 +52,11 @@ export const classKind = Kind.make("class", "classes", {
       relations: ["classMember", "subjectTeacher"],
       roles: classReaders,
     },
+    "post.publish": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["subjectTeacher"],
+    },
   },
   changes: [
     Schema.Struct({ type: Schema.Literal("class.created") }),
@@ -69,8 +74,12 @@ export const classKind = Kind.make("class", "classes", {
       message: Id("classroomMessages"),
       type: Schema.Literal("message.hidden"),
     }),
+    Schema.Struct({
+      post: Id("classroomPosts"),
+      type: Schema.Literal("announcement.posted"),
+    }),
   ],
-  published: [],
+  published: ["announcement.posted"],
   relations: ["classMember", "subjectTeacher"],
 });
 

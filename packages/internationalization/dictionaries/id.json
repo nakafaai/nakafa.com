@@ -788,7 +788,20 @@
     "discussion-start": "Mulai",
     "discussions-closed": "Hanya guru yang membuka diskusi di sekolah ini.",
     "discussion-failed": "Diskusimu belum dimulai.",
-    "reply-placeholder": "Tulis balasan"
+    "reply-placeholder": "Tulis balasan",
+    "posts": "Pengumuman",
+    "posts-empty": "Belum ada pengumuman",
+    "posts-empty-description": "Pengumuman kelas tampil di sini.",
+    "post-edited": "{time}, diubah",
+    "post-emailed": "Juga dikirim lewat email.",
+    "post-remove": "Hapus",
+    "post-remove-title": "Hapus pengumuman ini",
+    "post-remove-description": "Pengumuman hilang dari beranda kelas untuk semua orang dan tidak bisa kembali.",
+    "post-new": "Pengumuman baru",
+    "post-new-description": "Semua anggota kelas membacanya di beranda kelas dan di notifikasi.",
+    "post-submit": "Kirim",
+    "post-text": "Pengumuman",
+    "post-email": "Juga kirim lewat email"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

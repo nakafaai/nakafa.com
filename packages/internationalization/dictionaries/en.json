@@ -788,7 +788,20 @@
     "discussion-start": "Start",
     "discussions-closed": "Only teachers open discussions in this school.",
     "discussion-failed": "Your discussion was not started.",
-    "reply-placeholder": "Write a reply"
+    "reply-placeholder": "Write a reply",
+    "posts": "Announcements",
+    "posts-empty": "No announcement yet",
+    "posts-empty-description": "The class's announcements show here.",
+    "post-edited": "{time}, edited",
+    "post-emailed": "Also sent by email.",
+    "post-remove": "Remove",
+    "post-remove-title": "Remove this announcement",
+    "post-remove-description": "It leaves the class home for everyone, and it cannot come back.",
+    "post-new": "New announcement",
+    "post-new-description": "Everyone in the class reads it on the class home and in their notifications.",
+    "post-submit": "Post",
+    "post-text": "Announcement",
+    "post-email": "Also send by email"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",

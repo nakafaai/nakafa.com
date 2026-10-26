@@ -788,7 +788,20 @@
     "discussion-start": "Starten",
     "discussions-closed": "An dieser Schule eröffnen nur Lehrkräfte Diskussionen.",
     "discussion-failed": "Deine Diskussion wurde nicht gestartet.",
-    "reply-placeholder": "Antwort schreiben"
+    "reply-placeholder": "Antwort schreiben",
+    "posts": "Ankündigungen",
+    "posts-empty": "Noch keine Ankündigung",
+    "posts-empty-description": "Die Ankündigungen der Klasse erscheinen hier.",
+    "post-edited": "{time}, bearbeitet",
+    "post-emailed": "Auch per E-Mail gesendet.",
+    "post-remove": "Entfernen",
+    "post-remove-title": "Diese Ankündigung entfernen",
+    "post-remove-description": "Sie verschwindet für alle von der Startseite der Klasse und kommt nicht zurück.",
+    "post-new": "Neue Ankündigung",
+    "post-new-description": "Alle in der Klasse lesen sie auf der Startseite der Klasse und in ihren Benachrichtigungen.",
+    "post-submit": "Posten",
+    "post-text": "Ankündigung",
+    "post-email": "Auch per E-Mail senden"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
