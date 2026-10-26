@@ -167,3 +167,16 @@ export const examSignalValidator = Schema.Struct({
   kind: SignalKind,
   tenantId: Id("tenants"),
 });
+
+/**
+ * The question a student's screen shows now, one row for each attempt (K25). The student's device writes
+ * it when the student moves to another question, at most once every few seconds, and only the proctor
+ * panel open on that student reads it, so the dashboard of the room never reads a screen. It holds no
+ * picture of the screen: the panel draws the question and the student's answer from the exam's data.
+ */
+export const examScreenValidator = Schema.Struct({
+  at: Schema.Finite,
+  attempt: Id("examAttempts"),
+  question: Id("examQuestions"),
+  tenantId: Id("tenants"),
+});

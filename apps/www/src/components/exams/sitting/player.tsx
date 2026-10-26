@@ -29,6 +29,7 @@ import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
 import { projectSittingQuestions } from "@/components/exams/sitting/questions";
 import { SittingRetry } from "@/components/exams/sitting/retry";
+import { SittingLook } from "@/components/exams/sitting/look";
 import { useSittingSignals } from "@/components/exams/sitting/signals";
 import { useSittingClock } from "@/components/exams/sitting/timer";
 import { PlayerFinish } from "@/components/player/finish";
@@ -262,6 +263,7 @@ function RunningPaper({
           paper,
         })}
       />
+      <SittingLook attemptId={attemptId} deviceId={deviceId} slug={slug} />
       {header}
       <PlayerMain
         navigator={
