@@ -348,12 +348,25 @@ describe("billing/xendit/session", () => {
         ctx,
         processXenditEvent(sessionDelivery("payment_session.completed", "py_1"))
       );
+      const dollars = await seedCheckout(ctx, "pro.pass.1");
+      await ctx.db.delete(unpriced.checkoutId);
+      await ctx.db.patch(dollars.accountId, { currency: "USD" });
+      const unpricedPass = await exitInMutation(
+        ctx,
+        processXenditEvent(sessionDelivery("payment_session.completed", "py_1"))
+      );
       return {
         missing: Exit.isFailure(missing),
         payments: await ctx.db.query("billingPayments").collect(),
         priceless: Exit.isFailure(priceless),
+        unpricedPass: Exit.isFailure(unpricedPass),
       };
     });
-    expect(result).toEqual({ missing: true, payments: [], priceless: true });
+    expect(result).toEqual({
+      missing: true,
+      payments: [],
+      priceless: true,
+      unpricedPass: true,
+    });
   });
 });
