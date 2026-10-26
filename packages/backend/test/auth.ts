@@ -82,12 +82,14 @@ export const GOOGLE_KEY = {
 /**
  * The unsigned ID token that the stubbed Google token endpoint issues. A
  * `header` that names an algorithm and a key id makes Better Auth look the key
- * up, which a token from the endpoint never needs.
+ * up, which a token from the endpoint never needs. `claims` adds to or replaces
+ * the profile, such as the hosted domain (`hd`) of a Google Workspace account.
  */
 export function createGoogleIdToken(
   suffix: string,
   now: number,
-  header: object = { alg: "none", typ: "JWT" }
+  header: object = { alg: "none", typ: "JWT" },
+  claims: object = {}
 ) {
   const issuedAt = Math.floor(now / 1000);
   return Arr.join(
@@ -103,6 +105,7 @@ export function createGoogleIdToken(
         name: `Synthetic ${suffix}`,
         picture: `https://example.com/${suffix}.png`,
         sub: `google-${suffix}`,
+        ...claims,
       }),
       "test-signature",
     ],
@@ -122,13 +125,15 @@ export function cookieHeader(response: Response) {
 /**
  * Signs one synthetic learner in through Better Auth's Google callback, with
  * the token endpoint stubbed. The provider issues `access-<suffix>` and
- * `refresh-<suffix>`. The caller sets the fake clock to `now`, and unstubs the
- * global `fetch` afterwards.
+ * `refresh-<suffix>`, and an ID token with `claims` over its profile. The
+ * caller sets the fake clock to `now`, and unstubs the global `fetch`
+ * afterwards.
  */
 export async function signInWithGoogle(
   test: ReturnType<typeof createConvexTestWithBetterAuth>,
   suffix: string,
-  now: number
+  now: number,
+  claims: object = {}
 ) {
   googleFetch.mockReset().mockImplementation((input, init) => {
     expect(String(input)).toBe(GOOGLE_TOKEN_ENDPOINT);
@@ -138,7 +143,7 @@ export async function signInWithGoogle(
       Response.json({
         access_token: `access-${suffix}`,
         expires_in: 3600,
-        id_token: createGoogleIdToken(suffix, now),
+        id_token: createGoogleIdToken(suffix, now, undefined, claims),
         refresh_token: `refresh-${suffix}`,
         scope: "openid email profile",
         token_type: "Bearer",

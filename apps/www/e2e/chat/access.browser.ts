@@ -143,7 +143,11 @@ const meetsTheChat = Effect.fn("NakafaE2E.meetsTheChat")(function* (
     await expect(composerOf(sheet)).toHaveCount(0);
     await expect(promptWith(sheet, PROMPT)).toHaveCount(0);
 
-    await sheet.getByRole("button", { exact: true, name: "New chat" }).click();
+    // A new chat is the first item of the sheet's More menu.
+    await sheet
+      .getByRole("button", { exact: true, name: "More actions" })
+      .click();
+    await page.getByRole("menuitem", { exact: true, name: "New chat" }).click();
     await expect(sheet.getByText(NEW_CHAT)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });

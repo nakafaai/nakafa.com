@@ -101,8 +101,6 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
         disabled={!editable}
         id={id}
         inputMode="numeric"
-        max={QUESTION_POINTS_MAX}
-        min={1}
         onBlur={commit}
         onChange={(event) => setDraft(event.currentTarget.value)}
         onKeyDown={(event) => {
@@ -110,7 +108,7 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
             event.currentTarget.blur();
           }
         }}
-        type="number"
+        placeholder="1"
         value={draft ?? String(points)}
       />
     </Field>

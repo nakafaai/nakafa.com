@@ -174,7 +174,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
                     }}
                     value={c}
                   >
-                    <span className="truncate">{c.label}</span>
+                    <span className="min-w-0 text-pretty">{c.label}</span>
 
                     <HugeIcons
                       aria-hidden="true"

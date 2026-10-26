@@ -4,11 +4,15 @@ import {
   ArrowShrink02Icon,
   Cancel01Icon,
   ChatSearch01Icon,
+  MoreHorizontalIcon,
   StarsIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -36,7 +40,13 @@ interface Props {
   onResizeToggle: () => void;
 }
 
-/** Renders Nina sheet actions without owning the sheet layout. */
+/**
+ * Renders Nina sheet actions without owning the sheet layout: the history and a
+ * menu of the other actions in one group, and the close button on its own. The
+ * menu holds a new chat while a chat is open, and the width on a screen wide
+ * enough to change it; below that width, with no chat open, it would be empty,
+ * so its button leaves the header.
+ */
 export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
@@ -52,31 +62,43 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
           <span>Nina</span>
         </SheetTitle>
 
-        <div className="flex items-center">
-          <Activity mode={activeChatId ? "visible" : "hidden"}>
-            <Button
-              onClick={() => setActiveChatId(null)}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={Add01Icon} />
-              <span className="sr-only">{t("Ai.new-chat")}</span>
-            </Button>
-          </Activity>
-          <HistorySlot />
-          <Button
-            className="hidden sm:inline-flex"
-            onClick={onResizeToggle}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <HugeIcons
-              icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
-            />
-            <span className="sr-only">
-              {t(expanded ? "Ai.narrower" : "Ai.wider")}
-            </span>
-          </Button>
+        <div className="flex items-center gap-1">
+          <ButtonGroup aria-label={t("Ai.chat-actions")}>
+            <HistorySlot />
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    className={
+                      activeChatId ? undefined : "hidden sm:inline-flex"
+                    }
+                    size="icon-sm"
+                    variant="ghost"
+                  >
+                    <HugeIcons icon={MoreHorizontalIcon} />
+                    <span className="sr-only">{t("Common.more-actions")}</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-48">
+                <Activity mode={activeChatId ? "visible" : "hidden"}>
+                  <DropdownMenuItem onClick={() => setActiveChatId(null)}>
+                    <HugeIcons icon={Add01Icon} />
+                    {t("Ai.new-chat")}
+                  </DropdownMenuItem>
+                </Activity>
+                <DropdownMenuItem
+                  className="hidden sm:flex"
+                  onClick={onResizeToggle}
+                >
+                  <HugeIcons
+                    icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
+                  />
+                  {t(expanded ? "Ai.narrower" : "Ai.wider")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ButtonGroup>
           <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">
             <HugeIcons icon={Cancel01Icon} />
             <span className="sr-only">{t("Common.close")}</span>
