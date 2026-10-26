@@ -32,8 +32,6 @@
     },
     "sign-in-title": "Sign in to {school}",
     "sittings-empty": "Your teacher has not scheduled a sitting yet.",
-    "refused-title": "Your access to this school has changed.",
-    "refused-description": "Ask an admin of this school to check your access, or go back to Nakafa.",
     "answers-saved": "Answers saved",
     "quiet-staff": "No sitting is running, and none opens in the next 14 days.",
     "setup-invites": "Review pending invites",

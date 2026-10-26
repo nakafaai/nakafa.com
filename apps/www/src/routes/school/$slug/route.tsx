@@ -21,11 +21,15 @@ import { canOpenExams } from "@/components/tenant/exams/access";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { TenantRefused } from "@/components/tenant/refused";
 import { TenantShell } from "@/components/tenant/shell";
 import { readAuthLegalFn } from "@/lib/auth/legal.functions";
 import { readShellClassesFn } from "@/lib/tenant/classes.functions";
-import { canManageSchool, roleOf, type SchoolRead } from "@/lib/tenant/frame";
+import {
+  canManageSchool,
+  outsiderOf,
+  roleOf,
+  type SchoolRead,
+} from "@/lib/tenant/frame";
 import { readSchoolFrameFn } from "@/lib/tenant/frame.functions";
 import { schoolHead } from "@/lib/tenant/head";
 import { reusesVisitFrame } from "@/lib/tenant/visit";
@@ -202,9 +206,9 @@ function SchoolRefused(): ReactElement {
 }
 
 /**
- * Keeps a school failure on the school's own surface. A viewer who lost the
- * school sees the refused page, and any other failure sees the broken page with
- * a way to retry or to leave for Nakafa.
+ * Keeps a school failure on the school's own surface. A member whom the school
+ * stopped counting while a page was open sees what a reload answers, and any
+ * other failure sees the broken page with a way to retry or to leave for Nakafa.
  */
 function SchoolError({ error }: ErrorComponentProps): ReactElement {
   const t = useTranslations("Error");
@@ -220,7 +224,7 @@ function SchoolError({ error }: ErrorComponentProps): ReactElement {
   }, [error, refused]);
 
   if (refused) {
-    return <TenantRefused />;
+    return <SchoolLeft />;
   }
   return (
     <Stage>
@@ -233,4 +237,25 @@ function SchoolError({ error }: ErrorComponentProps): ReactElement {
       />
     </Stage>
   );
+}
+
+/**
+ * The page of a member whom the school stopped counting while a page was open: the outsider page
+ * that a reload of the same address answers, drawn from the frame that the visit already holds, so
+ * the live answer and the reload agree. Its Check again reads the frame once more. An account with
+ * no name answers not found, as a reload does.
+ */
+function SchoolLeft(): ReactElement {
+  const { school } = Route.useRouteContext();
+  return Option.match(outsiderOf(school), {
+    onNone: () => <SchoolRefused />,
+    onSome: (outsider) => (
+      <TenantOutsider
+        account={outsider.account}
+        logo={outsider.profile.logo}
+        mascot={outsider.profile.mascot}
+        school={outsider.profile.name}
+      />
+    ),
+  });
 }

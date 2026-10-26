@@ -22,7 +22,6 @@ const CONVEX_AUTH_READ = "**/api/auth/convex/token*";
 const ERROR_STATES = [
   en.Common["load-error"],
   en.Common["load-error-retry"],
-  en.School["refused-title"],
   standalone.Error.title,
   standalone.NotFound.title,
 ];

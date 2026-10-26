@@ -12,7 +12,7 @@ import {
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Layer, Option, Result, Schema } from "effect";
 import { readSchoolSignInTitle } from "@/lib/tenant/copy";
-import type { SchoolViewer } from "@/lib/tenant/frame";
+import { outsiderOf, type SchoolViewer } from "@/lib/tenant/frame";
 import {
   readSchoolFrame,
   SchoolReadFailed,
@@ -388,4 +388,70 @@ describe("SchoolReadsLive", () => {
       expect(failure._tag).toBe("SchoolReadFailed");
     })
   );
+});
+
+describe("outsiderOf", () => {
+  /** The frame that a member's own visit holds, read with the viewer that the test chooses. */
+  const memberFrame = (viewer: SchoolViewer) =>
+    readSchoolFrame({ ...READ, token: Option.some("token") }).pipe(
+      Effect.provide(reads({ viewer: Effect.succeed(Result.succeed(viewer)) }))
+    );
+
+  it.effect(
+    "gives a member whom the school stops counting the outsider frame that a reload reads",
+    () =>
+      Effect.gen(function* () {
+        const member = yield* memberFrame(VIEWER);
+        const reload = yield* readSchoolFrame({
+          ...READ,
+          token: Option.some("token"),
+        }).pipe(
+          Effect.provide(
+            reads({
+              account: Effect.succeedSome("Ayu"),
+              profile: Effect.succeedSome(PROFILE),
+              viewer: Effect.succeed(Result.fail("Outsider")),
+            })
+          )
+        );
+        expect(Option.getOrThrow(outsiderOf(member))).toMatchObject(reload);
+      })
+  );
+
+  it.effect(
+    "names the outsider by the username when the account has no name, as a reload does",
+    () =>
+      Effect.gen(function* () {
+        const member = yield* memberFrame({
+          ...VIEWER,
+          account: Schema.decodeSync(ViewerAccount)({
+            mascot: MASCOT,
+            name: "",
+            username: "ayu",
+          }),
+        });
+        expect(
+          Option.map(outsiderOf(member), (outsider) => outsider.account)
+        ).toEqual(Option.some("ayu"));
+      })
+  );
+
+  it.effect(
+    "gives none for an account that names nothing, where a reload answers not found",
+    () =>
+      Effect.gen(function* () {
+        const member = yield* memberFrame({
+          ...VIEWER,
+          account: Schema.decodeSync(ViewerAccount)({
+            mascot: MASCOT,
+            name: "",
+          }),
+        });
+        expect(outsiderOf(member)).toEqual(Option.none());
+      })
+  );
+
+  it("gives none for a frame that is not a member's", () => {
+    expect(outsiderOf({ _tag: "Refused" })).toEqual(Option.none());
+  });
 });
