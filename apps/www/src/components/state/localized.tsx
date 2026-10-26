@@ -3,6 +3,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
+import { createStore, useStore } from "zustand";
 import { ActionLink } from "@/components/state/action";
 import { Broken } from "@/components/state/broken";
 import { Missing } from "@/components/state/missing";
@@ -64,7 +65,12 @@ export function RouteFailure({
   readonly error: unknown;
   readonly source: string;
 }) {
-  const [reloading, setReloading] = useState(() => isStaleChunkError(error));
+  // Whether the page is reloading for a chunk of an earlier deploy. The reload
+  // writes it, from the tab's storage, so it lives in a store of its own.
+  const [reload] = useState(() =>
+    createStore<boolean>()(() => isStaleChunkError(error))
+  );
+  const reloading = useStore(reload);
 
   useEffect(() => {
     if (!isStaleChunkError(error)) {
@@ -76,9 +82,9 @@ export function RouteFailure({
       )
     );
     if (!reloaded) {
-      setReloading(false);
+      reload.setState(false, true);
     }
-  }, [error]);
+  }, [error, reload]);
 
   if (reloading) {
     return null;
