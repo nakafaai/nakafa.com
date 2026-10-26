@@ -27,6 +27,7 @@ describe("school settings routes", () => {
       ["/school/$slug/settings/invites", "invites", "people"],
       ["/school/$slug/settings/students", "students", "people"],
       ["/school/$slug/settings/clients", "clients", "integrations"],
+      ["/school/$slug/settings/connections", "connections", "integrations"],
       ["/school/$slug/settings/policies", "policies", "security"],
       ["/school/$slug/settings/audit", "audit", "security"],
     ]);
@@ -41,7 +42,7 @@ describe("school settings routes", () => {
     ).toEqual([
       ["school", ["profile", "periods", "cohorts", "units"]],
       ["people", ["members", "roles", "invites", "students"]],
-      ["integrations", ["clients"]],
+      ["integrations", ["clients", "connections"]],
       ["security", ["policies", "audit"]],
     ]);
   });
@@ -61,6 +62,7 @@ describe("school settings routes", () => {
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
+      "/school/$slug/settings/clients",
       "/school/$slug/settings/clients",
       "/school/$slug/settings/policies",
       "/school/$slug/settings/policies",
