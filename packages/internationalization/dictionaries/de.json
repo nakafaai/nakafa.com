@@ -835,7 +835,18 @@
     "reopen": "Zurückholen",
     "approve": "Genehmigen",
     "open-pdf": "PDF öffnen",
-    "open-check": "Prüfseite öffnen"
+    "open-check": "Prüfseite öffnen",
+    "detail": "Zeugnis",
+    "detail-empty": "Wähle eine Person aus der Liste, um ihr Zeugnis zu sehen.",
+    "report-empty": "Dieses Zeugnis ist noch nicht begonnen. Schreibe die Notiz der Klassenleitung, um es zu beginnen.",
+    "approved-at": "Freigegeben",
+    "note-empty": "Noch keine Notiz.",
+    "subjects-empty": "Noch keine Note freigegeben.",
+    "subject": "Fach",
+    "grade": "Note",
+    "result": "Ergebnis",
+    "kktp-reached": "KKTP erreicht",
+    "kktp-notReached": "KKTP nicht erreicht"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

@@ -126,12 +126,18 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await expect(approverRow).toContainText("Locked", {
     timeout: readinessTimeoutMilliseconds,
   });
-  await approverRow.getByRole("button", { name: "More actions" }).click();
-  await expect(
-    approver.getByRole("menuitem", { name: "Open PDF" })
-  ).toHaveAttribute("href", WEB_ADDRESS);
-  const check = await approver
-    .getByRole("menuitem", { name: "Open check page" })
+  // The locked report opens beside the list with its copied grade, its PDF and its check page.
+  await approverRow.getByRole("button", { name: "Acceptance Learner" }).click();
+  const detail = approver.getByRole("complementary", {
+    name: "Student's report card",
+  });
+  await expect(detail.getByRole("cell", { name: "Fisika X-1" })).toBeVisible();
+  await expect(detail.getByRole("link", { name: "Open PDF" })).toHaveAttribute(
+    "href",
+    WEB_ADDRESS
+  );
+  const check = await detail
+    .getByRole("link", { name: "Open check page" })
     .getAttribute("href");
   const code = Option.getOrElse(
     Option.flatMap(Str.match(CHECK_HASH)(check ?? ""), (found) =>

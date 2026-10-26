@@ -835,7 +835,18 @@
     "reopen": "Tarik kembali",
     "approve": "Setujui",
     "open-pdf": "Buka PDF",
-    "open-check": "Buka halaman pemeriksaan"
+    "open-check": "Buka halaman pemeriksaan",
+    "detail": "Rapor siswa",
+    "detail-empty": "Pilih siswa untuk melihat rapornya.",
+    "report-empty": "Rapor ini belum dimulai. Tulis catatan wali kelas untuk memulainya.",
+    "approved-at": "Disetujui",
+    "note-empty": "Belum ada catatan.",
+    "subjects-empty": "Belum ada nilai yang dirilis.",
+    "subject": "Mata pelajaran",
+    "grade": "Nilai",
+    "result": "Hasil",
+    "kktp-reached": "Mencapai KKTP",
+    "kktp-notReached": "Belum mencapai KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

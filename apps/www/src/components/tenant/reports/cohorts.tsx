@@ -6,10 +6,13 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { SchoolHeader } from "@/components/tenant/header";
 import { Link } from "@/lib/routing/link";
 
@@ -62,9 +65,11 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
   ]);
 
   return (
-    <>
-      <SchoolHeader items={[{ label: t("title") }]} title={t("title")} />
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+    <TableFiltersProvider>
+      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
+        <TableSearch placeholder={t("search-cohorts")} />
+      </SchoolHeader>
+      <div className="flex w-full min-w-0 flex-1 flex-col">
         {QueryResult.isSuccess(cohorts) &&
         Arr.isReadonlyArrayEmpty(cohorts.value) ? (
           <TableEmpty
@@ -79,10 +84,10 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
             columns={columns}
             data={cohorts.value}
             rowId={(cohort) => cohort.id}
-            search={{ column: "cohort", placeholder: t("search-cohorts") }}
+            search="cohort"
           />
         ) : null}
-      </LayoutContent>
-    </>
+      </div>
+    </TableFiltersProvider>
   );
 }

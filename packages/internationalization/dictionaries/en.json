@@ -835,7 +835,18 @@
     "reopen": "Take back",
     "approve": "Approve",
     "open-pdf": "Open PDF",
-    "open-check": "Open check page"
+    "open-check": "Open check page",
+    "detail": "Student's report card",
+    "detail-empty": "Choose a student to see their report card.",
+    "report-empty": "This report card has not started. Write the homeroom teacher's note to start it.",
+    "approved-at": "Approved",
+    "note-empty": "No note yet.",
+    "subjects-empty": "No grade is released yet.",
+    "subject": "Subject",
+    "grade": "Grade",
+    "result": "Result",
+    "kktp-reached": "Meets KKTP",
+    "kktp-notReached": "Below KKTP"
   },
   "SchoolStart": {
     "metadata-title": "Open your school",

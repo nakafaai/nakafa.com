@@ -1,7 +1,6 @@
 import {
   PaginatedQueryResult,
   QueryResult,
-  useMutation,
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
@@ -9,15 +8,17 @@ import {
   ArrowTurnBackwardIcon,
   CheckmarkBadge01Icon,
   CheckmarkCircle02Icon,
-  Download04Icon,
+  CircleIcon,
+  Edit02Icon,
+  Loading03Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
   SentIcon,
+  SquareLock02Icon,
 } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { NOTE_LIMIT } from "@repo/backend/confect/records/report";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -26,61 +27,87 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { SITE_ORIGIN } from "@repo/seo/origin";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
-import { useId, useState, useTransition } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
+import {
+  PaneOpen,
+  Panes,
+  PanesDetail,
+  PanesList,
+  PanesProvider,
+} from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFilter,
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
+import type { ReportLine } from "@/components/tenant/reports/change";
 import {
-  type ReportLine,
-  stateChange,
-  writeChange,
-} from "@/components/tenant/reports/change";
-import { saveSchool } from "@/components/tenant/settings/save";
+  checkAddress,
+  ReportLineDetail,
+  ReportNoteDialog,
+  useReportActions,
+} from "@/components/tenant/reports/detail";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
-
-const SOURCE = "components/tenant/reports/sheet";
-
-/** The public check page of a locked report, on the main site, in the viewer's language. */
-const checkAddress = (locale: string, hash: string) =>
-  new URL(`/${locale}/verify/${hash}`, SITE_ORIGIN).href;
 
 /** How many students one page of the list loads, and each page after it. */
 const PAGE_SIZE = 50;
 
-/** The states a line's report is in, as the status filter offers them. */
-const LINE_STATES = [
-  "none",
-  "draft",
-  "completed",
-  "approved",
-  "locked",
-] as const;
+/** The state of each line's report, with its icon, in the list, its filter, and the open report. */
+const STATE_ICONS = {
+  approved: Loading03Icon,
+  completed: SentIcon,
+  draft: Edit02Icon,
+  locked: SquareLock02Icon,
+  none: CircleIcon,
+};
 
 /** The columns of the report list. */
 const lineColumns = createColumnHelper<typeof dataTableFeatures, ReportLine>();
 
+/** The state of a line's report: not started, or the state the report is in. */
+const stateOf = (line: ReportLine) => line.report?.state ?? "none";
+
 /**
  * The report cards of one class group (ADR 0033, S4): each placed student with the state
- * of their report. The homeroom teacher writes a note and hands a report in, or takes it
- * back; the principal approves it, which draws its PDF and locks it. A locked report opens
- * its PDF.
+ * of their report, beside the report a press opens on a wide screen and in a sheet on a
+ * phone. The header holds the search by student and the state filter. The homeroom teacher
+ * writes a note and hands a report in, or takes it back; the principal approves it, which
+ * draws its PDF and locks it. A locked report opens its PDF and its public check page.
  */
 export function CohortReports({
+  cohortId,
+  slug,
+}: {
+  cohortId: Id<"tenantCohorts">;
+  slug: TenantSlug;
+}) {
+  return (
+    <TableFiltersProvider>
+      <PanesProvider>
+        <CohortReportsHeader cohortId={cohortId} slug={slug} />
+        <div className="flex w-full min-w-0 flex-1 flex-col">
+          <CohortReportsBody cohortId={cohortId} slug={slug} />
+        </div>
+      </PanesProvider>
+    </TableFiltersProvider>
+  );
+}
+
+/** The page's header: the path back to the report cards and the class group's name, then the search and the state filter. */
+function CohortReportsHeader({
   cohortId,
   slug,
 }: {
@@ -93,13 +120,9 @@ export function CohortReports({
     tenancy.cohorts.get,
     isSettled ? { cohortId, slug } : "skip"
   );
-  const pagination = usePaginatedQuery(
-    records.reports.sheet,
-    isSettled ? { cohortId, slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
-  );
   const title = QueryResult.isSuccess(cohort) ? cohort.value.name : "";
-  const header = (
+
+  return (
     <SchoolHeader
       items={[
         {
@@ -113,27 +136,78 @@ export function CohortReports({
         { label: title },
       ]}
       title={title}
-    />
+    >
+      <TableSearch placeholder={t("search-students")} />
+      <TableFilter
+        facets={[
+          {
+            column: "status",
+            icon: CircleIcon,
+            options: Arr.map(
+              ["none", "draft", "completed", "approved", "locked"] as const,
+              (state) => ({
+                icon: STATE_ICONS[state],
+                label: t(`state-${state}`),
+                value: state,
+              })
+            ),
+            title: t("status"),
+          },
+        ]}
+      />
+    </SchoolHeader>
+  );
+}
+
+/** The students of the class group, read a page at a time, beside the open report; or the empty state. */
+function CohortReportsBody({
+  cohortId,
+  slug,
+}: {
+  cohortId: Id<"tenantCohorts">;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolReports");
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const pagination = usePaginatedQuery(
+    records.reports.sheet,
+    isSettled ? { cohortId, slug } : "skip",
+    { initialNumItems: PAGE_SIZE }
   );
 
   if (pagination._tag === "LoadingFirstPage") {
-    return header;
+    return null;
   }
   const failed = PaginatedQueryResult.isFailure(pagination);
+  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    return failed ? (
+      <DataFailure onRetry={reloadPage} />
+    ) : (
+      <TableEmpty
+        act="reading"
+        description={t("students-empty-description")}
+        title={t("students-empty")}
+      />
+    );
+  }
+
   const columns = lineColumns.columns([
     lineColumns.accessor((line) => line.student.name, {
       cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
+        <PaneOpen id={info.row.original.student.id}>{info.getValue()}</PaneOpen>
       ),
       filterFn: "includesString",
       header: t("student"),
       id: "student",
       sortFn: "text",
     }),
-    lineColumns.accessor((line) => line.report?.state ?? "none", {
-      cell: (info) => t(`state-${info.getValue()}`),
+    lineColumns.accessor(stateOf, {
+      cell: (info) => (
+        <span className="flex items-center gap-2">
+          <HugeIcons icon={STATE_ICONS[info.getValue()]} />
+          {t(`state-${info.getValue()}`)}
+        </span>
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("status"),
@@ -152,47 +226,34 @@ export function CohortReports({
   ]);
 
   return (
-    <>
-      {header}
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+    <Panes>
+      <PanesList>
         {failed ? <DataFailure onRetry={reloadPage} /> : null}
-        {Arr.isReadonlyArrayEmpty(pagination.results) && !failed ? (
-          <TableEmpty
-            act="reading"
-            description={t("students-empty-description")}
-            title={t("students-empty")}
-          />
-        ) : null}
-        {Arr.isReadonlyArrayNonEmpty(pagination.results) ? (
-          <DataTable
-            columns={columns}
-            data={pagination.results}
-            facets={[
-              {
-                column: "status",
-                options: Arr.map(LINE_STATES, (state) => ({
-                  label: t(`state-${state}`),
-                  value: state,
-                })),
-                title: t("status"),
-              },
-            ]}
-            rowId={(line) => line.student.id}
-            search={{ column: "student", placeholder: t("search-students") }}
-          />
-        ) : null}
+        <DataTable
+          columns={columns}
+          data={pagination.results}
+          rowId={(line) => line.student.id}
+          search="student"
+        />
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
-      </LayoutContent>
-    </>
+      </PanesList>
+      <PanesDetail empty={t("detail-empty")} label={t("detail")}>
+        <ReportLineDetail
+          cohortId={cohortId}
+          lines={pagination.results}
+          slug={slug}
+        />
+      </PanesDetail>
+    </Panes>
   );
 }
 
 /**
  * The row menu of one student's report: write the note, hand in, or take back for the
- * homeroom teacher, approve for the principal, and open the PDF once it is locked. Each
- * item shows only when the server allows it.
+ * homeroom teacher, approve for the principal, and open the check page once it is locked.
+ * Each item shows only when the server allows it.
  */
 function ReportLineMenu({
   cohortId,
@@ -206,16 +267,7 @@ function ReportLineMenu({
   const t = useTranslations("SchoolReports");
   const common = useTranslations("Common");
   const locale = useLocale();
-  const complete = useMutation(records.reports.complete).withOptimisticUpdate(
-    stateChange("completed")
-  );
-  const reopen = useMutation(records.reports.reopen).withOptimisticUpdate(
-    stateChange("draft")
-  );
-  const approve = useMutation(records.reports.approve).withOptimisticUpdate(
-    stateChange("approved")
-  );
-  const [, startTransition] = useTransition();
+  const actions = useReportActions(slug);
   const [isWriting, setIsWriting] = useState(false);
   const { report } = line;
   const menu = menuOf(line);
@@ -247,52 +299,22 @@ function ReportLineMenu({
             </DropdownMenuItem>
           ) : null}
           {menu.complete && report !== null ? (
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(
-                    () => complete({ reportId: report.id, slug }),
-                    SOURCE
-                  )
-                )
-              }
-            >
+            <DropdownMenuItem onClick={() => actions.complete(report.id)}>
               <HugeIcons icon={SentIcon} />
               {t("complete")}
             </DropdownMenuItem>
           ) : null}
           {menu.reopen && report !== null ? (
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(
-                    () => reopen({ reportId: report.id, slug }),
-                    SOURCE
-                  )
-                )
-              }
-            >
+            <DropdownMenuItem onClick={() => actions.reopen(report.id)}>
               <HugeIcons icon={ArrowTurnBackwardIcon} />
               {t("reopen")}
             </DropdownMenuItem>
           ) : null}
           {menu.approve && report !== null ? (
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(
-                    () => approve({ reportId: report.id, slug }),
-                    SOURCE
-                  )
-                )
-              }
-            >
+            <DropdownMenuItem onClick={() => actions.approve(report.id)}>
               <HugeIcons icon={CheckmarkCircle02Icon} />
               {t("approve")}
             </DropdownMenuItem>
-          ) : null}
-          {menu.open && report !== null ? (
-            <ReportFileItem reportId={report.id} slug={slug} />
           ) : null}
           {menu.open && report !== null && report.hash !== null ? (
             <DropdownMenuItem
@@ -320,101 +342,5 @@ function ReportLineMenu({
         />
       ) : null}
     </div>
-  );
-}
-
-/** The item that opens a locked report's PDF. It reads the report when the menu opens. */
-function ReportFileItem({
-  reportId,
-  slug,
-}: {
-  reportId: Id<"reportCards">;
-  slug: TenantSlug;
-}) {
-  const t = useTranslations("SchoolReports");
-  const detail = useQuery(records.reports.get, { reportId, slug });
-  const file = QueryResult.isSuccess(detail) ? detail.value.file : null;
-  return (
-    <DropdownMenuItem
-      disabled={file === null}
-      render={
-        <a href={file ?? undefined} rel="noopener" target="_blank">
-          <HugeIcons icon={Download04Icon} />
-          {t("open-pdf")}
-        </a>
-      }
-    />
-  );
-}
-
-/** The dialog where the homeroom teacher writes a student's note, which starts the draft. */
-function ReportNoteDialog({
-  cohortId,
-  line,
-  open,
-  setOpen,
-  slug,
-}: {
-  cohortId: Id<"tenantCohorts">;
-  line: ReportLine;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  slug: TenantSlug;
-}) {
-  const t = useTranslations("SchoolReports");
-  const common = useTranslations("Common");
-  const id = useId();
-  const write = useMutation(records.reports.write).withOptimisticUpdate(
-    writeChange
-  );
-  const [isPending, startTransition] = useTransition();
-  const [note, setNote] = useState(line.report?.note ?? "");
-
-  const submit = () =>
-    startTransition(() => {
-      setOpen(false);
-      return saveSchool(
-        () => write({ cohortId, note, personId: line.student.id, slug }),
-        SOURCE
-      );
-    });
-
-  return (
-    <ResponsiveDialog
-      description={t("write-description", { name: line.student.name })}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={note.length > NOTE_LIMIT || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            {t("save-note")}
-          </Button>
-        </>
-      }
-      open={open}
-      setOpen={setOpen}
-      title={t("write")}
-    >
-      <Field>
-        <FieldLabel htmlFor={`${id}-note`}>{t("note-label")}</FieldLabel>
-        <Textarea
-          id={`${id}-note`}
-          maxLength={NOTE_LIMIT}
-          minRows={4}
-          onChange={(event) => setNote(event.target.value)}
-          value={note}
-        />
-      </Field>
-    </ResponsiveDialog>
   );
 }
