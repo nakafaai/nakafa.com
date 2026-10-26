@@ -6,7 +6,20 @@ import {
   NAKAFA_ZONE,
   productionHostExposure,
   webExposure,
+  workerName,
 } from "#www/deploy/stage";
+
+describe("workerName", () => {
+  it("names a production Worker after its service alone", () => {
+    expect(workerName("web", "prod")).toBe("nakafa-web");
+    expect(workerName("cas-engine", "prod")).toBe("nakafa-cas-engine");
+  });
+
+  it("suffixes every other stage, so stages never share a Worker", () => {
+    expect(workerName("web", "staging")).toBe("nakafa-web-staging");
+    expect(workerName("cas", "pr-42")).toBe("nakafa-cas-pr-42");
+  });
+});
 
 describe("webExposure", () => {
   it("serves production on the apex and every School host, with workers.dev off", () => {
@@ -26,6 +39,7 @@ describe("webExposure", () => {
     ]);
     expect(exposure.workersDev).toBe(false);
     expect(exposure.access).toEqual({
+      name: "nakafa-web-staging",
       policies: [
         {
           decision: "allow",
