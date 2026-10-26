@@ -106,6 +106,7 @@ function TenantLoginForm() {
             autoComplete="username"
             id={`${id}-username`}
             onChange={(event) => setLoginName(event.target.value)}
+            placeholder={t("username-placeholder")}
             value={loginName}
           />
         </Field>
@@ -129,6 +130,7 @@ function TenantLoginForm() {
             }
             id={`${id}-password`}
             onChange={(event) => setPassword(event.target.value)}
+            placeholder={t("password-placeholder")}
             type="password"
             value={password}
           />

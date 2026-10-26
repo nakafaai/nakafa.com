@@ -1,10 +1,8 @@
 import type { Ref } from "@confect/core";
 import type { OptimisticUpdate } from "@confect/react";
 import billing from "@repo/backend/confect/_generated/refs/billing";
-import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, DateTime, Duration, Option } from "effect";
-import { getProMonthlyPricingFor } from "@/lib/pricing/monthly";
 
 /** The school's billing as its settings page reads it. */
 export type SchoolBilling = Ref.Returns<typeof billing.school.overview>;
@@ -29,15 +27,6 @@ export function purchaseOf(rail: SchoolBilling["rail"], offer: SchoolOffer) {
 
 /** How long a school has to pay an invoice, as the server sets it when it issues one. */
 const INVOICE_DUE = Duration.days(14);
-
-/**
- * An amount in a currency's minor units (rupiah, cents) as the pages write that
- * currency, with the formatter the prices use, so an invoice reads like the price.
- */
-export function formatMinorAmount(amount: number, currency: BillingCurrency) {
-  const pricing = getProMonthlyPricingFor(currency);
-  return pricing.formatter.format(amount / 10 ** pricing.price.fractionDigits);
-}
 
 /**
  * The address a school writes to when it pays an invoice by bank transfer: Nakafa's
