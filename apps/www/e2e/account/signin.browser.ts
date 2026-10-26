@@ -2,6 +2,7 @@ import {
   type Browser,
   type BrowserContextOptions,
   expect,
+  type Request,
   test,
 } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
@@ -15,6 +16,11 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const SIGN_IN = "/en/auth";
 const HOME = "/en/home";
+/**
+ * Where home sends the synthetic learner, who has not answered the onboarding
+ * questionnaire. Home owns that gate, so the sign-in page sends the learner home.
+ */
+const ONBOARDING = "/en/onboarding";
 const PRICING = "/en/pricing";
 /** The status of the server's redirect away from the sign-in page. */
 const TEMPORARY_REDIRECT = 307;
@@ -30,16 +36,27 @@ function contextOptions(origin: string): BrowserContextOptions {
   return { baseURL: origin, serviceWorkers: "block" };
 }
 
+/** The first request of a redirect chain: the address the page asked for. */
+function firstRequestOf(request: Request): Request {
+  return Option.match(Option.fromNullishOr(request.redirectedFrom()), {
+    onNone: () => request,
+    onSome: firstRequestOf,
+  });
+}
+
 /**
- * Opens one address as a signed-in learner and proves where the server sent the
- * document: one 307 from the sign-in page, to the given path, so the browser never
- * receives the sign-in page.
+ * Opens one address as a signed-in learner and proves the server's answer: the
+ * sign-in page answers 307 to the given path, so the browser never receives the
+ * sign-in page, and the document settles on the landing path.
  */
 const expectRedirected = Effect.fn("NakafaE2E.expectSignInRedirect")(function* (
   origin: string,
   browser: Browser,
-  from: string,
-  to: string
+  route: {
+    readonly from: string;
+    readonly landing: string;
+    readonly to: string;
+  }
 ) {
   yield* withBrowserContext(browser, contextOptions(origin), (context) =>
     Effect.gen(function* () {
@@ -49,17 +66,27 @@ const expectRedirected = Effect.fn("NakafaE2E.expectSignInRedirect")(function* (
         page,
         Effect.gen(function* () {
           const response = yield* Effect.promise(() =>
-            page.goto(from, { waitUntil: "load" })
+            page.goto(route.from, { waitUntil: "load" })
           );
-          const redirected = yield* Effect.promise(async () => {
-            const first = response?.request().redirectedFrom();
-            return Option.fromNullishOr(await first?.response());
+          const signIn = yield* Effect.promise(async () => {
+            const first = Option.map(Option.fromNullishOr(response), (answer) =>
+              firstRequestOf(answer.request())
+            );
+            return Option.fromNullishOr(
+              await Option.getOrUndefined(first)?.response()
+            );
           });
           yield* Effect.sync(() => {
-            expect(new URL(page.url()).pathname).toBe(to);
             expect(
-              Option.map(redirected, (answer) => answer.status())
-            ).toStrictEqual(Option.some(TEMPORARY_REDIRECT));
+              Option.map(signIn, (answer) => ({
+                location: new URL(answer.headers().location ?? "", origin)
+                  .pathname,
+                status: answer.status(),
+              }))
+            ).toStrictEqual(
+              Option.some({ location: route.to, status: TEMPORARY_REDIRECT })
+            );
+            expect(new URL(page.url()).pathname).toBe(route.landing);
           });
           yield* Effect.promise(() =>
             expect(
@@ -78,7 +105,11 @@ test("a signed-in learner who opens the sign-in page lands on home", async ({
 }) => {
   expect(baseURL).toBeTruthy();
   await Effect.runPromise(
-    expectRedirected(baseURL ?? "", browser, SIGN_IN, HOME)
+    expectRedirected(baseURL ?? "", browser, {
+      from: SIGN_IN,
+      landing: ONBOARDING,
+      to: HOME,
+    })
   );
 });
 
@@ -89,13 +120,18 @@ test("a signed-in learner who opens the sign-in page with an intent lands on it"
   expect(baseURL).toBeTruthy();
   const intent = `${SIGN_IN}?${new URLSearchParams({ redirect: LESSON_PATH })}`;
   await Effect.runPromise(
-    expectRedirected(baseURL ?? "", browser, intent, LESSON_PATH)
+    expectRedirected(baseURL ?? "", browser, {
+      from: intent,
+      landing: LESSON_PATH,
+      to: LESSON_PATH,
+    })
   );
 });
 
 /**
  * The Free plan's action of a signed-in learner opens home in the same document,
- * as the header's call to action does, and never names the sign-in page.
+ * as the header's call to action does, and never names the sign-in page. Home
+ * then sends the synthetic learner on to onboarding, in the same document too.
  */
 test("the Free plan's action opens home for a signed-in learner", async ({
   baseURL,
@@ -115,12 +151,14 @@ test("the Free plan's action opens home for a signed-in learner", async ({
             yield* Effect.promise(() =>
               page.goto(PRICING, { waitUntil: "load" })
             );
-            const action = page
-              .locator('[data-pricing-plan="free"]')
-              .getByRole("link", { name: app.Pricing["free-cta"] });
+            // The action is a link drawn as a button, so it carries the button role.
+            const action = page.locator('[data-pricing-plan="free"] a:visible');
             yield* Effect.promise(() => expect(action).toHaveCount(1));
             yield* Effect.promise(() =>
               expect(action).toHaveAttribute("href", HOME)
+            );
+            yield* Effect.promise(() =>
+              expect(action).toHaveText(app.Pricing["free-cta"])
             );
             yield* Effect.promise(() =>
               page.evaluate((name) => {
@@ -129,7 +167,7 @@ test("the Free plan's action opens home for a signed-in learner", async ({
             );
             yield* Effect.promise(() => action.click());
             yield* Effect.promise(() =>
-              page.waitForURL((url) => url.pathname === HOME)
+              page.waitForURL((url) => url.pathname === ONBOARDING)
             );
             const sameDocument = yield* Effect.promise(() =>
               page.evaluate(
