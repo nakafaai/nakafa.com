@@ -97,7 +97,7 @@ export function DataTable<TData extends RowData>({
       <TableBody>
         {Arr.isReadonlyArrayNonEmpty(rows) ? (
           Arr.map(rows, (row) => (
-            <DataTableRow id={row.id} key={row.id}>
+            <DataTableRow key={row.id} row={row}>
               {Arr.map(row.getAllCells(), (cell) => (
                 <TableCell key={cell.id}>
                   <table.FlexRender cell={cell} />
@@ -125,11 +125,17 @@ export function DataTable<TData extends RowData>({
 }
 
 /** One row of the table: a row that opens beside the list on a page with panes, else a plain row. */
-function DataTableRow({ children, id }: { children: ReactNode; id: string }) {
+function DataTableRow({
+  children,
+  row,
+}: {
+  children: ReactNode;
+  row: { readonly id: string };
+}) {
   const hasPanes = useHasPanes();
 
   return hasPanes ? (
-    <PaneTableRow id={id}>{children}</PaneTableRow>
+    <PaneTableRow id={row.id}>{children}</PaneTableRow>
   ) : (
     <TableRow className="h-12">{children}</TableRow>
   );
