@@ -7,7 +7,7 @@ import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
 /**
  * The sign-in body of the main site and of a school host. The page passes its
  * title as `children` and its sign-in control as `action`: the main site's
- * control also signs out a visitor who is already signed in, and a school's
+ * control also sends on a visitor who is already signed in, and a school's
  * returns the visitor to the school root. The page also passes the figure above the
  * title: Nina on the main site, and the school's own mark on a school host. The body
  * adds the sentence that says why signing in keeps progress saved, and the privacy
