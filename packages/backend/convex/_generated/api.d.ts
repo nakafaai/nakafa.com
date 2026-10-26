@@ -173,7 +173,12 @@ export declare const api: {
         "public",
         {},
         {
-          credits: { allowance: number; balance: number; resetAt: number };
+          credits: {
+            allowance: number;
+            balance: number;
+            lots: { balance: number; expiresAt: number | null };
+            resetAt: number;
+          };
           plan: "free" | "pro";
           subscription: {
             cancelAtPeriodEnd: boolean;
@@ -206,6 +211,12 @@ export declare const api: {
         "action",
         "public",
         {},
+        { url: string }
+      >;
+      generateTopupCheckoutLink: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; successUrl: string },
         { url: string }
       >;
     };
@@ -3262,6 +3273,39 @@ export declare const api: {
         { id: Id<"examSittings">; token: string }
       >;
     };
+    imports: {
+      keys: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          keys: Array<{ answer: number; questionId: Id<"examQuestions"> }>;
+          slug: string;
+        },
+        { keyed: number }
+      >;
+      place: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          questions: Array<{
+            answer: number | null;
+            explanation: string;
+            figures: Array<{ alt: string; asset: Id<"examAssets"> }>;
+            number: number | null;
+            options: Array<string>;
+            prompt: string;
+          }>;
+          slug: string;
+        },
+        {
+          keyless: number;
+          left: number;
+          placed: Array<{ id: Id<"examQuestions">; number: number | null }>;
+        }
+      >;
+    };
     presence: {
       join: FunctionReference<
         "mutation",
@@ -4519,6 +4563,49 @@ export declare const api: {
         "public",
         { examId: Id<"exams">; questionId: Id<"examQuestions">; slug: string },
         { questions: Array<Id<"examQuestions">> }
+      >;
+    };
+    reads: {
+      canRead: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        {}
+      >;
+      read: FunctionReference<
+        "action",
+        "public",
+        {
+          examId: Id<"exams">;
+          slug: string;
+          source:
+            | {
+                kind: "pages";
+                pages: Array<{ image: Id<"_storage">; text: string }>;
+              }
+            | { images: Array<Id<"examAssets">>; kind: "text"; text: string };
+        },
+        {
+          keys: Array<{ answer: number; number: number }>;
+          questions: Array<{
+            answer: number | null;
+            explanation: string;
+            figures: Array<{
+              alt: string;
+              box: {
+                bottom: number;
+                left: number;
+                right: number;
+                top: number;
+              } | null;
+              image: number | null;
+              page: number | null;
+            }>;
+            number: number | null;
+            options: Array<string>;
+            prompt: string;
+          }>;
+        }
       >;
     };
     results: {
@@ -11199,6 +11286,7 @@ export declare const internal: {
                   previous_plan: "free" | "pro";
                 };
               };
+          requiresPro: boolean;
           timestamp?: number;
           userId: Id<"users">;
         },
@@ -11352,6 +11440,14 @@ export declare const internal: {
         | { customerId: string; kind: "unknownCustomer" }
       >;
       run: FunctionReference<"action", "internal", { page: number }, null>;
+    };
+    topup: {
+      refundWithoutPro: FunctionReference<
+        "action",
+        "internal",
+        { orderId: string; refundableAmount: number },
+        null
+      >;
     };
   };
   classroom: {
@@ -13254,6 +13350,14 @@ export declare const internal: {
     };
   };
   credits: {
+    lots: {
+      expire: FunctionReference<
+        "mutation",
+        "internal",
+        { lotId: Id<"creditLots"> },
+        null
+      >;
+    };
     mutations: {
       syncAllCreditResetPeriods: FunctionReference<
         "mutation",
@@ -13479,6 +13583,20 @@ export declare const internal: {
         "internal",
         { storageId: Id<"_storage"> },
         { size: number }
+      >;
+    };
+    reads: {
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { images: Array<Id<"_storage">> },
+        {}
+      >;
+      pictures: FunctionReference<
+        "query",
+        "internal",
+        { assets: Array<Id<"examAssets">>; examId: Id<"exams"> },
+        Array<{ storageId: Id<"_storage"> }>
       >;
     };
     seed: {
@@ -13773,6 +13891,7 @@ export declare const internal: {
             creditsResetAt: number;
             fingerprint: string;
             history?: { tokens: number; turns: number; unread?: number };
+            lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -13992,6 +14111,7 @@ export declare const internal: {
             creditsResetAt: number;
             fingerprint: string;
             history?: { tokens: number; turns: number; unread?: number };
+            lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
               locale: "en" | "id" | "de";

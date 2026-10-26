@@ -1,6 +1,7 @@
 import { findAccountByProviderCustomer } from "@repo/backend/confect/billing/accounts";
 import { endSubscriptionGrant } from "@repo/backend/confect/billing/grantEnd";
 import { syncSubscriptionGrant } from "@repo/backend/confect/billing/grants";
+import { applyPolarOrder } from "@repo/backend/confect/billing/polar/order";
 import {
   decodePolarEnvelope,
   decodePolarSubscription,
@@ -63,7 +64,7 @@ export const applyPolarSubscription = Effect.fn(
   return "applied" as const;
 });
 
-/** Routes one Polar event to the subscription it changes. Events that change no subscription are ignored. */
+/** Routes one Polar event to the row it changes. Events that change no subscription or pack are ignored. */
 const dispatch = (type: string, data: unknown) =>
   Match.value(type).pipe(
     Match.whenOr(
@@ -76,6 +77,8 @@ const dispatch = (type: string, data: unknown) =>
       "subscription.revoked",
       () => applyPolarSubscription(data)
     ),
+    Match.when("order.paid", () => applyPolarOrder(data, "paid")),
+    Match.when("order.refunded", () => applyPolarOrder(data, "refunded")),
     Match.orElse(() => Effect.succeed("ignored" as const))
   );
 
