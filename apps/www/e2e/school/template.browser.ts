@@ -208,3 +208,82 @@ test("a teacher turns a question into true or false and then cause and effect, w
   await expect(page.getByRole("button", { name: "Add option" })).toHaveCount(0);
   await context.close();
 });
+
+test("a teacher turns a question into a short answer with accepted answers, and the student types the answer", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("Ibu kota");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
+  await expect(prompt).toBeEditable({ timeout: readinessTimeoutMilliseconds });
+  await prompt.click();
+  await page.keyboard.type("Apa ibu kota Indonesia?");
+
+  // A short answer holds no options: the paper shows the student's answer line instead.
+  await page
+    .getByRole("button", { name: "Question type: Multiple choice" })
+    .click();
+  await page.getByRole("menuitemradio", { name: "Short answer" }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Question 1, option A" })
+  ).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Answer line" })).toBeVisible();
+
+  // The layer lists the accepted answers, which the teacher adds one by one.
+  const panel = page.getByRole("complementary", { name: "For teachers" });
+  const sentBefore = changes.sent;
+  await panel.getByRole("button", { name: "Add answer" }).click();
+  await panel
+    .getByRole("textbox", { name: "Accepted answer 1 of question 1" })
+    .fill("Jakarta");
+  await panel
+    .getByRole("textbox", { name: "Accepted answer 1 of question 1" })
+    .press("Enter");
+  await panel.getByRole("button", { name: "Add answer" }).click();
+  await panel
+    .getByRole("textbox", { name: "Accepted answer 2 of question 1" })
+    .fill("DKI Jakarta");
+  await panel
+    .getByRole("textbox", { name: "Accepted answer 2 of question 1" })
+    .press("Enter");
+  await expect(
+    page.getByRole("region", { name: FIRST_QUESTION })
+  ).not.toContainText("No key yet");
+  await saved(changes, sentBefore);
+
+  // The editor opened again shows the accepted answers the server holds.
+  const reopened = await context.newPage();
+  await reopened.goto(page.url());
+  const reopenedPanel = reopened.getByRole("complementary", {
+    name: "For teachers",
+  });
+  await expect(
+    reopenedPanel.getByRole("textbox", {
+      name: "Accepted answer 2 of question 1",
+    })
+  ).toHaveValue("DKI Jakarta", { timeout: readinessTimeoutMilliseconds });
+
+  // The student types the answer into one field, and no option shows.
+  await reopened.getByRole("link", { name: "Try as student" }).click();
+  await reopened.waitForURL(TRY_PATH);
+  const field = reopened.getByRole("textbox", { name: "Question 1" });
+  await expect(field).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await field.fill("jakarta");
+  await expect(field).toHaveValue("jakarta");
+  await expect(reopened.getByRole("radio")).toHaveCount(0);
+  await context.close();
+});
