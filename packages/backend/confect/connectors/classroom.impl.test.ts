@@ -171,12 +171,15 @@ describe("connectors/classroom", () => {
         const { classId, connectionId, fixture } = yield* school;
         const admin = fixture.as("admin");
         classroomAnswers({ day: 1, month: 11, year: 2026 });
-        yield* admin.mutation(classroom.link, {
-          classId,
-          connectionId,
-          courseId: "c1",
-          slug: nf,
-        });
+        // Picking the same class again keeps the one link.
+        yield* Effect.forEach([1, 2], () =>
+          admin.mutation(classroom.link, {
+            classId,
+            connectionId,
+            courseId: "c1",
+            slug: nf,
+          })
+        );
         yield* fixture.internal.action(sync.run, { connectionId });
         const listed = () =>
           fixture
@@ -292,6 +295,11 @@ describe("connectors/classroom", () => {
             }
           )
         ).toBeNull();
+        // A Google that fails keeps the connection; one that refuses its token moves it to reconnect.
+        fetcher.mockResolvedValue(json(500, { error: "server_error" }));
+        expect(
+          yield* admin.action(classroom.preview, { slug: nf }).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "GoogleFailed" });
         fetcher.mockResolvedValue(json(400, { error: "invalid_grant" }));
         expect(
           yield* admin.action(classroom.preview, { slug: nf }).pipe(Effect.flip)
