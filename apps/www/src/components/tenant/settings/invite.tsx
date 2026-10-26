@@ -9,7 +9,6 @@ import {
   InvitedRole,
   PersonName,
 } from "@repo/backend/confect/tenancy/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -33,7 +32,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { roleIcon } from "@/components/tenant/roles";
 import { addMemberChange } from "@/components/tenant/settings/accounts";
 import { cardOffered } from "@/components/tenant/settings/offer";
@@ -60,7 +59,7 @@ type InvitedRoleValue = typeof InvitedRole.Type;
  * Invite, the main action of the members and the invitations: its button in the page's header row, and the dialog
  * it opens.
  */
-export function SchoolInviteAction({ slug }: { slug: TenantSlug }) {
+export function SchoolInviteAction() {
   const t = useTranslations("SchoolSettings");
   const [open, setOpen] = useState(false);
 
@@ -69,7 +68,7 @@ export function SchoolInviteAction({ slug }: { slug: TenantSlug }) {
       <Button onClick={() => setOpen(true)} type="button">
         {t("invite-action")}
       </Button>
-      <SchoolInviteDialog open={open} setOpen={setOpen} slug={slug} />
+      <SchoolInviteDialog open={open} setOpen={setOpen} />
     </>
   );
 }
@@ -84,12 +83,11 @@ export function SchoolInviteAction({ slug }: { slug: TenantSlug }) {
 function SchoolInviteDialog({
   open,
   setOpen,
-  slug,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const common = useTranslations("Common");

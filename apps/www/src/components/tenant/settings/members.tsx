@@ -24,6 +24,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
@@ -66,10 +67,8 @@ const MembersFirstPageContext = createContext<MembersFirstPage | undefined>(
  */
 export function SchoolMembersSettings({
   first,
-  slug,
 }: {
   first: MembersFirstPage | undefined;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
 
@@ -92,13 +91,13 @@ export function SchoolMembersSettings({
                 },
               ]}
             />
-            <SchoolInviteAction slug={slug} />
+            <SchoolInviteAction />
           </>
         }
       >
         <ReadBoundary>
           <MembersFirstPageContext value={first}>
-            <SchoolMembersBody slug={slug} />
+            <SchoolMembersBody />
           </MembersFirstPageContext>
         </ReadBoundary>
       </SettingsTablePage>
@@ -107,7 +106,8 @@ export function SchoolMembersSettings({
 }
 
 /** The members of the school, read a page at a time, with the table and its end. */
-function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
+function SchoolMembersBody() {
+  const { slug } = useTenant();
   const first = use(MembersFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(

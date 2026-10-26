@@ -10,7 +10,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -34,7 +33,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleIcon } from "@/components/tenant/roles";
@@ -67,10 +66,8 @@ const RolesFirstPageContext = createContext<RolesFirstPage | undefined>(
  */
 export function SchoolRolesSettings({
   first,
-  slug,
 }: {
   first: RolesFirstPage | undefined;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const [isGuiding, setIsGuiding] = useState(false);
@@ -126,18 +123,19 @@ export function SchoolRolesSettings({
       >
         <ReadBoundary>
           <RolesFirstPageContext value={first}>
-            <SchoolGrantsBody slug={slug} />
+            <SchoolGrantsBody />
           </RolesFirstPageContext>
         </ReadBoundary>
         <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
-        <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
+        <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} />
       </SettingsTablePage>
     </TableFiltersProvider>
   );
 }
 
 /** The grants of the school, read a page at a time, with the table and its end. */
-function SchoolGrantsBody({ slug }: { slug: TenantSlug }) {
+function SchoolGrantsBody() {
+  const { slug } = useTenant();
   const first = use(RolesFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
@@ -154,7 +152,7 @@ function SchoolGrantsBody({ slug }: { slug: TenantSlug }) {
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {pagination._tag === "LoadingFirstPage" ||
       (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolGrantTable grants={pagination.results} slug={slug} />
+        <SchoolGrantTable grants={pagination.results} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
