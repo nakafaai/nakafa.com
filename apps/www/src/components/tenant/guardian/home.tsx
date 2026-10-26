@@ -110,7 +110,7 @@ function GuardianChildCard({
 }) {
   const t = useTranslations("SchoolGuardians");
   return (
-    <CardSection data-slot="guardian-child" data-status={child.status}>
+    <CardSection data-child={child.status}>
       <CardHeader>
         <CardTitle dir="auto">{child.student.name}</CardTitle>
         <CardDescription>{t(`child-${child.status}`)}</CardDescription>

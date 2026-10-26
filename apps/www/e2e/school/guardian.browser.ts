@@ -62,8 +62,8 @@ test("an admin links a parent, who signs in with the email code, checks the NISN
   await home.getByLabel("Sign-in code").fill(seeded.code);
   await home.getByRole("button", { name: "Sign in" }).click();
 
-  const child = home.locator('[data-slot="guardian-child"]');
-  await expect(child).toHaveAttribute("data-status", "pending", {
+  const child = home.locator('[data-child]');
+  await expect(child).toHaveAttribute("data-child", "pending", {
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(child.getByText("Siswa Uji")).toBeVisible();
@@ -74,7 +74,7 @@ test("an admin links a parent, who signs in with the email code, checks the NISN
   );
   await child.getByLabel("Child's NISN").fill(NISN);
   await child.getByRole("button", { name: "Check" }).click();
-  await expect(child).toHaveAttribute("data-status", "verified");
+  await expect(child).toHaveAttribute("data-child", "verified");
   await expect(child.getByText("No grade is released yet.")).toBeVisible();
 
   await settings.reload();
@@ -85,7 +85,7 @@ test("an admin links a parent, who signs in with the email code, checks the NISN
     .getByRole("dialog")
     .getByRole("button", { name: "Withdraw consent" })
     .click();
-  await expect(child).toHaveAttribute("data-status", "withdrawn");
+  await expect(child).toHaveAttribute("data-child", "withdrawn");
   await expect(child.getByText("You withdrew consent.")).toBeVisible();
 
   await settings.reload();
