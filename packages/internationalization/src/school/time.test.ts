@@ -36,10 +36,10 @@ const DATE_AND_TIME = {
 };
 
 /** How each locale writes the weekday and the time of `EVENING` in Jakarta. */
-const WEEKDAY_AND_TIME = {
-  de: "Di., 22:30",
-  en: "Tue 10:30 PM",
-  id: "Sel 22.30",
+const DAY_AND_TIME = {
+  de: "6. Okt., 22:30",
+  en: "Oct 6, 10:30 PM",
+  id: "6 Okt, 22.30",
 };
 
 /**
@@ -147,12 +147,12 @@ describe("formatSchoolTime", () => {
   );
 
   it.effect.each(ACTIVE_APP_LOCALE_CODES)(
-    "writes the weekday and the time of the school in %s",
+    "writes the day, the month and the time of the school in %s",
     (locale) =>
       Effect.gen(function* () {
         expect(
-          yield* schoolTime("weekdayTime", locale, "Asia/Jakarta", EVENING)
-        ).toBe(WEEKDAY_AND_TIME[locale]);
+          yield* schoolTime("dayTime", locale, "Asia/Jakarta", EVENING)
+        ).toBe(DAY_AND_TIME[locale]);
       })
   );
 

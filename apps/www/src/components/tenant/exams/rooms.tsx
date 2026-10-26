@@ -1,16 +1,16 @@
 import type { GenericId } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
+import {
+  Calendar03Icon,
+  Cancel01Icon,
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import {
   Table,
   TableBody,
@@ -20,19 +20,19 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
+import { TableChoice } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
-  RoomStateFilter,
+  type RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/filter";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -57,9 +57,8 @@ type StateFilter = typeof RoomStateFilter.Type;
 export const ROOM_PAGE_SIZE = 20;
 
 /** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
-type ExamRoomsPreload = Pick<
-  Awaited<ReturnType<typeof readExamRoomsFn>>,
-  "rooms" | "summary"
+type ExamRoomsPreload = Partial<
+  Pick<Awaited<ReturnType<typeof readExamRoomsFn>>, "rooms" | "summary">
 >;
 
 /** The first screen of the rooms page, which the page's loader read on the server. */
@@ -92,7 +91,7 @@ export function ExamRooms({
       fallback={(failure) => (
         <>
           <SchoolHeader items={examsItems} />
-          <LayoutContent className="py-6">{failure}</LayoutContent>
+          <div className="flex w-full min-w-0 flex-1 flex-col">{failure}</div>
         </>
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
@@ -155,9 +154,19 @@ function ExamRoomsContent({
       <SchoolHeader
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
-      />
-      <LayoutContent className="flex w-full flex-col gap-4 py-6">
-        <RoomStateSelect onValueChange={setFilter} value={filter} />
+      >
+        <RoomStateFilterMenu onValueChange={setFilter} value={filter} />
+        {tenant.canOpenExams ? (
+          <Link
+            className={buttonVariants()}
+            params={{ exam: examId, slug }}
+            to="/school/$slug/exams/$exam/edit"
+          >
+            {t("edit-action")}
+          </Link>
+        ) : null}
+      </SchoolHeader>
+      <div className="flex w-full min-w-0 flex-1 flex-col">
         <RoomsTable
           examId={examId}
           filter={filter}
@@ -165,24 +174,17 @@ function ExamRoomsContent({
           isSettled={isSettled}
           slug={slug}
         />
-      </LayoutContent>
+      </div>
     </>
   );
 }
 
 /**
- * The empty state of the rooms table once the list is exhausted: no room yet, with the way to the
- * editor for a viewer who may open it, or no room in the chosen state.
+ * The empty state of the rooms table once the list is exhausted: no room yet, or no room in the
+ * chosen state. The way to the editor is the page's main action, in its header.
  */
-function RoomsEmpty({
-  examId,
-  filter,
-}: {
-  examId: GenericId.GenericId<"exams">;
-  filter: StateFilter;
-}) {
+function RoomsEmpty({ filter }: { filter: StateFilter }) {
   const t = useTranslations("Exams");
-  const tenant = useTenant();
 
   if (filter !== "all") {
     return (
@@ -196,25 +198,14 @@ function RoomsEmpty({
   return (
     <TableEmpty
       act="pointing"
-      action={
-        tenant.canOpenExams ? (
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ exam: examId, slug: tenant.slug }}
-            to="/school/$slug/exams/$exam/edit"
-          >
-            {t("rooms-empty-action")}
-          </Link>
-        ) : undefined
-      }
       description={t("rooms-empty-description")}
       title={t("rooms-empty")}
     />
   );
 }
 
-/** The state filter of the table: every state, or one sitting state. */
-function RoomStateSelect({
+/** The rooms' Filter menu, in the page's header row: every room, or the rooms in one state, which the server reads. */
+function RoomStateFilterMenu({
   onValueChange,
   value,
 }: {
@@ -222,35 +213,27 @@ function RoomStateSelect({
   value: StateFilter;
 }) {
   const t = useTranslations("Exams");
-  const items = [
-    { label: t("state-all"), value: "all" },
-    { label: t("room-state-scheduled"), value: "scheduled" },
-    { label: t("room-state-open"), value: "open" },
-    { label: t("room-state-closed"), value: "closed" },
-  ];
 
   return (
-    <Select
-      items={items}
-      onValueChange={(next) => {
-        const chosen = Schema.decodeUnknownOption(RoomStateFilter)(next);
-        if (Option.isSome(chosen)) {
-          onValueChange(chosen.value);
-        }
-      }}
+    <TableChoice
+      onChange={onValueChange}
+      options={[
+        { icon: Calendar03Icon, label: t("state-all"), value: "all" },
+        {
+          icon: Clock01Icon,
+          label: t("room-state-scheduled"),
+          value: "scheduled",
+        },
+        { icon: PlayIcon, label: t("room-state-open"), value: "open" },
+        {
+          icon: CheckmarkCircle02Icon,
+          label: t("room-state-closed"),
+          value: "closed",
+        },
+      ]}
+      title={t("rooms-state")}
       value={value}
-    >
-      <SelectTrigger aria-label={t("rooms-state")} className="w-full max-w-xs">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {Arr.map(items, (item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    />
   );
 }
 
@@ -304,31 +287,29 @@ function RoomsTable({
     if (pagination._tag !== "Exhausted") {
       return loadMoreTrigger;
     }
-    return <RoomsEmpty examId={examId} filter={filter} />;
+    return <RoomsEmpty filter={filter} />;
   }
 
   return (
     <>
       {failure}
-      <TableFrame>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("room")}</TableHead>
-              <TableHead>{t("rooms-group")}</TableHead>
-              <TableHead>{t("rooms-opens")}</TableHead>
-              <TableHead>{t("rooms-closes")}</TableHead>
-              <TableHead>{t("rooms-state")}</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(pagination.results, (room) => (
-              <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
-            ))}
-          </TableBody>
-        </Table>
-      </TableFrame>
+      <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("room")}</TableHead>
+            <TableHead>{t("rooms-group")}</TableHead>
+            <TableHead>{t("rooms-opens")}</TableHead>
+            <TableHead>{t("rooms-closes")}</TableHead>
+            <TableHead>{t("rooms-state")}</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Arr.map(pagination.results, (room) => (
+            <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
+          ))}
+        </TableBody>
+      </Table>
       {loadMoreTrigger}
     </>
   );
@@ -401,6 +382,7 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
       action={t("room-cancel")}
       confirm={t("room-cancel-confirm")}
       description={t("room-cancel-description")}
+      icon={Cancel01Icon}
       onConfirm={() =>
         startTransition(() =>
           saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)

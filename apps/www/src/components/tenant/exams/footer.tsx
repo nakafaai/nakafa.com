@@ -6,7 +6,6 @@ import {
 import { useReducedMotion } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   Tooltip,
@@ -17,17 +16,21 @@ import { cva } from "class-variance-authority";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
+import { PageCounter } from "@/components/tenant/exams/counter";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { ExamPanelButton } from "@/components/tenant/exams/panel";
+import { ZoomMenu } from "@/components/tenant/exams/percent";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { QuestionPreview } from "@/components/tenant/exams/preview";
 import {
   useActiveQuestion,
+  useEditorView,
   useExam,
   useExamSelection,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
 import {
+  drawnZoom,
   sliderPosition,
   ZOOM_STEPS,
   zoomAt,
@@ -72,22 +75,24 @@ interface ExamFooterProps {
 }
 
 /**
- * The footer of the editor, a full-width bar under the canvas, as a design tool keeps its
- * navigation there: on a phone, the action that opens the teacher's panel at its start; then at its
- * end the zoom (on a wide screen only, since a phone pinches), a toggle for a strip of the pages, the
- * position of the page in view, a grid of every page, and fullscreen where the browser allows it.
- * Each icon names its action in a tooltip. The strip and the grid go to a page, and the page they choose becomes the one
- * the teacher is on.
+ * The footer of the editor, a full-width bar under the canvas, as a design tool keeps its navigation
+ * there: on a phone, the action that opens the teacher's panel at its start; then at its end the zoom (on
+ * a wide screen only, since a phone pinches) as a slider and a percentage menu, a toggle for a strip of the
+ * pages, the position of the page in view that jumps to a page, the grid of every page in place of the
+ * canvas, and fullscreen where the browser allows it. In the grid the footer keeps only the grid and
+ * fullscreen. Each icon names its action in a tooltip. The strip, the counter, and the grid go to a page,
+ * and the page they choose becomes the one the teacher is on.
  */
 export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
   const active = useActiveQuestion();
   const pin = useExamSelection((state) => state.pin);
-  const zoom = useExamZoom((state) => state.percent);
+  const drawn = useExamZoom(drawnZoom);
+  const grid = useEditorView((view) => view.mode === "grid");
+  const toggleGrid = useEditorView((view) => view.toggleGrid);
   const reduce = useReducedMotion();
   const [pagesOpen, setPagesOpen] = useState(false);
-  const [gridOpen, setGridOpen] = useState(false);
   const canFullscreen = useSyncExternalStore(
     subscribeFullscreen,
     canGoFullscreen,
@@ -130,7 +135,8 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   /**
    * Toggles the fullscreen of the whole page, where the browser allows it. The page goes fullscreen
    * rather than the editor alone, because the browser draws only the fullscreen element's own tree,
-   * and the dialogs, sheets, and menus of the editor open at the end of the document.
+   * and the dialogs, sheets, and menus of the editor open at the end of the document. Escape leaves it,
+   * as the browser lets it.
    */
   const toggleFullscreen = () => {
     if (document.fullscreenElement !== null) {
@@ -160,7 +166,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
 
   return (
     <footer className="flex shrink-0 flex-col border-t bg-background">
-      {pagesOpen ? (
+      {pagesOpen && !grid ? (
         <nav
           aria-label={t("pages")}
           className="flex gap-3 overflow-x-auto border-b p-3"
@@ -170,7 +176,6 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
               key={question.id}
               number={index + 1}
               onPick={() => goTo(question)}
-              place="strip"
               question={question}
               selected={selectedId === question.id}
             />
@@ -178,39 +183,51 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
         </nav>
       ) : null}
       <div className="flex min-h-12 items-center gap-2 px-3 py-1.5">
-        <ExamPanelButton />
-        <div className="ms-auto flex items-center gap-2">
-          <div className="hidden items-center gap-2 text-sm md:flex">
-            <Slider
-              aria-label={t("zoom")}
-              className="w-40"
-              max={ZOOM_STEPS}
-              min={0}
-              onValueChange={(position) => onZoom(zoomAt(position))}
-              step={1}
-              value={sliderPosition(zoom)}
-            />
-            <output className="w-12 text-end tabular-nums">{zoom}%</output>
-          </div>
-          <Button
-            aria-pressed={pagesOpen}
-            onClick={() => setPagesOpen((open) => !open)}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons aria-hidden="true" icon={Layout01Icon} />
-            {t("pages")}
-          </Button>
-          <span className="text-muted-foreground text-sm tabular-nums">
-            {current} / {total}
-          </span>
+        {grid ? null : <ExamPanelButton />}
+        <div className="ms-auto flex items-center gap-1">
+          {grid ? null : (
+            <>
+              <div className="hidden items-center gap-1 md:flex">
+                <Slider
+                  aria-label={t("zoom")}
+                  className="w-40"
+                  max={ZOOM_STEPS}
+                  min={0}
+                  onValueChange={(position) => onZoom(zoomAt(position))}
+                  step={1}
+                  value={sliderPosition(drawn)}
+                />
+                <ZoomMenu onZoom={onZoom} />
+              </div>
+              <Button
+                aria-pressed={pagesOpen}
+                onClick={() => setPagesOpen((open) => !open)}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                <HugeIcons aria-hidden="true" icon={Layout01Icon} />
+                {t("pages")}
+              </Button>
+              <PageCounter
+                current={current}
+                onJump={(index) =>
+                  Option.match(Arr.get(exam.questions, index), {
+                    onNone: () => undefined,
+                    onSome: goTo,
+                  })
+                }
+                total={total}
+              />
+            </>
+          )}
           <Tooltip>
             <TooltipTrigger
               render={
                 <Button
                   aria-label={t("grid")}
-                  onClick={() => setGridOpen(true)}
+                  aria-pressed={grid}
+                  onClick={toggleGrid}
                   size="icon-sm"
                   type="button"
                   variant="ghost"
@@ -241,54 +258,24 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
           </Tooltip>
         </div>
       </div>
-      <ResponsiveDialog open={gridOpen} setOpen={setGridOpen} title={t("grid")}>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {Arr.map(exam.questions, (question, index) => (
-            <PageThumb
-              key={question.id}
-              number={index + 1}
-              onPick={() => {
-                setGridOpen(false);
-                goTo(question);
-              }}
-              place="grid"
-              question={question}
-              selected={selectedId === question.id}
-            />
-          ))}
-        </div>
-      </ResponsiveDialog>
     </footer>
   );
 }
 
-/**
- * The frame of a page thumbnail. The strip keeps each thumbnail at one width at every screen width,
- * and the grid's thumbnail fills its cell.
- */
+/** The frame of a page thumbnail in the strip, one width at every screen width. */
 const pageThumb = cva(
-  "relative block aspect-4/3 overflow-hidden rounded-lg border bg-muted/40 outline-none hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-2 aria-[current=true]:ring-primary",
-  {
-    variants: {
-      place: {
-        grid: "w-full",
-        strip: "w-32 shrink-0",
-      },
-    },
-  }
+  "relative block aspect-4/3 w-32 shrink-0 overflow-hidden rounded-lg border bg-muted/40 outline-none hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-2 aria-[current=true]:ring-primary"
 );
 
-/** One page as a thumbnail, which a click goes to. It names its page for assistive technology. */
+/** One page as a thumbnail of the strip, which a click goes to. It names its page for assistive technology. */
 function PageThumb({
   number,
   onPick,
-  place,
   question,
   selected,
 }: {
   number: number;
   onPick: () => void;
-  place: "grid" | "strip";
   question: Question;
   selected: boolean;
 }) {
@@ -298,7 +285,7 @@ function PageThumb({
   return (
     <button
       aria-current={selected ? "true" : undefined}
-      className={pageThumb({ place })}
+      className={pageThumb()}
       onClick={onPick}
       type="button"
     >

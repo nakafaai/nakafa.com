@@ -11,6 +11,9 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 /** The address of an exam's try as a student on the school host. */
 const TRY_PATH = /\/exams\/[^/]+\/try$/;
 
+/** The editor's leave of its room, which it sends as the try replaces it, and may land after the try opens. */
+const LEAVE = "exams/presence:leave";
+
 /** The prompt that the teacher writes, which the try shows the way a student reads it. */
 const PROMPT = "Berapa hasil 2 + 3?";
 
@@ -79,7 +82,9 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   // The try action sits beside Schedule in the editor's header, and opens the try.
   await trying.getByRole("link", { name: "Try as student" }).click();
   await trying.waitForURL(TRY_PATH);
-  const sentOnEntering = changes.sent;
+  // Every change the page sent but the editor's leave of its room, which is no answer of the try.
+  const sentByTry = () => changes.sent - changes.argumentsOf(LEAVE).length;
+  const sentOnEntering = sentByTry();
   await expect(trying.getByRole("heading", { name: "Question 1" })).toBeVisible(
     { timeout: readinessTimeoutMilliseconds }
   );
@@ -99,7 +104,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await expect(
     trying.getByRole("radio", { name: "5", exact: true })
   ).toBeChecked();
-  expect(changes.sent).toBe(sentOnEntering);
+  expect(sentByTry()).toBe(sentOnEntering);
 
   // Finish trying returns to the editor, and the try sent nothing before the page was left.
   await trying.getByRole("link", { name: "Finish trying" }).click();

@@ -3,9 +3,8 @@ import {
   QueryResult,
   useMutation,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
-import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -50,7 +49,6 @@ export function SchoolGrantTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const tSchool = useTranslations("School");
   const viewer = useViewerQuery();
 
   if (Arr.isReadonlyArrayEmpty(grants)) {
@@ -90,7 +88,10 @@ export function SchoolGrantTable({
       sortFn: "text",
     }),
     grantColumns.display({
-      cell: (info) => <SchoolGrantMenu grant={info.row.original} slug={slug} />,
+      cell: (info) =>
+        info.row.original.revocable ? (
+          <SchoolGrantMenu grant={info.row.original} slug={slug} />
+        ) : null,
       id: "actions",
     }),
   ]);
@@ -99,31 +100,8 @@ export function SchoolGrantTable({
     <DataTable
       columns={columns}
       data={grants}
-      facets={[
-        {
-          column: "role",
-          options: Arr.map(BuiltinRole.literals, (role) => ({
-            label: tSchool(`role.${role}`),
-            value: role,
-          })),
-          title: t("grant-role"),
-        },
-        {
-          column: "scope",
-          options: Arr.map(
-            Arr.dedupe(
-              Arr.filter(Arr.map(grants, scopeName), (name) => name !== "")
-            ),
-            (name) => ({
-              label: name,
-              value: name,
-            })
-          ),
-          title: t("grant-scope"),
-        },
-      ]}
       rowId={(grant) => grant.id}
-      search={{ column: "person", placeholder: t("roles-search") }}
+      search="person"
     />
   );
 }
@@ -166,6 +144,7 @@ function SchoolGrantMenu({
             onClick={() => setIsRevoking(true)}
             variant="destructive"
           >
+            <HugeIcons icon={Delete02Icon} />
             {t("grant-revoke")}
           </DropdownMenuItem>
         </DropdownMenuContent>
