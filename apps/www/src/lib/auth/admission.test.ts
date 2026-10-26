@@ -223,6 +223,9 @@ describe("post-auth admission", () => {
         error: "oauth",
         redirect: "/en/search?q=geometry#results",
       });
+      expect(new URLSearchParams(retrySearch).toString()).toBe(
+        "redirect=%2Fen%2Fsearch%3Fq%3Dgeometry%23results&error=oauth"
+      );
     })
   );
 
