@@ -303,6 +303,34 @@ test("Beranda fits a 320 px phone without a sideways scroll", async ({
   await context.close();
 });
 
+test("Beranda fills the width beside the sidebar on a wide screen", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 1080, width: 1920 },
+  });
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
+
+  const header = await page.locator('[data-slot="page-header"]').boundingBox();
+  const dashboard = await page
+    .locator('[data-slot="dashboard"]')
+    .first()
+    .boundingBox();
+  // The page's side padding is all that stands between the header's edges and the dashboard's.
+  expect((header?.width ?? 0) - (dashboard?.width ?? 0)).toBeLessThanOrEqual(
+    64
+  );
+  await context.close();
+});
+
 test("an upcoming room shows as a bar in the owner's schedule, and the bar opens its room", async ({
   baseURL,
   browser,
