@@ -94,7 +94,7 @@ export function RichEditorHistory({
  * it goes by, what it does, and, for a format, whether the caret sits in it. A control without
  * `active` acts once, such as a divider that is inserted.
  */
-export interface EditorTool {
+interface EditorTool {
   readonly active?: boolean;
   readonly icon: ComponentProps<typeof HugeIcons>["icon"];
   readonly label: string;
