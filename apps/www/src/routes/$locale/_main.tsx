@@ -22,7 +22,9 @@ const ShellInput = Schema.Struct({ locale: Schema.String });
  */
 const MAIN_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
+  "Comments",
   "Player",
+  "Posts",
   "Tryouts",
 ] as const;
 

@@ -26,6 +26,7 @@ import {
   targetViewports,
   touchViewport,
 } from "@/e2e/support/viewport";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const dictionaries = { de, en, id };
 
@@ -51,12 +52,16 @@ const STANDALONE_ADDRESS = "/_missing";
 const LOCALE_HEADER = "x-nakafa-locale";
 
 /**
- * Where a page calls `notFound()` after the proxy let the request in: a
- * pagination query with only a cursor, which the article catalog cannot decode.
- * The app's own not-found page answers it, and its status depends on whether
- * the stream had started, so only the page is checked.
+ * Where a page calls `notFound()` inside the app: a pagination query with only a
+ * cursor, which the article catalog cannot decode. The catalog is a prerendered
+ * page, and every address that the Worker answers as missing gets the standalone
+ * page, so a reader reaches the app's own not-found page by a navigation in the
+ * browser, as `openMissing` does.
  */
 const SOFT_ADDRESS = "articles?cursor=x";
+
+/** The prerendered page that the navigation to `SOFT_ADDRESS` starts from. */
+const SOFT_SOURCE = "articles";
 
 /**
  * The narrowest window the page must hold. It is narrower than Nina and the
@@ -73,6 +78,11 @@ const narrowViewport = {
 /** The mark that a document keeps only while it is not loaded again. */
 const STAYED = "nakafaStayed";
 
+/**
+ * Opens the app's own not-found page as a reader reaches it: the catalog loads,
+ * React takes it over, and the router navigates in the browser to an address
+ * whose loader answers not found.
+ */
 const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
   page: Page,
   locale: Locale,
@@ -80,8 +90,21 @@ const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
 ) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* holdWebFont(page);
-  return yield* Effect.promise(() =>
-    page.goto(`/${locale}/${address}`, { waitUntil: "domcontentloaded" })
+  const response = yield* Effect.promise(() =>
+    page.goto(`/${locale}/${SOFT_SOURCE}`, { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(response?.status()).toBe(200));
+  yield* Effect.promise(() =>
+    waitUntilTakenOver(page.getByRole("heading", { level: 1 }))
+  );
+  yield* Effect.promise(() =>
+    page.evaluate(
+      (href) => window.__TSR_ROUTER__?.navigate({ href }),
+      `/${locale}/${address}`
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page).toHaveURL(new URL(`/${locale}/${address}`, page.url()).href)
   );
 });
 
