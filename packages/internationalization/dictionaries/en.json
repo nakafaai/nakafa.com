@@ -227,6 +227,7 @@
     "lock": "Lock",
     "unlock": "Unlock",
     "allow-device": "Allow a second device",
+    "student-more": "More actions for {name}",
     "confirm-lock-title": "Lock the session of {name}?",
     "confirm-lock-description": "The student cannot answer until a proctor unlocks the session.",
     "confirm-lock-action": "Lock session",

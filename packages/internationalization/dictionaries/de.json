@@ -227,6 +227,7 @@
     "lock": "Sperren",
     "unlock": "Entsperren",
     "allow-device": "Zweites Gerät erlauben",
+    "student-more": "Weitere Aktionen für {name}",
     "confirm-lock-title": "Sitzung von {name} sperren?",
     "confirm-lock-description": "Der Schüler kann nicht antworten, bis die Aufsicht die Sitzung entsperrt.",
     "confirm-lock-action": "Sitzung sperren",
