@@ -8,7 +8,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { subjectTeacherOf } from "@repo/backend/confect/classroom/authority";
 import { MentionRefused } from "@repo/backend/confect/classroom/forum/errors";
-import type { Mention } from "@repo/backend/confect/classroom/forum/mention";
+import {
+  type Mention,
+  mentionedPeople,
+} from "@repo/backend/confect/classroom/forum/mention";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { schedulePush } from "@repo/backend/confect/notifications/schedule";
@@ -31,11 +34,7 @@ export const checkMentions = Effect.fn("classroom.forum.notice.check")(
     if (everyone && !(yield* subjectTeacherOf(row, principal))) {
       return yield* new MentionRefused();
     }
-    const ids = Arr.dedupe(
-      Arr.flatMap(mentions, (mention) =>
-        mention._tag === "person" ? [mention.id] : []
-      )
-    );
+    const ids = Arr.dedupe(mentionedPeople(mentions));
     const people = yield* Effect.forEach(ids, (id) =>
       Effect.gen(function* () {
         const person = yield* reader

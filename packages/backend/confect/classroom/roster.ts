@@ -4,14 +4,13 @@ import type {
   TenantsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import type { Action } from "@repo/backend/confect/access/catalog";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import { classAuthority } from "@repo/backend/confect/classroom/authority";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** The most Persons one read of a class roster holds: its students and its subject teachers. */
-export const ROSTER_LIMIT = 300;
+const ROSTER_LIMIT = 300;
 
 /** The principal of one Person of a school, as the member middleware builds it, so an access check decides for that Person. */
 export const principalOf = Effect.fn("classroom.roster.principal")(function* (
@@ -23,7 +22,7 @@ export const principalOf = Effect.fn("classroom.roster.principal")(function* (
 
 /** Whether one Person may take a class action now, decided as the access check decides it for that Person. */
 export const mayIn = (
-  action: typeof Action.Type,
+  action: Parameters<typeof classAuthority.check>[0],
   row: ClassesDoc,
   principal: Member["Service"]
 ) =>

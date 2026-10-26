@@ -1,4 +1,5 @@
 import type {
+  ClassesDoc,
   NotificationsDoc,
   TenantPeopleDoc,
   TenantsDoc,
@@ -14,7 +15,7 @@ import { Effect, Match, Option } from "effect";
  * longer reads gives no detail, so the row shows nothing of it.
  */
 const classPart = Effect.fn("notifications.detail.class")(function* (
-  classId: NotificationsDoc["subject"]["id"],
+  classId: ClassesDoc["_id"],
   authorId: TenantPeopleDoc["_id"],
   person: TenantPeopleDoc,
   tenant: TenantsDoc
@@ -141,7 +142,7 @@ export const detailOf = Effect.fn("notifications.detail")(function* (
             task: null,
           }));
         }),
-      "person.invited": () => Effect.succeed(Option.none()),
+      "person.invited": () => Effect.succeedNone,
     })
   );
   return Option.getOrNull(detail);

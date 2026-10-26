@@ -1,5 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** The most mentions one message holds (ADR 0025). */
 export const MENTION_LIMIT = 20;
@@ -14,6 +14,12 @@ export const Mention = Schema.Union([
 export const Mentions = Schema.Array(Mention).check(
   Schema.isMaxLength(MENTION_LIMIT)
 );
+
+/** The Persons that some mentions name, leaving out everyone; a message stored before mentions names none. */
+export const mentionedPeople = (mentions: typeof Mentions.Type | undefined) =>
+  Arr.flatMap(mentions ?? [], (mention) =>
+    mention._tag === "person" ? [mention.id] : []
+  );
 
 /** One mention as a message shows it: a Person by name, or everyone. */
 export const MentionView = Schema.Union([

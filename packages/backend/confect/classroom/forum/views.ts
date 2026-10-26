@@ -6,6 +6,10 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { readMark } from "@repo/backend/confect/classroom/forum/mark";
+import {
+  type MentionView,
+  mentionedPeople,
+} from "@repo/backend/confect/classroom/forum/mention";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -65,11 +69,7 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
       Arr.dedupe(
         Arr.appendAll(
           Arr.map(rows, (message) => message.authorId),
-          Arr.flatMap(rows, (message) =>
-            Arr.flatMap(message.mentions ?? [], (mention) =>
-              mention._tag === "person" ? [mention.id] : []
-            )
-          )
+          Arr.flatMap(rows, (message) => mentionedPeople(message.mentions))
         )
       ),
       (personId) =>
@@ -85,22 +85,24 @@ export const messageViews = Effect.fn("classroom.forum.views.messages")(
             (candidate) => candidate._id === message.authorId
           )
         );
-        const mentions = Arr.flatMap(message.mentions ?? [], (mention) =>
-          mention._tag === "everyone"
-            ? [mention]
-            : Option.match(
-                Arr.findFirst(people, (found) => found._id === mention.id),
-                {
-                  onNone: () => [],
-                  onSome: (found) => [
-                    {
-                      _tag: "person" as const,
-                      id: found._id,
-                      name: found.name,
-                    },
-                  ],
-                }
-              )
+        const mentions = Arr.flatMap(
+          message.mentions ?? [],
+          (mention): (typeof MentionView.Type)[] =>
+            mention._tag === "everyone"
+              ? [mention]
+              : Option.match(
+                  Arr.findFirst(people, (found) => found._id === mention.id),
+                  {
+                    onNone: () => [],
+                    onSome: (found) => [
+                      {
+                        _tag: "person" as const,
+                        id: found._id,
+                        name: found.name,
+                      },
+                    ],
+                  }
+                )
         );
         const text =
           message.sealedText === null

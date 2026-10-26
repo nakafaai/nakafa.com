@@ -12,7 +12,7 @@ import {
   period,
 } from "@repo/backend/test/classroom";
 import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const { page, send } = refs.public.classroom.forum.messages;
 const { open, reply } = refs.public.classroom.forum.threads;
@@ -212,6 +212,65 @@ describe("classroom/forum mentions", () => {
           .query(people.list, { classId: forum.classId, slug: slugOf("other") })
           .pipe(Effect.flip);
         expect(other._tag).toBe("AccessDenied");
+      })
+  );
+
+  it.effect(
+    "lists the members to mention by name, leaves out a suspended one, and drops a mention of a Person who is gone",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("ACCEPTANCE_SEED", "true");
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        yield* fixture.internal.mutation(
+          refs.internal.classroom.forum.seed.history,
+          { classSlug: "fisika-x-1", count: 1, read: 0, slug: nf }
+        );
+        vi.unstubAllEnvs();
+        const teacher = fixture.as("teacher");
+        const list = () =>
+          teacher
+            .query(people.list, { classId: forum.classId, slug: nf })
+            .pipe(Effect.map(Arr.map((person) => person.name)));
+        expect(yield* list()).toEqual(["Raka Pratama", "Student"]);
+        const sent = yield* teacher.mutation(send, {
+          ...forum,
+          clientKey: "gone-mention",
+          mentions: [{ _tag: "person", id: fixture.people.student.personId }],
+          slug: nf,
+          text: "@Student",
+        });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            yield* writer
+              .table("tenantPeople")
+              .patch(fixture.people.student.personId, { status: "suspended" });
+            const gone = yield* writer.table("tenantPeople").insert({
+              account: { state: "unclaimed" },
+              kind: "member",
+              name: "Tamu",
+              status: "active",
+              tenantId: fixture.tenants.nf,
+            });
+            yield* writer.table("tenantPeople").delete(gone);
+            yield* writer
+              .table("classroomMessages")
+              .patch(sent.id, { mentions: [{ _tag: "person", id: gone }] });
+          }).pipe(Effect.orDie)
+        );
+        expect(yield* list()).toEqual(["Raka Pratama"]);
+        const shown = yield* teacher.query(page, {
+          ...forum,
+          ...firstPage,
+          slug: nf,
+        });
+        expect(
+          Arr.findFirst(shown.page, (message) => message.id === sent.id).pipe(
+            Option.map((message) => message.mentions)
+          )
+        ).toEqual(Option.some([]));
       })
   );
 });

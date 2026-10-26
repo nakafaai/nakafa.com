@@ -5,7 +5,7 @@ import {
   vapidToken,
 } from "@repo/backend/confect/notifications/webpush";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, Redacted, Schema } from "effect";
+import { Array as Arr, Effect, Redacted, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
 
@@ -24,24 +24,26 @@ const bytes = (text: string) => {
   if (decoded._tag === "Failure") {
     throw new Error("The test's own key does not decode.");
   }
-  return decoded.success;
+  return new Uint8Array(decoded.success);
 };
 
 /** Joins byte sequences, as the receiving browser does. */
 const join = (parts: readonly Uint8Array[]) => {
   const joined = new Uint8Array(
-    parts.reduce((sum, part) => sum + part.length, 0)
+    Arr.reduce(parts, 0, (sum, part) => sum + part.length)
   );
-  let offset = 0;
-  for (const part of parts) {
+  Arr.reduce(parts, 0, (offset, part) => {
     joined.set(part, offset);
-    offset += part.length;
-  }
+    return offset + part.length;
+  });
   return joined;
 };
 
 /** HMAC-SHA-256, as the receiving browser computes it. */
-const hmac = async (key: Uint8Array, data: Uint8Array) =>
+const hmac = async (
+  key: Uint8Array<ArrayBuffer>,
+  data: Uint8Array<ArrayBuffer>
+) =>
   new Uint8Array(
     await crypto.subtle.sign(
       "HMAC",

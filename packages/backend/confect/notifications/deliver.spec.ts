@@ -5,7 +5,7 @@ import { PushTarget } from "@repo/backend/confect/notifications/webpush";
 import { Schema } from "effect";
 
 /** What one push carries and where it goes: the notice's general text, and the recipient's browsers. */
-export const PushNotice = Schema.Struct({
+const PushNotice = Schema.Struct({
   payload: Schema.String,
   targets: Schema.Array(PushTarget),
 });

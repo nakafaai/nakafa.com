@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -7,16 +8,58 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { mentionedPeople } from "@repo/backend/confect/classroom/forum/mention";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
 import spec, {
-  type FanoutPhase,
+  FanoutPhase,
   type FanoutSource,
 } from "@repo/backend/confect/notifications/fanout.spec";
 import { schedulePush } from "@repo/backend/confect/notifications/schedule";
-import { Array as Arr, Duration, Effect, Layer, Match, Option } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  Layer,
+  Match,
+  Option,
+  Schema,
+} from "effect";
 
 /** Persons one run notifies, the batch of ADR 0027. */
 const FANOUT_BATCH = 100;
+
+/**
+ * What a source tells its class: its class, its author, its time, the row fields
+ * that name it, whether its author chose email, and the Persons it already
+ * notified on its own.
+ */
+const Notice = Schema.Struct({
+  authorId: Id("tenantPeople"),
+  classId: Id("classes"),
+  createdAt: Schema.Finite,
+  email: Schema.Boolean,
+  fields: Schema.Union([
+    Schema.Struct({
+      changeType: Schema.Literal("forum.mentioned"),
+      messageId: Id("classroomMessages"),
+    }),
+    Schema.Struct({
+      changeType: Schema.Literal("announcement.posted"),
+      postId: Id("classroomPosts"),
+    }),
+    Schema.Struct({
+      changeType: Schema.Literal("assignment.published"),
+      taskId: Id("classroomTasks"),
+    }),
+  ]),
+  named: Schema.Array(Id("tenantPeople")),
+});
+
+/** Where the next run of a fan-out starts: the phase, and the page of it. */
+const NextRun = Schema.Struct({
+  cursor: Schema.NullOr(Schema.String),
+  phase: FanoutPhase,
+});
 
 /**
  * The notice a source makes: its class, its author, its time, the row fields that
@@ -32,38 +75,36 @@ const noticeOf = Effect.fn("notifications.fanout.notice")(function* (
     mention: ({ messageId }) =>
       Effect.map(
         reader.table("classroomMessages").get(messageId).pipe(Effect.option),
-        Option.map((message) => ({
+        Option.map((message): typeof Notice.Type => ({
           authorId: message.authorId,
           classId: message.classId,
           createdAt: message.createdAt,
           email: false,
-          fields: { changeType: "forum.mentioned" as const, messageId },
-          named: Arr.flatMap(message.mentions ?? [], (mention) =>
-            mention._tag === "person" ? [mention.id] : []
-          ),
+          fields: { changeType: "forum.mentioned", messageId },
+          named: mentionedPeople(message.mentions),
         }))
       ),
     post: ({ postId }) =>
       Effect.map(
         reader.table("classroomPosts").get(postId).pipe(Effect.option),
-        Option.map((post) => ({
+        Option.map((post): typeof Notice.Type => ({
           authorId: post.authorId,
           classId: post.classId,
           createdAt: post.createdAt,
           email: post.email,
-          fields: { changeType: "announcement.posted" as const, postId },
+          fields: { changeType: "announcement.posted", postId },
           named: [],
         }))
       ),
     task: ({ taskId }) =>
       Effect.map(
         reader.table("classroomTasks").get(taskId).pipe(Effect.option),
-        Option.map((task) => ({
+        Option.map((task): typeof Notice.Type => ({
           authorId: task.authorId,
           classId: task.classId,
           createdAt: task.createdAt,
           email: false,
-          fields: { changeType: "assignment.published" as const, taskId },
+          fields: { changeType: "assignment.published", taskId },
           named: [],
         }))
       ),
@@ -100,12 +141,12 @@ const rosterPage = Effect.fn("notifications.fanout.page")(function* (
 const nextRun = (
   page: { readonly continueCursor: string; readonly isDone: boolean },
   phase: typeof FanoutPhase.Type
-) => {
+): Option.Option<typeof NextRun.Type> => {
   if (!page.isDone) {
     return Option.some({ cursor: page.continueCursor, phase });
   }
   return phase === "students"
-    ? Option.some({ cursor: null, phase: "teachers" as const })
+    ? Option.some({ cursor: null, phase: "teachers" })
     : Option.none();
 };
 

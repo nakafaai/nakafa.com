@@ -485,7 +485,9 @@
     "audit-label": {
       "assignment": {
         "created": "Klassenlehrer zugewiesen",
-        "removed": "Klassenlehrer entfernt"
+        "removed": "Klassenlehrer entfernt",
+        "published": "Aufgabe veröffentlicht",
+        "deadlineChanged": "Abgabefrist geändert"
       },
       "card": {
         "issued": "Anmeldekarte ausgestellt",

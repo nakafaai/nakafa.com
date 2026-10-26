@@ -67,13 +67,11 @@ describe("classroom/tasks", () => {
           "latihan-gerak-lurus-2",
           "tugas",
         ]);
-        const listed = yield* fixture
-          .as("student")
-          .query(tasks.list, {
-            ...firstPage,
-            classId: forum.classId,
-            slug: nf,
-          });
+        const listed = yield* fixture.as("student").query(tasks.list, {
+          ...firstPage,
+          classId: forum.classId,
+          slug: nf,
+        });
         expect(Arr.map(listed.page, (task) => task.slug)).toEqual([
           "latihan-gerak-lurus-2",
           "latihan-gerak-lurus",

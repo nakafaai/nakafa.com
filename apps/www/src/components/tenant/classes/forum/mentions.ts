@@ -15,7 +15,7 @@ const SPACE = /\s/u;
 const MENTION_END = /[\n@]/u;
 
 /** The most Persons the mention list shows at once. */
-export const MENTION_OPTIONS = 8;
+const MENTION_OPTIONS = 8;
 
 /**
  * The mention being typed before the caret: the `@` at the start of the text or
@@ -89,7 +89,7 @@ export const keptMentions = (
           mention._tag === "everyone" ? "@everyone" : `@${mention.name}`
         )
       ),
-      (self, that) =>
+      (self: typeof MentionView.Type, that: typeof MentionView.Type) =>
         self._tag === that._tag &&
         (self._tag === "everyone" ||
           (that._tag === "person" && self.id === that.id))
@@ -98,7 +98,7 @@ export const keptMentions = (
   );
 
 /** One piece of a message's text, with where it starts: plain text, or a mention that the message names. */
-export const Segment = Schema.Union([
+const Segment = Schema.Union([
   Schema.TaggedStruct("text", { at: Schema.Int, text: Schema.String }),
   Schema.TaggedStruct("mention", { at: Schema.Int, text: Schema.String }),
 ]);

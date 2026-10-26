@@ -77,6 +77,7 @@ describe("sendUpdate", () => {
       channelId: general,
       classId,
       clientKey: "client-key-1",
+      mentions: [],
       slug,
       text: sent.text ?? "",
     });
@@ -201,6 +202,7 @@ describe("openUpdate", () => {
       channelId: general,
       classId,
       clientKey: "client-key-2",
+      mentions: [],
       slug,
       text: "Pembuka",
       title: "Diskusi 1",
@@ -272,6 +274,7 @@ describe("replyUpdate", () => {
     replyUpdate(sent)(localStore, {
       classId,
       clientKey: "client-key-3",
+      mentions: [],
       number: 1,
       slug,
       text: "Balasan",

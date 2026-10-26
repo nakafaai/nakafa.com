@@ -33,7 +33,7 @@ export const PushTarget = Schema.Struct({
 });
 
 /** The application server's VAPID keys: the public key and the private scalar, Base64Url, and its contact. */
-export const VapidKeys = Schema.Struct({
+const VapidKeys = Schema.Struct({
   privateKey: Schema.Redacted(Schema.String),
   publicKey: Schema.String,
   subject: Schema.String,
@@ -54,9 +54,9 @@ const subtle = <A>(call: () => PromiseLike<A>) =>
 
 /** The bytes of a Base64Url text, or a key failure. */
 const bytesOf = (text: string) =>
-  Effect.mapError(
-    Effect.fromResult(Base64Url.decode(text)),
-    () => new PushFailed({ reason: "key" })
+  Effect.fromResult(Base64Url.decode(text)).pipe(
+    Effect.map((bytes) => new Uint8Array(bytes)),
+    Effect.mapError(() => new PushFailed({ reason: "key" }))
   );
 
 /** Joins byte sequences into one. */
@@ -73,8 +73,8 @@ const join = (parts: readonly Uint8Array[]) => {
 
 /** HMAC-SHA-256 of `data` under the raw key `key`, the extract and expand step of HKDF (RFC 5869). */
 const hmac = Effect.fn("notifications.webpush.hmac")(function* (
-  key: Uint8Array,
-  data: Uint8Array
+  key: Uint8Array<ArrayBuffer>,
+  data: Uint8Array<ArrayBuffer>
 ) {
   const imported = yield* subtle(() =>
     crypto.subtle.importKey(

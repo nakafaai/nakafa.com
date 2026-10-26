@@ -44,8 +44,9 @@ describe("sendMessage", () => {
     "sends the message with an update that shows it at once under its client key, and answers the stored message",
     () =>
       Effect.gen(function* () {
-        const send = vi.fn((_update: unknown, sent: typeof args) =>
-          Promise.resolve(Result.succeed({ ...stored, text: sent.text }))
+        const send = vi.fn(
+          (_update: unknown, sent: { readonly text: string }) =>
+            Promise.resolve(Result.succeed({ ...stored, text: sent.text }))
         );
 
         const answer = yield* sendMessage(send, author, args, []);

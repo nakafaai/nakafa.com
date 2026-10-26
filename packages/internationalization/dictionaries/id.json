@@ -485,7 +485,9 @@
     "audit-label": {
       "assignment": {
         "created": "Wali kelas ditetapkan",
-        "removed": "Wali kelas dilepas"
+        "removed": "Wali kelas dilepas",
+        "published": "Tugas diterbitkan",
+        "deadlineChanged": "Tenggat tugas diubah"
       },
       "card": {
         "issued": "Kartu masuk diterbitkan",

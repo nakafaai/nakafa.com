@@ -485,7 +485,9 @@
     "audit-label": {
       "assignment": {
         "created": "Homeroom teacher assigned",
-        "removed": "Homeroom teacher removed"
+        "removed": "Homeroom teacher removed",
+        "published": "Task published",
+        "deadlineChanged": "Task deadline changed"
       },
       "card": {
         "issued": "Login card issued",

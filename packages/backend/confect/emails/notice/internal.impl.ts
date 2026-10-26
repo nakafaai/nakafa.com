@@ -58,21 +58,15 @@ const readInput = FunctionImpl.make(
     const school = yield* schoolAddress(siteUrl, tenant.slug);
     const addresses = yield* Effect.forEach(recipients, (personId) =>
       Effect.gen(function* () {
-        const person = yield* reader
-          .table("tenantPeople")
-          .get(personId)
-          .pipe(Effect.orDie);
+        const person = yield* reader.table("tenantPeople").get(personId);
         if (person.account.state !== "claimed") {
           return Option.none();
         }
-        const user = yield* reader
-          .table("users")
-          .get(person.account.userId)
-          .pipe(Effect.orDie);
+        const user = yield* reader.table("users").get(person.account.userId);
         return isLoginAddress(user.email)
           ? Option.none()
           : Option.some({ email: user.email, personId });
-      })
+      }).pipe(Effect.orDie)
     );
     return {
       addresses: Arr.getSomes(addresses),

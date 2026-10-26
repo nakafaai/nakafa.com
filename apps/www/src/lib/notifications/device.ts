@@ -15,13 +15,13 @@ export const PushState = Schema.Literals([
 ]);
 
 /** The address of the service worker that shows a push. */
-export const WORKER_PATH = "/sw.js";
+const WORKER_PATH = "/sw.js";
 
 /** The name an iPhone, iPad or iPod gives itself in its user agent. */
 const APPLE_DEVICE = /iPad|iPhone|iPod/u;
 
 /** A step of the browser's push that failed. */
-export class DevicePushFailed extends Schema.TaggedError<DevicePushFailed>()(
+class DevicePushFailed extends Schema.TaggedError<DevicePushFailed>()(
   "DevicePushFailed",
   { step: Schema.Literals(["permission", "worker", "subscribe"]) }
 ) {}
@@ -95,7 +95,7 @@ export const subscribeDevice = Effect.fn("notifications.device.subscribe")(
       catch: () => new DevicePushFailed({ step: "subscribe" }),
       try: () =>
         registration.pushManager.subscribe({
-          applicationServerKey: key,
+          applicationServerKey: new Uint8Array(key),
           userVisibleOnly: true,
         }),
     });

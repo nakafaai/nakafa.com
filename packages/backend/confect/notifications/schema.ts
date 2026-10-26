@@ -64,7 +64,7 @@ export const Notification = Schema.Union([
 ]);
 
 /** What a row tells: an invitation, a mention, an announcement, or a new task. */
-export const NotificationType = Schema.Literals([
+const NotificationType = Schema.Literals([
   "person.invited",
   "forum.mentioned",
   "announcement.posted",

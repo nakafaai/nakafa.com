@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import {
   firstPage,
   forumClass,
   keyedFixture,
@@ -69,7 +73,7 @@ const mentioned = Effect.gen(function* () {
   });
   const rows = yield* fixture.as("student").query(inbox.list, firstPage);
   const row = Arr.getUnsafe(rows.page, 0);
-  return { fixture, notificationId: row.id };
+  return { fixture, forum, notificationId: row.id };
 });
 
 describe("notifications/deliver", () => {
@@ -142,6 +146,57 @@ describe("notifications/deliver", () => {
         expect(Arr.map(held, (job) => job.scheduledTime)).toEqual([
           Date.UTC(2026, 9, 1, 23, 0, 0),
         ]);
+      })
+  );
+
+  it.effect(
+    "writes the notice in Indonesian for a school with no active unit, and answers none once the recipient's account is unclaimed",
+    () =>
+      Effect.gen(function* () {
+        const { fixture, forum, notificationId } = yield* mentioned;
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const units = yield* (yield* DatabaseReader)
+              .table("tenantUnits")
+              .index("by_tenantId_and_status", (query) =>
+                query.eq("tenantId", fixture.tenants.nf).eq("status", "active")
+              )
+              .take(10);
+            const writer = yield* DatabaseWriter;
+            yield* Effect.forEach(units, (unit) =>
+              writer
+                .table("tenantUnits")
+                .patch(unit._id, { status: "archived" })
+            );
+          }).pipe(Effect.orDie)
+        );
+        const notice = yield* fixture.internal.query(deliver.notice, {
+          notificationId,
+        });
+        expect(notice?.payload).toContain("Seseorang menyebutmu di kelas.");
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenantPeople")
+              .patch(fixture.people.student.personId, {
+                account: { state: "unclaimed" },
+              })
+          ).pipe(Effect.orDie)
+        );
+        expect(
+          yield* fixture.internal.query(deliver.notice, { notificationId })
+        ).toBeNull();
+        yield* fixture.as("teacher").mutation(send, {
+          ...forum,
+          clientKey: "unclaimed-mention",
+          mentions: [{ _tag: "person", id: fixture.people.student.personId }],
+          slug: nf,
+          text: "@Student",
+        });
+        const pushes = Arr.filter(yield* fixture.run(scheduledJobs), (job) =>
+          job.name.includes("deliver")
+        );
+        expect(pushes).toHaveLength(1);
       })
   );
 });
