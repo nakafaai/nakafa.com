@@ -20,6 +20,10 @@ export const SCHOOL_API_PATH = "/api/school/v1";
 /** The path the Convex site serves the school MCP server at; a school host forwards `/mcp` to it. */
 export const SCHOOL_MCP_PATH = "/api/school/mcp";
 
+/** The paths a school host serves the REST API and the MCP server at, which it forwards to the Convex paths above. */
+export const SCHOOL_HOST_API_PATH = "/api/v1";
+export const SCHOOL_HOST_MCP_PATH = "/mcp";
+
 /** The most rows one page holds; a request for more is clamped (ADR 0029, amendment rule 7). */
 export const PAGE_LIMIT = 100;
 
@@ -73,11 +77,15 @@ const ROSTER_ERRORS = [
   SchoolApiRateLimited,
 ];
 
-/** The OAuth 2.0 error codes the token endpoint answers (RFC 6749 section 5.2, RFC 8707). */
+/** The OAuth 2.0 error codes the token endpoint answers (RFC 6749 section 5.2, RFC 8707, RFC 8628 section 3.5). */
 const OAuthErrorCode = Schema.Literals([
+  "access_denied",
+  "authorization_pending",
+  "expired_token",
   "invalid_client",
   "invalid_request",
   "invalid_target",
+  "slow_down",
   "unsupported_grant_type",
 ]);
 
@@ -95,16 +103,42 @@ export class OAuthClientError extends Schema.TaggedError<OAuthClientError>()(
   { httpApiStatus: 401 }
 ) {}
 
-/** The client credentials grant (RFC 6749 section 4.4), form encoded, with the resource it asks for (RFC 8707). */
+/** The client ID of the Nakafa CLI, a public client of the device grant (RFC 8628). */
+export const CLI_CLIENT_ID = "nakafa-cli";
+
+/** The grant type of a device's token request (RFC 8628 section 3.4). */
+export const DEVICE_GRANT = "urn:ietf:params:oauth:grant-type:device_code";
+
+/**
+ * A token request, form encoded: the client credentials grant (RFC 6749 section 4.4) with
+ * the client's secret and the resource it asks for (RFC 8707), or the device grant (RFC
+ * 8628) with the Nakafa CLI's client ID and the device code.
+ */
 const TokenRequest = Schema.Struct({
   client_id: Schema.String,
-  client_secret: Schema.String,
+  client_secret: Schema.optional(Schema.String),
+  device_code: Schema.optional(Schema.String),
   grant_type: Schema.String,
   resource: Schema.optional(Schema.String),
 });
 
+/** A device authorization request (RFC 8628 section 3.1): the Nakafa CLI and the school it signs in to. */
+const DeviceRequest = Schema.Struct({
+  client_id: Schema.String,
+  school: Schema.String,
+});
+
+/** A device authorization (RFC 8628 section 3.2): the codes, where the Admin types the user code, and how often to poll. */
+const DeviceResponse = Schema.Struct({
+  device_code: Schema.String,
+  expires_in: Schema.Finite,
+  interval: Schema.Finite,
+  user_code: Schema.String,
+  verification_uri: Schema.String,
+});
+
 /** An access token for one resource. */
-const TokenResponse = Schema.Struct({
+export const TokenResponse = Schema.Struct({
   access_token: Schema.String,
   expires_in: Schema.Finite,
   token_type: Schema.Literal("Bearer"),
@@ -157,12 +191,17 @@ export const ApiPlacement = Schema.Struct({
   personId: Schema.String,
 });
 
-/** The token endpoint, which takes the client's own credentials and no bearer token. */
+/** The token endpoint and the device authorization endpoint, which take the client's own credentials and no bearer token. */
 class OAuthGroup extends HttpApiGroup.make("oauth").add(
   HttpApiEndpoint.post("token", "/token", {
     error: [OAuthError, OAuthClientError],
     payload: TokenRequest.pipe(HttpApiSchema.asFormUrlEncoded()),
     success: TokenResponse,
+  }),
+  HttpApiEndpoint.post("device", "/device", {
+    error: [OAuthError, OAuthClientError],
+    payload: DeviceRequest.pipe(HttpApiSchema.asFormUrlEncoded()),
+    success: DeviceResponse,
   })
 ) {}
 

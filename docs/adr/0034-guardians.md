@@ -179,10 +179,16 @@ withdrawal is done (blueprint, Orang tua, requests).
 | Part | Status |
 | --- | --- |
 | The decision in this ADR | Recorded by S0 |
-| `verifiedParent` relation and the link rows | Planned, S7 |
-| `guardianCodes` and the email code at `/orang-tua` | Planned, S8 |
-| `guardianConsents` and the NISN second check | Planned, S8 |
-| The under-age flag on the school roster | Planned, with the roster import (ADR 0015) |
-| The under-18 gate (`ConsentRequired`) | Planned, S8 |
+| `verifiedParent` relation and the link rows | Built, S7: `guardianLinks` and the `guardianLink` kind (`confect/guardians`). Admin and Staff start, list, check by hand, and revoke links (`guardians/links`). An address reuses its guardian Person, and one address holds one live link to a student. |
+| `guardianCodes` and the email code at `/orang-tua` | Built, S8: `guardians/codes:send` mails the code from the mutation that draws it, through `confect/emails`, and answers the same for every address. The HMAC uses `LOGIN_CARD_SECRET` under the purpose label `nakafa/identity/guardian-code/v1`, bound to the school and the address (`identity/secret.ts`). The school host's Better Auth endpoint `/school/guardian/sign-in` (`auth/guardian.ts`) redeems the code through `guardians/codes:redeem`, binds the guardian Person with the claim method `code`, and makes the session. A sweep deletes expired codes hourly. |
+| `guardianConsents` and the NISN second check | Built, S8: the guardian's check compares the blind of the typed NISN with the roster's (`guardians/family:confirm`). Three mismatches leave only the staff check. Withdrawal writes the `withdrawn` row with the method of its grant and ends the link in one transaction. |
+| The under-age flag on the school roster | Built: `rosterEntries` holds `underAgeLimit` and the NISN, sealed and blinded under the school key (`confect/roster`). Admin and Staff set it with `roster/entries:set`. The Dapodik import sets it again when it lands (ADR 0015). |
+| The under-18 gate (`ConsentRequired`) | Built, S8: `requireConsent` in `guardians/gate.ts`. Wiring it into the class forum belongs to the classroom lane, and Nina's school threads and active grading call it when they land. |
 | Guardian notices and the rename of the notification relation | Planned, S9 |
-| Parent home, shared narratives, and requests | Planned, S10 |
+| Parent home, shared narratives, and requests | Partly built, S10: the parent home at `/orang-tua` lists each linked child, runs the NISN check, shows the released grades of a verified link, and withdraws consent. Shared narratives wait for Insight (ADR 0035), and report copy and correction requests are a later slice. |
+
+What waits outside the code: counsel's review of the consent wording and the policy
+version (K20), so `CONSENT_POLICY_VERSION` stays `id-profile-pending-1` and parent
+consent does not reach a real school before that review. The Staff (Staf TU) surface
+in the School shell waits for its navigation: the settings that hold the page are
+open to the Owner and the Admin only (K31).

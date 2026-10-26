@@ -11,27 +11,48 @@ const XenditSessionStatus = Schema.Literals([
   "CANCELED",
 ]);
 
-/** The intervals a Xendit recurring schedule takes in a session. */
+/** The intervals a Xendit recurring plan renews on. */
 const XenditInterval = Schema.Literals(["DAY", "WEEK", "MONTH"]);
 
 const positiveInt = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
 /**
- * The schedule of a subscription session. `anchor_date` is an ISO date-time whose
- * day of the month is at most 28. A failed charge is retried every
- * `retry_interval_count` `retry_interval`s, `total_retry` times, and the attempts
- * `failed_attempt_notifications` names tell the buyer it failed.
+ * The schedule of a recurring plan. `anchor_date` is the ISO date-time of the
+ * first charge, whose day of the month is at most 28. A failed charge is retried
+ * every `retry_interval_count` `retry_interval`s, `total_retry` times, and the
+ * attempts `failed_attempt_notifications` names tell the buyer it failed.
  */
-const XenditSubscriptionSchedule = Schema.Struct({
+const XenditPlanSchedule = Schema.Struct({
   anchor_date: Schema.String,
   interval: XenditInterval,
   interval_count: positiveInt,
-  total_recurrence: Schema.optionalKey(positiveInt),
-  retry_interval: Schema.optionalKey(XenditInterval),
+  retry_interval: Schema.optionalKey(Schema.Literal("DAY")),
   retry_interval_count: Schema.optionalKey(positiveInt),
   total_retry: Schema.optionalKey(positiveInt),
   failed_attempt_notifications: Schema.optionalKey(Schema.Array(positiveInt)),
 });
+
+/**
+ * The fields of Create Subscription Plan that Nakafa sends for an Indonesian Pro
+ * plan: the buyer's Xendit customer, the payment token the first month saved,
+ * the amount of every later month, and its schedule. The first month is paid in
+ * the checkout, so the plan charges nothing when it opens.
+ */
+export const XenditPlanRequest = Schema.Struct({
+  reference_id: Schema.String.check(Schema.isMinLength(1)),
+  customer_id: Schema.String,
+  currency: Schema.Literal("IDR"),
+  amount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  schedule: XenditPlanSchedule,
+  payment_tokens: Schema.Array(
+    Schema.Struct({ payment_token_id: Schema.String, rank: positiveInt })
+  ),
+  immediate_payment: Schema.Literal(false),
+  failed_cycle_action: Schema.Literals(["RESUME", "STOP"]),
+  locale: Schema.optionalKey(Schema.String),
+  description: Schema.optionalKey(Schema.String),
+});
+export type XenditPlanRequest = typeof XenditPlanRequest.Type;
 
 /**
  * Create Session reads a PAY or SUBSCRIPTION amount as above zero and a SAVE
@@ -63,24 +84,17 @@ export const XenditSessionRequest = Schema.Struct({
   allowed_payment_channels: Schema.optionalKey(Schema.Array(Schema.String)),
   /** When an unpaid session closes, as an ISO date-time; Xendit closes it after 30 minutes when left out. */
   expires_at: Schema.optionalKey(Schema.String),
-  subscription: Schema.optionalKey(
-    Schema.Struct({
-      schedule: XenditSubscriptionSchedule,
-      failed_cycle_action: Schema.optionalKey(
-        Schema.Literals(["RESUME", "STOP"])
-      ),
-      /** Charges the first cycle as soon as the buyer links a channel, before `anchor_date`. */
-      immediate_payment: Schema.optionalKey(Schema.Boolean),
-    })
+  /** `FORCED` saves the channel the buyer pays with as a payment token that a recurring plan charges later; only channels that can be saved are offered. */
+  allow_save_payment_method: Schema.optionalKey(
+    Schema.Literals(["DISABLED", "OPTIONAL", "FORCED"])
   ),
 }).check(Schema.makeFilter(amountFitsSessionType));
 export type XenditSessionRequest = typeof XenditSessionRequest.Type;
 
 /**
- * The fields of the 201 answer that the checkout and the billing row need.
- * Xendit leaves a nullable field out of the answer while it holds nothing (a
- * pay session has no plan, and no session has a payment before it is paid),
- * so each of those may be missing as well as null.
+ * The fields of the 201 answer that the checkout needs. Xendit leaves a
+ * nullable field out of the answer while it holds nothing, so the payment link
+ * may be missing as well as null.
  */
 export const XenditSessionResponse = Schema.Struct({
   payment_session_id: Schema.String,
@@ -88,7 +102,6 @@ export const XenditSessionResponse = Schema.Struct({
   session_type: XenditSessionType,
   status: XenditSessionStatus,
   payment_link_url: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  recurring_plan_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
   expires_at: Schema.DateTimeUtcFromString,
 });
 export type XenditSessionResponse = typeof XenditSessionResponse.Type;
@@ -179,7 +192,8 @@ export const XenditSessionEvent = Schema.Struct({
   session_type: XenditSessionType,
   status: XenditSessionStatus,
   payment_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  recurring_plan_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  /** The channel a session that forced saving it saved, which the buyer's recurring plan charges. */
+  payment_token_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
 });
 export type XenditSessionEvent = typeof XenditSessionEvent.Type;
 

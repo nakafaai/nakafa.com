@@ -9,6 +9,7 @@ import { useRouter } from "@tanstack/react-router";
 import { Data, Effect } from "effect";
 import { useEffect, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { ProOfferDialog } from "@/components/billing/offers";
 import { reportClientException } from "@/lib/analytics/client";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -61,21 +62,31 @@ export function TryoutReviewCheckout() {
   const pending = billing.isPending || isRefreshing;
 
   return (
-    <Button
-      disabled={pending || !isActiveLocale(locale)}
-      onClick={() => {
-        if (!isActiveLocale(locale)) {
-          return;
-        }
-        billing.openCheckout({ locale, source: "tryout-review-checkout" });
-      }}
-    >
-      <Spinner
-        data-icon="inline-start"
-        icon={Diamond02Icon}
-        isLoading={pending}
+    <>
+      <Button
+        disabled={pending || !isActiveLocale(locale)}
+        onClick={() => {
+          if (!isActiveLocale(locale)) {
+            return;
+          }
+          billing.openCheckout({ locale, source: "tryout-review-checkout" });
+        }}
+        onFocus={() => billing.warmCheckout({})}
+        onPointerEnter={() => billing.warmCheckout({})}
+      >
+        <Spinner
+          data-icon="inline-start"
+          icon={Diamond02Icon}
+          isLoading={pending}
+        />
+        {t("pro-cta")}
+      </Button>
+      <ProOfferDialog
+        choose={billing.chooseOffer}
+        dismiss={billing.dismissChoice}
+        isPending={billing.isPending}
+        offers={billing.choice?.offers ?? null}
       />
-      {t("pro-cta")}
-    </Button>
+    </>
   );
 }

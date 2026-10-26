@@ -16,6 +16,7 @@ import type { CliCommand, CliRequest } from "#cli/command/spec";
 import { makeCliCommand } from "#cli/command/tree";
 import { makeInvocationError } from "#cli/error";
 import { writeJson } from "#cli/output";
+import { loginSchool, logoutSchool, readSchool } from "#cli/school";
 
 const INVOCATION_EXIT_CODE = 2;
 const API_EXIT_CODE = 3;
@@ -40,6 +41,12 @@ export const runCli = Effect.fn("NakafaCli.run")(function* (
             error.status >= 500 ? NETWORK_OR_SERVER_EXIT_CODE : API_EXIT_CODE
           )
         ),
+      SchoolError: (error) =>
+        writeJson(
+          "stderr",
+          { code: error.code, message: error.message },
+          false
+        ).pipe(Effect.as(API_EXIT_CODE)),
       InvocationError: (error) =>
         writeJson(
           "stderr",
@@ -132,6 +139,15 @@ const executeRequest = Effect.fn("NakafaCli.executeRequest")(function* (
 
 function executeCommand(request: CliRequest) {
   const command = request.command;
+  if (command.kind === "school-login") {
+    return loginSchool(command.host);
+  }
+  if (command.kind === "school-logout") {
+    return logoutSchool();
+  }
+  if (command.kind === "school-read") {
+    return readSchool(command.read);
+  }
   if (command.kind === "mcp") {
     return Effect.succeed({
       endpoint: NAKAFA_MCP_ENDPOINT,
@@ -145,7 +161,12 @@ function executeCommand(request: CliRequest) {
   });
 }
 
-function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
+function buildApiPath(
+  command: Exclude<
+    CliCommand,
+    { kind: "mcp" | "school-login" | "school-logout" | "school-read" }
+  >
+) {
   if (command.kind === "get") {
     const query = new URLSearchParams({ ref: command.ref });
     return `${NAKAFA_PUBLIC_API_PATH}/content?${query}`;
