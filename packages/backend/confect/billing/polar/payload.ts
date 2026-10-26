@@ -59,11 +59,15 @@ const polarSubscriptionValidator = Schema.Struct({
   customerId: Schema.String,
   endedAt: Schema.NullOr(Schema.DateFromString),
   id: Schema.String,
+  /** The keys the checkout set. A School seat subscription names the school it pays for as `tenantId`. */
+  metadata: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
   modifiedAt: Schema.NullOr(Schema.DateFromString),
   pastDueAt: Schema.optionalKey(Schema.NullOr(Schema.DateFromString)),
   priceId: Schema.optionalKey(Schema.NullOr(Schema.String)),
   productId: Schema.String,
   recurringInterval: Schema.NullOr(Schema.String),
+  /** The seats a seat-based subscription bills, and nothing for any other product. */
+  seats: Schema.optionalKey(Schema.NullOr(Schema.Int)),
   status: Schema.String,
 }).pipe(
   Schema.encodeKeys({

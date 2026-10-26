@@ -8,6 +8,7 @@ import {
 import { Exit } from "effect";
 
 const NOW = Date.UTC(2026, 9, 24);
+const DAY = 24 * 60 * 60 * 1000;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -19,7 +20,7 @@ afterEach(() => {
 });
 
 describe("billing/invoices", () => {
-  it("issues open invoices at the catalog price in the account's currency, with the next numbers of the year", async () => {
+  it("issues open invoices at the catalog price in the account's currency for the days left, with the next numbers of the year", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const tenantId = await ctx.db.insert("tenants", {
@@ -42,6 +43,7 @@ describe("billing/invoices", () => {
         ctx,
         issueInvoice({
           accountId,
+          billedFrom: 1000,
           buyerTaxId: null,
           dueAt: 5000,
           offer: "school.seat.year",
@@ -54,11 +56,12 @@ describe("billing/invoices", () => {
         ctx,
         issueInvoice({
           accountId,
+          billedFrom: 7 * DAY,
           buyerTaxId: "01.234.567.8-901.000",
           dueAt: 5000,
           offer: "school.seat.year",
-          periodEnd: 4000,
-          periodStart: 1000,
+          periodEnd: 10 * DAY,
+          periodStart: 0,
           seats: 2,
         })
       );
@@ -77,7 +80,8 @@ describe("billing/invoices", () => {
       firstTotal: 30_000_000,
       lineAmount: 30_000_000,
       numbers: ["NKF-2026-000001", "NKF-2026-000002"],
-      secondTotal: 200_000,
+      // Two seats billed for the last 3 of 10 days pay 30% of Rp100.000 each.
+      secondTotal: 60_000,
       status: "open",
     });
   });
@@ -105,6 +109,7 @@ describe("billing/invoices", () => {
         ctx,
         issueInvoice({
           accountId,
+          billedFrom: 1000,
           buyerTaxId: null,
           dueAt: 5000,
           offer: "school.seat.month",
@@ -142,6 +147,7 @@ describe("billing/invoices", () => {
         ctx,
         issueInvoice({
           accountId,
+          billedFrom: 1000,
           buyerTaxId: null,
           dueAt: 5000,
           offer: "school.seat.year",

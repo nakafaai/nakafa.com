@@ -11,7 +11,6 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import {
   holdsLabel,
   type OptionEdit,
@@ -46,14 +45,18 @@ interface OptionRowProps {
   readonly letter: string;
   /** Whether the option is locked, so its text and its controls take no change. */
   readonly locked: boolean;
-  /** The number of the question, which names the option for assistive technology. */
-  readonly number: number;
+  /** The name of the option's editor for assistive technology, such as "Question 1, option A". */
+  readonly name: string;
   /** Removes the option, or none while the question holds the fewest options it may take. */
   readonly onRemove: (() => void) | null;
   /**
    * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
    */
   readonly onSave: (label: OptionLabel, unstored: () => void) => void;
+  /** The text the empty editor shows. */
+  readonly placeholder: string;
+  /** The name of the remove control for assistive technology. */
+  readonly removeName: string;
 }
 
 /**
@@ -69,11 +72,12 @@ export function OptionRow({
   letter,
   label,
   locked,
-  number,
+  name,
   onRemove,
   onSave,
+  placeholder,
+  removeName,
 }: OptionRowProps) {
-  const t = useTranslations("Exams");
   const editor = useRef<DocumentEditorInstance | null>(null);
   // The label the server held at the last render, which the editor holds too while the teacher has typed nothing
   // on top of it since.
@@ -170,7 +174,7 @@ export function OptionRow({
         <ExamDocument
           extensions={OPTION_EXTENSIONS}
           key={editorRound}
-          label={t("option-of", { letter, number })}
+          label={name}
           onChange={(transaction) => {
             const current = editor.current;
             if (current === null) {
@@ -193,7 +197,7 @@ export function OptionRow({
             );
             next.setEditable(!locked, false);
           }}
-          placeholder={t("option-placeholder")}
+          placeholder={placeholder}
           size="line"
         />
       </PaperOption>
@@ -202,7 +206,7 @@ export function OptionRow({
           <ControlRoom />
         ) : (
           <Button
-            aria-label={t("option-remove-of", { letter, number })}
+            aria-label={removeName}
             className="opacity-0 pointer-coarse:opacity-100 group-focus-within/option:opacity-100 group-hover/option:opacity-100"
             disabled={locked}
             onClick={remove}

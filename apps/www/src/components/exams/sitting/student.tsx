@@ -45,6 +45,7 @@ import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { useLastValue } from "@/lib/data/kept";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
 
@@ -86,6 +87,8 @@ export function StudentSitting({
   // The entry waits for the server's answer: a second press would send a second device with the same token.
   const [entering, startEntering] = useTransition();
   const ready = QueryResult.isSuccess(view);
+  // A sitting cancelled, or closed to the student, while its page is open keeps its exam's title above the refusal.
+  const kept = useLastValue(view);
 
   /** Shows the admission, or the sentence that explains why the entry was refused. */
   const receive = useCallback((next: Admission) => {
@@ -116,7 +119,17 @@ export function StudentSitting({
   }, [enter, ready, receive, sittingId, slug]);
 
   if (QueryResult.isFailure(view)) {
-    return <StudentFailure error={view.error} />;
+    return (
+      <>
+        <SittingBar
+          examTitle={Option.match(kept, {
+            onNone: () => t("sitting"),
+            onSome: (last) => last.sitting.examTitle,
+          })}
+        />
+        <StudentFailure error={view.error} />
+      </>
+    );
   }
   if (!QueryResult.isSuccess(view)) {
     return <SittingBar examTitle={t("sitting")} />;
@@ -229,7 +242,7 @@ function StudentScheduled({
 }
 
 /**
- * The page when the sitting could not be read. A lost membership is thrown, which sends the school to its
+ * The body when the sitting could not be read, under its bar. A lost membership is thrown, which sends the school to its
  * refused page. A sitting the student may not enter, or an item the student may not see, shows its refusal,
  * and any other failure shows the retry, which reports it.
  */
@@ -248,41 +261,33 @@ function StudentFailure({
   );
 }
 
-/** The page when the sitting is not open to the student: the header, why, and the way back home. */
+/** The body when the sitting is not open to the student, under its bar: why, and the way back home. */
 function StudentRefusal() {
   const t = useTranslations("Exams");
   const { slug } = useTenant();
 
   return (
-    <>
-      <SittingBar examTitle={t("sitting")} />
-      <LayoutContent className="grid w-full gap-6 py-6">
-        <p>{t("student-unavailable")}</p>
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ slug }}
-          to="/school/$slug"
-        >
-          {t("student-back-home")}
-        </Link>
-      </LayoutContent>
-    </>
+    <LayoutContent className="grid w-full gap-6 py-6">
+      <p>{t("student-unavailable")}</p>
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        params={{ slug }}
+        to="/school/$slug"
+      >
+        {t("student-back-home")}
+      </Link>
+    </LayoutContent>
   );
 }
 
 /**
- * The page when the sitting could not be read for a reason other than its visibility: the header, then the
+ * The body when the sitting could not be read for a reason other than its visibility, under its bar: the
  * sentence and the retry of `SittingRetry`, which reports the failure.
  */
 function StudentRetry({ error }: { readonly error: unknown }) {
-  const t = useTranslations("Exams");
-
   return (
-    <>
-      <SittingBar examTitle={t("sitting")} />
-      <LayoutContent className="grid w-full gap-6 py-6">
-        <SittingRetry error={error} />
-      </LayoutContent>
-    </>
+    <LayoutContent className="grid w-full gap-6 py-6">
+      <SittingRetry error={error} />
+    </LayoutContent>
   );
 }

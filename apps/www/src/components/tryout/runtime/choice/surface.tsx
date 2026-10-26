@@ -32,8 +32,6 @@ export function TryoutSelectableRadioOption({
 }: TryoutSelectableRadioOptionProps) {
   return (
     <TryoutChoiceFrame
-      id={id}
-      label={label}
       variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
       <Radio
@@ -42,6 +40,7 @@ export function TryoutSelectableRadioOption({
         disabled={disabled}
         value={value}
       />
+      <TryoutChoiceLabel id={id}>{label}</TryoutChoiceLabel>
     </TryoutChoiceFrame>
   );
 }
@@ -66,8 +65,6 @@ export function TryoutSelectableMultipleChoice({
 }: TryoutSelectableMultipleChoiceProps) {
   return (
     <TryoutChoiceFrame
-      id={id}
-      label={label}
       variant={getTryoutPreviewChoiceVariant({ appearance, checked })}
     >
       <Checkbox
@@ -77,6 +74,7 @@ export function TryoutSelectableMultipleChoice({
         disabled={disabled}
         onCheckedChange={onCheckedChange}
       />
+      <TryoutChoiceLabel id={id}>{label}</TryoutChoiceLabel>
     </TryoutChoiceFrame>
   );
 }
@@ -97,8 +95,6 @@ export function TryoutReviewedChoice({
 }: TryoutReviewedChoiceProps) {
   return (
     <TryoutChoiceFrame
-      id={id}
-      label={label}
       variant={getTryoutReviewedChoiceVariant({ checked, isCorrect })}
     >
       <Checkbox
@@ -107,35 +103,38 @@ export function TryoutReviewedChoice({
         className="mt-1 shrink-0 cursor-pointer"
         disabled
       />
+      <TryoutChoiceLabel id={id}>{label}</TryoutChoiceLabel>
     </TryoutChoiceFrame>
   );
 }
 
 type ButtonVariantOptions = NonNullable<Parameters<typeof buttonVariants>[0]>;
 
-interface TryoutChoiceFrameProps {
-  children: ReactNode;
-  id: string;
-  label: ReactNode;
-  variant: NonNullable<ButtonVariantOptions["variant"]>;
-}
-
-/** Owns the shared visual composition for every explicit choice variant. */
+/** Owns the shared visual composition for every explicit choice variant: its control, then its label. */
 function TryoutChoiceFrame({
   children,
-  id,
-  label,
   variant,
-}: TryoutChoiceFrameProps) {
-  const labelId = `${id}-label`;
-
+}: {
+  children: ReactNode;
+  variant: NonNullable<ButtonVariantOptions["variant"]>;
+}) {
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.
-    <Label className={choiceFrame(variant)}>
+    <Label className={choiceFrame(variant)}>{children}</Label>
+  );
+}
+
+/** The label of one choice, which its control names by id. */
+function TryoutChoiceLabel({
+  children,
+  id,
+}: {
+  children: ReactNode;
+  id: string;
+}) {
+  return (
+    <div className="min-w-0 flex-1" id={`${id}-label`}>
       {children}
-      <div className="min-w-0 flex-1" id={labelId}>
-        {label}
-      </div>
-    </Label>
+    </div>
   );
 }

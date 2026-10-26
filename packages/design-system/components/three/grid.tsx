@@ -15,45 +15,46 @@ interface GridPlaneProps {
   readonly sectionColor: ColorRepresentation;
 }
 
-function GridSegments({
-  color,
-  lineWidth,
-  points,
-}: {
-  readonly color: ColorRepresentation;
-  readonly lineWidth: number;
-  readonly points: GridPlaneGeometry["cells"];
-}) {
-  return points.length > 0 ? (
-    <Line
-      color={color}
-      depthWrite={false}
-      frustumCulled={false}
-      lineWidth={lineWidth}
-      opacity={0.2}
-      points={points}
-      segments
-      transparent
-    />
-  ) : null;
-}
-
+/** Draws a plane's cells, sections, and boundary, each only when it has segments. */
 function GridPlane({ cellColor, geometry, sectionColor }: GridPlaneProps) {
-  return geometry.visible ? (
+  if (!geometry.visible) {
+    return null;
+  }
+  const segments = [
+    { color: cellColor, id: "cells", lineWidth: 0.5, points: geometry.cells },
+    {
+      color: sectionColor,
+      id: "sections",
+      lineWidth: 0.8,
+      points: geometry.sections,
+    },
+    {
+      color: sectionColor,
+      id: "boundary",
+      lineWidth: 1,
+      points: geometry.boundary,
+    },
+  ];
+
+  return (
     <group>
-      <GridSegments color={cellColor} lineWidth={0.5} points={geometry.cells} />
-      <GridSegments
-        color={sectionColor}
-        lineWidth={0.8}
-        points={geometry.sections}
-      />
-      <GridSegments
-        color={sectionColor}
-        lineWidth={1}
-        points={geometry.boundary}
-      />
+      {Arr.map(segments, ({ color, id, lineWidth, points }) =>
+        points.length > 0 ? (
+          <Line
+            color={color}
+            depthWrite={false}
+            frustumCulled={false}
+            key={id}
+            lineWidth={lineWidth}
+            opacity={0.2}
+            points={points}
+            segments
+            transparent
+          />
+        ) : null
+      )}
     </group>
-  ) : null;
+  );
 }
 
 /** Keeps explicit mathematical frames finite and the general world continuous. */

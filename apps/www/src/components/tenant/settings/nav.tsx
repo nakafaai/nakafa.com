@@ -2,6 +2,7 @@ import {
   ArrowRight01Icon,
   Building03Icon,
   Calendar03Icon,
+  CreditCardIcon,
   DocumentValidationIcon,
   InformationCircleIcon,
   Link01Icon,
@@ -58,6 +59,7 @@ const sectionIcons: Record<
   ComponentProps<typeof HugeIcons>["icon"]
 > = {
   audit: DocumentValidationIcon,
+  billing: CreditCardIcon,
   clients: Plug01Icon,
   cohorts: UserMultiple02Icon,
   invites: Mail01Icon,

@@ -35,6 +35,7 @@ const answerRow = Effect.fn("exams.results.questions.answer")(function* (
   return {
     attemptId: row.attempt,
     name: person.name,
+    points: row.points,
     response: row.response,
     verdict: row.verdict,
   };
