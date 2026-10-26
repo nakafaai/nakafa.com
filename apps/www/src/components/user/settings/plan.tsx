@@ -1,4 +1,10 @@
-import { Settings01Icon } from "@hugeicons/core-free-icons";
+import { useMutation } from "@confect/react";
+import {
+  Cancel01Icon,
+  Diamond02Icon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -7,19 +13,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { Match } from "effect";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { Effect, Match } from "effect";
+import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { ProOfferDialog } from "@/components/billing/offers";
 import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { PlanPayments } from "@/components/user/settings/payments";
 import { UpgradePlanCard } from "@/components/user/settings/upgrade";
+import { reportClientException } from "@/lib/analytics/client";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import {
   type BillingOverview,
   type BillingSubscription,
+  cancelPlanChange,
   formatBillingDate,
   type PlanState,
   planStateOf,
@@ -40,6 +54,7 @@ export function UserSettingsPlan({ overview }: { overview: BillingOverview }) {
     Match.discriminatorsExhaustive("kind")({
       free: () => <UpgradePlanCard />,
       granted: () => <GrantedPlanCard />,
+      pass: ({ endsAt }) => <PassPlanCard endsAt={endsAt} />,
       subscribed: (state) => <SubscribedPlanCard state={state} />,
     })
   );
@@ -57,6 +72,63 @@ function GrantedPlanCard() {
         <CardDescription>{t("plan-granted-description")}</CardDescription>
       </CardHeader>
       <CardSectionFooter hint={t("plan-granted-footer")} />
+    </CardSection>
+  );
+}
+
+/**
+ * Pro that passes give: the day the last of them ends, the receipts, and the
+ * action that buys another pass, which starts where this one ends. No portal
+ * manages a pass, since nothing renews it.
+ */
+function PassPlanCard({ endsAt }: { endsAt: number }) {
+  const billing = useBillingNavigation();
+  const locale = useLocale();
+  const t = useTranslations("Auth");
+  const tPricing = useTranslations("Pricing");
+
+  const handleExtend = () => {
+    if (!isActiveLocale(locale)) {
+      return;
+    }
+
+    billing.openCheckout({
+      locale,
+      passesOnly: true,
+      source: "settings-pass",
+    });
+  };
+
+  return (
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{tPricing("pro-title")}</CardTitle>
+        <CardDescription>
+          {t("plan-pass-description", {
+            date: formatBillingDate(endsAt, locale),
+          })}
+        </CardDescription>
+      </CardHeader>
+      <CardSectionFooter hint={t("plan-pass-footer")}>
+        <CardSectionActions>
+          <PlanPayments />
+          <Button
+            disabled={billing.isPending || !isActiveLocale(locale)}
+            onClick={handleExtend}
+            onFocus={() => billing.warmCheckout({ passesOnly: true })}
+            onPointerEnter={() => billing.warmCheckout({ passesOnly: true })}
+          >
+            <Spinner icon={Diamond02Icon} isLoading={billing.isPending} />
+            {t("plan-pass-extend")}
+          </Button>
+        </CardSectionActions>
+      </CardSectionFooter>
+      <ProOfferDialog
+        choose={billing.chooseOffer}
+        dismiss={billing.dismissChoice}
+        isPending={billing.isPending}
+        offers={billing.choice?.offers ?? null}
+      />
     </CardSection>
   );
 }
@@ -100,21 +172,122 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
           <dd>{providerNameOf(subscription.rail)}</dd>
         </dl>
       </CardContent>
-      <CardSectionFooter
-        hint={t(pastDue ? "plan-pro-past-due-footer" : "plan-pro-footer")}
-      >
+      {subscription.rail === "xendit" ? (
+        <XenditPlanFooter ending={ending} subscription={subscription} />
+      ) : (
+        <CardSectionFooter
+          hint={t(pastDue ? "plan-pro-past-due-footer" : "plan-pro-footer")}
+        >
+          <CardSectionActions>
+            <Button
+              disabled={billing.isPending || !isActiveLocale(locale)}
+              onClick={handleManage}
+              variant="outline"
+            >
+              <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
+              {t("manage-billing")}
+            </Button>
+          </CardSectionActions>
+        </CardSectionFooter>
+      )}
+    </CardSection>
+  );
+}
+
+/**
+ * The footer of a plan Xendit bills, which no provider portal manages: the
+ * receipts, and the cancel that ends the plan with its paid period once the
+ * learner confirms. A plan that already ends says so and offers the receipts.
+ */
+function XenditPlanFooter({
+  ending,
+  subscription,
+}: {
+  ending: boolean;
+  subscription: BillingSubscription;
+}) {
+  const t = useTranslations("Auth");
+  const locale = useLocale();
+  const [isConfirming, setIsConfirming] = useState(false);
+  const cancelPlan = useMutation(
+    billing.xendit.cancel.cancelPlan
+  ).withOptimisticUpdate(cancelPlanChange);
+
+  if (ending) {
+    return (
+      <CardSectionFooter hint={t("plan-xendit-ending-footer")}>
         <CardSectionActions>
-          <Button
-            disabled={billing.isPending || !isActiveLocale(locale)}
-            onClick={handleManage}
-            variant="outline"
-          >
-            <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
-            {t("manage-billing")}
-          </Button>
+          <PlanPayments />
         </CardSectionActions>
       </CardSectionFooter>
-    </CardSection>
+    );
+  }
+
+  return (
+    <CardSectionFooter hint={t("plan-xendit-footer")}>
+      <CardSectionActions>
+        <PlanPayments />
+        <Button
+          onClick={() => setIsConfirming(true)}
+          type="button"
+          variant="destructive"
+        >
+          <HugeIcons icon={Cancel01Icon} />
+          {t("plan-cancel")}
+        </Button>
+      </CardSectionActions>
+      <ResponsiveDialog
+        description={t("plan-cancel-description", {
+          date: formatBillingDate(
+            subscription.currentPeriodEnd ?? subscription.currentPeriodStart,
+            locale
+          ),
+        })}
+        footer={
+          <>
+            <Button
+              onClick={() => setIsConfirming(false)}
+              type="button"
+              variant="outline"
+            >
+              {t("plan-keep")}
+            </Button>
+            <Button
+              onClick={() => {
+                setIsConfirming(false);
+                Effect.runPromise(
+                  Effect.tryPromise(() => cancelPlan({})).pipe(
+                    Effect.flatMap(Effect.fromResult),
+                    Effect.catch((error) =>
+                      reportClientException(error, {
+                        source: "components/user/settings/plan",
+                      }).pipe(
+                        Effect.andThen(
+                          Effect.sync(() => {
+                            toast.error({
+                              description: "action-error.description",
+                              title: "action-error.title",
+                            });
+                          })
+                        )
+                      )
+                    )
+                  )
+                );
+              }}
+              type="button"
+              variant="destructive"
+            >
+              <HugeIcons icon={Cancel01Icon} />
+              {t("plan-cancel")}
+            </Button>
+          </>
+        }
+        open={isConfirming}
+        setOpen={setIsConfirming}
+        title={t("plan-cancel-title")}
+      />
+    </CardSectionFooter>
   );
 }
 

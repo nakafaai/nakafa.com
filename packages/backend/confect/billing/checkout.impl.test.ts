@@ -187,15 +187,15 @@ describe("billing/checkout internal steps", () => {
     ).toEqual({ kind: "unavailable" });
   });
 
-  it("holds Pro for a user with no grant and no subscription on any rail as free", async () => {
+  it("holds no Pro for a user with no grant and no subscription on any rail", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation((ctx) => insertUser(ctx));
-    expect(await t.query(internal.billing.checkout.holdsPro, { userId })).toBe(
-      false
-    );
+    expect(
+      await t.query(internal.billing.checkout.proHolding, { userId })
+    ).toBe("none");
   });
 
-  it("holds Pro for a user whose personal Pro grant still runs", async () => {
+  it("holds a plan for a user whose personal Pro grant from a contract still runs", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(async (ctx) => {
       const id = await insertUser(ctx);
@@ -208,12 +208,61 @@ describe("billing/checkout internal steps", () => {
       });
       return id;
     });
-    expect(await t.query(internal.billing.checkout.holdsPro, { userId })).toBe(
-      true
-    );
+    expect(
+      await t.query(internal.billing.checkout.proHolding, { userId })
+    ).toBe("plan");
   });
 
-  it("does not hold Pro for a personal Pro grant that has ended", async () => {
+  it("holds a pass while only passes run, and a plan once a grant of another kind runs beside them", async () => {
+    const t = createBillingTestConvex();
+    const userId = await t.mutation(async (ctx) => {
+      const id = await insertUser(ctx);
+      const accountId = await ctx.db.insert("billingAccounts", {
+        owner: { kind: "personal", userId: id },
+        rail: "xendit",
+        country: "ID",
+        currency: "IDR",
+        providerCustomerId: null,
+      });
+      const payment = await ctx.db.insert("billingPayments", {
+        kind: "pass",
+        accountId,
+        status: "succeeded",
+        amount: 79_000,
+        currency: "IDR",
+        rail: "xendit",
+        providerPaymentId: "pay_holding",
+        providerUpdatedAt: NOW,
+        method: "session",
+        paidAt: NOW,
+      });
+      await ctx.db.insert("billingGrants", {
+        product: "pro",
+        source: { kind: "pass", paymentId: payment },
+        userId: id,
+        validFrom: NOW - 1000,
+        validTo: FAR_FUTURE,
+      });
+      return id;
+    });
+    expect(
+      await t.query(internal.billing.checkout.proHolding, { userId })
+    ).toBe("pass");
+    await t.mutation((ctx) =>
+      ctx.db.insert("billingGrants", {
+        product: "pro",
+        source: { kind: "contract", contractId: "contract-beside" },
+        userId,
+        validFrom: NOW - 1000,
+        validTo: FAR_FUTURE,
+      })
+    );
+    expect(
+      await t.query(internal.billing.checkout.proHolding, { userId })
+    ).toBe("plan");
+  });
+
+  it("holds no Pro for a personal Pro grant that has ended", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(async (ctx) => {
       const id = await insertUser(ctx);
@@ -226,13 +275,13 @@ describe("billing/checkout internal steps", () => {
       });
       return id;
     });
-    expect(await t.query(internal.billing.checkout.holdsPro, { userId })).toBe(
-      false
-    );
+    expect(
+      await t.query(internal.billing.checkout.proHolding, { userId })
+    ).toBe("none");
   });
 
   it.each(["active", "pastDue"] as const)(
-    "holds Pro for a user whose Pro subscription is %s on the Polar account",
+    "holds a plan for a user whose Pro subscription is %s on the Polar account",
     async (status) => {
       const t = createBillingTestConvex();
       const userId = await t.mutation(async (ctx) => {
@@ -242,12 +291,12 @@ describe("billing/checkout internal steps", () => {
         return id;
       });
       expect(
-        await t.query(internal.billing.checkout.holdsPro, { userId })
-      ).toBe(true);
+        await t.query(internal.billing.checkout.proHolding, { userId })
+      ).toBe("plan");
     }
   );
 
-  it("holds Pro for a user whose Pro subscription is active on the Xendit account", async () => {
+  it("holds a plan for a user whose Pro subscription is active on the Xendit account", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(async (ctx) => {
       const id = await insertUser(ctx);
@@ -270,18 +319,17 @@ describe("billing/checkout internal steps", () => {
           kind: "xendit",
           planId: "plan_holds",
           tokenId: null,
-          channel: "CARDS",
         },
         providerUpdatedAt: NOW,
       });
       return id;
     });
-    expect(await t.query(internal.billing.checkout.holdsPro, { userId })).toBe(
-      true
-    );
+    expect(
+      await t.query(internal.billing.checkout.proHolding, { userId })
+    ).toBe("plan");
   });
 
-  it("does not hold Pro for a canceled Pro subscription, or for a school offer on a person's account", async () => {
+  it("holds no Pro for a canceled Pro subscription, or for a school offer on a person's account", async () => {
     const t = createBillingTestConvex();
     const userId = await t.mutation(async (ctx) => {
       const id = await insertUser(ctx);
@@ -308,8 +356,8 @@ describe("billing/checkout internal steps", () => {
       });
       return id;
     });
-    expect(await t.query(internal.billing.checkout.holdsPro, { userId })).toBe(
-      false
-    );
+    expect(
+      await t.query(internal.billing.checkout.proHolding, { userId })
+    ).toBe("none");
   });
 });

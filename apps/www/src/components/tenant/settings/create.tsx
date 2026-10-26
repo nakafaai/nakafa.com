@@ -176,6 +176,7 @@ function SchoolUnitCreateForm({
             id={`${id}-name`}
             maxLength={160}
             onChange={(event) => setName(event.target.value)}
+            placeholder={t("unit-add-name-placeholder")}
             value={name}
           />
         </Field>

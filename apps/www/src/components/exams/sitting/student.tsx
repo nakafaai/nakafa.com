@@ -31,6 +31,7 @@ import {
 } from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
+import { SittingBody } from "@/components/exams/sitting/body";
 import { readSittingDevice } from "@/components/exams/sitting/device";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
@@ -41,7 +42,6 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
@@ -160,7 +160,7 @@ export function StudentSitting({
   return (
     <>
       <SittingBar examTitle={sitting.examTitle} />
-      <LayoutContent className="w-full py-6">
+      <SittingBody>
         <form onSubmit={onSubmit}>
           <CardSection>
             <CardHeader>
@@ -193,7 +193,7 @@ export function StudentSitting({
             </CardSectionFooter>
           </CardSection>
         </form>
-      </LayoutContent>
+      </SittingBody>
     </>
   );
 }
@@ -210,7 +210,7 @@ function StudentScheduled({
   return (
     <>
       <SittingBar examTitle={sitting.examTitle} />
-      <LayoutContent className="w-full py-6">
+      <SittingBody>
         <CardSection>
           <CardHeader>
             <CardTitle>{t("sitting")}</CardTitle>
@@ -232,7 +232,7 @@ function StudentScheduled({
           </CardContent>
           <CardSectionFooter hint={t("student-scheduled-footer")} />
         </CardSection>
-      </LayoutContent>
+      </SittingBody>
     </>
   );
 }
@@ -263,7 +263,7 @@ function StudentRefusal() {
   const { slug } = useTenant();
 
   return (
-    <LayoutContent className="grid w-full gap-6 py-6">
+    <SittingBody>
       <p>{t("student-unavailable")}</p>
       <Link
         className={buttonVariants({ variant: "outline" })}
@@ -272,7 +272,7 @@ function StudentRefusal() {
       >
         {t("student-back-home")}
       </Link>
-    </LayoutContent>
+    </SittingBody>
   );
 }
 
@@ -282,8 +282,8 @@ function StudentRefusal() {
  */
 function StudentRetry({ error }: { readonly error: unknown }) {
   return (
-    <LayoutContent className="grid w-full gap-6 py-6">
+    <SittingBody>
       <SittingRetry error={error} />
-    </LayoutContent>
+    </SittingBody>
   );
 }
