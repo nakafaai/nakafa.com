@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
   hostAddress,
@@ -73,13 +74,7 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
-  await proctor
-    .getByRole("dialog")
-    .getByRole("button", { name: "Close sitting", exact: true })
-    .click();
+  await closeSitting(proctor);
   await proctor.getByRole("link", { name: "Results", exact: true }).click();
 
   // The students are the page's one table; the questions open from the header in a sheet.
