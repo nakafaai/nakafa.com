@@ -75,10 +75,16 @@ const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
  * Google sign-in stays disabled; each runtime adds its own session signing key
  * as `JWKS` and its app origin as `SITE_URL`, so synthetic learners can sign in
  * locally. The acceptance seeds run only where `ACCEPTANCE_SEED` is set, and
- * only this runtime sets it.
+ * only this runtime sets it. The runtime offers every Google connector with an
+ * inert client, so a browser test reaches Google's consent address and the
+ * callback, and no exchange with Google succeeds.
  */
 const localEnvironment = {
   ACCEPTANCE_SEED: "true",
+  GOOGLE_CONNECTORS: "drive,calendar,classroom",
+  GOOGLE_CONNECTOR_CLIENT_ID:
+    "acceptance-connectors.apps.googleusercontent.com",
+  GOOGLE_CONNECTOR_CLIENT_SECRET: "build-disabled",
   GOOGLE_AUTH_CLIENT_ID: "build-disabled",
   GOOGLE_AUTH_CLIENT_SECRET: "build-disabled",
   BETTER_AUTH_SECRET: LOCAL_AUTH_SECRET,
