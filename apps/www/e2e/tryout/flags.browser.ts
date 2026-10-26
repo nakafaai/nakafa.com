@@ -129,13 +129,10 @@ const verifyFlags = Effect.fn("NakafaE2E.verifyPlayerFlags")(function* (
 
   // The last number goes to the last question, where next becomes review.
   const navigator = yield* openNavigator(page, hasTouch);
-  const total = yield* Effect.promise(() =>
-    navigator.getByRole("listitem").count()
-  );
-  yield* activate(
-    navigator.getByRole("listitem").last().getByRole("button"),
-    hasTouch
-  );
+  // The numbers are the items of the navigator's ordered list; the legend is not one.
+  const numbers = navigator.locator("ol > li");
+  const total = yield* Effect.promise(() => numbers.count());
+  yield* activate(numbers.last().getByRole("button"), hasTouch);
   yield* Effect.promise(() =>
     expect(questionArticle(page, total)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
