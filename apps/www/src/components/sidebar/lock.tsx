@@ -67,6 +67,15 @@ export function LockableShell({
           data-titled={titles > 0 ? "" : undefined}
           locked={locked}
         >
+          {/* Hidden rather than collapsed, so locking and unlocking swap the
+            sidebar at once and the learner's open or closed choice returns
+            unchanged when the lock ends. It comes before the page in the
+            document: main's padding reads the expanded sidebar through :has(),
+            and a long page paints before the browser has parsed all of it, so
+            a sidebar after the page would arrive late and move the page. */}
+          <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden">
+            {sidebar}
+          </div>
           {/* Pages lay out in normal flow directly inside main: a flex column
             would shrink every centered page column to its content, and a
             wrapper of their own would move when a lock change drops the
@@ -81,12 +90,6 @@ export function LockableShell({
               {children}
             </SidebarScope>
           </SidebarInset>
-          {/* Hidden rather than collapsed, so locking and unlocking swap the
-            sidebar at once and the learner's open or closed choice returns
-            unchanged when the lock ends. */}
-          <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden">
-            {sidebar}
-          </div>
         </SidebarProvider>
       </ShellTitlesContext>
     </ShellLocksContext>

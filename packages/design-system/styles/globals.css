@@ -233,6 +233,7 @@
   --font-sans:
     "Inter Variable", "Inter Fallback Roboto", "Inter Fallback Arial", "Amiri",
     ui-sans-serif, system-ui, sans-serif;
+  /* The app declares Amiri's faces with optional display, so Arabic text never moves when Amiri arrives. */
   --font-quran: "Amiri", ui-serif, serif;
   /* Geist Mono's variable exists only inside a scope that applies it. Outside
    * every scope, a monospace element falls back to the system stack. Tailwind

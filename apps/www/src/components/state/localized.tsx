@@ -1,5 +1,6 @@
 import { captureException } from "@repo/analytics/posthog/capture";
 import type { Locale } from "@repo/internationalization/src/locale";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useEffect } from "react";
 import { ActionLink } from "@/components/state/action";
 import { Broken } from "@/components/state/broken";
@@ -10,15 +11,16 @@ import { readStandaloneMessages } from "@/lib/i18n/standalone";
 /**
  * The not-found state of one locale, with its home and search links. It reads the
  * standalone dictionary, so it still speaks when the shell's messages are missing.
- * A page that stands on a host without the app's routes names the origin of the
- * app, so its links reach the app.
+ * On a school host the home link is the main site's home, because the root of a
+ * school that refused the visitor would answer not found again, and the search
+ * link is left out, because a school has no search page.
  */
 export function LocalizedNotFound({
   locale,
-  origin = "",
+  school = false,
 }: {
   readonly locale: Locale;
-  readonly origin?: string;
+  readonly school?: boolean;
 }) {
   const messages = readStandaloneMessages(locale);
   return (
@@ -28,15 +30,17 @@ export function LocalizedNotFound({
         title={messages.NotFound.title}
       >
         <ActionLink
-          href={`${origin}/${locale}`}
+          href={school ? new URL(`/${locale}`, SITE_ORIGIN).href : `/${locale}`}
           label={messages.State["home-button"]}
           variant="default"
         />
-        <ActionLink
-          href={`${origin}/${locale}/search`}
-          label={messages.NotFound["search-button"]}
-          variant="ghost"
-        />
+        {school ? null : (
+          <ActionLink
+            href={`/${locale}/search`}
+            label={messages.NotFound["search-button"]}
+            variant="ghost"
+          />
+        )}
       </Missing>
     </Stage>
   );
