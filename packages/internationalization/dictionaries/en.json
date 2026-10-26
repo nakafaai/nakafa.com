@@ -332,7 +332,10 @@
     "import-drop": "Drop a Word or PDF file here, or choose one.",
     "import-remove": "Remove file",
     "presence-editor": "{name} is editing",
-    "presence-more": "{names} are editing"
+    "presence-more": "{names} are editing",
+    "template-choice": "Multiple choice",
+    "template-choices": "Complex multiple choice",
+    "template-label": "Question type: {type}"
   },
   "SchoolSettings": {
     "school": "School",

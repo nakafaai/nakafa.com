@@ -10,13 +10,19 @@ import {
 } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Match, Schema } from "effect";
 
 /**
- * The templates a question may take. This slice writes one: a single-answer
- * multiple choice. Each later slice adds its own member here.
+ * The templates a question may take (K23): a single-answer multiple choice
+ * (`choice`), and a complex multiple choice (`choices`), whose student checks
+ * every correct option. A new question starts as `choice`, and each later
+ * template adds its member here.
  */
-const QuestionTemplate = Schema.Literals(["choice"]);
+export const QuestionTemplate = Schema.Literals(["choice", "choices"]);
+export type QuestionTemplate = typeof QuestionTemplate.Type;
+
+/** The template every new question starts as, an imported one included: a single-answer choice (K23). */
+export const NEW_QUESTION_TEMPLATE: QuestionTemplate = "choice";
 
 /**
  * The options a new question starts with. The research notes of this lane recorded
@@ -67,20 +73,45 @@ export const CHOICE_OPTIONS_MIN = 2;
 export const CHOICE_OPTIONS_MAX = 5;
 
 /**
- * Whether the interactions of a question are the ones this kind takes: distinct
- * single-answer choices, each with a minimum and a maximum of one option, and from
- * two to five options. A question that holds any other interaction, a choice that may
- * take no option or more than one, or a choice with another number of options, is
- * refused.
+ * The most options one choice of a template takes: one for a single-answer choice, and
+ * every option it holds for a complex choice, whose student checks each correct one.
  */
-export const isChoiceAnswers = (answers: readonly Interaction[]) =>
+export const choiceLimit = (template: QuestionTemplate, options: number) =>
+  Match.value(template).pipe(
+    Match.when("choice", () => 1),
+    Match.when("choices", () => options),
+    Match.exhaustive
+  );
+
+/**
+ * Whether a template's question takes a rubric, the teacher's guide to scoring an answer by hand.
+ * A choice is scored by its key, so neither choice template takes one; the layer shows a rubric
+ * only for a template that takes one.
+ */
+export const takesRubric = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("choice", () => false),
+    Match.when("choices", () => false),
+    Match.exhaustive
+  );
+
+/**
+ * Whether the interactions of a question are the ones its template takes: distinct
+ * choices of two to five options, each taking at least one option and at most the
+ * template's limit (`choiceLimit`). A question that holds any other interaction, or a
+ * choice of other bounds or of another number of options, is refused.
+ */
+export const answersFit = (
+  template: QuestionTemplate,
+  answers: readonly Interaction[]
+) =>
   hasUniqueIds(answers) &&
   Arr.every(
     answers,
     (answer) =>
       answer.kind === "choice" &&
       answer.minChoices === 1 &&
-      answer.maxChoices === 1 &&
+      answer.maxChoices === choiceLimit(template, answer.options.length) &&
       answer.options.length >= CHOICE_OPTIONS_MIN &&
       answer.options.length <= CHOICE_OPTIONS_MAX
   );

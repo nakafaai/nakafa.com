@@ -332,7 +332,10 @@
     "import-drop": "Lege eine Word- oder PDF-Datei hier ab oder wähle eine aus.",
     "import-remove": "Datei entfernen",
     "presence-editor": "{name} bearbeitet gerade",
-    "presence-more": "{names} bearbeiten gerade"
+    "presence-more": "{names} bearbeiten gerade",
+    "template-choice": "Einfachauswahl",
+    "template-choices": "Mehrfachauswahl",
+    "template-label": "Fragetyp: {type}"
   },
   "SchoolSettings": {
     "school": "Schule",
