@@ -1203,6 +1203,8 @@
   "Notifications": {
     "title": "Benachrichtigungen",
     "mark-all-read": "Alle gelesen",
+    "this-school": "Diese Schule",
+    "all-schools": "Alle Schulen",
     "empty": "Du hast noch keine Benachrichtigungen.",
     "person-invited": "Du wurdest eingeladen, dieser Schule beizutreten.",
     "forum-mentioned": "{actor} hat dich in {className} erwähnt.",

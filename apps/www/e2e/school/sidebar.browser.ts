@@ -30,6 +30,7 @@ test("a school without a logo shows its animal beside its name, and its account 
   await page.getByRole("button", { name: "Acceptance Owner" }).click();
 
   for (const item of [
+    "Notifications",
     "Account settings",
     "Theme",
     "Language",

@@ -89,3 +89,33 @@ for (const viewport of [
     await context.close();
   });
 }
+
+test("the forum page lists the class's channels in the server's HTML and in the browser, without a page error", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+
+  // The channel rows render on the server: a row that threw there would leave the HTML without it.
+  const served = await context.request.get(
+    address("/classes/fisika-x-1/forum")
+  );
+  expect(served.status()).toBe(200);
+  expect(await served.text()).toContain(">General<");
+
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  await page.goto(address("/classes/fisika-x-1/forum"));
+  const general = page.getByRole("link", { name: "General", exact: true });
+  await waitUntilTakenOver(general);
+  await expect(general).toBeVisible();
+  expect(errors).toEqual([]);
+  await context.close();
+});

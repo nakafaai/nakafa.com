@@ -10,6 +10,7 @@ import {
   insertRows,
   inviteAt,
   NOW,
+  nf,
   storedRows,
 } from "@repo/backend/test/inbox";
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -83,6 +84,11 @@ describe("notifications/inbox list", () => {
           id: budiNf,
           kind: "person",
         });
+        // A school's own inbox page reads that school's rows alone.
+        const own = yield* ana.client.query(list, { ...firstPage, slug: nf });
+        expect(Arr.map(own.page, (item) => item.subject)).toEqual([
+          { id: anaNf, kind: "person" },
+        ]);
       })
   );
 

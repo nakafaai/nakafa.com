@@ -47,20 +47,10 @@ export function ConnectorCard({
 }) {
   const t = useTranslations("Connectors");
   const common = useTranslations("Common");
-  const [isConnecting, startConnecting] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const reconnect = Option.exists(
     connection,
     (found) => found.status === "reconnect"
-  );
-  const connect = (
-    <Button
-      disabled={isConnecting}
-      onClick={() => startConnecting(onConnect)}
-      variant={Option.isSome(connection) ? "outline" : "default"}
-    >
-      {reconnect ? t("reconnect") : t("connect")}
-    </Button>
   );
 
   return (
@@ -80,10 +70,12 @@ export function ConnectorCard({
         tone={reconnect ? "destructive" : "muted"}
       >
         {Option.isNone(connection) ? (
-          connect
+          <ConnectButton onConnect={onConnect} reconnect={false} />
         ) : (
           <>
-            {reconnect ? connect : null}
+            {reconnect ? (
+              <ConnectButton onConnect={onConnect} reconnect={true} />
+            ) : null}
             <Button onClick={() => setConfirming(true)} variant="destructive">
               {t("disconnect")}
             </Button>
@@ -116,5 +108,30 @@ export function ConnectorCard({
         )}
       </CardSectionFooter>
     </CardSection>
+  );
+}
+
+/**
+ * Starts a connect at Google: the main action of a card without a connection, and the way back
+ * for one whose token Google stopped accepting. It stays pressed while the start runs.
+ */
+function ConnectButton({
+  onConnect,
+  reconnect,
+}: {
+  onConnect: () => Promise<void>;
+  reconnect: boolean;
+}) {
+  const t = useTranslations("Connectors");
+  const [isConnecting, startConnecting] = useTransition();
+
+  return (
+    <Button
+      disabled={isConnecting}
+      onClick={() => startConnecting(onConnect)}
+      variant={reconnect ? "outline" : "default"}
+    >
+      {reconnect ? t("reconnect") : t("connect")}
+    </Button>
   );
 }

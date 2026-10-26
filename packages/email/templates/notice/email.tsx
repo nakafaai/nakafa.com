@@ -54,7 +54,6 @@ export const renderNoticeEmail = Effect.fn("email.notice.render")(function* (
     )
   );
   const copy = getNoticeEmailCopy(props.locale);
-  const email = <NoticeEmail {...props} />;
   const renderFailure = () =>
     new NoticeEmailRenderError({
       code: "NOTICE_EMAIL_RENDER_FAILED",
@@ -64,11 +63,11 @@ export const renderNoticeEmail = Effect.fn("email.notice.render")(function* (
     [
       Effect.tryPromise({
         catch: renderFailure,
-        try: () => render(email),
+        try: () => render(<NoticeEmail {...props} />),
       }),
       Effect.tryPromise({
         catch: renderFailure,
-        try: () => render(email, { plainText: true }),
+        try: () => render(<NoticeEmail {...props} />, { plainText: true }),
       }),
     ],
     { concurrency: "unbounded" }

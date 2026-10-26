@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { NotificationView } from "@repo/backend/confect/notifications/schema";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import {
   type ListNotification,
@@ -49,9 +50,18 @@ describe("inbox list state", () => {
   });
 
   it("marks every unread row read and keeps the read time of the rows read already", () => {
-    expect(markPageRead([row("first"), row("second", 3)], 9)).toEqual([
+    expect(
+      markPageRead([row("first"), row("second", 3)], 9, undefined)
+    ).toEqual([row("first", 9), row("second", 3)]);
+  });
+
+  it("marks only the rows of the school a slug names", () => {
+    const page = [row("first")];
+    expect(markPageRead(page, 9, page[0]?.tenant.slug)).toEqual([
       row("first", 9),
-      row("second", 3),
     ]);
+    expect(
+      markPageRead(page, 9, Schema.decodeUnknownSync(TenantSlug)("lain"))
+    ).toEqual(page);
   });
 });

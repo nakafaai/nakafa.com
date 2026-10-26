@@ -1203,6 +1203,8 @@
   "Notifications": {
     "title": "Notifikasi",
     "mark-all-read": "Tandai semua dibaca",
+    "this-school": "Sekolah ini",
+    "all-schools": "Semua sekolah",
     "empty": "Belum ada notifikasi.",
     "person-invited": "Kamu diundang bergabung ke sekolah ini.",
     "forum-mentioned": "{actor} menyebutmu di {className}.",
