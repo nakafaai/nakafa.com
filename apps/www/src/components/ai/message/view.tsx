@@ -50,7 +50,7 @@ function AiChatMessageBody() {
     status === "complete" || status === "cancelled" || status === "failed";
 
   return (
-    <MessageContent className="gap-6">
+    <MessageContent className="max-w-3xl gap-6">
       <div className="flex min-w-0 flex-col gap-4">
         <AiChatMessageContent />
         <AiChatMessageLoading />
