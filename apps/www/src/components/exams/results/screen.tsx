@@ -19,6 +19,7 @@ import {
   StudentStatusFilter,
   StudentsTable,
 } from "@/components/exams/results/students";
+import { TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -149,9 +150,14 @@ function SittingResultsContent({
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
             <div className="flex min-h-0 w-full min-w-0 flex-1">
-              <div className="flex min-w-0 flex-1 flex-col">
+              <TablePageBody>
+                {canRelease || releasedAt !== null ? null : (
+                  <p className="border-b px-4 py-3 text-muted-foreground text-sm">
+                    {t("release-wait")}
+                  </p>
+                )}
                 <StudentsTable first={preload?.students} status={status} />
-              </div>
+              </TablePageBody>
               <StudentAnswersPanel />
             </div>
           </TableFiltersProvider>

@@ -215,6 +215,8 @@
     "prompt-placeholder": "Frage hier schreiben.",
     "results-title": "Ergebnisse",
     "results-name": "Name",
+    "results-not-yet": "Noch nicht",
+    "release-wait": "Die Administration oder der Autor der Prüfung gibt die Ergebnisse frei, sobald die Sitzung geschlossen ist.",
     "results-status": "Status",
     "results-score": "Punkte",
     "results-search": "Nach Namen suchen",

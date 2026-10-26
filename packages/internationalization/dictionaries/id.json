@@ -215,6 +215,8 @@
     "prompt-placeholder": "Tulis soal di sini.",
     "results-title": "Hasil",
     "results-name": "Nama",
+    "results-not-yet": "Belum",
+    "release-wait": "Penulis ujian atau Admin merilis hasilnya setelah sesi ditutup.",
     "results-status": "Status",
     "results-score": "Skor",
     "results-search": "Cari nama",

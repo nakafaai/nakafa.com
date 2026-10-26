@@ -215,6 +215,8 @@
     "prompt-placeholder": "Write the question here.",
     "results-title": "Results",
     "results-name": "Student",
+    "results-not-yet": "Not yet",
+    "release-wait": "The exam author or the Admin releases the results once the sitting closes.",
     "results-status": "Status",
     "results-score": "Score",
     "results-search": "Search by name",

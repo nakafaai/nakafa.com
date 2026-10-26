@@ -1,19 +1,8 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
-import {
-  Calendar03Icon,
-  MoreHorizontalIcon,
-  PencilEdit02Icon,
-} from "@hugeicons/core-free-icons";
+import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -27,7 +16,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
@@ -112,7 +101,7 @@ export function ExamList({
           />
         ) : null}
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         {empty ? (
           <NoExamEmpty drafts={drafts} />
         ) : (
@@ -126,7 +115,7 @@ export function ExamList({
         {loadMore !== null && (
           <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
         )}
-      </div>
+      </TablePageBody>
     </TableFiltersProvider>
   );
 }
@@ -200,9 +189,10 @@ function ExamTable({
     examColumns.display({
       cell: (info) =>
         Arr.contains(saving, info.row.original.id) ? null : (
-          <ExamRowMenu exam={info.row.original} />
+          <ExamRoomsLink exam={info.row.original} />
         ),
-      id: "actions",
+      header: t("rooms-title"),
+      id: "rooms",
     }),
   ]);
 
@@ -216,52 +206,23 @@ function ExamTable({
   );
 }
 
-/** An exam's row menu: its editor, and its rooms. */
-function ExamRowMenu({ exam }: { exam: ExamSummary }) {
+/**
+ * An exam's way to its rooms, in its own column: the title already opens the editor, so the rooms
+ * stay one click away instead of behind a menu.
+ */
+function ExamRoomsLink({ exam }: { exam: ExamSummary }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const { slug } = useTenant();
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            render={
-              <Link
-                params={{ exam: exam.id, slug }}
-                to="/school/$slug/exams/$exam/edit"
-              />
-            }
-          >
-            <HugeIcons icon={PencilEdit02Icon} />
-            {t("edit-action")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            render={
-              <Link
-                params={{ exam: exam.id, slug }}
-                to="/school/$slug/exams/$exam"
-              />
-            }
-          >
-            <HugeIcons icon={Calendar03Icon} />
-            {t("rooms-title")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <Link
+      className={buttonVariants({ size: "sm", variant: "ghost" })}
+      params={{ exam: exam.id, slug }}
+      to="/school/$slug/exams/$exam"
+    >
+      <HugeIcons icon={Calendar03Icon} />
+      {t("rooms-title")}
+    </Link>
   );
 }
 
