@@ -2292,6 +2292,7 @@
       "nakafa": "Pencarian materi gagal",
       "deepResearch": "Riset web gagal",
       "memory": "Pencarian memori gagal",
+      "calendar": "Gagal membaca kalender",
       "unknown": "Pemeriksaan gagal"
     },
     "review-credits": "Lihat kredit",
@@ -2314,6 +2315,7 @@
       "nakafa": "Mencari materi belajar",
       "deepResearch": "Menelusuri sumber di web",
       "memory": "Mengingat kembali memori",
+      "calendar": "Membaca kalender",
       "unknown": "Memeriksa informasi",
       "stopped": "Dihentikan",
       "partial": "Sebagian selesai",

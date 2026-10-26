@@ -9,11 +9,15 @@ export const RESEARCH_CAPABILITY = "deepResearch";
 /** The capability that searches what the learner told Nina before. */
 export const MEMORY_CAPABILITY = "memory";
 
+/** The capability that reads the learner's coming events from Google Calendar. */
+const CALENDAR_CAPABILITY = "calendar";
+
 const LEARNING_CAPABILITY_NAME_VALUES = [
   NAKAFA_CAPABILITY,
   RESEARCH_CAPABILITY,
   "math",
   MEMORY_CAPABILITY,
+  CALENDAR_CAPABILITY,
 ] as const;
 /**
  * Schema-owned names for Nina's internal education capabilities. The browser
@@ -35,4 +39,5 @@ export type LearningCapabilityName = typeof LearningCapabilityNameSchema.Type;
  */
 export const TextOnlyCapabilitySchema = LearningCapabilityNameSchema.pick([
   MEMORY_CAPABILITY,
+  CALENDAR_CAPABILITY,
 ]);
