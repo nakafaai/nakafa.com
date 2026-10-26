@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  Array as Arr,
   ConfigProvider,
   Effect,
   Fiber,
@@ -9,6 +10,7 @@ import {
   Option,
   Path,
   PlatformError,
+  Record as Rec,
   Ref,
 } from "effect";
 import {
@@ -28,18 +30,16 @@ const memoryLayer = () => {
     chmod: () => Effect.void,
     makeDirectory: () => Effect.void,
     readFileString: (path) =>
-      Option.match(MutableHashMap.get(files, path), {
-        onNone: () =>
-          Effect.fail(
-            PlatformError.systemError({
-              _tag: "NotFound",
-              method: "readFileString",
-              module: "FileSystem",
-              pathOrDescriptor: path,
-            })
-          ),
-        onSome: Effect.succeed,
-      }),
+      Effect.fromOption(MutableHashMap.get(files, path)).pipe(
+        Effect.mapError(() =>
+          PlatformError.systemError({
+            _tag: "NotFound",
+            method: "readFileString",
+            module: "FileSystem",
+            pathOrDescriptor: path,
+          })
+        )
+      ),
     remove: (path) =>
       Effect.sync(() => {
         MutableHashMap.remove(files, path);
@@ -61,19 +61,27 @@ const oauth = (error: string, description = "Wait.") =>
 /** A client that answers each request with the next response of its path, and records the requests. */
 const scripted = (
   requests: Ref.Ref<readonly HttpClientRequest.HttpClientRequest[]>,
-  answers: Record<string, Response[]>
-) =>
-  HttpClient.make((request) =>
-    Ref.update(requests, (sent) => [...sent, request]).pipe(
-      Effect.as(
+  answers: Record<string, readonly Response[]>
+) => {
+  const queues = Ref.makeUnsafe(answers);
+  return HttpClient.make((request) => {
+    const path = new URL(request.url).pathname;
+    return Ref.update(requests, Arr.append(request)).pipe(
+      Effect.andThen(
+        Ref.modify(queues, (all) => {
+          const queue = Option.getOrElse(Rec.get(all, path), Arr.empty);
+          return [Arr.head(queue), Rec.set(all, path, Arr.drop(queue, 1))];
+        })
+      ),
+      Effect.map((next) =>
         HttpClientResponse.fromWeb(
           request,
-          answers[new URL(request.url).pathname]?.shift() ??
-            Response.json({}, { status: 500 })
+          Option.getOrElse(next, () => Response.json({}, { status: 500 }))
         )
       )
-    )
-  );
+    );
+  });
+};
 
 /** The services of one CLI run: the scripted client, an in-memory sign-in file, and a home directory. */
 const services = (client: HttpClient.HttpClient) =>
@@ -114,12 +122,14 @@ describe("CLI school commands", () => {
           ],
         });
         yield* Effect.gen(function* () {
-          const login = yield* Effect.fork(loginSchool("harapan.nakafa.com"));
+          const login = yield* Effect.forkChild(
+            loginSchool("harapan.nakafa.com")
+          );
           yield* TestClock.adjust("5 seconds");
           yield* TestClock.adjust("5 seconds");
           yield* TestClock.adjust("10 seconds");
           expect(yield* Fiber.join(login)).toEqual({
-            expires_at: 3_610_000,
+            expires_at: 3_620_000,
             school: "harapan.nakafa.com",
           });
           expect(yield* readSchool({ read: "periods" })).toEqual({
@@ -128,7 +138,9 @@ describe("CLI school commands", () => {
           });
         }).pipe(Effect.provide(services(client)));
         const sent = yield* Ref.get(requests);
-        expect(sent.map((request) => new URL(request.url).pathname)).toEqual([
+        expect(
+          Arr.map(sent, (request) => new URL(request.url).pathname)
+        ).toEqual([
           "/api/v1/device",
           "/api/v1/token",
           "/api/v1/token",
@@ -162,7 +174,7 @@ describe("CLI school commands", () => {
           ],
         });
         yield* Effect.gen(function* () {
-          const login = yield* Effect.fork(
+          const login = yield* Effect.forkChild(
             Effect.flip(loginSchool("harapan.nakafa.com"))
           );
           yield* TestClock.adjust("5 seconds");
@@ -205,7 +217,7 @@ describe("CLI school commands", () => {
               { status: 403 }
             ),
           ],
-          "/api/v1/people": [page()],
+          "/api/v1/people": [page(), page()],
           "/api/v1/placements": [page()],
         });
         yield* Effect.gen(function* () {
@@ -216,19 +228,21 @@ describe("CLI school commands", () => {
           });
           yield* readSchool({ cursor: "next", period: "p1", read: "cohorts" });
           yield* readSchool({ read: "people", status: "suspended" });
+          yield* readSchool({ read: "people" });
           yield* readSchool({ period: "p1", read: "placements" });
           expect(
             yield* Effect.flip(readSchool({ period: "p1", read: "cohorts" }))
           ).toMatchObject({ message: "This client may not read it." });
         }).pipe(Effect.provide(services(client)));
         expect(
-          (yield* Ref.get(requests)).map((request) => {
+          Arr.map(yield* Ref.get(requests), (request) => {
             const query = UrlParams.toString(request.urlParams);
             return `${new URL(request.url).pathname}${query === "" ? "" : `?${query}`}`;
           })
         ).toEqual([
           "/api/v1/cohorts?cursor=next&period=p1",
           "/api/v1/people?status=suspended",
+          "/api/v1/people",
           "/api/v1/placements?period=p1",
           "/api/v1/cohorts?period=p1",
         ]);

@@ -20,10 +20,10 @@ const OWNER_ONLY = 0o600;
  */
 const sessionPath = Effect.fn("NakafaCli.credentials.path")(function* () {
   const path = yield* Path.Path;
-  const xdg = yield* Config.option(Config.string("XDG_CONFIG_HOME"));
+  const xdg = yield* Config.option(Config.String("XDG_CONFIG_HOME"));
   const base = Option.isSome(xdg)
     ? xdg.value
-    : path.join(yield* Config.string("HOME"), ".config");
+    : path.join(yield* Config.String("HOME"), ".config");
   return path.join(base, "nakafa", "school.json");
 });
 

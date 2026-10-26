@@ -129,7 +129,7 @@ const DeviceRequest = Schema.Struct({
 });
 
 /** A device authorization (RFC 8628 section 3.2): the codes, where the Admin types the user code, and how often to poll. */
-export const DeviceResponse = Schema.Struct({
+const DeviceResponse = Schema.Struct({
   device_code: Schema.String,
   expires_in: Schema.Finite,
   interval: Schema.Finite,
@@ -138,7 +138,7 @@ export const DeviceResponse = Schema.Struct({
 });
 
 /** An access token for one resource. */
-const TokenResponse = Schema.Struct({
+export const TokenResponse = Schema.Struct({
   access_token: Schema.String,
   expires_in: Schema.Finite,
   token_type: Schema.Literal("Bearer"),

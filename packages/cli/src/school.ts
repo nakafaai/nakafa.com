@@ -7,6 +7,7 @@ import {
   SCHOOL_HOST_API_PATH,
   SchoolApi,
   SchoolApiBearer,
+  type TokenResponse,
 } from "@repo/backend/confect/integrations/api";
 import {
   Array as Arr,
@@ -15,7 +16,6 @@ import {
   Duration,
   Effect,
   Match,
-  Option,
   Schema,
   String as Str,
 } from "effect";
@@ -69,7 +69,7 @@ export const loginSchool = Effect.fn("NakafaCli.school.login")(function* (
 ) {
   const client = yield* schoolClient(host);
   // A school host's first label is the school's address.
-  const school = Option.getOrElse(Arr.head(Str.split(".")(host)), () => host);
+  const school = Arr.headNonEmpty(Str.split(".")(host));
   const device = yield* client.oauth
     .device({ payload: { client_id: CLI_CLIENT_ID, school } })
     .pipe(Effect.mapError(refusalOf));
@@ -78,10 +78,7 @@ export const loginSchool = Effect.fn("NakafaCli.school.login")(function* (
   );
   const poll = (
     seconds: number
-  ): Effect.Effect<
-    { readonly access_token: string; readonly expires_in: number },
-    SchoolError
-  > =>
+  ): Effect.Effect<typeof TokenResponse.Type, SchoolError> =>
     Effect.sleep(Duration.seconds(seconds)).pipe(
       Effect.andThen(
         client.oauth.token({
@@ -122,7 +119,12 @@ export const SchoolRead = Schema.Union([
   Schema.Struct({
     cursor: Schema.optional(Schema.String),
     period: Schema.String,
-    read: Schema.Literals(["cohorts", "placements"]),
+    read: Schema.Literal("cohorts"),
+  }),
+  Schema.Struct({
+    cursor: Schema.optional(Schema.String),
+    period: Schema.String,
+    read: Schema.Literal("placements"),
   }),
   Schema.Struct({
     cursor: Schema.optional(Schema.String),
@@ -142,7 +144,10 @@ export const readSchool = Effect.fn("NakafaCli.school.read")(function* (
   command: typeof SchoolRead.Type
 ) {
   const session = yield* readSession(yield* Clock.currentTimeMillis);
-  const client = yield* schoolClient(session.host);
+  // The client reads its middleware when it is made, so the bearer layer comes first.
+  const client = yield* schoolClient(session.host).pipe(
+    Effect.provide(bearerLayer(session.token))
+  );
   const read = Match.value(command).pipe(
     Match.discriminatorsExhaustive("read")({
       cohorts: (found) =>
@@ -163,8 +168,5 @@ export const readSchool = Effect.fn("NakafaCli.school.read")(function* (
         }),
     })
   );
-  return yield* read.pipe(
-    Effect.provide(bearerLayer(session.token)),
-    Effect.mapError(refusalOf)
-  );
+  return yield* read.pipe(Effect.mapError(refusalOf));
 });

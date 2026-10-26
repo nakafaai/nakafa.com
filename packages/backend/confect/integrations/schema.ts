@@ -119,7 +119,7 @@ export const UserCode = Schema.String.check(
  * Where a device authorization stands: waiting for the school's Admin, authorized for one
  * integration client of the school, or denied. An authorized device reads as its client.
  */
-export const DeviceState = Schema.Union([
+const DeviceState = Schema.Union([
   Schema.Struct({ status: Schema.Literal("pending") }),
   Schema.Struct({
     clientId: Id("integrationClients"),

@@ -22,18 +22,16 @@ const memoryFiles = () => {
       }),
     makeDirectory: () => Effect.void,
     readFileString: (path) =>
-      Option.match(MutableHashMap.get(files, path), {
-        onNone: () =>
-          Effect.fail(
-            PlatformError.systemError({
-              _tag: "NotFound",
-              method: "readFileString",
-              module: "FileSystem",
-              pathOrDescriptor: path,
-            })
-          ),
-        onSome: Effect.succeed,
-      }),
+      Effect.fromOption(MutableHashMap.get(files, path)).pipe(
+        Effect.mapError(() =>
+          PlatformError.systemError({
+            _tag: "NotFound",
+            method: "readFileString",
+            module: "FileSystem",
+            pathOrDescriptor: path,
+          })
+        )
+      ),
     remove: (path) =>
       Effect.sync(() => {
         MutableHashMap.remove(files, path);
@@ -45,6 +43,15 @@ const memoryFiles = () => {
   });
   return { files, layer, modes };
 };
+
+/** The refusal of a file system that the user may not write. */
+const denied = (method: string, path: string) =>
+  PlatformError.systemError({
+    _tag: "PermissionDenied",
+    method,
+    module: "FileSystem",
+    pathOrDescriptor: path,
+  });
 
 /** The environment of one run: the home directory, and a configuration directory when given. */
 const environment = (values: Record<string, string>) =>
@@ -118,7 +125,10 @@ describe("CLI school credentials", () => {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          FileSystem.layerNoop({}),
+          FileSystem.layerNoop({
+            makeDirectory: (path) => Effect.fail(denied("makeDirectory", path)),
+            remove: (path) => Effect.fail(denied("remove", path)),
+          }),
           Path.layer,
           environment({ HOME: "/home/sari" })
         )

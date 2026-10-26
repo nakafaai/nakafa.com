@@ -16,6 +16,7 @@ import {
   SchoolApiRateLimited,
   SchoolApiToken,
   SchoolApiUnauthorized,
+  type TokenResponse,
 } from "@repo/backend/confect/integrations/api";
 import { pageOr } from "@repo/backend/confect/integrations/reads";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -62,7 +63,7 @@ const unknownClient = () =>
 const tokenAnswer = (answer: {
   readonly expiresIn: number;
   readonly token: string;
-}) => ({
+}): typeof TokenResponse.Type => ({
   access_token: answer.token,
   expires_in: answer.expiresIn,
   token_type: BEARER,

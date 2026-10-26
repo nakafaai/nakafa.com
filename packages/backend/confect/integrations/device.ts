@@ -72,7 +72,7 @@ const userCodeOf = (typed: string) =>
  * types on the school's clients page. An unknown school answers `unknown`.
  */
 export const startDevice = Effect.fn("integrations.device.start")(function* (
-  slug: typeof TenantSlug.Type
+  slug: TenantSlug
 ) {
   const tenant = yield* (yield* DatabaseReader)
     .table("tenants")

@@ -77,13 +77,11 @@ describe("integrations/devices", () => {
           HALVES,
           "$1-$2"
         )(Str.toLowerCase(device.userCode));
-        yield* fixture
-          .as("admin")
-          .mutation(authorize, {
-            clientId: client.id,
-            slug: nf,
-            userCode: typed,
-          });
+        yield* fixture.as("admin").mutation(authorize, {
+          clientId: client.id,
+          slug: nf,
+          userCode: typed,
+        });
         atStep(2);
         const issued = yield* poll();
         expect(issued).toMatchObject({
@@ -155,13 +153,11 @@ describe("integrations/devices", () => {
         for (const userCode of ["12", "BBBBBBBB"]) {
           expect(
             yield* Effect.flip(
-              fixture
-                .as("admin")
-                .mutation(authorize, {
-                  clientId: client.id,
-                  slug: nf,
-                  userCode,
-                })
+              fixture.as("admin").mutation(authorize, {
+                clientId: client.id,
+                slug: nf,
+                userCode,
+              })
             )
           ).toMatchObject({ _tag: "DeviceUnknown" });
         }
