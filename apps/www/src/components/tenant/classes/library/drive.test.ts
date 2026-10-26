@@ -18,13 +18,18 @@ const shown = {
 
 /** A Drive view double that records the types it offers. */
 class DocsView {
+  static readonly made: DocsView[] = [];
   readonly setMimeTypes = vi.fn((_types: string) => this);
+
+  constructor() {
+    DocsView.made.push(this);
+  }
 }
 
 /** A Picker builder double that records each setting and keeps the callback. */
 class PickerBuilder {
   static readonly last: PickerBuilder[] = [];
-  readonly addView = vi.fn((_view: DocsView) => this);
+  readonly addView = vi.fn((_view: unknown) => this);
   readonly build = vi.fn(() => ({
     dispose: shown.dispose,
     setVisible: shown.setVisible,
@@ -76,6 +81,7 @@ describe("pickDriveFile", () => {
     Reflect.deleteProperty(window, "google");
     document.head.querySelector(SCRIPT)?.remove();
     PickerBuilder.last.length = 0;
+    DocsView.made.length = 0;
     shown.answer.mockReset();
     shown.dispose.mockReset();
     shown.setVisible.mockReset();
@@ -99,9 +105,9 @@ describe("pickDriveFile", () => {
         expect(builder?.setDeveloperKey).toHaveBeenCalledWith("key");
         expect(builder?.setOAuthToken).toHaveBeenCalledWith("access");
         expect(builder?.setLocale).toHaveBeenCalledWith("id");
-        expect(
-          builder?.addView.mock.calls[0]?.[0].setMimeTypes
-        ).toHaveBeenCalledWith(LIBRARY_ACCEPT);
+        expect(DocsView.made[0]?.setMimeTypes).toHaveBeenCalledWith(
+          LIBRARY_ACCEPT
+        );
         expect(shown.setVisible).toHaveBeenCalledWith(true);
 
         shown.setVisible.mockReset();

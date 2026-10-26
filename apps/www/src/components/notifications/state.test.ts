@@ -61,7 +61,7 @@ describe("inbox list state", () => {
       row("first", 9),
     ]);
     expect(
-      markPageRead(page, 9, Schema.decodeUnknownSync(TenantSlug)("lain"))
+      markPageRead(page, 9, Schema.decodeSync(TenantSlug)("lain"))
     ).toEqual(page);
   });
 });

@@ -173,7 +173,7 @@ describe("pickFromDrive", () => {
           name: "Modul.pdf",
         };
         vi.mocked(pickDriveFile).mockReturnValueOnce(
-          Effect.succeed(Option.some(picked))
+          Effect.succeedSome(picked)
         );
         expect(
           yield* pickFromDrive(

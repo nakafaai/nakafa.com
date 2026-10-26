@@ -49,7 +49,7 @@ describe("useInbox", () => {
     mocks.usePaginatedQuery.mockReturnValue(
       PaginatedQueryResult.loadingFirstPage({ skipped: false })
     );
-    const slug = Schema.decodeUnknownSync(TenantSlug)("harapan");
+    const slug = Schema.decodeSync(TenantSlug)("harapan");
 
     useInbox(Option.none(), slug);
 
