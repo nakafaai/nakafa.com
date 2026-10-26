@@ -1,10 +1,10 @@
-import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
+import { ExamResponse } from "@repo/backend/confect/exams/sittings/response";
 import {
   AttemptState,
   RoomName,
@@ -181,7 +181,7 @@ const PaperQuestion = Schema.Struct({
   id: Id("examQuestions"),
   interactions: Schema.NonEmptyArray(InteractionSchema),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
-  response: Schema.NullOr(Schema.Array(LocalIdSchema)),
+  response: Schema.NullOr(ExamResponse),
   /** The version of the saved answer, which the next answer of this question numbers one above (ADR 0013). */
   version: Schema.NullOr(Version),
 });
@@ -197,4 +197,17 @@ export const PaperView = Schema.Struct({
  */
 export const PromptView = Schema.Struct({
   prompt: Schema.String,
+});
+
+/**
+ * One student's screen as the proctor's panel draws it (K25): the question the student's screen shows
+ * now, its number, its prompt as JSON text, its interactions without any key, the response the student
+ * saved or `null`, and when the student moved there.
+ */
+export const ScreenView = Schema.Struct({
+  at: Schema.Finite,
+  interactions: Schema.NonEmptyArray(InteractionSchema),
+  number: Schema.Int.check(Schema.isGreaterThan(0)),
+  prompt: Schema.String,
+  response: Schema.NullOr(ExamResponse),
 });

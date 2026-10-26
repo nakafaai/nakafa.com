@@ -11,27 +11,28 @@ import {
 import { Array as Arr, Number as Num } from "effect";
 import { useTranslations } from "use-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
-import { responseLetters, verdictKeys } from "@/components/exams/results/model";
+import { responseText, verdictKeys } from "@/components/exams/results/model";
 import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
-/** The letters of the options that a student chose, or a line that says the question was left unanswered. */
+/**
+ * The letters of the options that a student chose, the text the student typed, or the pairs the
+ * student made, or a line that says the question was left unanswered.
+ */
 function AnswerLine({
-  optionIds,
-  response,
+  question,
 }: {
-  readonly optionIds: readonly string[];
-  readonly response: readonly string[];
+  readonly question: (typeof StudentResult.Type)["questions"][number];
 }) {
   const t = useTranslations("Exams");
-  const letters = responseLetters(optionIds, response);
-  if (letters.length === 0) {
+  const shown = responseText(question, question.response);
+  if (shown === "") {
     return t("student-no-answer");
   }
-  return t("student-answer", { letters: Arr.join(letters, ", ") });
+  return t("student-answer", { answer: shown });
 }
 
 /** One question of the student's result: its number and verdict, with the answer that the student chose beneath. */
@@ -49,10 +50,7 @@ function AnswerItem({
         <span>{t(verdictKeys[question.verdict])}</span>
       </div>
       <span className="text-muted-foreground">
-        <AnswerLine
-          optionIds={question.optionIds}
-          response={question.response}
-        />
+        <AnswerLine question={question} />
       </span>
     </li>
   );

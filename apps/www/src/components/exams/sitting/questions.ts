@@ -1,3 +1,7 @@
+import {
+  type ExamResponse,
+  isAnswered,
+} from "@repo/backend/confect/exams/sittings/response";
 import { Array as Arr, Option } from "effect";
 import type {
   PaperQuestion,
@@ -22,14 +26,11 @@ const pickedOption = (question: PaperQuestion, index: number) =>
  * through `choose`, as a click on the option does, and a question is answered once it holds a response.
  */
 export function projectSittingQuestions(input: {
-  readonly choose: (
-    question: PaperQuestion,
-    response: readonly string[]
-  ) => void;
+  readonly choose: (question: PaperQuestion, response: ExamResponse) => void;
   readonly paper: PaperValue;
 }): readonly PlayerQuestionModel[] {
   return Arr.map(input.paper.questions, (question) => ({
-    answered: question.response !== null && question.response.length > 0,
+    answered: question.response !== null && isAnswered(question.response),
     flagged: question.flagged,
     key: question.id,
     pick: (index) =>

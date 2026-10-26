@@ -25,16 +25,24 @@ function readSegment(segments: readonly string[], index: number) {
   return Arr.get(segments, index).pipe(Option.flatMap(decodeSegment));
 }
 
+/** The non-empty segments of a path. */
+function pathSegments(pathname: string) {
+  return Arr.filter(pathname.split("/"), Boolean);
+}
+
+/** The locale that a path names in front, or none for a path without one. */
+function readPathLocale(segments: readonly string[]) {
+  return Option.flatMap(readSegment(segments, 0), decodeLocale);
+}
+
 /**
  * Whether a path points into the school tree, with or without a locale in front.
  * Only a school host reaches that tree, so a main host answers such a path with
  * not found. The start page of an account is the one exception.
  */
 export function isSchoolTreePath(pathname: string): boolean {
-  const segments = Arr.filter(pathname.split("/"), Boolean);
-  const startsWithLocale = Option.isSome(
-    Option.flatMap(readSegment(segments, 0), decodeLocale)
-  );
+  const segments = pathSegments(pathname);
+  const startsWithLocale = Option.isSome(readPathLocale(segments));
   const school = startsWithLocale ? 1 : 0;
   if (!Option.contains(readSegment(segments, school), SCHOOL_SEGMENT)) {
     return false;
@@ -65,17 +73,23 @@ function readRequestSchool(headers: Headers) {
 
 /**
  * The locale of the not-found page that answers a school tree path of a main host
- * before the router sees it, or none for every other request. The page names no
- * school, so no search engine indexes the address.
+ * before the router sees it, or none for every other request: the locale that the
+ * path names, or the one that the request negotiates for a path without one. The
+ * page names no school, so no search engine indexes the address.
  */
 export function readSchoolTreeGate(request: Request): Option.Option<Locale> {
   if (Option.isSome(readRequestSchool(request.headers))) {
     return Option.none();
   }
-  if (!isSchoolTreePath(new URL(request.url).pathname)) {
+  const { pathname } = new URL(request.url);
+  if (!isSchoolTreePath(pathname)) {
     return Option.none();
   }
-  return Option.some(negotiateLocale(request.headers));
+  return Option.some(
+    Option.getOrElse(readPathLocale(pathSegments(pathname)), () =>
+      negotiateLocale(request.headers)
+    )
+  );
 }
 
 /**

@@ -102,6 +102,18 @@ export const billingOverviewValidator = Schema.Struct({
       balance: Schema.Finite,
       expiresAt: Schema.NullOr(Schema.Finite),
     }),
+    /**
+     * The school pool a member draws from instead of their own credits (K46):
+     * the school's daily cap, what is left of it today (less when the school's
+     * month runs out first), and the UTC midnight the day starts over.
+     */
+    pool: Schema.NullOr(
+      Schema.Struct({
+        allowance: Schema.Finite,
+        balance: Schema.Finite,
+        resetAt: Schema.Finite,
+      })
+    ),
   }),
 });
 
@@ -285,4 +297,6 @@ export const billingCheckoutValidator = Schema.Struct({
   openedAt: Schema.Finite,
   /** When the rail closes the session unpaid. */
   expiresAt: Schema.Finite,
+  /** The school invoice the session pays, or null for a learner's Pro checkout. */
+  invoiceId: Schema.NullOr(Id("billingInvoices")),
 });

@@ -153,29 +153,17 @@ function WindConversionScene({
 
   return (
     <group position={[0, -0.02, 0]} scale={1.18}>
-      <WindGustField color={colors.wind} windSpeed={windSpeed} />
+      <group>
+        {Arr.map(WIND_GUSTS, (gust) => (
+          <WindGust
+            color={colors.wind}
+            index={gust.index}
+            key={gust.id}
+            windSpeed={windSpeed}
+          />
+        ))}
+      </group>
       <WindTurbine colors={colors} rotorRef={rotorRef} />
-    </group>
-  );
-}
-
-function WindGustField({
-  color,
-  windSpeed,
-}: {
-  color: string;
-  windSpeed: number;
-}) {
-  return (
-    <group>
-      {Arr.map(WIND_GUSTS, (gust) => (
-        <WindGust
-          color={color}
-          index={gust.index}
-          key={gust.id}
-          windSpeed={windSpeed}
-        />
-      ))}
     </group>
   );
 }

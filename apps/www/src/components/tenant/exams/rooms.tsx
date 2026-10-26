@@ -1,17 +1,16 @@
 import type { GenericId } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import {
+  Calendar03Icon,
+  Cancel01Icon,
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,7 +20,7 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -29,17 +28,20 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableChoice } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
-  RoomStateFilter,
+  type RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/filter";
+import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { useLastValue } from "@/lib/data/kept";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
@@ -57,9 +59,8 @@ type StateFilter = typeof RoomStateFilter.Type;
 export const ROOM_PAGE_SIZE = 20;
 
 /** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
-type ExamRoomsPreload = Pick<
-  Awaited<ReturnType<typeof readExamRoomsFn>>,
-  "rooms" | "summary"
+type ExamRoomsPreload = Partial<
+  Pick<Awaited<ReturnType<typeof readExamRoomsFn>>, "rooms" | "summary">
 >;
 
 /** The first screen of the rooms page, which the page's loader read on the server. */
@@ -129,22 +130,37 @@ function ExamRoomsContent({
     preload?.summary
   );
   const examsItems = useExamsItems(tenant.canOpenExams);
+  // An exam deleted, or closed to the viewer, while its rooms are open keeps its title and says so.
+  const kept = useLastValue(summary);
 
   if (QueryResult.isFailure(summary)) {
     if (isLostAccess(summary.error)) {
       throw summary.error;
     }
-    if (isDenied(summary.error)) {
-      return (
+    if (!isDenied(summary.error)) {
+      throw summary.error;
+    }
+    return Option.match(kept, {
+      onNone: () => (
         <>
           <SchoolHeader items={examsItems} />
           <p className="p-4 text-muted-foreground text-sm md:p-6">
             {t("rooms-unavailable")}
           </p>
         </>
-      );
-    }
-    throw summary.error;
+      ),
+      onSome: (gone) => (
+        <>
+          <SchoolHeader
+            items={[...examsItems, { label: gone.title }]}
+            title={gone.title}
+          />
+          <p className="p-4 text-muted-foreground text-sm md:p-6">
+            <ExamGone />
+          </p>
+        </>
+      ),
+    });
   }
   if (!QueryResult.isSuccess(summary)) {
     return null;
@@ -156,7 +172,7 @@ function ExamRoomsContent({
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
       >
-        <RoomStateSelect onValueChange={setFilter} value={filter} />
+        <RoomStateFilterMenu onValueChange={setFilter} value={filter} />
         {tenant.canOpenExams ? (
           <Link
             className={buttonVariants()}
@@ -205,7 +221,8 @@ function RoomsEmpty({ filter }: { filter: StateFilter }) {
   );
 }
 
-function RoomStateSelect({
+/** The rooms' Filter menu, in the page's header row: every room, or the rooms in one state, which the server reads. */
+function RoomStateFilterMenu({
   onValueChange,
   value,
 }: {
@@ -213,35 +230,27 @@ function RoomStateSelect({
   value: StateFilter;
 }) {
   const t = useTranslations("Exams");
-  const items = [
-    { label: t("state-all"), value: "all" },
-    { label: t("room-state-scheduled"), value: "scheduled" },
-    { label: t("room-state-open"), value: "open" },
-    { label: t("room-state-closed"), value: "closed" },
-  ];
 
   return (
-    <Select
-      items={items}
-      onValueChange={(next) => {
-        const chosen = Schema.decodeUnknownOption(RoomStateFilter)(next);
-        if (Option.isSome(chosen)) {
-          onValueChange(chosen.value);
-        }
-      }}
+    <TableChoice
+      onChange={onValueChange}
+      options={[
+        { icon: Calendar03Icon, label: t("state-all"), value: "all" },
+        {
+          icon: Clock01Icon,
+          label: t("room-state-scheduled"),
+          value: "scheduled",
+        },
+        { icon: PlayIcon, label: t("room-state-open"), value: "open" },
+        {
+          icon: CheckmarkCircle02Icon,
+          label: t("room-state-closed"),
+          value: "closed",
+        },
+      ]}
+      title={t("rooms-state")}
       value={value}
-    >
-      <SelectTrigger aria-label={t("rooms-state")} className="w-32 sm:w-40">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {Arr.map(items, (item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    />
   );
 }
 
@@ -282,25 +291,23 @@ function RoomsTable({
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
-  const failure = PaginatedQueryResult.isFailure(pagination) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
-  const loadMoreTrigger = PaginatedQueryResult.isCanLoadMore(pagination) ? (
-    <Intersection onIntersect={() => pagination.loadMore(ROOM_PAGE_SIZE)} />
-  ) : null;
+  const failed = PaginatedQueryResult.isFailure(pagination);
+  const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
+    ? () => pagination.loadMore(ROOM_PAGE_SIZE)
+    : null;
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failure !== null) {
-      return failure;
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
     }
     if (pagination._tag !== "Exhausted") {
-      return loadMoreTrigger;
+      return <RoomsMore loadMore={loadMore} />;
     }
     return <RoomsEmpty filter={filter} />;
   }
 
   return (
     <>
-      {failure}
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
         <TableHeader>
           <TableRow>
@@ -318,9 +325,14 @@ function RoomsTable({
           ))}
         </TableBody>
       </Table>
-      {loadMoreTrigger}
+      <RoomsMore loadMore={loadMore} />
     </>
   );
+}
+
+/** The sentinel that reads the next page of rooms as it comes into view, while the list has more. */
+function RoomsMore({ loadMore }: { loadMore: (() => void) | null }) {
+  return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
 }
 
 /**

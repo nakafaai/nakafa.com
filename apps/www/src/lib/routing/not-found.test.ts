@@ -3,37 +3,30 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
-  createNotFoundRequest,
-  NOT_FOUND_LOCALE_HEADER,
-  NOT_FOUND_PATH,
-  readNotFoundPage,
+  notFoundPageOf,
   readNotFoundPageLocale,
   withContentLanguage,
 } from "@/lib/routing/not-found";
 
-describe("readNotFoundPage", () => {
-  it("reads the locale that the server names in its header, on the main site", () => {
+describe("notFoundPageOf", () => {
+  it("names the locale, on the main site", () => {
     expect(
-      readNotFoundPage(
-        new Headers({ [NOT_FOUND_LOCALE_HEADER]: "id", host: "nakafa.com" })
+      notFoundPageOf(
+        new Request("https://nakafa.com/en/school/xyz", {
+          headers: { host: "nakafa.com" },
+        }),
+        "id"
       )
     ).toStrictEqual({ locale: "id", school: false });
   });
 
-  it("answers the default locale for a missing or unknown locale", () => {
-    expect(readNotFoundPage(new Headers()).locale).toBe("en");
-    expect(
-      readNotFoundPage(new Headers({ [NOT_FOUND_LOCALE_HEADER]: "zz" })).locale
-    ).toBe("en");
-  });
-
   it("knows a request that came to a school host", () => {
     expect(
-      readNotFoundPage(
-        new Headers({
-          [NOT_FOUND_LOCALE_HEADER]: "de",
-          host: "harapan.nakafa.com",
-        })
+      notFoundPageOf(
+        new Request("https://harapan.nakafa.com/settings", {
+          headers: { host: "harapan.nakafa.com" },
+        }),
+        "de"
       )
     ).toStrictEqual({ locale: "de", school: true });
   });
@@ -64,29 +57,6 @@ describe("readNotFoundPageLocale", () => {
     expect(Option.isNone(readNotFoundPageLocale({ isNotFound: true }))).toBe(
       true
     );
-  });
-});
-
-describe("createNotFoundRequest", () => {
-  it("moves the request to the standalone page with its locale, keeping the host and the cookies", () => {
-    const next = createNotFoundRequest(
-      new Request("https://harapan.nakafa.com/exams/?page=2", {
-        headers: {
-          cookie: "session=1",
-          host: "harapan.nakafa.com",
-        },
-        method: "HEAD",
-      }),
-      "de"
-    );
-
-    expect(new URL(next.url).href).toBe(
-      `https://harapan.nakafa.com${NOT_FOUND_PATH}`
-    );
-    expect(next.method).toBe("GET");
-    expect(next.headers.get(NOT_FOUND_LOCALE_HEADER)).toBe("de");
-    expect(next.headers.get("cookie")).toBe("session=1");
-    expect(next.headers.get("host")).toBe("harapan.nakafa.com");
   });
 });
 

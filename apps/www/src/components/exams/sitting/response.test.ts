@@ -1,7 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Option, Schema } from "effect";
-import { choiceOf, toggleOption } from "@/components/exams/sitting/response";
+import {
+  choiceOf,
+  markedWith,
+  pairedWith,
+  pairingOf,
+  tableOf,
+  toggleOption,
+  writtenOf,
+} from "@/components/exams/sitting/response";
 
 const decodeInteraction = Schema.decodeUnknownSync(InteractionSchema);
 
@@ -77,5 +85,139 @@ describe("toggleOption", () => {
     expect(
       toggleOption(["option-1", "option-2"], "option-1", false, 2)
     ).toEqual(["option-2"]);
+  });
+});
+
+describe("writtenOf", () => {
+  /** A short answer's text entry, which a student types into. */
+  const entry = decodeInteraction({
+    id: "entry",
+    kind: "textEntry",
+    label: "Answer",
+  });
+
+  /** An essay's long text, which a student writes in. */
+  const essay = decodeInteraction({
+    id: "essay",
+    kind: "extendedText",
+    label: "Answer",
+  });
+
+  it("finds the text entry or the long text of a question that holds only it", () => {
+    expect(writtenOf([entry])).toEqual(Option.some(entry));
+    expect(writtenOf([essay])).toEqual(Option.some(essay));
+  });
+
+  it("finds nothing written in a choice, or in a question of two interactions", () => {
+    expect(writtenOf([choice(1)])).toEqual(Option.none());
+    expect(writtenOf([entry, choice(1)])).toEqual(Option.none());
+  });
+});
+
+describe("pairedWith", () => {
+  /** A match of three statements, whose order the pairs keep. */
+  const match = {
+    sources: [{ id: "source-1" }, { id: "source-2" }, { id: "source-3" }],
+  };
+
+  it("pairs a statement with an answer, which another statement gives up, in the order of the statements", () => {
+    const one = pairedWith(match.sources, [], {
+      source: "source-2",
+      target: "target-1",
+    });
+    expect(one).toEqual([{ source: "source-2", target: "target-1" }]);
+    expect(
+      pairedWith(match.sources, one, { source: "source-1", target: "target-1" })
+    ).toEqual([{ source: "source-1", target: "target-1" }]);
+    expect(
+      pairedWith(match.sources, one, { source: "source-1", target: "target-3" })
+    ).toEqual([
+      { source: "source-1", target: "target-3" },
+      { source: "source-2", target: "target-1" },
+    ]);
+  });
+
+  it("drops a pair of a statement that the match does not hold", () => {
+    expect(
+      pairedWith(match.sources, [], { source: "source-9", target: "target-1" })
+    ).toEqual([]);
+  });
+});
+
+describe("pairingOf", () => {
+  /** A match, which a matching question holds alone. */
+  const match = decodeInteraction({
+    id: "match",
+    kind: "match",
+    label: "Pairs",
+    shuffle: false,
+    sources: [
+      { id: "source-1", label: label("Ibu kota"), maxMatches: 1 },
+      { id: "source-2", label: label("Mata uang"), maxMatches: 1 },
+    ],
+    targets: [
+      { id: "target-1", label: label("Jakarta"), maxMatches: 1 },
+      { id: "target-2", label: label("Rupiah"), maxMatches: 1 },
+    ],
+  });
+
+  it("finds the match of a question that holds only it, and none beside a choice", () => {
+    expect(pairingOf([match])).toEqual(Option.some(match));
+    expect(pairingOf([match, choice(1)])).toEqual(Option.none());
+    expect(pairingOf([choice(1)])).toEqual(Option.none());
+  });
+});
+
+describe("markedWith and tableOf", () => {
+  /** A table of three statements, whose order the cells keep. */
+  const statements = [
+    { id: "statement-1" },
+    { id: "statement-2" },
+    { id: "statement-3" },
+  ];
+
+  it("marks a statement with a column, replaces its earlier mark, and keeps the order of the statements", () => {
+    const one = markedWith(statements, [], {
+      column: "column-1",
+      statement: "statement-2",
+    });
+    expect(
+      markedWith(statements, one, {
+        column: "column-2",
+        statement: "statement-1",
+      })
+    ).toEqual([
+      { column: "column-2", statement: "statement-1" },
+      { column: "column-1", statement: "statement-2" },
+    ]);
+    expect(
+      markedWith(statements, one, {
+        column: "column-2",
+        statement: "statement-2",
+      })
+    ).toEqual([{ column: "column-2", statement: "statement-2" }]);
+    expect(
+      markedWith(statements, one, {
+        column: "column-1",
+        statement: "statement-9",
+      })
+    ).toEqual(one);
+  });
+
+  it("finds the table of a question that holds only it", () => {
+    const table = decodeInteraction({
+      columns: [
+        { id: "column-1", label: label("Benar") },
+        { id: "column-2", label: label("Salah") },
+      ],
+      id: "matrix",
+      kind: "matrix",
+      label: "Table",
+      shuffle: false,
+      statements: [{ id: "statement-1", label: label("Air mendidih") }],
+    });
+    expect(tableOf([table])).toEqual(Option.some(table));
+    expect(tableOf([table, choice(1)])).toEqual(Option.none());
+    expect(tableOf([choice(1)])).toEqual(Option.none());
   });
 });

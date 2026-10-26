@@ -7,19 +7,26 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
+import { Option } from "effect";
 import { useRef } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { ExamFooter } from "@/components/tenant/exams/footer";
+import { ExamGrid } from "@/components/tenant/exams/grid";
 import { ExamHeader, ExamLockedNote } from "@/components/tenant/exams/header";
 import {
   ExamPanel,
   ExamPanelProvider,
   ExamPanelSheet,
 } from "@/components/tenant/exams/panel";
-import { ExamProvider, useExamZoom } from "@/components/tenant/exams/provider";
+import {
+  ExamProvider,
+  useEditorView,
+  useExamZoom,
+} from "@/components/tenant/exams/provider";
 import { ExamToolbar } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
+import { useLastValue } from "@/lib/data/kept";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import type { readExamEditorFn } from "@/lib/tenant/exams.functions";
 
@@ -29,7 +36,7 @@ import type { readExamEditorFn } from "@/lib/tenant/exams.functions";
  * questions as pages that scroll one after another beside the teacher's panel of the chosen one, and
  * a footer with the pages, the position, the zoom, the grid, and fullscreen. The editor fills the viewport as the page's main landmark, because
  * the school sidebar steps aside on its route; an exam that cannot be read says so and links back to
- * the list. The exam is read once here, and the parts read it through the provider.
+ * the list, and an exam that goes while the editor is open stays on screen, locked, with that sentence. The exam is read once here, and the parts read it through the provider.
  */
 export function ExamEditor({
   examId,
@@ -48,17 +55,20 @@ export function ExamEditor({
     isSettled ? { examId, slug } : "skip",
     preload?.exam
   );
+  // An exam deleted, or closed to the teacher, after the editor read it keeps its workspace on screen, locked.
+  const kept = useLastValue(result);
 
-  if (QueryResult.isFailure(result)) {
-    return <ExamUnavailable />;
-  }
-
-  if (!QueryResult.isSuccess(result)) {
-    return null;
+  if (Option.isNone(kept)) {
+    return QueryResult.isFailure(result) ? <ExamUnavailable /> : null;
   }
 
   return (
-    <ExamProvider exam={result.value} prompt={preload?.prompt} slug={slug}>
+    <ExamProvider
+      exam={kept.value}
+      gone={QueryResult.isFailure(result)}
+      prompt={preload?.prompt}
+      slug={slug}
+    >
       <ExamWorkspace />
     </ExamProvider>
   );
@@ -71,10 +81,12 @@ export function ExamEditor({
  * teacher's panel in a sheet from the footer. The panel has no default size of the canvas, so the
  * server draws the canvas as wide as the room the panel leaves, and the layout keeps that width once
  * the page loads. The zoom lives in the provider's store, which the canvas reads and the footer changes.
+ * The footer's grid button shows every question as a tile in place of the canvas and the panel.
  */
 function ExamWorkspace() {
   const canvas = useRef<HTMLElement>(null);
   const setZoom = useExamZoom((zoom) => zoom.set);
+  const grid = useEditorView((view) => view.mode === "grid");
 
   return (
     <ExamPanelProvider>
@@ -82,19 +94,23 @@ function ExamWorkspace() {
         <ExamHeader />
         <ExamToolbar />
         <ExamLockedNote />
-        {/* Below the large width the handle and the panel step aside, so the canvas takes the row. */}
-        <ResizablePanelGroup
-          className="max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden! min-h-0 flex-1"
-          orientation="horizontal"
-        >
-          <ResizablePanel className="flex min-w-0 flex-col" minSize="40%">
-            <ExamCanvas canvas={canvas} />
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize="30%" maxSize="50%" minSize="20%">
-            <ExamPanel />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        {grid ? (
+          <ExamGrid />
+        ) : (
+          // Below the large width the handle and the panel step aside, so the canvas takes the row.
+          <ResizablePanelGroup
+            className="max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden! min-h-0 flex-1"
+            orientation="horizontal"
+          >
+            <ResizablePanel className="flex min-w-0 flex-col" minSize="40%">
+              <ExamCanvas canvas={canvas} />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize="30%" maxSize="50%" minSize="20%">
+              <ExamPanel />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
         <ExamPanelSheet />
         <ExamFooter canvas={canvas} onZoom={setZoom} />
       </main>

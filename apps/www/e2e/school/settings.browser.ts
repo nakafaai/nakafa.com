@@ -1,5 +1,6 @@
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import {
   createSchool,
   grantStudent,
@@ -69,6 +70,22 @@ test("an admin opens the profile and the periods of a school", async ({
   await expect(
     page.getByRole("cell", { exact: true, name: "School opened" })
   ).toBeVisible();
+  // Export, the trail's main action, hands over the whole trail as a CSV file.
+  const download = page.waitForEvent("download");
+  await page.locator("header").getByRole("button", { name: "Export" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(
+    new RegExp(`^audit-${school.slug}-\\d{4}-\\d{2}-\\d{2}\\.csv$`)
+  );
+  const csv = await Effect.runPromise(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Effect.promise(() => file.path());
+      return yield* fs.readFileString(path);
+    }).pipe(Effect.provide(nodeServicesLayer))
+  );
+  expect(csv).toContain("When,Who,Change\r\n");
+  expect(csv).toContain(",School opened\r\n");
   await page
     .getByRole("navigation", { name: "breadcrumb" })
     .getByRole("link", { name: "Home" })
@@ -342,3 +359,74 @@ test("an admin sees that no login card is issued yet on Student accounts, and th
   await expect(page.getByText("No login card issued yet.")).toBeVisible();
   await context.close();
 });
+
+for (const width of [390, 1440]) {
+  test(`an admin who revokes their own Admin role leaves the settings for the school's home, with one sentence, at ${width}`, async ({
+    browser,
+    baseURL,
+  }) => {
+    const school = await Effect.runPromise(createSchool());
+    const address = (path: string) =>
+      hostAddress(baseURL, `${school.slug}.localhost`, path);
+    const viewport = { height: 900, width };
+
+    // The Owner gives an invited learner the Admin role.
+    const learnerContext = await browser.newContext({ viewport });
+    await Effect.runPromise(
+      inviteLearner({
+        address: `admin-${width}-${school.slug}@acceptance.example.test`,
+        baseURL: address("/"),
+        context: learnerContext,
+        slug: school.slug,
+      })
+    );
+    const ownerContext = await browser.newContext({ viewport });
+    await Effect.runPromise(
+      signInOwner(ownerContext, school.slug, address("/"))
+    );
+    const owner = await ownerContext.newPage();
+    await owner.goto(address("/settings/roles"));
+    const give = owner
+      .locator("header")
+      .getByRole("button", { name: "Give role" });
+    await waitUntilTakenOver(give);
+    await give.click();
+    const dialog = owner.getByRole("dialog", { name: "Give a role" });
+    await dialog.getByRole("combobox", { name: "Person" }).click();
+    await owner.getByRole("option", { name: "Acceptance Learner" }).click();
+    await dialog.getByRole("combobox", { name: "Role" }).click();
+    await owner.getByRole("option", { exact: true, name: "Admin" }).click();
+    await dialog.getByRole("button", { name: "Give role" }).click();
+    await expect(
+      owner
+        .getByRole("row")
+        .filter({ hasText: "Acceptance Learner" })
+        .getByRole("cell", { exact: true, name: "Admin" })
+    ).toBeVisible();
+    await ownerContext.close();
+
+    // The Admin revokes the role that opens the settings: the page leaves for the school's
+    // home before the role ends, so the settings never turn into the refused page.
+    const admin = await learnerContext.newPage();
+    await admin.goto(address("/settings/roles"));
+    const row = admin
+      .getByRole("row")
+      .filter({ hasText: "Acceptance Learner" })
+      .filter({ has: admin.getByRole("cell", { exact: true, name: "Admin" }) });
+    const more = row.getByRole("button", { name: "More actions" });
+    await waitUntilTakenOver(more);
+    await more.click();
+    await admin.getByRole("menuitem", { name: "Revoke" }).click();
+    await admin
+      .getByRole("dialog", { name: "Revoke this role?" })
+      .getByRole("button", { name: "Revoke" })
+      .click();
+
+    await expect(admin).toHaveURL(address("/"));
+    await expect(admin.getByText("Your role has ended.")).toBeVisible();
+    await expect(
+      admin.getByText("Your access to this school has changed.")
+    ).toHaveCount(0);
+    await learnerContext.close();
+  });
+}

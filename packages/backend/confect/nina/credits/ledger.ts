@@ -15,6 +15,11 @@ import {
   restoreLot,
 } from "@repo/backend/confect/credits/lots";
 import {
+  movePool,
+  poolHoldOf,
+  schoolPoolOf,
+} from "@repo/backend/confect/credits/pool";
+import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/confect/credits/state";
@@ -22,7 +27,7 @@ import {
   NinaCreditError,
   type NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
-import { Array as Arr, Clock, Effect, Struct } from "effect";
+import { Array as Arr, Clock, Effect, Option, Struct } from "effect";
 
 // Admission quota is independent of refundable credits. Five starts may burst;
 // ten per minute permits interactive retries without unbounded hold cycling.
@@ -42,6 +47,79 @@ const firstUsage = Effect.fn("nina.credits.firstUsage")(function* (
   return yield* Effect.fromOption(Arr.head(usages)).pipe(Effect.orDie);
 });
 
+/** Not enough credits to start an answer: the balance or the pool cannot hold one credit. */
+const insufficient = () =>
+  new NinaCreditError({
+    code: "INSUFFICIENT_CREDITS",
+    message: "Not enough credits to start this response.",
+  });
+
+/** Admits one more turn under the learner's chat quota, which is independent of their credits. */
+const admitTurn = Effect.fn("nina.credits.admit")(function* (
+  user: Docs["users"]
+) {
+  const ctx = yield* MutationCtxService;
+  // The component SDK owns its quota algorithm and component mutation contract.
+  const quota = yield* Effect.tryPromise({
+    try: () =>
+      chatRateLimiter.limit(ctx, "chatTurn", {
+        key: user._id,
+      }),
+    catch: () =>
+      new NinaCreditError({
+        code: "NINA_CREDIT_IO_FAILED",
+        message: "Unable to check chat admission quota.",
+      }),
+  });
+  if (!quota.ok) {
+    return yield* new NinaCreditError({
+      code: "RATE_LIMITED",
+      message: "Too many chat requests. Try again shortly.",
+    });
+  }
+});
+
+/**
+ * Holds a school member's credits from their school's shared pool (K46): one
+ * answer's cap, or what the school's month or the member's day still allows when
+ * that is less. The member's own allowance stays as it is. The hold's usage row
+ * names the pool, and the row's balance is the member's own, unchanged.
+ */
+const reservePool = Effect.fn("nina.credits.reservePool")(function* (
+  user: Docs["users"],
+  pool: Parameters<typeof poolHoldOf>[0],
+  now: number
+) {
+  const { credits, draw } = yield* poolHoldOf(pool, user._id, now);
+  if (credits < 1) {
+    return yield* insufficient();
+  }
+  yield* admitTurn(user);
+  yield* movePool(draw, user._id, credits);
+  const transactionId = yield* (yield* DatabaseWriter)
+    .table("creditTransactions")
+    .insert({
+      userId: user._id,
+      amount: -credits,
+      type: "usage",
+      balanceAfter: user.credits,
+      metadata: {
+        phase: "reserved",
+        pool: draw.tenantId,
+      },
+    })
+    .pipe(Effect.orDie);
+  const reservation: typeof NinaCreditHold.Type = {
+    userId: user._id,
+    credits,
+    creditsResetAt: user.creditsResetAt,
+    transactionId,
+    pool: draw,
+    ...Struct.pick(user, ["planCreditGrantId"]),
+  };
+  return reservation;
+});
+
 /**
  * Atomically holds credits before provider work, using the SDK's transaction.
  * The allowance of the current period is spent first, because it ends with the
@@ -50,8 +128,11 @@ const firstUsage = Effect.fn("nina.credits.firstUsage")(function* (
  */
 export const reserveCredits = Effect.fn("nina.credits.reserve")(
   function* (user: Docs["users"]) {
-    const ctx = yield* MutationCtxService;
     const now = yield* Clock.currentTimeMillis;
+    const pool = yield* schoolPoolOf(user._id, now);
+    if (Option.isSome(pool)) {
+      return yield* reservePool(user, pool.value, now);
+    }
     const state = yield* resolveEffectiveCreditState(user, now).pipe(
       Effect.mapError(
         () =>
@@ -68,29 +149,9 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
     // A turn holds the cap, or the whole balance when that is less. Its real cost settles at the end.
     const hold = Math.min(MAX_CREDITS_PER_RESPONSE, available);
     if (hold < 1) {
-      return yield* new NinaCreditError({
-        code: "INSUFFICIENT_CREDITS",
-        message: "Not enough credits to start this response.",
-      });
+      return yield* insufficient();
     }
-    // The component SDK owns its quota algorithm and component mutation contract.
-    const quota = yield* Effect.tryPromise({
-      try: () =>
-        chatRateLimiter.limit(ctx, "chatTurn", {
-          key: user._id,
-        }),
-      catch: () =>
-        new NinaCreditError({
-          code: "NINA_CREDIT_IO_FAILED",
-          message: "Unable to check chat admission quota.",
-        }),
-    });
-    if (!quota.ok) {
-      return yield* new NinaCreditError({
-        code: "RATE_LIMITED",
-        message: "Too many chat requests. Try again shortly.",
-      });
-    }
+    yield* admitTurn(user);
     const database = yield* DatabaseWriter;
     const resetGrant = getCreditResetGrantTransaction(user, state);
     if (resetGrant) {
@@ -133,7 +194,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
       debitLot(draw.lot, draw.credits, { phase: "reserved" })
     );
     const transactionId = yield* firstUsage([...allowanceUsage, ...lotUsage]);
-    return {
+    const reservation: typeof NinaCreditHold.Type = {
       userId: user._id,
       credits: hold,
       creditsResetAt: state.creditsResetAt,
@@ -144,6 +205,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
       })),
       ...Struct.pick(user, ["planCreditGrantId"]),
     };
+    return reservation;
   },
   // Translate native storage defects at this ledger boundary without catching
   // expected insufficient-credit, quota, or ownership failures.
@@ -210,6 +272,21 @@ export const refundCredits = Effect.fn("nina.credits.refund")(
         Effect.orDie
       );
     if (user && !isAccountDeletionPending(user)) {
+      // A hold from the school pool gives the pool its credits back; the member's own balance never moved.
+      if (turn.pool !== undefined) {
+        yield* movePool(turn.pool, turn.userId, -refund);
+        yield* writer
+          .table("creditTransactions")
+          .insert({
+            userId: user._id,
+            amount: refund,
+            type: "refund",
+            balanceAfter: user.credits,
+            metadata: { pool: turn.pool.tenantId, reservationId },
+          })
+          .pipe(Effect.orDie);
+        return;
+      }
       const restoredToLots = yield* restoreLotDraws(
         turn.lots ?? [],
         refund,
