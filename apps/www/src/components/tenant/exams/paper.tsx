@@ -2,6 +2,8 @@ import { useMutation } from "@confect/react";
 import { Add01Icon, Alert02Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
+import { asTemplate } from "@repo/backend/confect/exams/template";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
@@ -24,9 +26,10 @@ import {
   choiceOf,
   keyWithoutOption,
   markedKey,
-  markedOption,
+  markedOptions,
   type OptionLabel,
   optionLetter,
+  toggledKey,
   withOptionAdded,
   withOptionLabel,
   withOptionRemoved,
@@ -36,6 +39,7 @@ import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import {
   answerUpdate,
+  templateUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
@@ -88,23 +92,36 @@ function useQuestionEditing(question: Question) {
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
   );
-  // The writer sends through the latest mutation. It keeps the saves of this question in order, and each
-  // save starts from the newer of the draft its last answer returned and the question the render holds.
-  const send = useCallbackRef((draft: QuestionDraft) =>
+  const retemplate = useMutation(
+    exams.questions.template
+  ).withOptimisticUpdate(templateUpdate);
+  // The writer sends through the latest mutations. It keeps the saves of this question in order, and each
+  // save starts from the newer of the draft its last answer returned and the question the render holds. A
+  // save that changes the template sends the template's call, which converts the answers on the server.
+  const send = useCallbackRef((draft: QuestionDraft, base: QuestionDraft) =>
     sentAction(() =>
-      answer({
-        answers: draft.answers,
-        examId: exam.id,
-        key: draft.key,
-        questionId: question.id,
-        revision: draft.revision,
-        slug,
-      })
+      draft.template === base.template
+        ? answer({
+            answers: draft.answers,
+            examId: exam.id,
+            key: draft.key,
+            questionId: question.id,
+            revision: draft.revision,
+            slug,
+          })
+        : retemplate({
+            examId: exam.id,
+            questionId: question.id,
+            revision: draft.revision,
+            slug,
+            template: draft.template,
+          })
     ).pipe(
       Effect.map((view) => ({
         answers: view.answers,
         key: view.key,
         revision: view.revision,
+        template: view.template,
       }))
     )
   );
@@ -114,6 +131,7 @@ function useQuestionEditing(question: Question) {
       answers: question.answers,
       key: question.key,
       revision: question.revision,
+      template: question.template,
     })
   );
   // The writer lives with this page. A page that unmounts with a save in flight leaves that save to finish.
@@ -159,12 +177,36 @@ function useQuestionEditing(question: Question) {
     });
   };
 
-  /** Marks one option as the key of the question, which saves at once. Marking the key's option again saves nothing. */
+  /**
+   * Marks one option of the key, which saves at once. A single-answer choice marks it alone, and marking
+   * its marked option again saves nothing; a complex choice marks it beside the others, or unmarks it.
+   */
   const markOption = (optionId: string) => {
-    if (markedOption(current().key) !== optionId) {
-      saveAnswers((draft) => ({
-        answers: draft.answers,
-        key: markedKey(draft.answers, optionId),
+    const draft = current();
+    if (draft.template === "choices") {
+      saveAnswers((base) => ({
+        ...base,
+        key: toggledKey(base.answers, base.key, optionId),
+      }));
+      return;
+    }
+    if (!Arr.contains(markedOptions(draft.key), optionId)) {
+      saveAnswers((base) => ({
+        ...base,
+        key: markedKey(base.answers, optionId),
+      }));
+    }
+  };
+
+  /**
+   * Gives the question another template, which saves at once: the answers take the template's bounds, and the
+   * key stays only when it still fits (`asTemplate`), as the server converts them.
+   */
+  const setTemplate = (template: QuestionTemplate) => {
+    if (current().template !== template) {
+      saveAnswers((base) => ({
+        ...asTemplate(template, base.answers, base.key),
+        template,
       }));
     }
   };
@@ -173,6 +215,7 @@ function useQuestionEditing(question: Question) {
     displayed: shown ?? question,
     markOption,
     saveAnswers,
+    setTemplate,
   };
 }
 
@@ -388,6 +431,7 @@ function LivePaper({
                 choice.options.length > CHOICE_OPTIONS_MIN
                   ? () =>
                       saveAnswers((draft) => ({
+                        ...draft,
                         answers: withOptionRemoved(draft.answers, option.id),
                         key: keyWithoutOption(draft.key, option.id),
                       }))
@@ -396,8 +440,8 @@ function LivePaper({
               onSave={(label: OptionLabel, unstored: () => void) =>
                 saveAnswers(
                   (draft) => ({
+                    ...draft,
                     answers: withOptionLabel(draft.answers, option.id, label),
-                    key: draft.key,
                   }),
                   unstored
                 )
@@ -411,8 +455,8 @@ function LivePaper({
           <Button
             onClick={() =>
               saveAnswers((draft) => ({
+                ...draft,
                 answers: withOptionAdded(draft.answers),
-                key: draft.key,
               }))
             }
             size="sm"

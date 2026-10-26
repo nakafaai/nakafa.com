@@ -22,6 +22,7 @@ import {
   encodeAnswers,
   encodeKey,
   NEW_QUESTION_POINTS,
+  NEW_QUESTION_TEMPLATE,
   newChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
 import {
@@ -167,6 +168,7 @@ const seedQuestion = Effect.fn("exams.seed.question")(function* (
     points: NEW_QUESTION_POINTS,
     prompt,
     rubric,
+    template: NEW_QUESTION_TEMPLATE,
   }).pipe(Effect.orDie);
 });
 
