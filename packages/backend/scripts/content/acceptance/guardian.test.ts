@@ -118,16 +118,18 @@ describe("acceptance guardian", () => {
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
-  it.effect("refuses the mode without its four arguments before any operation", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* guardianMode.run("/root", ["acc-1234abcd"]).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "AcceptanceRuntimeError",
-        message:
-          "Usage: acceptance guardian <school-slug> <email> <nisn> <code-file>",
-      });
-      expect(mocks.read).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  it.effect(
+    "refuses the mode without its four arguments before any operation",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* guardianMode.run("/root", ["acc-1234abcd"]).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message:
+            "Usage: acceptance guardian <school-slug> <email> <nisn> <code-file>",
+        });
+        expect(mocks.read).not.toHaveBeenCalled();
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });

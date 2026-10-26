@@ -88,8 +88,7 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
 ) {
   const existing = yield* rosterEntryOf(person._id);
   const nisn = yield* Option.match(facts.nisn, {
-    onNone: () =>
-      Effect.succeed(Option.getOrUndefined(existing)?.nisn),
+    onNone: () => Effect.succeed(Option.getOrUndefined(existing)?.nisn),
     onSome: (value) =>
       Effect.gen(function* () {
         const keys = yield* schoolKeys(person.tenantId);

@@ -6,6 +6,8 @@ import { Layer } from "effect";
 
 /** Implements the acceptance seed of `seed.spec.ts`. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
-  Layer.provide(FunctionImpl.make(databaseSchema, spec, "code", seedGuardianCode)),
+  Layer.provide(
+    FunctionImpl.make(databaseSchema, spec, "code", seedGuardianCode)
+  ),
   GroupImpl.finalize
 );

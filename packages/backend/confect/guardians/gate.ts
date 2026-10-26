@@ -23,7 +23,9 @@ export const requireConsent = Effect.fn("guardians.gate.require")(function* (
   const verified = yield* (yield* DatabaseReader)
     .table("guardianLinks")
     .index("by_studentPersonId_and_state_status", (query) =>
-      query.eq("studentPersonId", studentPersonId).eq("state.status", "verified")
+      query
+        .eq("studentPersonId", studentPersonId)
+        .eq("state.status", "verified")
     )
     .first()
     .pipe(Effect.orDie);

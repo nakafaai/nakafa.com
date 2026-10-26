@@ -81,8 +81,9 @@ const confirm = FunctionImpl.make(
       return "verified";
     }
     const typed = Schema.decodeOption(Nisn)(Str.trim(nisn));
-    const entry = Option.flatMap(yield* rosterEntryOf(link.studentPersonId), (row) =>
-      Option.fromUndefinedOr(row.nisn)
+    const entry = Option.flatMap(
+      yield* rosterEntryOf(link.studentPersonId),
+      (row) => Option.fromUndefinedOr(row.nisn)
     );
     if (
       !isLive(link, now) ||
@@ -147,7 +148,10 @@ const grades = FunctionImpl.make(
     const released = Arr.filter(rows, (row) => row.state === "released");
     return yield* Effect.forEach(released, (row) =>
       Effect.gen(function* () {
-        const cls = yield* reader.table("classes").get(row.classId).pipe(Effect.orDie);
+        const cls = yield* reader
+          .table("classes")
+          .get(row.classId)
+          .pipe(Effect.orDie);
         const view = gradeView(row, yield* schemeOf(row.schemeId));
         const grade: typeof ChildGrade.Type = {
           ...(view.band === undefined ? {} : { band: view.band }),

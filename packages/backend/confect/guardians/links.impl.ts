@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
+import { activeGrants } from "@repo/backend/confect/access/policy";
 import { GuardianLink } from "@repo/backend/confect/guardians/access";
 import {
   guardianLinkAccess,
@@ -26,7 +27,6 @@ import { LINK_TERM } from "@repo/backend/confect/guardians/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { activeGrants } from "@repo/backend/confect/access/policy";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { personAccess } from "@repo/backend/confect/tenancy/authority";
@@ -87,7 +87,10 @@ const start = FunctionImpl.make(
       onNone: () =>
         createPerson(personActor(actor), student.tenantId, guardianName),
       onSome: (link) =>
-        reader.table("tenantPeople").get(link.guardianPersonId).pipe(Effect.orDie),
+        reader
+          .table("tenantPeople")
+          .get(link.guardianPersonId)
+          .pipe(Effect.orDie),
     });
     const linkId = yield* (yield* DatabaseWriter)
       .table("guardianLinks")

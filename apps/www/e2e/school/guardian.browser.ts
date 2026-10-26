@@ -62,7 +62,7 @@ test("an admin links a parent, who signs in with the email code, checks the NISN
   await home.getByLabel("Sign-in code").fill(seeded.code);
   await home.getByRole("button", { name: "Sign in" }).click();
 
-  const child = home.locator('[data-child]');
+  const child = home.locator("[data-child]");
   await expect(child).toHaveAttribute("data-child", "pending", {
     timeout: readinessTimeoutMilliseconds,
   });

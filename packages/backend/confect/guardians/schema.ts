@@ -19,7 +19,11 @@ export const CONSENT_POLICY_VERSION = "id-profile-pending-1";
 export const PolicyVersion = Schema.Literal(CONSENT_POLICY_VERSION);
 
 /** Why a link ended: the guardian withdrew consent, the school revoked it, or it expired unverified. */
-export const LinkEndReason = Schema.Literals(["expired", "revoked", "withdrawn"]);
+export const LinkEndReason = Schema.Literals([
+  "expired",
+  "revoked",
+  "withdrawn",
+]);
 
 /**
  * A link waits for its check, is verified, or has ended. Only a verified link is

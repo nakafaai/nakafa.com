@@ -282,8 +282,10 @@ describe("guardians/family grades", () => {
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const fisika = yield* classOf(fixture, x1.id, "Fisika");
         const kimia = yield* classOf(fixture, x1.id, "Kimia");
+        const biologi = yield* classOf(fixture, x1.id, "Biologi");
         yield* teach(fixture, fisika.id, fixture.people.teacher.personId);
         yield* teach(fixture, kimia.id, fixture.people.teacher.personId);
+        yield* teach(fixture, biologi.id, fixture.people.teacher.personId);
         yield* fixture
           .as("admin")
           .mutation(refs.public.tenancy.placements.place, {
@@ -307,18 +309,26 @@ describe("guardians/family grades", () => {
           slug: nf,
           value: 82,
         });
-        yield* fixture.as("teacher").mutation(enter, {
+        const below = yield* fixture.as("teacher").mutation(enter, {
           classId: kimia.id,
+          personId: fixture.people.student.personId,
+          slug: nf,
+          value: 50,
+        });
+        yield* fixture.as("teacher").mutation(enter, {
+          classId: biologi.id,
           personId: fixture.people.student.personId,
           slug: nf,
           value: 60,
         });
-        yield* fixture
-          .as("teacher")
-          .mutation(refs.public.records.grades.release, {
-            gradeId: released.id,
-            slug: nf,
-          });
+        for (const gradeId of [released.id, below.id]) {
+          yield* fixture
+            .as("teacher")
+            .mutation(refs.public.records.grades.release, {
+              gradeId,
+              slug: nf,
+            });
+        }
         expect(
           yield* Effect.flip(
             guardian.query(grades, { linkId: link.id, slug: nf })
@@ -339,6 +349,12 @@ describe("guardians/family grades", () => {
             id: released.id,
             kktp: "reached",
             value: 82,
+          },
+          {
+            className: "Kimia X-1",
+            id: below.id,
+            kktp: "notReached",
+            value: 50,
           },
         ]);
       })
