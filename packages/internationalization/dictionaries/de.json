@@ -497,6 +497,7 @@
     "invites": "Einladungen",
     "students": "Schülerkonten",
     "roster": "Dapodik",
+    "guardians": "Eltern",
     "clients": "API-Clients",
     "policies": "Richtlinien",
     "audit": "Prüfprotokoll",
@@ -967,8 +968,7 @@
     "cohorts-no-period-action": "Perioden öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
     "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
-    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
-    "guardians": "Eltern"
+    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
   },
   "Classroom": {
     "tabs-home": "Start",
