@@ -10,7 +10,6 @@ import {
 import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import { NOTE_LIMIT } from "@repo/backend/confect/records/report";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -25,6 +24,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -37,6 +37,7 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { TableFrame } from "@/components/shared/table/frame";
+import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
 import {
   type ReportLine,
@@ -48,6 +49,9 @@ import { SchoolDateTime } from "@/components/tenant/settings/time";
 
 const SOURCE = "components/tenant/reports/detail";
 
+/** The route of one class group's report cards, whose context holds the class group's ID. */
+const cohortRoute = getRouteApi("/school/$slug/reports/$cohortId");
+
 /** The public check page of a locked report, on the main site, in the viewer's language. */
 export const checkAddress = (locale: string, hash: string) =>
   new URL(`/${locale}/verify/${hash}`, SITE_ORIGIN).href;
@@ -56,7 +60,8 @@ export const checkAddress = (locale: string, hash: string) =>
  * Hands a report in, takes it back, or approves it, each shown at once on the list and
  * undone if the server refuses it. The row menu and the open report share them.
  */
-export function useReportActions(slug: TenantSlug) {
+export function useReportActions() {
+  const { slug } = useTenant();
   const complete = useMutation(records.reports.complete).withOptimisticUpdate(
     stateChange("completed")
   );
@@ -89,15 +94,7 @@ export function useReportActions(slug: TenantSlug) {
  * the released grades; then the actions the server allows in the footer. A student without
  * a report yet shows only the way to start one. A student the list no longer holds closes.
  */
-export function ReportLineDetail({
-  cohortId,
-  lines,
-  slug,
-}: {
-  cohortId: Id<"tenantCohorts">;
-  lines: readonly ReportLine[];
-  slug: TenantSlug;
-}) {
+export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
   const t = useTranslations("SchoolReports");
   const open = usePanes((state) => state.open);
   const line = Option.flatMap(open, (id) =>
@@ -117,23 +114,18 @@ export function ReportLineDetail({
             <p className="text-muted-foreground text-sm">{t("report-empty")}</p>
           </PaneBody>
         ) : (
-          <ReportDetailBody reportId={found.report.id} slug={slug} />
+          <ReportDetailBody reportId={found.report.id} />
         )}
-        <ReportDetailFooter cohortId={cohortId} line={found} slug={slug} />
+        <ReportDetailFooter line={found} />
       </>
     ),
   });
 }
 
 /** The body of a started report: its state and dates, the note, and the subjects it copies. */
-function ReportDetailBody({
-  reportId,
-  slug,
-}: {
-  reportId: Id<"reportCards">;
-  slug: TenantSlug;
-}) {
+function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
   const t = useTranslations("SchoolReports");
+  const { slug } = useTenant();
   const detail = useQuery(records.reports.get, { reportId, slug });
 
   if (!QueryResult.isSuccess(detail)) {
@@ -197,18 +189,10 @@ function ReportDetailBody({
  * and approve a handed-in report, and open the PDF and the check page of a locked one. A
  * report with no allowed action has no footer.
  */
-function ReportDetailFooter({
-  cohortId,
-  line,
-  slug,
-}: {
-  cohortId: Id<"tenantCohorts">;
-  line: ReportLine;
-  slug: TenantSlug;
-}) {
+function ReportDetailFooter({ line }: { line: ReportLine }) {
   const t = useTranslations("SchoolReports");
   const locale = useLocale();
-  const actions = useReportActions(slug);
+  const actions = useReportActions();
   const [isWriting, setIsWriting] = useState(false);
   const menu = menuOf(line);
   const { report } = line;
@@ -269,30 +253,19 @@ function ReportDetailFooter({
         />
       ) : null}
       {menu.open && report !== null ? (
-        <ReportFileButton reportId={report.id} slug={slug} />
+        <ReportFileButton reportId={report.id} />
       ) : null}
       {menu.write ? (
-        <ReportNoteDialog
-          cohortId={cohortId}
-          line={line}
-          open={isWriting}
-          setOpen={setIsWriting}
-          slug={slug}
-        />
+        <ReportNoteDialog line={line} open={isWriting} setOpen={setIsWriting} />
       ) : null}
     </PaneFooter>
   );
 }
 
 /** The button that opens a locked report's PDF, once its file is read. */
-function ReportFileButton({
-  reportId,
-  slug,
-}: {
-  reportId: Id<"reportCards">;
-  slug: TenantSlug;
-}) {
+function ReportFileButton({ reportId }: { reportId: Id<"reportCards"> }) {
   const t = useTranslations("SchoolReports");
+  const { slug } = useTenant();
   const detail = useQuery(records.reports.get, { reportId, slug });
   const file = QueryResult.isSuccess(detail) ? detail.value.file : null;
 
@@ -311,19 +284,19 @@ function ReportFileButton({
 
 /** The dialog where the homeroom teacher writes a student's note, which starts the draft. */
 export function ReportNoteDialog({
-  cohortId,
   line,
   open,
   setOpen,
-  slug,
 }: {
-  cohortId: Id<"tenantCohorts">;
   line: ReportLine;
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolReports");
+  const { slug } = useTenant();
+  const cohortId = cohortRoute.useRouteContext({
+    select: (context) => context.cohortId,
+  });
   const common = useTranslations("Common");
   const id = useId();
   const write = useMutation(records.reports.write).withOptimisticUpdate(

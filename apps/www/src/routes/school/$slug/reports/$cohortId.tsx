@@ -22,6 +22,5 @@ export const Route = createFileRoute("/school/$slug/reports/$cohortId")({
 });
 
 function SchoolCohortReportsPage(): ReactElement {
-  const { cohortId, slug } = Route.useRouteContext();
-  return <CohortReports cohortId={cohortId} slug={slug} />;
+  return <CohortReports />;
 }

@@ -96,6 +96,6 @@ const encodeContent = Schema.encodeEffect(Schema.fromJsonString(HashContent));
 export const contentHash = Effect.fn("records.card.hash")(function* (
   content: typeof HashContent.Type
 ) {
-  const text = yield* encodeContent(content).pipe(Effect.orDie);
-  return yield* sha256Hex(text).pipe(Effect.orDie);
-});
+  const text = yield* encodeContent(content);
+  return yield* sha256Hex(text);
+}, Effect.orDie);

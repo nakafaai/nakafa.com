@@ -16,10 +16,8 @@ import {
   SentIcon,
   SquareLock02Icon,
 } from "@hugeicons/core-free-icons";
-import type { Id } from "@repo/backend/confect/_generated/id";
 import records from "@repo/backend/confect/_generated/refs/records";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -29,6 +27,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { getRouteApi } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useState } from "react";
@@ -51,6 +50,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { menuOf } from "@/components/tenant/reports/access";
 import type { ReportLine } from "@/components/tenant/reports/change";
@@ -64,6 +64,18 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /** How many students one page of the list loads, and each page after it. */
 const PAGE_SIZE = 50;
+
+/** The route of one class group's report cards, whose context holds the class group's ID. */
+const cohortRoute = getRouteApi("/school/$slug/reports/$cohortId");
+
+/** The school and the class group of the page, which every read and write names. */
+function useCohortArgs() {
+  const { slug } = useTenant();
+  const cohortId = cohortRoute.useRouteContext({
+    select: (context) => context.cohortId,
+  });
+  return { cohortId, slug };
+}
 
 /** The state of each line's report, with its icon, in the list, its filter, and the open report. */
 const STATE_ICONS = {
@@ -87,19 +99,13 @@ const stateOf = (line: ReportLine) => line.report?.state ?? "none";
  * writes a note and hands a report in, or takes it back; the principal approves it, which
  * draws its PDF and locks it. A locked report opens its PDF and its public check page.
  */
-export function CohortReports({
-  cohortId,
-  slug,
-}: {
-  cohortId: Id<"tenantCohorts">;
-  slug: TenantSlug;
-}) {
+export function CohortReports() {
   return (
     <TableFiltersProvider>
       <PanesProvider>
-        <CohortReportsHeader cohortId={cohortId} slug={slug} />
+        <CohortReportsHeader />
         <div className="flex w-full min-w-0 flex-1 flex-col">
-          <CohortReportsBody cohortId={cohortId} slug={slug} />
+          <CohortReportsBody />
         </div>
       </PanesProvider>
     </TableFiltersProvider>
@@ -107,19 +113,11 @@ export function CohortReports({
 }
 
 /** The page's header: the path back to the report cards and the class group's name, then the search and the state filter. */
-function CohortReportsHeader({
-  cohortId,
-  slug,
-}: {
-  cohortId: Id<"tenantCohorts">;
-  slug: TenantSlug;
-}) {
+function CohortReportsHeader() {
   const t = useTranslations("SchoolReports");
+  const args = useCohortArgs();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const cohort = useQuery(
-    tenancy.cohorts.get,
-    isSettled ? { cohortId, slug } : "skip"
-  );
+  const cohort = useQuery(tenancy.cohorts.get, isSettled ? args : "skip");
   const title = QueryResult.isSuccess(cohort) ? cohort.value.name : "";
 
   return (
@@ -129,7 +127,7 @@ function CohortReportsHeader({
           label: t("title"),
           target: {
             from: LOCALE_ROUTE,
-            params: { slug },
+            params: { slug: args.slug },
             to: "/school/$slug/reports",
           },
         },
@@ -160,18 +158,13 @@ function CohortReportsHeader({
 }
 
 /** The students of the class group, read a page at a time, beside the open report; or the empty state. */
-function CohortReportsBody({
-  cohortId,
-  slug,
-}: {
-  cohortId: Id<"tenantCohorts">;
-  slug: TenantSlug;
-}) {
+function CohortReportsBody() {
   const t = useTranslations("SchoolReports");
+  const args = useCohortArgs();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     records.reports.sheet,
-    isSettled ? { cohortId, slug } : "skip",
+    isSettled ? args : "skip",
     { initialNumItems: PAGE_SIZE }
   );
 
@@ -214,13 +207,7 @@ function CohortReportsBody({
       id: "status",
     }),
     lineColumns.display({
-      cell: (info) => (
-        <ReportLineMenu
-          cohortId={cohortId}
-          line={info.row.original}
-          slug={slug}
-        />
-      ),
+      cell: (info) => <ReportLineMenu line={info.row.original} />,
       id: "actions",
     }),
   ]);
@@ -240,11 +227,7 @@ function CohortReportsBody({
         ) : null}
       </PanesList>
       <PanesDetail empty={t("detail-empty")} label={t("detail")}>
-        <ReportLineDetail
-          cohortId={cohortId}
-          lines={pagination.results}
-          slug={slug}
-        />
+        <ReportLineDetail lines={pagination.results} />
       </PanesDetail>
     </Panes>
   );
@@ -255,19 +238,11 @@ function CohortReportsBody({
  * homeroom teacher, approve for the principal, and open the check page once it is locked.
  * Each item shows only when the server allows it.
  */
-function ReportLineMenu({
-  cohortId,
-  line,
-  slug,
-}: {
-  cohortId: Id<"tenantCohorts">;
-  line: ReportLine;
-  slug: TenantSlug;
-}) {
+function ReportLineMenu({ line }: { line: ReportLine }) {
   const t = useTranslations("SchoolReports");
   const common = useTranslations("Common");
   const locale = useLocale();
-  const actions = useReportActions(slug);
+  const actions = useReportActions();
   const [isWriting, setIsWriting] = useState(false);
   const { report } = line;
   const menu = menuOf(line);
@@ -333,13 +308,7 @@ function ReportLineMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       {menu.write ? (
-        <ReportNoteDialog
-          cohortId={cohortId}
-          line={line}
-          open={isWriting}
-          setOpen={setIsWriting}
-          slug={slug}
-        />
+        <ReportNoteDialog line={line} open={isWriting} setOpen={setIsWriting} />
       ) : null}
     </div>
   );

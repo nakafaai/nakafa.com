@@ -5701,6 +5701,9 @@ export declare const api: {
             | "forum.read"
             | "grade.release"
             | "grade.view"
+            | "report.approve"
+            | "report.complete"
+            | "report.view"
             | "visit.end"
             | "document.edit"
             | "document.view"
@@ -5735,6 +5738,9 @@ export declare const api: {
             | "grade.enter"
             | "grade.list"
             | "scheme.manage"
+            | "report.list"
+            | "report.write"
+            | "report.open"
             | "visit.approve"
             | "document.edit"
             | "document.edit"
@@ -5748,6 +5754,7 @@ export declare const api: {
             | "guardian.list"
             | "roster.manage"
             | "roster.view"
+            | "roster.import"
           >;
           name: string;
           scope:
@@ -5805,6 +5812,9 @@ export declare const api: {
               | "forum.read"
               | "grade.release"
               | "grade.view"
+              | "report.approve"
+              | "report.complete"
+              | "report.view"
               | "visit.end"
               | "document.edit"
               | "document.view"
@@ -5839,6 +5849,9 @@ export declare const api: {
               | "grade.enter"
               | "grade.list"
               | "scheme.manage"
+              | "report.list"
+              | "report.write"
+              | "report.open"
               | "visit.approve"
               | "document.edit"
               | "document.edit"
@@ -5852,6 +5865,7 @@ export declare const api: {
               | "guardian.list"
               | "roster.manage"
               | "roster.view"
+              | "roster.import"
             >;
             createdAt: number;
             id: Id<"integrationClients">;
@@ -5973,6 +5987,18 @@ export declare const api: {
                   type: "grade.released";
                 }
               | {
+                  guardian: Id<"tenantPeople">;
+                  student: Id<"tenantPeople">;
+                  type: "guardian.started";
+                }
+              | {
+                  method: "code_nisn" | "staff";
+                  student: Id<"tenantPeople">;
+                  type: "guardian.linked";
+                }
+              | { student: Id<"tenantPeople">; type: "guardian.withdrawn" }
+              | { student: Id<"tenantPeople">; type: "guardian.revoked" }
+              | {
                   client: Id<"integrationClients">;
                   scope:
                     | { kind: "tenant" }
@@ -5992,6 +6018,13 @@ export declare const api: {
               | { type: "period.archived" }
               | { type: "period.restored" }
               | { type: "period.rename" }
+              | {
+                  added: number;
+                  changed: number;
+                  skipped: number;
+                  source: "dapodik";
+                  type: "roster.imported";
+                }
               | { type: "person.created" }
               | {
                   invite: Id<"tenantInvites">;
@@ -6069,6 +6102,7 @@ export declare const api: {
                   step: "archive" | "cohorts" | "place" | "homeroom";
                   type: "promotion.undone";
                 }
+              | { hash: string; type: "report.locked" }
               | { type: "exam.results.released" }
               | { type: "sitting.schedule" }
               | {
@@ -6168,6 +6202,7 @@ export declare const api: {
               | { id: Id<"connectorConnections">; kind: "connection" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"classGrades">; kind: "grade" }
+              | { id: Id<"reportCards">; kind: "report" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
@@ -6660,6 +6695,7 @@ export declare const api: {
               | { id: Id<"connectorConnections">; kind: "connection" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"classGrades">; kind: "grade" }
+              | { id: Id<"reportCards">; kind: "report" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
@@ -6701,6 +6737,7 @@ export declare const api: {
             | { id: Id<"connectorConnections">; kind: "connection" }
             | { id: Id<"classes">; kind: "class" }
             | { id: Id<"classGrades">; kind: "grade" }
+            | { id: Id<"reportCards">; kind: "report" }
             | { id: Id<"tenantVisits">; kind: "visit" }
             | { id: Id<"editorDocuments">; kind: "document" }
             | { id: Id<"exams">; kind: "exam" }
@@ -7195,6 +7232,21 @@ export declare const api: {
     };
   };
   records: {
+    checks: {
+      report: FunctionReference<
+        "mutation",
+        "public",
+        { hash: string },
+        | {
+            approvedAt: number;
+            kind: "report";
+            outcome: "locked";
+            period: string;
+            school: string;
+          }
+        | { outcome: "unknown" }
+      >;
+    };
     grades: {
       enter: FunctionReference<
         "mutation",
@@ -7213,37 +7265,6 @@ export declare const api: {
           personId: Id<"tenantPeople">;
           state: "draft" | "released";
           value: number;
-        }
-      >;
-      list: FunctionReference<
-        "query",
-        "public",
-        {
-          classId: Id<"classes">;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          slug: string;
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            band?: string;
-            classId: Id<"classes">;
-            id: Id<"classGrades">;
-            kktp: "reached" | "notReached";
-            personId: Id<"tenantPeople">;
-            state: "draft" | "released";
-            value: number;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
         }
       >;
       mine: FunctionReference<
@@ -7272,6 +7293,160 @@ export declare const api: {
           personId: Id<"tenantPeople">;
           state: "draft" | "released";
           value: number;
+        }
+      >;
+      scheme: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        { bands: Array<{ label: string; minimum: number }>; kktp: number }
+      >;
+      sheet: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            grade: {
+              band?: string;
+              classId: Id<"classes">;
+              id: Id<"classGrades">;
+              kktp: "reached" | "notReached";
+              personId: Id<"tenantPeople">;
+              state: "draft" | "released";
+              value: number;
+            } | null;
+            student: { id: Id<"tenantPeople">; name: string };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+    reports: {
+      approve: FunctionReference<
+        "mutation",
+        "public",
+        { reportId: Id<"reportCards">; slug: string },
+        {
+          approvedAt: number | null;
+          hash: string | null;
+          id: Id<"reportCards">;
+          note: string;
+          state: "draft" | "completed" | "approved" | "locked";
+        }
+      >;
+      cohorts: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{ id: Id<"tenantCohorts">; name: string; period: string }>
+      >;
+      complete: FunctionReference<
+        "mutation",
+        "public",
+        { reportId: Id<"reportCards">; slug: string },
+        {
+          approvedAt: number | null;
+          hash: string | null;
+          id: Id<"reportCards">;
+          note: string;
+          state: "draft" | "completed" | "approved" | "locked";
+        }
+      >;
+      get: FunctionReference<
+        "query",
+        "public",
+        { reportId: Id<"reportCards">; slug: string },
+        {
+          approvedAt: number | null;
+          file: string | null;
+          hash: string | null;
+          id: Id<"reportCards">;
+          note: string;
+          state: "draft" | "completed" | "approved" | "locked";
+          student: { id: Id<"tenantPeople">; name: string };
+          subjects: Array<{
+            band?: string;
+            className: string;
+            kktp: "reached" | "notReached";
+            value: number;
+          }>;
+        }
+      >;
+      reopen: FunctionReference<
+        "mutation",
+        "public",
+        { reportId: Id<"reportCards">; slug: string },
+        {
+          approvedAt: number | null;
+          hash: string | null;
+          id: Id<"reportCards">;
+          note: string;
+          state: "draft" | "completed" | "approved" | "locked";
+        }
+      >;
+      sheet: FunctionReference<
+        "query",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            can: Array<"report.approve" | "report.complete" | "report.write">;
+            report: {
+              approvedAt: number | null;
+              hash: string | null;
+              id: Id<"reportCards">;
+              note: string;
+              state: "draft" | "completed" | "approved" | "locked";
+            } | null;
+            student: { id: Id<"tenantPeople">; name: string };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      write: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          note: string;
+          personId: Id<"tenantPeople">;
+          slug: string;
+        },
+        {
+          approvedAt: number | null;
+          hash: string | null;
+          id: Id<"reportCards">;
+          note: string;
+          state: "draft" | "completed" | "approved" | "locked";
         }
       >;
     };
@@ -7319,6 +7494,58 @@ export declare const api: {
           hasNisn: boolean;
           personId: Id<"tenantPeople">;
           underAgeLimit?: boolean;
+        }
+      >;
+    };
+    exports: {
+      lines: FunctionReference<
+        "action",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        Array<{ cohortName: string; name: string; nisn: string | null }>
+      >;
+    };
+    imports: {
+      apply: FunctionReference<
+        "mutation",
+        "public",
+        {
+          periodId: Id<"tenantPeriods">;
+          rows: Array<{
+            cohortName?: string;
+            name: string;
+            nisn: string;
+            underAgeLimit: boolean;
+          }>;
+          slug: string;
+        },
+        { added: number; changed: number; skipped: number }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            cohortName: string;
+            name: string;
+            nisn: string | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
         }
       >;
     };
@@ -14093,6 +14320,14 @@ export declare const internal: {
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
+    seed: {
+      code: FunctionReference<
+        "mutation",
+        "internal",
+        { email: string; nisn: string; slug: string },
+        { code: string }
+      >;
+    };
   };
   identity: {
     logins: {
@@ -14110,6 +14345,109 @@ export declare const internal: {
         { slug: string },
         { code: string; loginName: string }
       >;
+    };
+  };
+  integrations: {
+    reads: {
+      cohorts: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              grade: number;
+              id: string;
+              name: string;
+              periodId: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      people: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          status: "active" | "suspended" | "removed";
+        },
+        | {
+            data: Array<{
+              account: "claimed" | "unclaimed";
+              id: string;
+              name: string;
+              status: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      periods: FunctionReference<
+        "query",
+        "internal",
+        { clientId: Id<"integrationClients"> },
+        | {
+            data: Array<{
+              end: string;
+              id: string;
+              name: string;
+              start: string;
+              status: string;
+              unitId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+      placements: FunctionReference<
+        "query",
+        "internal",
+        {
+          clientId: Id<"integrationClients">;
+          cursor: string | null;
+          numItems: number;
+          period: string;
+        },
+        | {
+            data: Array<{
+              cohortId: string;
+              periodId: string;
+              personId: string;
+            }>;
+            next: string | null;
+            outcome: "page";
+          }
+        | { outcome: "forbidden" }
+      >;
+    };
+    tokens: {
+      check: FunctionReference<
+        "mutation",
+        "internal",
+        { resource: "api" | "mcp"; token: string },
+        | { clientId: Id<"integrationClients">; outcome: "allowed" }
+        | { outcome: "unauthorized" }
+        | { outcome: "limited"; retryAfter: number }
+      >;
+      issue: FunctionReference<
+        "mutation",
+        "internal",
+        { clientId: string; resource?: string; secret: string },
+        | { expiresIn: number; outcome: "issued"; token: string }
+        | { error: "invalid_client" | "invalid_target"; outcome: "refused" }
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
   };
   nina: {
@@ -15236,6 +15574,44 @@ export declare const internal: {
         "internal",
         { source: "account-deletion" | "consent-overlap"; workflowId: string },
         null
+      >;
+    };
+  };
+  records: {
+    prints: {
+      draw: FunctionReference<
+        "action",
+        "internal",
+        { reportId: Id<"reportCards"> },
+        null
+      >;
+      lock: FunctionReference<
+        "mutation",
+        "internal",
+        { reportId: Id<"reportCards">; storageId: Id<"_storage"> },
+        null
+      >;
+      printable: FunctionReference<
+        "query",
+        "internal",
+        { reportId: Id<"reportCards"> },
+        {
+          approvedAt: number;
+          cohort: string;
+          hash: string;
+          locale: "en" | "id" | "de";
+          note: string;
+          period: string;
+          school: string;
+          student: string;
+          subjects: Array<{
+            band?: string;
+            className: string;
+            kktp: "reached" | "notReached";
+            value: number;
+          }>;
+          verifyUrl: string;
+        }
       >;
     };
   };
