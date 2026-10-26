@@ -60,8 +60,8 @@ const expectBandsInOrder = Effect.fn("NakafaE2E.expectVisualBandsInOrder")(
 );
 
 /**
- * Proves the full screen action ends a visual card's actions band, at the
- * band's right padding.
+ * Proves the full screen action and the menu of the other actions end a visual
+ * card's actions band, the menu at the band's right padding.
  */
 const expectFullscreenEndsActions = Effect.fn(
   "NakafaE2E.expectFullscreenEndsActions"
@@ -79,11 +79,14 @@ const expectFullscreenEndsActions = Effect.fn(
       };
     })
   );
-  yield* Effect.promise(() =>
-    expect(
-      actions.getByRole("button", { name: en.Common.fullscreen }).last()
-    ).toBeVisible()
-  );
+  yield* Effect.promise(async () => {
+    await expect(
+      actions.getByRole("button", { name: en.Common.fullscreen })
+    ).toBeVisible();
+    await expect(actions.locator("button").last()).toHaveAccessibleName(
+      en.Common["more-actions"]
+    );
+  });
   yield* Effect.sync(() =>
     expect(Math.abs(end.lastRight - end.right)).toBeLessThan(1)
   );
@@ -116,10 +119,10 @@ const expectSceneBands = Effect.fn("NakafaE2E.expectSceneBands")(function* (
 });
 
 /**
- * Opens a coordinate scene at 200 percent text and proves its four actions, the
- * grid, play, reset, and full screen, stay inside the card that holds them. The
- * card clips what lies beyond its edge, so an action outside the card is cut off
- * without any error.
+ * Opens a coordinate scene at 200 percent text and proves its three buttons,
+ * play, full screen, and the menu of its other actions, stay inside the card
+ * that holds them. The card clips what lies beyond its edge, so an action
+ * outside the card is cut off without any error.
  */
 const expectSceneActionsInsideCardAtLargeText = Effect.fn(
   "NakafaE2E.expectSceneActionsInsideCardAtLargeText"
@@ -133,10 +136,9 @@ const expectSceneActionsInsideCardAtLargeText = Effect.fn(
   yield* Effect.sync(() => {
     expect(rootSize).toBe("32px");
     expect(Arr.map(actions, (action) => action.label)).toEqual([
-      en.Common.grid,
       en.Common.play,
-      en.Common.reset,
       en.Common.fullscreen,
+      en.Common["more-actions"],
     ]);
     for (const action of actions) {
       expect(action.inside).toBe(true);

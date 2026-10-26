@@ -3,6 +3,7 @@ import {
   type EditorOptions,
   Extension,
   type MarkdownToken,
+  type NodeViewRenderer,
 } from "@tiptap/core";
 import { Highlight } from "@tiptap/extension-highlight";
 import { OrderedList, TaskItem, TaskList } from "@tiptap/extension-list";
@@ -122,16 +123,20 @@ const NumberedList = OrderedList.extend({
  * lexes the same way, and the task list.
  *
  * `limit` is the most characters the Markdown may hold, `onRefuse` runs when a
- * paste does not fit, and `placeholder` is the hint of an empty text.
+ * paste does not fit, and `placeholder` is the hint of an empty text. `taskView`
+ * draws each task of a task list: the editor gives the design system's view, so
+ * the box is the design system's check box and the browser draws none.
  */
 export function richOptions({
   limit,
   onRefuse,
   placeholder,
+  taskView,
 }: {
   limit: number;
   onRefuse: () => void;
   placeholder: string;
+  taskView: NodeViewRenderer;
 }) {
   return {
     extensions: [
@@ -147,7 +152,9 @@ export function richOptions({
       Underline.extend({ markdownTokenizer: markTokenizer("underline") }),
       Highlight.extend({ markdownTokenizer: markTokenizer("highlight") }),
       TaskList,
-      TaskItem.configure({ nested: true }),
+      TaskItem.extend({ addNodeView: () => taskView }).configure({
+        nested: true,
+      }),
       Markdown,
       Limit.configure({ limit, onRefuse }),
       Placeholder.configure({ placeholder }),

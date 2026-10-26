@@ -6,7 +6,10 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import type { ActSchema } from "@repo/mascot/nina/act";
+import type { VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import type { ReactNode } from "react";
+import { contentWidthVariants } from "@/components/shared/content/width";
 import { EmptyNina } from "@/components/state/empty";
 
 /**
@@ -20,6 +23,40 @@ export function TableFrame({ children }: { children: ReactNode }) {
   return (
     <div className="overflow-hidden rounded-xl border bg-card [&_[data-slot=table-cell]]:whitespace-nowrap">
       {children}
+    </div>
+  );
+}
+
+/**
+ * The body of a page whose body is one list, under the page's header: the page's gutter, at the
+ * width of the page's content, and one card that fills the rest of the page's height, drawn as the
+ * try-out catalog draws its lists. A settings section's table takes the column width of its cards;
+ * a working table, such as the exams, rooms or results, takes the page width. The data table fills
+ * the card, its rows divided and running the card's width, and so does the empty state in its
+ * place; a table taller than the card scrolls inside it with its column heads in view.
+ */
+export function TablePageBody({
+  children,
+  width = "page",
+}: {
+  children: ReactNode;
+  /** The width of the page's content: the column of a settings section, or the page width. */
+  width?: NonNullable<VariantProps<typeof contentWidthVariants>["width"]>;
+}) {
+  return (
+    <div
+      className={cn(
+        contentWidthVariants({ width }),
+        "flex min-h-0 w-full flex-1 flex-col p-4"
+      )}
+      data-slot="table-page-body"
+    >
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm"
+        data-slot="table-card"
+      >
+        {children}
+      </div>
     </div>
   );
 }
