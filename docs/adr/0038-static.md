@@ -111,7 +111,7 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   of the school's own host and makes the same `readSchoolFrame` decision as before
   (`readBrowserSchoolFrame`). A visitor's legal links come from the static answer of the shell
   navigation that every locale's pages already write. Every page reads its rows live, so a click reads
-  nothing before it commits. The 25 School server functions, their handlers and their tests are
+  nothing before it commits. Every School server function, its handler and its tests are
   deleted, and so are the school language save (the browser writes its cookie) and the `httpOnly` flag
   of the saved player view, which the browser now reads.
 - **Static shell.** The build prerenders the root document once as `/_school.html` (Start's `spa`
