@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
 import { EXPORT_PAGE } from "@repo/backend/confect/roster/exports.impl";
 import { IMPORT_BATCH, Nisn } from "@repo/backend/confect/roster/schema";
 import { cohort, denied, nf, period } from "@repo/backend/test/classroom";
@@ -32,6 +34,24 @@ describe("roster/exports", () => {
         yield* asStaffSchool(fixture);
         const term = yield* period(fixture, fixture.units.smp);
         const x1 = yield* cohort(fixture, term.id, "VII-A");
+        // Two pages of students are more than the free plan admits, so the school pays per student.
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("billingGrants").insert({
+              ninaSeats: SCHOOL_FREE_STUDENTS,
+              product: "school",
+              scope: { kind: "tenant" },
+              seats: SCHOOL_FREE_STUDENTS,
+              source: {
+                contractId: "contract-roster-export",
+                kind: "contract",
+              },
+              tenantId: fixture.tenants.nf,
+              validFrom: 0,
+              validTo: Date.UTC(2099, 0, 1),
+            })
+          )
+        );
         // A student placed by hand has no roster row, so the export leaves the NISN empty.
         yield* fixture
           .as("admin")
