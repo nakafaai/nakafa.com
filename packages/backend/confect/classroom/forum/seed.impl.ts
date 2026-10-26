@@ -101,7 +101,8 @@ const history = FunctionImpl.make(
         const fields = {
           channelId: general._id,
           classId: row._id,
-          clientKey: `seed-${general._id}-${index}`,
+          // Each seed writes as its own classmate, so a second seed's keys never meet the first's.
+          clientKey: `seed-${authorId}-${index}`,
         };
         const createdAt = now - (count - index) * SEED_GAP_MILLISECONDS;
         const messageId = yield* writer.table("classroomMessages").insert({
