@@ -172,7 +172,25 @@ function ExamRoomsContent({
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
       >
-        <RoomStateFilterMenu onValueChange={setFilter} value={filter} />
+        <TableChoice
+          onChange={setFilter}
+          options={[
+            { icon: Calendar03Icon, label: t("state-all"), value: "all" },
+            {
+              icon: Clock01Icon,
+              label: t("room-state-scheduled"),
+              value: "scheduled",
+            },
+            { icon: PlayIcon, label: t("room-state-open"), value: "open" },
+            {
+              icon: CheckmarkCircle02Icon,
+              label: t("room-state-closed"),
+              value: "closed",
+            },
+          ]}
+          title={t("rooms-state")}
+          value={filter}
+        />
         {tenant.canOpenExams ? (
           <Link
             className={buttonVariants()}
@@ -217,39 +235,6 @@ function RoomsEmpty({ filter }: { filter: StateFilter }) {
       act="pointing"
       description={t("rooms-empty-description")}
       title={t("rooms-empty")}
-    />
-  );
-}
-
-/** The rooms' Filter menu, in the page's header row: every room, or the rooms in one state, which the server reads. */
-function RoomStateFilterMenu({
-  onValueChange,
-  value,
-}: {
-  onValueChange: (value: StateFilter) => void;
-  value: StateFilter;
-}) {
-  const t = useTranslations("Exams");
-
-  return (
-    <TableChoice
-      onChange={onValueChange}
-      options={[
-        { icon: Calendar03Icon, label: t("state-all"), value: "all" },
-        {
-          icon: Clock01Icon,
-          label: t("room-state-scheduled"),
-          value: "scheduled",
-        },
-        { icon: PlayIcon, label: t("room-state-open"), value: "open" },
-        {
-          icon: CheckmarkCircle02Icon,
-          label: t("room-state-closed"),
-          value: "closed",
-        },
-      ]}
-      title={t("rooms-state")}
-      value={value}
     />
   );
 }
