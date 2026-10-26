@@ -1021,8 +1021,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
-    "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
-    "load-error-retry": "Data ini belum dapat dimuat.",
+    "load-error": "Data ini belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
     "breadcrumb": "Jalur navigasi",
@@ -1458,7 +1457,7 @@
   },
   "ComingSoon": {
     "title": "Segera Hadir",
-    "description": "Fitur ini belum tersedia. Silakan periksa kembali nanti atau berkontribusi pada proyek.",
+    "description": "Konten ini masih ditulis.",
     "contribute": "Berkontribusi"
   },
   "Auth": {
@@ -2552,7 +2551,7 @@
     "title": "Data penggunaan",
     "prompt-description": "Berbagi detail bersifat opsional.",
     "prompt-footer": "Kamu bisa mengubahnya nanti.",
-    "description": "Izinkan Nakafa melihat fitur yang kamu gunakan dan bagian yang perlu diperbaiki tanpa merekam layar. Nakafa selalu menghitung kunjungan, tanpa cookie atau akun, untuk menjalankan situs. Pilih Izinkan hanya jika kamu berusia minimal 18 tahun, atau 13 sampai 17 tahun dengan persetujuan orang tua atau wali hukum.",
+    "description": "Nakafa menghitung kunjungan tanpa cookie, dan dengan izinmu juga melihat fitur yang kamu pakai, tanpa merekam layar.",
     "allow": "Izinkan",
     "decline": "Tolak",
     "manage": "Data penggunaan",
@@ -2561,10 +2560,10 @@
     "status-browser-signal": "Pengaturan privasi browsermu menonaktifkan berbagi detail.",
     "status-pending": "Pilihanmu sedang dimuat.",
     "status-prompt": "Belum ada pilihan.",
-    "policy": "<privacy-policy>Kebijakan Privasi</privacy-policy>",
-    "load-error": "Kami tidak dapat memuat pilihanmu. Pembagian data tetap nonaktif selama kami mencoba lagi.",
-    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tidak dapat diterapkan. Statusnya tetap seperti semula.",
-    "save-error": "Kami tidak dapat menyimpan pilihanmu. Pembagian data tetap nonaktif. Coba lagi."
+    "policy": "Izinkan jika kamu berusia 18 tahun ke atas, atau 13 sampai 17 tahun dengan persetujuan wali, sesuai <privacy-policy>Kebijakan Privasi</privacy-policy>.",
+    "load-error": "Pilihanmu belum dapat dimuat, jadi pembagian data tetap nonaktif selama kami mencoba lagi.",
+    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tetap seperti semula.",
+    "save-error": "Pilihanmu tidak dapat disimpan, jadi pembagian data tetap nonaktif."
   },
   "SEO": {
     "subject": {

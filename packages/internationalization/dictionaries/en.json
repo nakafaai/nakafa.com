@@ -1021,8 +1021,7 @@
     "classification": "Education"
   },
   "Common": {
-    "load-error": "We could not load this data. Please try again.",
-    "load-error-retry": "We could not load this data.",
+    "load-error": "We could not load this data.",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
     "breadcrumb": "Breadcrumb",
@@ -1458,7 +1457,7 @@
   },
   "ComingSoon": {
     "title": "Coming Soon",
-    "description": "This feature is not available yet. Please check back later or contribute to the project.",
+    "description": "This content is still being written.",
     "contribute": "Contribute"
   },
   "Auth": {
@@ -2552,7 +2551,7 @@
     "title": "Usage data",
     "prompt-description": "Sharing details is optional.",
     "prompt-footer": "You can change it later.",
-    "description": "Allow Nakafa to see which features you use and what needs fixing without recording your screen. Nakafa always counts visits, without cookies or accounts, to operate the site. Choose Allow only if you are 18 or older, or 13 to 17 with a parent or legal guardian's approval.",
+    "description": "Nakafa counts visits without cookies, and with your consent it also sees which features you use, never your screen.",
     "allow": "Allow",
     "decline": "Decline",
     "manage": "Usage data",
@@ -2561,10 +2560,10 @@
     "status-browser-signal": "Your browser privacy settings keep detailed sharing off.",
     "status-pending": "We are loading your choice.",
     "status-prompt": "You have not chosen yet.",
-    "policy": "<privacy-policy>Privacy Policy</privacy-policy>",
-    "load-error": "We could not load your choice. Usage sharing stays off while we retry.",
-    "runtime-error": "Your choice was saved, but usage sharing could not be applied. It stays as it was.",
-    "save-error": "We could not save your choice. Usage sharing stays off. Try again."
+    "policy": "Allow at 18 or older, or at 13 to 17 with a guardian's approval, as the <privacy-policy>Privacy Policy</privacy-policy> explains.",
+    "load-error": "We could not load your choice, so sharing stays off while we retry.",
+    "runtime-error": "Your choice was saved, but sharing stays as it was.",
+    "save-error": "We could not save your choice, so sharing stays off."
   },
   "SEO": {
     "subject": {
