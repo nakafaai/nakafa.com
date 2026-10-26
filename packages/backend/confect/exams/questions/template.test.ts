@@ -2,6 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
+import {
+  choiceAnswers,
+  textLabel,
+} from "@repo/backend/confect/exams/question";
 import { teacherExam } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
@@ -31,6 +35,7 @@ describe("exams/questions/template", () => {
         });
         const complex = yield* teacher.mutation(template, {
           examId: exam.id,
+          labels: [],
           questionId: question.id,
           revision: keyed.revision,
           slug: nf,
@@ -79,6 +84,7 @@ describe("exams/questions/template", () => {
         const [question] = exam.questions;
         const complex = yield* teacher.mutation(template, {
           examId: exam.id,
+          labels: [],
           questionId: question.id,
           revision: 0,
           slug: nf,
@@ -94,6 +100,7 @@ describe("exams/questions/template", () => {
         });
         const single = yield* teacher.mutation(template, {
           examId: exam.id,
+          labels: [],
           questionId: question.id,
           revision: several.revision,
           slug: nf,
@@ -111,6 +118,7 @@ describe("exams/questions/template", () => {
         });
         const again = yield* teacher.mutation(template, {
           examId: exam.id,
+          labels: [],
           questionId: question.id,
           revision: one.revision,
           slug: nf,
@@ -118,6 +126,7 @@ describe("exams/questions/template", () => {
         });
         const back = yield* teacher.mutation(template, {
           examId: exam.id,
+          labels: [],
           questionId: question.id,
           revision: again.revision,
           slug: nf,
@@ -140,6 +149,7 @@ describe("exams/questions/template", () => {
         const [question] = exam.questions;
         const same = yield* teacher.mutation(template, {
           examId: exam.id,
+          labels: [],
           questionId: question.id,
           revision: 0,
           slug: nf,
@@ -149,6 +159,7 @@ describe("exams/questions/template", () => {
         const stale = yield* teacher
           .mutation(template, {
             examId: exam.id,
+            labels: [],
             questionId: question.id,
             revision: 3,
             slug: nf,
@@ -167,6 +178,7 @@ describe("exams/questions/template", () => {
         const frozen = yield* teacher
           .mutation(template, {
             examId: exam.id,
+            labels: [],
             questionId: question.id,
             revision: 0,
             slug: nf,
@@ -174,6 +186,129 @@ describe("exams/questions/template", () => {
           })
           .pipe(Effect.flip);
         expect(frozen).toMatchObject({ _tag: "ExamFrozen" });
+      })
+  );
+
+  it.effect(
+    "turns a choice into true or false with the two labels it is given and no key, keeps the labels a teacher retypes, refuses a third option, and keeps both options and the key back as a choice",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Benar salah");
+        const [question] = exam.questions;
+        const keyed = yield* teacher.mutation(answer, {
+          answers: question.answers,
+          examId: exam.id,
+          key: keyOf("option-1"),
+          questionId: question.id,
+          revision: 0,
+          slug: nf,
+        });
+        const truth = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: ["Benar", "Salah"],
+          questionId: question.id,
+          revision: keyed.revision,
+          slug: nf,
+          template: "truefalse",
+        });
+        expect(truth).toMatchObject({ key: null, template: "truefalse" });
+        expect(truth.answers).toEqual(
+          choiceAnswers([textLabel("Benar"), textLabel("Salah")])
+        );
+        const retyped = yield* teacher.mutation(answer, {
+          answers: choiceAnswers([textLabel("صحيح"), textLabel("خطأ")]),
+          examId: exam.id,
+          key: keyOf("option-2"),
+          questionId: question.id,
+          revision: truth.revision,
+          slug: nf,
+        });
+        expect(retyped.key).toEqual(keyOf("option-2"));
+        const third = yield* teacher
+          .mutation(answer, {
+            answers: choiceAnswers([
+              textLabel("Benar"),
+              textLabel("Salah"),
+              textLabel("Mungkin"),
+            ]),
+            examId: exam.id,
+            key: null,
+            questionId: question.id,
+            revision: retyped.revision,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(third).toMatchObject({ _tag: "AnswersDoNotFit" });
+        const back = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: [],
+          questionId: question.id,
+          revision: retyped.revision,
+          slug: nf,
+          template: "choice",
+        });
+        expect(back).toMatchObject({
+          key: keyOf("option-2"),
+          template: "choice",
+        });
+        expect(back.answers[0]).toMatchObject({
+          options: [
+            { label: textLabel("صحيح") },
+            { label: textLabel("خطأ") },
+          ],
+        });
+      })
+  );
+
+  it.effect(
+    "turns a choice into cause and effect with five labelled options, and refuses labels that do not name each fixed option once",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Sebab akibat");
+        const [question] = exam.questions;
+        const relations = ["S1", "S2", "S3", "S4", "S5"];
+        const cause = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: relations,
+          questionId: question.id,
+          revision: 0,
+          slug: nf,
+          template: "cause",
+        });
+        expect(cause).toMatchObject({ key: null, template: "cause" });
+        expect(cause.answers[0]).toMatchObject({
+          maxChoices: 1,
+          options: relations.map((text, index) => ({
+            id: `option-${index + 1}`,
+            label: textLabel(text),
+          })),
+        });
+        const short = yield* teacher
+          .mutation(template, {
+            examId: exam.id,
+            labels: ["S1", "S2", "S3", "S4"],
+            questionId: question.id,
+            revision: cause.revision,
+            slug: nf,
+            template: "truefalse",
+          })
+          .pipe(Effect.flip);
+        expect(short).toMatchObject({ _tag: "AnswersDoNotFit" });
+        const unasked = yield* teacher
+          .mutation(template, {
+            examId: exam.id,
+            labels: ["S1"],
+            questionId: question.id,
+            revision: cause.revision,
+            slug: nf,
+            template: "choice",
+          })
+          .pipe(Effect.flip);
+        expect(unasked).toMatchObject({ _tag: "AnswersDoNotFit" });
       })
   );
 
@@ -185,6 +320,7 @@ describe("exams/questions/template", () => {
       const [question] = exam.questions;
       yield* teacher.mutation(template, {
         examId: exam.id,
+        labels: [],
         questionId: question.id,
         revision: 0,
         slug: nf,

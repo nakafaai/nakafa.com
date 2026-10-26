@@ -10,15 +10,23 @@ import {
 } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Effect, Match, Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 
 /**
  * The templates a question may take (K23): a single-answer multiple choice
- * (`choice`), and a complex multiple choice (`choices`), whose student checks
- * every correct option. A new question starts as `choice`, and each later
- * template adds its member here.
+ * (`choice`); a complex multiple choice (`choices`), whose student checks every
+ * correct option; true or false (`truefalse`), a single-answer choice of two
+ * fixed options; and cause and effect (`cause`), a single-answer choice of the
+ * five fixed relations between a statement and its reason, which the prompt
+ * holds. A new question starts as `choice`, and each later template adds its
+ * member here.
  */
-export const QuestionTemplate = Schema.Literals(["choice", "choices"]);
+export const QuestionTemplate = Schema.Literals([
+  "choice",
+  "choices",
+  "truefalse",
+  "cause",
+]);
 export type QuestionTemplate = typeof QuestionTemplate.Type;
 
 /** The template every new question starts as, an imported one included: a single-answer choice (K23). */
@@ -73,33 +81,70 @@ export const CHOICE_OPTIONS_MIN = 2;
 export const CHOICE_OPTIONS_MAX = 5;
 
 /**
- * The most options one choice of a template takes: one for a single-answer choice, and
- * every option it holds for a complex choice, whose student checks each correct one.
+ * The most options one choice of a template takes: every option it holds for a complex choice,
+ * whose student checks each correct one, and one for every other template.
  */
 export const choiceLimit = (template: QuestionTemplate, options: number) =>
   Match.value(template).pipe(
-    Match.when("choice", () => 1),
     Match.when("choices", () => options),
-    Match.exhaustive
+    Match.orElse(() => 1)
+  );
+
+/** The options of a true or false question: true and false. */
+const TRUE_FALSE_OPTIONS = 2;
+
+/**
+ * The options of a cause and effect question: both true and related, both true and unrelated, the
+ * statement true and the reason false, the statement false and the reason true, and both false.
+ */
+const CAUSE_OPTIONS = 5;
+
+/**
+ * The number of options a template fixes, or none when the teacher adds and removes them: two for
+ * true or false, and five for cause and effect. The editor writes their labels in the teacher's
+ * language when the question takes the template, and the teacher may retype them, so a question
+ * in any language reads them in its own words.
+ */
+export const fixedOptions = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("truefalse", () => Option.some(TRUE_FALSE_OPTIONS)),
+    Match.when("cause", () => Option.some(CAUSE_OPTIONS)),
+    Match.orElse(() => Option.none<number>())
   );
 
 /**
  * Whether a template's question takes a rubric, the teacher's guide to scoring an answer by hand.
- * A choice is scored by its key, so neither choice template takes one; the layer shows a rubric
- * only for a template that takes one.
+ * Every template so far is a choice, which is scored by its key, so none takes one; the layer
+ * shows a rubric only for a template that takes one. Each template decides it here, so a new
+ * template cannot leave it undecided.
  */
 export const takesRubric = (template: QuestionTemplate) =>
   Match.value(template).pipe(
     Match.when("choice", () => false),
     Match.when("choices", () => false),
+    Match.when("truefalse", () => false),
+    Match.when("cause", () => false),
     Match.exhaustive
   );
 
+/** The most characters of one fixed option's label, as the editor writes it for the template. */
+export const OPTION_LABEL_MAX = 200;
+
+/**
+ * The labels of the options a template fixes, as plain text in the teacher's language: one
+ * for each fixed option (`fixedOptions`), and none for a template whose options the teacher
+ * adds.
+ */
+export const TemplateLabels = Schema.Array(
+  Schema.NonEmptyString.check(Schema.isMaxLength(OPTION_LABEL_MAX))
+).check(Schema.isMaxLength(CHOICE_OPTIONS_MAX));
+
 /**
  * Whether the interactions of a question are the ones its template takes: distinct
- * choices of two to five options, each taking at least one option and at most the
- * template's limit (`choiceLimit`). A question that holds any other interaction, or a
- * choice of other bounds or of another number of options, is refused.
+ * choices of two to five options, as many as the template fixes when it fixes them
+ * (`fixedOptions`), each taking at least one option and at most the template's limit
+ * (`choiceLimit`). A question that holds any other interaction, or a choice of other
+ * bounds or of another number of options, is refused.
  */
 export const answersFit = (
   template: QuestionTemplate,
@@ -113,7 +158,11 @@ export const answersFit = (
       answer.minChoices === 1 &&
       answer.maxChoices === choiceLimit(template, answer.options.length) &&
       answer.options.length >= CHOICE_OPTIONS_MIN &&
-      answer.options.length <= CHOICE_OPTIONS_MAX
+      answer.options.length <= CHOICE_OPTIONS_MAX &&
+      Option.match(fixedOptions(template), {
+        onNone: () => true,
+        onSome: (count) => answer.options.length === count,
+      })
   );
 
 /** The interactions of a question as JSON text, decoded with the contract's interaction schema. */
@@ -212,6 +261,12 @@ const emptyLabel: typeof ContentDocumentSchema.Type = {
   content: [{ type: "paragraph" }],
   type: "doc",
 };
+
+/** The label of an option that reads `text`: one paragraph of plain text, as the option editor writes it. */
+export const textLabel = (text: string): typeof ContentDocumentSchema.Type => ({
+  content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
+  type: "doc",
+});
 
 /**
  * The name of a new choice, read by screen readers. The contract refuses an empty label,

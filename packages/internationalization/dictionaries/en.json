@@ -323,7 +323,16 @@
     "presence-more": "{names} are editing",
     "template-choice": "Multiple choice",
     "template-choices": "Complex multiple choice",
-    "template-label": "Question type: {type}"
+    "template-label": "Question type: {type}",
+    "template-truefalse": "True or false",
+    "template-cause": "Cause and effect",
+    "truefalse-true": "True",
+    "truefalse-false": "False",
+    "cause-related": "The statement and the reason are true and related",
+    "cause-unrelated": "The statement and the reason are true but not related",
+    "cause-reason-false": "The statement is true and the reason is false",
+    "cause-statement-false": "The statement is false and the reason is true",
+    "cause-both-false": "The statement and the reason are false"
   },
   "SchoolSettings": {
     "school": "School",

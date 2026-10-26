@@ -4,6 +4,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
+import { textLabel } from "@repo/backend/confect/exams/question";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -221,6 +222,7 @@ describe("the optimistic updates", () => {
 
     templateUpdate(localStore, {
       examId,
+      labels: [],
       questionId: first.id,
       revision: first.revision,
       slug,
@@ -240,6 +242,48 @@ describe("the optimistic updates", () => {
             template: "choices",
           },
           second,
+        ],
+      })
+    );
+  });
+
+  it("show a question as true or false with the labels it is given and no key", () => {
+    const key: [InteractionKey] = [
+      { correct: ["option-2"], interaction: "choice", kind: "choice" },
+    ];
+    const view = viewOf([{ ...first, key }]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+
+    templateUpdate(localStore, {
+      examId,
+      labels: ["Benar", "Salah"],
+      questionId: first.id,
+      revision: first.revision,
+      slug,
+      template: "truefalse",
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some({
+        ...view,
+        questions: [
+          {
+            ...first,
+            answers: [
+              {
+                ...choice,
+                options: [
+                  { id: "option-1", label: textLabel("Benar") },
+                  { id: "option-2", label: textLabel("Salah") },
+                ],
+              },
+            ],
+            key: null,
+            revision: first.revision + 1,
+            template: "truefalse",
+          },
         ],
       })
     );

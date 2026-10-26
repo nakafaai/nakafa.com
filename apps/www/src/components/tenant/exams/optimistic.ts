@@ -141,33 +141,38 @@ export const removeUpdate: OptimisticUpdate<typeof exams.questions.remove> = (
 
 /**
  * The exam with one question in another template: its answers and key converted as the server converts
- * them (`asTemplate`), and its revision one higher, as the server raises it.
+ * them, with the labels of the options the template fixes (`asTemplate`), and its revision one higher, as
+ * the server raises it.
  */
 const templatedQuestion = (
   view: ExamView,
   questionId: QuestionId,
-  template: Question["template"]
+  change: { readonly labels: readonly string[]; readonly template: Question["template"] }
 ): ExamView => ({
   ...view,
   questions: Arr.map(view.questions, (question) =>
     question.id === questionId
       ? {
           ...question,
-          ...asTemplate(template, question.answers, question.key),
+          ...asTemplate(
+            change.template,
+            question.answers,
+            question.key,
+            change.labels
+          ),
           revision: question.revision + 1,
-          template,
+          template: change.template,
         }
       : question
   ),
 });
 
 /** Shows a question in its new template in the store while the server converts it. */
-export const templateUpdate: OptimisticUpdate<
-  typeof exams.questions.template
-> = (localStore, args) =>
-  changeExam(localStore, examQuery(args), (view) =>
-    templatedQuestion(view, args.questionId, args.template)
-  );
+export const templateUpdate: OptimisticUpdate<typeof exams.questions.template> =
+  (localStore, args) =>
+    changeExam(localStore, examQuery(args), (view) =>
+      templatedQuestion(view, args.questionId, args)
+    );
 
 /** Shows a saved answer of a question in the store while the server saves it. */
 export const answerUpdate: OptimisticUpdate<typeof exams.questions.answer> = (
