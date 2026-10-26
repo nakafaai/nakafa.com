@@ -179,6 +179,7 @@ export declare const api: {
             lots: { balance: number; expiresAt: number | null };
             resetAt: number;
           };
+          pass: { endsAt: number } | null;
           plan: "free" | "pro";
           subscription: {
             cancelAtPeriodEnd: boolean;
@@ -198,6 +199,30 @@ export declare const api: {
             status: "pending" | "active" | "pastDue" | "canceled" | "ended";
           } | null;
         }
+      >;
+      payments: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<{
+          amount: number;
+          currency: "EUR" | "IDR" | "USD";
+          kind: "cycle" | "pass" | "invoice" | "credits";
+          paidAt: number;
+          rail: "polar" | "xendit";
+        }>
+      >;
+      proOffers: FunctionReference<
+        "query",
+        "public",
+        { currency: "EUR" | "IDR" | "USD" },
+        Array<{
+          amount: number;
+          currency: "EUR" | "IDR" | "USD";
+          interval: "month" | "pass" | "year";
+          months: number;
+          offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+        }>
       >;
     };
     sessions: {
@@ -224,6 +249,11 @@ export declare const api: {
         { locale: "en" | "id" | "de"; successUrl: string },
         { url: string }
       >;
+    };
+    xendit: {
+      cancel: {
+        cancelPlan: FunctionReference<"mutation", "public", {}, null>;
+      };
     };
   };
   chats: {
@@ -11399,12 +11429,6 @@ export declare const internal: {
         },
         { kind: "admitted" } | { kind: "unavailable" }
       >;
-      holdsPro: FunctionReference<
-        "query",
-        "internal",
-        { userId: Id<"users"> },
-        boolean
-      >;
       mayAdoptCustomer: FunctionReference<
         "query",
         "internal",
@@ -11424,6 +11448,12 @@ export declare const internal: {
             providerCustomerId: string | null;
           }
         | { kind: "unavailable" }
+      >;
+      proHolding: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        "none" | "pass" | "plan"
       >;
       recordCustomer: FunctionReference<
         "mutation",
@@ -11548,6 +11578,41 @@ export declare const internal: {
       >;
       run: FunctionReference<"action", "internal", { page: number }, null>;
     };
+    reminder: {
+      delivery: {
+        deliver: FunctionReference<
+          "action",
+          "internal",
+          { grantId: Id<"billingGrants">; locale: "en" | "id" | "de" },
+          null
+        >;
+      };
+      internal: {
+        enqueue: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            grantId: Id<"billingGrants">;
+            html: string;
+            subject: string;
+            text: string;
+          },
+          null
+        >;
+        readInput: FunctionReference<
+          "query",
+          "internal",
+          { grantId: Id<"billingGrants">; locale: "en" | "id" | "de" },
+          {
+            endsAt: number;
+            extendUrl: string;
+            locale: "en" | "id" | "de";
+            privacyPolicyUrl: string;
+            termsOfServiceUrl: string;
+          } | null
+        >;
+      };
+    };
     topup: {
       refundWithoutPro: FunctionReference<
         "action",
@@ -11557,6 +11622,14 @@ export declare const internal: {
       >;
     };
     xendit: {
+      cancel: {
+        deactivate: FunctionReference<
+          "action",
+          "internal",
+          { planId: string },
+          null
+        >;
+      };
       checkout: {
         admit: FunctionReference<
           "mutation",
@@ -11666,6 +11739,7 @@ export declare const internal: {
                     previous_plan: "free" | "pro";
                   };
                 };
+            locale: "en" | "id" | "de";
             offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
             session: {
               expiresAt: number;
