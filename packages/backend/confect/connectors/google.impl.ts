@@ -361,7 +361,7 @@ const store = FunctionImpl.make(
       googleSubject: args.subject,
       refreshToken: args.refreshToken,
       scopes: args.scopes,
-    });
+    }).pipe(Effect.orDie);
     if (GOOGLE_MANIFEST[args.connector].syncs) {
       const now = yield* Clock.currentTimeMillis;
       yield* (yield* DatabaseWriter)

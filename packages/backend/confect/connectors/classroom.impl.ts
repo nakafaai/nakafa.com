@@ -34,6 +34,7 @@ import {
   Layer,
   Number as Num,
   Option,
+  pipe,
   Schema,
   String as Str,
 } from "effect";
@@ -315,8 +316,8 @@ const links = FunctionImpl.make(
 
 /** A Classroom title as a task title: one trimmed line of at most 120 characters, or none when nothing is left. */
 const taskTitleOf = (title: string) =>
-  Schema.decodeUnknownOption(TaskTitle)(
-    Str.trim(Str.slice(Str.trim(title.replace(LINE_BREAKS, " ")), 0, 120))
+  Schema.decodeOption(TaskTitle)(
+    pipe(title.replace(LINE_BREAKS, " "), Str.trim, Str.slice(0, 120), Str.trim)
   );
 
 /**
@@ -361,10 +362,9 @@ const storeWork = FunctionImpl.make(
         if (Option.isNone(title)) {
           return false;
         }
-        const clientKey = Str.slice(
+        const clientKey = pipe(
           `classroom-${work.workId.replace(KEY_UNSAFE, "-")}`,
-          0,
-          64
+          Str.slice(0, 64)
         );
         const stored = yield* reader
           .table("classroomTasks")
@@ -391,10 +391,9 @@ const storeWork = FunctionImpl.make(
             maximum: 1000,
             minimum: 0,
           }),
-          text: Str.slice(
+          text: pipe(
             Str.trim(work.text) === "" ? title.value : Str.trim(work.text),
-            0,
-            8000
+            Str.slice(0, 8000)
           ),
           title: title.value,
         }).pipe(Effect.provideService(Class, klass));
