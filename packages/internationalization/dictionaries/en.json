@@ -80,6 +80,7 @@
     "password-label": "Password",
     "password-too-long": "The password is too long.",
     "password-too-short": "The password is too short.",
+    "sign-in-missing": "Type your school username and password.",
     "sign-in-refused": "The username or password is not right, so check both or ask your teacher if it keeps failing.",
     "submit": "Sign in",
     "username-action": "Sign in with a username",

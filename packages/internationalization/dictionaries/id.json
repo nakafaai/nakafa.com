@@ -80,6 +80,7 @@
     "password-label": "Kata sandi",
     "password-too-long": "Kata sandi terlalu panjang.",
     "password-too-short": "Kata sandi terlalu pendek.",
+    "sign-in-missing": "Ketik username sekolah dan kata sandimu.",
     "sign-in-refused": "Username atau kata sandi tidak cocok, jadi periksa keduanya atau tanya guru jika tetap gagal.",
     "submit": "Masuk",
     "username-action": "Masuk dengan username",
