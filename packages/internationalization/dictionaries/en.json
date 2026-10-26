@@ -361,7 +361,8 @@
     "billing-offer-month": "Every month",
     "billing-offer-year": "Every year",
     "billing-term-dates": "{start} to {end}",
-    "billing-quote": "{price} per student, {total} for {seats} students",
+    "billing-quote-term": "{seats, plural, one {# student} other {# students}} until {date}",
+    "billing-quote-seats": "{seats, plural, one {# student} other {# students}} at {price} each",
     "billing-issue": "Issue invoice",
     "billing-checkout": "Continue",
     "billing-invoices": "Invoices",
@@ -2323,9 +2324,9 @@
     "offer-title": "Choose how to pay",
     "offer-description": "The monthly plan renews by itself, and a pass is paid once.",
     "offer-monthly": "Monthly",
-    "offer-monthly-method": "Renews every month with an e-wallet or a card.",
+    "offer-monthly-method": "Renews monthly by e-wallet or card.",
     "offer-pass": "{months, number}-month pass",
-    "offer-pass-method": "Paid once with QRIS, a bank transfer or an e-wallet.",
+    "offer-pass-method": "Paid once by QRIS, transfer or e-wallet.",
     "offer-continue": "Continue"
   },
   "PricingPage": {

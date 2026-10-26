@@ -361,7 +361,8 @@
     "billing-offer-month": "Jeden Monat",
     "billing-offer-year": "Jedes Jahr",
     "billing-term-dates": "{start} bis {end}",
-    "billing-quote": "{price} pro Schüler, {total} für {seats} Schüler",
+    "billing-quote-term": "{seats} Schüler bis {date}",
+    "billing-quote-seats": "{seats} Schüler zu je {price}",
     "billing-issue": "Rechnung erstellen",
     "billing-checkout": "Weiter",
     "billing-invoices": "Rechnungen",
@@ -2323,9 +2324,9 @@
     "offer-title": "Zahlungsart wählen",
     "offer-description": "Das Monatsabo verlängert sich selbst, ein Pass wird einmal bezahlt.",
     "offer-monthly": "Monatlich",
-    "offer-monthly-method": "Verlängert sich jeden Monat mit E-Wallet oder Karte.",
+    "offer-monthly-method": "Verlängert sich per E-Wallet oder Karte.",
     "offer-pass": "{months, plural, one {Pass für # Monat} other {Pass für # Monate}}",
-    "offer-pass-method": "Einmal bezahlt mit QRIS, Banküberweisung oder E-Wallet.",
+    "offer-pass-method": "Einmal per QRIS, Überweisung, E-Wallet.",
     "offer-continue": "Weiter"
   },
   "PricingPage": {

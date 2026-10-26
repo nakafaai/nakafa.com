@@ -361,7 +361,8 @@
     "billing-offer-month": "Setiap bulan",
     "billing-offer-year": "Setiap tahun",
     "billing-term-dates": "{start} sampai {end}",
-    "billing-quote": "{price} per siswa, {total} untuk {seats} siswa",
+    "billing-quote-term": "{seats} siswa sampai {date}",
+    "billing-quote-seats": "{seats} siswa, {price} per siswa",
     "billing-issue": "Buat invoice",
     "billing-checkout": "Lanjut",
     "billing-invoices": "Invoice",
@@ -2323,9 +2324,9 @@
     "offer-title": "Pilih cara bayar",
     "offer-description": "Paket bulanan diperpanjang otomatis, dan pass dibayar sekali.",
     "offer-monthly": "Bulanan",
-    "offer-monthly-method": "Diperpanjang tiap bulan dengan e-wallet atau kartu.",
+    "offer-monthly-method": "Ditagih tiap bulan ke e-wallet atau kartu.",
     "offer-pass": "Pass {months} bulan",
-    "offer-pass-method": "Dibayar sekali dengan QRIS, transfer bank, atau e-wallet.",
+    "offer-pass-method": "Sekali bayar via QRIS, transfer, e-wallet.",
     "offer-continue": "Lanjut"
   },
   "PricingPage": {

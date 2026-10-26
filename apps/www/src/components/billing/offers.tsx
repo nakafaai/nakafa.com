@@ -88,7 +88,7 @@ export function ProOfferDialog({
   );
 }
 
-/** One offer: its name, how it is paid, and its price. */
+/** One offer: its name and price on one line, and how it is paid on the next. */
 function ProOfferOption({ offer }: { offer: ProOffer }) {
   const t = useTranslations("Pricing");
   const isPass = offer.interval === "pass";
@@ -97,17 +97,19 @@ function ProOfferOption({ offer }: { offer: ProOffer }) {
     <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-data-checked:border-primary">
       <Radio className="mt-0.5" value={offer.offer} />
       <span className="grid flex-1 gap-1">
-        <span className="font-medium text-sm">
-          {isPass
-            ? t("offer-pass", { months: offer.months })
-            : t("offer-monthly")}
+        <span className="flex items-baseline justify-between gap-3 font-medium text-sm">
+          <span>
+            {isPass
+              ? t("offer-pass", { months: offer.months })
+              : t("offer-monthly")}
+          </span>
+          <span className="tabular-nums">
+            {formatMinorAmount(offer.amount, offer.currency)}
+          </span>
         </span>
         <span className="text-muted-foreground text-sm">
           {t(isPass ? "offer-pass-method" : "offer-monthly-method")}
         </span>
-      </span>
-      <span className="font-medium text-sm tabular-nums">
-        {formatMinorAmount(offer.amount, offer.currency)}
       </span>
     </label>
   );

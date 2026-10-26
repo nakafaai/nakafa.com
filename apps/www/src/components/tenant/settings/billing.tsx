@@ -311,7 +311,11 @@ function SchoolTermDialog({
   );
 }
 
-/** One term the school can pay for: its name and dates, a student's price for the days left, and the total. */
+/**
+ * One term the school can pay for: its name and total on one line, and on the
+ * next the students it pays for with the day an invoice's term ends, or the
+ * price of each renewing Polar seat.
+ */
 function SchoolTermOption({
   currency,
   quote,
@@ -327,22 +331,23 @@ function SchoolTermOption({
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-data-checked:border-primary">
       <Radio className="mt-0.5" value={quote.offer} />
-      <span className="grid gap-1">
-        <span className="font-medium text-sm">
-          {t(OFFER_LABELS[rail][quote.offer])}
+      <span className="grid flex-1 gap-1">
+        <span className="flex items-baseline justify-between gap-3 font-medium text-sm">
+          <span>{t(OFFER_LABELS[rail][quote.offer])}</span>
+          <span className="tabular-nums">
+            {formatMinorAmount(quote.total, currency)}
+          </span>
         </span>
         <span className="text-muted-foreground text-sm">
-          {t("billing-term-dates", {
-            end: formatBillingDate(quote.periodEnd - 1, locale),
-            start: formatBillingDate(quote.periodStart, locale),
-          })}
-        </span>
-        <span className="text-sm">
-          {t("billing-quote", {
-            price: formatMinorAmount(quote.unitAmount, currency),
-            seats: quote.seats,
-            total: formatMinorAmount(quote.total, currency),
-          })}
+          {rail === "xendit"
+            ? t("billing-quote-term", {
+                date: formatBillingDate(quote.periodEnd - 1, locale),
+                seats: quote.seats,
+              })
+            : t("billing-quote-seats", {
+                price: formatMinorAmount(quote.unitAmount, currency),
+                seats: quote.seats,
+              })}
         </span>
       </span>
     </label>
