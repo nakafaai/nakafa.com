@@ -30,7 +30,9 @@ export function SittingDocument(
 /** What a document keeps while its reader loads: a prompt's height for a page, nothing for a line. */
 function DocumentReserve({
   size,
-}: Pick<ComponentProps<typeof LazySittingDocument>, "size">) {
+}: {
+  size: ComponentProps<typeof LazySittingDocument>["size"];
+}) {
   return size === "line" ? null : <PromptReserve />;
 }
 
