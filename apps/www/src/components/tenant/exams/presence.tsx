@@ -70,7 +70,7 @@ export function ExamPresence() {
 
 /**
  * Keeps this editor in the exam's room while `isOpen` holds: it joins at once, beats every
- * interval while the tab shows, joins again when the tab shows after a beat found it hidden, and
+ * interval while the tab shows, joins again a moment after the tab shows once a beat found it hidden, and
  * leaves when the page goes away or the editor closes (`makeHeartbeat`). A failure is reported,
  * and the row keeps what the room last said.
  */

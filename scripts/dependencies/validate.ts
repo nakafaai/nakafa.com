@@ -4,6 +4,7 @@ import {
   Option,
   Order,
   Record as Rec,
+  String as Str,
 } from "effect";
 import {
   AI_SDK_COHORT,
@@ -13,6 +14,7 @@ import {
   NODE_RUNTIME_VERSION,
   OBSOLETE_DEPENDENCIES,
   PACKAGE_MANAGER,
+  RETIRED_LOCK_PACKAGES,
   SCRIPT_DEPENDENCY_HOLDS,
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
@@ -124,7 +126,22 @@ function cohortProblems(workspace: WorkspaceManifest) {
   ]);
 }
 
-/** Validates exact cohort declarations and the absence of v3 packages. */
+/**
+ * Reports each retired package that the lock resolves. A resolved package is a
+ * packages entry whose array starts with "<name>@<version>"; a peer declaration
+ * names the package only as a key or a list item, so it never matches.
+ */
+function lockProblems(lock: string) {
+  return Arr.flatMap(
+    Rec.toEntries(RETIRED_LOCK_PACKAGES),
+    ([dependency, replacement]) =>
+      problemWhen(
+        Str.includes(`["${dependency}@`)(lock),
+        `bun.lock resolves the retired package ${dependency}; ${replacement} replaces it.`
+      )
+  );
+}
+
 /** The dependencies that routine updates leave to their reviewed holds. */
 export function heldDependencyNames(): readonly string[] {
   return Arr.sort(
@@ -136,13 +153,16 @@ export function heldDependencyNames(): readonly string[] {
   );
 }
 
+/** Validates exact cohort declarations, retired packages, and the lock. */
 export function validateDependencyPolicy({
+  lock,
   manifests,
   rootManifest,
   workspace,
 }: DependencyPolicyInput) {
   return Arr.flatten([
     declarationProblems(manifests),
+    lockProblems(lock),
     Arr.flatMap(
       Rec.toEntries(OBSOLETE_DEPENDENCIES),
       ([dependency, replacement]) =>

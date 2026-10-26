@@ -1,7 +1,15 @@
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  Record as Rec,
+  Result,
+  Schema,
+} from "effect";
 import { KeyValueStore } from "effect/persistence";
+import { isFinalRefusal } from "@/components/exams/sitting/entry";
 
 /**
  * The browser's kept state of a sitting attempt, which holds the answers until the server holds them. Flags are
@@ -174,3 +182,24 @@ export function submittedKeysOf<Sitting, Attempt>(
     )
   );
 }
+
+/**
+ * Settles the answer that the browser keeps once its send ends, and resolves to the failure that the student
+ * is told about, or to none when the server took the answer. A success runs `confirm`, and so does a final
+ * refusal, such as a stale version, because the server will not take that answer later either. A refusal for
+ * a lock, and any other failure, keeps the answer for the next visit to the paper to send again.
+ */
+export const settleSent = Effect.fn("exams.sitting.keep.settle")(function* <
+  E,
+  R,
+>(sent: Effect.Effect<unknown, E>, confirm: Effect.Effect<void, never, R>) {
+  const result = yield* Effect.result(sent);
+  if (Result.isSuccess(result)) {
+    yield* confirm;
+    return Option.none<E>();
+  }
+  if (isFinalRefusal(result.failure)) {
+    yield* confirm;
+  }
+  return Option.some(result.failure);
+});

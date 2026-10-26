@@ -1,5 +1,5 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
@@ -8,6 +8,11 @@ import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";
 import { BackButton } from "@/components/shared/back";
 import { ThemePicker } from "@/components/shared/theme/picker";
+import {
+  getPostAuthDestination,
+  resolvePostAuthIntent,
+} from "@/lib/auth/admission";
+import { isSignedIn } from "@/lib/auth/gate";
 import { readAuthLegalFn } from "@/lib/auth/legal.functions";
 import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
@@ -22,10 +27,26 @@ const AuthSearch = Schema.Struct({
 
 /**
  * The sign-in page takes the root metadata, which names its title, description
- * and the canonical address of the locale's home, as the reference app does.
+ * and the canonical address of the locale's home, as the reference app does. A
+ * signed-in visitor never sees it: the gate sends them on to the page the intent
+ * names, or home, before the loader runs, with 307 on the server.
  */
 export const Route = createFileRoute("/$locale/_entry/auth/")({
   validateSearch: Schema.toStandardSchemaV1(AuthSearch),
+  beforeLoad: async ({ params, search }) => {
+    if (!(await isSignedIn())) {
+      return;
+    }
+    const destination = getPostAuthDestination(
+      resolvePostAuthIntent(search.redirect, params.locale),
+      params.locale
+    );
+    // The intent is a validated path of any page, so it stays an href, not a typed route.
+    throw redirect({
+      href: `/${destination.locale}${destination.href}`,
+      statusCode: 307,
+    });
+  },
   loader: async ({ params }) => {
     const [messages, legal] = await Promise.all([
       readRouteMessages({

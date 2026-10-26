@@ -3343,6 +3343,12 @@ export declare const api: {
           title: string;
         }
       >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        null
+      >;
       rename: FunctionReference<
         "mutation",
         "public",
@@ -13678,6 +13684,12 @@ export declare const internal: {
         "internal",
         { storageId: Id<"_storage"> },
         { size: number }
+      >;
+      sweep: FunctionReference<
+        "mutation",
+        "internal",
+        { examId: Id<"exams"> },
+        { done: boolean }
       >;
     };
     reads: {
