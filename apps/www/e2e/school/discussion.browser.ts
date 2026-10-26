@@ -79,8 +79,8 @@ for (const viewport of [
         .locator("[data-slot=discussion]")
         .getByText("Karena gaya gesek melawan arah gerak.")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-    // On a wide screen the channel stays beside the discussion, and it counts the reply.
-    if (viewport.width >= 1024) {
+    // From tablet width the channel stays beside the discussion, and it counts the reply.
+    if (viewport.width >= 768) {
       await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
     }
     await context.close();

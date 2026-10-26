@@ -31,7 +31,7 @@ import { schoolClassChannelTarget } from "@/lib/routing/school/target";
 type Thread = Ref.Returns<typeof classroom.forum.threads.get>;
 
 /**
- * One numbered discussion of a class (ADR 0025). On a wide screen it opens as a panel beside its
+ * One numbered discussion of a class (ADR 0025). From tablet width it opens as a panel beside its
  * channel, which stays readable; on a phone it fills the screen, and the path above leads back to the
  * channel. Its opening message stands first, its replies follow, and the composer under them
  * replies, for a member of the class or a subject teacher.
@@ -58,8 +58,8 @@ export function ForumDiscussion({
   });
 
   return (
-    <div className="grid w-full min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-      <div className="hidden min-w-0 lg:flex">
+    <div className="grid w-full min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+      <div className="hidden min-w-0 md:flex">
         <ForumChannel
           canManage={canManage}
           canPost={canPost}
@@ -70,7 +70,7 @@ export function ForumDiscussion({
       </div>
       <section
         aria-label={title}
-        className="flex h-[70dvh] min-h-96 min-w-0 flex-col gap-3 lg:border-s lg:ps-6"
+        className="flex h-[70dvh] min-h-96 min-w-0 flex-col gap-3 md:border-s md:ps-6"
         data-slot="discussion"
       >
         <div className="flex min-w-0 items-start justify-between gap-2">
@@ -80,7 +80,7 @@ export function ForumDiscussion({
           <TargetLink
             aria-label={t("discussion-close")}
             className={buttonVariants({
-              className: "hidden shrink-0 lg:inline-flex",
+              className: "hidden shrink-0 md:inline-flex",
               size: "icon-sm",
               variant: "ghost",
             })}
