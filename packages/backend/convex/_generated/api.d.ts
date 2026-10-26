@@ -486,6 +486,7 @@ export declare const api: {
           },
           {
             author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
             createdAt: number;
             editedAt: number | null;
             id: Id<"classroomMessages">;
@@ -503,6 +504,7 @@ export declare const api: {
           },
           {
             author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
             createdAt: number;
             editedAt: number | null;
             id: Id<"classroomMessages">;
@@ -531,6 +533,7 @@ export declare const api: {
             isDone: boolean;
             page: Array<{
               author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
               createdAt: number;
               editedAt: number | null;
               id: Id<"classroomMessages">;
@@ -553,6 +556,7 @@ export declare const api: {
           },
           {
             author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
             createdAt: number;
             editedAt: number | null;
             id: Id<"classroomMessages">;
