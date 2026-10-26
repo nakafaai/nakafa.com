@@ -129,11 +129,12 @@ function useWide() {
 }
 
 /**
- * The group's height and where its second pane steps aside. A list's panes run from under its
+ * The group's width, height, and where its second pane steps aside. It fills the page up to the
+ * app's widest content, `max-w-7xl`, and no further. A list's panes run from under its
  * header to the bottom of the screen, and a page whose header is taller than the school header's
  * 4rem sets `--panes-offset` to its height; the exam editor's panes fill the room its shell leaves.
  */
-const panesVariants = cva("min-h-0", {
+const panesVariants = cva("mx-auto min-h-0 w-full max-w-7xl", {
   variants: {
     fill: {
       parent: "flex-1",
