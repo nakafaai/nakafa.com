@@ -27,13 +27,13 @@ const MCP_RESOURCE = "https://nf.nakafa.com/mcp";
 /** Sends one MCP request to the school MCP route with a bearer token, or none. */
 const send = (fixture: Fixture, request: McpRequest, token?: string) => {
   const headers = new Headers();
-  for (const [name, value] of Rec.toEntries({
-    ...request.headers,
-    ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
-  })) {
+  for (const [name, value] of Rec.toEntries(request.headers ?? {})) {
     if (value !== null) {
       headers.set(name, value);
     }
+  }
+  if (token !== undefined) {
+    headers.set("authorization", `Bearer ${token}`);
   }
   return Effect.promise(() =>
     fixture.fetch(SCHOOL_MCP_PATH, {
@@ -158,21 +158,24 @@ describe("school MCP route", () => {
             .isError
         ).toBe(true);
 
-        const closed = yield* mcpToken(fixture, ["person.view"]);
-        const refused = yield* send(
-          fixture,
-          modernPost(
-            7,
-            "tools/call",
-            { arguments: {}, name: "school_list_periods" },
-            "school_list_periods"
-          ),
-          closed.token
-        ).pipe(
-          Effect.flatMap(json),
-          Effect.flatMap(Schema.decodeUnknownEffect(ToolAnswer))
-        );
-        expect(refused.result.isError).toBe(true);
+        // A client that holds only cohort.view reads no period and no person, so each tool refuses it.
+        const closed = yield* mcpToken(fixture, ["cohort.view"]);
+        for (const [name, args] of [
+          ["school_list_periods", {}],
+          ["school_list_cohorts", { period: term.id }],
+          ["school_list_people", {}],
+          ["school_list_placements", { period: term.id }],
+        ] as const) {
+          const refused = yield* send(
+            fixture,
+            modernPost(7, "tools/call", { arguments: args, name }, name),
+            closed.token
+          ).pipe(
+            Effect.flatMap(json),
+            Effect.flatMap(Schema.decodeUnknownEffect(ToolAnswer))
+          );
+          expect(refused.result.isError).toBe(true);
+        }
       })
   );
 

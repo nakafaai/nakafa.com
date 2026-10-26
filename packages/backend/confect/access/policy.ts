@@ -136,6 +136,14 @@ const make = <
     };
   });
 
+  /** The rule of one action of the kind; an action the kind does not rule is a defect. */
+  const ruleOf = (action: typeof Action.Type) =>
+    Option.match(HashMap.get(rules, action), {
+      onNone: () =>
+        Effect.die(`Access action ${action} has no rule on kind ${name}.`),
+      onSome: Effect.succeed,
+    });
+
   /**
    * Decides one action on a loaded subject. A row of another tenant is
    * refused by `decide` whichever path loaded it, and that refusal is the
@@ -146,11 +154,7 @@ const make = <
     row: Row
   ) {
     const member = yield* Member;
-    const rule = yield* Option.match(HashMap.get(rules, action), {
-      onNone: () =>
-        Effect.die(`Access action ${action} has no rule on kind ${name}.`),
-      onSome: Effect.succeed,
-    });
+    const rule = yield* ruleOf(action);
     const decision = yield* decide(
       action,
       rule,
@@ -193,11 +197,7 @@ const make = <
     row: Row,
     principal: typeof ClientPrincipal.Type
   ) {
-    const rule = yield* Option.match(HashMap.get(rules, action), {
-      onNone: () =>
-        Effect.die(`Access action ${action} has no rule on kind ${name}.`),
-      onSome: Effect.succeed,
-    });
+    const rule = yield* ruleOf(action);
     const decision = yield* decide(
       action,
       rule,

@@ -78,10 +78,7 @@ export const integrationTokenValidator = Schema.Struct({
 });
 
 /** Why the token endpoint refused a request, as the OAuth error code it answers. */
-export const TokenRefusal = Schema.Literals([
-  "invalid_client",
-  "invalid_target",
-]);
+const TokenRefusal = Schema.Literals(["invalid_client", "invalid_target"]);
 
 /** What the internal issue answers: the token once, or the refusal. */
 export const TokenIssue = Schema.Union([

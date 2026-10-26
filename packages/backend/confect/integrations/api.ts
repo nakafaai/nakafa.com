@@ -96,7 +96,7 @@ export class OAuthClientError extends Schema.TaggedError<OAuthClientError>()(
 ) {}
 
 /** The client credentials grant (RFC 6749 section 4.4), form encoded, with the resource it asks for (RFC 8707). */
-export const TokenRequest = Schema.Struct({
+const TokenRequest = Schema.Struct({
   client_id: Schema.String,
   client_secret: Schema.String,
   grant_type: Schema.String,
@@ -104,7 +104,7 @@ export const TokenRequest = Schema.Struct({
 });
 
 /** An access token for one resource. */
-export const TokenResponse = Schema.Struct({
+const TokenResponse = Schema.Struct({
   access_token: Schema.String,
   expires_in: Schema.Finite,
   token_type: Schema.Literal("Bearer"),
@@ -158,7 +158,7 @@ export const ApiPlacement = Schema.Struct({
 });
 
 /** The token endpoint, which takes the client's own credentials and no bearer token. */
-export class OAuthGroup extends HttpApiGroup.make("oauth").add(
+class OAuthGroup extends HttpApiGroup.make("oauth").add(
   HttpApiEndpoint.post("token", "/token", {
     error: [OAuthError, OAuthClientError],
     payload: TokenRequest.pipe(HttpApiSchema.asFormUrlEncoded()),
@@ -167,7 +167,7 @@ export class OAuthGroup extends HttpApiGroup.make("oauth").add(
 ) {}
 
 /** The roster reads that a client's action list opens: periods, cohorts, people, and placements. */
-export class RosterGroup extends HttpApiGroup.make("roster")
+class RosterGroup extends HttpApiGroup.make("roster")
   .add(
     HttpApiEndpoint.get("periods", "/periods", {
       error: ROSTER_ERRORS,

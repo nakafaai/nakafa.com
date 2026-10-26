@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { TOKEN_SECONDS } from "@repo/backend/confect/integrations/api";
 import { createClient, issue } from "@repo/backend/test/api";
 import { nf } from "@repo/backend/test/classroom";
@@ -138,6 +141,27 @@ describe("integrations/tokens check", () => {
         );
         expect(
           yield* fixture.internal.mutation(check, { resource: "api", token })
+        ).toEqual(unauthorized);
+        // A client that is no longer active opens nothing, even with a live token left behind.
+        const again = yield* issue(fixture, client);
+        const live = again.outcome === "issued" ? again.token : "";
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("integrationClients")
+              .patch(client.id, {
+                revokedAt: TENANCY_NOW,
+                secretHash: null,
+                status: "revoked",
+              })
+              .pipe(Effect.orDie)
+          )
+        );
+        expect(
+          yield* fixture.internal.mutation(check, {
+            resource: "api",
+            token: live,
+          })
         ).toEqual(unauthorized);
       })
   );

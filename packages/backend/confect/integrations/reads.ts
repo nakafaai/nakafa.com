@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { Action } from "@repo/backend/confect/access/catalog";
 import { PAGE_LIMIT } from "@repo/backend/confect/integrations/api";
+import type { Forbidden } from "@repo/backend/confect/integrations/reads.spec";
 import {
   cohortAuthority,
   periodAuthority,
@@ -15,9 +16,7 @@ import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Option } from "effect";
 
 /** The answer of a read that the client's action list does not open. */
-export const FORBIDDEN: { readonly outcome: "forbidden" } = {
-  outcome: "forbidden",
-};
+export const FORBIDDEN: typeof Forbidden.Type = { outcome: "forbidden" };
 
 /** Loads the client a verified token named, with its school. A token names a client that exists, so a missing one is a defect. */
 export const clientRead = Effect.fn("integrations.reads.client")(function* (
@@ -36,7 +35,7 @@ export const clientRead = Effect.fn("integrations.reads.client")(function* (
 });
 
 /** A client and its school, the principal that every read decides for. */
-export type ClientRead = Effect.Success<ReturnType<typeof clientRead>>;
+type ClientRead = Effect.Success<ReturnType<typeof clientRead>>;
 
 /** Whether the client's own action list names an action. The rule and the scope are decided per row. */
 export const lists = (read: ClientRead, action: typeof Action.Type) =>

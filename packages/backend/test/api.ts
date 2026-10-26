@@ -9,7 +9,7 @@ import type { Effect } from "effect";
 export type Fixture = Effect.Success<typeof tenancyFixture>;
 
 /** The roster reads a school API client holds by default. */
-export const ROSTER_READS: typeof ClientActions.Type = [
+const ROSTER_READS: typeof ClientActions.Type = [
   "cohort.view",
   "period.view",
   "person.view",

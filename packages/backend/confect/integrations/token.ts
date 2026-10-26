@@ -58,7 +58,7 @@ const RESOURCE_PATHS: Readonly<Record<string, typeof TokenResource.Type>> = {
  * or the API or the MCP server of the client's own school host. A resource of another
  * school or of another path names none, so the request is refused as `invalid_target`.
  */
-export const resourceOf = (
+const resourceOf = (
   resource: string | undefined,
   slug: string
 ): Option.Option<typeof TokenResource.Type> => {

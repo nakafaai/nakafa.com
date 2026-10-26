@@ -9,6 +9,11 @@ import {
 import { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
+/** The refusal of a read that the client's action list or scope does not open. */
+export const Forbidden = Schema.Struct({
+  outcome: Schema.Literal("forbidden"),
+});
+
 /** One page of a client's read, or the refusal of a read its action list or scope does not open. */
 const answerOf = <S extends Schema.Top>(item: S) =>
   Schema.Union([
@@ -17,7 +22,7 @@ const answerOf = <S extends Schema.Top>(item: S) =>
       next: Schema.NullOr(Schema.String),
       outcome: Schema.Literal("page"),
     }),
-    Schema.Struct({ outcome: Schema.Literal("forbidden") }),
+    Forbidden,
   ]);
 
 /** The page of a read that names a cursor and a size. */

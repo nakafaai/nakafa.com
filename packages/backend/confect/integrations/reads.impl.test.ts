@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { createClient } from "@repo/backend/test/api";
 import { cohort, nf, period } from "@repo/backend/test/classroom";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -150,7 +151,14 @@ describe("integrations/reads", () => {
             unitId: fixture.units.sd,
           });
         const all = yield* createClient(fixture);
-        for (const periodId of [other.id, "not-an-id"]) {
+        // A period that no longer exists reads as one the client may not see.
+        const gone = yield* period(fixture, fixture.units.sma);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantPeriods").delete(gone.id).pipe(Effect.orDie)
+          )
+        );
+        for (const periodId of [other.id, "not-an-id", gone.id]) {
           expect(
             yield* fixture.internal.query(reads.cohorts, {
               clientId: all.id,

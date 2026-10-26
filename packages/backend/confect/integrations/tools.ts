@@ -145,7 +145,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
           "List the periods (semesters or school years) of the school.",
         input: NoInput,
         name: "school_list_periods",
-        output: mcpToolOutputSchema(pageOf(ApiPeriod)),
+        output: ApiPeriod.pipe(pageOf, mcpToolOutputSchema),
         title: "List periods",
       }),
     });
@@ -174,7 +174,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
           "List the class groups (rombel) of one period, a page at a time.",
         input: PeriodPage,
         name: "school_list_cohorts",
-        output: mcpToolOutputSchema(pageOf(ApiCohort)),
+        output: ApiCohort.pipe(pageOf, mcpToolOutputSchema),
         title: "List class groups",
       }),
     });
@@ -203,7 +203,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
           "List the people of the school by status, a page at a time, with no email address.",
         input: PeoplePage,
         name: "school_list_people",
-        output: mcpToolOutputSchema(pageOf(ApiPerson)),
+        output: ApiPerson.pipe(pageOf, mcpToolOutputSchema),
         title: "List people",
       }),
     });
@@ -232,7 +232,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
           "List which student is placed in which class group of one period, a page at a time.",
         input: PeriodPage,
         name: "school_list_placements",
-        output: mcpToolOutputSchema(pageOf(ApiPlacement)),
+        output: ApiPlacement.pipe(pageOf, mcpToolOutputSchema),
         title: "List placements",
       }),
     });
