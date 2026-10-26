@@ -7,6 +7,7 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../notifications/push.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
+["publicKey"]: RegisteredConvexFunction.register({ ...definitions["publicKey"], handler: forward(definitions["publicKey"].handler) }),
 ["subscribe"]: RegisteredConvexFunction.register({ ...definitions["subscribe"], handler: forward(definitions["subscribe"].handler) }),
 ["unsubscribe"]: RegisteredConvexFunction.register({ ...definitions["unsubscribe"], handler: forward(definitions["unsubscribe"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../notifications/push.spec")["default"]>;

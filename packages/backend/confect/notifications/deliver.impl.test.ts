@@ -155,6 +155,9 @@ describe("notifications/deliver", () => {
       Effect.gen(function* () {
         vi.setSystemTime(Date.UTC(2026, 9, 1, 15, 0, 0));
         const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        // A zone the platform does not name, written after the period that needs a real one.
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
             writer
@@ -162,8 +165,6 @@ describe("notifications/deliver", () => {
               .patch(fixture.units.smp, { timeZone: "Mars/Olympus" })
           ).pipe(Effect.orDie)
         );
-        const term = yield* period(fixture, fixture.units.smp);
-        const forum = yield* forumClass(fixture, term.id, "X-1");
         yield* fixture
           .as("student")
           .mutation(push.subscribe, yield* browserKeys);
