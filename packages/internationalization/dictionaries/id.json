@@ -1,5 +1,6 @@
 {
   "DataTable": {
+    "filter": "Saring",
     "no-results": "Tidak ada hasil.",
     "reset": "Atur ulang"
   },
@@ -107,6 +108,15 @@
     "signals-empty": "Belum ada kejadian yang tercatat.",
     "signal-exit": "Keluar dari ujian",
     "signal-return": "Kembali ke ujian",
+    "screen-title": "Layar siswa",
+    "screen-none": "Siswa belum membuka soal.",
+    "results-away": "Keluar ujian",
+    "results-student-answers": "Jawaban siswa",
+    "results-not-submitted": "Siswa belum mengumpulkan ujian.",
+    "results-away-seconds": "{count} kali selama {seconds} detik",
+    "results-away-minutes": "{count} kali selama {minutes} menit {seconds} detik",
+    "signal-away-seconds": "Keluar dari ujian selama {seconds} detik",
+    "signal-away-minutes": "Keluar dari ujian selama {minutes} menit {seconds} detik",
     "signal-blur": "Keluar dari jendela",
     "signal-fullscreenExit": "Keluar dari layar penuh",
     "signal-copy": "Menyalin teks",
@@ -174,6 +184,7 @@
     "unavailable": "Ujian ini tidak tersedia.",
     "frozen-note": "Ujian ini sudah dijadwalkan, jadi soalnya tidak bisa diubah.",
     "archived-note": "Sekolah ini diarsipkan, jadi ujiannya hanya bisa dibaca sampai dipulihkan.",
+    "gone-note": "Ujian ini sudah dihapus atau ditutup untuk Anda, jadi perubahan di sini tidak tersimpan.",
     "room-cancel": "Batalkan ruang",
     "room-cancel-title": "Batalkan ruang ini?",
     "room-cancel-description": "Siswa tidak bisa masuk. Soal ujian bisa diubah lagi jika tidak ada ruang lain untuknya.",
@@ -225,13 +236,11 @@
     "release-title": "Rilis hasil kepada siswa?",
     "release-description": "Setiap siswa melihat skor dan jawabannya sendiri setelah kamu merilisnya.",
     "release-action": "Rilis hasil",
-    "release-footer": "Siswa melihat hasilnya setelah kamu merilisnya.",
-    "release-wait-footer": "Penulis ujian atau Admin merilis hasilnya setelah sesi ditutup.",
-    "released-footer": "Siswa sudah dapat melihat hasilnya.",
+    "released": "Dirilis",
     "student-results-title": "Hasilmu",
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
-    "student-answer": "Jawabanmu: {letters}",
+    "student-answer": "Jawabanmu: {answer}",
     "student-answers": "Jawabanmu",
     "student-results-released": "Gurumu sudah merilis hasil ini.",
     "schedule": "Jadwalkan",
@@ -247,9 +256,9 @@
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
     "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat.",
     "rooms-title": "Ruang",
+    "edit-action": "Ubah ujian",
     "rooms-empty": "Belum ada ruang",
     "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",
-    "rooms-empty-action": "Buka ujian",
     "rooms-filter-empty": "Tidak ada ruang dengan status ini",
     "rooms-filter-empty-description": "Pilih status lain untuk melihat ruang yang lain.",
     "rooms-unavailable": "Anda tidak dapat melihat ruang ujian ini.",
@@ -292,6 +301,19 @@
     "fullscreen": "Layar penuh",
     "fullscreen-exit": "Keluar layar penuh",
     "zoom": "Perbesar",
+    "zoom-options": "Pilihan perbesaran",
+    "zoom-fit": "Pas",
+    "zoom-fill": "Penuh",
+    "page-of": "Soal {current} dari {total}, buka soal lain",
+    "page-jump": "Buka soal, 1 sampai {total}",
+    "open-question": "Buka soal {number}",
+    "select-question": "Pilih soal {number}",
+    "select-all": "Pilih semua",
+    "grid-duplicate": "Duplikat",
+    "grid-delete": "Hapus",
+    "selected-count": "{count} dipilih",
+    "remove-many-title": "Hapus {count} soal?",
+    "remove-many-description": "Soal-soal dan jawabannya keluar dari ujian ini.",
     "student-retry": "Sesi ini gagal dimuat, jadi coba lagi sebentar lagi.",
     "student-opens-at": "Sesi ini dibuka {time}.",
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
@@ -320,7 +342,55 @@
     "import-drop": "Letakkan berkas Word atau PDF di sini, atau pilih satu.",
     "import-remove": "Hapus berkas",
     "presence-editor": "{name} sedang mengedit",
-    "presence-more": "{names} sedang mengedit"
+    "presence-more": "{names} sedang mengedit",
+    "template-choice": "Pilihan ganda",
+    "template-choices": "Pilihan ganda kompleks",
+    "template-label": "Jenis soal: {type}",
+    "template-truefalse": "Benar-salah",
+    "template-cause": "Sebab-akibat",
+    "truefalse-true": "Benar",
+    "truefalse-false": "Salah",
+    "cause-related": "Pernyataan dan alasan benar serta berhubungan",
+    "cause-unrelated": "Pernyataan dan alasan benar tetapi tidak berhubungan",
+    "cause-reason-false": "Pernyataan benar dan alasan salah",
+    "cause-statement-false": "Pernyataan salah dan alasan benar",
+    "cause-both-false": "Pernyataan dan alasan salah",
+    "template-short": "Isian singkat",
+    "short-placeholder": "Ketik jawabanmu",
+    "short-line": "Kolom jawaban",
+    "accepted-answers": "Jawaban yang diterima",
+    "accepted-of": "Jawaban diterima {index} soal {number}",
+    "accepted-remove-of": "Hapus jawaban diterima {index} soal {number}",
+    "accepted-add": "Tambah jawaban",
+    "accepted-hint": "Huruf besar dan spasi berlebih tidak dihitung, dan jawaban lain menunggu kamu nilai.",
+    "template-essay": "Uraian",
+    "essay-placeholder": "Tulis jawabanmu",
+    "essay-area": "Kolom uraian",
+    "verdict-partial": "Sebagian benar",
+    "results-points": "Poin",
+    "grade-of": "Poin {name}",
+    "template-match": "Menjodohkan",
+    "match-statements": "Pernyataan",
+    "match-answers": "Jawaban",
+    "statement-of": "Soal {number}, pernyataan {name}",
+    "answer-of": "Soal {number}, jawaban {name}",
+    "statement-placeholder": "Pernyataan",
+    "answer-placeholder": "Jawaban",
+    "statement-remove-of": "Hapus pernyataan {name} soal {number}",
+    "answer-remove-of": "Hapus jawaban {name} soal {number}",
+    "statement-add": "Tambah pernyataan",
+    "match-answer-add": "Tambah pilihan jawaban",
+    "statement-number": "Pernyataan {name}",
+    "pair-of": "Jawaban untuk pernyataan {name} soal {number}",
+    "pair-choose": "Pilih",
+    "pair-hint": "Setiap jawaban berpasangan dengan satu pernyataan, dan kunci tersimpan setelah semua pernyataan punya jawaban.",
+    "pair-statement": "Jawaban untuk pernyataan {number}",
+    "template-table": "Tabel benar-salah",
+    "table-columns": "Kolom",
+    "column-of": "Soal {number}, kolom {name}",
+    "column-placeholder": "Kolom",
+    "cell-of": "Kolom untuk pernyataan {name} soal {number}",
+    "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom."
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -337,6 +407,47 @@
     "clients": "Klien API",
     "policies": "Kebijakan",
     "audit": "Jejak audit",
+    "billing": "Tagihan",
+    "billing-free-title": "Gratis",
+    "billing-free-description": "Sampai {limit} siswa, dengan semua fitur School.",
+    "billing-school-title": "School",
+    "billing-school-description": "Setiap siswa punya Pro sampai {date}.",
+    "billing-students": "Siswa",
+    "billing-limit": "Batas gratis",
+    "billing-paid": "Siswa dibayar",
+    "billing-nina": "Kredit Nina bulan ini",
+    "billing-nina-used": "{used} dari {total} terpakai",
+    "billing-upgrade": "Upgrade",
+    "billing-add": "Bayar siswa baru",
+    "billing-free-footer": "Upgrade untuk mendaftarkan lebih dari {limit} siswa dan memberi setiap siswa Pro.",
+    "billing-add-footer": "Siswa baru ditagih untuk sisa periode.",
+    "billing-free-empty": "Daftarkan siswa untuk meng-upgrade sekolah ke School.",
+    "billing-school-footer": "Semua siswa sudah dibayar.",
+    "billing-dialog-title": "Pilih periode",
+    "billing-dialog-description": "Bayar per siswa terdaftar untuk sisa hari periode.",
+    "billing-dialog-seats": "Bayar per siswa terdaftar. Kursi diperpanjang sampai kamu membatalkannya.",
+    "billing-term-semester": "Semester ini",
+    "billing-term-year": "Tahun ajaran ini",
+    "billing-offer-month": "Setiap bulan",
+    "billing-offer-year": "Setiap tahun",
+    "billing-term-dates": "{start} sampai {end}",
+    "billing-quote": "{price} per siswa, {total} untuk {seats} siswa",
+    "billing-issue": "Buat invoice",
+    "billing-invoices": "Invoice",
+    "billing-invoices-description": "Semua invoice yang diterbitkan untuk sekolah.",
+    "billing-invoices-footer": "Bayar invoice terbuka sebelum jatuh tempo.",
+    "billing-invoices-empty": "Sekolah belum punya invoice.",
+    "invoice-number": "Invoice",
+    "invoice-term": "Periode",
+    "invoice-students": "Siswa",
+    "invoice-total": "Total",
+    "invoice-status": "Status",
+    "invoice-draft": "Draf",
+    "invoice-open": "Terbuka",
+    "invoice-paid": "Lunas",
+    "invoice-void": "Batal",
+    "invoice-pay": "Bayar",
+    "invoice-transfer": "Bayar lewat transfer",
     "manage-group": "Pengelolaan",
     "manage-settings": "Pengaturan",
     "address-copy": "Salin alamat",
@@ -361,6 +472,9 @@
     "policy-students-footer": "Setiap perubahan kebijakan tercatat di jejak audit.",
     "policy-nina": "Nina untuk siswa",
     "policy-nina-description": "Siswa boleh meminta bantuan Nina di sekolah ini.",
+    "policy-nina-credits": "Kredit Nina per hari",
+    "policy-nina-credits-description": "Kredit sekolah yang boleh dipakai satu siswa setiap hari.",
+    "policy-nina-credits-value": "{count, number} kredit",
     "policy-threads": "Thread siswa",
     "policy-threads-description": "Siswa boleh membuka thread di sekolah ini.",
     "policy-domains": "Domain email",
@@ -473,19 +587,25 @@
     "client-secret-title": "Rahasia baru",
     "client-secret-description": "Salin sekarang, karena rahasia ini tidak akan ditampilkan lagi.",
     "audit-description": "Siapa mengubah apa di sekolah ini, dan kapan.",
-    "audit-footer": "Nilai kebijakan tidak disalin ke jejak.",
     "audit-view": "Lihat jejak",
     "audit-when": "Kapan",
     "audit-who": "Siapa",
     "audit-change": "Perubahan",
     "audit-empty": "Belum ada perubahan.",
     "audit-search": "Cari perubahan",
+    "audit-export": "Ekspor",
     "audit-operator": "Staf Nakafa",
     "audit-system": "Sistem",
     "audit-label": {
       "assignment": {
         "created": "Wali kelas ditetapkan",
         "removed": "Wali kelas dilepas"
+      },
+      "billing": {
+        "invoice": {
+          "issued": "Tagihan diterbitkan",
+          "paid": "Tagihan dibayar"
+        }
       },
       "card": {
         "issued": "Kartu masuk diterbitkan",
@@ -579,7 +699,8 @@
       },
       "exam": {
         "results": {
-          "released": "Hasil ujian dirilis"
+          "released": "Hasil ujian dirilis",
+          "graded": "Jawaban ujian dinilai"
         }
       },
       "tenant": {
@@ -738,7 +859,6 @@
     "no-unit-description": "Periode dan kelompok milik unit yang aktif. Pulihkan atau tambahkan satu unit dulu.",
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
-    "members-empty-action": "Buka undangan",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
     "policy-domains-invalid": "Domain tidak valid: {domains}.",
     "policy-domains-limit": "Gunakan paling banyak {limit} domain."
@@ -1393,6 +1513,8 @@
     "credits-used": "{percent, number}% terpakai",
     "credits-resets": "Reset {date}",
     "credits-left": "Sisa {left, number} dari {total, number} kredit",
+    "school-credits": "Kredit sekolah hari ini",
+    "school-credits-footer": "Sekolahmu memberimu kredit ini setiap hari.",
     "plan-free": "Free",
     "plan-pro": "Pro",
     "name": "Nama",
@@ -1530,6 +1652,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "Obrolan ini sudah dihapus."
+    },
     "image-refused-size": {
       "title": "Gambar tidak ditambahkan.",
       "description": "Pilih gambar dengan ukuran paling besar 2 MB."
@@ -1903,6 +2028,14 @@
       "title": "Orang ini sudah punya cukup peran.",
       "description": "Hapus satu peran sebelum memberi peran lain."
     },
+    "school-refusal-seat-limit": {
+      "title": "Paket gratis sudah penuh.",
+      "description": "Upgrade ke School di tagihan untuk menambah siswa."
+    },
+    "school-refusal-seats-paid": {
+      "title": "Semua siswa sudah dibayar.",
+      "description": "Siswa baru bisa ditagih setelah terdaftar."
+    },
     "school-refusal-person-inactive": {
       "title": "Orang ini sudah tidak aktif.",
       "description": "Undang orang ini lagi untuk memulihkan akses."
@@ -1998,6 +2131,13 @@
     "import-encrypted": {
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
+    },
+    "audit-export-error": {
+      "title": "Jejak audit gagal diekspor.",
+      "description": "Periksa koneksi, lalu coba lagi."
+    },
+    "school-own-role-ended": {
+      "title": "Peranmu sudah berakhir."
     }
   },
   "Ai": {

@@ -52,7 +52,16 @@ export function Ocean({ motion }: { motion: ProjectileMotionState }) {
   return (
     <group>
       <ReflectiveWater centerX={centerX} length={length} width={width} />
-      <WindParticles centerX={centerX} length={length} />
+      <group>
+        {Arr.map(WIND_PARTICLES, (particle) => (
+          <WindParticle
+            centerX={centerX}
+            key={particle.id}
+            length={length}
+            particle={particle}
+          />
+        ))}
+      </group>
     </group>
   );
 }
@@ -105,27 +114,6 @@ function ReflectiveWater({
   });
 
   return <primitive object={water} />;
-}
-
-function WindParticles({
-  centerX,
-  length,
-}: {
-  centerX: number;
-  length: number;
-}) {
-  return (
-    <group>
-      {Arr.map(WIND_PARTICLES, (particle) => (
-        <WindParticle
-          centerX={centerX}
-          key={particle.id}
-          length={length}
-          particle={particle}
-        />
-      ))}
-    </group>
-  );
 }
 
 function WindParticle({

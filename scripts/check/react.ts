@@ -113,27 +113,45 @@ function renderDeclaration(node: Node) {
     : undefined;
 }
 
+/** Returns the name of a variable that holds JSX, directly or through a branch. */
+function heldJsxName(node: Node) {
+  return isVariableDeclaration(node) &&
+    isIdentifier(node.name) &&
+    isJsxValue(node.initializer)
+    ? node.name.text
+    : undefined;
+}
+
 /**
- * Reports functions that return JSX declared inside a React component. A
- * nested component remounts on every render, and a render helper hides a
- * component boundary from React and from readers; both belong in a named
- * module-level component. Inline callbacks, such as list items or rich-text
- * tags, stay where they are passed.
+ * Reports functions that return JSX declared inside a React component, and
+ * JSX held in a variable anywhere in a module. A nested component remounts on
+ * every render, a render helper hides a component boundary from React and
+ * from readers, and an element kept in a variable is a component without a
+ * name; each belongs in a named module-level component. Inline callbacks, such
+ * as list items or rich-text tags, stay where they are passed.
  */
 export function inspectReactSource(file: string, sourceFile: SourceFile) {
   if (!JSX_MODULE_PATTERN.test(file)) {
     return [];
   }
-  /** Returns the nested render functions below one node, in source order. */
+  /** Returns the nested render functions and held JSX below one node, in source order. */
   const visit = (node: Node, component: string | undefined): string[] => {
     const declaration = renderDeclaration(node);
+    const held = heldJsxName(node);
     const owner = component ?? declaration?.name;
     return Arr.appendAll(
-      declaration !== undefined && component !== undefined
-        ? [
-            `${file}: declare ${declaration.name} as a named module-level component instead of a function that returns JSX inside ${component}.`,
-          ]
-        : [],
+      Arr.appendAll(
+        declaration !== undefined && component !== undefined
+          ? [
+              `${file}: declare ${declaration.name} as a named module-level component instead of a function that returns JSX inside ${component}.`,
+            ]
+          : [],
+        held === undefined
+          ? []
+          : [
+              `${file}: render ${held} as a named module-level component, or write the element where it is used, instead of holding JSX in a variable.`,
+            ]
+      ),
       Arr.flatMap(children(node), (child) => visit(child, owner))
     );
   };

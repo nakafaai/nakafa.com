@@ -1,4 +1,4 @@
-import type { ConvexReactClient } from "convex/react";
+import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { use } from "react";
 import {
   ConvexSessionCredentials,
@@ -17,9 +17,9 @@ export function LiveCredentials({ client }: { client: ConvexReactClient }) {
     throw new TypeError("LiveCredentials must be used within PageProviders");
   }
   return (
-    <>
-      <ConvexSessionCredentials client={client} store={store} />
-      <ConvexSessionRelease client={client} />
-    </>
+    <ConvexProvider client={client}>
+      <ConvexSessionCredentials store={store} />
+      <ConvexSessionRelease />
+    </ConvexProvider>
   );
 }

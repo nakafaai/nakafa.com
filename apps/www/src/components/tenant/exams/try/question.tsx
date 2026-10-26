@@ -1,11 +1,26 @@
 import { QueryResult, useQuery } from "@confect/react";
 import editors from "@repo/backend/confect/_generated/refs/editor";
+import {
+  chosenOptions,
+  madePairs,
+  markedCells,
+  NO_RESPONSE,
+  typedText,
+} from "@repo/backend/confect/exams/sittings/response";
 import { ClientOnly } from "@tanstack/react-router";
 import { Option } from "effect";
 import { lazy, Suspense, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import { choiceOf } from "@/components/exams/sitting/response";
+import { SittingField } from "@/components/exams/sitting/field";
+import { SittingPairs } from "@/components/exams/sitting/pairs";
+import {
+  choiceOf,
+  pairingOf,
+  tableOf,
+  writtenOf,
+} from "@/components/exams/sitting/response";
+import { SittingTable } from "@/components/exams/sitting/table";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
 
@@ -45,6 +60,9 @@ export function ExamTryQuestion({
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
   const choice = choiceOf(question.answers);
+  const entry = writtenOf(question.answers);
+  const pairing = pairingOf(question.answers);
+  const table = tableOf(question.answers);
 
   return (
     <section aria-labelledby={titleId} className="grid gap-6">
@@ -63,7 +81,31 @@ export function ExamTryQuestion({
           choice={choice.value}
           labelledBy={titleId}
           onChoose={(next) => choose(question.id, next)}
-          response={response ?? []}
+          response={chosenOptions(response ?? NO_RESPONSE)}
+        />
+      ) : null}
+      {Option.isSome(entry) ? (
+        <SittingField
+          entry={entry.value}
+          labelledBy={titleId}
+          onType={(text) => choose(question.id, { text })}
+          text={typedText(response ?? NO_RESPONSE)}
+        />
+      ) : null}
+      {Option.isSome(pairing) ? (
+        <SittingPairs
+          labelledBy={titleId}
+          match={pairing.value}
+          onPair={(pairs) => choose(question.id, { pairs })}
+          pairs={madePairs(response ?? NO_RESPONSE)}
+        />
+      ) : null}
+      {Option.isSome(table) ? (
+        <SittingTable
+          cells={markedCells(response ?? NO_RESPONSE)}
+          labelledBy={titleId}
+          onMark={(cells) => choose(question.id, { cells })}
+          table={table.value}
         />
       ) : null}
     </section>

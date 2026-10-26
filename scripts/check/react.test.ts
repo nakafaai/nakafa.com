@@ -21,6 +21,11 @@ function violation(name: string, component: string) {
   return `${VIEW}: declare ${name} as a named module-level component instead of a function that returns JSX inside ${component}.`;
 }
 
+/** The message for one variable that holds JSX. */
+function held(name: string) {
+  return `${VIEW}: render ${name} as a named module-level component, or write the element where it is used, instead of holding JSX in a variable.`;
+}
+
 describe("React source policy", () => {
   it.effect("rejects render functions declared inside a component", () =>
     Effect.gen(function* () {
@@ -82,6 +87,41 @@ export default function () {
     })
   );
 
+  it.effect("rejects JSX held in a variable in every form and scope", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(`
+const searchIcon = <Icon name="search" />;
+export function ExamMenu({ locked }: { locked: boolean }) {
+  const tryAsStudent = (
+    <Button>Try</Button>
+  );
+  const lock = locked ? <Lock /> : null;
+  const hint = locked && <small />;
+  const empty = <></>;
+  if (locked) {
+    return tryAsStudent;
+  }
+  return <>{tryAsStudent}{lock}{hint}{empty}<Field icon={searchIcon} /></>;
+}
+export const renderEmail = (props: Props) => {
+  const email = <Email {...props} />;
+  return [render(email), render(email, { plainText: true })];
+};
+export function Boundary() {
+  return <ErrorBoundary fallbackRender={() => { const failure = <Failure />; return failure; }} />;
+}`);
+      assert.deepStrictEqual(violations, [
+        held("searchIcon"),
+        held("tryAsStudent"),
+        held("lock"),
+        held("hint"),
+        held("empty"),
+        held("email"),
+        held("failure"),
+      ]);
+    })
+  );
+
   it.effect(
     "allows inline callbacks, values, and module-level components",
     () =>
@@ -92,7 +132,6 @@ function Verse({ item }: { item: string }) {
 }
 export const VerseList = ({ items }: { items: string[] }) => {
   const title = t.rich("title", { mark: (chunks) => <mark>{chunks}</mark> });
-  const heading = <h2>{title}</h2>;
   const count = useMemo(() => items.length, [items]);
   const label = useCallback(() => String(count), [count]);
   const { length } = items;
@@ -106,7 +145,7 @@ export const VerseList = ({ items }: { items: string[] }) => {
   };
   return (
     <div onClick={() => select(items[0])}>
-      {heading}
+      <h2>{title}</h2>
       {label()}
       {items.map((item) => <Verse item={item} key={item} />)}
     </div>

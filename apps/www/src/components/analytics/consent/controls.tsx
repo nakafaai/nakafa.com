@@ -69,14 +69,6 @@ export function AnalyticsConsentControls({
     return null;
   }
 
-  const actions = (
-    <ConsentActions
-      canDecline={consent.canDecline}
-      canGrant={consent.canGrant}
-      decide={consent.decide}
-    />
-  );
-
   return (
     <>
       <style>{HIDE_PROMPT_WHILE_MARKED}</style>
@@ -101,7 +93,13 @@ export function AnalyticsConsentControls({
               <ConsentDetails error={consent.error} />
             </CardContent>
             <CardSectionFooter hint={t("prompt-footer")}>
-              <CardSectionActions>{actions}</CardSectionActions>
+              <CardSectionActions>
+                <ConsentActions
+                  canDecline={consent.canDecline}
+                  canGrant={consent.canGrant}
+                  decide={consent.decide}
+                />
+              </CardSectionActions>
             </CardSectionFooter>
           </CardSection>
         </section>

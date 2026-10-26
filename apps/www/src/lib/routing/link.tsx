@@ -13,8 +13,10 @@ import {
   type LinkOptions,
   type RegisteredRouter,
   type RemoveTrailingSlashes,
+  useLocation,
   useMatches,
   useParams,
+  useRouter,
 } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
@@ -88,6 +90,20 @@ export function useRouteMatched(
   });
 }
 
+/**
+ * Whether the page on screen is a link's own page or a page below its address,
+ * as the router matches the link's route and params against the location. A
+ * section without a layout route of its own, such as the Quran and its surahs,
+ * holds its pages by address alone, which the matches of `useRouteMatched` do not
+ * show, and the params keep one article category from claiming another's pages.
+ */
+export function useSectionMatched(target: LinkTarget) {
+  const router = useRouter();
+  return useLocation({
+    select: () => router.matchRoute(target, { fuzzy: true }) !== false,
+  });
+}
+
 /** The full path of the leaf route on screen, as the router spells it without a trailing slash. */
 export function useLeafRoutePath() {
   return useMatches({
@@ -126,13 +142,13 @@ export function Link<const TTo extends string | undefined = undefined>(
  * of the route it names, and no caller writes a path string.
  */
 export function TargetLink({
-  activeOptions = EXACT_ACTIVE_OPTIONS,
   hash,
   preload,
   target,
   ...anchor
 }: Omit<ComponentProps<"a">, "href" | "target"> & {
-  readonly activeOptions?: ActiveOptions | undefined;
+  /** The rule of the active state; exact when none is named, as every app link. */
+  readonly activeOptions?: ActiveOptions;
   /** The fragment of the page that the link opens, without its `#`. */
   readonly hash?: string | undefined;
   readonly preload?: LinkPreload | undefined;
@@ -141,7 +157,6 @@ export function TargetLink({
   return (
     <Link
       {...anchor}
-      activeOptions={activeOptions}
       {...(hash === undefined ? {} : { hash })}
       {...(preload === undefined ? {} : { preload })}
       {...target}

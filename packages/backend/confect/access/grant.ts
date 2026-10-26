@@ -22,6 +22,7 @@ import {
   type GrantTerm,
   OwnerRole,
 } from "@repo/backend/confect/access/schema";
+import { ensureStudentSeat } from "@repo/backend/confect/billing/seats";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
@@ -118,6 +119,13 @@ export const writeGrant = Effect.fn("access.grant.write")(function* (
       message: "This school has too many owners.",
     });
   }
+  // A Person who already studies in the school takes no new seat in another unit.
+  if (
+    role === "student" &&
+    !Arr.some(grants, (grant) => grant.role.key === "student")
+  ) {
+    yield* ensureStudentSeat(person.tenantId);
+  }
   const grantId = yield* (yield* DatabaseWriter)
     .table("tenantGrants")
     .insert({
@@ -198,28 +206,46 @@ export const endGrant = Effect.fn("access.grant.end")(function* (
   });
 });
 
+/** The tenant's active Owner grants whose holders are active Persons who have signed in. */
+export const signedInOwners = Effect.fn("access.grant.signedInOwners")(
+  function* (tenantId: GenericId.GenericId<"tenants">) {
+    const reader = yield* DatabaseReader;
+    return yield* Effect.filter(
+      yield* activeOwners(tenantId),
+      (owner) =>
+        reader
+          .table("tenantPeople")
+          .get(owner.personId)
+          .pipe(
+            Effect.orDie,
+            Effect.map(
+              (holder) =>
+                holder.status === "active" && holder.account.state === "claimed"
+            )
+          ),
+      { concurrency: "unbounded" }
+    );
+  }
+);
+
+/**
+ * Whether ending a grant leaves its school an Owner who has signed in: any grant that is
+ * not an Owner's does, and an Owner's does while another signed-in Owner remains.
+ */
+export const leavesOwner = (
+  grant: Pick<TenantGrantsDoc, "_id" | "role">,
+  owners: readonly Pick<TenantGrantsDoc, "_id">[]
+) =>
+  grant.role.key !== "owner" ||
+  Arr.some(owners, (owner) => owner._id !== grant._id);
+
 /** Refuses to end the last Owner grant held by an active, claimed Person. */
 export const ensureOwnerRemains = Effect.fn("access.grant.ownerRemains")(
   function* (grant: TenantGrantsDoc) {
     if (grant.role.key !== "owner") {
       return;
     }
-    const reader = yield* DatabaseReader;
-    const holders = yield* Effect.forEach(
-      Arr.filter(
-        yield* activeOwners(grant.tenantId),
-        (owner) => owner._id !== grant._id
-      ),
-      (owner) =>
-        reader.table("tenantPeople").get(owner.personId).pipe(Effect.orDie)
-    );
-    if (
-      !Arr.some(
-        holders,
-        (holder) =>
-          holder.status === "active" && holder.account.state === "claimed"
-      )
-    ) {
+    if (!leavesOwner(grant, yield* signedInOwners(grant.tenantId))) {
       return yield* new GrantRejected({
         code: "LAST_OWNER",
         message: "A school keeps at least one owner who has signed in.",

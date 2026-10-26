@@ -20,6 +20,7 @@ import {
   openMemoryPage,
 } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const WRITTEN = "Prefers worked examples before the formula";
 const SECOND = "Revises the proofs on Sundays";
@@ -29,6 +30,7 @@ const openRow = async (page: Page, text: string) => {
   await expect(memoryRow(page, text)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+  await waitUntilTakenOver(nameOf(page, text));
   await nameOf(page, text).click();
   await opened(page, text);
 };
@@ -149,6 +151,9 @@ const deletesAcrossTheThreshold = Effect.fn(
     await expect(memoryRow(page, OLDEST)).toHaveCount(0);
     const row = memoryRow(page, NEWEST);
 
+    await waitUntilTakenOver(
+      row.getByRole("button", { name: "Delete memory" })
+    );
     await row.hover();
     await row.getByRole("button", { name: "Delete memory" }).click();
     await confirmDelete(page);
