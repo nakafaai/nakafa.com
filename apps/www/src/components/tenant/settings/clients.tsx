@@ -4,7 +4,10 @@ import {
   QueryResult,
   useMutation,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import {
+  CommandLineIcon,
+  MoreHorizontalIcon,
+} from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -287,6 +290,7 @@ function SchoolClientMenu({
             {t("client-rotate")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsConnecting(true)}>
+            <HugeIcons icon={CommandLineIcon} />
             {t("device-title")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
