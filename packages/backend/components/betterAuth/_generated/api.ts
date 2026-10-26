@@ -59,6 +59,7 @@ export const api: {
                 accessTokenExpiresAt?: null | number;
                 accountId: string;
                 createdAt: number;
+                hostedDomain?: null | string;
                 idToken?: null | string;
                 password?: null | string;
                 providerId: string;
@@ -188,6 +189,7 @@ export const api: {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
+                  | "hostedDomain"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -382,6 +384,7 @@ export const api: {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
+                  | "hostedDomain"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -647,6 +650,7 @@ export const api: {
                 accessTokenExpiresAt?: null | number;
                 accountId?: string;
                 createdAt?: number;
+                hostedDomain?: null | string;
                 idToken?: null | string;
                 password?: null | string;
                 providerId?: string;
@@ -671,6 +675,7 @@ export const api: {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
+                  | "hostedDomain"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -888,6 +893,7 @@ export const api: {
                 accessTokenExpiresAt?: null | number;
                 accountId?: string;
                 createdAt?: number;
+                hostedDomain?: null | string;
                 idToken?: null | string;
                 password?: null | string;
                 providerId?: string;
@@ -912,6 +918,7 @@ export const api: {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
+                  | "hostedDomain"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
