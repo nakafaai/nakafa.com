@@ -103,36 +103,10 @@ export function useChatAdmission({
     };
   }, [viewerId]);
 
-  /**
-   * Admits the send held for the viewer, or sends it to sign-in, once the viewer
-   * is known. It reads the viewer, the surface and the draft as they are then. A
-   * composer that left meanwhile drops the send, and its words stay in the draft.
-   */
-  const admitHeld = useEffectEvent(() => {
-    const message = held.current;
-    held.current = null;
-    if (message === null) {
-      return;
-    }
-    setWaiting(false);
-    admitPrompt(message);
-  });
-
-  useEffect(() => {
-    if (!gate.pending) {
-      admitHeld();
-    }
-  }, [gate.pending]);
-
-  /** Admits a send the learner pressed, unless one is already held for the viewer. */
-  function submit(message: PromptInputMessage) {
-    if (waiting) {
-      return false;
-    }
-    return admitPrompt(message);
-  }
-
   function admitPrompt(message: PromptInputMessage) {
+    // Any send that comes here ends the wait for the viewer. One that comes
+    // while the viewer is still unknown is held again below.
+    setWaiting(false);
     const query = message.text?.trim();
     if (!query || busy) {
       return false;
@@ -208,6 +182,33 @@ export function useChatAdmission({
         return Promise.reject(defect);
       });
   }
+
+  /** Admits a send the learner pressed, unless one is already held for the viewer. */
+  function submit(message: PromptInputMessage) {
+    if (waiting) {
+      return false;
+    }
+    return admitPrompt(message);
+  }
+
+  /**
+   * Admits the send held for the viewer, or sends it to sign-in, once the viewer
+   * is known. It reads the viewer, the surface and the draft as they are then. A
+   * composer that left meanwhile drops the send, and its words stay in the draft.
+   */
+  const admitHeld = useEffectEvent(() => {
+    const message = held.current;
+    held.current = null;
+    if (message !== null) {
+      admitPrompt(message);
+    }
+  });
+
+  useEffect(() => {
+    if (!gate.pending) {
+      admitHeld();
+    }
+  }, [gate.pending]);
 
   return { disabled: busy || waiting, prompt, promptId, submit };
 }
