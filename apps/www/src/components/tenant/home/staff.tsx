@@ -1,11 +1,5 @@
 import { QueryResult } from "@confect/react";
 import {
-  Calendar03Icon,
-  HourglassIcon,
-  LiveStreaming02Icon,
-  PencilEdit02Icon,
-} from "@hugeicons/core-free-icons";
-import {
   HOME_RESULT_LIMIT,
   HOME_ROOM_LIMIT,
 } from "@repo/backend/confect/exams/home/bounds";
@@ -40,7 +34,7 @@ import { schoolExamSittingTarget } from "@/lib/routing/school/target";
 type Room = (typeof HomeView.Type)["next"][number];
 
 /**
- * The strip of four numbers and the cells of a staff home, on one connected dashboard. One read brings the rooms, the
+ * The row of four numbers and the cards of a staff home, each card one concern. One read brings the rooms, the
  * results, and the drafts, and the setup cell reads the school's setup on its own. Until the reads that the cells need
  * have answered, nothing shows below the header, and then every cell appears at once, so no cell that is shown moves
  * when another arrives. The cells lay out in rows that fill the dashboard at each width, so a cell that is not shown
@@ -96,11 +90,9 @@ export function StaffHome({
             live.length,
             reachesBound(live.length, HOME_ROOM_LIMIT)
           )}
-          icon={LiveStreaming02Icon}
           period={t("metric-live-period")}
           span={span}
           title={t("metric-live")}
-          tone="success"
         />
       ),
       key: "count-live",
@@ -112,11 +104,9 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(next.length, nextBound)}
-          icon={Calendar03Icon}
           period={t("metric-next-period")}
           span={span}
           title={t("metric-next")}
-          tone="info"
         />
       ),
       key: "count-next",
@@ -128,11 +118,9 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(waitingOf(closed), closedBound)}
-          icon={HourglassIcon}
           period={t("metric-waiting-period")}
           span={span}
           title={t("metric-waiting")}
-          tone="warning"
         />
       ),
       key: "count-waiting",
@@ -144,11 +132,9 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(draftRows.length, draftsBounded)}
-          icon={PencilEdit02Icon}
           period={t("metric-drafts-period")}
           span={span}
           title={t("metric-drafts")}
-          tone="neutral"
         />
       ),
       key: "count-drafts",
@@ -183,7 +169,7 @@ export function StaffHome({
       key: "quiet",
       narrow: 2,
       shown: shown.quiet,
-      wide: 12,
+      wide: 8,
     },
     {
       draw: (span) => (
@@ -250,12 +236,16 @@ function scheduleItemOf(
   };
 }
 
-/** The quiet state of a staff home, which takes the place of the schedule and the rooms while none run or open soon. */
+/**
+ * The quiet state of a staff home: the schedule's card, titled as the schedule is, which takes the place of the
+ * schedule and the rooms while none run or open soon.
+ */
 function QuietCell({ span }: { span: CellSpan }) {
   const t = useTranslations("School");
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.CellHeader title={t("tile-schedule")} />
       <Dashboard.Empty act="sleeping">{t("quiet-staff")}</Dashboard.Empty>
     </Dashboard.Cell>
   );

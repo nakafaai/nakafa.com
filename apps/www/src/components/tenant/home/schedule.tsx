@@ -1,4 +1,3 @@
-import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
@@ -43,11 +42,7 @@ export function ScheduleCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader
-        icon={Calendar03Icon}
-        title={t("tile-schedule")}
-        tone="info"
-      />
+      <Dashboard.CellHeader title={t("tile-schedule")} />
       <div className="flex gap-1 px-6">
         {Arr.map(days, (day, index) => (
           <ScheduleColumn day={day} index={index} key={day.key} />
@@ -121,10 +116,8 @@ function ScheduleRow({ item }: { item: ScheduleItem }) {
   return (
     <Dashboard.Row
       detail={item.room}
-      icon={Calendar03Icon}
       render={<TargetLink target={item.target} title={item.title} />}
       title={item.title}
-      tone="info"
       trailing={item.trailing}
     />
   );
