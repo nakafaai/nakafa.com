@@ -67,7 +67,11 @@ import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
+import guardianCodes from "./tables/guardianCodes";
+import guardianConsents from "./tables/guardianConsents";
+import guardianLinks from "./tables/guardianLinks";
 import integrationClients from "./tables/integrationClients";
+import integrationDevices from "./tables/integrationDevices";
 import integrationTokens from "./tables/integrationTokens";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -100,6 +104,8 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import reportCards from "./tables/reportCards";
+import rosterEntries from "./tables/rosterEntries";
 import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import tenantAssignments from "./tables/tenantAssignments";
@@ -198,7 +204,11 @@ export default $defineSchema({
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),
   gradingSchemes: $Table.tableDefinition(gradingSchemes),
+  guardianCodes: $Table.tableDefinition(guardianCodes),
+  guardianConsents: $Table.tableDefinition(guardianConsents),
+  guardianLinks: $Table.tableDefinition(guardianLinks),
   integrationClients: $Table.tableDefinition(integrationClients),
+  integrationDevices: $Table.tableDefinition(integrationDevices),
   integrationTokens: $Table.tableDefinition(integrationTokens),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
@@ -231,6 +241,8 @@ export default $defineSchema({
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
+  reportCards: $Table.tableDefinition(reportCards),
+  rosterEntries: $Table.tableDefinition(rosterEntries),
   schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   tenantAssignments: $Table.tableDefinition(tenantAssignments),

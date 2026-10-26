@@ -3,7 +3,7 @@
 import { afterAll, describe, expect, it } from "@effect/vitest";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
 import { plainText } from "@repo/design-system/components/editor/plain";
-import { Editor, type JSONContent } from "@tiptap/core";
+import { Editor, type JSONContent, type NodeViewRenderer } from "@tiptap/core";
 import { Array as Arr, Function as Fn, Result, String as Str } from "effect";
 
 /**
@@ -14,7 +14,13 @@ import { Array as Arr, Function as Fn, Result, String as Str } from "effect";
  */
 function openEditor(content: JSONContent | string) {
   return new Editor({
-    ...richOptions({ limit: 100_000, onRefuse: Fn.constVoid, placeholder: "" }),
+    ...richOptions({
+      limit: 100_000,
+      onRefuse: Fn.constVoid,
+      placeholder: "",
+      // An editor without a page draws no node, so it calls no view.
+      taskView: vi.fn<NodeViewRenderer>(),
+    }),
     content,
     ...(typeof content === "string"
       ? { contentType: "markdown" as const }

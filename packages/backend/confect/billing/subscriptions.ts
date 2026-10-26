@@ -40,11 +40,14 @@ const findByProvider = Effect.fn("billing.subscriptions.findByProvider")(
         .first()
         .pipe(Effect.orDie);
     }
+    // A subscription whose plan has not opened yet is new, never one row of many without a plan.
+    const planId = provider.planId;
+    if (planId === null) {
+      return Option.none();
+    }
     return yield* reader
       .table("billingSubscriptions")
-      .index("by_xendit_planId", (query) =>
-        query.eq("provider.planId", provider.planId)
-      )
+      .index("by_xendit_planId", (query) => query.eq("provider.planId", planId))
       .first()
       .pipe(Effect.orDie);
   }
