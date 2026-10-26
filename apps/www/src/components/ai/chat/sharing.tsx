@@ -23,7 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation";
-import { ChatRetryContext, useChatRetry } from "@/components/ai/chat/retry";
+import { ChatRetryContext, useChatRetry } from "@/components/ai/chat/recovery";
 import { reportClientException } from "@/lib/analytics/client";
 import { useAnswerRetry } from "@/lib/convex/requery";
 import { useCurrentLocale } from "@/lib/routing/link";

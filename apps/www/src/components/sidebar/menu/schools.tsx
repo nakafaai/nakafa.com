@@ -22,7 +22,7 @@ function SidebarSchoolMenuItem({
   tenant,
 }: {
   tenant: {
-    logo: string | undefined;
+    logo?: string;
     mascot: typeof Mascot.Type;
     name: string;
     slug: TenantSlug;

@@ -4,7 +4,7 @@ import { ClientOnly, useLocation } from "@tanstack/react-router";
 import type { PropsWithChildren, ReactNode } from "react";
 import { lazy, Suspense } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
-import { ChatRetryContext } from "@/components/ai/chat/retry";
+import { ChatRetryContext } from "@/components/ai/chat/recovery";
 import { useAnswerRetry } from "@/lib/convex/requery";
 
 // The failure card holds the sign-in chain, which only a signed-out visitor who

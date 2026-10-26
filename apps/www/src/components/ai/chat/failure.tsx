@@ -7,7 +7,7 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { useTranslations } from "use-intl";
-import { useChatRetry } from "@/components/ai/chat/retry";
+import { useChatRetry } from "@/components/ai/chat/recovery";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 import { EmptyNina } from "@/components/state/empty";

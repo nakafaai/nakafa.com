@@ -16,7 +16,7 @@ import {
   readerView,
   withOlderPage,
 } from "@/components/ai/chat/reading";
-import { ChatRetryContext } from "@/components/ai/chat/retry";
+import { ChatRetryContext } from "@/components/ai/chat/recovery";
 import { createChatStore } from "@/components/ai/chat/store";
 import { turnOf, turnsByOrder } from "@/components/ai/chat/turns";
 import { AiChat } from "@/components/ai/chat/view";
