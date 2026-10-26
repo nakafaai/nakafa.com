@@ -93,6 +93,7 @@ describe("access/kind declarations", () => {
       "grant.ended",
       "person.reactivated",
       "person.suspended",
+      "roster.set",
     ]);
   });
 });

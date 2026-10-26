@@ -7,9 +7,11 @@ import { editor } from "@repo/backend/confect/editor/kinds";
 import { exam } from "@repo/backend/confect/exams/kinds";
 import { results } from "@repo/backend/confect/exams/results/kinds";
 import { sitting } from "@repo/backend/confect/exams/sittings/kinds";
+import { guardians } from "@repo/backend/confect/guardians/kinds";
 import { integrations } from "@repo/backend/confect/integrations/kinds";
 import { operators } from "@repo/backend/confect/operators/kinds";
 import { records } from "@repo/backend/confect/records/kinds";
+import { roster } from "@repo/backend/confect/roster/kinds";
 import { tenancy } from "@repo/backend/confect/tenancy/kinds";
 import { Array as Arr, Record, Schema, SchemaGetter, Struct } from "effect";
 
@@ -26,6 +28,8 @@ export const kinds = [
   ...exam.kinds,
   ...sitting.kinds,
   ...results.kinds,
+  ...guardians.kinds,
+  ...roster.kinds,
 ] as const;
 
 /** Every lane's extensions of another lane's kinds. */
@@ -41,6 +45,8 @@ const extensions = [
   ...exam.extensions,
   ...sitting.extensions,
   ...results.extensions,
+  ...guardians.extensions,
+  ...roster.extensions,
 ] as const;
 
 /** Every declaration and extension; each kind's actions, rules, and changes join from these. */

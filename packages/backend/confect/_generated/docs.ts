@@ -64,6 +64,9 @@ export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSig
 export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
+export type GuardianCodesDoc = Document.Document<typeof schemaDefinition, "guardianCodes">;
+export type GuardianConsentsDoc = Document.Document<typeof schemaDefinition, "guardianConsents">;
+export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guardianLinks">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
 export type IntegrationTokensDoc = Document.Document<typeof schemaDefinition, "integrationTokens">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
@@ -98,6 +101,7 @@ export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "prog
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
 export type ReportCardsDoc = Document.Document<typeof schemaDefinition, "reportCards">;
+export type RosterEntriesDoc = Document.Document<typeof schemaDefinition, "rosterEntries">;
 export type SchoolLoginsDoc = Document.Document<typeof schemaDefinition, "schoolLogins">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
 export type TenantAssignmentsDoc = Document.Document<typeof schemaDefinition, "tenantAssignments">;
@@ -193,6 +197,9 @@ export interface Docs {
   examSittings: ExamSittingsDoc;
   exams: ExamsDoc;
   gradingSchemes: GradingSchemesDoc;
+  guardianCodes: GuardianCodesDoc;
+  guardianConsents: GuardianConsentsDoc;
+  guardianLinks: GuardianLinksDoc;
   integrationClients: IntegrationClientsDoc;
   integrationTokens: IntegrationTokensDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
@@ -227,6 +234,7 @@ export interface Docs {
   quranRows: QuranRowsDoc;
   quranSearch: QuranSearchDoc;
   reportCards: ReportCardsDoc;
+  rosterEntries: RosterEntriesDoc;
   schoolLogins: SchoolLoginsDoc;
   snapshotBatches: SnapshotBatchesDoc;
   tenantAssignments: TenantAssignmentsDoc;

@@ -5,14 +5,17 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { TableEmpty } from "@/components/shared/table/frame";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { SchoolCohortMembers } from "@/components/tenant/settings/cohort/members";
-import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
+import { SchoolHomeroomAction } from "@/components/tenant/settings/homeroom";
 import { SchoolPlacementAdd } from "@/components/tenant/settings/placement";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -81,7 +84,7 @@ function CohortFailure({ children }: { children: ReactNode }) {
         ]}
         title={t(section.labelKey)}
       />
-      <LayoutContent className="py-6">{children}</LayoutContent>
+      <div className="flex w-full min-w-0 flex-1 flex-col">{children}</div>
     </>
   );
 }
@@ -110,7 +113,7 @@ function CohortUnavailable() {
         ]}
         title={t(section.labelKey)}
       />
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+      <div className="flex w-full min-w-0 flex-1 flex-col">
         <TableEmpty
           act="pointing"
           action={
@@ -124,7 +127,7 @@ function CohortUnavailable() {
           description={t("cohort-unavailable-description")}
           title={t("cohort-unavailable")}
         />
-      </LayoutContent>
+      </div>
     </>
   );
 }
@@ -162,7 +165,7 @@ function SchoolCohortPage({
   );
 
   return (
-    <>
+    <TableFiltersProvider>
       <SchoolHeader
         items={[
           {
@@ -177,12 +180,13 @@ function SchoolCohortPage({
         ]}
         title={detail.name}
       >
+        <TableSearch placeholder={t("cohort-members-search")} />
+        <SchoolHomeroomAction cohort={detail} slug={slug} />
         {isArchived ? null : (
           <SchoolPlacementAdd cohortId={cohortId} slug={slug} />
         )}
       </SchoolHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        <SchoolHomeroomCard cohort={detail} slug={slug} />
+      <div className="flex w-full min-w-0 flex-1 flex-col">
         <ReadBoundary>
           <SchoolCohortMembers
             cohortId={cohortId}
@@ -193,7 +197,7 @@ function SchoolCohortPage({
             slug={slug}
           />
         </ReadBoundary>
-      </LayoutContent>
-    </>
+      </div>
+    </TableFiltersProvider>
   );
 }

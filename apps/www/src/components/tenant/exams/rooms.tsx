@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -24,11 +25,10 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
@@ -92,7 +92,7 @@ export function ExamRooms({
       fallback={(failure) => (
         <>
           <SchoolHeader items={examsItems} />
-          <LayoutContent className="py-6">{failure}</LayoutContent>
+          <div className="flex w-full min-w-0 flex-1 flex-col">{failure}</div>
         </>
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
@@ -155,9 +155,19 @@ function ExamRoomsContent({
       <SchoolHeader
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
-      />
-      <LayoutContent className="flex w-full flex-col gap-4 py-6">
+      >
         <RoomStateSelect onValueChange={setFilter} value={filter} />
+        {tenant.canOpenExams ? (
+          <Link
+            className={buttonVariants()}
+            params={{ exam: examId, slug }}
+            to="/school/$slug/exams/$exam/edit"
+          >
+            {t("edit-action")}
+          </Link>
+        ) : null}
+      </SchoolHeader>
+      <div className="flex w-full min-w-0 flex-1 flex-col">
         <RoomsTable
           examId={examId}
           filter={filter}
@@ -165,24 +175,17 @@ function ExamRoomsContent({
           isSettled={isSettled}
           slug={slug}
         />
-      </LayoutContent>
+      </div>
     </>
   );
 }
 
 /**
- * The empty state of the rooms table once the list is exhausted: no room yet, with the way to the
- * editor for a viewer who may open it, or no room in the chosen state.
+ * The empty state of the rooms table once the list is exhausted: no room yet, or no room in the
+ * chosen state. The way to the editor is the page's main action, in its header.
  */
-function RoomsEmpty({
-  examId,
-  filter,
-}: {
-  examId: GenericId.GenericId<"exams">;
-  filter: StateFilter;
-}) {
+function RoomsEmpty({ filter }: { filter: StateFilter }) {
   const t = useTranslations("Exams");
-  const tenant = useTenant();
 
   if (filter !== "all") {
     return (
@@ -196,24 +199,12 @@ function RoomsEmpty({
   return (
     <TableEmpty
       act="pointing"
-      action={
-        tenant.canOpenExams ? (
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ exam: examId, slug: tenant.slug }}
-            to="/school/$slug/exams/$exam/edit"
-          >
-            {t("rooms-empty-action")}
-          </Link>
-        ) : undefined
-      }
       description={t("rooms-empty-description")}
       title={t("rooms-empty")}
     />
   );
 }
 
-/** The state filter of the table: every state, or one sitting state. */
 function RoomStateSelect({
   onValueChange,
   value,
@@ -240,7 +231,7 @@ function RoomStateSelect({
       }}
       value={value}
     >
-      <SelectTrigger aria-label={t("rooms-state")} className="w-full max-w-xs">
+      <SelectTrigger aria-label={t("rooms-state")} className="w-32 sm:w-40">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -304,31 +295,29 @@ function RoomsTable({
     if (pagination._tag !== "Exhausted") {
       return loadMoreTrigger;
     }
-    return <RoomsEmpty examId={examId} filter={filter} />;
+    return <RoomsEmpty filter={filter} />;
   }
 
   return (
     <>
       {failure}
-      <TableFrame>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("room")}</TableHead>
-              <TableHead>{t("rooms-group")}</TableHead>
-              <TableHead>{t("rooms-opens")}</TableHead>
-              <TableHead>{t("rooms-closes")}</TableHead>
-              <TableHead>{t("rooms-state")}</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(pagination.results, (room) => (
-              <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
-            ))}
-          </TableBody>
-        </Table>
-      </TableFrame>
+      <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("room")}</TableHead>
+            <TableHead>{t("rooms-group")}</TableHead>
+            <TableHead>{t("rooms-opens")}</TableHead>
+            <TableHead>{t("rooms-closes")}</TableHead>
+            <TableHead>{t("rooms-state")}</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Arr.map(pagination.results, (room) => (
+            <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
+          ))}
+        </TableBody>
+      </Table>
       {loadMoreTrigger}
     </>
   );
@@ -401,6 +390,7 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
       action={t("room-cancel")}
       confirm={t("room-cancel-confirm")}
       description={t("room-cancel-description")}
+      icon={Cancel01Icon}
       onConfirm={() =>
         startTransition(() =>
           saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)

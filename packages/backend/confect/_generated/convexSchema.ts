@@ -64,6 +64,9 @@ import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import gradingSchemes from "./tables/gradingSchemes";
+import guardianCodes from "./tables/guardianCodes";
+import guardianConsents from "./tables/guardianConsents";
+import guardianLinks from "./tables/guardianLinks";
 import integrationClients from "./tables/integrationClients";
 import integrationTokens from "./tables/integrationTokens";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
@@ -98,6 +101,7 @@ import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import reportCards from "./tables/reportCards";
+import rosterEntries from "./tables/rosterEntries";
 import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import tenantAssignments from "./tables/tenantAssignments";
@@ -193,6 +197,9 @@ export default $defineSchema({
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),
   gradingSchemes: $Table.tableDefinition(gradingSchemes),
+  guardianCodes: $Table.tableDefinition(guardianCodes),
+  guardianConsents: $Table.tableDefinition(guardianConsents),
+  guardianLinks: $Table.tableDefinition(guardianLinks),
   integrationClients: $Table.tableDefinition(integrationClients),
   integrationTokens: $Table.tableDefinition(integrationTokens),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
@@ -227,6 +234,7 @@ export default $defineSchema({
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
   reportCards: $Table.tableDefinition(reportCards),
+  rosterEntries: $Table.tableDefinition(rosterEntries),
   schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   tenantAssignments: $Table.tableDefinition(tenantAssignments),

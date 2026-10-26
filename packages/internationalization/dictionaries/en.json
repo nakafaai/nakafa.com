@@ -1,7 +1,8 @@
 {
   "DataTable": {
     "no-results": "No results.",
-    "reset": "Reset"
+    "reset": "Reset",
+    "filter": "Filter"
   },
   "School": {
     "account-settings": "Account settings",
@@ -249,7 +250,6 @@
     "rooms-title": "Rooms",
     "rooms-empty": "No rooms yet",
     "rooms-empty-description": "Each room appears here once the exam is scheduled.",
-    "rooms-empty-action": "Open the exam",
     "rooms-filter-empty": "No room is in this state",
     "rooms-filter-empty-description": "Choose another state to see the other rooms.",
     "rooms-unavailable": "You cannot view the rooms of this exam.",
@@ -320,7 +320,8 @@
     "import-drop": "Drop a Word or PDF file here, or choose one.",
     "import-remove": "Remove file",
     "presence-editor": "{name} is editing",
-    "presence-more": "{names} are editing"
+    "presence-more": "{names} are editing",
+    "edit-action": "Edit exam"
   },
   "SchoolSettings": {
     "school": "School",
@@ -473,7 +474,6 @@
     "client-secret-title": "New secret",
     "client-secret-description": "Copy it now, because it will not be shown again.",
     "audit-description": "Who changed what in this school, and when.",
-    "audit-footer": "Policy values are not copied into the trail.",
     "audit-view": "View trail",
     "audit-when": "When",
     "audit-who": "Who",
@@ -621,7 +621,17 @@
         "declined": "Visit declined",
         "ended": "Visit ended"
       },
-      "unknown": "Another change"
+      "unknown": "Another change",
+      "guardian": {
+        "started": "Parent linked",
+        "linked": "Parent link verified",
+        "withdrawn": "Parent consent withdrawn",
+        "revoked": "Parent link ended"
+      },
+      "roster": {
+        "set": "Student record updated",
+        "imported": "Students imported from Dapodik"
+      }
     },
     "role-description": {
       "owner": "Can do everything in this school.",
@@ -741,10 +751,11 @@
     "no-unit-description": "Periods and cohorts belong to an active unit. Restore or add one first.",
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
-    "members-empty-action": "Open invitations",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
     "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
-    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
+    "policy-domains-limit": "Use up to {limit} different domains, each on its own line.",
+    "roster": "Dapodik",
+    "guardians": "Parents"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -794,7 +805,10 @@
     "search": "Search students",
     "release": "Release",
     "empty": "No student in this class yet.",
-    "empty-description": "Students appear here once they are placed in the class group."
+    "empty-description": "Students appear here once they are placed in the class group.",
+    "detail": "Student's grade",
+    "detail-empty": "Choose a student to see their grade.",
+    "kktp": "KKTP"
   },
   "SchoolReports": {
     "title": "Report cards",
@@ -2053,6 +2067,20 @@
     "school-refusal-report-not-placed": {
       "title": "This student is not here.",
       "description": "Place the student in the class group first."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "This link has changed.",
+      "description": "Reload the list to see its status."
+    },
+    "school-refusal-guardian-link": {
+      "title": "The link was not made.",
+      "description": "Choose an active student without this email."
+    },
+    "school-roster-imported": {
+      "title": "The students are in the roster."
+    },
+    "school-roster-export-failed": {
+      "title": "The file was not saved."
     }
   },
   "Ai": {
@@ -2523,5 +2551,95 @@
     "kind-report": "Report card",
     "period": "Period",
     "approved": "Approved on"
+  },
+  "SchoolGuardians": {
+    "sign-in-action": "Sign in as a parent",
+    "email-label": "Parent email",
+    "email-description": "Use the email the school registered.",
+    "email-invalid": "Enter a valid email address.",
+    "send-code": "Send code",
+    "code-label": "Sign-in code",
+    "code-description": "If the school linked {email}, a six-digit code was sent there.",
+    "code-invalid": "Enter the six digits from the email.",
+    "code-refused": "The code is wrong or has expired.",
+    "sign-in": "Sign in",
+    "resend-code": "Send the code again",
+    "failed": "Could not connect. Try again.",
+    "home-title": "My children",
+    "home-empty": "No child is linked yet.",
+    "home-empty-description": "Ask the school to link your email to your child.",
+    "child-pending": "The link is waiting for a check.",
+    "child-verified": "The link is verified.",
+    "child-expired": "The link has expired.",
+    "child-revoked": "The school ended this link.",
+    "child-withdrawn": "You withdrew consent.",
+    "child-staff-check": "The school will check this link.",
+    "child-ended-hint": "Contact the school to link again.",
+    "nisn-label": "Child's NISN",
+    "nisn-hint": "Enter your child's NISN to confirm this link.",
+    "nisn-refused": "The details do not match, check them or contact the school.",
+    "nisn-submit": "Check",
+    "withdraw": "Withdraw consent",
+    "withdraw-hint": "You can withdraw consent at any time.",
+    "withdraw-title": "Withdraw consent?",
+    "withdraw-description": "You will not see your child's grades until the school links you again.",
+    "grades-empty": "No grade is released yet.",
+    "grade-class": "Class",
+    "grade-value": "Grade",
+    "grade-note": "Note",
+    "kktp-reached": "Reached",
+    "kktp-notReached": "Not reached",
+    "link-add": "Link a parent",
+    "link-add-description": "The parent asks for a sign-in code on the school's parent page.",
+    "links-empty": "No parent is linked yet.",
+    "links-empty-description": "Link a parent's email to a student so they can sign in.",
+    "links-search": "Search students",
+    "student": "Student",
+    "guardian-name": "Parent's name",
+    "status": "Status",
+    "status-pending": "Pending",
+    "status-verified": "Verified",
+    "status-expired": "Expired",
+    "status-revoked": "Ended",
+    "status-withdrawn": "Withdrawn",
+    "status-mismatch": "Details do not match",
+    "link-verify": "Verify by hand",
+    "link-revoke": "End link",
+    "link-revoke-title": "End this link?",
+    "link-revoke-description": "The parent can no longer see the child's records.",
+    "link-detail": "Parent link",
+    "link-detail-empty": "Choose a student to see their link.",
+    "expires": "Expires",
+    "mismatches": "Failed NISN checks",
+    "child": "Child",
+    "child-detail": "Child",
+    "child-detail-empty": "Choose a child to see the details."
+  },
+  "SchoolRoster": {
+    "import": "Import",
+    "export": "Export",
+    "file-label": "Dapodik student list",
+    "empty": "Import the students from Dapodik.",
+    "empty-description": "Choose the student list exported from Dapodik. The file stays on this device.",
+    "no-period": "No active period yet.",
+    "no-period-description": "Open a period before you import students.",
+    "file-refused": "This file cannot be imported.",
+    "file-unreadable": "Choose an XLSX file exported from Dapodik.",
+    "file-header": "The file has no Nama and NISN columns.",
+    "file-empty": "The file has no student below its header.",
+    "line": "Row",
+    "name": "Name",
+    "nisn": "NISN",
+    "cohort": "Class group",
+    "status": "Status",
+    "search": "Search names",
+    "status-under": "Under 18",
+    "status-adult": "18 or older",
+    "status-name": "Name missing",
+    "status-nisn": "NISN is not 10 digits",
+    "status-birth": "Birth date unreadable",
+    "status-cohort": "Class group name too long",
+    "cancel": "Cancel",
+    "apply": "Import students"
   }
 }

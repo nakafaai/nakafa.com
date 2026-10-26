@@ -1,7 +1,8 @@
 {
   "DataTable": {
     "no-results": "Tidak ada hasil.",
-    "reset": "Atur ulang"
+    "reset": "Atur ulang",
+    "filter": "Saring"
   },
   "School": {
     "account-settings": "Pengaturan akun",
@@ -249,7 +250,6 @@
     "rooms-title": "Ruang",
     "rooms-empty": "Belum ada ruang",
     "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",
-    "rooms-empty-action": "Buka ujian",
     "rooms-filter-empty": "Tidak ada ruang dengan status ini",
     "rooms-filter-empty-description": "Pilih status lain untuk melihat ruang yang lain.",
     "rooms-unavailable": "Anda tidak dapat melihat ruang ujian ini.",
@@ -320,7 +320,8 @@
     "import-drop": "Letakkan berkas Word atau PDF di sini, atau pilih satu.",
     "import-remove": "Hapus berkas",
     "presence-editor": "{name} sedang mengedit",
-    "presence-more": "{names} sedang mengedit"
+    "presence-more": "{names} sedang mengedit",
+    "edit-action": "Ubah ujian"
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -473,7 +474,6 @@
     "client-secret-title": "Rahasia baru",
     "client-secret-description": "Salin sekarang, karena rahasia ini tidak akan ditampilkan lagi.",
     "audit-description": "Siapa mengubah apa di sekolah ini, dan kapan.",
-    "audit-footer": "Nilai kebijakan tidak disalin ke jejak.",
     "audit-view": "Lihat jejak",
     "audit-when": "Kapan",
     "audit-who": "Siapa",
@@ -621,7 +621,17 @@
         "declined": "Kunjungan ditolak",
         "ended": "Kunjungan selesai"
       },
-      "unknown": "Perubahan lain"
+      "unknown": "Perubahan lain",
+      "guardian": {
+        "started": "Orang tua ditautkan",
+        "linked": "Tautan orang tua terverifikasi",
+        "withdrawn": "Persetujuan orang tua ditarik",
+        "revoked": "Tautan orang tua diakhiri"
+      },
+      "roster": {
+        "set": "Data siswa diperbarui",
+        "imported": "Siswa diimpor dari Dapodik"
+      }
     },
     "role-description": {
       "owner": "Dapat melakukan semua hal di sekolah ini.",
@@ -741,10 +751,11 @@
     "no-unit-description": "Periode dan kelompok milik unit yang aktif. Pulihkan atau tambahkan satu unit dulu.",
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
-    "members-empty-action": "Buka undangan",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
     "policy-domains-invalid": "Periksa domain ini: {domains}. Tulis satu domain di setiap baris.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
+    "roster": "Dapodik",
+    "guardians": "Orang tua"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -794,7 +805,10 @@
     "search": "Cari siswa",
     "release": "Rilis",
     "empty": "Belum ada siswa di kelas ini.",
-    "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya."
+    "empty-description": "Siswa muncul di sini setelah ditempatkan di rombelnya.",
+    "detail": "Nilai siswa",
+    "detail-empty": "Pilih siswa untuk melihat nilainya.",
+    "kktp": "KKTP"
   },
   "SchoolReports": {
     "title": "Rapor",
@@ -2053,6 +2067,20 @@
     "school-refusal-report-not-placed": {
       "title": "Siswa ini tidak di sini.",
       "description": "Tempatkan siswa di rombel terlebih dahulu."
+    },
+    "school-refusal-guardian-closed": {
+      "title": "Tautan ini sudah berubah.",
+      "description": "Muat ulang daftar untuk melihat statusnya."
+    },
+    "school-refusal-guardian-link": {
+      "title": "Tautan tidak dibuat.",
+      "description": "Pilih siswa aktif yang belum memakai email ini."
+    },
+    "school-roster-imported": {
+      "title": "Siswa sudah masuk ke daftar."
+    },
+    "school-roster-export-failed": {
+      "title": "File tidak tersimpan."
     }
   },
   "Ai": {
@@ -2523,5 +2551,95 @@
     "kind-report": "Rapor",
     "period": "Periode",
     "approved": "Disetujui pada"
+  },
+  "SchoolGuardians": {
+    "sign-in-action": "Masuk sebagai orang tua",
+    "email-label": "Email orang tua",
+    "email-description": "Gunakan email yang didaftarkan sekolah.",
+    "email-invalid": "Tulis alamat email yang benar.",
+    "send-code": "Kirim kode",
+    "code-label": "Kode masuk",
+    "code-description": "Jika sekolah menautkan {email}, kode enam angka dikirim ke sana.",
+    "code-invalid": "Tulis enam angka dari email.",
+    "code-refused": "Kode salah atau sudah kedaluwarsa.",
+    "sign-in": "Masuk",
+    "resend-code": "Kirim ulang kode",
+    "failed": "Tidak dapat terhubung. Coba lagi.",
+    "home-title": "Anak saya",
+    "home-empty": "Belum ada anak yang ditautkan.",
+    "home-empty-description": "Minta sekolah menautkan email Anda ke data anak.",
+    "child-pending": "Tautan menunggu pemeriksaan.",
+    "child-verified": "Tautan terverifikasi.",
+    "child-expired": "Tautan sudah kedaluwarsa.",
+    "child-revoked": "Sekolah mengakhiri tautan ini.",
+    "child-withdrawn": "Anda menarik persetujuan.",
+    "child-staff-check": "Sekolah akan memeriksa tautan ini.",
+    "child-ended-hint": "Hubungi sekolah untuk menautkan lagi.",
+    "nisn-label": "NISN anak",
+    "nisn-hint": "Masukkan NISN anak untuk memastikan tautan ini.",
+    "nisn-refused": "Data tidak cocok, periksa lagi atau hubungi sekolah.",
+    "nisn-submit": "Periksa",
+    "withdraw": "Tarik persetujuan",
+    "withdraw-hint": "Anda dapat menarik persetujuan kapan saja.",
+    "withdraw-title": "Tarik persetujuan?",
+    "withdraw-description": "Anda tidak akan melihat nilai anak lagi sampai sekolah menautkan ulang.",
+    "grades-empty": "Belum ada nilai yang dirilis.",
+    "grade-class": "Kelas",
+    "grade-value": "Nilai",
+    "grade-note": "Keterangan",
+    "kktp-reached": "Tuntas",
+    "kktp-notReached": "Belum tuntas",
+    "link-add": "Tautkan orang tua",
+    "link-add-description": "Orang tua meminta kode masuk sendiri di halaman orang tua sekolah.",
+    "links-empty": "Belum ada orang tua yang ditautkan.",
+    "links-empty-description": "Tautkan email orang tua ke siswa agar mereka dapat masuk.",
+    "links-search": "Cari siswa",
+    "student": "Siswa",
+    "guardian-name": "Nama orang tua",
+    "status": "Status",
+    "status-pending": "Menunggu",
+    "status-verified": "Terverifikasi",
+    "status-expired": "Kedaluwarsa",
+    "status-revoked": "Diakhiri",
+    "status-withdrawn": "Ditarik",
+    "status-mismatch": "Data tidak cocok",
+    "link-verify": "Verifikasi manual",
+    "link-revoke": "Akhiri tautan",
+    "link-revoke-title": "Akhiri tautan ini?",
+    "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi.",
+    "link-detail": "Tautan orang tua",
+    "link-detail-empty": "Pilih siswa untuk melihat tautannya.",
+    "expires": "Berakhir",
+    "mismatches": "Cek NISN gagal",
+    "child": "Anak",
+    "child-detail": "Anak",
+    "child-detail-empty": "Pilih anak untuk melihat rinciannya."
+  },
+  "SchoolRoster": {
+    "import": "Impor",
+    "export": "Ekspor",
+    "file-label": "Daftar peserta didik Dapodik",
+    "empty": "Impor siswa dari Dapodik.",
+    "empty-description": "Pilih daftar peserta didik hasil ekspor Dapodik. File tetap di perangkat ini.",
+    "no-period": "Belum ada periode aktif.",
+    "no-period-description": "Buka periode sebelum mengimpor siswa.",
+    "file-refused": "File ini tidak bisa diimpor.",
+    "file-unreadable": "Pilih file XLSX hasil ekspor Dapodik.",
+    "file-header": "File tidak punya kolom Nama dan NISN.",
+    "file-empty": "File tidak punya siswa di bawah judul kolomnya.",
+    "line": "Baris",
+    "name": "Nama",
+    "nisn": "NISN",
+    "cohort": "Rombel",
+    "status": "Status",
+    "search": "Cari nama",
+    "status-under": "Di bawah 18 tahun",
+    "status-adult": "18 tahun atau lebih",
+    "status-name": "Nama kosong",
+    "status-nisn": "NISN bukan 10 digit",
+    "status-birth": "Tanggal lahir tidak terbaca",
+    "status-cohort": "Nama rombel terlalu panjang",
+    "cancel": "Batal",
+    "apply": "Impor siswa"
   }
 }

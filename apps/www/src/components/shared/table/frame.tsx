@@ -10,11 +10,11 @@ import type { ReactNode } from "react";
 import { EmptyNina } from "@/components/state/empty";
 
 /**
- * A data table as shadcn draws one: a rounded border around the table, with every row
- * and its border running the full width inside it. A list of records lives here, never
- * inside a card, so no row is cut short by a card's padding. Each cell keeps its words
- * on one line, and a table wider than the frame scrolls inside it, so a narrow screen
- * never breaks a name in the middle of a word.
+ * A table that sits inside a part of a page, as shadcn draws one: a rounded border
+ * around the table, with every row and its border running the full width inside it.
+ * Each cell keeps its words on one line, and a table wider than the frame scrolls inside
+ * it, so a narrow screen never breaks a name in the middle of a word. A table that is
+ * the whole body of its page is a `DataTable`, which runs from edge to edge instead.
  */
 export function TableFrame({ children }: { children: ReactNode }) {
   return (
@@ -25,9 +25,10 @@ export function TableFrame({ children }: { children: ReactNode }) {
 }
 
 /**
- * The frame of a data table that holds no row yet: what the list will hold, in one
- * sentence, with Nina doing what fits the list, in place of column heads over nothing.
- * The page's action that adds the first record sits in the page header.
+ * The body of a list that holds no record yet: what the list will hold, in one
+ * sentence, with Nina doing what fits the list, in the middle of the body in place of
+ * column heads over nothing. The page's action that adds the first record sits in the
+ * page header.
  */
 export function TableEmpty({
   act,
@@ -43,15 +44,13 @@ export function TableEmpty({
   title: string;
 }) {
   return (
-    <TableFrame>
-      <Empty className="md:p-10">
-        <EmptyHeader>
-          <EmptyNina act={act} />
-          <EmptyTitle className="text-base">{title}</EmptyTitle>
-          <EmptyDescription>{description}</EmptyDescription>
-        </EmptyHeader>
-        {action === undefined ? null : <EmptyContent>{action}</EmptyContent>}
-      </Empty>
-    </TableFrame>
+    <Empty className="flex-1 md:p-10">
+      <EmptyHeader>
+        <EmptyNina act={act} />
+        <EmptyTitle className="text-base">{title}</EmptyTitle>
+        <EmptyDescription>{description}</EmptyDescription>
+      </EmptyHeader>
+      {action === undefined ? null : <EmptyContent>{action}</EmptyContent>}
+    </Empty>
   );
 }

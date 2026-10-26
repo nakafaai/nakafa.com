@@ -4,11 +4,13 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Match, Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
+import { PanesProvider } from "@/components/shared/panes";
+import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 import { AddChannel } from "@/components/tenant/classes/add";
@@ -20,7 +22,10 @@ import { createChannelDrafts } from "@/components/tenant/classes/drafts";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useTenant } from "@/components/tenant/context";
-import { ClassGradebook } from "@/components/tenant/grades/sheet";
+import {
+  ClassGradebook,
+  GradebookFilters,
+} from "@/components/tenant/grades/sheet";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -167,46 +172,56 @@ function ClassPage({
     ],
   });
   const canGrade = Arr.contains(klass.can, "grade.list");
-  const path = Match.value(tab).pipe(
-    Match.when("home", () => [{ label: klass.name }]),
-    Match.when("grades", () => [classItem, { label: t("tabs-grades") }]),
-    Match.orElse(() => forumPath)
-  );
 
-  const body = Match.value(tab).pipe(
-    Match.when("grades", () => (
-      <ClassGradebook classId={klass.id} slug={slug} />
-    )),
-    Match.orElse(() =>
-      Option.isSome(shown) ? (
-        <ForumChannel
-          canManage={canManageForum}
-          canPost={Arr.contains(klass.can, "forum.post")}
-          channelId={shown.value}
-          classId={klass.id}
-          slug={slug}
-        />
-      ) : (
-        <ChannelList
-          classId={klass.id}
-          drafts={drafts}
-          first={Option.fromUndefinedOr(preload?.channels)}
-          slug={slug}
-        />
-      )
-    )
-  );
+  if (tab === "grades") {
+    return (
+      <TableFiltersProvider>
+        <PanesProvider>
+          <SchoolHeader
+            items={[classItem, { label: t("tabs-grades") }]}
+            title={klass.name}
+          >
+            <GradebookFilters />
+          </SchoolHeader>
+          <div className="px-4 pt-3">
+            <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
+          </div>
+          <div className="flex w-full min-w-0 flex-1 flex-col">
+            <ClassGradebook classId={klass.id} slug={slug} />
+          </div>
+        </PanesProvider>
+      </TableFiltersProvider>
+    );
+  }
 
   return (
     <>
-      <SchoolHeader items={path} title={klass.name}>
+      <SchoolHeader
+        items={tab === "home" ? [{ label: klass.name }] : forumPath}
+        title={klass.name}
+      >
         {tab === "forum" && Option.isNone(shown) && canManageForum ? (
           <AddChannel classId={klass.id} drafts={drafts} slug={slug} />
         ) : null}
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <ClassTabs canGrade={canGrade} classSlug={classSlug} tab={tab} />
-        {body}
+        {Option.isSome(shown) ? (
+          <ForumChannel
+            canManage={canManageForum}
+            canPost={Arr.contains(klass.can, "forum.post")}
+            channelId={shown.value}
+            classId={klass.id}
+            slug={slug}
+          />
+        ) : (
+          <ChannelList
+            classId={klass.id}
+            drafts={drafts}
+            first={Option.fromUndefinedOr(preload?.channels)}
+            slug={slug}
+          />
+        )}
       </LayoutContent>
     </>
   );
