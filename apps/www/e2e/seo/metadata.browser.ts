@@ -1,9 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Schema } from "effect";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { paginationNavigation } from "@/e2e/support/selector";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
   "LessonNavigationMissing",
@@ -59,6 +61,9 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
                 const run = Effect.runPromiseWith(
                   yield* Effect.context<never>()
                 );
+                // The usage-data prompt stands over the foot of the page until
+                // the visitor decides, and the next lesson's link sits there.
+                yield* seedAnalyticsConsent(page, "denied");
                 yield* Effect.promise(() => page.goto(href));
                 const pagination = paginationNavigation(page);
                 const next = pagination.locator("a[href]:visible").last();
@@ -91,6 +96,9 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
                 );
                 yield* Effect.promise(() => reference.close());
 
+                // A press before React takes the link over loads the page
+                // again, and this test is about the page the router draws.
+                yield* Effect.promise(() => waitUntilTakenOver(next));
                 yield* Effect.promise(() => next.click());
                 yield* Effect.promise(() =>
                   expect(page).toHaveURL((url) => url.pathname === destination)

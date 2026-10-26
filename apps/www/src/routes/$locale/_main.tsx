@@ -19,10 +19,15 @@ const ShellInput = Schema.Struct({ locale: Schema.String });
 /**
  * The messages of the student shell and of the learn pages that the locale route
  * does not carry. The Common, State and Toast messages come from the locale route.
+ * Pricing is here because a finished try-out set offers Pro, and the signed-in
+ * screens read it from here too.
  */
 const MAIN_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
+  "Comments",
   "Player",
+  "Posts",
+  "Pricing",
   "Tryouts",
 ] as const;
 

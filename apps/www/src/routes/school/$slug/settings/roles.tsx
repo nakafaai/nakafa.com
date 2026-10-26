@@ -9,7 +9,7 @@ import { readRolesFn } from "@/lib/tenant/settings.functions";
 /** The roles of the people of the school. */
 export const Route = createFileRoute("/school/$slug/settings/roles")({
   loader: ({ context }) =>
-    context.school._tag === "Member"
+    context.firstHtml && context.school._tag === "Member"
       ? readRolesFn({ data: { numItems: PAGE_SIZE, slug: context.slug } })
       : undefined,
   component: SchoolRolesPage,

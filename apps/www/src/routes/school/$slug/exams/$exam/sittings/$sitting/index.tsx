@@ -1,8 +1,11 @@
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
 import type { ReactElement } from "react";
+import { dashboardArgs } from "@/components/exams/sitting/change";
 import { SittingDashboard } from "@/components/exams/sitting/dashboard";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { readOnce } from "@/lib/convex/read";
 import { readSittingDashboardFn } from "@/lib/tenant/exams.functions";
 import { readExamId, readSittingId } from "@/lib/tenant/params";
 
@@ -24,6 +27,18 @@ export const Route = createFileRoute(
   loader: ({ context }) => {
     if (context.school._tag !== "Member") {
       return;
+    }
+    // After a press the dashboard reads once from Convex, then live.
+    if (!context.firstHtml) {
+      return Effect.runPromise(
+        readOnce(
+          exams.sittings.dashboard,
+          dashboardArgs(
+            { sittingId: context.sittingId, slug: context.slug },
+            null
+          )
+        ).pipe(Effect.orElseSucceed(() => undefined))
+      );
     }
     return readSittingDashboardFn({
       data: { sittingId: context.sittingId, slug: context.slug },

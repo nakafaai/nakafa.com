@@ -1,5 +1,6 @@
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import {
   createSchool,
   grantStudent,
@@ -69,6 +70,22 @@ test("an admin opens the profile and the periods of a school", async ({
   await expect(
     page.getByRole("cell", { exact: true, name: "School opened" })
   ).toBeVisible();
+  // Export, the trail's main action, hands over the whole trail as a CSV file.
+  const download = page.waitForEvent("download");
+  await page.locator("header").getByRole("button", { name: "Export" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(
+    new RegExp(`^audit-${school.slug}-\\d{4}-\\d{2}-\\d{2}\\.csv$`)
+  );
+  const csv = await Effect.runPromise(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Effect.promise(() => file.path());
+      return yield* fs.readFileString(path);
+    }).pipe(Effect.provide(nodeServicesLayer))
+  );
+  expect(csv).toContain("When,Who,Change\r\n");
+  expect(csv).toContain(",School opened\r\n");
   await page
     .getByRole("navigation", { name: "breadcrumb" })
     .getByRole("link", { name: "Home" })

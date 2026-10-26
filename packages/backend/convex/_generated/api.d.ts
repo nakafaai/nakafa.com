@@ -205,7 +205,12 @@ export declare const api: {
       generateCheckoutLink: FunctionReference<
         "action",
         "public",
-        { locale: "en" | "id" | "de"; successUrl: string },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          locale: "en" | "id" | "de";
+          offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+          successUrl: string;
+        },
         { url: string }
       >;
       generateCustomerPortalUrl: FunctionReference<
@@ -11366,11 +11371,12 @@ export declare const internal: {
             | {
                 name: "checkout started";
                 properties: {
-                  checkout_locale: "de" | "en";
+                  checkout_locale: "de" | "en" | "en" | "id";
                   customer_ip_available: boolean;
                   locale: "en" | "id" | "de";
                   product_count: number;
                   product_id: string;
+                  rail: "polar" | "xendit";
                 };
               }
             | {
@@ -11550,6 +11556,145 @@ export declare const internal: {
         { orderId: string; refundableAmount: number },
         null
       >;
+    };
+    xendit: {
+      checkout: {
+        admit: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            accountId: Id<"billingAccounts">;
+            event:
+              | {
+                  name: "content viewed";
+                  properties: {
+                    alignment_id: string;
+                    concept_id: string;
+                    content_id: string;
+                    content_type: "article" | "material" | "question";
+                    context_key: string;
+                    is_new_view: boolean;
+                    learning_object_id: string;
+                    lens_id: string;
+                    locale: "en" | "id" | "de";
+                    route: string;
+                  };
+                }
+              | {
+                  name: "tryout attempt started";
+                  properties: {
+                    access_source: "free" | "subscription";
+                    attempt_number: number;
+                    country_key: string;
+                    exam_key: string;
+                    locale: "en" | "id" | "de";
+                    score_status: "provisional" | "official";
+                    set_key: string;
+                    track_key: string;
+                  };
+                }
+              | {
+                  name: "tryout attempt completed";
+                  properties: {
+                    attempt_number: number;
+                    country_key: string;
+                    exam_key: string;
+                    locale: "en" | "id" | "de";
+                    score_status: "provisional" | "official";
+                    set_key: string;
+                    total_questions: number;
+                    track_key: string;
+                  };
+                }
+              | {
+                  name: "tryout paywall viewed";
+                  properties: { source: "review" };
+                }
+              | {
+                  name: "chat message sent";
+                  properties: { chat_type: "study" };
+                }
+              | {
+                  name: "chat response completed";
+                  properties: {
+                    chat_type: "study";
+                    credits?: number;
+                    input_tokens?: number;
+                    output_tokens?: number;
+                    total_tokens?: number;
+                  };
+                }
+              | {
+                  name: "chat response failed";
+                  properties: {
+                    chat_type: "study";
+                    error_code:
+                      | "provider-busy"
+                      | "provider-unavailable"
+                      | "service-configuration"
+                      | "request-rejected"
+                      | "input-too-large"
+                      | "response-timeout"
+                      | "content-blocked"
+                      | "response-limit"
+                      | "interrupted"
+                      | "unknown";
+                  };
+                }
+              | {
+                  name: "checkout started";
+                  properties: {
+                    checkout_locale: "de" | "en" | "en" | "id";
+                    customer_ip_available: boolean;
+                    locale: "en" | "id" | "de";
+                    product_count: number;
+                    product_id: string;
+                    rail: "polar" | "xendit";
+                  };
+                }
+              | {
+                  name: "subscription started";
+                  properties: { product_id: string; status: string };
+                }
+              | {
+                  name: "subscription canceled";
+                  properties: { product_id: string; status: string };
+                }
+              | {
+                  name: "plan changed";
+                  properties: {
+                    new_plan: "free" | "pro";
+                    previous_plan: "free" | "pro";
+                  };
+                };
+            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            session: {
+              expiresAt: number;
+              planId: string | null;
+              sessionId: string;
+              url: string;
+            };
+            userId: Id<"users">;
+          },
+          null
+        >;
+        prepare: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            userId: Id<"users">;
+          },
+          {
+            accountId: Id<"billingAccounts">;
+            authId: string;
+            email: string;
+            name: string;
+            openUrl: string | null;
+            providerCustomerId: string | null;
+          }
+        >;
+      };
     };
   };
   classroom: {

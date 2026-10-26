@@ -226,9 +226,7 @@
     "release-title": "Rilis hasil kepada siswa?",
     "release-description": "Setiap siswa melihat skor dan jawabannya sendiri setelah kamu merilisnya.",
     "release-action": "Rilis hasil",
-    "release-footer": "Siswa melihat hasilnya setelah kamu merilisnya.",
-    "release-wait-footer": "Penulis ujian atau Admin merilis hasilnya setelah sesi ditutup.",
-    "released-footer": "Siswa sudah dapat melihat hasilnya.",
+    "released": "Dirilis",
     "student-results-title": "Hasilmu",
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
@@ -293,6 +291,19 @@
     "fullscreen": "Layar penuh",
     "fullscreen-exit": "Keluar layar penuh",
     "zoom": "Perbesar",
+    "zoom-options": "Pilihan perbesaran",
+    "zoom-fit": "Pas",
+    "zoom-fill": "Penuh",
+    "page-of": "Soal {current} dari {total}, buka soal lain",
+    "page-jump": "Buka soal, 1 sampai {total}",
+    "open-question": "Buka soal {number}",
+    "select-question": "Pilih soal {number}",
+    "select-all": "Pilih semua",
+    "grid-duplicate": "Duplikat",
+    "grid-delete": "Hapus",
+    "selected-count": "{count} dipilih",
+    "remove-many-title": "Hapus {count} soal?",
+    "remove-many-description": "Soal-soal dan jawabannya keluar dari ujian ini.",
     "student-retry": "Sesi ini gagal dimuat, jadi coba lagi sebentar lagi.",
     "student-opens-at": "Sesi ini dibuka {time}.",
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
@@ -480,6 +491,7 @@
     "audit-change": "Perubahan",
     "audit-empty": "Belum ada perubahan.",
     "audit-search": "Cari perubahan",
+    "audit-export": "Ekspor",
     "audit-operator": "Staf Nakafa",
     "audit-system": "Sistem",
     "audit-label": {
@@ -1529,6 +1541,9 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "chat-deleted": {
+      "title": "Obrolan ini sudah dihapus."
+    },
     "image-refused-size": {
       "title": "Gambar tidak ditambahkan.",
       "description": "Pilih gambar dengan ukuran paling besar 2 MB."
@@ -1997,6 +2012,10 @@
     "import-encrypted": {
       "title": "PDF ini memakai kata sandi.",
       "description": "Simpan dulu tanpa kata sandi."
+    },
+    "audit-export-error": {
+      "title": "Jejak audit gagal diekspor.",
+      "description": "Periksa koneksi, lalu coba lagi."
     },
     "school-own-role-ended": {
       "title": "Peranmu sudah berakhir."

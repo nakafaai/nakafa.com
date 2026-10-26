@@ -59,6 +59,22 @@ describe("billing/xendit/webhook", () => {
       })
   );
 
+  it.effect(
+    "keys a payment session by its event, session and status, so a retry with a new created time repeats the key",
+    () =>
+      Effect.gen(function* () {
+        const delivery = (created: string) =>
+          `{"business_id":"biz_1","created":"${created}","data":{"payment_session_id":"ps_1","reference_id":"checkout-1","session_type":"PAY","status":"COMPLETED"},"event":"payment_session.completed"}`;
+        const first = delivery("2026-10-25T20:00:00Z");
+        const retry = delivery("2026-10-25T20:15:00Z");
+        const key = yield* xenditDeliveryKey(yield* envelopeOf(first), first);
+        expect(key).toBe("payment_session.completed:ps_1:COMPLETED");
+        expect(yield* xenditDeliveryKey(yield* envelopeOf(retry), retry)).toBe(
+          key
+        );
+      })
+  );
+
   it.effect("keys a delivery without a status by an empty status", () =>
     Effect.gen(function* () {
       const body =

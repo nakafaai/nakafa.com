@@ -1,22 +1,24 @@
-import {
-  DEFAULT_LOCALE,
-  decodeLocale,
-  type Locale,
-  LocaleSchema,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { isNotFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
+import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 
-/** The request header in which the server names the locale of the standalone not-found page. */
-export const NOT_FOUND_LOCALE_HEADER = "x-nakafa-locale";
+/**
+ * The not-found page that the server answers a refused or missing address with
+ * (ADR 0026): the locale that it renders in, and whether the request came to a
+ * school host. The root route's not-found error carries it, so the document
+ * speaks that locale too.
+ */
+export const NotFoundPageData = Schema.Struct({
+  locale: LocaleSchema,
+  school: Schema.Boolean,
+});
 
-/** The address of the standalone not-found page, which the server renders for a refused or missing address. */
-export const NOT_FOUND_PATH = "/_missing";
+/** The not-found page of one answer, as `NotFoundPageData` declares it. */
+export type NotFoundPage = typeof NotFoundPageData.Type;
 
-/** The data that the standalone page's not-found error carries: the locale that the page renders in. */
-export const NotFoundPageData = Schema.Struct({ locale: LocaleSchema });
-
-/** The locale of the standalone not-found page, as its not-found error names it, or none for any other error. */
+/** The locale of the not-found page, as its not-found error names it, or none for any other error. */
 export function readNotFoundPageLocale(error: unknown): Option.Option<Locale> {
   if (!isNotFound(error)) {
     return Option.none();
@@ -27,30 +29,18 @@ export function readNotFoundPageLocale(error: unknown): Option.Option<Locale> {
   );
 }
 
-/** The locale that the request names for the standalone not-found page, or the default locale when it names none. */
-export function readNotFoundLocale(headers: Headers): Locale {
-  return Option.getOrElse(
-    decodeLocale(headers.get(NOT_FOUND_LOCALE_HEADER)),
-    () => DEFAULT_LOCALE
-  );
-}
-
 /**
- * The request that renders the standalone not-found page in one locale. It keeps
- * the host, the cookies and the language of the visitor's request, and replaces
- * its path and query with the page's address, so the page answers in the locale
- * that the server names.
+ * The not-found page of a request in one locale, which knows whether the request
+ * came to a school host. The host comes from the `host` header, as the school
+ * gate reads it.
  */
-export function createNotFoundRequest(
-  request: Request,
-  locale: Locale
-): Request {
-  const url = new URL(request.url);
-  url.pathname = NOT_FOUND_PATH;
-  url.search = "";
-  const headers = new Headers(request.headers);
-  headers.set(NOT_FOUND_LOCALE_HEADER, locale);
-  return new Request(url, { headers, method: "GET" });
+export function notFoundPageOf(request: Request, locale: Locale): NotFoundPage {
+  return {
+    locale,
+    school: Option.isSome(
+      Option.flatMap(readRequestHostname(request.headers), readSchoolSlug)
+    ),
+  };
 }
 
 /** The response with the language that the not-found page of a locale names. */

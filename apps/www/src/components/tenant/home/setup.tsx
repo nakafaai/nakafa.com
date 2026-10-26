@@ -1,11 +1,5 @@
 import { QueryResult } from "@confect/react";
-import {
-  ArrowRight02Icon,
-  Mail01Icon,
-  School01Icon,
-  UserAdd01Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -52,14 +46,6 @@ const STEP_TARGET: Record<SetupStep, (slug: TenantSlug) => LinkTarget> = {
       to: "/school/$slug/settings/units",
     }) satisfies LinkTarget,
 };
-
-/** The icon of each step, which its row shows at its start. */
-const STEP_ICON = {
-  invites: Mail01Icon,
-  students: UserGroupIcon,
-  teacher: UserAdd01Icon,
-  unit: School01Icon,
-} as const;
 
 /**
  * The steps that the school still lacks, once both the setup read and the viewer's units have answered. Until
@@ -112,7 +98,7 @@ export function SetupCell({ span }: { span: CellSpan }) {
     <ReadBoundary
       fallback={(failure) => (
         <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-          <Dashboard.CellHeader icon={School01Icon} title={t("tile-setup")} />
+          <Dashboard.CellHeader title={t("tile-setup")} />
           {failure}
         </Dashboard.Cell>
       )}
@@ -140,7 +126,7 @@ function SetupRows({ span }: { span: CellSpan }) {
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader icon={School01Icon} title={t("tile-setup")}>
+      <Dashboard.CellHeader title={t("tile-setup")}>
         <span className="text-muted-foreground text-sm tabular-nums">
           {progress}
         </span>
@@ -168,7 +154,6 @@ function SetupRow({ step }: { step: SetupStep }) {
 
   return (
     <Dashboard.Row
-      icon={STEP_ICON[step]}
       render={
         <TargetLink target={STEP_TARGET[step](tenant.slug)} title={title} />
       }

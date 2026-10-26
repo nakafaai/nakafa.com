@@ -14,6 +14,10 @@ import {
   createExamSelection,
   type ExamSelection,
 } from "@/components/tenant/exams/selection";
+import {
+  createEditorView,
+  type EditorView,
+} from "@/components/tenant/exams/view";
 import { createExamZoom, type ExamZoom } from "@/components/tenant/exams/zoom";
 
 /** The exam the editor shows and the school it belongs to. */
@@ -23,17 +27,19 @@ type SelectionStore = ReturnType<typeof createExamSelection>;
 type LiveStore = ReturnType<typeof createExamLive>;
 type EditingStore = StoreApi<ExamEditing>;
 type ZoomStore = ReturnType<typeof createExamZoom>;
+type ViewStore = ReturnType<typeof createEditorView>;
 
 const ExamContext = createContext<typeof ExamValue.Type | null>(null);
 const SelectionContext = createContext<SelectionStore | null>(null);
 const LiveContext = createContext<LiveStore | null>(null);
 const EditingContext = createContext<EditingStore | null>(null);
 const ZoomContext = createContext<ZoomStore | null>(null);
+const ViewContext = createContext<ViewStore | null>(null);
 
 /**
  * Gives the editor the exam it shows, as Convex answers, the question the teacher chose,
- * the prompts the canvas holds open, the editor the toolbar acts on, and the zoom of the
- * pages. The stores are created once for this provider, and the exam is what the query
+ * the prompts the canvas holds open, the editor the toolbar acts on, the zoom of the
+ * pages, and whether the canvas or the grid shows. The stores are created once for this provider, and the exam is what the query
  * returned, so the pages and the toolbar read one copy of each.
  */
 export function ExamProvider({
@@ -52,13 +58,16 @@ export function ExamProvider({
   const [live] = useState(() => createExamLive(prompt));
   const [editing] = useState(() => createExamEditing());
   const [zoom] = useState(createExamZoom);
+  const [view] = useState(createEditorView);
 
   return (
     <ExamContext value={{ exam, slug }}>
       <SelectionContext value={selection}>
         <LiveContext value={live}>
           <EditingContext value={editing}>
-            <ZoomContext value={zoom}>{children}</ZoomContext>
+            <ZoomContext value={zoom}>
+              <ViewContext value={view}>{children}</ViewContext>
+            </ZoomContext>
           </EditingContext>
         </LiveContext>
       </SelectionContext>
@@ -130,6 +139,17 @@ export function useExamZoom<T>(selector: (state: ExamZoom) => T) {
 
   if (store === null) {
     throw new Error("useExamZoom must be used within ExamProvider");
+  }
+
+  return useStore(store, selector);
+}
+
+/** Reads one selected slice of how the editor shows its questions: the canvas of pages, or the grid. */
+export function useEditorView<T>(selector: (state: EditorView) => T) {
+  const store = use(ViewContext);
+
+  if (store === null) {
+    throw new Error("useEditorView must be used within ExamProvider");
   }
 
   return useStore(store, selector);

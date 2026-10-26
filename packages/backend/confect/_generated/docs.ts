@@ -11,6 +11,7 @@ export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "arti
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
 export type AssessmentFlagsDoc = Document.Document<typeof schemaDefinition, "assessmentFlags">;
 export type BillingAccountsDoc = Document.Document<typeof schemaDefinition, "billingAccounts">;
+export type BillingCheckoutsDoc = Document.Document<typeof schemaDefinition, "billingCheckouts">;
 export type BillingCountersDoc = Document.Document<typeof schemaDefinition, "billingCounters">;
 export type BillingEventsDoc = Document.Document<typeof schemaDefinition, "billingEvents">;
 export type BillingGrantsDoc = Document.Document<typeof schemaDefinition, "billingGrants">;
@@ -64,6 +65,7 @@ export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSi
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
+export type IntegrationTokensDoc = Document.Document<typeof schemaDefinition, "integrationTokens">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
@@ -137,6 +139,7 @@ export interface Docs {
   articleCategories: ArticleCategoriesDoc;
   assessmentFlags: AssessmentFlagsDoc;
   billingAccounts: BillingAccountsDoc;
+  billingCheckouts: BillingCheckoutsDoc;
   billingCounters: BillingCountersDoc;
   billingEvents: BillingEventsDoc;
   billingGrants: BillingGrantsDoc;
@@ -190,6 +193,7 @@ export interface Docs {
   exams: ExamsDoc;
   gradingSchemes: GradingSchemesDoc;
   integrationClients: IntegrationClientsDoc;
+  integrationTokens: IntegrationTokensDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
