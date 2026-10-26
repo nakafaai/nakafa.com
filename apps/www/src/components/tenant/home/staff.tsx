@@ -6,7 +6,7 @@ import {
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { Fragment } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
@@ -81,6 +81,14 @@ export function StaffHome({
     setupShown,
   });
   const nextBound = reachesBound(next.length, HOME_ROOM_LIMIT);
+  // The numbers pair up on a phone; an odd last number takes its row alone.
+  const counts = Arr.filter(
+    ["count-live", "count-next", "count-waiting", "count-drafts"] as const,
+    (key) => shown[key]
+  );
+  const paired = (key: (typeof counts)[number]) =>
+    counts.length % 2 === 0 ||
+    Arr.last(counts).pipe(Option.exists((last) => last !== key));
   const closedBound = reachesBound(closed.length, HOME_RESULT_LIMIT);
   const cells = placeCells([
     {
@@ -90,6 +98,7 @@ export function StaffHome({
             live.length,
             reachesBound(live.length, HOME_ROOM_LIMIT)
           )}
+          pair={paired("count-live")}
           period={t("metric-live-period")}
           span={span}
           title={t("metric-live")}
@@ -104,6 +113,7 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(next.length, nextBound)}
+          pair={paired("count-next")}
           period={t("metric-next-period")}
           span={span}
           title={t("metric-next")}
@@ -118,6 +128,7 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(waitingOf(closed), closedBound)}
+          pair={paired("count-waiting")}
           period={t("metric-waiting-period")}
           span={span}
           title={t("metric-waiting")}
@@ -132,6 +143,7 @@ export function StaffHome({
       draw: (span) => (
         <MetricCell
           count={countLabel(draftRows.length, draftsBounded)}
+          pair={paired("count-drafts")}
           period={t("metric-drafts-period")}
           span={span}
           title={t("metric-drafts")}

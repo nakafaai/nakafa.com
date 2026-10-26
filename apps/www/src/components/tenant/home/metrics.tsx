@@ -7,15 +7,19 @@ import { schoolExamsTarget } from "@/lib/routing/school/target";
 /**
  * One number of the row at the top of a staff home, as a card that links to the exams list, where the rooms, results
  * and drafts it counts live. Its number is a count, which the caller builds, and its span is one of the four shares
- * of the row. Its title names what it counts in plain words, as the card that lists those things does.
+ * of the row. Its title names what it counts in plain words, as the card that lists those things does. On a phone two
+ * numbers share a row, and an odd last number takes the row alone.
  */
 export function MetricCell({
   count,
+  pair,
   period,
   span,
   title,
 }: {
   count: string;
+  /** Whether the card shares a phone's row with the next number. */
+  pair: boolean;
   period: string;
   span: CellSpan;
   title: string;
@@ -25,6 +29,7 @@ export function MetricCell({
   return (
     <Dashboard.Cell
       narrow={span.narrow}
+      pair={pair}
       render={<TargetLink target={schoolExamsTarget(slug)} />}
       wide={span.wide}
     >

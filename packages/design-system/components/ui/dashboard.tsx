@@ -12,11 +12,11 @@ import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 /**
  * The grid of a dashboard: each cell is a card of its own, with the gap of the page between cards. Its columns follow
- * the width of the container, not the viewport: one column below 600 pixels, two from 600, and twelve from 960, so a
- * cell's wide span is its share of twelfths.
+ * the width of the container, not the viewport: two columns below 960 pixels and twelve from 960, so a cell's wide
+ * span is its share of twelfths.
  */
 const dashboardVariants = cva(
-  "grid @min-[600px]:grid-cols-2 @min-[960px]:grid-cols-12 grid-cols-1 gap-4"
+  "grid @min-[960px]:grid-cols-12 grid-cols-2 gap-4"
 );
 
 /** The number of columns that a cell's wide span counts in, from 960 pixels. */
@@ -24,21 +24,25 @@ export type WideColumns = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 /**
  * A cell's span. `narrow` is how many of the two columns it takes from 600 pixels, and `wide` how many twelfths of the
- * row it takes from 960 pixels. Below 600 pixels every cell takes the one column, so a span shows only from its
- * breakpoint.
+ * row it takes from 960 pixels. Below 600 pixels a cell takes the whole row, unless it is one of a `pair` of small
+ * cells, such as two numbers, which share a row on a phone too.
  */
 const cellVariants = cva(
-  "flex min-w-0 flex-col gap-4 overflow-hidden rounded-xl bg-card py-6 text-card-foreground shadow-xs ring-1 ring-foreground/10 has-[>[data-slot=dashboard-list]:last-child]:pb-3",
+  "col-span-2 flex min-w-0 flex-col gap-4 overflow-hidden rounded-xl bg-card py-6 text-card-foreground shadow-xs ring-1 ring-foreground/10 has-[>[data-slot=dashboard-list]:last-child]:pb-3",
   {
-    defaultVariants: { linked: false, narrow: 1, wide: 12 },
+    defaultVariants: { linked: false, narrow: 1, pair: false, wide: 12 },
     variants: {
       linked: {
         false: "",
         true: "group outline-none transition-colors ease-out hover:bg-accent hover:text-accent-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
       },
       narrow: {
-        1: "",
-        2: "@min-[600px]:col-span-2",
+        1: "@min-[600px]:col-span-1",
+        2: "",
+      },
+      pair: {
+        false: "",
+        true: "col-span-1",
       },
       wide: {
         1: "@min-[960px]:col-span-1",
@@ -85,10 +89,14 @@ function DashboardRoot({ children, className }: ComponentProps<"div">) {
   );
 }
 
-/** One card of a dashboard. It takes its spans from `narrow` and `wide`, and `render` makes the whole cell a link. */
+/**
+ * One card of a dashboard. It takes its spans from `narrow` and `wide`, `pair` shares a phone's row with the next small
+ * card, and `render` makes the whole cell a link.
+ */
 function DashboardCell({
   className,
   narrow,
+  pair,
   render,
   wide,
   ...props
@@ -104,7 +112,7 @@ function DashboardCell({
     props: mergeProps<"div">(
       {
         className: cn(
-          cellVariants({ linked: render !== undefined, narrow, wide }),
+          cellVariants({ linked: render !== undefined, narrow, pair, wide }),
           className
         ),
       },
