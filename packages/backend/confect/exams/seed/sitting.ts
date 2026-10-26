@@ -21,6 +21,7 @@ import { storedDocument } from "@repo/backend/confect/editor/document";
 import {
   encodeAnswers,
   encodeKey,
+  essayAnswers,
   NEW_QUESTION_POINTS,
   NEW_QUESTION_TEMPLATE,
   newChoiceAnswers,
@@ -172,15 +173,47 @@ const seedQuestion = Effect.fn("exams.seed.question")(function* (
   }).pipe(Effect.orDie);
 });
 
+/** The points of the seeded essay, more than one so that a grade between none and all is partial. */
+const ESSAY_POINTS = 4;
+
+/**
+ * Places the seeded essay after `after`: a prompt of one paragraph, empty rubric and explanation
+ * documents, and one long text with no key, which the teacher grades by the rubric.
+ */
+const seedEssay = Effect.fn("exams.seed.essay")(function* (
+  exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
+  after: ExamQuestionsDoc["_id"]
+) {
+  const prompt = yield* createDocument({
+    scope: exam.scope,
+    tenantId: exam.tenantId,
+    text: yield* storedDocument(
+      promptText(["Jelaskan proses fotosintesis dengan singkat."])
+    ).pipe(Effect.orDie),
+  }).pipe(Effect.orDie);
+  const rubric = yield* createEmptyDocument(exam).pipe(Effect.orDie);
+  const explanation = yield* createEmptyDocument(exam).pipe(Effect.orDie);
+  return yield* placeQuestion(exam, after, {
+    answers: yield* encodeAnswers(essayAnswers()),
+    explanation,
+    key: null,
+    points: ESSAY_POINTS,
+    prompt,
+    rubric,
+    template: "essay",
+  }).pipe(Effect.orDie);
+});
+
 /**
  * Gives the learner who holds the address a student grant in the school's first active unit,
- * then creates a keyed exam with two choice questions and a sitting of it that opens now and
- * closes an hour later. The learner must already be a member of the school, because a claim
+ * then creates a keyed exam with two choice questions, and an essay when `essay` asks for one, and a
+ * sitting of it that opens now and closes an hour later. The learner must already be a member of the school, because a claim
  * happens when the account signs in. The journal records the schedule as the system (ADR 0013).
  */
 export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   readonly crowd?: number;
   readonly email: string;
+  readonly essay?: boolean;
   readonly slug: string;
   readonly upcoming?: boolean;
 }) {
@@ -228,11 +261,17 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
     null,
     ["Soal pertama."]
   );
-  yield* seedQuestion(
+  const second = yield* seedQuestion(
     { _id: examId, questions: [first], scope, tenantId: tenant._id },
     first,
     MIXED_PARAGRAPHS
   );
+  if (args.essay === true) {
+    yield* seedEssay(
+      { _id: examId, questions: [first, second], scope, tenantId: tenant._id },
+      second
+    );
+  }
   const exam = yield* reader.table("exams").get(examId).pipe(Effect.orDie);
   const made = yield* createSitting({
     actor: systemActor,
