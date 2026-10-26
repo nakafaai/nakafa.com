@@ -1,6 +1,5 @@
 import type { GenericId } from "@confect/core";
 import {
-  ArrowDown01Icon,
   CancelCircleIcon,
   Key01Icon,
 } from "@hugeicons/core-free-icons";
@@ -10,17 +9,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { SplitMenuTrigger } from "@/components/shared/split";
 import {
   useMayProctor,
   useSittingData,
@@ -119,7 +113,6 @@ function SittingProctorActions({
   readonly onOpen: (dialog: "close" | "token") => void;
 }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
 
   return (
     <ButtonGroup>
@@ -128,26 +121,7 @@ function SittingProctorActions({
         <span className="max-sm:sr-only">{t("change-token")}</span>
       </Button>
       <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    aria-label={common("more-actions")}
-                    size="icon"
-                    variant="outline"
-                  />
-                }
-              >
-                <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
-              </DropdownMenuTrigger>
-            }
-          />
-          <TooltipContent side="bottom">
-            {common("more-actions")}
-          </TooltipContent>
-        </Tooltip>
+        <SplitMenuTrigger />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
             className="cursor-pointer"
