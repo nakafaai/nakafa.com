@@ -37,6 +37,7 @@ import { TeacherPortal } from "@/components/tenant/exams/panel";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   PaperSketch,
+  PreviewProse,
   usePageDocument,
 } from "@/components/tenant/exams/preview";
 import {
@@ -44,9 +45,11 @@ import {
   useExamLocked,
   useExamSelection,
 } from "@/components/tenant/exams/provider";
+import { ExamDocument } from "@/components/tenant/exams/rich";
 import { activeQuestion } from "@/components/tenant/exams/selection";
 import {
   PaperLine,
+  PaperOption,
   PaperOptions,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
@@ -68,8 +71,6 @@ const ExamText = lazy(() =>
 interface ExamPageProps {
   /** The canvas that scrolls the pages, which decides how far a page is from the view. */
   readonly canvas: RefObject<HTMLElement | null>;
-  /** The number of questions in the exam, which decides whether a page may be removed. */
-  readonly count: number;
   /** The place of the question in the exam, from zero. */
   readonly index: number;
   /** The question the page shows. */
@@ -78,17 +79,13 @@ interface ExamPageProps {
 
 /** The props of the row above a page's paper. */
 interface PageRowProps {
-  /** The number of questions in the exam, which decides whether the page may be removed. */
-  readonly count: number;
+  /** The edits of the question, whose type the row shows and changes at once. */
+  readonly editing: QuestionEditing;
   /** The place of the question in the exam, from zero. */
   readonly index: number;
-  /** Turns the question into another type. */
-  readonly onTemplate: QuestionEditing["setTemplate"];
   readonly question: Question;
   /** Whether the server has saved the question, so it takes a move, a type and its actions. */
   readonly saved: boolean;
-  /** The type the page shows, which follows a change at once. */
-  readonly template: Question["template"];
 }
 
 /**
@@ -96,14 +93,7 @@ interface PageRowProps {
  * key, and its actions. A page the server has not saved yet, or a page of a locked exam, shows its number and
  * its type alone, and the type takes a change only once Convex holds the session.
  */
-function PageRow({
-  count,
-  index,
-  onTemplate,
-  question,
-  saved,
-  template,
-}: PageRowProps) {
+function PageRow({ editing, index, question, saved }: PageRowProps) {
   const t = useTranslations("Exams");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const locked = useExamLocked();
@@ -123,8 +113,8 @@ function PageRow({
         </h2>
         <QuestionType
           editable={editable && isSettled}
-          onChange={onTemplate}
-          template={template}
+          onChange={editing.setTemplate}
+          template={editing.displayed.template}
         />
         {question.key === null && needsKey(question.template) ? (
           <span className="flex items-center gap-1 text-muted-foreground text-xs">
@@ -137,9 +127,7 @@ function PageRow({
           </span>
         ) : null}
       </div>
-      {editable ? (
-        <PageActions count={count} index={index} question={question} />
-      ) : null}
+      {editable ? <PageActions index={index} question={question} /> : null}
     </div>
   );
 }
@@ -154,7 +142,7 @@ function PageRow({
  * prompt's editor loads. A page the server has not saved yet shows its options only, and they take
  * no change until it answers.
  */
-export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
+export function ExamPage({ canvas, index, question }: ExamPageProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
   // Each page reads a boolean for its own choice, so a change of the choice renders only the two pages it moves between.
@@ -228,22 +216,18 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
       ref={page}
     >
       <PageRow
-        count={count}
+        editing={editing}
         index={index}
-        onTemplate={editing.setTemplate}
         question={question}
         saved={saved}
-        template={editing.displayed.template}
       />
       {live ? (
         <Suspense
           fallback={
-            <PaperSketch
-              doc={prompt}
-              question={question}
-              selected={chosen}
-              withControls
-            />
+            <QuestionPaper selected={chosen}>
+              <PreviewProse article doc={prompt} size="page" />
+              <PaperSketch question={question} withControls />
+            </QuestionPaper>
           }
         >
           <LivePaper
@@ -254,25 +238,19 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
           />
         </Suspense>
       ) : (
-        <PaperSketch
-          doc={prompt}
-          question={question}
-          selected={chosen}
-          withControls
-        />
+        <QuestionPaper selected={chosen}>
+          <PreviewProse article doc={prompt} size="page" />
+          <PaperSketch question={question} withControls />
+        </QuestionPaper>
       )}
       {chosen ? (
         <TeacherPortal>
           <TeacherLayer
+            editing={editing}
             live={live}
             notes={{ explanation, rubric }}
             number={number}
-            onAccept={editing.setAccepted}
-            onCells={editing.setCells}
-            onMark={editing.markOption}
-            onPair={editing.setPairs}
             question={question}
-            shown={editing.displayed}
           />
         </TeacherPortal>
       ) : null}
@@ -339,9 +317,12 @@ function LivePaper({
       <ExamText
         documentId={question.prompt}
         key={`${question.prompt}-${frozen}`}
-        label={t("question-text", { number })}
-        placeholder={t("prompt-placeholder")}
-      />
+      >
+        <ExamDocument
+          label={t("question-text", { number })}
+          placeholder={t("prompt-placeholder")}
+        />
+      </ExamText>
       {match === null ? null : (
         <div className="grid min-w-0 gap-6 md:grid-cols-2">
           <MatchColumn
@@ -392,9 +373,7 @@ function LivePaper({
             <OptionRow
               key={option.id}
               label={savedLabel(option)}
-              letter={optionLetter(index)}
               locked={locked}
-              name={t("option-of", { letter: optionLetter(index), number })}
               onRemove={
                 choice.options.length > CHOICE_OPTIONS_MIN && !fixed
                   ? () =>
@@ -414,12 +393,22 @@ function LivePaper({
                   unstored
                 )
               }
-              placeholder={t("option-placeholder")}
               removeName={t("option-remove-of", {
                 letter: optionLetter(index),
                 number,
               })}
-            />
+            >
+              <PaperOption letter={optionLetter(index)}>
+                <ExamDocument
+                  label={t("option-of", {
+                    letter: optionLetter(index),
+                    number,
+                  })}
+                  placeholder={t("option-placeholder")}
+                  size="line"
+                />
+              </PaperOption>
+            </OptionRow>
           ))}
         </PaperOptions>
       )}

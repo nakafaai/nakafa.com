@@ -18,12 +18,12 @@ import type { Transaction } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
 import { Effect, Fiber, Ref } from "effect";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
-import { ExamDocument } from "@/components/tenant/exams/rich";
+import { ExamDocumentWiringContext } from "@/components/tenant/exams/rich";
 import {
   createPromptSync,
   type PromptSync,
@@ -119,14 +119,10 @@ const runRound = (
 
 /** The props of one rich text of a question. */
 interface ExamTextProps {
+  /** The rich text the caller composes, an `ExamDocument` with its name, its hint and its size. */
+  readonly children: ReactNode;
   /** The document the text edits, which the question owns. */
   readonly documentId: Id<"editorDocuments">;
-  /** The accessible name of the text. */
-  readonly label: string;
-  /** The hint shown while the text is empty. */
-  readonly placeholder: string;
-  /** The room the text takes at least: a prompt a page of writing, and a note a line. */
-  readonly size?: "line" | "page";
 }
 
 /**
@@ -135,14 +131,9 @@ interface ExamTextProps {
  * read-only until the server opens the document, and it stays read-only once the exam is frozen. A
  * local change schedules a round after `SEND_QUIET_PERIOD`, and the server's steps arrive through a
  * subscription, so the editor takes them without polling. When the text closes, the round it waits
- * for stops, and the steps the editor holds are sent.
+ * for stops, and the steps the editor holds are sent. The text wires the document the caller composes.
  */
-export function ExamText({
-  documentId,
-  label,
-  placeholder,
-  size = "page",
-}: ExamTextProps) {
+export function ExamText({ children, documentId }: ExamTextProps) {
   const { exam, gone, slug } = useExam();
   const frozen = isLocked(exam);
   const labels = useDocumentLabels();
@@ -295,13 +286,10 @@ export function ExamText({
   };
 
   return (
-    <ExamDocument
-      extensions={extensions}
-      label={label}
-      onChange={change}
-      onEditor={open}
-      placeholder={placeholder}
-      size={size}
-    />
+    <ExamDocumentWiringContext
+      value={{ extensions, onChange: change, onEditor: open }}
+    >
+      {children}
+    </ExamDocumentWiringContext>
   );
 }
