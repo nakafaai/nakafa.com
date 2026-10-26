@@ -33,7 +33,9 @@ export type ClassroomThreadsDoc = Document.Document<typeof schemaDefinition, "cl
 export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ConnectorConnectionsDoc = Document.Document<typeof schemaDefinition, "connectorConnections">;
+export type ConnectorEventsDoc = Document.Document<typeof schemaDefinition, "connectorEvents">;
 export type ConnectorKeysDoc = Document.Document<typeof schemaDefinition, "connectorKeys">;
+export type ConnectorLinksDoc = Document.Document<typeof schemaDefinition, "connectorLinks">;
 export type ConnectorSecretsDoc = Document.Document<typeof schemaDefinition, "connectorSecrets">;
 export type ConnectorStatesDoc = Document.Document<typeof schemaDefinition, "connectorStates">;
 export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefinition, "contentAnalyticsPartitions">;
@@ -167,7 +169,9 @@ export interface Docs {
   commentLikes: CommentLikesDoc;
   comments: CommentsDoc;
   connectorConnections: ConnectorConnectionsDoc;
+  connectorEvents: ConnectorEventsDoc;
   connectorKeys: ConnectorKeysDoc;
+  connectorLinks: ConnectorLinksDoc;
   connectorSecrets: ConnectorSecretsDoc;
   connectorStates: ConnectorStatesDoc;
   contentAnalyticsPartitions: ContentAnalyticsPartitionsDoc;

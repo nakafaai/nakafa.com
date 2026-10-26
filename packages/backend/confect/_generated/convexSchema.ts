@@ -33,7 +33,9 @@ import classroomThreads from "./tables/classroomThreads";
 import commentLikes from "./tables/commentLikes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
+import connectorEvents from "./tables/connectorEvents";
 import connectorKeys from "./tables/connectorKeys";
+import connectorLinks from "./tables/connectorLinks";
 import connectorSecrets from "./tables/connectorSecrets";
 import connectorStates from "./tables/connectorStates";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -167,7 +169,9 @@ export default $defineSchema({
   commentLikes: $Table.tableDefinition(commentLikes),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),
+  connectorEvents: $Table.tableDefinition(connectorEvents),
   connectorKeys: $Table.tableDefinition(connectorKeys),
+  connectorLinks: $Table.tableDefinition(connectorLinks),
   connectorSecrets: $Table.tableDefinition(connectorSecrets),
   connectorStates: $Table.tableDefinition(connectorStates),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),

@@ -32,7 +32,9 @@ import classroomThreads from "./tables/classroomThreads";
 import commentLikes from "./tables/commentLikes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
+import connectorEvents from "./tables/connectorEvents";
 import connectorKeys from "./tables/connectorKeys";
+import connectorLinks from "./tables/connectorLinks";
 import connectorSecrets from "./tables/connectorSecrets";
 import connectorStates from "./tables/connectorStates";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -166,7 +168,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly commentLikes: typeof commentLikes;
   readonly comments: typeof comments;
   readonly connectorConnections: typeof connectorConnections;
+  readonly connectorEvents: typeof connectorEvents;
   readonly connectorKeys: typeof connectorKeys;
+  readonly connectorLinks: typeof connectorLinks;
   readonly connectorSecrets: typeof connectorSecrets;
   readonly connectorStates: typeof connectorStates;
   readonly contentAnalyticsPartitions: typeof contentAnalyticsPartitions;
@@ -299,7 +303,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   commentLikes,
   comments,
   connectorConnections,
+  connectorEvents,
   connectorKeys,
+  connectorLinks,
   connectorSecrets,
   connectorStates,
   contentAnalyticsPartitions,
