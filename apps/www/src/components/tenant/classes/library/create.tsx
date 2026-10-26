@@ -20,6 +20,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -452,13 +453,13 @@ function LibraryDriveField({
 }) {
   const t = useTranslations("Classroom");
   const locale = useLocale();
-  const id = useId();
 
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{t("library-drive")}</FieldLabel>
+      {/* The button's own words name it, so the field's title is not its label. */}
+      <FieldTitle>{t("library-drive")}</FieldTitle>
       {Option.isNone(file) ? (
-        <Button disabled={pending} id={id} onClick={onChoose} variant="outline">
+        <Button disabled={pending} onClick={onChoose} variant="outline">
           <HugeIcons aria-hidden="true" icon={GoogleDriveIcon} />
           {t("library-drive-choose")}
         </Button>
