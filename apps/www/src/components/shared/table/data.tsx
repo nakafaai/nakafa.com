@@ -27,6 +27,8 @@ import {
 import { Array as Arr, Record as Rec } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { PaneTableRow } from "@/components/shared/pane";
+import { useHasPanes } from "@/components/shared/panes";
 import { dataTableFeatures } from "@/components/shared/table/features";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyNina } from "@/components/state/empty";
@@ -40,7 +42,8 @@ const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };
  * column heads in view. The page's header row filters it: its search box keeps the rows whose `search` column holds the
  * text, and its Filter menu keeps the rows whose columns hold a chosen value (`TableFiltersProvider`). A sortable
  * column sorts from its head. Every row has the height of a row with its three-dot menu, so rows with and
- * without one keep one rhythm. A filter that leaves no row shows Nina searching in the table's place.
+ * without one keep one rhythm. A filter that leaves no row shows Nina searching in the table's place. On a page
+ * with panes, pressing a row opens it beside the list.
  */
 export function DataTable<TData extends RowData>({
   columns,
@@ -96,13 +99,13 @@ export function DataTable<TData extends RowData>({
       <TableBody>
         {Arr.isReadonlyArrayNonEmpty(rows) ? (
           Arr.map(rows, (row) => (
-            <TableRow className="h-12" key={row.id}>
+            <DataTableRow key={row.id} row={row}>
               {Arr.map(row.getAllCells(), (cell) => (
                 <TableCell key={cell.id}>
                   <table.FlexRender cell={cell} />
                 </TableCell>
               ))}
-            </TableRow>
+            </DataTableRow>
           ))
         ) : (
           <TableRow>
@@ -120,6 +123,23 @@ export function DataTable<TData extends RowData>({
         )}
       </TableBody>
     </Table>
+  );
+}
+
+/** One row of the table: a row that opens beside the list on a page with panes, else a plain row. */
+function DataTableRow({
+  children,
+  row,
+}: {
+  children: ReactNode;
+  row: { readonly id: string };
+}) {
+  const hasPanes = useHasPanes();
+
+  return hasPanes ? (
+    <PaneTableRow id={row.id}>{children}</PaneTableRow>
+  ) : (
+    <TableRow className="h-12">{children}</TableRow>
   );
 }
 

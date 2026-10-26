@@ -18,13 +18,11 @@ export function SubjectItem({
   target,
 }: SubjectItemProps) {
   return (
-    <Link className="group block min-w-0" title={label} {...target}>
+    <Link className="group block min-w-0" {...target}>
       <div className="relative overflow-hidden p-6 transition-colors ease-out group-hover:bg-accent group-hover:text-accent-foreground">
         <div className="flex items-center gap-2">
           <HugeIcons className="size-4 shrink-0" icon={icon} />
-          <Heading className="flex-1 truncate" title={label}>
-            {label}
-          </Heading>
+          <Heading className="min-w-0 flex-1 text-pretty">{label}</Heading>
           <HugeIcons
             className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
             icon={ArrowRight02Icon}

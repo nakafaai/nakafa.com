@@ -14,6 +14,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DatePicker } from "@repo/design-system/components/ui/date";
 import {
   Field,
   FieldGroup,
@@ -391,19 +392,21 @@ function SchoolPeriodAddDialog({
         <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
           <Field>
             <FieldLabel htmlFor={`${id}-start`}>{t("period-start")}</FieldLabel>
-            <Input
+            <DatePicker
               id={`${id}-start`}
-              onChange={(event) => setStart(event.target.value)}
-              type="date"
+              max={end === "" ? undefined : end}
+              onValueChange={setStart}
+              placeholder={t("period-start-placeholder")}
               value={start}
             />
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-end`}>{t("period-end")}</FieldLabel>
-            <Input
+            <DatePicker
               id={`${id}-end`}
-              onChange={(event) => setEnd(event.target.value)}
-              type="date"
+              min={start === "" ? undefined : start}
+              onValueChange={setEnd}
+              placeholder={t("period-end-placeholder")}
               value={end}
             />
           </Field>
