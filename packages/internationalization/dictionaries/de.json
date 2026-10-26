@@ -231,7 +231,7 @@
     "student-results-title": "Dein Ergebnis",
     "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
-    "student-answer": "Deine Antwort: {letters}",
+    "student-answer": "Deine Antwort: {answer}",
     "student-answers": "Deine Antworten",
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",

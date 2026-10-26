@@ -231,7 +231,7 @@
     "student-results-title": "Your result",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
-    "student-answer": "Your answer: {letters}",
+    "student-answer": "Your answer: {answer}",
     "student-answers": "Your answers",
     "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",

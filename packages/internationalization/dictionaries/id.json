@@ -231,7 +231,7 @@
     "student-results-title": "Hasilmu",
     "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
-    "student-answer": "Jawabanmu: {letters}",
+    "student-answer": "Jawabanmu: {answer}",
     "student-answers": "Jawabanmu",
     "student-results-released": "Gurumu sudah merilis hasil ini.",
     "schedule": "Jadwalkan",

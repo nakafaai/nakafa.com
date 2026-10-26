@@ -2,6 +2,12 @@ import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { Flag01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import {
+  chosenOptions,
+  type ExamResponse,
+  NO_RESPONSE,
+  typedText,
+} from "@repo/backend/confect/exams/sittings/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -22,12 +28,13 @@ import {
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
-import { choiceOf } from "@/components/exams/sitting/response";
+import { SittingField } from "@/components/exams/sitting/field";
+import { choiceOf, entryOf } from "@/components/exams/sitting/response";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
- * One question of the paper: its number, its prompt as the editor holds it now, its options, and the
- * flag that the student sets for review. A choice is kept in the browser before it is sent, so a reload
+ * One question of the paper: its number, its prompt as the editor holds it now, its options or its
+ * answer line, and the flag that the student sets for review. A choice or a typed answer is kept in the browser before it is sent, so a reload
  * or a closed tab sends it again. The prompt waits while the server folds the editor's steps, and the
  * query runs again when the fold is written, so a prompt that is not ready shows nothing yet.
  */
@@ -60,6 +67,10 @@ export function SittingQuestion({
   const mark = useMarkFlag();
   const choice = useMemo(
     () => choiceOf(question.interactions),
+    [question.interactions]
+  );
+  const entry = useMemo(
+    () => entryOf(question.interactions),
     [question.interactions]
   );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;
@@ -96,8 +107,8 @@ export function SittingQuestion({
     [pictures]
   );
 
-  /** Keeps the choice in the browser, then sends it, numbered one above the saved version. */
-  function onChoose(response: readonly string[]) {
+  /** Keeps the choice or the typed text in the browser, then sends it, numbered one above the saved version. */
+  function onChoose(response: ExamResponse) {
     choose({ attemptId, deviceId, question, response, sittingId, slug });
   }
 
@@ -129,7 +140,16 @@ export function SittingQuestion({
               disabled={locked}
               labelledBy={titleId}
               onChoose={onChoose}
-              response={question.response ?? []}
+              response={chosenOptions(question.response ?? NO_RESPONSE)}
+            />
+          ) : null}
+          {Option.isSome(entry) ? (
+            <SittingField
+              disabled={locked}
+              entry={entry.value}
+              labelledBy={titleId}
+              onType={(text) => onChoose({ text })}
+              text={typedText(question.response ?? NO_RESPONSE)}
             />
           ) : null}
         </SittingPictures>

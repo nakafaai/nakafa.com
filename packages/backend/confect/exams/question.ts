@@ -18,14 +18,16 @@ import { Array as Arr, Effect, Match, Option, Schema } from "effect";
  * correct option; true or false (`truefalse`), a single-answer choice of two
  * fixed options; and cause and effect (`cause`), a single-answer choice of the
  * five fixed relations between a statement and its reason, which the prompt
- * holds. A new question starts as `choice`, and each later template adds its
- * member here.
+ * holds; and a short answer (`short`), a text entry that the key's accepted
+ * answers score. A new question starts as `choice`, and each later template
+ * adds its member here.
  */
 export const QuestionTemplate = Schema.Literals([
   "choice",
   "choices",
   "truefalse",
   "cause",
+  "short",
 ]);
 export type QuestionTemplate = typeof QuestionTemplate.Type;
 
@@ -114,7 +116,7 @@ export const fixedOptions = (template: QuestionTemplate) =>
 
 /**
  * Whether a template's question takes a rubric, the teacher's guide to scoring an answer by hand.
- * Every template so far is a choice, which is scored by its key, so none takes one; the layer
+ * A choice and a short answer are scored by their key, so none takes one; the layer
  * shows a rubric only for a template that takes one. Each template decides it here, so a new
  * template cannot leave it undecided.
  */
@@ -124,6 +126,7 @@ export const takesRubric = (template: QuestionTemplate) =>
     Match.when("choices", () => false),
     Match.when("truefalse", () => false),
     Match.when("cause", () => false),
+    Match.when("short", () => false),
     Match.exhaustive
   );
 
@@ -140,29 +143,36 @@ export const TemplateLabels = Schema.Array(
 ).check(Schema.isMaxLength(CHOICE_OPTIONS_MAX));
 
 /**
- * Whether the interactions of a question are the ones its template takes: distinct
- * choices of two to five options, as many as the template fixes when it fixes them
- * (`fixedOptions`), each taking at least one option and at most the template's limit
- * (`choiceLimit`). A question that holds any other interaction, or a choice of other
- * bounds or of another number of options, is refused.
+ * Whether one interaction is a choice that a choice template takes: a choice of two to five
+ * options, as many as the template fixes when it fixes them (`fixedOptions`), taking at least one
+ * option and at most the template's limit (`choiceLimit`).
+ */
+const choiceFits = (template: QuestionTemplate, answer: Interaction) =>
+  answer.kind === "choice" &&
+  answer.minChoices === 1 &&
+  answer.maxChoices === choiceLimit(template, answer.options.length) &&
+  answer.options.length >= CHOICE_OPTIONS_MIN &&
+  answer.options.length <= CHOICE_OPTIONS_MAX &&
+  Option.match(fixedOptions(template), {
+    onNone: () => true,
+    onSome: (count) => answer.options.length === count,
+  });
+
+/**
+ * Whether the interactions of a question are the ones its template takes: distinct interactions,
+ * each a text entry for a short answer, and each a choice that fits the template (`choiceFits`) for
+ * every other template. A question that holds any other interaction is refused.
  */
 export const answersFit = (
   template: QuestionTemplate,
   answers: readonly Interaction[]
 ) =>
   hasUniqueIds(answers) &&
-  Arr.every(
-    answers,
-    (answer) =>
-      answer.kind === "choice" &&
-      answer.minChoices === 1 &&
-      answer.maxChoices === choiceLimit(template, answer.options.length) &&
-      answer.options.length >= CHOICE_OPTIONS_MIN &&
-      answer.options.length <= CHOICE_OPTIONS_MAX &&
-      Option.match(fixedOptions(template), {
-        onNone: () => true,
-        onSome: (count) => answer.options.length === count,
-      })
+  Arr.every(answers, (answer) =>
+    Match.value(template).pipe(
+      Match.when("short", () => answer.kind === "textEntry"),
+      Match.orElse(() => choiceFits(template, answer))
+    )
   );
 
 /** The interactions of a question as JSON text, decoded with the contract's interaction schema. */
@@ -300,6 +310,11 @@ export const choiceAnswers = (
     shuffle: false,
   },
 ];
+
+/** The interactions of a short answer question: one text entry, which the key's accepted answers score. */
+export const shortAnswers = (): readonly [
+  Extract<Interaction, { kind: "textEntry" }>,
+] => [{ id: "entry", kind: "textEntry", label: NEW_CHOICE_LABEL }];
 
 /**
  * The interactions of a new question: a single-answer choice with `NEW_QUESTION_OPTIONS`

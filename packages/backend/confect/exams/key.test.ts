@@ -82,7 +82,7 @@ describe("exams/key keyFits", () => {
     ).toBe(false);
   });
 
-  it("refuses a text interaction, which no choice answer fits", () => {
+  it("fits a text interaction with accepted answers, and refuses a choice answer for it", () => {
     const text = Schema.decodeSync(InteractionSchema)({
       id: "text",
       kind: "textEntry",
@@ -94,6 +94,23 @@ describe("exams/key keyFits", () => {
         [{ correct: ["option-1"], interaction: "text", kind: "choice" }]
       )
     ).toBe(false);
+    expect(
+      keyFits(
+        [text],
+        [
+          {
+            accepted: {
+              acceptedAnswers: ["Jakarta"],
+              collapseWhitespace: true,
+              ignoreCase: true,
+              kind: "text",
+            },
+            interaction: "text",
+            kind: "textEntry",
+          },
+        ]
+      )
+    ).toBe(true);
   });
 
   it("refuses interactions that share an identifier, even when the key answers that identifier once", () => {

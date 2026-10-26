@@ -1,8 +1,27 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Array as Arr, Option } from "effect";
 
-/** The choice interaction, the one kind that a student's response answers. */
+/** The choice interaction, whose response is the options the student chose. */
 export type Choice = Extract<Interaction, { readonly kind: "choice" }>;
+
+/** The text entry interaction, whose response is the text the student typed. */
+type TextEntry = Extract<Interaction, { readonly kind: "textEntry" }>;
+
+/**
+ * The text entry of a question, when the question holds exactly one interaction and that interaction
+ * is a text entry, as a short answer does. This is the rule that the server applies.
+ */
+export function entryOf(
+  interactions: readonly Interaction[]
+): Option.Option<TextEntry> {
+  if (interactions.length !== 1) {
+    return Option.none();
+  }
+  return Arr.findFirst(
+    interactions,
+    (interaction): interaction is TextEntry => interaction.kind === "textEntry"
+  );
+}
 
 /**
  * The choice of a question, when the question holds exactly one interaction and that interaction

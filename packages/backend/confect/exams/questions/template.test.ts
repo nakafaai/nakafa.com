@@ -4,6 +4,8 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
   choiceAnswers,
+  newChoiceAnswers,
+  shortAnswers,
   textLabel,
 } from "@repo/backend/confect/exams/question";
 import { teacherExam } from "@repo/backend/test/exams";
@@ -309,6 +311,77 @@ describe("exams/questions/template", () => {
           })
           .pipe(Effect.flip);
         expect(unasked).toMatchObject({ _tag: "AnswersDoNotFit" });
+      })
+  );
+
+  it.effect(
+    "turns a choice into a short answer that takes accepted answers, and back into a new choice with no key",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Isian");
+        const [question] = exam.questions;
+        const keyed = yield* teacher.mutation(answer, {
+          answers: question.answers,
+          examId: exam.id,
+          key: keyOf("option-2"),
+          questionId: question.id,
+          revision: 0,
+          slug: nf,
+        });
+        const short = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: [],
+          questionId: question.id,
+          revision: keyed.revision,
+          slug: nf,
+          template: "short",
+        });
+        expect(short).toMatchObject({ key: null, template: "short" });
+        expect(short.answers).toEqual(shortAnswers());
+        const accepted = [
+          {
+            accepted: {
+              acceptedAnswers: ["Jakarta", "DKI Jakarta"],
+              collapseWhitespace: true,
+              ignoreCase: true,
+              kind: "text",
+            },
+            interaction: "entry",
+            kind: "textEntry",
+          },
+        ] as const;
+        const typed = yield* teacher.mutation(answer, {
+          answers: short.answers,
+          examId: exam.id,
+          key: accepted,
+          questionId: question.id,
+          revision: short.revision,
+          slug: nf,
+        });
+        expect(typed.key).toEqual(accepted);
+        const choices = yield* teacher
+          .mutation(answer, {
+            answers: question.answers,
+            examId: exam.id,
+            key: null,
+            questionId: question.id,
+            revision: typed.revision,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(choices).toMatchObject({ _tag: "AnswersDoNotFit" });
+        const back = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: [],
+          questionId: question.id,
+          revision: typed.revision,
+          slug: nf,
+          template: "choice",
+        });
+        expect(back).toMatchObject({ key: null, template: "choice" });
+        expect(back.answers).toEqual(newChoiceAnswers());
       })
   );
 

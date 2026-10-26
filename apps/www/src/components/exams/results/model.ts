@@ -1,5 +1,9 @@
 import type { Verdict } from "@repo/backend/confect/exams/results/schema";
-import { Array as Arr } from "effect";
+import {
+  type ExamResponse,
+  isTextResponse,
+} from "@repo/backend/confect/exams/sittings/response";
+import { Array as Arr, String as Str } from "effect";
 
 /** The copy key that names each verdict of an answer. */
 export const verdictKeys = {
@@ -19,13 +23,26 @@ export const optionLetter = (index: number) =>
   String.fromCharCode(CODE_OF_A + index);
 
 /** The letters of the chosen options, in the order of the choice rather than the order of the answer. */
-export const responseLetters = (
+const responseLetters = (
   optionIds: readonly string[],
   response: readonly string[]
 ) =>
   Arr.flatMap(optionIds, (optionId, index) =>
     Arr.contains(response, optionId) ? [optionLetter(index)] : []
   );
+
+/**
+ * A saved response as a result shows it: the letters of the chosen options in the order of the choice,
+ * or the text the student typed, without its surrounding spaces. A response that answers nothing shows
+ * as empty text.
+ */
+export const responseText = (
+  optionIds: readonly string[],
+  response: ExamResponse
+) =>
+  isTextResponse(response)
+    ? Str.trim(response.text)
+    : Arr.join(responseLetters(optionIds, response), ", ");
 
 /**
  * The share of the answered questions that are correct, as a whole percentage. A question with no
