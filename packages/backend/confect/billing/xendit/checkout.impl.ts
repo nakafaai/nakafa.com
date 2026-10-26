@@ -112,6 +112,7 @@ const admit = FunctionImpl.make(
         openedAt: now,
         expiresAt: args.session.expiresAt,
         locale: args.locale,
+        invoiceId: null,
       })
       .pipe(Effect.orDie);
     yield* captureProductEvent({

@@ -15,6 +15,7 @@ import {
   syncSubscriptionGrant,
 } from "@repo/backend/confect/billing/grants";
 import { recordPayment } from "@repo/backend/confect/billing/payments";
+import { applyInvoicePaid } from "@repo/backend/confect/billing/school";
 import {
   BillingRowMissing,
   RailMismatch,
@@ -22,6 +23,7 @@ import {
 import { applySubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import { XenditSessionEvent } from "@repo/backend/confect/billing/xendit/contract";
 import { renewalAnchor } from "@repo/backend/confect/billing/xendit/renewal";
+import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { Clock, DateTime, Duration, Effect, Option, Schema } from "effect";
 
 const decodeSession = Schema.decodeUnknownOption(XenditSessionEvent);
@@ -198,6 +200,23 @@ const applyFirstMonthPaid = Effect.fn("billing.xendit.session.firstMonthPaid")(
   }
 );
 
+/** Takes the payment link off an invoice that is still open. A paid invoice keeps the link it was paid on. */
+const clearPaymentLink = Effect.fn("billing.xendit.session.clearLink")(
+  function* (invoiceId: Docs["billingInvoices"]["_id"]) {
+    const invoice = yield* (yield* DatabaseReader)
+      .table("billingInvoices")
+      .get(invoiceId)
+      .pipe(Effect.orDie);
+    if (invoice.status !== "open") {
+      return;
+    }
+    yield* (yield* DatabaseWriter)
+      .table("billingInvoices")
+      .patch(invoiceId, { paymentLink: null })
+      .pipe(Effect.orDie);
+  }
+);
+
 /** Marks a checkout as ended, so a redelivered session event finds nothing open. */
 const closeCheckout = Effect.fn("billing.xendit.session.close")(function* (
   checkout: Docs["billingCheckouts"],
@@ -210,9 +229,11 @@ const closeCheckout = Effect.fn("billing.xendit.session.close")(function* (
 });
 
 /**
- * A hosted session completed. A pass is recorded and granted. The monthly plan's
- * first month starts its subscription: the payment, Pro until the first renewal,
- * and the recurring plan that charges the channel the session saved.
+ * A hosted session completed. A session that pays a school invoice pays the
+ * invoice, and its School grant is written. A pass is recorded and granted. The
+ * monthly plan's first month starts its subscription: the payment, Pro until
+ * the first renewal, and the recurring plan that charges the channel the
+ * session saved.
  */
 export const applySessionCompleted = Effect.fn(
   "billing.xendit.session.completed"
@@ -227,7 +248,13 @@ export const applySessionCompleted = Effect.fn(
   }
   const paymentId =
     session.value.payment_id ?? session.value.payment_session_id;
-  if (billingOffer(checkout.value.offer).interval === "pass") {
+  if (checkout.value.invoiceId !== null) {
+    yield* applyInvoicePaid(systemActor, checkout.value.invoiceId, {
+      method: "session",
+      paidAt: yield* Clock.currentTimeMillis,
+      providerPaymentId: paymentId,
+    });
+  } else if (billingOffer(checkout.value.offer).interval === "pass") {
     yield* applyPassPaid(checkout.value, paymentId);
   } else {
     yield* applyFirstMonthPaid(
@@ -240,7 +267,10 @@ export const applySessionCompleted = Effect.fn(
   return "applied" as const;
 });
 
-/** A hosted session closed unpaid: its checkout ends, and nothing else was ever written for it. */
+/**
+ * A hosted session closed unpaid. Its checkout ends, and an invoice it was
+ * opened for loses its payment link; nothing else was ever written for it.
+ */
 export const applySessionExpired = Effect.fn("billing.xendit.session.expired")(
   function* (data: unknown) {
     const session = decodeSession(data);
@@ -250,6 +280,10 @@ export const applySessionExpired = Effect.fn("billing.xendit.session.expired")(
     const checkout = yield* readOpenCheckout(session.value.payment_session_id);
     if (Option.isNone(checkout)) {
       return "unknownSession" as const;
+    }
+    // An invoice whose payment closed unpaid loses its link, so the next request to pay opens another.
+    if (checkout.value.invoiceId !== null) {
+      yield* clearPaymentLink(checkout.value.invoiceId);
     }
     yield* closeCheckout(checkout.value, "expired");
     return "applied" as const;

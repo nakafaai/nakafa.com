@@ -18,14 +18,17 @@ import billing_contracts from "../billing/contracts.spec";
 import billing_deletion from "../billing/deletion.spec";
 import billing_events from "../billing/events.spec";
 import billing_grants from "../billing/grants.spec";
+import billing_polar_school from "../billing/polar/school.spec";
 import billing_queries from "../billing/queries.spec";
 import billing_reconcile from "../billing/reconcile.spec";
 import billing_reminder_delivery from "../billing/reminder/delivery.spec";
 import billing_reminder_internal from "../billing/reminder/internal.spec";
+import billing_school from "../billing/school.spec";
 import billing_sessions from "../billing/sessions.spec";
 import billing_topup from "../billing/topup.spec";
 import billing_xendit_cancel from "../billing/xendit/cancel.spec";
 import billing_xendit_checkout from "../billing/xendit/checkout.spec";
+import billing_xendit_invoice from "../billing/xendit/invoice.spec";
 import billing_xendit_renewal from "../billing/xendit/renewal.spec";
 import chats_mutations from "../chats/mutations.spec";
 import chats_queries from "../chats/queries.spec";
@@ -212,7 +215,7 @@ const spec: Spec.Spec<{
   readonly access: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "access", never, GroupSpec.NamedAt<typeof access_grants, "grants">>, "access">;
   readonly analytics: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "analytics", never, GroupSpec.NamedAt<typeof analytics_capture, "capture"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "erasure", never, GroupSpec.NamedAt<typeof analytics_erasure_action, "action"> | GroupSpec.NamedAt<typeof analytics_erasure_workflow, "workflow">>, "erasure">>, "analytics">;
   readonly auth: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "auth", never, GroupSpec.NamedAt<typeof auth_actions, "actions"> | GroupSpec.NamedAt<typeof auth_cleanup, "cleanup"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof auth_deletion, GroupSpec.NamedAt<typeof auth_deletion_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof auth_deletion_recovery, "recovery"> | GroupSpec.NamedAt<typeof auth_deletion_verification, "verification"> | GroupSpec.NamedAt<typeof auth_deletion_workflow, "workflow">>, "deletion"> | GroupSpec.NamedAt<typeof auth_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof auth_queries, "queries">>, "auth">;
-  readonly billing: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "billing", never, GroupSpec.NamedAt<typeof billing_accounts, "accounts"> | GroupSpec.NamedAt<typeof billing_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_contracts, "contracts"> | GroupSpec.NamedAt<typeof billing_deletion, "deletion"> | GroupSpec.NamedAt<typeof billing_events, "events"> | GroupSpec.NamedAt<typeof billing_grants, "grants"> | GroupSpec.NamedAt<typeof billing_queries, "queries"> | GroupSpec.NamedAt<typeof billing_reconcile, "reconcile"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "reminder", never, GroupSpec.NamedAt<typeof billing_reminder_delivery, "delivery"> | GroupSpec.NamedAt<typeof billing_reminder_internal, "internal">>, "reminder"> | GroupSpec.NamedAt<typeof billing_sessions, "sessions"> | GroupSpec.NamedAt<typeof billing_topup, "topup"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "xendit", never, GroupSpec.NamedAt<typeof billing_xendit_cancel, "cancel"> | GroupSpec.NamedAt<typeof billing_xendit_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_xendit_renewal, "renewal">>, "xendit">>, "billing">;
+  readonly billing: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "billing", never, GroupSpec.NamedAt<typeof billing_accounts, "accounts"> | GroupSpec.NamedAt<typeof billing_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_contracts, "contracts"> | GroupSpec.NamedAt<typeof billing_deletion, "deletion"> | GroupSpec.NamedAt<typeof billing_events, "events"> | GroupSpec.NamedAt<typeof billing_grants, "grants"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "polar", never, GroupSpec.NamedAt<typeof billing_polar_school, "school">>, "polar"> | GroupSpec.NamedAt<typeof billing_queries, "queries"> | GroupSpec.NamedAt<typeof billing_reconcile, "reconcile"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "reminder", never, GroupSpec.NamedAt<typeof billing_reminder_delivery, "delivery"> | GroupSpec.NamedAt<typeof billing_reminder_internal, "internal">>, "reminder"> | GroupSpec.NamedAt<typeof billing_school, "school"> | GroupSpec.NamedAt<typeof billing_sessions, "sessions"> | GroupSpec.NamedAt<typeof billing_topup, "topup"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "xendit", never, GroupSpec.NamedAt<typeof billing_xendit_cancel, "cancel"> | GroupSpec.NamedAt<typeof billing_xendit_checkout, "checkout"> | GroupSpec.NamedAt<typeof billing_xendit_invoice, "invoice"> | GroupSpec.NamedAt<typeof billing_xendit_renewal, "renewal">>, "xendit">>, "billing">;
   readonly chats: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof chats_mutations, "mutations"> | GroupSpec.NamedAt<typeof chats_queries, "queries">>, "chats">;
   readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "forum", never, GroupSpec.NamedAt<typeof classroom_forum_channels, "channels"> | GroupSpec.NamedAt<typeof classroom_forum_messages, "messages">>, "forum"> | GroupSpec.NamedAt<typeof classroom_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
   readonly comments: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof comments_mutations, "mutations"> | GroupSpec.NamedAt<typeof comments_queries, "queries">>, "comments">;
@@ -272,17 +275,22 @@ const spec: Spec.Spec<{
     ["deletion"]: billing_deletion,
     ["events"]: billing_events,
     ["grants"]: billing_grants,
+    ["polar"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["school"]: billing_polar_school,
+    }),
     ["queries"]: billing_queries,
     ["reconcile"]: billing_reconcile,
     ["reminder"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["delivery"]: billing_reminder_delivery,
       ["internal"]: billing_reminder_internal,
     }),
+    ["school"]: billing_school,
     ["sessions"]: billing_sessions,
     ["topup"]: billing_topup,
     ["xendit"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
       ["cancel"]: billing_xendit_cancel,
       ["checkout"]: billing_xendit_checkout,
+      ["invoice"]: billing_xendit_invoice,
       ["renewal"]: billing_xendit_renewal,
     }),
   }),

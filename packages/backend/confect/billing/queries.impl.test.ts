@@ -44,6 +44,7 @@ describe("billing/queries overview", () => {
           allowance: 10,
           balance: 10,
           lots: { balance: 0, expiresAt: null },
+          pool: null,
           resetAt: NEXT_DAY,
         },
         pass: null,
@@ -75,6 +76,7 @@ describe("billing/queries overview", () => {
           allowance: 1000,
           balance: 1000,
           lots: { balance: 0, expiresAt: null },
+          pool: null,
           resetAt: NEXT_MONTH,
         },
         pass: null,
@@ -192,6 +194,71 @@ describe("billing/queries overview", () => {
       expect(overview.credits.lots).toEqual({
         balance: 1600,
         expiresAt: NEXT_MONTH,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("shows a school member the day their school's pool leaves them, which the school's month bounds too", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    try {
+      const { authed, t, user } = await signIn("pro");
+      await t.mutation(async (ctx) => {
+        const tenantId = await ctx.db.insert("tenants", {
+          country: "ID",
+          currency: "IDR",
+          kind: "school",
+          name: "SMP Pool",
+          policies: {
+            emailDomains: [],
+            nina: true,
+            ninaDailyCredits: 40,
+            studentThreads: false,
+          },
+          slug: "smp-pool",
+          status: "active",
+        });
+        await ctx.db.insert("tenantPeople", {
+          account: {
+            claimedAt: 0,
+            method: "card",
+            state: "claimed",
+            userId: user.userId,
+          },
+          kind: "member",
+          name: "Siswa Pool",
+          status: "active",
+          tenantId,
+        });
+        await ctx.db.insert("billingGrants", {
+          product: "school",
+          tenantId,
+          scope: { kind: "tenant" },
+          seats: 2,
+          ninaSeats: 2,
+          source: { kind: "contract", contractId: "contract-pool" },
+          validFrom: 0,
+          validTo: NEXT_MONTH,
+        });
+        await ctx.db.insert("creditPools", {
+          tenantId,
+          month: "2026-10",
+          used: 190,
+        });
+        await ctx.db.insert("creditPoolDays", {
+          tenantId,
+          userId: user.userId,
+          day: "2026-10-25",
+          used: 25,
+        });
+      });
+      const overview = await authed.query(api.billing.queries.overview, {});
+      expect(overview.credits.pool).toEqual({
+        allowance: 40,
+        balance: 10,
+        resetAt: NEXT_DAY,
       });
     } finally {
       vi.useRealTimers();

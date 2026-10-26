@@ -57,6 +57,7 @@ function insertOpenCheckout(
     openedAt: FAR_PAST,
     expiresAt,
     locale: "id",
+    invoiceId: null,
   });
 }
 

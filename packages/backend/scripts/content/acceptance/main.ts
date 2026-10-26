@@ -20,6 +20,7 @@ import { sittingMode } from "@repo/backend/scripts/content/acceptance/sitting";
 import { studentMode } from "@repo/backend/scripts/content/acceptance/student";
 import { teacherMode } from "@repo/backend/scripts/content/acceptance/teacher";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/terminal";
+import { transferMode } from "@repo/backend/scripts/content/acceptance/transfer";
 import { xenditMode } from "@repo/backend/scripts/content/acceptance/xendit";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
@@ -52,6 +53,7 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   importMode,
   profileMode,
   xenditMode,
+  transferMode,
 ];
 
 /** The usage line that names every mode with its arguments. */

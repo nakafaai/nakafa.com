@@ -5,6 +5,8 @@ import {
   type BillingOverview,
   type BillingSubscription,
   cancelPlanChange,
+  creditFooterKey,
+  creditPeriodKey,
   formatBillingDate,
   formatCount,
   formatMinorAmount,
@@ -29,6 +31,7 @@ const FREE: BillingOverview = {
     allowance: 10,
     balance: 10,
     lots: { balance: 0, expiresAt: null },
+    pool: null,
     resetAt: Date.UTC(2026, 9, 26),
   },
   plan: "free",
@@ -113,6 +116,22 @@ describe("billing/plan", () => {
     expect(formatMinorAmount(43_696, "IDR")).toBe("Rp 43.696");
     expect(formatMinorAmount(1000, "EUR")).toBe("10,00 €");
     expect(formatMinorAmount(1000, "USD")).toBe("$10.00");
+  });
+
+  it("names the credits a viewer spends now: the school's day for a pool member, otherwise the plan's period", () => {
+    const member: BillingOverview = {
+      ...FREE,
+      credits: {
+        ...FREE.credits,
+        pool: { allowance: 50, balance: 20, resetAt: Date.UTC(2026, 9, 26) },
+      },
+      plan: "pro",
+    };
+    expect(creditPeriodKey(FREE)).toBe("credits-today");
+    expect(creditPeriodKey({ ...FREE, plan: "pro" })).toBe("credits-month");
+    expect(creditPeriodKey(member)).toBe("school-credits");
+    expect(creditFooterKey(FREE)).toBe("credits-free-footer");
+    expect(creditFooterKey(member)).toBe("school-credits-footer");
   });
 
   it("names the payment provider of each rail", () => {

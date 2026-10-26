@@ -220,21 +220,20 @@ export const latestPersonalGrant = Effect.fn("billing.grants.latestPersonal")(
 );
 
 /** The school grant of one school that runs latest at `now`, if any runs. */
-const latestSchoolGrant = Effect.fn("billing.grants.latestSchool")(function* (
-  tenantId: Docs["tenants"]["_id"],
-  now: number
-) {
-  const reader = yield* DatabaseReader;
-  return yield* reader
-    .table("billingGrants")
-    .index(
-      "by_tenantId_and_validTo",
-      (query) => query.eq("tenantId", tenantId).gt("validTo", now),
-      "desc"
-    )
-    .first()
-    .pipe(Effect.orDie);
-});
+export const latestSchoolGrant = Effect.fn("billing.grants.latestSchool")(
+  function* (tenantId: Docs["tenants"]["_id"], now: number) {
+    const reader = yield* DatabaseReader;
+    return yield* reader
+      .table("billingGrants")
+      .index(
+        "by_tenantId_and_validTo",
+        (query) => query.eq("tenantId", tenantId).gt("validTo", now),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.orDie);
+  }
+);
 
 /**
  * The school grant that runs latest among the schools a user is an active member

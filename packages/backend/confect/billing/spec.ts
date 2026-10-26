@@ -53,6 +53,15 @@ export class RailMismatch extends Schema.TaggedError<RailMismatch>()(
   }
 ) {}
 
+/** No invoice carries the number an operator named, so there is nothing to record a payment against. */
+export class InvoiceNotFound extends Schema.TaggedError<InvoiceNotFound>()(
+  "InvoiceNotFound",
+  {
+    number: Schema.String,
+    message: Schema.String,
+  }
+) {}
+
 /** A school contract ends no later than it starts, so it grants no time. */
 export class ContractWindowInvalid extends Schema.TaggedError<ContractWindowInvalid>()(
   "ContractWindowInvalid",
@@ -257,6 +266,20 @@ export class XenditCheckoutError extends Schema.TaggedError<XenditCheckoutError>
   declare readonly message: string;
 }
 export const XenditCheckoutErrorWire = publicFailure(XenditCheckoutError);
+
+/** Raised when a school asks to pay for students its running School grants already pay for. */
+export const schoolSeatsPaidCode = "SCHOOL_SEATS_PAID";
+export class SchoolSeatsPaid extends Schema.TaggedError<SchoolSeatsPaid>()(
+  "SchoolSeatsPaid",
+  {
+    code: Schema.Literal(schoolSeatsPaidCode),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof schoolSeatsPaidCode;
+  declare readonly message: string;
+}
+export const SchoolSeatsPaidWire = publicFailure(SchoolSeatsPaid);
 
 /** What linking a Polar customer to a Nakafa user did. Only `linked` links anything. */
 export const LinkPolarCustomerOutcome = Schema.Literals([

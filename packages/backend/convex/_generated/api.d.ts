@@ -167,6 +167,20 @@ export declare const api: {
     };
   };
   billing: {
+    polar: {
+      school: {
+        checkout: FunctionReference<
+          "action",
+          "public",
+          {
+            locale: "en" | "id" | "de";
+            offer: "school.seat.month" | "school.seat.year";
+            slug: string;
+          },
+          { url: string }
+        >;
+      };
+    };
     queries: {
       overview: FunctionReference<
         "query",
@@ -177,6 +191,11 @@ export declare const api: {
             allowance: number;
             balance: number;
             lots: { balance: number; expiresAt: number | null };
+            pool: {
+              allowance: number;
+              balance: number;
+              resetAt: number;
+            } | null;
             resetAt: number;
           };
           pass: { endsAt: number } | null;
@@ -223,6 +242,53 @@ export declare const api: {
           months: number;
           offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
         }>
+      >;
+    };
+    school: {
+      overview: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          invoices: Array<{
+            currency: "EUR" | "IDR" | "USD";
+            dueAt: number;
+            number: string;
+            paymentLink: string | null;
+            periodEnd: number;
+            periodStart: number;
+            seats: number;
+            status: "draft" | "open" | "paid" | "void";
+            total: number;
+          }>;
+          plan:
+            | { kind: "free"; limit: number }
+            | {
+                kind: "school";
+                nina: { capacity: number; used: number };
+                seats: number;
+                validTo: number;
+              };
+          quotes: Array<{
+            offer:
+              "school.seat.month" | "school.seat.semester" | "school.seat.year";
+            periodEnd: number;
+            periodStart: number;
+            seats: number;
+            total: number;
+            unitAmount: number;
+          }>;
+          rail: "polar" | "xendit";
+          students: number;
+          tenantId: Id<"tenants">;
+        }
+      >;
+      pay: FunctionReference<
+        "mutation",
+        "public",
+        { offer: "school.seat.semester" | "school.seat.year"; slug: string },
+        { number: string }
       >;
     };
     sessions: {
@@ -5631,6 +5697,8 @@ export declare const api: {
             | "exam.edit"
             | "exam.rooms"
             | "exam.view"
+            | "billing.manage"
+            | "billing.view"
           >;
           name: string;
           scope:
@@ -5725,6 +5793,8 @@ export declare const api: {
               | "exam.edit"
               | "exam.rooms"
               | "exam.view"
+              | "billing.manage"
+              | "billing.view"
             >;
             createdAt: number;
             id: Id<"integrationClients">;
@@ -5998,13 +6068,28 @@ export declare const api: {
               | { type: "tenant.logo.removed" }
               | { type: "tenant.logo.set" }
               | {
-                  key: "emailDomains" | "nina" | "studentThreads";
+                  key:
+                    | "emailDomains"
+                    | "nina"
+                    | "ninaDailyCredits"
+                    | "studentThreads";
                   type: "tenant.policy.set";
                 }
               | { name: string; type: "tenant.name.set" }
               | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
+              | {
+                  currency: "EUR" | "IDR" | "USD";
+                  number: string;
+                  total: number;
+                  type: "billing.invoice.issued";
+                }
+              | {
+                  method: "session" | "transfer";
+                  number: string;
+                  type: "billing.invoice.paid";
+                }
               | { type: "unit.created" }
               | {
                   contentLanguage: "en" | "id" | "de";
@@ -8364,10 +8449,16 @@ export declare const api: {
           policy:
             | { key: "emailDomains"; value: Array<string> }
             | { key: "nina"; value: boolean }
+            | { key: "ninaDailyCredits"; value: number }
             | { key: "studentThreads"; value: boolean };
           slug: string;
         },
-        { emailDomains: Array<string>; nina: boolean; studentThreads: boolean }
+        {
+          emailDomains: Array<string>;
+          nina: boolean;
+          ninaDailyCredits?: number;
+          studentThreads: boolean;
+        }
       >;
     };
     start: {
@@ -8626,6 +8717,7 @@ export declare const api: {
             policies: {
               emailDomains: Array<string>;
               nina: boolean;
+              ninaDailyCredits?: number;
               studentThreads: boolean;
             };
             slug: string;
@@ -11463,11 +11555,42 @@ export declare const internal: {
       >;
     };
     contracts: {
+      issueContractInvoice: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          buyerTaxId: string | null;
+          description: string;
+          periodEnd: number;
+          periodStart: number;
+          seats: number;
+          tenantSlug: string;
+          unitAmount: number;
+        },
+        { invoiceId: Id<"billingInvoices">; number: string; total: number }
+      >;
+      recordInvoiceTransfer: FunctionReference<
+        "mutation",
+        "internal",
+        { number: string; paidAt: number; reference: string },
+        "applied" | "duplicate"
+      >;
       recordSchoolContract: FunctionReference<
         "mutation",
         "internal",
         {
           contractId: string;
+          seats: number;
+          tenantSlug: string;
+          validFrom: number;
+          validTo: number;
+        },
+        { accountId: Id<"billingAccounts">; grantId: Id<"billingGrants"> }
+      >;
+      recordSchoolPilot: FunctionReference<
+        "mutation",
+        "internal",
+        {
           seats: number;
           tenantSlug: string;
           validFrom: number;
@@ -11761,6 +11884,41 @@ export declare const internal: {
             openUrl: string | null;
             providerCustomerId: string | null;
           }
+        >;
+      };
+      invoice: {
+        open: FunctionReference<
+          "action",
+          "internal",
+          {
+            invoiceId: Id<"billingInvoices">;
+            offer: "school.seat.semester" | "school.seat.year";
+          },
+          null
+        >;
+        payable: FunctionReference<
+          "query",
+          "internal",
+          { invoiceId: Id<"billingInvoices"> },
+          {
+            accountId: Id<"billingAccounts">;
+            dueAt: number;
+            number: string;
+            total: number;
+          } | null
+        >;
+        record: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            accountId: Id<"billingAccounts">;
+            expiresAt: number;
+            invoiceId: Id<"billingInvoices">;
+            offer: "school.seat.semester" | "school.seat.year";
+            sessionId: string;
+            url: string;
+          },
+          null
         >;
       };
       renewal: {
@@ -14385,6 +14543,7 @@ export declare const internal: {
             };
             phase: "active";
             planCreditGrantId?: Id<"creditTransactions">;
+            pool?: { day: string; month: string; tenantId: Id<"tenants"> };
             promptMessageId: string;
             promptedAt?: number;
             remembered?: number;
@@ -14605,6 +14764,7 @@ export declare const internal: {
             };
             phase: "active";
             planCreditGrantId?: Id<"creditTransactions">;
+            pool?: { day: string; month: string; tenantId: Id<"tenants"> };
             promptMessageId: string;
             promptedAt?: number;
             remembered?: number;

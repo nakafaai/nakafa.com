@@ -24,13 +24,23 @@ export const polarRefundErrorCode = "POLAR_REFUND_ERROR";
 export const polarUpdateErrorCode = "POLAR_UPDATE_ERROR";
 export const polarSubscriptionListErrorCode = "POLAR_SUBSCRIPTION_LIST_ERROR";
 
-/** The checkout a Polar customer starts: the customer, the products, and where the learner returns. */
+/**
+ * The checkout a Polar customer starts: the customer, the products, and where the
+ * buyer returns. A School checkout also names the seats it buys and the school in
+ * its metadata, and asks for the buyer's business details.
+ */
 const polarCheckoutInputValidator = Schema.Struct({
   customerId: Schema.String,
   customerIpAddress: Schema.NullOr(Schema.String),
   locale: polarCheckoutLocaleValidator,
   productIds: Schema.Array(Schema.String),
   successUrl: Schema.String,
+  school: Schema.optionalKey(
+    Schema.Struct({
+      seats: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+      tenantId: Schema.String,
+    })
+  ),
 });
 export type PolarCheckoutInput = typeof polarCheckoutInputValidator.Type;
 
