@@ -4,16 +4,17 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { MAX_ASSET_READS } from "@repo/backend/confect/exams/asset";
 import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
 import { png } from "@repo/backend/test/exams";
-import { storeFile } from "@repo/backend/test/logo";
+import { storageUrl, storeFile } from "@repo/backend/test/logo";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { Array as Arr, Effect, Exit } from "effect";
 
 const { create } = refs.public.exams.exams;
 const { canAdd, register, uploadUrl, urls } = refs.public.exams.assets;
-const { discard, stored } = refs.internal.exams.assets;
+const { discard, stored, sweep } = refs.internal.exams.assets;
 
 /** Every row of the images, so a test reads what the server stored. */
 const assetRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -271,6 +272,55 @@ describe("exams/assets", () => {
           fixture.convex.run((ctx) => ctx.storage.getUrl(storageId))
         );
         expect(address).toBeNull();
+      })
+  );
+
+  it.effect(
+    "sweeps the images of a deleted exam a page at a time, each file with its row",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* fixture.as("teacher").mutation(create, {
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "PTS Matematika",
+        });
+        const storageIds = yield* Effect.forEach(
+          Arr.makeBy(MAX_ASSET_READS + 1, () => png()),
+          (file) => storeFile(fixture.convex, file)
+        );
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const exam = yield* (yield* DatabaseReader)
+              .table("exams")
+              .get(made.id)
+              .pipe(Effect.orDie);
+            const writer = yield* DatabaseWriter;
+            yield* Effect.forEach(storageIds, (storageId) =>
+              writer
+                .table("examAssets")
+                .insert({
+                  byteSize: png().size,
+                  contentType: "image/png",
+                  createdAt: TENANCY_NOW,
+                  createdBy: exam.createdBy,
+                  examId: made.id,
+                  height: 30,
+                  storageId,
+                  tenantId: exam.tenantId,
+                  width: 40,
+                })
+                .pipe(Effect.orDie)
+            );
+          })
+        );
+        expect(
+          yield* fixture.internal.mutation(sweep, { examId: made.id })
+        ).toEqual({ done: false });
+        expect(yield* fixture.run(assetRows)).toHaveLength(1);
+        yield* fixture.finishScheduled();
+        expect(yield* fixture.run(assetRows)).toEqual([]);
+        expect(yield* storageUrl(fixture.convex, storageIds[0])).toBeNull();
       })
   );
 });

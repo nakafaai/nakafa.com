@@ -125,21 +125,28 @@ describe("public path targets", () => {
 });
 
 describe("app address targets", () => {
-  it("reads the signed path after the locale, and the material context of its query", () => {
-    expect(routeOf(addressTarget("/en/curriculum/merdeka"))).toEqual(
+  it("reads the signed path, which carries no locale, and the material context of its query", () => {
+    expect(routeOf(addressTarget("/curriculum/merdeka"))).toEqual(
       Option.some("/$locale/curricula/$curriculum/$")
     );
     expect(
-      addressTarget("/en/subjects/mathematics/algebra/functions?ctx=merdeka~n")
+      addressTarget(
+        "/materi/biologi/keanekaragaman-makhluk-hidup/makhluk-hidup-dalam-ekosistem?ctx=merdeka~n"
+      )
     ).toEqual(
       Option.some(
         expect.objectContaining({
+          params: {
+            _splat: "makhluk-hidup-dalam-ekosistem",
+            subject: "biologi",
+            topic: "keanekaragaman-makhluk-hidup",
+          },
           search: { ctx: "merdeka~n" },
           to: "/$locale/materials/$subject/$topic/$",
         })
       )
     );
-    expect(Option.isNone(addressTarget("/en"))).toBe(true);
+    expect(Option.isNone(addressTarget("/"))).toBe(true);
   });
 });
 

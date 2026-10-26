@@ -337,7 +337,7 @@ describe("lease of the owned acceptance runtime", () => {
 import { ChildProcess } from ${encodeJsonText(import.meta.resolve("effect/process"))};
 import { runMain } from ${encodeJsonText(import.meta.resolve("@effect/platform-node/NodeRuntime"))};
 import { layer } from ${encodeJsonText(import.meta.resolve("@effect/platform-node/NodeServices"))};
-import { withTerminal } from ${encodeJsonText(new URL("./process.ts", import.meta.url).href)};
+import { withTerminal } from ${encodeJsonText(new URL("./terminal.ts", import.meta.url).href)};
 runMain(withTerminal(Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   yield* Effect.acquireRelease(

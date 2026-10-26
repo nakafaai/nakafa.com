@@ -5,69 +5,9 @@ import {
   sanitizeAcceptanceCommandError,
 } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import {
-  Array as Arr,
-  Effect,
-  Exit,
-  FileSystem,
-  Schedule,
-  Scope,
-  Stream,
-} from "effect";
+import { Effect, Exit, FileSystem, Schedule, Scope, Stream } from "effect";
 import { HttpClient } from "effect/http";
 import { ChildProcess } from "effect/process";
-
-/** Keeps terminal hangup on NodeRuntime's graceful interruption path until cleanup finishes. */
-export const withTerminal = Effect.fn("contentAcceptance.withTerminal")(
-  function* <A, E, R>(program: Effect.Effect<A, E, R>) {
-    yield* Effect.acquireRelease(
-      Effect.sync(() => {
-        // bun may exit before this process, causing its terminal to hang up.
-        const interrupt = () => process.emit("SIGINT");
-        process.on("SIGHUP", interrupt);
-        return interrupt;
-      }),
-      (interrupt) =>
-        Effect.sync(() => process.removeListener("SIGHUP", interrupt))
-    );
-    return yield* program;
-  },
-  Effect.scoped
-);
-
-/** Runs application tools while keeping private signing and cloud deployment credentials out. */
-export const runBuildCommand = Effect.fn("contentAcceptance.runBuildCommand")(
-  function* (
-    cwd: string,
-    [command, ...args]: readonly [string, ...string[]],
-    env: Readonly<Record<string, string | undefined>> = {}
-  ) {
-    const child = yield* ChildProcess.make(command, args, {
-      cwd,
-      env: {
-        ...env,
-        AKSARA_ACCEPTANCE_PRIVATE_KEY: undefined,
-        AKSARA_SIGNING_PRIVATE_KEY: undefined,
-        CONVEX_DEPLOY_KEY: undefined,
-        CONVEX_DEPLOYMENT_TOKEN: undefined,
-      },
-      extendEnv: true,
-      // Turbo's wrapper forwards SIGTERM, duplicating the process-group signal.
-      killSignal: "SIGINT",
-      // Let the build and the served app stop their children before escalating.
-      forceKillAfter: "15 seconds",
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    const code = yield* child.exitCode;
-    if (code !== 0) {
-      return yield* acceptanceRuntimeError(
-        `${command} ${Arr.join(args, " ")} failed with exit code ${code}.`
-      );
-    }
-  }
-);
 
 /**
  * Removes cloud selection before anonymous Convex initialization.
@@ -129,14 +69,33 @@ export const assertLocalPortsFree = Effect.fn(
  * other builds and browsers, a query still waits for CPU while it holds its
  * permit, so the local user time limit of queries and mutations is five
  * seconds instead of the one second a cloud deployment gives them.
+ *
+ * The same contention stretches the start. Each start pushes every function,
+ * and the backend analyzes the pushed modules within four seconds: on a busy
+ * machine the analysis outlasts them and the push fails ("Loading the pushed
+ * modules encountered the following error: Function execution timed out
+ * (maximum duration: 4s)"), so the local analysis gets thirty. The Convex CLI
+ * waits thirty seconds for the backend's own process to answer before it
+ * pushes, which a swapping machine also outlasts, so it waits two minutes.
+ * A cloud deployment keeps its own limits for every real deploy.
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/concurrency_limiter.rs
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/timeout.rs
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/common/src/knobs.rs
+ * @see https://github.com/get-convex/convex-js/blob/main/src/cli/lib/localDeployment/run.ts
  */
 const localBackendEnvironment = {
+  CONVEX_LOCAL_BACKEND_STARTUP_TIMEOUT_SECS: "120",
   DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
   FUNRUN_ISOLATE_ACTIVE_THREADS: String(navigator.hardwareConcurrency),
+  ISOLATE_ANALYZE_USER_TIMEOUT_SECONDS: "30",
 };
+
+/**
+ * How long a start may take before its backend answers: the push of every
+ * function took 2.94 minutes at a load of about 40 on 11 cores (25 Oct 2026),
+ * and longer while the machine swapped, so a start gets ten minutes.
+ */
+const BACKEND_READY_TIMEOUT = "10 minutes";
 
 /**
  * Scopes a private temporary root to one Convex process group.
@@ -222,7 +181,7 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
         schedule: Schedule.spaced("1 second"),
       }),
       Effect.timeoutOrElse({
-        duration: "4 minutes",
+        duration: BACKEND_READY_TIMEOUT,
         orElse: () =>
           acceptanceRuntimeError(
             "The local Convex process did not become ready."

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Schema } from "effect";
+import exams from "@repo/backend/confect/_generated/refs/exams";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Array as Arr, Option, Schema } from "effect";
 import {
+  changePaper,
   nextVersionOf,
   type PaperQuestion,
   type PaperValue,
@@ -67,5 +70,46 @@ describe("nextVersionOf", () => {
   it("numbers the first answer 1 and each later one above the saved version", () => {
     expect(nextVersionOf(question("question-a", null))).toBe(1);
     expect(nextVersionOf(question("question-b", ["b-1"], 4))).toBe(5);
+  });
+});
+
+describe("changePaper", () => {
+  const key = {
+    deviceId: "device-1",
+    sittingId: Schema.decodeUnknownSync(Id("examSittings"))("sitting-a"),
+    slug: Schema.decodeSync(TenantSlug)("sekolah"),
+  };
+
+  /** A local store that holds `current` for the paper, and records what is written to it. */
+  const storeHolding = (current: Option.Option<PaperValue>) => {
+    const getQuery = vi.fn();
+    getQuery.mockReturnValue(current);
+    const setQuery = vi.fn();
+    return {
+      localStore: { getAllQueries: vi.fn(), getQuery, setQuery },
+      setQuery,
+    };
+  };
+
+  it("writes the changed paper of the student's key into the store that holds it", () => {
+    const { localStore, setQuery } = storeHolding(Option.some(paper));
+
+    changePaper(localStore, key, (current) =>
+      setPaperFlag(current, questionId("question-a"), true)
+    );
+
+    expect(setQuery).toHaveBeenCalledExactlyOnceWith(
+      exams.sittings.paper,
+      key,
+      Option.some(setPaperFlag(paper, questionId("question-a"), true))
+    );
+  });
+
+  it("writes nothing when the store holds no paper for the key", () => {
+    const { localStore, setQuery } = storeHolding(Option.none());
+
+    changePaper(localStore, key, (current) => current);
+
+    expect(setQuery).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,10 @@
 import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import { archiveUnit } from "@repo/backend/test/exams";
 import {
@@ -334,6 +337,46 @@ describe("exams/sittings entry", () => {
           token: made.token,
         });
         yield* fixture.run(archiveUnit(fixture.units.smp));
+        yield* refusedAsLocked(fixture, made, entered.attempt);
+      })
+  );
+
+  it.effect(
+    "refuses an entry and a signal in a cohort sitting whose period is archived, as a locked sitting",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "PTS");
+        const cohortId = yield* seedPlacement(
+          fixture,
+          fixture.people.student.personId
+        );
+        const made = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES,
+          examId,
+          group: { cohortId, kind: "cohort" },
+          opensAt: OPENS,
+        });
+        vi.setSystemTime(OPENS);
+        yield* fixture.internal.mutation(open, { sittingId: made.id });
+        const entered = yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        yield* fixture.run(
+          Effect.gen(function* () {
+            const cohort = yield* (yield* DatabaseReader)
+              .table("tenantCohorts")
+              .get(cohortId)
+              .pipe(Effect.orDie);
+            yield* (yield* DatabaseWriter)
+              .table("tenantPeriods")
+              .patch(cohort.periodId, { status: "archived" })
+              .pipe(Effect.orDie);
+          })
+        );
         yield* refusedAsLocked(fixture, made, entered.attempt);
       })
   );

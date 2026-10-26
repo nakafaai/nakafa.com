@@ -14,12 +14,12 @@ import { learnerMode } from "@repo/backend/scripts/content/acceptance/learner";
 import { cleanMode } from "@repo/backend/scripts/content/acceptance/local";
 import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
 import { ownerMode } from "@repo/backend/scripts/content/acceptance/owner";
-import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { profileMode } from "@repo/backend/scripts/content/acceptance/profile";
 import { schoolMode } from "@repo/backend/scripts/content/acceptance/school";
 import { sittingMode } from "@repo/backend/scripts/content/acceptance/sitting";
 import { studentMode } from "@repo/backend/scripts/content/acceptance/student";
 import { teacherMode } from "@repo/backend/scripts/content/acceptance/teacher";
+import { withTerminal } from "@repo/backend/scripts/content/acceptance/terminal";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,

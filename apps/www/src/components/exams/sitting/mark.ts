@@ -3,8 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
-import { changePaper } from "@/components/exams/sitting/answer";
-import { setPaperFlag } from "@/components/exams/sitting/paper";
+import { changePaper, setPaperFlag } from "@/components/exams/sitting/paper";
 
 /** One flag that the student sets or clears, which names the question and its sitting. */
 const FlagInput = Schema.Struct({
