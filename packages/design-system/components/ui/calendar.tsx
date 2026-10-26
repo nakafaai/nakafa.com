@@ -7,6 +7,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { cn } from "cn";
 import { type ComponentProps, type Ref, useCallback } from "react";
 import {
@@ -14,6 +15,16 @@ import {
   DayPicker,
   getDefaultClassNames,
 } from "react-day-picker";
+import { de } from "react-day-picker/locale/de";
+import { enUS } from "react-day-picker/locale/en-US";
+import { id } from "react-day-picker/locale/id";
+import { useLocale } from "use-intl";
+
+/** The words and the first weekday that the calendar draws in each Nakafa locale. */
+const calendarLocales = { de, en: enUS, id } satisfies Record<
+  Locale,
+  ComponentProps<typeof DayPicker>["locale"]
+>;
 
 function CalendarRoot({
   className,
@@ -90,6 +101,7 @@ function Calendar({
   buttonVariant?: ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const locale = calendarLocales[useLocale()];
 
   return (
     <DayPicker
@@ -196,9 +208,10 @@ function Calendar({
       }}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString(locale.code, { month: "short" }),
         ...formatters,
       }}
+      locale={locale}
       showOutsideDays={showOutsideDays}
       {...props}
     />

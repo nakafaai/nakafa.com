@@ -10,8 +10,6 @@ import {
   StartRole,
 } from "@repo/backend/confect/tenancy/start";
 import {
-  QuestionnaireChoice,
-  QuestionnaireChoices,
   QuestionnaireDescription,
   QuestionnaireError,
   QuestionnaireItem,
@@ -22,7 +20,12 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useStart } from "@/components/tenant/start/context";
-import { StartOption } from "@/components/tenant/start/option";
+import {
+  StartChoice,
+  StartChoices,
+  StartLevelOption,
+  StartOption,
+} from "@/components/tenant/start/option";
 import { levelsOf } from "@/components/tenant/start/state";
 
 /** The icon of each role a founder can take. */
@@ -44,9 +47,9 @@ export function StartCountryQuestion() {
       <QuestionnaireDescription>
         {t("country-description")}
       </QuestionnaireDescription>
-      <QuestionnaireChoices className="sm:grid-cols-2">
+      <StartChoices>
         {Arr.map(StartCountry.literals, (country) => (
-          <QuestionnaireChoice
+          <StartChoice
             checked={draft?.country === country}
             key={country}
             onChange={(event) => {
@@ -57,9 +60,9 @@ export function StartCountryQuestion() {
             value={country}
           >
             <StartOption country={country} title={t(`country.${country}`)} />
-          </QuestionnaireChoice>
+          </StartChoice>
         ))}
-      </QuestionnaireChoices>
+      </StartChoices>
       <QuestionnaireError>{t("required-error")}</QuestionnaireError>
     </QuestionnaireItem>
   );
@@ -83,9 +86,9 @@ export function StartLevelsQuestion() {
       <QuestionnaireDescription>
         {t("levels-description")}
       </QuestionnaireDescription>
-      <QuestionnaireChoices className="sm:grid-cols-2">
+      <StartChoices>
         {Arr.map(offered, (level) => (
-          <QuestionnaireChoice
+          <StartChoice
             checked={Arr.contains(saved, level)}
             key={level}
             onChange={(event) => {
@@ -100,16 +103,16 @@ export function StartLevelsQuestion() {
             value={level}
           >
             {country === "ID" ? (
-              <StartOption
+              <StartLevelOption
                 description={t(`level.${level}.description`)}
                 title={t(`level.${level}.title`)}
               />
             ) : (
               <StartOption title={t(`stage.${level}`)} />
             )}
-          </QuestionnaireChoice>
+          </StartChoice>
         ))}
-      </QuestionnaireChoices>
+      </StartChoices>
       <QuestionnaireError>{t("levels-error")}</QuestionnaireError>
     </QuestionnaireItem>
   );
@@ -126,9 +129,9 @@ export function StartRoleQuestion() {
       <QuestionnaireDescription>
         {t("role-description")}
       </QuestionnaireDescription>
-      <QuestionnaireChoices className="sm:grid-cols-2">
+      <StartChoices>
         {Arr.map(StartRole.literals, (role) => (
-          <QuestionnaireChoice
+          <StartChoice
             checked={draft?.role === role}
             key={role}
             onChange={(event) => {
@@ -143,9 +146,9 @@ export function StartRoleQuestion() {
               icon={roleIcons[role]}
               title={t(`role.${role}.title`)}
             />
-          </QuestionnaireChoice>
+          </StartChoice>
         ))}
-      </QuestionnaireChoices>
+      </StartChoices>
       <QuestionnaireError>{t("required-error")}</QuestionnaireError>
     </QuestionnaireItem>
   );
@@ -169,9 +172,9 @@ export function StartSizeQuestion() {
       <QuestionnaireDescription>
         {t("size-description")}
       </QuestionnaireDescription>
-      <QuestionnaireChoices className="sm:grid-cols-2">
+      <StartChoices>
         {Arr.map(SchoolSize.literals, (size) => (
-          <QuestionnaireChoice
+          <StartChoice
             checked={draft?.size === size}
             key={size}
             onChange={(event) => {
@@ -182,9 +185,9 @@ export function StartSizeQuestion() {
             value={size}
           >
             <StartOption title={t(`size.${size}`)} />
-          </QuestionnaireChoice>
+          </StartChoice>
         ))}
-      </QuestionnaireChoices>
+      </StartChoices>
       <QuestionnaireError>{t("required-error")}</QuestionnaireError>
       {draft?.size !== undefined && Arr.contains(LARGE_SIZES, draft.size) ? (
         <p className="text-pretty text-muted-foreground text-sm">

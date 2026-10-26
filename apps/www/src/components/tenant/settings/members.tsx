@@ -3,14 +3,26 @@ import {
   PaginatedQueryResult,
   useMutation,
 } from "@confect/react";
-import { UserCircleIcon, UserRemove01Icon } from "@hugeicons/core-free-icons";
+import {
+  IdCardIcon,
+  MailSend01Icon,
+  UserAdd01Icon,
+  UserCircleIcon,
+  UserRemove01Icon,
+} from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
-import { createContext, startTransition, use } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  startTransition,
+  use,
+} from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -19,6 +31,8 @@ import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableStatus } from "@/components/shared/table/status";
+import type { StatusTone } from "@/components/shared/table/tone";
 import {
   TableFilter,
   TableFiltersProvider,
@@ -37,6 +51,24 @@ import {
 } from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/members";
+
+/**
+ * How each member status shows, in the list and in its Filter menu: an icon that fits it and that no
+ * other status shares, and the tone of its badge. A member who still needs an invitation stands out,
+ * a joined member reads as done.
+ */
+const STATUS_LOOKS = {
+  cardIssued: { icon: IdCardIcon, tone: "primary" },
+  invited: { icon: MailSend01Icon, tone: "info" },
+  joined: { icon: UserCircleIcon, tone: "success" },
+  notInvited: { icon: UserAdd01Icon, tone: "warning" },
+} as const satisfies Record<
+  MemberStatus,
+  {
+    icon: ComponentProps<typeof HugeIcons>["icon"];
+    tone: typeof StatusTone.Type;
+  }
+>;
 
 /** How many members one page of the list loads, and each page after it. */
 export const PAGE_SIZE = 25;
@@ -82,8 +114,8 @@ export function SchoolMembersSettings({
               facets={[
                 {
                   column: "status",
-                  icon: UserCircleIcon,
                   options: Arr.map(MemberStatus.literals, (status) => ({
+                    icon: STATUS_LOOKS[status].icon,
                     label: t(`member-status-label.${status}`),
                     value: status,
                   })),
@@ -162,7 +194,13 @@ function SchoolMemberTable({
       sortFn: "text",
     }),
     memberColumns.accessor((member) => member.status, {
-      cell: (info) => t(`member-status-label.${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={STATUS_LOOKS[info.getValue()].icon}
+          label={t(`member-status-label.${info.getValue()}`)}
+          tone={STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       filterFn: "oneOf",
       header: t("member-status"),
       id: "status",
@@ -181,7 +219,8 @@ function SchoolMemberTable({
     }),
     memberColumns.display({
       cell: (info) =>
-        info.row.original.status === "notInvited" ? (
+        info.row.original.removable &&
+        info.row.original.status !== "invited" ? (
           <SchoolMemberMenu member={info.row.original} slug={slug} />
         ) : null,
       id: "actions",
@@ -199,9 +238,10 @@ function SchoolMemberTable({
 }
 
 /**
- * The row menu of a member who is not invited, because its invite ended or its card
- * expired. It removes the member behind a confirmation. An invited member is handled on
- * the invitations page, and a joined member has no menu here.
+ * The row menu of a member whom the viewer may remove: one who joined, one whose card waits,
+ * and one whose invite ended or card expired. It removes the member behind a confirmation, and
+ * the account of a member who joined loses the school at once. An invited member is handled on
+ * the invitations page, and the list answers which rows the viewer may remove.
  */
 function SchoolMemberMenu({
   member,

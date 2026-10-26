@@ -1,14 +1,21 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  TenantGrantsDoc,
+  TenantPeopleDoc,
+} from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { tenantAccess } from "@repo/backend/confect/access/authority";
+import {
+  grantAuthority,
+  tenantAccess,
+} from "@repo/backend/confect/access/authority";
 import {
   assignRole,
   authorizeOwnerRole,
 } from "@repo/backend/confect/access/grant";
 import { activeGrants } from "@repo/backend/confect/access/policy";
+import { OwnerRole } from "@repo/backend/confect/access/schema";
 import { cardOf } from "@repo/backend/confect/identity/card";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -38,7 +45,15 @@ import { renamePerson } from "@repo/backend/confect/tenancy/rename";
 import { memberStatusOf } from "@repo/backend/confect/tenancy/roster";
 import spec from "@repo/backend/confect/tenancy/roster.spec";
 import type { Email, PersonName } from "@repo/backend/confect/tenancy/schema";
-import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  Layer,
+  Option,
+  Schema,
+  Struct,
+} from "effect";
 
 /**
  * Whether an unclaimed Person waits on a pending invite whose term has not ended.
@@ -73,7 +88,9 @@ const holdsLiveCard = Effect.fn("tenancy.roster.liveCard")(function* (
  * Person costs one grant read.
  */
 const memberRow = Effect.fn("tenancy.roster.member")(function* (
-  person: TenantPeopleDoc
+  person: TenantPeopleDoc,
+  caller: GenericId.GenericId<"tenantPeople">,
+  managesOwners: boolean
 ) {
   const claimed = person.account.state === "claimed";
   const invited = claimed ? false : yield* waitingOnInvite(person);
@@ -82,21 +99,57 @@ const memberRow = Effect.fn("tenancy.roster.member")(function* (
   return {
     id: person._id,
     name: person.name,
+    removable: yield* removableBy(person, grants, caller, managesOwners),
     roles: Arr.dedupe(Arr.map(grants, (grant) => grant.role.key)),
     status: memberStatusOf({ carded, claimed, invited }),
   };
 });
 
 /**
- * The active members of the school, a page at a time, each with its roles and its
- * status. Operator Persons are visits, not members, so the page leaves them out.
+ * Whether the caller may remove the Person, decided as `people.remove` decides it: the caller
+ * manages the Person and may revoke each of its grants, and an Owner or Admin grant also needs
+ * the Owner rule. Nobody removes themselves here, because the removal would end the remover's
+ * own school. The last-Owner rule needs no read: an Owner who removes someone stays, and only an
+ * Owner may end an Owner's grant.
+ */
+const removableBy = Effect.fn("tenancy.roster.removable")(function* (
+  person: TenantPeopleDoc,
+  grants: readonly TenantGrantsDoc[],
+  caller: GenericId.GenericId<"tenantPeople">,
+  managesOwners: boolean
+) {
+  if (person._id === caller) {
+    return false;
+  }
+  if (!Arr.contains(yield* personAuthority.allowed(person), "person.manage")) {
+    return false;
+  }
+  const revocable = yield* Effect.forEach(grants, (grant) =>
+    Effect.map(
+      grantAuthority.allowed(grant),
+      (can) =>
+        Arr.contains(can, "grant.revoke") &&
+        (managesOwners || !Schema.is(OwnerRole)(grant.role.key))
+    )
+  );
+  return Arr.every(revocable, (allowed) => allowed);
+});
+
+/**
+ * The active members of the school, a page at a time, each with its roles, its status, and
+ * whether the caller may remove it. Operator Persons are visits, not members, so the page
+ * leaves them out.
  */
 const members = FunctionImpl.make(
   databaseSchema,
   spec,
   "members",
   Effect.fn("tenancy.roster.members")(function* ({ paginationOpts }) {
-    const { tenant } = yield* Member;
+    const { person: caller, tenant } = yield* Member;
+    const managesOwners = Arr.contains(
+      yield* tenantAuthority.allowed(tenant),
+      "owner.manage"
+    );
     const page = yield* (yield* DatabaseReader)
       .table("tenantPeople")
       .index("by_tenantId_and_status", (query) =>
@@ -106,7 +159,7 @@ const members = FunctionImpl.make(
       .pipe(Effect.orDie);
     const rows = yield* Effect.forEach(
       Arr.filter(page.page, (person) => person.kind === "member"),
-      (person) => memberRow(person),
+      (person) => memberRow(person, caller._id, managesOwners),
       { concurrency: "unbounded" }
     );
     return Struct.assign(page, { page: rows });

@@ -189,6 +189,7 @@ function SchoolInviteDialog({
           <Input
             id={`${id}-name`}
             onChange={(event) => setName(event.target.value)}
+            placeholder={t("invite-name-placeholder")}
             value={name}
           />
         </Field>
@@ -197,6 +198,7 @@ function SchoolInviteDialog({
           <Input
             id={`${id}-email`}
             onChange={(event) => setEmail(event.target.value)}
+            placeholder={t("invite-email-placeholder")}
             type="email"
             value={email}
           />

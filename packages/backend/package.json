@@ -15,7 +15,7 @@
     "confect:dev": "confect dev",
     "deploy": "bun run codegen && convex deploy",
     "dev": "convex dev --tail-logs",
-    "generate-schema": "cd components/betterAuth && auth generate --config cli.config.ts --yes && bunx --no-install --cwd ../../../.. ultracite fix packages/backend/components/betterAuth/schema.ts",
+    "generate-schema": "JITI_FS_CACHE=false auth generate --config components/betterAuth/cli.config.ts --yes && mv schema.ts components/betterAuth/schema.ts && bunx --no-install --cwd ../.. ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
     "judgment:measure": "bun scripts/judgment/main.ts",
     "knowledge:compare": "bun scripts/knowledge/main.ts",
@@ -69,6 +69,7 @@
     "convex-helpers": "0.1.129",
     "dedent": "^1.7.2",
     "effect": "catalog:",
+    "jspdf": "4.2.1",
     "parse-domain": "^8.4.0",
     "prosemirror-model": "1.25.12",
     "prosemirror-transform": "1.12.2",
@@ -78,7 +79,8 @@
     "remark-mdx": "catalog:",
     "remark-parse": "catalog:",
     "strip-ansi": "^7.2.0",
-    "unified": "catalog:"
+    "unified": "catalog:",
+    "uqr": "0.1.3"
   },
   "devDependencies": {
     "@confect/cli": "10.3.2",

@@ -27,7 +27,7 @@ function ThemeGroup({ options }: { options: typeof themeOptions }) {
           onClick={() => setTheme(theme.value)}
         >
           <HugeIcons className="shrink-0" icon={theme.icon} />
-          <span className="truncate">{t(theme.value)}</span>
+          {t(theme.value)}
           <ActiveBadge isActive={currentTheme === theme.value} />
         </DropdownMenuItem>
       ))}
