@@ -16,7 +16,6 @@ export const Route = createFileRoute("/school/$slug/settings/audit")({
 });
 
 function SchoolAuditPage(): ReactElement {
-  const { slug } = Route.useRouteContext();
   const preload = Route.useLoaderData();
-  return <SchoolAuditSettings preload={preload} slug={slug} />;
+  return <SchoolAuditSettings preload={preload} />;
 }

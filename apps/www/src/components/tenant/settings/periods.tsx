@@ -38,7 +38,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   SchoolPeriodMenu,
@@ -111,7 +111,7 @@ export function SchoolPeriodsSettings({
         read={{ args: { slug }, ref: tenancy.viewer.get }}
       >
         <PeriodsPreloadContext value={preload}>
-          <SchoolPeriodsContent slug={slug} />
+          <SchoolPeriodsContent />
         </PeriodsPreloadContext>
       </ReadBoundary>
     </TableFiltersProvider>
@@ -122,7 +122,7 @@ export function SchoolPeriodsSettings({
  * The periods of the school's active unit, with the unit choice when the school has more than one unit.
  * A school with no active unit says so and links to the units, because a period belongs to a unit.
  */
-function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
+function SchoolPeriodsContent() {
   const preload = use(PeriodsPreloadContext);
   const t = useTranslations("SchoolSettings");
   const viewer = useViewerQuery();
@@ -184,14 +184,12 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
           <ReadBoundary>
             <SchoolPeriodTable
               first={unit.id === preload?.unitId ? preload.page : undefined}
-              slug={slug}
               unitId={unit.id}
             />
           </ReadBoundary>
           <SchoolPeriodAddDialog
             open={isAdding}
             setOpen={setIsAdding}
-            slug={slug}
             unitId={unit.id}
           />
         </>
@@ -208,13 +206,12 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
  */
 function SchoolPeriodTable({
   first,
-  slug,
   unitId,
 }: {
   first: PeriodsPreload["page"] | undefined;
-  slug: TenantSlug;
   unitId: UnitId;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
@@ -304,14 +301,13 @@ function SchoolPeriodTable({
 function SchoolPeriodAddDialog({
   open,
   setOpen,
-  slug,
   unitId,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
   unitId: UnitId;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const id = useId();

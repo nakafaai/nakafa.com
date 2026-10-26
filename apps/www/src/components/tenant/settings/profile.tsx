@@ -21,7 +21,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { logoRefusalOf } from "@/components/tenant/logo";
 import { SchoolMark } from "@/components/tenant/mark";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -52,7 +52,7 @@ export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
   return (
     <SettingsPage>
       <ReadBoundary read={{ args: { slug }, ref: tenancy.viewer.get }}>
-        <SchoolProfileBody slug={slug} />
+        <SchoolProfileBody />
       </ReadBoundary>
     </SettingsPage>
   );
@@ -63,7 +63,7 @@ export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
  * The settings pages read the school on the client, so a logo that changes shows
  * at once.
  */
-function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
+function SchoolProfileBody() {
   const viewer = useViewerQuery();
 
   if (QueryResult.isFailure(viewer)) {
@@ -73,21 +73,20 @@ function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
     return null;
   }
 
-  return <SchoolProfileCard slug={slug} tenant={viewer.value.tenant} />;
+  return <SchoolProfileCard tenant={viewer.value.tenant} />;
 }
 
 /** Renders the name card, the logo card and the address card, each with its action in the footer. */
 function SchoolProfileCard({
-  slug,
   tenant,
 }: {
-  slug: TenantSlug;
   tenant: {
     readonly logo?: string | undefined;
     readonly mascot: Parameters<typeof SchoolMark>[0]["mascot"];
     readonly name: string;
   };
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const fileInput = useRef<HTMLInputElement>(null);
