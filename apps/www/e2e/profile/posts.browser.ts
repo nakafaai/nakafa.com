@@ -170,9 +170,7 @@ for (const viewport of VIEWPORTS) {
             await expect(postOf(page, KEPT)).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
-            await expect(
-              page.getByText(app.Common["load-error-retry"])
-            ).toBeVisible({
+            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
@@ -184,9 +182,9 @@ for (const viewport of VIEWPORTS) {
             await expect(composerOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
-            await expect(
-              page.getByText(app.Common["load-error-retry"])
-            ).toHaveCount(0);
+            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
+              0
+            );
             await expect(postOf(page, KEPT)).toBeVisible();
           });
         })
@@ -219,9 +217,7 @@ for (const viewport of VIEWPORTS) {
             // rows stay, the failure shows, and nothing asks again by itself.
             changes.failQuery(POSTS_LIST_QUERY, unreadable);
             await rowsOf(page).last().scrollIntoViewIfNeeded();
-            await expect(
-              page.getByText(app.Common["load-error-retry"])
-            ).toBeVisible({
+            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
@@ -230,9 +226,10 @@ for (const viewport of VIEWPORTS) {
             // second page.
             changes.recoverQuery();
             await page.getByRole("button", { name: app.Common.retry }).click();
-            await expect(
-              page.getByText(app.Common["load-error-retry"])
-            ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
+            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
+              0,
+              { timeout: readinessTimeoutMilliseconds }
+            );
             await rowsOf(page).last().scrollIntoViewIfNeeded();
             await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE + 1, {
               timeout: readinessTimeoutMilliseconds,
@@ -260,9 +257,9 @@ for (const viewport of VIEWPORTS) {
             await expect(postOf(page, KEPT)).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
-            await expect(
-              page.getByText(app.Common["load-error-retry"])
-            ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+              timeout: readinessTimeoutMilliseconds,
+            });
             await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
             await expect(composerOf(page)).toBeDisabled();
 
@@ -271,9 +268,9 @@ for (const viewport of VIEWPORTS) {
             await expect(composerOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
-            await expect(
-              page.getByText(app.Common["load-error-retry"])
-            ).toHaveCount(0);
+            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
+              0
+            );
             await expect(postOf(page, KEPT)).toBeVisible();
           });
         })

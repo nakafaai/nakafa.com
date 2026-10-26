@@ -151,12 +151,12 @@ function EmojiPickerFooter({
               <div className="flex size-7 flex-none items-center justify-center text-lg">
                 {emoji.emoji}
               </div>
-              <span className="truncate text-foreground text-xs">
+              <span className="min-w-0 text-pretty text-foreground text-xs">
                 {emoji.label}
               </span>
             </>
           ) : (
-            <span className="ml-1.5 flex h-7 items-center truncate text-muted-foreground text-xs">
+            <span className="ml-1.5 flex min-h-7 items-center text-muted-foreground text-xs">
               {t("emoji-picker-placeholder")}
             </span>
           )

@@ -13,22 +13,13 @@ import type { XenditSessionRequest } from "@repo/backend/confect/billing/xendit/
 import { ensureCustomer } from "@repo/backend/confect/billing/xendit/customers";
 import { createSession } from "@repo/backend/confect/billing/xendit/sessions";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Clock, DateTime, Duration, Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 type ProOffer = typeof ProCheckoutOffer.Type;
 type XenditLocale = ReturnType<typeof getXenditCheckoutLocale>;
 
-/** Xendit accepts no anchor day after the 28th, so a subscription started later in the month renews on the 28th. */
-const LAST_ANCHOR_DAY = 28;
-
-/** Western Indonesian Time, UTC+7, in which the day of an Indonesian subscription's renewal is read. */
-const WIB_OFFSET_MS = Duration.toMillis(Duration.hours(7));
-
-/** A failed renewal is charged again once a day, three times, and each failed attempt tells the buyer. */
-const RENEWAL_RETRIES = 3;
-
-/** What the buyer reads on Xendit's page for each Pro offer, in the page's language. */
-const OFFER_DESCRIPTIONS = {
+/** What the buyer reads on Xendit's page and in Xendit's messages for each Pro offer, in the page's language. */
+export const OFFER_DESCRIPTIONS = {
   en: {
     "pro.monthly": "Nakafa Pro, renews every month",
     "pro.pass.1": "Nakafa Pro for 1 month",
@@ -44,42 +35,23 @@ const OFFER_DESCRIPTIONS = {
 } satisfies Record<XenditLocale, Record<ProOffer, string>>;
 
 /**
- * The first renewal of a subscription that starts at `now` and renews every
- * `months` months: the same day in Western Indonesian Time, or the 28th when the
- * day is later. The first cycle is charged when the buyer links a channel, so
- * the renewal is one period after the checkout.
- */
-export function renewalAnchor(now: number, months: number): string {
-  const renewal = DateTime.makeUnsafe(now).pipe(
-    DateTime.setZoneOffset(WIB_OFFSET_MS),
-    DateTime.add({ months })
-  );
-  return DateTime.formatIsoOffset(
-    DateTime.getPart(renewal, "day") > LAST_ANCHOR_DAY
-      ? DateTime.setParts(renewal, { day: LAST_ANCHOR_DAY })
-      : renewal
-  );
-}
-
-/**
- * The hosted session one Pro offer opens. A pass is one payment through any
- * channel Xendit offers. A subscription links a channel Xendit can charge
- * again, charges the first month at once, renews monthly, and stops after a
- * renewal that fails every retry, so a lapsed buyer is never charged later.
+ * The hosted session one Pro offer opens: one payment through any channel
+ * Xendit offers for a pass, and for the monthly plan the first month through a
+ * channel Xendit saves, which the recurring plan opened after the payment
+ * charges every month after.
  */
 export function proSessionRequest(input: {
   readonly amount: number;
   readonly customerId: string;
   readonly locale: ActiveAppLocaleCode;
-  readonly now: number;
   readonly offer: ProOffer;
   readonly referenceId: string;
   readonly returnUrl: string;
 }): XenditSessionRequest {
-  const offer = billingOffer(input.offer);
   const locale = getXenditCheckoutLocale(input.locale);
   const session = {
     reference_id: input.referenceId,
+    session_type: "PAY",
     mode: "PAYMENT_LINK",
     currency: "IDR",
     amount: input.amount,
@@ -90,26 +62,9 @@ export function proSessionRequest(input: {
     success_return_url: input.returnUrl,
     cancel_return_url: input.returnUrl,
   } as const;
-  if (offer.interval === "pass") {
-    return { ...session, session_type: "PAY" };
-  }
-  return {
-    ...session,
-    session_type: "SUBSCRIPTION",
-    subscription: {
-      schedule: {
-        anchor_date: renewalAnchor(input.now, offer.months),
-        interval: "MONTH",
-        interval_count: offer.months,
-        retry_interval: "DAY",
-        retry_interval_count: 1,
-        total_retry: RENEWAL_RETRIES,
-        failed_attempt_notifications: [1, 2, RENEWAL_RETRIES],
-      },
-      failed_cycle_action: "STOP",
-      immediate_payment: true,
-    },
-  };
+  return billingOffer(input.offer).interval === "pass"
+    ? session
+    : { ...session, allow_save_payment_method: "FORCED" };
 }
 
 /** A Xendit call of the checkout failed. Its cause is logged, and the learner sees the checkout failure. */
@@ -172,7 +127,6 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
         amount: input.amount,
         customerId,
         locale: input.locale,
-        now: yield* Clock.currentTimeMillis,
         offer: input.offer,
         referenceId: yield* randomUuid,
         returnUrl: input.successUrl,
@@ -198,11 +152,11 @@ export const createXenditCheckout = Effect.fn("billing.xendit.checkout.create")(
         },
       },
       offer: input.offer,
+      locale: input.locale,
       session: {
         sessionId: session.payment_session_id,
         url,
         expiresAt: DateTime.toEpochMillis(session.expires_at),
-        planId: session.recurring_plan_id ?? null,
       },
       userId: input.appUserId,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));

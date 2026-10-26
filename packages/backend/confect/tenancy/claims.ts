@@ -5,7 +5,8 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import type { Email } from "@repo/backend/confect/tenancy/schema";
-import { Duration, Effect, Option } from "effect";
+import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
+import { Duration, Effect, Option, Predicate } from "effect";
 
 /**
  * Rows one scheduled claim step handles at most: the invites that one run
@@ -44,6 +45,30 @@ export const claimAfterVerification = Effect.fn(
     .pipe(Effect.orDie);
   if (Option.isSome(waiting)) {
     yield* scheduleRun(userId);
+  }
+});
+
+/**
+ * After a Google sign-in writes a hosted domain that the account did not hold:
+ * schedules the claim run when an invite waits for the account's address. A
+ * school with allowed email domains admits an account by that domain (ADR
+ * 0009), so an earlier run may have left the invite pending: Google signs a new
+ * learner up by writing the user before the account, and the run that the new
+ * user asked for can come before the domain is stored.
+ */
+export const claimAfterHostedDomain = Effect.fn(
+  "tenancy.claims.afterHostedDomain"
+)(function* (
+  authId: string,
+  hostedDomain: string | null | undefined,
+  held: string | null | undefined
+) {
+  if (!Predicate.isString(hostedDomain) || hostedDomain === held) {
+    return;
+  }
+  const user = yield* getAppUserByAuthId(authId);
+  if (user) {
+    yield* claimAfterVerification(user._id, user.email);
   }
 });
 

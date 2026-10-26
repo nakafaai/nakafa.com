@@ -50,7 +50,7 @@ export function ThemePicker({
             variant={variant}
           >
             <HugeIcons icon={PaintBoardIcon} />
-            <span className="truncate">{t("theme")}</span>
+            {t("theme")}
           </Button>
         }
       />
