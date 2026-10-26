@@ -1,10 +1,14 @@
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Input } from "@repo/design-system/components/ui/input";
+import { Textarea } from "@repo/design-system/components/ui/textarea";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
+
+/** The lines an essay's area shows, as a paper leaves room for a few paragraphs. */
+const ESSAY_ROWS = 6;
 
 /**
  * The frame of a paper: a page in the shape of the thumbnails, which a longer question makes taller,
@@ -93,12 +97,22 @@ export function ControlRoom() {
 }
 
 /**
- * The answer line of a short answer, as the student finds it on the paper: an empty field that names
- * what goes in it. The teacher writes the accepted answers in the layer, never on the paper, so the
- * line takes no text here.
+ * The answer field of a short answer or an essay, as the student finds it on the paper: an empty line
+ * for a short answer, and an empty area of several lines for an essay. The teacher writes the accepted
+ * answers or the rubric in the layer, never on the paper, so the field takes no text here.
  */
-export function PaperLine() {
+export function PaperLine({ essay = false }: { essay?: boolean }) {
   const t = useTranslations("Exams");
+  if (essay) {
+    return (
+      <Textarea
+        aria-label={t("essay-area")}
+        disabled
+        placeholder={t("essay-placeholder")}
+        rows={ESSAY_ROWS}
+      />
+    );
+  }
   return (
     <Input
       aria-label={t("short-line")}

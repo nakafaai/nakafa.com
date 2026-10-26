@@ -1,6 +1,7 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
+  needsKey,
   QUESTION_POINTS_MAX,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
@@ -258,7 +259,8 @@ export function TeacherLayer({
           number={number}
           onChange={onAccept}
         />
-      ) : (
+      ) : null}
+      {needsKey(shown.template) && shown.template !== "short" ? (
         <AnswerKey
           editable={editable}
           marked={markedOptions(shown.key)}
@@ -267,7 +269,7 @@ export function TeacherLayer({
           onMark={onMark}
           options={options}
         />
-      )}
+      ) : null}
       {takesRubric(shown.template) ? (
         <div className="grid gap-2">
           <FieldTitle>{t("rubric")}</FieldTitle>

@@ -29,8 +29,12 @@ export function useResultsScope() {
   return scope;
 }
 
-/** What every student's row reads from the sitting: its unit's time zone and the total points of its questions. */
+/**
+ * What every row reads from the sitting: its unit's time zone, the total points of its questions, and
+ * whether the viewer grades its answers.
+ */
 const ResultsPaper = Schema.Struct({
+  canGrade: Schema.Boolean,
   timeZone: Schema.String,
   total: Schema.Finite,
 });

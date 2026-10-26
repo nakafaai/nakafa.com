@@ -13,26 +13,15 @@ import {
   ResultNotFound,
 } from "@repo/backend/confect/exams/results/errors";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
-import type { Verdict } from "@repo/backend/confect/exams/results/schema";
+import { gradeVerdict } from "@repo/backend/confect/exams/results/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Array as Arr, Effect, Option } from "effect";
 
 /**
- * The verdict that a grade gives: none of the question's points is `incorrect`, all of them is
- * `correct`, and any number between is `partial`.
- */
-const verdictOf = (points: number, weight: number): Verdict => {
-  if (points === 0) {
-    return "incorrect";
-  }
-  return points === weight ? "correct" : "partial";
-};
-
-/**
  * Gives one scored answer of a submitted attempt the points the teacher decides, as a teacher marks a
  * paper (K6, K7): an essay or a short answer that waits for the teacher, or any answer the teacher
- * judges again. The verdict follows the points (`verdictOf`), the student's score is the sum of the
+ * judges again. The verdict follows the points (`gradeVerdict`), the student's score is the sum of the
  * points, and each grade is journaled under the sitting with the Person who gave it. An answer the
  * sitting does not hold is refused as `ResultNotFound`, and more points than the question is worth as
  * `PointsAboveWeight`.
@@ -73,7 +62,7 @@ export const grade = Effect.fn("exams.results.grade")(function* (args: {
     .table("examResults")
     .patch(row.value._id, {
       points: args.points,
-      verdict: verdictOf(args.points, question.points),
+      verdict: gradeVerdict(args.points, question.points),
     })
     .pipe(Effect.orDie);
   yield* resultAuthority.record(personActor(member.person), sitting, {

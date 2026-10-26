@@ -11,7 +11,7 @@ import { lazy, Suspense, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { SittingField } from "@/components/exams/sitting/field";
-import { choiceOf, entryOf } from "@/components/exams/sitting/response";
+import { choiceOf, writtenOf } from "@/components/exams/sitting/response";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
 
@@ -51,7 +51,7 @@ export function ExamTryQuestion({
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
   const choice = choiceOf(question.answers);
-  const entry = entryOf(question.answers);
+  const entry = writtenOf(question.answers);
 
   return (
     <section aria-labelledby={titleId} className="grid gap-6">

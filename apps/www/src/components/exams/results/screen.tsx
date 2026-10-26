@@ -95,7 +95,13 @@ function SittingResultsContent({
         Arr.map(overview.value.questions, (question) => question.points)
       )
     : 0;
-  const paper = useMemo(() => ({ timeZone, total }), [timeZone, total]);
+  const canGrade =
+    QueryResult.isSuccess(overview) &&
+    Arr.contains(overview.value.can, "result.grade");
+  const paper = useMemo(
+    () => ({ canGrade, timeZone, total }),
+    [canGrade, timeZone, total]
+  );
 
   if (QueryResult.isFailure(overview)) {
     if (isLostAccess(overview.error)) {
@@ -127,8 +133,8 @@ function SittingResultsContent({
         <ReleaseCard canRelease={canRelease} releasedAt={releasedAt} />
         <ResultsPaperContext value={paper}>
           <StudentsTable first={preload?.students} />
+          <QuestionResults questions={questions} />
         </ResultsPaperContext>
-        <QuestionResults questions={questions} />
       </div>
     </ResultsScopeContext>
   );

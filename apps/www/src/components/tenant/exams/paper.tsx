@@ -3,6 +3,7 @@ import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
   fixedOptions,
+  needsKey,
   takesRubric,
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -176,7 +177,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
             onChange={editing.setTemplate}
             template={editing.displayed.template}
           />
-          {question.key === null ? (
+          {question.key === null && needsKey(question.template) ? (
             <span className="flex items-center gap-1 text-muted-foreground text-xs">
               <HugeIcons
                 aria-hidden="true"
@@ -310,6 +311,7 @@ function LivePaper({
         </PaperOptions>
       )}
       {Option.isSome(entryOf(displayed.answers)) ? <PaperLine /> : null}
+      {displayed.template === "essay" ? <PaperLine essay /> : null}
       {canAddOption ? (
         <div className={chosen ? undefined : "invisible"}>
           <Button

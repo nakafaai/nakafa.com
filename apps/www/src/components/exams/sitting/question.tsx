@@ -29,7 +29,7 @@ import {
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
 import { SittingField } from "@/components/exams/sitting/field";
-import { choiceOf, entryOf } from "@/components/exams/sitting/response";
+import { choiceOf, writtenOf } from "@/components/exams/sitting/response";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
@@ -70,7 +70,7 @@ export function SittingQuestion({
     [question.interactions]
   );
   const entry = useMemo(
-    () => entryOf(question.interactions),
+    () => writtenOf(question.interactions),
     [question.interactions]
   );
   const promptText = QueryResult.isSuccess(prompt) ? prompt.value.prompt : null;

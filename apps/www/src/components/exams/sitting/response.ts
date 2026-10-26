@@ -4,22 +4,27 @@ import { Array as Arr, Option } from "effect";
 /** The choice interaction, whose response is the options the student chose. */
 export type Choice = Extract<Interaction, { readonly kind: "choice" }>;
 
-/** The text entry interaction, whose response is the text the student typed. */
-type TextEntry = Extract<Interaction, { readonly kind: "textEntry" }>;
+/** A written interaction: a short answer's text entry or an essay's long text, whose response is text. */
+export type Written = Extract<
+  Interaction,
+  { readonly kind: "extendedText" | "textEntry" }
+>;
 
 /**
- * The text entry of a question, when the question holds exactly one interaction and that interaction
- * is a text entry, as a short answer does. This is the rule that the server applies.
+ * The written interaction of a question, when the question holds exactly one interaction and that
+ * interaction is a text entry or a long text, as a short answer and an essay do. This is the rule that
+ * the server applies.
  */
-export function entryOf(
+export function writtenOf(
   interactions: readonly Interaction[]
-): Option.Option<TextEntry> {
+): Option.Option<Written> {
   if (interactions.length !== 1) {
     return Option.none();
   }
   return Arr.findFirst(
     interactions,
-    (interaction): interaction is TextEntry => interaction.kind === "textEntry"
+    (interaction): interaction is Written =>
+      interaction.kind === "textEntry" || interaction.kind === "extendedText"
   );
 }
 

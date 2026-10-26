@@ -340,7 +340,13 @@
     "accepted-of": "Jawaban diterima {index} soal {number}",
     "accepted-remove-of": "Hapus jawaban diterima {index} soal {number}",
     "accepted-add": "Tambah jawaban",
-    "accepted-hint": "Huruf besar dan spasi berlebih tidak dihitung, dan jawaban lain menunggu kamu nilai."
+    "accepted-hint": "Huruf besar dan spasi berlebih tidak dihitung, dan jawaban lain menunggu kamu nilai.",
+    "template-essay": "Uraian",
+    "essay-placeholder": "Tulis jawabanmu",
+    "essay-area": "Kolom uraian",
+    "verdict-partial": "Sebagian benar",
+    "results-points": "Poin",
+    "grade-of": "Poin {name}"
   },
   "SchoolSettings": {
     "school": "Sekolah",

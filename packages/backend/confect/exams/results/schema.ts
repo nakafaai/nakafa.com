@@ -16,6 +16,17 @@ export const Verdict = Schema.Literals([
 ]);
 export type Verdict = typeof Verdict.Type;
 
+/**
+ * The verdict that a teacher's grade gives: none of the question's points is `incorrect`, all of them
+ * is `correct`, and any number between is `partial`.
+ */
+export const gradeVerdict = (points: number, weight: number): Verdict => {
+  if (points === 0) {
+    return "incorrect";
+  }
+  return points === weight ? "correct" : "partial";
+};
+
 /** The points one answer earns: a whole number from none to the most a question is worth. */
 export const GradePoints = Schema.Int.check(
   Schema.isBetween({ maximum: QUESTION_POINTS_MAX, minimum: 0 })

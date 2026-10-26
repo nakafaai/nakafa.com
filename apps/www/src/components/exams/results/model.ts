@@ -9,10 +9,14 @@ import { Array as Arr, String as Str } from "effect";
 export const verdictKeys = {
   correct: "verdict-correct",
   incorrect: "verdict-incorrect",
+  partial: "verdict-partial",
   pending: "verdict-pending",
 } satisfies Record<
   Verdict,
-  "verdict-correct" | "verdict-incorrect" | "verdict-pending"
+  | "verdict-correct"
+  | "verdict-incorrect"
+  | "verdict-partial"
+  | "verdict-pending"
 >;
 
 /** The character code of the capital letter A, which names the first option of a choice. */

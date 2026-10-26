@@ -340,7 +340,13 @@
     "accepted-of": "Akzeptierte Antwort {index} von Frage {number}",
     "accepted-remove-of": "Akzeptierte Antwort {index} von Frage {number} entfernen",
     "accepted-add": "Antwort hinzufügen",
-    "accepted-hint": "Groß- und Kleinschreibung und zusätzliche Leerzeichen zählen nicht, und jede andere Antwort wartet auf deine Bewertung."
+    "accepted-hint": "Groß- und Kleinschreibung und zusätzliche Leerzeichen zählen nicht, und jede andere Antwort wartet auf deine Bewertung.",
+    "template-essay": "Aufsatz",
+    "essay-placeholder": "Antwort schreiben",
+    "essay-area": "Antwortfeld",
+    "verdict-partial": "Teilweise richtig",
+    "results-points": "Punkte",
+    "grade-of": "Punkte von {name}"
   },
   "SchoolSettings": {
     "school": "Schule",

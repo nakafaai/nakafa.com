@@ -249,6 +249,7 @@ export function PaperSketch({
         </PaperOptions>
       ) : null}
       {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
+      {question.template === "essay" ? <PaperLine essay /> : null}
       {addsOption ? <OptionAddRoom /> : null}
     </QuestionPaper>
   );

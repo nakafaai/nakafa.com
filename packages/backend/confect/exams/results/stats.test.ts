@@ -40,6 +40,7 @@ describe("exams/results/stats", () => {
         { count: 1, optionId: "option-3" },
         { count: 1, optionId: "option-4" },
       ],
+      partial: 0,
       pending: 1,
     });
   });
@@ -55,6 +56,7 @@ describe("exams/results/stats", () => {
       correct: 1,
       incorrect: 1,
       optionCounts: [],
+      partial: 0,
       pending: 1,
     });
   });
@@ -65,6 +67,7 @@ describe("exams/results/stats", () => {
       correct: 0,
       incorrect: 0,
       optionCounts: Arr.map(options, (optionId) => ({ count: 0, optionId })),
+      partial: 0,
       pending: 0,
     });
   });

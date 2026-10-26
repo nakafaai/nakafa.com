@@ -3,7 +3,10 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { QuestionPoints } from "@repo/backend/confect/exams/question";
-import { Verdict } from "@repo/backend/confect/exams/results/schema";
+import {
+  GradePoints,
+  Verdict,
+} from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
@@ -55,10 +58,11 @@ export const StudentRow = Schema.Struct({
   submittedAt: Schema.NullOr(Schema.Finite),
 });
 
-/** One student's answer to a question, with its verdict, in the question's list. */
+/** One student's answer to a question, with the points it earned and its verdict, in the question's list. */
 export const AnswerRow = Schema.Struct({
   attemptId: Id("examAttempts"),
   name: PersonName,
+  points: GradePoints,
   response: ExamResponse,
   verdict: Verdict,
 });

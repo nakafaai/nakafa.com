@@ -255,6 +255,7 @@ describe("exams/results", () => {
             { count: 0, optionId: "option-3" },
             { count: 0, optionId: "option-4" },
           ],
+          partial: 0,
           pending: 0,
         });
       })

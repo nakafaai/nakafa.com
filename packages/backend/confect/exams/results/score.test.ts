@@ -124,6 +124,19 @@ describe("exams/results/score", () => {
     expect(scoreResponse([text], accepting("Jakarta"), [])).toBe("incorrect");
   });
 
+  it("leaves a written essay pending for the teacher, and scores a blank one incorrect, with or without a key", () => {
+    const essay: Interaction = {
+      id: "essay",
+      kind: "extendedText",
+      label: "Answer",
+    };
+    expect(scoreResponse([essay], null, { text: "Fotosintesis" })).toBe(
+      "pending"
+    );
+    expect(scoreResponse([essay], null, { text: "" })).toBe("incorrect");
+    expect(scoreResponse([essay], keyOf(["option-1"]), [])).toBe("incorrect");
+  });
+
   it("scores a choice that a text response answers incorrect, as it chooses no option", () => {
     expect(scoreResponse(single, keyOf(["option-2"]), { text: "B" })).toBe(
       "incorrect"

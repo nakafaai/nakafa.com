@@ -3,7 +3,7 @@ import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interacti
 import { Option, Schema } from "effect";
 import {
   choiceOf,
-  entryOf,
+  writtenOf,
   toggleOption,
 } from "@/components/exams/sitting/response";
 
@@ -83,7 +83,7 @@ describe("toggleOption", () => {
     ).toEqual(["option-2"]);
   });
 
-describe("entryOf", () => {
+describe("writtenOf", () => {
   /** A short answer's text entry, which a student types into. */
   const entry = decodeInteraction({
     id: "entry",
@@ -91,12 +91,20 @@ describe("entryOf", () => {
     label: "Answer",
   });
 
-  it("finds the text entry of a question that holds only it", () => {
-    expect(entryOf([entry])).toEqual(Option.some(entry));
+  /** An essay's long text, which a student writes in. */
+  const essay = decodeInteraction({
+    id: "essay",
+    kind: "extendedText",
+    label: "Answer",
   });
 
-  it("finds no text entry in a choice, or in a question of two interactions", () => {
-    expect(entryOf([choice(1)])).toEqual(Option.none());
-    expect(entryOf([entry, choice(1)])).toEqual(Option.none());
+  it("finds the text entry or the long text of a question that holds only it", () => {
+    expect(writtenOf([entry])).toEqual(Option.some(entry));
+    expect(writtenOf([essay])).toEqual(Option.some(essay));
+  });
+
+  it("finds nothing written in a choice, or in a question of two interactions", () => {
+    expect(writtenOf([choice(1)])).toEqual(Option.none());
+    expect(writtenOf([entry, choice(1)])).toEqual(Option.none());
   });
 });

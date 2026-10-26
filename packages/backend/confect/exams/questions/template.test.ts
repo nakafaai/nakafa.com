@@ -4,6 +4,7 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
   choiceAnswers,
+  essayAnswers,
   newChoiceAnswers,
   shortAnswers,
   textLabel,
@@ -382,6 +383,38 @@ describe("exams/questions/template", () => {
         });
         expect(back).toMatchObject({ key: null, template: "choice" });
         expect(back.answers).toEqual(newChoiceAnswers());
+      })
+  );
+
+  it.effect(
+    "turns a choice into an essay with one long text and no key, which still saves no key",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Esai");
+        const [question] = exam.questions;
+        const essay = yield* teacher.mutation(template, {
+          examId: exam.id,
+          labels: [],
+          questionId: question.id,
+          revision: 0,
+          slug: nf,
+          template: "essay",
+        });
+        expect(essay).toMatchObject({ key: null, template: "essay" });
+        expect(essay.answers).toEqual(essayAnswers());
+        const refused = yield* teacher
+          .mutation(answer, {
+            answers: essay.answers,
+            examId: exam.id,
+            key: keyOf("option-1"),
+            questionId: question.id,
+            revision: essay.revision,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "KeyDoesNotFit" });
       })
   );
 

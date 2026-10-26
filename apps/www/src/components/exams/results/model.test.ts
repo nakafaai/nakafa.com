@@ -12,6 +12,7 @@ describe("components/exams/results model", () => {
     expect(verdictKeys).toEqual({
       correct: "verdict-correct",
       incorrect: "verdict-incorrect",
+      partial: "verdict-partial",
       pending: "verdict-pending",
     });
   });
