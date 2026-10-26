@@ -11741,12 +11741,7 @@ export declare const internal: {
                 };
             locale: "en" | "id" | "de";
             offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
-            session: {
-              expiresAt: number;
-              planId: string | null;
-              sessionId: string;
-              url: string;
-            };
+            session: { expiresAt: number; sessionId: string; url: string };
             userId: Id<"users">;
           },
           null
@@ -11766,6 +11761,36 @@ export declare const internal: {
             openUrl: string | null;
             providerCustomerId: string | null;
           }
+        >;
+      };
+      renewal: {
+        open: FunctionReference<
+          "action",
+          "internal",
+          {
+            locale: "en" | "id" | "de";
+            subscriptionId: Id<"billingSubscriptions">;
+          },
+          null
+        >;
+        read: FunctionReference<
+          "query",
+          "internal",
+          { subscriptionId: Id<"billingSubscriptions"> },
+          {
+            amount: number;
+            anchor: number;
+            customerId: string;
+            months: number;
+            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            tokenId: string;
+          } | null
+        >;
+        record: FunctionReference<
+          "mutation",
+          "internal",
+          { planId: string; subscriptionId: Id<"billingSubscriptions"> },
+          null
         >;
       };
     };

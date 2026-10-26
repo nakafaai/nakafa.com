@@ -141,32 +141,40 @@ describe("billing/xendit/renewal", () => {
   });
 
   it("asks Xendit again after a failure on its side, and reports a refused plan without asking again", async () => {
-    vi.mocked(createPlan)
-      .mockReturnValueOnce(
-        Effect.fail(
-          new XenditRequestFailed({
-            errorCode: "SERVER_ERROR",
-            message: "Xendit failed.",
-            status: 500,
-          })
-        )
-      )
-      .mockReturnValueOnce(Effect.succeed(OPENED));
+    // A retry runs the request again, so each mocked request counts its own attempts.
+    let attempts = 0;
+    vi.mocked(createPlan).mockReturnValue(
+      Effect.suspend(() => {
+        attempts += 1;
+        return attempts === 1
+          ? Effect.fail(
+              new XenditRequestFailed({
+                errorCode: "SERVER_ERROR",
+                message: "Xendit failed.",
+                status: 500,
+              })
+            )
+          : Effect.succeed(OPENED);
+      })
+    );
     const retried = await paidFirstMonth();
     await retried.t.action(steps.open, {
       locale: "id",
       subscriptionId: retried.subscriptionId,
     });
-    expect(createPlan).toHaveBeenCalledTimes(2);
-    vi.mocked(createPlan).mockReset();
+    expect(attempts).toBe(2);
+    let refusals = 0;
     vi.mocked(createPlan).mockReturnValue(
-      Effect.fail(
-        new XenditRequestFailed({
-          errorCode: "INVALID_PAYMENT_TOKEN",
-          message: "The token cannot be charged.",
-          status: 400,
-        })
-      )
+      Effect.suspend(() => {
+        refusals += 1;
+        return Effect.fail(
+          new XenditRequestFailed({
+            errorCode: "INVALID_PAYMENT_TOKEN",
+            message: "The token cannot be charged.",
+            status: 400,
+          })
+        );
+      })
     );
     const refused = await paidFirstMonth();
     await expect(
@@ -175,6 +183,6 @@ describe("billing/xendit/renewal", () => {
         subscriptionId: refused.subscriptionId,
       })
     ).rejects.toThrow();
-    expect(createPlan).toHaveBeenCalledOnce();
+    expect(refusals).toBe(1);
   }, 30_000);
 });
