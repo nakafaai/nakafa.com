@@ -41,10 +41,13 @@ const SHEET_TYPES =
   ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 /** The columns of the preview table. */
-const rowColumns = createColumnHelper<typeof dataTableFeatures, ReadRow>();
+const rowColumns = createColumnHelper<
+  typeof dataTableFeatures,
+  typeof ReadRow.Type
+>();
 
 /** The status of one read row: under or over the age limit, or the problem that keeps it out. */
-const statusOf = (row: ReadRow) => {
+const statusOf = (row: typeof ReadRow.Type) => {
   if (row.outcome === "problem") {
     return row.problem;
   }
@@ -206,9 +209,9 @@ function RosterImportOfPeriod({
   const apply = useMutation(roster.imports.apply);
   const exportLines = useAction(roster.exports.lines);
   const input = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<readonly ReadRow[] | undefined>(
-    undefined
-  );
+  const [preview, setPreview] = useState<
+    readonly (typeof ReadRow.Type)[] | undefined
+  >(undefined);
   const [problem, setProblem] = useState<FileProblem | undefined>(undefined);
   const [isReading, startReading] = useTransition();
   const [isApplying, startApplying] = useTransition();
@@ -231,7 +234,7 @@ function RosterImportOfPeriod({
       setPreview(read.success.rows);
     });
 
-  const submit = (rows: readonly ReadRow[]) =>
+  const submit = (rows: readonly (typeof ReadRow.Type)[]) =>
     startApplying(async () => {
       for (const batch of Arr.chunksOf(studentsOf(rows), IMPORT_BATCH)) {
         let applied = false;
@@ -356,7 +359,7 @@ function RosterImportOfPeriod({
 }
 
 /** Every read row of the file with its status, so the Admin sees each row a problem keeps out. */
-function RosterPreview({ rows }: { rows: readonly ReadRow[] }) {
+function RosterPreview({ rows }: { rows: readonly (typeof ReadRow.Type)[] }) {
   const t = useTranslations("SchoolRoster");
   const columns = rowColumns.columns([
     rowColumns.accessor((row) => row.line, {

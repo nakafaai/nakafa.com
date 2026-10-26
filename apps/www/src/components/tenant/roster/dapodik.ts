@@ -1,4 +1,4 @@
-import { Nisn } from "@repo/backend/confect/roster/schema";
+import { ImportRow, Nisn } from "@repo/backend/confect/roster/schema";
 import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import {
@@ -88,22 +88,19 @@ const columnsOf = (row: readonly Cell[]): Option.Option<Columns> => {
 /** Why one row of the sheet is not imported. */
 export const RowProblem = Schema.Literals(["name", "nisn", "birth", "cohort"]);
 
-/** One student a row adds or changes. */
-export type StudentRow = {
-  readonly cohortName?: typeof CohortName.Type;
-  readonly name: typeof PersonName.Type;
-  readonly nisn: typeof Nisn.Type;
-  readonly underAgeLimit: boolean;
-};
-
 /** One read row: the student it holds, or the problem that keeps it out, with its line in the sheet. */
-export type ReadRow =
-  | { readonly line: number; readonly outcome: "row"; readonly row: StudentRow }
-  | {
-      readonly line: number;
-      readonly outcome: "problem";
-      readonly problem: typeof RowProblem.Type;
-    };
+export const ReadRow = Schema.Union([
+  Schema.Struct({
+    line: Schema.Finite,
+    outcome: Schema.Literal("row"),
+    row: ImportRow,
+  }),
+  Schema.Struct({
+    line: Schema.Finite,
+    outcome: Schema.Literal("problem"),
+    problem: RowProblem,
+  }),
+]);
 
 /** The text of a text or number cell, trimmed, or none for an empty cell or any other value. */
 const textOf = (cell: Cell) => {
@@ -173,7 +170,7 @@ const readRow = (
   line: number,
   columns: Columns,
   today: DateTime.Utc
-): ReadRow => {
+): typeof ReadRow.Type => {
   const at = (column: Option.Option<number>) =>
     Option.flatMap(column, (index) => textOf(row[index]));
   const name = Option.flatMap(
@@ -232,9 +229,13 @@ const holdsStudent = (row: readonly Cell[], columns: Columns) =>
 export const SheetProblem = Schema.Literals(["header", "empty"]);
 
 /** The answer of reading one sheet: its rows, or the problem that refuses it. */
-export type SheetRead =
-  | { readonly outcome: "read"; readonly rows: readonly ReadRow[] }
-  | { readonly outcome: "refused"; readonly problem: typeof SheetProblem.Type };
+export const SheetRead = Schema.Union([
+  Schema.Struct({
+    outcome: Schema.Literal("read"),
+    rows: Schema.Array(ReadRow),
+  }),
+  Schema.Struct({ outcome: Schema.Literal("refused"), problem: SheetProblem }),
+]);
 
 /**
  * Reads the rows of a Dapodik student list (ADR 0015). The header row is the first row that
@@ -247,7 +248,7 @@ export type SheetRead =
 export function readDapodikSheet(
   rows: readonly (readonly Cell[])[],
   today: DateTime.Utc
-): SheetRead {
+): typeof SheetRead.Type {
   const header = Option.flatMap(
     Arr.findFirstIndex(rows, (row) => Option.isSome(columnsOf(row))),
     (index) =>
@@ -277,7 +278,9 @@ export function readDapodikSheet(
 }
 
 /** The students of a read sheet, without the rows that have a problem. */
-export const studentsOf = (rows: readonly ReadRow[]): readonly StudentRow[] =>
+export const studentsOf = (
+  rows: readonly (typeof ReadRow.Type)[]
+): readonly (typeof ImportRow.Type)[] =>
   Arr.getSomes(
     Arr.map(rows, (row) =>
       row.outcome === "row" ? Option.some(row.row) : Option.none()
