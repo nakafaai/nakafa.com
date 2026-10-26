@@ -38,8 +38,9 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        <InboxFilter all={all} />
+        {/* Mark all read comes with the rows, so it stands before the filter, which never moves. */}
         <MarkAllRead first={Option.none()} slug={scope} />
+        <InboxFilter all={all} />
       </SchoolHeader>
       <LayoutContent className="flex flex-col py-6">
         <NotificationsClockContext value={clock}>
