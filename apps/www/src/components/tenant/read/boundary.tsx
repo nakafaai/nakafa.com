@@ -27,8 +27,8 @@ interface TenantRead<Query extends Ref.AnyPublicQuery> {
  * loading the page again. A refusal that the viewer has lost the school's access
  * is not this part's to show: the boundary rethrows it to the school's own
  * boundary, which shows the refused page. A refusal of this part alone shows its own sentence, with no
- * Try again. `fallback` lays the failure out inside
- * the page's own frame, so a page keeps its header while its read fails.
+ * Try again. A boundary without `read` shows the failure of the page's paginated read. `fallback` lays the
+ * failure out inside the page's own frame, so a page keeps its header while its read fails.
  */
 export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
   children,
@@ -43,11 +43,11 @@ export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) =>
         fallback(
-          <BoundaryFailure
-            error={error}
-            read={read}
-            reset={resetErrorBoundary}
-          />
+          read === undefined ? (
+            <PageFailure error={error} />
+          ) : (
+            <ReadFailure error={error} read={read} reset={resetErrorBoundary} />
+          )
         )
       }
       onError={(error, info) => {
@@ -64,23 +64,6 @@ export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
     >
       {children}
     </ErrorBoundary>
-  );
-}
-
-/** The failure of the boundary's read, or of the page's paginated read when the boundary names none. */
-function BoundaryFailure<Query extends Ref.AnyPublicQuery>({
-  error,
-  read,
-  reset,
-}: {
-  error: unknown;
-  read: TenantRead<Query> | undefined;
-  reset: () => void;
-}) {
-  return read === undefined ? (
-    <PageFailure error={error} />
-  ) : (
-    <ReadFailure error={error} read={read} reset={reset} />
   );
 }
 

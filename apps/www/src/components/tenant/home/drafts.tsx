@@ -2,9 +2,9 @@ import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";
-import { type StoreApi, useStore } from "zustand";
+import { useStore } from "zustand";
 import { useTenant } from "@/components/tenant/context";
-import type { ExamDrafts } from "@/components/tenant/exams/drafts";
+import { useExamDrafts } from "@/components/tenant/exams/dialog";
 import type { CellSpan } from "@/components/tenant/home/cells";
 import { useHomeNow } from "@/components/tenant/home/clock";
 import { formatAge } from "@/lib/i18n/date";
@@ -21,12 +21,11 @@ type Draft = (typeof HomeView.Type)["drafts"][number];
 export function DraftsCell({
   drafts,
   span,
-  store,
 }: {
   drafts: readonly Draft[];
   span: CellSpan;
-  store: StoreApi<ExamDrafts>;
 }) {
+  const store = useExamDrafts();
   const t = useTranslations("School");
   const locale = useLocale();
   const now = useHomeNow();
