@@ -8,7 +8,7 @@ import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
 import { png } from "@repo/backend/test/exams";
 import { storeFile } from "@repo/backend/test/logo";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
 import { Array as Arr, Effect, Exit } from "effect";
 
 const { create } = refs.public.exams.exams;

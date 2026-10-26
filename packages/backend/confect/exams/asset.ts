@@ -1,6 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { refusal } from "@repo/backend/confect/tenancy/errors";
-import { ImageType } from "@repo/editor/image";
+import { ImageType } from "@repo/editor/upload";
 import { Schema } from "effect";
 
 /** The most images one call of `urls` or `images` reads: the images of one prompt, in one call. */

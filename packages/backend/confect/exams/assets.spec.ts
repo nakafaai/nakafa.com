@@ -12,7 +12,7 @@ import {
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { ImageType } from "@repo/editor/image";
+import { ImageType } from "@repo/editor/upload";
 import { Schema } from "effect";
 
 /**
