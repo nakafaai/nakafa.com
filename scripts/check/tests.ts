@@ -14,6 +14,7 @@ import {
   ownerBlock,
   sharedPackageName,
 } from "#scripts/check/compiler";
+import { inspectNativeControls } from "#scripts/check/controls";
 import { inspectDictionaries } from "#scripts/check/dictionary";
 import {
   effectFindings,
@@ -97,6 +98,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectGatewaySource(file, sourceFile),
         inspectToastSource(file, sourceFile),
         inspectReactSource(file, sourceFile),
+        inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
         inspectSealedSource(file, sourceFile),

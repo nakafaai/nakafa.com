@@ -149,6 +149,7 @@ export function AddChannel({
                 setTitle(event.target.value);
                 setRefusal(Option.none());
               }}
+              placeholder={t("channel-name-placeholder")}
               value={title}
             />
             {Option.isSome(refusal) ? (
