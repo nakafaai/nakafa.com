@@ -968,7 +968,7 @@
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
     "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
-    "policy-domains-invalid": "Prüfe diese Domains, jede in einer eigenen Zeile: {domains}.",
+    "policy-domains-invalid": "Prüfe diese Domains: {domains}, und schreibe jede in eine eigene Zeile.",
     "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
   },
   "Classroom": {

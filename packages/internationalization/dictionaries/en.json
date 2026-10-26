@@ -968,7 +968,7 @@
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
-    "policy-domains-invalid": "Check these domains, one on each line: {domains}.",
+    "policy-domains-invalid": "Check these domains: {domains}, and write each one on its own line.",
     "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
   },
   "Classroom": {
