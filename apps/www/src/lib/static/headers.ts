@@ -56,12 +56,44 @@ const SOCIAL_IMAGE_RULES: readonly HeaderRule[] = Arr.map(
   })
 );
 
+/** A built asset's file name carries the hash of its content, so a browser keeps it for a year and never asks again. */
+const ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+/**
+ * The page headers that only a document reads: its security policy and framing,
+ * its referrer and permissions policies, the transport rule that the document
+ * already set for the host, and the agent discovery links. A built script or
+ * style applies none of them, yet a page fetches hundreds of them, each carrying
+ * these bytes.
+ */
+const DOCUMENT_ONLY_HEADERS: readonly string[] = [
+  "Content-Security-Policy",
+  "X-Frame-Options",
+  "Referrer-Policy",
+  "Strict-Transport-Security",
+  "Permissions-Policy",
+  "Link",
+  "X-Llms-Txt",
+];
+
+/**
+ * The headers of the built assets under `/assets/`: cached for good, and without
+ * the document-only headers that the page rule attaches to every address. They
+ * keep the rest, such as the content type guard and the TDM reservation.
+ */
+const ASSET_HEADER_RULE: HeaderRule = {
+  detach: DOCUMENT_ONLY_HEADERS,
+  headers: [{ key: "Cache-Control", value: ASSET_CACHE_CONTROL }],
+  path: "/assets/*",
+};
+
 /**
  * The headers of the files that the build writes, one rule per address pattern.
  * The Worker answers none of these addresses, so the static assets carry the
  * content type and the cache policy that each answer had.
  */
 export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
+  ASSET_HEADER_RULE,
   { path: "/sitemap.xml", headers: SITEMAP_HEADERS },
   { path: "/sitemap/*", headers: SITEMAP_HEADERS },
   { path: "/rss.xml", headers: RSS_HEADERS },

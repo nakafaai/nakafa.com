@@ -1,9 +1,19 @@
 import {
   ArrowRight01Icon,
+  Building03Icon,
+  Calendar03Icon,
+  DocumentValidationIcon,
+  InformationCircleIcon,
   Link01Icon,
+  Mail01Icon,
+  Plug01Icon,
   School01Icon,
+  SecurityCheckIcon,
   SecurityLockIcon,
+  StudentIcon,
   UserGroupIcon,
+  UserMultiple02Icon,
+  UserSettings01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   Collapsible,
@@ -21,7 +31,7 @@ import {
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar-submenu";
 import { Array as Arr } from "effect";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
@@ -42,13 +52,31 @@ const groupIcons: Record<
   security: SecurityLockIcon,
 };
 
+/** The icon of each section, beside its name. A section added without one does not compile. */
+const sectionIcons: Record<
+  SchoolSettingsGroup["sections"][number]["labelKey"],
+  ComponentProps<typeof HugeIcons>["icon"]
+> = {
+  audit: DocumentValidationIcon,
+  clients: Plug01Icon,
+  cohorts: UserMultiple02Icon,
+  invites: Mail01Icon,
+  members: UserGroupIcon,
+  periods: Calendar03Icon,
+  policies: SecurityCheckIcon,
+  profile: InformationCircleIcon,
+  roles: UserSettings01Icon,
+  students: StudentIcon,
+  units: Building03Icon,
+};
+
 /**
  * Renders the school settings as the sidebar body for settings routes, replacing the
  * school's own navigation without replacing the shell: one Settings group whose
  * groups fold open into their sections, as shadcn's sidebar draws a menu with
  * submenus. The group that holds the current section opens, also when the current
  * section moves into it, as after the settings root sends the viewer to its first
- * section, or a link opens a section of another group. A school host
+ * section, or a link opens a section of another group; a group never closes by itself. A school host
  * has no locale in its paths, so the links are school links, as in the
  * school's own navigation.
  */
@@ -73,14 +101,24 @@ function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
   const isSectionActive = (section: (typeof group.sections)[number]) =>
     section.target.to === leafPath;
   const holdsCurrent = Arr.some(group.sections, isSectionActive);
+  const [open, setOpen] = useState(holdsCurrent);
+  const [heldCurrent, setHeldCurrent] = useState(holdsCurrent);
 
-  // A new key starts the group again from its default when the current section
-  // moves in or out of it, and leaves a group the viewer folded alone otherwise.
+  // The group opens when the current section moves into it. It never closes by itself
+  // when the current section moves out, so the groups under the pointer stay in place;
+  // only the viewer folds a group.
+  if (holdsCurrent !== heldCurrent) {
+    setHeldCurrent(holdsCurrent);
+    if (holdsCurrent) {
+      setOpen(true);
+    }
+  }
+
   return (
     <Collapsible
       className="group/collapsible"
-      defaultOpen={holdsCurrent}
-      key={String(holdsCurrent)}
+      onOpenChange={setOpen}
+      open={open}
       render={<SidebarMenuItem />}
     >
       <CollapsibleTrigger render={<SidebarMenuButton tooltip={label} />}>
@@ -99,6 +137,7 @@ function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
                 isActive={isSectionActive(section)}
                 render={<TargetLink target={section.target} />}
               >
+                <HugeIcons icon={sectionIcons[section.labelKey]} />
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>

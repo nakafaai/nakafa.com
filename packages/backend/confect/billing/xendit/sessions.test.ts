@@ -26,16 +26,15 @@ describe("billing/xendit/sessions", () => {
   });
 
   it.effect(
-    "opens a subscription checkout and returns its payment link and plan",
+    "opens a subscription checkout and returns its payment link and plan, from an answer that leaves out the empty nullable fields",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValue(
           ok({
+            // Xendit leaves out the payment and its token until the buyer pays.
             expires_at: "2026-10-26T05:30:00.000Z",
-            payment_id: null,
             payment_link_url: "https://xen.to/checkout",
             payment_session_id: "ps-1",
-            payment_token_id: null,
             recurring_plan_id: "repl_1",
             reference_id: "billing-1",
             session_type: "SUBSCRIPTION",

@@ -79,6 +79,9 @@ export function OptionRow({
   removeName,
 }: OptionRowProps) {
   const editor = useRef<DocumentEditorInstance | null>(null);
+  // The label the server held at the last render, which the editor holds too while the teacher has typed nothing
+  // on top of it since.
+  const previous = useRef(label);
   // The save calls the latest `onSave`, so a save after the quiet period uses the answers and the
   // revision of the render that is on screen when it runs.
   const save = useCallbackRef(onSave);
@@ -123,6 +126,26 @@ export function OptionRow({
     Effect.runFork(saver.cancel);
     onRemove();
   };
+
+  // The editor takes a label the server holds once it changes, as a save of this option lands after the editor
+  // opened, or another editor saves it. An editor that no longer holds the label it had before has the teacher's
+  // own typing, which waits for its save and wins.
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = label;
+    const current = editor.current;
+    if (current === null) {
+      return;
+    }
+    const held = current.getJSON();
+    if (holdsLabel(held, label) || !holdsLabel(held, before)) {
+      return;
+    }
+    current.commands.setContent(
+      Node.fromJSON(assessmentSchema, label).toJSON(),
+      { emitUpdate: false }
+    );
+  }, [label]);
 
   // The editor takes the lock of the option as it changes, not only when it opens.
   // A lock is not an edit, so the editor emits no change for it, and no label is saved.
