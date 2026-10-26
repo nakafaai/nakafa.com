@@ -32,11 +32,14 @@ type SidebarRightProps = {
  * the actions, so the panel reads as header, outline and footer.
  */
 export function SidebarRightHeader({
+  context,
   description,
   descriptionLanguage,
   publicPath,
   title,
 }: {
+  /** The curriculum hint that the link to the page carries, when the reader came from one. */
+  context?: string | undefined;
   description: string;
   descriptionLanguage?: string;
   /** The signed public path of the page the header names, which the router opens. */
@@ -48,7 +51,13 @@ export function SidebarRightHeader({
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            render={<PublicPathLink publicPath={publicPath} title={title} />}
+            render={
+              <PublicPathLink
+                context={context}
+                publicPath={publicPath}
+                title={title}
+              />
+            }
             size="lg"
           >
             <div className="grid flex-1 text-left text-sm leading-tight">

@@ -5,7 +5,9 @@ import { readConvexClient } from "@/lib/convex/client";
 
 /**
  * Mounts the page's one Convex client for a route whose signed-in readers need it.
- * The route loads this module lazily, so a visitor's page never loads the client.
+ * Only those routes load this module: the account layout with its component chunk,
+ * after its gate, and the try-out layout lazily for a signed-in hint, so a
+ * visitor's page never loads the client.
  */
 export function RouteConvexProvider({ children }: { children: ReactNode }) {
   return (

@@ -1,15 +1,17 @@
+import editors from "@repo/backend/confect/_generated/refs/editor";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { dashboardArgs } from "@/components/exams/sitting/change";
 import { readPlayerMode } from "@/components/player/mode.server";
 import { readRequired } from "@/lib/data/read.server";
-import type {
-  ExamInput,
-  ExamListInput,
-  ExamRoomsInput,
-  ResultsInput,
-  SittingInput,
-  StudentSittingInput,
+import {
+  type ExamInput,
+  type ExamListInput,
+  type ExamRoomsInput,
+  PREVIEW_CLIENT,
+  type ResultsInput,
+  type SittingInput,
+  type StudentSittingInput,
 } from "@/lib/tenant/exams";
 import { memberHandler } from "@/lib/tenant/member.server";
 
@@ -51,10 +53,36 @@ export const examRoomsHandler = memberHandler(
     })
 );
 
-/** The exam as its editor and its try open it. */
+/** The exam as its try opens it. */
 export const examOpenHandler = memberHandler(
   ({ examId, slug }: typeof ExamInput.Type, token: string) =>
     readRequired(exams.exams.open, { examId, slug }, token)
+);
+
+/**
+ * The exam as its editor opens it, with its first question's prompt as the server holds it, so the
+ * first page draws its prompt in the first paint instead of after a read that starts once the page
+ * mounts. An exam always holds a question, so a first question is always there.
+ */
+export const examEditorHandler = memberHandler(
+  ({ examId, slug }: typeof ExamInput.Type, token: string) =>
+    Effect.gen(function* () {
+      const exam = yield* readRequired(
+        exams.exams.open,
+        { examId, slug },
+        token
+      );
+      const first = yield* Option.match(Arr.head(exam.questions), {
+        onNone: () => Effect.die("An exam always holds a question."),
+        onSome: Effect.succeed,
+      });
+      const opened = yield* readRequired(
+        editors.documents.open,
+        { clientId: PREVIEW_CLIENT, documentId: first.prompt, slug },
+        token
+      );
+      return { exam, prompt: { documentId: first.prompt, opened } };
+    })
 );
 
 /** The proctor's dashboard of one sitting, its first page of seats. */

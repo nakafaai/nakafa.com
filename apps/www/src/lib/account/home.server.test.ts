@@ -6,7 +6,7 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { isRedirect } from "@tanstack/react-router";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Deferred, Effect, Option } from "effect";
 import {
   chatIndexScreenHandler,
   chatScreenHandler,
@@ -118,6 +118,8 @@ describe("homeScreenHandler", () => {
         onboarding.queries.getStatus,
         { isAuthenticated: false, isRequired: false },
       ],
+      [auth.queries.getCurrentUser, null],
+      [contents.queries.recent.getRecentlyViewed, []],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -132,6 +134,8 @@ describe("homeScreenHandler", () => {
         onboarding.queries.getStatus,
         { isAuthenticated: true, isRequired: true },
       ],
+      [auth.queries.getCurrentUser, account],
+      [contents.queries.recent.getRecentlyViewed, []],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -162,6 +166,31 @@ describe("homeScreenHandler", () => {
     expect(screen.trendingLooks).toEqual([]);
     expect(screen.seo).toMatchObject({ canonicalPath: "/en", indexable: true });
   });
+
+  it.effect("reads the gate and the page together, in one round trip", () =>
+    Effect.gen(function* () {
+      sessionWith(Option.some("token"));
+      const pageRead = yield* Deferred.make<void>();
+      mocks.preloadConfectQuery.mockImplementation((ref) => {
+        if (ref === onboarding.queries.getStatus) {
+          // The gate answers only once a read of the page has gone out beside it.
+          return Deferred.await(pageRead).pipe(
+            Effect.as({ isAuthenticated: true, isRequired: false })
+          );
+        }
+        return Deferred.succeed(pageRead, undefined).pipe(
+          Effect.as(ref === auth.queries.getCurrentUser ? account : [])
+        );
+      });
+      const screen = yield* Effect.promise(() =>
+        homeScreenHandler({ data: { locale: "en" } })
+      );
+      expect(screen.name).toBe("Nabil");
+      expect(mocks.readHomeTrendingSubjects).toHaveBeenCalledExactlyOnceWith(
+        "en"
+      );
+    })
+  );
 
   it("answers the home screen with no recent subjects when the server refuses them", async () => {
     sessionWith(Option.some("token"));
