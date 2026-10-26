@@ -106,6 +106,7 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
             event.currentTarget.blur();
           }
         }}
+        placeholder="1"
         value={draft ?? String(points)}
       />
     </Field>

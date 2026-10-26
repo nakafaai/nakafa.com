@@ -61,6 +61,7 @@ export function PageCounter({
           onJump(number - 1);
         }
       }}
+      placeholder={String(current)}
       ref={focusOnMount}
       value={typing}
     />

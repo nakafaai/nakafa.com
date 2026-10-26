@@ -112,6 +112,7 @@ export function GradeField({
           event.currentTarget.blur();
         }
       }}
+      placeholder="0"
       value={draft ?? String(answer.points)}
     />
   );
