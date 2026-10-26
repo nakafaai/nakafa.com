@@ -56,7 +56,9 @@ const hostedDomainOf = (idToken: string) =>
  * hosted domain of the ID token when the write carries one. A write without an
  * ID token, such as a token refresh, leaves the stored domain as it is.
  */
-const issuedColumns = (account: { readonly idToken?: string | null }) => ({
+const issuedColumns = (account: {
+  readonly idToken?: string | null | undefined;
+}) => ({
   ...noProviderTokens,
   ...(Predicate.isString(account.idToken)
     ? { hostedDomain: hostedDomainOf(account.idToken) }

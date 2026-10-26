@@ -61,6 +61,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   accessTokenExpiresAt?: null | number;
                   accountId: string;
                   createdAt: number;
+                  hostedDomain?: null | string;
                   idToken?: null | string;
                   password?: null | string;
                   providerId: string;
@@ -191,6 +192,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "password"
                     | "createdAt"
                     | "updatedAt"
+                    | "hostedDomain"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -386,6 +388,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "password"
                     | "createdAt"
                     | "updatedAt"
+                    | "hostedDomain"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -654,6 +657,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   accessTokenExpiresAt?: null | number;
                   accountId?: string;
                   createdAt?: number;
+                  hostedDomain?: null | string;
                   idToken?: null | string;
                   password?: null | string;
                   providerId?: string;
@@ -678,6 +682,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "password"
                     | "createdAt"
                     | "updatedAt"
+                    | "hostedDomain"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -896,6 +901,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   accessTokenExpiresAt?: null | number;
                   accountId?: string;
                   createdAt?: number;
+                  hostedDomain?: null | string;
                   idToken?: null | string;
                   password?: null | string;
                   providerId?: string;
@@ -920,6 +926,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "password"
                     | "createdAt"
                     | "updatedAt"
+                    | "hostedDomain"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
