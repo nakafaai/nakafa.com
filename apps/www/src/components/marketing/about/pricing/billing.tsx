@@ -5,6 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
+import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { Effect } from "effect";
 import { useTransition } from "react";
@@ -47,6 +48,7 @@ export function BillingButton({
  */
 function BillingAction({ variant }: { variant: PricingButtonVariant }) {
   const locale = useLocale();
+  const navigate = useNavigate();
   const t = useTranslations("Pricing");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
   const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
@@ -108,9 +110,9 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
       return;
     }
     if (subscription?.rail === "xendit") {
-      window.location.assign(
-        localizeInternalHref("/user/settings/subscriptions", locale)
-      );
+      navigate({
+        href: localizeInternalHref("/user/settings/subscriptions", locale),
+      });
       return;
     }
 

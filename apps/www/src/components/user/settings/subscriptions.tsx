@@ -2,16 +2,14 @@ import { QueryResult } from "@confect/react";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { useConvexAuth } from "@/components/auth/convex";
 import { UserSettingsCredits } from "@/components/user/settings/credits";
-import { UserSettingsPayments } from "@/components/user/settings/payments";
 import { UserSettingsPlan } from "@/components/user/settings/plan";
 import type { BillingOverview } from "@/lib/billing/plan";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
- * The billing settings: the plan card, the Nina credits card, and the receipts.
- * The settings route resolves the overview first, so both cards show it before
- * the live query answers, and no action swaps between two labels. The receipts
- * follow once their own read arrives.
+ * The billing settings: the plan card and the Nina credits card. The settings
+ * route resolves the overview first, so both cards show it before the live query
+ * answers, and no action swaps between two labels.
  */
 export function UserSettingsSubscriptions({
   initialOverview,
@@ -33,7 +31,6 @@ export function UserSettingsSubscriptions({
     <>
       <UserSettingsPlan overview={overview} />
       <UserSettingsCredits overview={overview} />
-      <UserSettingsPayments />
     </>
   );
 }

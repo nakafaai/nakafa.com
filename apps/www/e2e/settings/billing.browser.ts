@@ -71,7 +71,7 @@ test("a learner in Indonesia chooses the monthly plan or a pass, each in rupiah"
   );
 });
 
-test("a pass holder sees when the pass ends, extends it with passes only, and finds the receipt", async ({
+test("a pass holder sees when the pass ends, finds the receipt in Payments, and extends it with passes only", async ({
   baseURL,
   page,
 }) => {
@@ -82,14 +82,20 @@ test("a pass holder sees when the pass ends, extends it with passes only, and fi
       yield* Effect.promise(async () => {
         await page.goto(SUBSCRIPTIONS);
         await expect(page.getByText("Your Pro pass runs until")).toBeVisible();
-        const receipts = page.getByRole("table");
+        await picture(page, "pass");
+        const payments = page.getByRole("button", { name: "Payments" });
+        await waitUntilTakenOver(payments);
+        await payments.click();
+        const receipts = page.getByRole("dialog", { name: "Payments" });
         await expect(
           receipts.getByRole("cell", { name: "Pro pass" })
         ).toBeVisible();
         await expect(
           receipts.getByRole("cell", { name: "Rp 79.000" })
         ).toBeVisible();
-        await picture(page, "pass");
+        await pictureDialog(page, "payments");
+        await receipts.getByRole("button", { name: "Close" }).click();
+        await expect(receipts).toBeHidden();
         const extend = page.getByRole("button", { name: "Extend Pro" });
         await waitUntilTakenOver(extend);
         await extend.click();
@@ -115,10 +121,16 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
       yield* Effect.promise(async () => {
         await page.goto(SUBSCRIPTIONS);
         await expect(page.getByText("Xendit", { exact: true })).toBeVisible();
-        await expect(
-          page.getByRole("cell", { name: "Pro subscription" })
-        ).toBeVisible();
         await picture(page, "subscribed");
+        const payments = page.getByRole("button", { name: "Payments" });
+        await waitUntilTakenOver(payments);
+        await payments.click();
+        const receipts = page.getByRole("dialog", { name: "Payments" });
+        await expect(
+          receipts.getByRole("cell", { name: "Pro subscription" })
+        ).toBeVisible();
+        await receipts.getByRole("button", { name: "Close" }).click();
+        await expect(receipts).toBeHidden();
         const cancel = page.getByRole("button", { name: "Cancel plan" });
         await waitUntilTakenOver(cancel);
         await cancel.click();

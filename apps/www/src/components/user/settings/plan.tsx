@@ -26,6 +26,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { PlanPayments } from "@/components/user/settings/payments";
 import { UpgradePlanCard } from "@/components/user/settings/upgrade";
 import { reportClientException } from "@/lib/analytics/client";
 import { useBillingNavigation } from "@/lib/billing/checkout";
@@ -76,9 +77,9 @@ function GrantedPlanCard() {
 }
 
 /**
- * Pro that passes give: the day the last of them ends, and the action that buys
- * another pass, which starts where this one ends. No portal manages a pass, since
- * nothing renews it.
+ * Pro that passes give: the day the last of them ends, the receipts, and the
+ * action that buys another pass, which starts where this one ends. No portal
+ * manages a pass, since nothing renews it.
  */
 function PassPlanCard({ endsAt }: { endsAt: number }) {
   const billing = useBillingNavigation();
@@ -110,6 +111,7 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
       </CardHeader>
       <CardSectionFooter hint={t("plan-pass-footer")}>
         <CardSectionActions>
+          <PlanPayments />
           <Button
             disabled={billing.isPending || !isActiveLocale(locale)}
             onClick={handleExtend}
@@ -194,8 +196,8 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
 
 /**
  * The footer of a plan Xendit bills, which no provider portal manages: the
- * learner cancels it here, after confirming, and it ends with its paid period.
- * A plan that already ends says so and offers nothing.
+ * receipts, and the cancel that ends the plan with its paid period once the
+ * learner confirms. A plan that already ends says so and offers the receipts.
  */
 function XenditPlanFooter({
   ending,
@@ -212,16 +214,23 @@ function XenditPlanFooter({
   ).withOptimisticUpdate(cancelPlanChange);
 
   if (ending) {
-    return <CardSectionFooter hint={t("plan-xendit-ending-footer")} />;
+    return (
+      <CardSectionFooter hint={t("plan-xendit-ending-footer")}>
+        <CardSectionActions>
+          <PlanPayments />
+        </CardSectionActions>
+      </CardSectionFooter>
+    );
   }
 
   return (
     <CardSectionFooter hint={t("plan-xendit-footer")}>
       <CardSectionActions>
+        <PlanPayments />
         <Button
           onClick={() => setIsConfirming(true)}
           type="button"
-          variant="outline"
+          variant="destructive"
         >
           <HugeIcons icon={Cancel01Icon} />
           {t("plan-cancel")}

@@ -1,9 +1,11 @@
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import {
   CreditCardIcon,
+  Diamond02Icon,
   Invoice01Icon,
   Mail01Icon,
   MoreHorizontalIcon,
+  Wallet01Icon,
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -180,6 +182,9 @@ function SchoolPlanCard({
         {canPay ? (
           <CardSectionActions>
             <Button onClick={() => setIsChoosing(true)} type="button">
+              <HugeIcons
+                icon={plan.kind === "free" ? Diamond02Icon : Wallet01Icon}
+              />
               {plan.kind === "free" ? t("billing-upgrade") : t("billing-add")}
             </Button>
           </CardSectionActions>
@@ -269,8 +274,12 @@ function SchoolTermDialog({
             onClick={submit}
             type="button"
           >
-            <HugeIcons icon={Invoice01Icon} />
-            {t("billing-issue")}
+            <HugeIcons
+              icon={overview.rail === "xendit" ? Invoice01Icon : Wallet01Icon}
+            />
+            {overview.rail === "xendit"
+              ? t("billing-issue")
+              : t("billing-checkout")}
           </Button>
         </>
       }

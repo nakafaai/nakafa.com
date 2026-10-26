@@ -1,11 +1,10 @@
+import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
+import { Invoice01Icon } from "@hugeicons/core-free-icons";
 import billingRefs from "@repo/backend/confect/_generated/refs/billing";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Table,
   TableBody,
@@ -15,9 +14,9 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
+import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { CardSection } from "@/components/shared/card/section";
 import {
   formatBillingDate,
   formatMinorAmount,
@@ -33,14 +32,14 @@ const PAYMENT_LABELS = {
 } as const;
 
 /**
- * The learner's receipts: the payments that went through, newest first, each
- * with its day, what it bought, its amount and the provider that took it. The
- * card shows once the read arrives, and only when there is a payment to list.
+ * The plan card's Payments action: a dialog of the learner's receipts. The
+ * receipts are read while the card shows, so the dialog opens on its table.
  */
-export function UserSettingsPayments() {
+export function PlanPayments() {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const t = useTranslations("Auth");
-  const locale = useLocale();
+  const common = useTranslations("Common");
+  const [isOpen, setIsOpen] = useState(false);
   const payments = useQuery(
     billingRefs.queries.payments,
     isAuthenticated ? {} : "skip"
@@ -48,47 +47,67 @@ export function UserSettingsPayments() {
   if (QueryResult.isFailure(payments)) {
     throw payments.error;
   }
-  if (
-    !(
-      QueryResult.isSuccess(payments) &&
-      Arr.isReadonlyArrayNonEmpty(payments.value)
-    )
-  ) {
-    return null;
-  }
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("payments")}</CardTitle>
-        <CardDescription>{t("payments-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("payment-date")}</TableHead>
-              <TableHead>{t("payment-for")}</TableHead>
-              <TableHead>{t("paid-with")}</TableHead>
-              <TableHead className="text-end">{t("payment-amount")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(payments.value, (payment) => (
-              <TableRow key={`${payment.rail}-${payment.paidAt}`}>
-                <TableCell>
-                  {formatBillingDate(payment.paidAt, locale)}
-                </TableCell>
-                <TableCell>{t(PAYMENT_LABELS[payment.kind])}</TableCell>
-                <TableCell>{providerNameOf(payment.rail)}</TableCell>
-                <TableCell className="text-end tabular-nums">
-                  {formatMinorAmount(payment.amount, payment.currency)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </CardSection>
+    <>
+      <Button onClick={() => setIsOpen(true)} type="button" variant="outline">
+        <HugeIcons icon={Invoice01Icon} />
+        {t("payments")}
+      </Button>
+      <ResponsiveDialog
+        description={t("payments-description")}
+        footer={
+          <Button
+            onClick={() => setIsOpen(false)}
+            type="button"
+            variant="outline"
+          >
+            {common("close")}
+          </Button>
+        }
+        open={isOpen}
+        setOpen={setIsOpen}
+        title={t("payments")}
+      >
+        {QueryResult.isSuccess(payments) ? (
+          <PaymentsTable payments={payments.value} />
+        ) : null}
+      </ResponsiveDialog>
+    </>
+  );
+}
+
+/** The receipts, newest first, each with its day, what it bought, the provider that took it and its amount. */
+function PaymentsTable({
+  payments,
+}: {
+  payments: Ref.Returns<typeof billingRefs.queries.payments>;
+}) {
+  const t = useTranslations("Auth");
+  const locale = useLocale();
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("payment-date")}</TableHead>
+          <TableHead>{t("payment-for")}</TableHead>
+          <TableHead>{t("paid-with")}</TableHead>
+          <TableHead className="text-end">{t("payment-amount")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Arr.map(payments, (payment) => (
+          <TableRow key={`${payment.rail}-${payment.paidAt}`}>
+            <TableCell>{formatBillingDate(payment.paidAt, locale)}</TableCell>
+            <TableCell>{t(PAYMENT_LABELS[payment.kind])}</TableCell>
+            <TableCell>{providerNameOf(payment.rail)}</TableCell>
+            <TableCell className="text-end tabular-nums">
+              {formatMinorAmount(payment.amount, payment.currency)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
