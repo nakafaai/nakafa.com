@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { createSchool, hostAddress, seedCard } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -33,10 +33,10 @@ test("a sign-in without the username or password answers at once and asks the se
   baseURL,
 }) => {
   const school = await Effect.runPromise(createSchool());
-  const signIns: string[] = [];
+  const signIns = MutableList.make<string>();
   page.on("request", (request) => {
     if (request.url().includes("/api/auth/sign-in/")) {
-      signIns.push(request.url());
+      MutableList.append(signIns, request.url());
     }
   });
   await page.goto(
@@ -54,7 +54,7 @@ test("a sign-in without the username or password answers at once and asks the se
   await expect(page.locator("form").getByRole("alert")).toHaveText(
     "Type your school username and password."
   );
-  expect(signIns).toEqual([]);
+  expect(MutableList.toArray(signIns)).toEqual([]);
 });
 
 test("a student whose card an Admin printed signs in with the school username, the code, and a new password", async ({
