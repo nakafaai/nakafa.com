@@ -32,8 +32,6 @@
     },
     "sign-in-title": "Masuk ke {school}",
     "sittings-empty": "Guru kamu belum menjadwalkan sesi.",
-    "refused-title": "Akses Anda ke sekolah ini telah berubah.",
-    "refused-description": "Minta admin sekolah ini memeriksa akses Anda, atau kembali ke Nakafa.",
     "answers-saved": "Jawaban tersimpan",
     "quiet-staff": "Tidak ada sesi yang sedang berlangsung, dan tidak ada yang dibuka dalam 14 hari ke depan.",
     "setup-invites": "Tinjau undangan yang menunggu",
@@ -65,13 +63,15 @@
     "all-exams": "Semua ujian"
   },
   "SchoolEntry": {
+    "username-placeholder": "ayu.lestari",
+    "password-placeholder": "Kata sandimu",
     "card-code-label": "Kode kartu",
     "card-code-placeholder": "Masuk pertama atau kartu baru",
-    "card-expired": "Kartu ini sudah kedaluwarsa. Minta kartu baru ke guru atau admin.",
+    "card-expired": "Minta kartu baru ke guru atau admin, karena kartu ini sudah kedaluwarsa.",
     "card-invalid": "Username atau kode kartu tidak cocok.",
-    "card-rate-limited": "Terlalu banyak percobaan dari perangkat ini. Tunggu beberapa menit, lalu coba lagi.",
-    "card-used": "Kartu ini sudah dipakai. Minta kartu baru ke guru atau admin.",
-    "failed": "Gagal masuk. Coba lagi.",
+    "card-rate-limited": "Tunggu beberapa menit sebelum mencoba lagi di perangkat ini.",
+    "card-used": "Minta kartu baru ke guru atau admin, karena kartu ini sudah dipakai.",
+    "failed": "Gagal masuk, jadi coba lagi.",
     "outsider-card": "Masuk dengan kartu",
     "outsider-description": "Kamu masuk sebagai {account}, yang belum punya undangan di sini.",
     "outsider-switch": "Ganti akun",
@@ -179,6 +179,7 @@
     "apply": "Impor siswa"
   },
   "Exams": {
+    "minutes-placeholder": "10",
     "token": "Token",
     "change-token": "Ganti token",
     "close-sitting": "Tutup sesi",
@@ -229,6 +230,7 @@
     "lock": "Kunci",
     "unlock": "Buka kunci",
     "allow-device": "Izinkan perangkat kedua",
+    "student-more": "Aksi lain untuk {name}",
     "confirm-lock-title": "Kunci sesi {name}?",
     "confirm-lock-description": "Siswa tidak bisa menjawab sampai pengawas membuka kunci sesinya.",
     "confirm-lock-action": "Kunci sesi",
@@ -280,7 +282,7 @@
     "gone-note": "Ujian ini sudah dihapus atau ditutup untuk Anda, jadi perubahan di sini tidak tersimpan.",
     "room-cancel": "Batalkan ruang",
     "room-cancel-title": "Batalkan ruang ini?",
-    "room-cancel-description": "Siswa tidak bisa masuk. Soal ujian bisa diubah lagi jika tidak ada ruang lain untuknya.",
+    "room-cancel-description": "Siswa tidak bisa masuk lagi, dan soal bisa diubah lagi jika tidak ada ruang tersisa.",
     "room-cancel-confirm": "Batalkan ruang",
     "questions": "Soal",
     "question": "Soal {number}",
@@ -344,10 +346,12 @@
     "room": "Ruang",
     "room-placeholder": "Lab 2",
     "starts": "Mulai",
+    "starts-day-placeholder": "Pilih hari",
+    "starts-time-placeholder": "Jam",
     "length": "Durasi",
     "length-minutes": "{count} menit",
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
-    "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat.",
+    "schedule-past": "Pilih waktu mulai yang belum lewat.",
     "rooms-title": "Ruang",
     "edit-action": "Ubah ujian",
     "rooms-empty": "Belum ada ruang",
@@ -415,9 +419,9 @@
     "seat-last-activity": "Aktivitas terakhir {time}.",
     "title-needed": "Ujian perlu judul sebelum dapat dibuat.",
     "title-too-long": "Judul paling banyak {count} karakter.",
-    "no-unit-description": "Ujian berada di dalam unit. Tambahkan atau pulihkan unit di pengaturan terlebih dahulu.",
+    "no-unit-description": "Setiap ujian berada di dalam unit, jadi tambahkan atau pulihkan unit di pengaturan dulu.",
     "no-unit-action": "Buka unit",
-    "no-unit-member": "Ujian berada di dalam unit. Minta admin sekolah ini menambahkan satu unit.",
+    "no-unit-member": "Setiap ujian berada di dalam unit, jadi minta admin sekolah ini menambahkan satu.",
     "schedule-keys-numbered": "Tandai jawaban benar untuk soal {questions} terlebih dahulu.",
     "room-needed": "Beri nama ruangan terlebih dahulu.",
     "starts-needed": "Pilih kapan sesi dimulai.",
@@ -486,6 +490,12 @@
     "cell-hint": "Setiap pernyataan memilih satu kolom, dan kunci tersimpan setelah semua pernyataan punya kolom."
   },
   "SchoolSettings": {
+    "student-add-name-placeholder": "Ayu Lestari",
+    "invite-name-placeholder": "Budi Santoso",
+    "invite-email-placeholder": "budi@example.com",
+    "unit-add-name-placeholder": "SMA Harapan Bangsa",
+    "address-placeholder": "harapan-bangsa",
+    "name-placeholder": "Harapan Bangsa",
     "school": "Sekolah",
     "people": "Orang",
     "integrations": "Integrasi",
@@ -520,14 +530,16 @@
     "billing-school-footer": "Semua siswa sudah dibayar.",
     "billing-dialog-title": "Pilih periode",
     "billing-dialog-description": "Bayar per siswa terdaftar untuk sisa hari periode.",
-    "billing-dialog-seats": "Bayar per siswa terdaftar. Kursi diperpanjang sampai kamu membatalkannya.",
+    "billing-dialog-seats": "Bayar per siswa terdaftar, dengan kursi yang diperpanjang sampai kamu membatalkannya.",
     "billing-term-semester": "Semester ini",
     "billing-term-year": "Tahun ajaran ini",
     "billing-offer-month": "Setiap bulan",
     "billing-offer-year": "Setiap tahun",
     "billing-term-dates": "{start} sampai {end}",
-    "billing-quote": "{price} per siswa, {total} untuk {seats} siswa",
+    "billing-quote-term": "{seats} siswa sampai {date}",
+    "billing-quote-seats": "{seats} siswa, {price} per siswa",
     "billing-issue": "Buat invoice",
+    "billing-checkout": "Lanjut",
     "billing-invoices": "Invoice",
     "billing-invoices-description": "Semua invoice yang diterbitkan untuk sekolah.",
     "billing-invoices-footer": "Bayar invoice terbuka sebelum jatuh tempo.",
@@ -586,7 +598,7 @@
     "unit-add-name": "Nama",
     "unit-add-level": "Jenjang",
     "unit-add-submit": "Tambah sekolah",
-    "unit-add-footer": "Sekolah baru belum punya periode. Tambahkan satu di halaman Periode.",
+    "unit-add-footer": "Tambahkan periode pertamanya di halaman Periode.",
     "unit-time-zone": "Zona waktu",
     "unit-page-language": "Bahasa halaman",
     "unit-archive-footer": "Sekolah yang diarsipkan tetap dapat dibaca.",
@@ -610,6 +622,8 @@
     "period-name-placeholder": "Semester 1",
     "period-start": "Hari pertama",
     "period-end": "Hari terakhir",
+    "period-start-placeholder": "Pilih hari pertama",
+    "period-end-placeholder": "Pilih hari terakhir",
     "period-add-footer": "Periode baru dimulai sebagai direncanakan.",
     "period-rename": "Ganti nama",
     "period-rename-save": "Simpan",
@@ -636,7 +650,7 @@
     "cohorts-unavailable": "Rombel unit ini belum bisa ditampilkan.",
     "cohorts-unavailable-description": "Pilih unit lain untuk melihat rombelnya.",
     "cohort-unavailable": "Rombel ini belum bisa dibuka di sini.",
-    "cohort-unavailable-description": "Rombel ini mungkin milik sekolah lain atau sudah tidak ada. Pilih rombel dari daftar rombel.",
+    "cohort-unavailable-description": "Pilih rombel dari daftar, karena rombel ini sudah tidak ada atau milik sekolah lain.",
     "placement-add": "Tambah siswa",
     "placement-add-footer": "Setiap siswa masuk satu rombel dalam setiap periode.",
     "placement-student": "Siswa",
@@ -745,7 +759,8 @@
       "integration": {
         "created": "Klien dibuat",
         "rotated": "Rahasia diganti",
-        "revoked": "Klien dicabut"
+        "revoked": "Klien dicabut",
+        "authorized": "Perangkat terhubung"
       },
       "invite": {
         "expired": "Undangan kedaluwarsa",
@@ -864,7 +879,7 @@
       "integration": "Membaca data sekolah melalui aksi yang dimiliki kliennya."
     },
     "roles-overview": "Yang boleh dilakukan setiap peran",
-    "roles-overview-description": "Setiap peran di sekolah ini, dan apa yang boleh dilakukannya.",
+    "roles-overview-description": "Hanya Pemilik yang bisa memberi peran Pemilik dan Admin.",
     "roles-overview-footer": "Satu orang bisa memegang lebih dari satu peran.",
     "secret-copy": "Salin",
     "unit-npsn": "NPSN",
@@ -964,12 +979,17 @@
     "cohort-restore": "Pulihkan",
     "period-restore": "Pulihkan",
     "no-unit-title": "Belum ada unit aktif",
-    "no-unit-description": "Periode dan kelompok milik unit yang aktif. Pulihkan atau tambahkan satu unit dulu.",
+    "no-unit-description": "Pulihkan atau tambahkan unit dulu, karena periode dan kelompok berada di dalam unit.",
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
     "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
-    "policy-domains-invalid": "Domain tidak valid: {domains}; tulis satu domain di setiap baris.",
-    "policy-domains-limit": "Gunakan paling banyak {limit} domain, masing-masing di baris sendiri."
+    "policy-domains-invalid": "Periksa domain ini, satu di setiap baris: {domains}.",
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
+    "device-title": "Hubungkan perangkat",
+    "device-description": "Ketik kode dari Nakafa CLI agar perangkat itu membaca sekolah sebagai {name}.",
+    "device-code": "Kode perangkat",
+    "device-authorize": "Hubungkan",
+    "device-deny": "Tolak perangkat"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1178,7 +1198,7 @@
     "finish": "Buka sekolah",
     "required-error": "Pilih satu jawaban.",
     "school-limit-line": "Mendirikan sekolah lagi perlu berbicara dengan pendiri dulu.",
-    "address-check-failed": "Alamat ini belum bisa diperiksa. Ketik ulang untuk memeriksanya."
+    "address-check-failed": "Alamat ini belum bisa diperiksa, jadi ketik ulang untuk mencoba lagi."
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
@@ -1674,6 +1694,15 @@
     "plan-pro-past-due-footer": "Perbarui metode pembayaranmu.",
     "plan-granted-description": "Pro aktif di akun ini.",
     "plan-granted-footer": "Nakafa tidak menagihnya.",
+    "plan-pass-description": "Pass Pro kamu berlaku sampai {date}.",
+    "plan-pass-footer": "Pass berikutnya mulai saat pass ini berakhir.",
+    "plan-pass-extend": "Perpanjang Pro",
+    "plan-xendit-footer": "Batalkan kapan saja; Pro tetap aktif sampai periode yang dibayar berakhir.",
+    "plan-xendit-ending-footer": "Tidak ada tagihan setelah periode ini.",
+    "plan-cancel": "Batalkan paket",
+    "plan-keep": "Tetap Pro",
+    "plan-cancel-title": "Batalkan Pro?",
+    "plan-cancel-description": "Pro tetap aktif sampai {date}, dan tidak ada tagihan setelahnya.",
     "period-start": "Periode mulai",
     "renews-on": "Diperpanjang pada",
     "ends-on": "Berakhir pada",
@@ -1755,7 +1784,16 @@
     "top-up-balance": "Kredit tambahan",
     "top-up-expires": "Berakhir {date}",
     "top-up-left": "Sisa {count, number}",
-    "buy-credits": "Beli kredit"
+    "buy-credits": "Beli kredit",
+    "payments": "Pembayaran",
+    "payments-description": "Pembayaran yang berhasil, dari yang terbaru.",
+    "payment-date": "Tanggal",
+    "payment-for": "Untuk",
+    "payment-amount": "Jumlah",
+    "payment-credits": "Kredit Nina",
+    "payment-cycle": "Langganan Pro",
+    "payment-invoice": "Tagihan",
+    "payment-pass": "Pass Pro"
   },
   "Editor": {
     "arabic": "Papan ketik Arab",
@@ -2337,6 +2375,16 @@
     "school-roster-export-failed": {
       "title": "File tidak tersimpan."
     },
+    "school-device-authorized": {
+      "title": "Perangkat sudah terhubung."
+    },
+    "school-device-denied": {
+      "title": "Perangkat ditolak."
+    },
+    "school-refusal-device-unknown": {
+      "title": "Kode perangkat tidak dikenal.",
+      "description": "Periksa kode di perangkat."
+    },
     "audit-export-error": {
       "title": "Jejak audit gagal diekspor.",
       "description": "Periksa koneksi, lalu coba lagi."
@@ -2586,7 +2634,14 @@
     "pro-feature-2": "{credits, number} kredit setiap bulan untuk tanya Nina",
     "pro-feature-3": "Pembahasan lengkap semua try out, termasuk percobaan sebelumnya",
     "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
-    "pro-cta": "Ambil Pro"
+    "pro-cta": "Ambil Pro",
+    "offer-title": "Pilih cara bayar",
+    "offer-description": "Paket bulanan diperpanjang otomatis, dan pass dibayar sekali.",
+    "offer-monthly": "Bulanan",
+    "offer-monthly-method": "Ditagih tiap bulan ke e-wallet atau kartu.",
+    "offer-pass": "Pass {months} bulan",
+    "offer-pass-method": "Sekali bayar via QRIS, transfer, e-wallet.",
+    "offer-continue": "Lanjut"
   },
   "PricingPage": {
     "metadata-title": "Harga Nakafa: Gratis dan Pro",

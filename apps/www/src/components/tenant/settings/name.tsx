@@ -79,6 +79,7 @@ export function SchoolNameCard({
             id={inputId}
             maxLength={120}
             onChange={(event) => setDraft(event.target.value)}
+            placeholder={t("name-placeholder")}
             value={draft}
           />
           {invalid ? (
