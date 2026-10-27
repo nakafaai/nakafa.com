@@ -2,10 +2,8 @@ import { TaskAddress } from "@repo/backend/confect/classroom/tasks/task";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
-import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ClassShell } from "@/components/tenant/classes/shell";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readClassForumFn } from "@/lib/tenant/classes.functions";
 import { readClassAddress } from "@/lib/tenant/params";
 
 /**
@@ -23,29 +21,15 @@ export const Route = createFileRoute(
     }
     return { classAddress: classAddress.value, task: task.value };
   },
-  loader: ({ context }) => {
-    if (context.school._tag !== "Member") {
-      return;
-    }
-    return readClassForumFn({
-      data: {
-        classSlug: context.classAddress,
-        numItems: CHANNEL_PAGE_SIZE,
-        slug: context.slug,
-      },
-    });
-  },
   component: SchoolClassTaskPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolClassTaskPage(): ReactElement {
   const { classAddress, slug, task } = Route.useRouteContext();
-  const preload = Route.useLoaderData();
   return (
     <ClassShell
       classSlug={classAddress}
-      preload={preload}
       slug={slug}
       view={{ _tag: "task", task }}
     />

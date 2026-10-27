@@ -1,4 +1,4 @@
-import { QueryResult, useMutation } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskText } from "@repo/backend/confect/classroom/tasks/task";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -30,7 +30,6 @@ import {
 } from "@/components/tenant/classes/tasks/optimistic";
 import { TaskWorkTable } from "@/components/tenant/classes/tasks/work";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
  * One task of a class: what it asks and when it is due, worth how many points, and what late work
@@ -40,10 +39,9 @@ import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 export function TaskPage({ task: address }: { task: string }) {
   const { can, classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const read = usePreloadedQueryResult(
+  const read = useQuery(
     classroom.tasks.get,
-    isSettled ? { classId, slug, task: address } : "skip",
-    undefined
+    isSettled ? { classId, slug, task: address } : "skip"
   );
   if (QueryResult.isFailure(read)) {
     if (isLostAccess(read.error)) {

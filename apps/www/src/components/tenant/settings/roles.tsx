@@ -1,7 +1,7 @@
 import {
-  type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
+  usePaginatedQuery,
 } from "@confect/react";
 import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
@@ -18,8 +18,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { Array as Arr, Option } from "effect";
-import { createContext, use, useState } from "react";
+import { Array as Arr } from "effect";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -37,34 +37,16 @@ import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolGrantTable } from "@/components/tenant/settings/roles/grants";
 import { scopeOptions } from "@/components/tenant/settings/scope";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
 
 /** How many grants one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first page of the list, which its loader read on the server. */
-type RolesFirstPage = PreloadedPage<
-  PaginatedQueryItem<typeof access.grants.list>
->;
-
-/** The first page of the grants, which the page's loader read on the server. */
-const RolesFirstPageContext = createContext<RolesFirstPage | undefined>(
-  undefined
-);
+const PAGE_SIZE = 25;
 
 /**
  * The roles of the school: Role guide in the header opens what each role may do, and
  * Give role opens the dialog that gives a role of the whole school to a person. The
  * grants sit in a data table, and each grant's revoke action sits in its row menu.
  */
-export function SchoolRolesSettings({
-  first,
-}: {
-  first: RolesFirstPage | undefined;
-}) {
+export function SchoolRolesSettings() {
   const t = useTranslations("SchoolSettings");
   const [isGuiding, setIsGuiding] = useState(false);
   const [isGiving, setIsGiving] = useState(false);
@@ -113,9 +95,7 @@ export function SchoolRolesSettings({
         }
       >
         <ReadBoundary>
-          <RolesFirstPageContext value={first}>
-            <SchoolGrantsBody />
-          </RolesFirstPageContext>
+          <SchoolGrantsBody />
         </ReadBoundary>
         <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
         <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} />
@@ -127,13 +107,11 @@ export function SchoolRolesSettings({
 /** The grants of the school, read a page at a time, with the table and its end. */
 function SchoolGrantsBody() {
   const { slug } = useTenant();
-  const first = use(RolesFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     access.grants.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

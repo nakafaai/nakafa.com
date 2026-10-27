@@ -2221,10 +2221,6 @@
     "open-chat": {
       "title": "Open chat"
     },
-    "school-language-error": {
-      "title": "We could not change the language.",
-      "description": "Please try again."
-    },
     "sign-out-error": {
       "title": "We could not sign you out.",
       "description": "Check your connection, then try again."

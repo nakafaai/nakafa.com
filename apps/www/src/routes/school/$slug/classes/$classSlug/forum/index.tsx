@@ -2,10 +2,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
-import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ClassShell } from "@/components/tenant/classes/shell";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readClassForumFn } from "@/lib/tenant/classes.functions";
 import { readClassAddress } from "@/lib/tenant/params";
 
 /**
@@ -32,18 +30,6 @@ export const Route = createFileRoute("/school/$slug/classes/$classSlug/forum/")(
       }
       return { classAddress: classAddress.value };
     },
-    loader: ({ context }) => {
-      if (context.school._tag !== "Member") {
-        return;
-      }
-      return readClassForumFn({
-        data: {
-          classSlug: context.classAddress,
-          numItems: CHANNEL_PAGE_SIZE,
-          slug: context.slug,
-        },
-      });
-    },
     component: SchoolClassForumPage,
     notFoundComponent: SchoolPageNotFound,
   }
@@ -51,12 +37,10 @@ export const Route = createFileRoute("/school/$slug/classes/$classSlug/forum/")(
 
 function SchoolClassForumPage(): ReactElement {
   const { classAddress, slug } = Route.useRouteContext();
-  const preload = Route.useLoaderData();
   const { channel, message } = Route.useSearch();
   return (
     <ClassShell
       classSlug={classAddress}
-      preload={preload}
       slug={slug}
       view={
         channel === undefined

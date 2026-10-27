@@ -29,7 +29,7 @@ Measured on origin/main 2359c75ad0, before origin/main e4776b377e. The research 
 
 D1. Public pages are prerendered HTML in assets-only Workers. A Node renderer runs once per release against one bulk read of the active release, and writes every public URL. Each shard holds at most 18,000 files, and today one shard holds every public page. An unmatched path answers the static 404 page (not_found_handling 404-page), never a render.
 
-D2. Signed-in and School surfaces render only in the browser. School hosts (*.nakafa.com) get an assets-only single-page-application shell. Its school gate and refusal run in the browser against Convex. Signed-in apex screens are client routes of a static shell that owns their route prefixes. No server function runs for them.
+D2. Signed-in and School surfaces render only in the browser. School hosts (*.nakafa.com) get a static single-page-application shell. Its school gate and refusal run in the browser against Convex. Signed-in apex screens are client routes of a static shell that owns their route prefixes. No server function runs for them. (Amended 26 Oct 2026 for School, see "Phase B for School as implemented": the web Worker answers the shell from its own assets instead of a second, assets-only Worker.)
 
 D3. One small dynamic Worker, with its own bundle and no TanStack or SSR code, serves nakafa.com/api/*. It answers the Better Auth relay, weather from request.cf coordinates, the pricing currency from CF-IPCountry, and the Aksara renderer manifest. Its target is under 10 ms CPU per request, measured in Workers Logs. The Convex token is fetched per document load and held in memory only.
 
@@ -101,6 +101,30 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   on that repository. A target whose `NAKAFA_DEPLOY_SURFACE` is `none` (development)
   starts nothing. The cache POST and its receipt are deleted. The Nakafa deploy
   workflow has no repository dispatch trigger.
+
+## Phase B for School as implemented
+
+- **Browser only.** The `/school` route is client-only (`ssr: false`), so the server renders the root
+  document alone. Its root reads the locale (the language cookie, then the browser's languages), the
+  school's messages from the locale's dictionary chunk, and the instant in the browser
+  (`src/lib/tenant/root.ts`). The layout's gate reads the session's Convex token from the token route
+  of the school's own host and makes the same `readSchoolFrame` decision as before
+  (`readBrowserSchoolFrame`). A visitor's legal links come from the static answer of the shell
+  navigation that every locale's pages already write. Every page reads its rows live, so a click reads
+  nothing before it commits. Every School server function, its handler and its tests are
+  deleted, and so are the school language save (the browser writes its cookie) and the `httpOnly` flag
+  of the saved player view, which the browser now reads.
+- **Static shell.** The build prerenders the root document once as `/_school.html` (Start's `spa`
+  option, masked at `/`, which redirects to a locale). The Worker answers every page of a school host
+  with that asset after the refusal check, with status 404 for a refused school and 200 otherwise
+  (`src/lib/routing/school/shell.server.ts`), so a school page costs no render. `/api/*`, `/_serverFn/*`
+  and every asset keep their answers on the same host.
+- **One Worker, not two.** A second, assets-only School Worker would need its own asset set built in
+  the same deploy. Alchemy 2.0.0-beta.84 reads a Worker's asset folder when it plans an update, before
+  the Web build writes it, and resolves a binding to the web Worker by its stable name, so nothing
+  orders the second Worker after the build. Moving `*.nakafa.com/*` between Workers in one deploy also
+  hits Alchemy's refusal to take a route that another Worker holds. The web Worker already binds the
+  release's assets and answers `/api` and server functions on every host, so it serves the shell.
 
 Not in Phase A: the `/api` relay and the School shell (Phase B), shards and the
 stable loader (Phase C), and per-request cookies for the pricing currency, which

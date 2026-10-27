@@ -1,4 +1,8 @@
-import { PaginatedQueryResult, useMutation } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  useMutation,
+  usePaginatedQuery,
+} from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskPoints } from "@repo/backend/confect/classroom/tasks/task";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -34,7 +38,6 @@ import {
   type TaskWork,
 } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** How many pieces of work the table reads each time its end comes into view. */
 const WORK_PAGE_SIZE = 30;
@@ -47,11 +50,10 @@ const WORK_PAGE_SIZE = 30;
 export function TaskWorkTable({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     classroom.tasks.submissions,
     { classId, slug, task: task.slug },
-    { initialNumItems: WORK_PAGE_SIZE },
-    Option.none()
+    { initialNumItems: WORK_PAGE_SIZE }
   );
   if (
     PaginatedQueryResult.isFailure(pagination) &&

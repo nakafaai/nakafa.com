@@ -1,4 +1,9 @@
-import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Array as Arr, Option } from "effect";
@@ -16,7 +21,6 @@ import {
 import { MessageStream } from "@/components/tenant/classes/forum/stream";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** How many messages a place reads each time its oldest loaded message comes into view. */
 export const MESSAGE_PAGE_SIZE = 30;
@@ -84,11 +88,10 @@ function ChannelMessages() {
   const { channelId, classId, slug } = useChannelScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const place = useReadPlace();
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     classroom.forum.messages.page,
     isSettled ? { channelId, classId, slug } : "skip",
-    { initialNumItems: MESSAGE_PAGE_SIZE },
-    Option.none()
+    { initialNumItems: MESSAGE_PAGE_SIZE }
   );
   const read = useQuery(
     classroom.forum.reads.get,

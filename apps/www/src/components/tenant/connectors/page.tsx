@@ -2,6 +2,7 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
+  usePaginatedQuery,
   useQuery,
 } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
@@ -26,7 +27,6 @@ import { ClassroomImport } from "@/components/tenant/connectors/classroom";
 import { useTenant } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { SettingsPage } from "@/components/tenant/settings/section";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** How many of the school's connections the page reads. */
 const CONNECTION_PAGE_SIZE = 20;
@@ -53,11 +53,10 @@ function SchoolConnections() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const offered = useQuery(connectors.google.offered, isSettled ? {} : "skip");
-  const connections = usePaginatedPreloaded(
+  const connections = usePaginatedQuery(
     connectors.connections.listSchool,
     isSettled ? { slug } : "skip",
-    { initialNumItems: CONNECTION_PAGE_SIZE },
-    Option.none()
+    { initialNumItems: CONNECTION_PAGE_SIZE }
   );
   const start = useMutation(connectors.google.startSchool);
   const disconnect = useMutation(connectors.connections.disconnectSchool);

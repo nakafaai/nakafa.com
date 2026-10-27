@@ -1,5 +1,10 @@
 import type { Ref } from "@confect/core";
-import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
@@ -28,7 +33,6 @@ import {
 import { MessageStream } from "@/components/tenant/classes/forum/stream";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassChannelTarget } from "@/lib/routing/school/target";
 
@@ -167,11 +171,10 @@ function DiscussionReplies({
   const { classId, slug } = useChannelScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const place = useReadPlace();
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     classroom.forum.threads.replies,
     isSettled ? { classId, number, slug } : "skip",
-    { initialNumItems: MESSAGE_PAGE_SIZE },
-    Option.none()
+    { initialNumItems: MESSAGE_PAGE_SIZE }
   );
   const read = useQuery(
     classroom.forum.reads.get,

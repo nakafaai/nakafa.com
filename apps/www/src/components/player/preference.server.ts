@@ -7,12 +7,16 @@ import {
 } from "@/components/player/mode";
 import { serverHandler } from "@/lib/server/fn";
 
+/**
+ * Writes the view the learner chose. The cookie holds a layout preference and no
+ * credential, so the browser may read it: a school sitting, which renders only in
+ * the browser, reads the same saved view as a page the server renders.
+ */
 const rememberPlayerMode = Effect.fn("player.mode.remember")(function* (
   mode: PlayerMode
 ) {
   yield* Effect.sync(() => {
     setCookie(PLAYER_MODE_COOKIE, mode, {
-      httpOnly: true,
       maxAge: PLAYER_MODE_MAX_AGE,
       path: "/",
       sameSite: "lax",

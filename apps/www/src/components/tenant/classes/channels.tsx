@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -11,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, type Option } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { DataFailure } from "@/components/shared/failure";
@@ -21,18 +20,11 @@ import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassChannelTarget } from "@/lib/routing/school/target";
 
 /** How many channels the list asks for each time its end comes into view. */
 export const CHANNEL_PAGE_SIZE = 20;
-
-/** The first page of a class's channels, which its forum loader read on the server. */
-type ChannelsFirstPage = Pick<
-  Ref.Returns<typeof classroom.forum.channels.list>,
-  "isDone" | "page"
->;
 
 /** One channel of a class, as the list shows it. */
 type Channel = typeof ChannelView.Type;
@@ -45,19 +37,12 @@ type Channel = typeof ChannelView.Type;
  * shows its own sentence and a retry, never the empty state, and a viewer who lost the
  * school's access is sent to the refused page.
  */
-export function ChannelList({
-  drafts,
-  first,
-}: {
-  drafts: StoreApi<ChannelDrafts>;
-  first: Option.Option<ChannelsFirstPage>;
-}) {
+export function ChannelList({ drafts }: { drafts: StoreApi<ChannelDrafts> }) {
   const { classId, slug } = useClassScope();
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     classroom.forum.channels.list,
     { classId, slug },
-    { initialNumItems: CHANNEL_PAGE_SIZE },
-    first
+    { initialNumItems: CHANNEL_PAGE_SIZE }
   );
   const saving = useStore(drafts, (state) => state.names);
   if (

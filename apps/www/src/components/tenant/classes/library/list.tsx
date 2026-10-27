@@ -1,4 +1,8 @@
-import { PaginatedQueryResult, useMutation } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  useMutation,
+  usePaginatedQuery,
+} from "@confect/react";
 import {
   Delete02Icon,
   Image01Icon,
@@ -16,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, DateTime, Option } from "effect";
+import { Array as Arr, DateTime } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
@@ -42,7 +46,6 @@ import {
 } from "@/components/tenant/classes/library/uploads";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** How many items the library reads each time its end comes into view. */
 const LIBRARY_PAGE_SIZE = 20;
@@ -67,11 +70,10 @@ export function LibraryList({ teacher }: { teacher: boolean }) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const uploads = useStore(useLibraryUploads(), (state) => state.uploads);
   const [seen, setSeen] = useState<readonly string[]>([]);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     classroom.library.list,
     isSettled ? { classId, slug } : "skip",
-    { initialNumItems: LIBRARY_PAGE_SIZE },
-    Option.none()
+    { initialNumItems: LIBRARY_PAGE_SIZE }
   );
   const items = PaginatedQueryResult.isFailure(pagination)
     ? []

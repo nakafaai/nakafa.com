@@ -1,5 +1,10 @@
 import type { Ref } from "@confect/core";
-import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
@@ -49,25 +54,6 @@ import {
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type {
-  readClassDiscussionFn,
-  readClassForumFn,
-} from "@/lib/tenant/classes.functions";
-
-/**
- * The first screen of a class page, which the page's loader read on the server: the class, with
- * the first channels on a view that lists them, or the discussion. The gradebook's loader reads no
- * channel.
- */
-type ClassPreload =
-  | (Pick<Awaited<ReturnType<typeof readClassForumFn>>, "resolved"> &
-      Partial<Pick<Awaited<ReturnType<typeof readClassForumFn>>, "channels">>)
-  | Awaited<ReturnType<typeof readClassDiscussionFn>>;
-
-/** The first screen of a class page, which the page's loader read on the server. */
-const ClassPreloadContext = createContext<ClassPreload | undefined>(undefined);
 
 /** What the class page shows, which the class shell provides to the parts that draw it. */
 const ClassViewContext = createContext<typeof ClassView.Type | null>(null);
@@ -106,12 +92,10 @@ function useDrafts() {
  */
 export function ClassShell({
   classSlug,
-  preload,
   slug,
   view,
 }: {
   classSlug: string;
-  preload: ClassPreload | undefined;
   slug: TenantSlug;
   view: typeof ClassView.Type;
 }) {
@@ -126,9 +110,7 @@ export function ClassShell({
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
       <ClassViewContext value={view}>
-        <ClassPreloadContext value={preload}>
-          <ClassPage classSlug={classSlug} slug={slug} />
-        </ClassPreloadContext>
+        <ClassPage classSlug={classSlug} slug={slug} />
       </ClassViewContext>
     </ReadBoundary>
   );
@@ -149,13 +131,11 @@ function ClassPage({
   classSlug: string;
   slug: TenantSlug;
 }) {
-  const preload = use(ClassPreloadContext);
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const resolved = usePreloadedQueryResult(
+  const resolved = useQuery(
     classroom.classes.resolve,
-    isSettled ? { classSlug, slug } : "skip",
-    preload?.resolved
+    isSettled ? { classSlug, slug } : "skip"
   );
 
   if (QueryResult.isFailure(resolved)) {
@@ -191,24 +171,21 @@ function ClassPage({
  */
 function ResolvedClass({ klass }: { klass: Resolved }) {
   const view = useClassView();
-  const preload = use(ClassPreloadContext);
   const t = useTranslations("Classroom");
   const { classSlug, slug } = useClassScope();
   const [drafts] = useState(createChannelDrafts);
-  const thread = usePreloadedQueryResult(
+  const thread = useQuery(
     classroom.forum.threads.get,
     view._tag === "discussion"
       ? { classId: klass.id, number: view.number, slug }
-      : "skip",
-    preload !== undefined && "thread" in preload ? preload.thread : undefined
+      : "skip"
   );
-  const channels = usePaginatedPreloaded(
+  const channels = usePaginatedQuery(
     classroom.forum.channels.list,
     view._tag === "channel" || view._tag === "discussion"
       ? { classId: klass.id, slug }
       : "skip",
-    { initialNumItems: CHANNEL_PAGE_SIZE },
-    Option.fromUndefinedOr(preload?.channels)
+    { initialNumItems: CHANNEL_PAGE_SIZE }
   );
   // A task's title ends the path, read from the same task its page shows.
   const task = useQuery(
@@ -345,7 +322,6 @@ function ClassBody({
   klass: Resolved;
 }) {
   const view = useClassView();
-  const preload = use(ClassPreloadContext);
   const drafts = useDrafts();
   const { slug } = useClassScope();
   const canManage = Arr.contains(klass.can, "forum.manage");
@@ -418,10 +394,7 @@ function ClassBody({
   }
   return (
     <ClassScroll table>
-      <ChannelList
-        drafts={drafts}
-        first={Option.fromUndefinedOr(preload?.channels)}
-      />
+      <ChannelList drafts={drafts} />
     </ClassScroll>
   );
 }

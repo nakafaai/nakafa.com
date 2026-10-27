@@ -91,14 +91,7 @@ for (const viewport of [
   });
 }
 
-/**
- * What React writes into the server's HTML when a part of the page threw while the server rendered
- * it and the browser has to render it again: the definition of its client-render instruction, and
- * the instruction itself.
- */
-const SERVER_RENDER_FAILED = ["$RX=function", '$RX("'];
-
-test("every class page that reads the class's channels renders on the server and in the browser, without an error state or a page error", async ({
+test("every class page draws its content in the browser, without an error state or a page error", async ({
   browser,
   baseURL,
 }) => {
@@ -130,31 +123,29 @@ test("every class page that reads the class's channels renders on the server and
     timeout: readinessTimeoutMilliseconds,
   });
 
-  // The pages of the class, each with what its server HTML must show: the forum lists the
-  // channels, and a channel or a discussion names the channel in its path.
+  // The pages of the class, each with what it draws once it reads its rows: the forum lists the
+  // channels, and a channel or a discussion names the channel in its path. The Worker serves every
+  // School page as the static shell, so each answers 200 and draws in the browser.
   const pages = [
-    { path: "/classes/fisika-x-1", shows: ">Fisika X-1<" },
-    { path: "/classes/fisika-x-1/forum", shows: ">General<" },
-    { path: channel, shows: ">General<" },
-    { path: "/classes/fisika-x-1/forum/1", shows: ">General<" },
-    { path: "/classes/fisika-x-1/library", shows: ">Fisika X-1<" },
-    { path: "/classes/fisika-x-1/tasks", shows: ">Fisika X-1<" },
+    { path: "/classes/fisika-x-1", shows: "Fisika X-1" },
+    { path: "/classes/fisika-x-1/forum", shows: "General" },
+    { path: channel, shows: "General" },
+    { path: "/classes/fisika-x-1/forum/1", shows: "General" },
+    { path: "/classes/fisika-x-1/library", shows: "Fisika X-1" },
+    { path: "/classes/fisika-x-1/tasks", shows: "Fisika X-1" },
   ];
   for (const { path, shows } of pages) {
-    const served = await context.request.get(address(path));
-    expect(served.status(), path).toBe(200);
-    const html = await served.text();
-    expect(html, path).toContain(shows);
-    for (const marker of SERVER_RENDER_FAILED) {
-      expect(html, path).not.toContain(marker);
-    }
-
-    await page.goto(address(path));
+    const served = await page.goto(address(path));
+    expect(served?.status(), path).toBe(200);
     await waitUntilTakenOver(
       page
         .getByRole("navigation", { name: "Class" })
         .getByRole("link", { name: "Forum" })
     );
+    await expect(
+      page.getByRole("main").getByText(shows, { exact: true }).first(),
+      path
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await expect(page.getByRole("main").getByRole("alert"), path).toHaveCount(
       0
     );

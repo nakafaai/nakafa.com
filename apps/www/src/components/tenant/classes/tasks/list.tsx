@@ -1,4 +1,4 @@
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, DateTime, Option } from "effect";
+import { Array as Arr, DateTime } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -18,7 +18,6 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassTaskTarget } from "@/lib/routing/school/target";
 
@@ -36,11 +35,10 @@ export function TaskList() {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     classroom.tasks.list,
     isSettled ? { classId, slug } : "skip",
-    { initialNumItems: TASK_PAGE_SIZE },
-    Option.none()
+    { initialNumItems: TASK_PAGE_SIZE }
   );
   if (
     PaginatedQueryResult.isFailure(pagination) &&
