@@ -15,7 +15,7 @@ import {
 } from "effect";
 import { bufferResponse } from "@/lib/auth/body";
 import { readSessionCookie } from "@/lib/auth/cookie.server";
-import { SESSION_PATH } from "@/lib/auth/session";
+import { SESSION_PATH, TOKEN_PATH } from "@/lib/auth/session";
 import { readRequestHost } from "@/lib/routing/school/host";
 import { runServerEffect } from "@/lib/server/fn";
 
@@ -159,9 +159,16 @@ export const answerAuthDeadline = (
     )
   );
 
+/** Whether a request sends nothing that could prove a session: no session cookie and no bearer token. */
+function sendsNoCredentials(request: Request) {
+  return (
+    readSessionCookie(request) === null && !request.headers.has("authorization")
+  );
+}
+
 /**
  * Whether a request asks Better Auth for the session of a visitor who sent
- * nothing that could prove one: no session cookie and no bearer token.
+ * nothing that could prove one.
  *
  * Better Auth answers such a request with `null` before it reads a table, so
  * Convex has nothing to add. Without this answer each read is still one HTTP
@@ -174,9 +181,13 @@ export const answerAuthDeadline = (
 function isSignedOutSessionRead(request: Request) {
   return (
     new URL(request.url).pathname === SESSION_PATH &&
-    readSessionCookie(request) === null &&
-    !request.headers.has("authorization")
+    sendsNoCredentials(request)
   );
+}
+
+/** Whether a request asks Better Auth for the Convex token of its session. */
+function isTokenRead(request: Request) {
+  return new URL(request.url).pathname === TOKEN_PATH;
 }
 
 /**
@@ -189,6 +200,23 @@ function answerSignedOutSession() {
   return Response.json(null, {
     headers: { "Cache-Control": "no-store", Pragma: "no-cache" },
   });
+}
+
+/**
+ * The answer to a token read that names no live session: no token, which no
+ * cache may keep, with the cookies Better Auth's own answer cleared. Better Auth
+ * answers such a read 401, and the browser logs every 401 it fetches as an
+ * error, though a page that remembered a session that has since ended asks for
+ * its token as it loads. The page's token reader takes a missing token as it
+ * takes the 401, and hands Convex `null`, which Convex reads as signed out.
+ */
+function answerNoToken(cookies: readonly string[]) {
+  const headers = new Headers({
+    "Cache-Control": "no-store",
+    Pragma: "no-cache",
+  });
+  Arr.forEach(cookies, (cookie) => headers.append("set-cookie", cookie));
+  return Response.json({ token: null }, { headers });
 }
 
 /**
@@ -211,22 +239,36 @@ function withBrowserHost(request: Request): Request {
 }
 
 /**
+ * Answers one read. A session read or a token read that sends no credentials is
+ * answered here and never reaches Convex. Every other read reaches Better Auth
+ * with the browser's host (`withBrowserHost`), and a token read whose session
+ * has ended gets no token in place of Better Auth's 401.
+ */
+function answerRead(handler: AuthRouteHandler, request: Request) {
+  if (isSignedOutSessionRead(request)) {
+    return Effect.succeed(answerSignedOutSession());
+  }
+  if (isTokenRead(request) && sendsNoCredentials(request)) {
+    return Effect.succeed(answerNoToken([]));
+  }
+  return readAuthResponse(handler, withBrowserHost(request)).pipe(
+    Effect.map((response) =>
+      isTokenRead(request) && response.status === 401
+        ? answerNoToken(response.headers.getSetCookie())
+        : response
+    ),
+    answerAuthDeadline
+  );
+}
+
+/**
  * Builds the route methods for the Better Auth handler. A network failure that
- * is not repeated rejects the route, and the server answers 500. A session read
- * from a visitor without a session
- * cookie is answered here and never reaches Convex. Every other request reaches
- * Better Auth with the browser's host (`withBrowserHost`).
+ * is not repeated rejects the route, and the server answers 500. Reads go
+ * through `answerRead`, and writes reach Better Auth with the browser's host.
  */
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
-    GET: (request: Request) =>
-      runServerEffect(
-        isSignedOutSessionRead(request)
-          ? Effect.succeed(answerSignedOutSession())
-          : readAuthResponse(handler, withBrowserHost(request)).pipe(
-              answerAuthDeadline
-            )
-      ),
+    GET: (request: Request) => runServerEffect(answerRead(handler, request)),
     POST: (request: Request) =>
       runServerEffect(
         writeAuthResponse(handler, withBrowserHost(request)).pipe(
