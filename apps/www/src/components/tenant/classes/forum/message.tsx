@@ -281,6 +281,7 @@ function MessageEditor({
             onDone();
           }
         }}
+        placeholder={t("message-placeholder")}
       />
       <div className="flex justify-end gap-2">
         <Button onClick={onDone} size="sm" type="button" variant="outline">

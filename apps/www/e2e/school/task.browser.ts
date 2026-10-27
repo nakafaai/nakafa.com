@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { chooseDay } from "@/e2e/support/date";
 import {
   createSchool,
   hostAddress,
@@ -7,6 +8,9 @@ import {
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
+
+/** The last quarter hour of a day, as the time list names it in a 12 or a 24 hour locale. */
+const LATE_EVENING = /^(11:45\sPM|23:45)$/u;
 
 /** The address of the task the test publishes. */
 const TASK_PATH = /\/classes\/fisika-x-1\/tasks\/latihan-gerak-lurus$/;
@@ -42,7 +46,10 @@ for (const viewport of [
     await dialog
       .getByRole("textbox", { name: "What to do" })
       .fill("Kerjakan soal 1 sampai 10.");
-    await dialog.getByLabel("Deadline").fill("2027-10-30T23:59");
+    // The deadline is a day from the calendar and a time from the list, with no native picker.
+    await chooseDay(page, dialog.getByLabel("Deadline"), "2027-10-30");
+    await dialog.getByRole("combobox", { name: "Time" }).click();
+    await page.getByRole("option", { name: LATE_EVENING }).click();
     await dialog.getByRole("button", { name: "Publish" }).click();
     await expect(dialog).toBeHidden();
 

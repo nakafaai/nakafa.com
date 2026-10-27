@@ -156,6 +156,7 @@ function HandIn({ task }: { task: ClassTask }) {
         dir="auto"
         id={`${id}-work`}
         onChange={(event) => setText(event.target.value)}
+        placeholder={t("handin-placeholder")}
         value={text}
       />
       <div className="flex justify-end">

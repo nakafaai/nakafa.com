@@ -1,8 +1,14 @@
 import { PaginatedQueryResult, useMutation } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskPoints } from "@repo/backend/confect/classroom/tasks/task";
-import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@repo/design-system/components/ui/number";
 import {
   Table,
   TableBody,
@@ -11,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, Number as Num, Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
@@ -104,8 +110,11 @@ function WorkRow({ points, work }: { points: number; work: TaskWork }) {
   const { classId, slug } = useClassScope();
   const score = useMutation(classroom.tasks.score);
 
-  const give = (value: string) => {
-    const parsed = Option.filter(Num.parse(value), Schema.is(TaskPoints));
+  const give = (value: number | null) => {
+    const parsed = Option.filter(
+      Option.fromNullOr(value),
+      Schema.is(TaskPoints)
+    );
     if (
       Option.isNone(parsed) ||
       parsed.value > points ||
@@ -142,16 +151,21 @@ function WorkRow({ points, work }: { points: number; work: TaskWork }) {
         ) : null}
       </TableCell>
       <TableCell className="align-top">
-        <Input
-          aria-label={t("task-points-for", { name: work.person.name })}
-          defaultValue={work.score === null ? "" : String(work.score)}
-          inputMode="numeric"
+        <NumberField
+          defaultValue={work.score ?? undefined}
           key={work.score}
           max={points}
           min={0}
-          onBlur={(event) => give(event.target.value)}
-          type="number"
-        />
+          onValueCommitted={give}
+        >
+          <NumberFieldGroup>
+            <NumberFieldDecrement />
+            <NumberFieldInput
+              aria-label={t("task-points-for", { name: work.person.name })}
+            />
+            <NumberFieldIncrement />
+          </NumberFieldGroup>
+        </NumberField>
       </TableCell>
     </TableRow>
   );

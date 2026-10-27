@@ -354,6 +354,7 @@ export function AddToLibrary() {
               id={`${id}-title`}
               maxLength={120}
               onChange={(event) => setTitle(event.target.value)}
+              placeholder={t("library-title-placeholder")}
               value={title}
             />
           </Field>

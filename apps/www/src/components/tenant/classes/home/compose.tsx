@@ -93,6 +93,7 @@ export function NewAnnouncement() {
               dir="auto"
               id={`${id}-text`}
               onChange={(event) => setText(event.target.value)}
+              placeholder={t("announcement-placeholder")}
               value={text}
             />
           </Field>

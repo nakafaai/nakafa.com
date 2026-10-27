@@ -129,6 +129,7 @@ export function StartDiscussion({
                 setTitle(event.target.value);
                 setRefusal(Option.none());
               }}
+              placeholder={t("discussion-title-placeholder")}
               value={title}
             />
             {Option.isSome(refusal) ? (
@@ -144,6 +145,7 @@ export function StartDiscussion({
               dir="auto"
               id={`${id}-text`}
               onChange={(event) => setText(event.target.value)}
+              placeholder={t("discussion-first-placeholder")}
               value={text}
             />
           </Field>

@@ -7,12 +7,20 @@ import {
   TaskTitle,
 } from "@repo/backend/confect/classroom/tasks/task";
 import { Button } from "@repo/design-system/components/ui/button";
+import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@repo/design-system/components/ui/number";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -23,14 +31,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { randomUuid } from "@repo/utilities/uuid";
-import {
-  Array as Arr,
-  Effect,
-  Number as Num,
-  Option,
-  Schema,
-  String as Str,
-} from "effect";
+import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -55,7 +56,7 @@ export function NewTask() {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [points, setPoints] = useState("100");
+  const [points, setPoints] = useState<number | null>(100);
   const [latePolicy, setLatePolicy] =
     useState<typeof LatePolicy.Type>("accept");
   const id = useId();
@@ -66,7 +67,7 @@ export function NewTask() {
   const heading = Str.trim(title);
   const body = Str.trim(text);
   const due = deadlineOf(deadline);
-  const worth = Option.filter(Num.parse(points), Schema.is(TaskPoints));
+  const worth = Option.filter(Option.fromNullOr(points), Schema.is(TaskPoints));
   const ready =
     Schema.is(TaskTitle)(heading) &&
     Schema.is(TaskText)(body) &&
@@ -134,6 +135,7 @@ export function NewTask() {
               dir="auto"
               id={`${id}-title`}
               onChange={(event) => setTitle(event.target.value)}
+              placeholder={t("task-title-placeholder")}
               value={title}
             />
           </Field>
@@ -144,6 +146,7 @@ export function NewTask() {
               dir="auto"
               id={`${id}-text`}
               onChange={(event) => setText(event.target.value)}
+              placeholder={t("task-text-placeholder")}
               value={text}
             />
           </Field>
@@ -151,10 +154,11 @@ export function NewTask() {
             <FieldLabel htmlFor={`${id}-deadline`}>
               {t("task-deadline")}
             </FieldLabel>
-            <Input
+            <DateTimePicker
+              dayPlaceholder={t("task-day-placeholder")}
               id={`${id}-deadline`}
-              onChange={(event) => setDeadline(event.target.value)}
-              type="datetime-local"
+              onValueChange={setDeadline}
+              timePlaceholder={t("task-time-placeholder")}
               value={deadline}
             />
           </Field>
@@ -163,15 +167,19 @@ export function NewTask() {
               <FieldLabel htmlFor={`${id}-points`}>
                 {t("task-points")}
               </FieldLabel>
-              <Input
+              <NumberField
                 id={`${id}-points`}
-                inputMode="numeric"
                 max={1000}
                 min={0}
-                onChange={(event) => setPoints(event.target.value)}
-                type="number"
+                onValueChange={setPoints}
                 value={points}
-              />
+              >
+                <NumberFieldGroup>
+                  <NumberFieldDecrement />
+                  <NumberFieldInput />
+                  <NumberFieldIncrement />
+                </NumberFieldGroup>
+              </NumberField>
             </Field>
             <Field>
               <FieldLabel htmlFor={`${id}-late`}>{t("task-late")}</FieldLabel>
