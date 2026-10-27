@@ -8811,7 +8811,7 @@ export declare const api: {
           name: string;
           slug: string;
           status: "active" | "suspended";
-        }
+        } | null
       >;
       refusal: FunctionReference<"query", "public", { slug: string }, boolean>;
     };

@@ -65,7 +65,8 @@ added to `reservedSlugs` first.
 
 `tenancy/profile:get` is the tenant's public identity (slug, name, kind,
 status) for the sign-in page and the not-found page; it reads no identity and
-returns only those fields.
+returns only those fields, or none for a slug that no tenant uses. A probe of a
+random School host is an expected answer, not a failure, so it logs no error.
 
 ### Subdomains
 

@@ -5,7 +5,7 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
 import { storageUrl, storeFile } from "@repo/backend/test/logo";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 const profile = refs.public.tenancy.profile.get;
 
@@ -24,10 +24,10 @@ describe("tenancy/profile", () => {
         };
         expect(
           yield* fixture.anonymous.query(profile, { slug: slugOf("other") })
-        ).toEqual(expected);
+        ).toEqual(Option.some(expected));
         expect(
           yield* fixture.as("owner").query(profile, { slug: slugOf("other") })
-        ).toEqual(expected);
+        ).toEqual(Option.some(expected));
       })
   );
 
@@ -48,29 +48,28 @@ describe("tenancy/profile", () => {
         const shown = yield* fixture.anonymous.query(profile, {
           slug: slugOf("other"),
         });
-        expect(shown).toEqual({
-          kind: "school",
-          logo: yield* storageUrl(fixture.convex, logo),
-          mascot: schoolMascot("other"),
-          name: "Sekolah Lain",
-          slug: "other",
-          status: "active",
-        });
+        expect(shown).toEqual(
+          Option.some({
+            kind: "school",
+            logo: yield* storageUrl(fixture.convex, logo),
+            mascot: schoolMascot("other"),
+            name: "Sekolah Lain",
+            slug: "other",
+            status: "active",
+          })
+        );
       })
   );
 
-  it.effect("fails with a typed not-found for an unknown address", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const missing = yield* fixture.anonymous
-        .query(profile, { slug: slugOf("missing") })
-        .pipe(Effect.flip);
-      expect(missing).toMatchObject({
-        _tag: "TenantNotFound",
-        code: "TENANT_NOT_FOUND",
-        message: "No school has this address.",
-      });
-    })
+  it.effect(
+    "answers none for an address that no school uses, so a probe of a random School host fails nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        expect(
+          yield* fixture.anonymous.query(profile, { slug: slugOf("missing") })
+        ).toEqual(Option.none());
+      })
   );
 });
 
