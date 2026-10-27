@@ -158,7 +158,10 @@ test("a device the proctor retired says so and offers no Finish, while the attem
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor.getByRole("button", { name: "Acceptance Learner" }).click();
+  await proctor
+    .getByRole("list", { name: "Student seats" })
+    .getByRole("button", { name: "Acceptance Learner" })
+    .click();
   // An attempt in progress keeps Lock as the panel's main action and Allow a second device in its menu.
   await proctor
     .getByRole("button", { name: "More actions for Acceptance Learner" })

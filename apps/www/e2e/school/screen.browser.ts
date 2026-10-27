@@ -71,7 +71,10 @@ test("a proctor sees the question on a student's screen with the student's answe
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor.getByRole("button", { name: LEARNER_NAME }).click();
+  await proctor
+    .getByRole("list", { name: "Student seats" })
+    .getByRole("button", { name: LEARNER_NAME })
+    .click();
   const screen = proctor.locator("section", { hasText: "Student screen" });
   await expect(screen).toContainText("Question 1", {
     timeout: readinessTimeoutMilliseconds,
