@@ -7,7 +7,7 @@ import type { ClientSession } from "@/lib/auth/visitor";
  * the layout only: a forged value shows a placeholder, and the session read says
  * the truth.
  */
-const SIGNED_IN_HINT_COOKIE = "nakafa-signed-in";
+export const SIGNED_IN_HINT_COOKIE = "nakafa-signed-in";
 
 /** The attribute of the root element that the inline script sets from the hint. */
 export const SIGNED_IN_ATTRIBUTE = "data-signed-in";

@@ -4,6 +4,12 @@ import { Effect, MutableRef, Option, Predicate, Schema } from "effect";
 export const SESSION_PATH = "/api/auth/get-session";
 
 /**
+ * The Better Auth route that issues the Convex token of the session a request's
+ * cookie names, at the helper's default base path.
+ */
+export const TOKEN_PATH = "/api/auth/convex/token";
+
+/**
  * The Better Auth session as Nakafa reads it.
  *
  * `hasError` marks a session request Better Auth could not complete; it keeps
