@@ -19,6 +19,13 @@ export type SaveTryoutResponseArgs =
   typeof saveTryoutResponseArgsValidator.Type;
 export const saveTryoutResponseResultValidator = Schema.Null;
 
+/** One question of the caller's running section, flagged to come back to or unflagged. */
+export const tryoutFlagArgsValidator = Schema.Struct({
+  flagged: Schema.Boolean,
+  placementId: IdSchema("tryoutAttemptPlacements"),
+});
+export type TryoutFlagArgs = typeof tryoutFlagArgsValidator.Type;
+
 /** Expected failure while saving one selected try-out response. */
 export class TryoutResponseError extends Schema.TaggedError<TryoutResponseError>()(
   "TryoutResponseError",

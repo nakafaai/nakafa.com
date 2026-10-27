@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import { DeferredFigure } from "@/components/state/mascot";
-import { Screen } from "@/components/state/screen";
+import {
+  Screen,
+  ScreenActions,
+  ScreenDescription,
+  ScreenFigure,
+  ScreenHeader,
+  ScreenTitle,
+} from "@/components/state/screen";
 
 interface MissingProps {
   /**
@@ -23,11 +30,17 @@ interface MissingProps {
  */
 export function Missing({ children, description, title }: MissingProps) {
   return (
-    <Screen
-      actions={children}
-      description={description}
-      figure={<DeferredFigure scene="missing" />}
-      title={<h1>{title}</h1>}
-    />
+    <Screen>
+      <ScreenHeader>
+        <ScreenFigure>
+          <DeferredFigure scene="missing" />
+        </ScreenFigure>
+        <ScreenTitle>
+          <h1>{title}</h1>
+        </ScreenTitle>
+        <ScreenDescription>{description}</ScreenDescription>
+      </ScreenHeader>
+      <ScreenActions>{children}</ScreenActions>
+    </Screen>
   );
 }

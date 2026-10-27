@@ -1,4 +1,4 @@
-import { Add01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { BadgePlusIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   FieldDescription,
@@ -168,7 +168,7 @@ export function AcceptedAnswers({
             type="button"
             variant="ghost"
           >
-            <HugeIcons aria-hidden="true" icon={Add01Icon} />
+            <HugeIcons aria-hidden="true" icon={BadgePlusIcon} />
             {t("accepted-add")}
           </Button>
         </div>

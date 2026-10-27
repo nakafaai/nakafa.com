@@ -48,7 +48,10 @@ export function SchoolUnitChoice({
         }}
         value={unitId}
       >
-        <SelectTrigger aria-label={t("unit-choice")} className="w-28 sm:w-44">
+        <SelectTrigger
+          aria-label={t("unit-choice")}
+          className="w-auto max-w-48 sm:max-w-xs"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

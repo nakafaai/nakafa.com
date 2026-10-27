@@ -103,7 +103,6 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
     })),
     labels: {
       home: tCommon("home"),
-      more: tCommon("more"),
       quran: t("quran"),
       verse: t("verse"),
     },

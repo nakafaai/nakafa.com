@@ -117,7 +117,6 @@ export function GuardianLinkStartDialog({
             id={`${id}-student`}
             onChoose={setStudentId}
             personId={studentId}
-            slug={slug}
           />
         </Field>
         <Field>

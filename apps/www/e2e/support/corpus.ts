@@ -38,4 +38,10 @@ export const pinnedRoutes = {
     en: "/en/subjects/mathematics/analytic-geometry/hyperbola",
     id: "/id/materi/matematika/geometri-analitik/hiperbola",
   },
+  /** A curriculum subject that has no lesson in the acceptance content yet. */
+  upcoming: {
+    de: "/de/lehrplaene/merdeka/klasse-10/physik",
+    en: "/en/curriculum/merdeka/class-10/physics",
+    id: "/id/kurikulum/merdeka/kelas-10/fisika",
+  },
 } satisfies Record<string, Record<AppLocaleCode, string>>;

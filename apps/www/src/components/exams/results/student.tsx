@@ -16,6 +16,7 @@ import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /**
@@ -63,11 +64,10 @@ function AnswerItem({
  */
 export function StudentResults({
   sittingId,
-  slug,
 }: {
   readonly sittingId: GenericId.GenericId<"examSittings">;
-  readonly slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("Exams");
 
   return (

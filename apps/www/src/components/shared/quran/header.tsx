@@ -55,7 +55,6 @@ export function QuranSurahHeader({
               target: QURAN_TARGET,
             },
           ]}
-          menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
@@ -67,7 +66,6 @@ export function QuranSurahHeader({
                 target: QURAN_TARGET,
               },
             ]}
-            menuLabel={tCommon("more")}
           />
         </div>
       </div>

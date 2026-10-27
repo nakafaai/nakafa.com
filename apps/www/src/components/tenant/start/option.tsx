@@ -1,41 +1,10 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  QuestionnaireChoice,
-  QuestionnaireChoiceDescription,
-  QuestionnaireChoices,
-} from "@repo/design-system/components/ui/questionnaire";
-import type { ComponentProps, ReactNode } from "react";
+import { QuestionnaireChoiceDescription } from "@repo/design-system/components/ui/questionnaire";
 import {
   CountryFlagIcon,
   type RegionCountryCode,
 } from "@/components/shared/flag";
-
-/**
- * The choices of one question as one compact list: a single column of rows of the same height,
- * joined by dividers, so every choice reads in full at 390 px and a long question never scrolls
- * through a grid of uneven cards.
- */
-export function StartChoices({ children }: { children: ReactNode }) {
-  return (
-    <QuestionnaireChoices className="gap-0 divide-y divide-input rounded-md border border-input shadow-xs">
-      {children}
-    </QuestionnaireChoices>
-  );
-}
-
-/**
- * One row of a question's list. A phone has no keyboard, so the row keeps its letter shortcut for
- * wider screens only, and gives the room to the words.
- */
-export function StartChoice(props: ComponentProps<typeof QuestionnaireChoice>) {
-  return (
-    <QuestionnaireChoice
-      className="rounded-none border-0 shadow-none first:rounded-t-md last:rounded-b-md max-sm:[&>[data-slot=questionnaire-choice-shortcut]]:hidden"
-      {...props}
-    />
-  );
-}
 
 /**
  * One choice of the school questionnaire: a flag or an icon when the choice has one, its title on

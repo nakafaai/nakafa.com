@@ -66,6 +66,7 @@
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Your password",
     "card-code-label": "Card code",
+    "card-hint": "No Google address? Sign in with the school username and card your admin gave you.",
     "card-code-placeholder": "First sign-in or a new card",
     "card-expired": "Ask your teacher or admin for a new card, because this one has expired.",
     "card-invalid": "The username or card code is not right.",
@@ -73,7 +74,7 @@
     "card-used": "Ask your teacher or admin for a new card, because this one was already used.",
     "failed": "Signing in did not go through, so try again.",
     "outsider-card": "Sign in with a card",
-    "outsider-description": "You are signed in as {account}, which has no invite here yet.",
+    "outsider-description": "You are signed in as {account}, which has no invite here yet, so ask an admin to send one or sign in with the address it went to.",
     "outsider-switch": "Switch account",
     "outsider-title": "Not a member of {school}",
     "password-label": "Password",
@@ -84,7 +85,7 @@
     "submit": "Sign in",
     "username-action": "Sign in with a username",
     "username-label": "School username",
-    "outsider-check-again": "Check again"
+    "outsider-check-again": "Check again for my invite"
   },
   "SchoolGuardians": {
     "sign-in-action": "Sign in as a parent",
@@ -310,6 +311,8 @@
     "prompt-placeholder": "Write the question here.",
     "results-title": "Results",
     "results-name": "Student",
+    "results-not-yet": "Not yet",
+    "release-wait": "The exam author or the Admin releases the results once the sitting closes.",
     "results-status": "Status",
     "results-score": "Score",
     "results-search": "Search by name",
@@ -415,7 +418,6 @@
     "student-opens-at": "This sitting opens {time}.",
     "student-scheduled-footer": "The token field opens with the sitting.",
     "student-back-home": "Back to home",
-    "flag-question": "Flag for review",
     "seat-last-activity": "Last activity {time}.",
     "title-needed": "The exam needs a title before you can create it.",
     "title-too-long": "The title can have at most {count} characters.",
@@ -557,6 +559,7 @@
     "invoice-pay": "Pay",
     "invoice-transfer": "Pay by transfer",
     "manage-group": "Management",
+    "back-to-school": "Back to {school}",
     "manage-settings": "Settings",
     "address-copy": "Copy address",
     "address-footer": "Copy it to share with your school.",
@@ -697,6 +700,7 @@
     "client-secret-title": "New secret",
     "client-secret-description": "Copy it now, because it will not be shown again.",
     "audit-description": "Who changed what in this school, and when.",
+    "audit-footer": "Policy values are not copied into the trail.",
     "audit-view": "View trail",
     "audit-when": "When",
     "audit-who": "Who",
@@ -989,7 +993,7 @@
     "no-unit-action": "Open units",
     "cohorts-no-period-action": "Open periods",
     "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
-    "policy-domains-invalid": "Check these domains, one on each line: {domains}.",
+    "policy-domains-invalid": "Check these domains: {domains}, and write each one on its own line.",
     "policy-domains-limit": "Use up to {limit} different domains, each on its own line.",
     "device-title": "Connect a device",
     "device-description": "Type the code the Nakafa CLI shows to let it read the school as {name}.",
@@ -1710,6 +1714,11 @@
     "shortcut-step": "Previous or next question",
     "shortcut-pick": "Choose an option",
     "shortcut-navigator": "Question navigator",
+    "flag": "Flag",
+    "review": "Review",
+    "legend-answered": "Answered",
+    "legend-flagged": "Flagged",
+    "shortcut-flag": "Flag the question",
     "cell-flagged": "{state, select, answered {Question {number}, answered, flagged for review} other {Question {number}, unanswered, flagged for review}}"
   },
   "Utils": {
@@ -1761,6 +1770,7 @@
     "contribute": "Contribute"
   },
   "Auth": {
+    "back-to-nakafa": "Back to Nakafa",
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
     "sign-in-title": "Sign in to Nakafa",
@@ -2100,6 +2110,10 @@
     },
     "tryout-submit-answer-error": {
       "title": "We couldn't save your answer.",
+      "description": "Please try again."
+    },
+    "tryout-flag-error": {
+      "title": "We couldn't save your flag.",
       "description": "Please try again."
     },
     "memory-limit": {

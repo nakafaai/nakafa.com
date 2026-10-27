@@ -9,16 +9,13 @@ import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr, Option } from "effect";
 import { Fragment } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import type { StoreApi } from "zustand";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
-import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
 import { countLabel, reachesBound } from "@/components/tenant/home/count";
 import { DraftsCell } from "@/components/tenant/home/drafts";
 import { LiveCell } from "@/components/tenant/home/live";
 import { MetricCell } from "@/components/tenant/home/metrics";
 import { useHomeExams, useHomeSetup } from "@/components/tenant/home/query";
-import type { HomeReleases } from "@/components/tenant/home/release";
 import { ResultsCell } from "@/components/tenant/home/results";
 import {
   ScheduleCell,
@@ -40,13 +37,7 @@ type Room = (typeof HomeView.Type)["next"][number];
  * when another arrives. The cells lay out in rows that fill the dashboard at each width, so a cell that is not shown
  * leaves no gap.
  */
-export function StaffHome({
-  drafts,
-  releases,
-}: {
-  drafts: StoreApi<ExamDrafts>;
-  releases: StoreApi<HomeReleases>;
-}) {
+export function StaffHome() {
   const tenant = useTenant();
   const exams = useHomeExams();
   const setup = useHomeSetup();
@@ -185,12 +176,7 @@ export function StaffHome({
     },
     {
       draw: (span) => (
-        <ResultsCell
-          bound={closedBound}
-          releases={releases}
-          results={closed}
-          span={span}
-        />
+        <ResultsCell bound={closedBound} results={closed} span={span} />
       ),
       key: "results",
       narrow: 1,
@@ -198,9 +184,7 @@ export function StaffHome({
       wide: 8,
     },
     {
-      draw: (span) => (
-        <DraftsCell drafts={draftRows} span={span} store={drafts} />
-      ),
+      draw: (span) => <DraftsCell drafts={draftRows} span={span} />,
       key: "drafts",
       narrow: 1,
       shown: shown.drafts,

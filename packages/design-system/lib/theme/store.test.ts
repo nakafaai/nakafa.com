@@ -168,6 +168,29 @@ describe("connectThemeStore", () => {
     expect(document.documentElement.classList.contains("dark")).toBe(true);
   });
 
+  it("leaves a root that already shows the theme as it is, so connecting changes no style", () => {
+    // What the prepaint script writes for a visitor whose system is dark.
+    document.documentElement.classList.add("dark");
+    document.documentElement.style.setProperty("color-scheme", "dark");
+
+    const { store } = connectStore(true);
+
+    expect(store.getState().resolvedTheme).toBe("dark");
+    expect(countTransitionRules()).toBe(0);
+    expect(document.documentElement.className).toBe("dark");
+  });
+
+  it("writes a root that shows the theme under another color scheme", () => {
+    document.documentElement.classList.add("dark");
+
+    connectStore(true);
+
+    expect(countTransitionRules()).toBe(1);
+    expect(
+      document.documentElement.style.getPropertyValue("color-scheme")
+    ).toBe("dark");
+  });
+
   it("turns transitions off until the next frame", () => {
     let nextFrame: FrameRequestCallback | undefined;
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {

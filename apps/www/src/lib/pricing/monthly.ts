@@ -51,11 +51,9 @@ function makePricing<Currency extends PricingCurrency>(
   currency: Currency,
   price: MonthlyPrice
 ) {
-  const format = getPriceFormat(price);
   return {
     currency,
-    format,
-    formatter: new Intl.NumberFormat(price.locale, format),
+    formatter: new Intl.NumberFormat(price.locale, getPriceFormat(price)),
     price,
   };
 }

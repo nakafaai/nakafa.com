@@ -7,7 +7,7 @@ import type { PlayerOverlay } from "@/components/player/store";
 
 /** What a pressed key asks the player to do. */
 const PlayerKeyIntentSchema = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("mark") }),
+  Schema.Struct({ kind: Schema.Literal("flag") }),
   Schema.Struct({ kind: Schema.Literal("navigator") }),
   Schema.Struct({ index: Schema.Int, kind: Schema.Literal("pick") }),
   Schema.Struct({
@@ -61,8 +61,8 @@ export function readKeyTarget(target: EventTarget | null) {
 
 /**
  * Maps one keydown to what the player does, and leaves typing and widgets that
- * own the key alone. The arrows step, `1` to `5` pick an option, `M` marks the
- * question for review, and `G` opens and closes the navigator. While the finish
+ * own the key alone. The arrows step, `1` to `5` pick an option, `F` flags the
+ * question to come back to, and `G` opens and closes the navigator. While the finish
  * dialog is open every key is its own, and `composite` and `editable` say where
  * the key landed.
  */
@@ -120,8 +120,8 @@ export function readPlayerKey(
   if (context.locked) {
     return Option.none();
   }
-  if (event.key === "m" || event.key === "M") {
-    return Option.some({ kind: "mark" });
+  if (event.key === "f" || event.key === "F") {
+    return Option.some({ kind: "flag" });
   }
   return Option.map(
     Arr.findFirstIndex(PICK_KEYS, (key) => key === event.key),

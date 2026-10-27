@@ -1,8 +1,4 @@
 import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
-import {
-  ScrollArea,
-  ScrollBar,
-} from "@repo/design-system/components/ui/scroll-area";
 import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { cn } from "cn";
 import katex from "katex";
@@ -91,7 +87,9 @@ export function MathContainer({
 
 /**
  * Renders one block-math card with native horizontal scrolling for wide
- * formulas.
+ * formulas, as code blocks and inline formulas scroll, under the page's own
+ * scrollbar style. A lesson draws dozens of these, so the card is plain markup:
+ * no client component hydrates, measures or registers anything for it.
  *
  * MathContainer uses the data-math-block presence marker to style adjacent
  * rows without coupling the stack to implementation-specific class names.
@@ -110,12 +108,12 @@ export function BlockMath({
       data-markdown-ignore=""
       data-math-block=""
     >
-      <ScrollArea className="grid">
-        <div className="px-4">
-          <KatexMarkup displayMode={true} {...props} />
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      <div
+        className="overflow-x-auto overflow-y-hidden px-4"
+        data-slot="math-scroll"
+      >
+        <KatexMarkup displayMode={true} {...props} />
+      </div>
     </div>
   );
 }

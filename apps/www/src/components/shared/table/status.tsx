@@ -17,6 +17,15 @@ const TONE_VARIANTS = {
 >;
 
 /**
+ * How one state of a table looks: its own icon and its tone, as `TableStatus` draws them. A table's
+ * map of its states to their looks is typed by this, so the shape has one owner.
+ */
+export type StatusLook = Pick<
+  ComponentProps<typeof TableStatus>,
+  "icon" | "tone"
+>;
+
+/**
  * A record's status in a table cell, as the try-out catalog shows a try-out's: a badge in the
  * tone of the state, with the state's own icon and its name. Every state of one table takes an
  * icon of its own, so no two states of the table share one.

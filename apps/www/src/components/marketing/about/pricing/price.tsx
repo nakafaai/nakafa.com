@@ -8,7 +8,7 @@ import { PricingCurrencySchema } from "@/lib/pricing/monthly";
 type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
 type PricingPlan = keyof PricingDisplay;
 
-export interface PriceProps {
+interface PriceProps {
   price: PricingDisplay[PricingPlan];
 }
 

@@ -13,8 +13,9 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { ReactElement } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
-import { Broken } from "@/components/state/broken";
-import { RouteFailure } from "@/components/state/localized";
+import { ActionLink } from "@/components/state/action";
+import { Broken, BrokenRetry } from "@/components/state/broken";
+import { useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
@@ -150,27 +151,14 @@ export const Route = createFileRoute("/school/$slug")({
 });
 
 function SchoolLayout(): ReactElement {
-  const { legal, school } = Route.useRouteContext();
+  const { school } = Route.useRouteContext();
   const classes = Route.useLoaderData();
   if (school._tag === "Visitor") {
-    return (
-      <TenantEntry
-        legal={legal}
-        logo={school.profile.logo}
-        mascot={school.profile.mascot}
-        slug={school.profile.slug}
-        title={school.title}
-      />
-    );
+    return <TenantEntry title={school.title} />;
   }
   if (school._tag === "Outsider") {
     return (
-      <TenantOutsider
-        account={school.account}
-        logo={school.profile.logo}
-        mascot={school.profile.mascot}
-        school={school.profile.name}
-      />
+      <TenantOutsider account={school.account} school={school.profile.name} />
     );
   }
   const { viewer } = school;
@@ -200,9 +188,16 @@ function SchoolLayout(): ReactElement {
 /** The page of a school that the gate refused: no school has the address, or the viewer may not open it. */
 function SchoolRefused(): ReactElement {
   const locale = useLocale();
+  const tState = useTranslations("State");
   return (
     <Stage>
-      <TenantMissing homeHref={new URL(`/${locale}`, SITE_ORIGIN).href} />
+      <TenantMissing>
+        <ActionLink
+          href={new URL(`/${locale}`, SITE_ORIGIN).href}
+          label={tState("home-button")}
+          variant="default"
+        />
+      </TenantMissing>
     </Stage>
   );
 }
@@ -213,24 +208,29 @@ function SchoolRefused(): ReactElement {
  * other failure sees the broken page with a way to retry or to leave for Nakafa.
  */
 function SchoolError({ error }: ErrorComponentProps): ReactElement {
+  return isLostAccess(error) ? <SchoolLeft /> : <SchoolFailure error={error} />;
+}
+
+/** The broken page of a school failure, reported once, or nothing while the page reloads for a chunk of an earlier deploy. */
+function SchoolFailure({ error }: { error: unknown }): ReactElement | null {
   const t = useTranslations("Error");
   const tState = useTranslations("State");
   const locale = useLocale();
-  if (isLostAccess(error)) {
-    return <SchoolLeft />;
+  const reloading = useRouteFailure(error, "school-segment-error");
+  if (reloading) {
+    return null;
   }
   return (
-    <RouteFailure error={error} source="school-segment-error">
-      <Stage>
-        <Broken
-          description={t("description")}
-          home={tState("home-button")}
-          homeHref={new URL(`/${locale}`, SITE_ORIGIN).href}
-          retry={t("retry")}
-          title={t("title")}
+    <Stage>
+      <Broken description={t("description")} title={t("title")}>
+        <BrokenRetry>{t("retry")}</BrokenRetry>
+        <ActionLink
+          href={new URL(`/${locale}`, SITE_ORIGIN).href}
+          label={tState("home-button")}
+          variant="ghost"
         />
-      </Stage>
-    </RouteFailure>
+      </Broken>
+    </Stage>
   );
 }
 
@@ -247,8 +247,6 @@ function SchoolLeft(): ReactElement {
     onSome: (outsider) => (
       <TenantOutsider
         account={outsider.account}
-        logo={outsider.profile.logo}
-        mascot={outsider.profile.mascot}
         school={outsider.profile.name}
       />
     ),

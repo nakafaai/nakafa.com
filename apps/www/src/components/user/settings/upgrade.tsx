@@ -1,10 +1,4 @@
-import {
-  BookOpen01Icon,
-  CustomerSupportIcon,
-  Diamond02Icon,
-  SparklesIcon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
+import { Diamond02Icon, type Tick01Icon } from "@hugeicons/core-free-icons";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -28,19 +22,8 @@ import {
 } from "@/components/shared/card/section";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import { isActiveLocale } from "@/lib/i18n/active";
-import { proPlanFeatures } from "@/lib/marketing/plan";
+import { planFeatureIcons, proPlanFeatures } from "@/lib/marketing/plan";
 import { PricingCurrencySchema } from "@/lib/pricing/monthly";
-
-/** The icon of each benefit a Pro plan lists, so every line reads at a glance. */
-const BENEFIT_ICONS = {
-  "pro-feature-1": Tick01Icon,
-  "pro-feature-2": SparklesIcon,
-  "pro-feature-3": BookOpen01Icon,
-  "pro-feature-5": CustomerSupportIcon,
-} as const satisfies Record<
-  (typeof proPlanFeatures)[number],
-  typeof Tick01Icon
->;
 
 /** One benefit of Pro: its icon and its line, in a two-column list. */
 function Benefit({ icon, text }: { icon: typeof Tick01Icon; text: string }) {
@@ -102,7 +85,7 @@ export function UpgradePlanCard() {
         <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
           {Arr.map(proPlanFeatures, (key) => (
             <Benefit
-              icon={BENEFIT_ICONS[key]}
+              icon={planFeatureIcons[key]}
               key={key}
               text={tPricing(key, { credits })}
             />
