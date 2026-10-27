@@ -1,11 +1,29 @@
-import { expect, test } from "@playwright/test";
+import { type Browser, expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   createSchool,
   hostAddress,
   inviteLearner,
   seedSitting,
+  signInOwner,
 } from "@/e2e/support/school";
+
+/**
+ * Seeds a sitting for the learner. The seed opens it in the school's first active unit, which the
+ * school has only once its Owner has signed in, so the Owner signs in first, as every proctor
+ * spec does.
+ */
+const seedLearnerSitting = async (
+  browser: Browser,
+  slug: string,
+  home: string,
+  learner: string
+) => {
+  const owner = await browser.newContext();
+  await Effect.runPromise(signInOwner(owner, slug, home));
+  await owner.close();
+  return Effect.runPromise(seedSitting(slug, learner));
+};
 
 test("a student's sitting screen fills the page under its bar, with its card in the middle of the body", async ({
   baseURL,
@@ -26,7 +44,12 @@ test("a student's sitting screen fills the page under its bar, with its card in 
       slug: school.slug,
     })
   );
-  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  const sitting = await seedLearnerSitting(
+    browser,
+    school.slug,
+    address("/"),
+    learner
+  );
   const page = await context.newPage();
 
   await page.goto(address(`/sittings/${sitting.sittingId}`));
@@ -65,7 +88,12 @@ test("a student's results start at the top of the sitting body, which caps at th
       slug: school.slug,
     })
   );
-  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  const sitting = await seedLearnerSitting(
+    browser,
+    school.slug,
+    address("/"),
+    learner
+  );
   const page = await context.newPage();
 
   await page.goto(address(`/sittings/${sitting.sittingId}`));
