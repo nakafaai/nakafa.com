@@ -66,11 +66,18 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await placeDialog.getByRole("combobox", { name: "Student" }).click();
   await settings.getByRole("option", { name: "Acceptance Learner" }).click();
   await placeDialog.getByRole("button", { name: "Add student" }).click();
-  await settings.getByRole("combobox", { name: "Teacher" }).click();
+  // The homeroom teacher is chosen in the dialog behind the header's Homeroom teacher button.
+  await settings
+    .locator("header")
+    .getByRole("button", { name: "Homeroom teacher" })
+    .click();
+  const homeroom = settings.getByRole("dialog", { name: "Homeroom teacher" });
+  await homeroom.getByRole("combobox", { name: "Teacher" }).click();
   await settings
     .getByRole("option", { name: "Acceptance Class Teacher" })
     .click();
-  await settings.getByRole("button", { exact: true, name: "Save" }).click();
+  await homeroom.getByRole("button", { exact: true, name: "Save" }).click();
+  await expect(homeroom).toBeHidden();
 
   // The subject teacher releases the learner's grade, which the report shows.
   const page = await teacher.newPage();
