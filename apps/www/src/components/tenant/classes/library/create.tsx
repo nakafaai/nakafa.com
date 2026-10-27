@@ -1,28 +1,18 @@
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
-import {
-  Cancel01Icon,
-  FileAttachmentIcon,
-  FileUploadIcon,
-  GoogleDriveIcon,
-} from "@hugeicons/core-free-icons";
+import { GoogleDriveIcon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { LIBRARY_BYTE_LIMIT } from "@repo/backend/confect/classroom/library/file";
 import {
-  LIBRARY_ACCEPT,
   LibraryTitle,
   LinkAddress,
 } from "@repo/backend/confect/classroom/library/item";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
-  FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
-  FieldTitle,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -31,10 +21,9 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { SITE_ORIGIN } from "@repo/seo/origin";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
-import { type ReactNode, useId, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   forumCall,
@@ -48,6 +37,11 @@ import {
   uploadLibraryFile,
 } from "@/components/tenant/classes/library/add";
 import type { DriveFile } from "@/components/tenant/classes/library/drive";
+import {
+  ChosenFile,
+  LibraryDriveField,
+  LibraryFileField,
+} from "@/components/tenant/classes/library/fields";
 import { useLibraryUploads } from "@/components/tenant/classes/library/scope";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";
@@ -361,142 +355,5 @@ export function AddToLibrary() {
         </FieldGroup>
       </ResponsiveDialog>
     </>
-  );
-}
-
-/** The file of a new item: a drop area until a file is chosen, then the file's name with a way to clear it. */
-function LibraryFileField({
-  file,
-  onFile,
-  oversize,
-}: {
-  file: File | null;
-  onFile: (file: File | null) => void;
-  oversize: boolean;
-}) {
-  const t = useTranslations("Classroom");
-  const id = useId();
-  const [dragging, setDragging] = useState(false);
-
-  return (
-    <Field data-invalid={oversize}>
-      <FieldLabel htmlFor={id}>{t("library-file")}</FieldLabel>
-      {file === null ? (
-        <div
-          className="relative flex flex-col items-center gap-2 rounded-lg border bg-muted/40 px-4 py-6 text-center text-muted-foreground text-sm transition-colors hover:bg-muted has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-muted"
-          data-dragging={dragging}
-        >
-          <HugeIcons aria-hidden="true" icon={FileUploadIcon} />
-          <span>{t("library-drop")}</span>
-          <input
-            accept={LIBRARY_ACCEPT}
-            aria-label={t("library-file")}
-            className="absolute inset-0 cursor-pointer opacity-0"
-            id={id}
-            onChange={(event) => onFile(event.target.files?.item(0) ?? null)}
-            onDragEnter={() => setDragging(true)}
-            onDragLeave={() => setDragging(false)}
-            onDrop={() => setDragging(false)}
-            type="file"
-          />
-        </div>
-      ) : (
-        <ChosenFile
-          icon={FileAttachmentIcon}
-          name={file.name}
-          onClear={() => onFile(null)}
-        />
-      )}
-      {oversize ? (
-        <FieldError>{t("library-file-oversize")}</FieldError>
-      ) : (
-        <FieldDescription>{t("library-file-limit")}</FieldDescription>
-      )}
-    </Field>
-  );
-}
-
-/** A chosen file of a new item: its icon and name, with a way to clear it. */
-function ChosenFile({
-  icon,
-  name,
-  onClear,
-}: {
-  icon: typeof FileAttachmentIcon;
-  name: string;
-  onClear: () => void;
-}) {
-  const t = useTranslations("Classroom");
-
-  return (
-    <div className="flex min-w-0 items-center gap-2 rounded-lg border py-1 pr-1 pl-3 text-sm">
-      <HugeIcons aria-hidden="true" icon={icon} />
-      <span className="min-w-0 flex-1 truncate" dir="auto">
-        {name}
-      </span>
-      <Button
-        aria-label={t("library-file-clear")}
-        onClick={onClear}
-        size="icon-sm"
-        variant="ghost"
-      >
-        <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-      </Button>
-    </div>
-  );
-}
-
-/**
- * The Drive file of a new item: a button that opens Google's Picker until a file is picked, then
- * the chosen file, with a way to clear it, which the dialog composes. An account without Drive is told so, with a link to its
- * connections, which opens beside the class so the dialog keeps what was written.
- */
-function LibraryDriveField({
-  children,
-  chosen,
-  missing,
-  onChoose,
-  pending,
-}: {
-  /** The chosen file, which the dialog composes once a file is picked. */
-  children: ReactNode;
-  chosen: boolean;
-  missing: boolean;
-  onChoose: () => void;
-  pending: boolean;
-}) {
-  const t = useTranslations("Classroom");
-  const locale = useLocale();
-
-  return (
-    <Field>
-      {/* The button's own words name it, so the field's title is not its label. */}
-      <FieldTitle>{t("library-drive")}</FieldTitle>
-      {chosen ? (
-        children
-      ) : (
-        <Button disabled={pending} onClick={onChoose} variant="outline">
-          <HugeIcons aria-hidden="true" icon={GoogleDriveIcon} />
-          {t("library-drive-choose")}
-        </Button>
-      )}
-      {missing ? (
-        <FieldDescription>
-          {t("library-drive-missing")}{" "}
-          <a
-            className="font-medium text-foreground underline underline-offset-4"
-            href={
-              new URL(`/${locale}/user/settings/connectors`, SITE_ORIGIN).href
-            }
-            rel="noopener"
-            target="_blank"
-          >
-            {t("library-drive-connect")}
-          </a>
-        </FieldDescription>
-      ) : (
-        <FieldDescription>{t("library-file-limit")}</FieldDescription>
-      )}
-    </Field>
   );
 }
