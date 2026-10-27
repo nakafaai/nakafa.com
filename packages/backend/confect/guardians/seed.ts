@@ -3,7 +3,10 @@ import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { readLinkedPerson } from "@repo/backend/confect/guardians/authority";
 import { storeCode } from "@repo/backend/confect/guardians/codes";
 import { liveLinksOfAddress } from "@repo/backend/confect/guardians/link";
-import { writeRosterEntry } from "@repo/backend/confect/roster/entry";
+import {
+  schoolKeys,
+  writeRosterEntry,
+} from "@repo/backend/confect/roster/entry";
 import type { Nisn } from "@repo/backend/confect/roster/schema";
 import type { Email } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Effect, Option } from "effect";
@@ -24,12 +27,13 @@ export const seedGuardianCode = Effect.fn("guardians.seed.code")(
     const tenant = yield* tenantOf(args.slug);
     const links = yield* liveLinksOfAddress(tenant._id, args.email);
     yield* required(Arr.head(links), "The address has no live link.");
+    const keys = yield* schoolKeys(tenant._id);
     yield* Effect.forEach(
       links,
       (link) =>
         readLinkedPerson(link.studentPersonId).pipe(
           Effect.flatMap((student) =>
-            writeRosterEntry(student, {
+            writeRosterEntry(keys, student, {
               nisn: Option.some(args.nisn),
               underAgeLimit: true,
             })
