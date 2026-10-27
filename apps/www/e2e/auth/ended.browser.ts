@@ -7,6 +7,11 @@ import { TOKEN_PATH } from "@/lib/auth/session";
 
 /** The id of a session the browser remembers, which the server no longer holds. */
 const ENDED_SESSION = "ended-session";
+/**
+ * The learner's home, which reads Convex as soon as it loads, so it asks for the
+ * remembered session's token at once.
+ */
+const HOME = "/en/home";
 
 /**
  * A browser that still holds the signed-in hint and the id of a session that
@@ -14,7 +19,7 @@ const ENDED_SESSION = "ended-session";
  * route answers that no session holds a token, so the browser fetches no 401
  * and the console stays empty while the page settles signed out.
  */
-test("a page whose remembered session has ended loads with no console error", async ({
+test("the learner home of a remembered session that has ended loads with no console error", async ({
   baseURL,
   context,
   page,
@@ -45,7 +50,7 @@ test("a page whose remembered session has ended loads with no console error", as
   const tokenRead = page.waitForResponse(
     (response) => new URL(response.url()).pathname === TOKEN_PATH
   );
-  await page.goto("/en");
+  await page.goto(HOME);
   expect(await (await tokenRead).json()).toStrictEqual({ token: null });
   await page.waitForLoadState("networkidle");
 
