@@ -108,22 +108,28 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   (`apps/www/src/lib/static/pages.ts`, `apps/www/src/lib/sitemap/files.ts`), and their loaders read
   the build's visitor answer (`readStaticData`) unless the signed-in hint is set or the address binds
   an attempt.
-- **Learner pages on the Worker.** The Worker runs before the assets at and beneath a track
-  (`runWorkerFirst` in `apps/www/worker.ts`, derived from `LEARNER_ROUTE_TEMPLATES`). A page request
-  that sends a session cookie or binds an attempt renders on the Worker as before (`isLearnerPage` in
-  `apps/www/src/lib/routing/learner.server.ts`), so the learner's attempt, the shell lock, the score
-  card and the player's view are in the first HTML. Every other read takes the asset that the build
-  wrote (`readVisitorAsset`), and a miss goes through the Worker's decisions, which answer the static
-  not-found page without a render.
-- **No swap after hydration.** The assets match a path without its query, so serving the static page
-  to everyone would give a learner's hard load, `?attemptId` included, the visitor's HTML. Their own
+- **Written beside their address.** The build writes those pages under `/_tryout`
+  (`staticPagePath` in `apps/www/src/lib/routing/prerendered.ts`, each page's `prerender.outputPath`),
+  so their own addresses have no asset and reach the Worker, as before. Their Markdown twins and social
+  images stay at their own paths and are answered by the assets alone.
+- **Learner pages on the Worker.** A page request that sends a session cookie or binds an attempt
+  renders on the Worker as before (`isLearnerPage` in `apps/www/src/lib/routing/learner.server.ts`),
+  so the learner's attempt, the shell lock, the score card and the player's view are in the first
+  HTML. A visitor's request takes the page under `/_tryout` (`readVisitorAsset`), after the redirect
+  and School decisions and before any content read. A page the release does not hold goes on through
+  the Worker's decisions, which answer the static not-found page without a render.
+- **Not `runWorkerFirst`.** A list of paths in `assets.runWorkerFirst` makes Cloudflare answer every
+  path the list does not name from the assets alone, so the API, server functions, search, chat and
+  School hosts would answer the assets' 404 page (#1337, reverted by #1413). School host paths cannot
+  be listed, so the pages move out of the way instead.
+- **No swap after hydration.** The assets match a path without its query, so a static page at its
+  own address would give a learner's hard load, `?attemptId` included, the visitor's HTML. Their own
   page would replace it after hydration: the shell lock moving the header, the player replacing the
-  set page, the score card replacing the facts card, and Start turning into Continue. The player's view
-  would also leave the first HTML.
-- **Cost.** A visitor's read beneath a track is one Worker request that reads one asset; before, it
-  was a render, 40 to 333 ms of CPU for a missing set. A learner's view costs what it did. Slice 2
-  moves the attempt into the browser, after which the Worker-first rule and `isLearnerPage` are
-  deleted.
+  set page, the score card replacing the facts card, and Start turning into Continue.
+- **Cost.** A visitor's view is the same Worker request as before, now one asset read instead of a
+  render, which cost 40 to 333 ms of CPU for a missing set. A learner's view costs what it did. Slice
+  2 moves the attempt into the browser, after which the pages return to their own paths and
+  `isLearnerPage` is deleted.
 
 ## Phase B for School as implemented
 

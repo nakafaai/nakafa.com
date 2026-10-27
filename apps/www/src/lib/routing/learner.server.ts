@@ -1,10 +1,10 @@
 import { env } from "cloudflare:workers";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readSessionCookie } from "@/lib/auth/cookie.server";
-import { LEARNER_ROUTE_TEMPLATES } from "@/lib/routing/prerendered";
+import { namesLearnerPage, staticPagePath } from "@/lib/routing/prerendered";
 import { hasStaticRelease } from "@/lib/routing/release";
-import { matchesRouteTemplate, namesFile } from "@/lib/routing/template";
+import { routeRewrite } from "@/lib/routing/rewrite";
 
 /** The status of the assets' answer to a path that names no asset. */
 const NOT_FOUND = 404;
@@ -21,58 +21,52 @@ function isLearnerRequest(request: Request) {
 }
 
 /**
+ * Whether a request names a try-out track, set or section of the main site. The
+ * router matches the path that its input rewrite gives, so a school host's path,
+ * which becomes its School tree path, names none.
+ */
+function namesTryoutPage(request: Request) {
+  const { pathname } = routeRewrite.input({ url: new URL(request.url) });
+  return namesLearnerPage(pathname);
+}
+
+/**
  * Whether the Worker renders a request as a learner's own try-out page: a track,
- * a set or a section, not a file beside it such as its `.md` twin, that a learner
- * asks for. The build prerenders these pages for a visitor, so for any other
- * request they are assets.
+ * a set or a section that a learner asks for. The build prerenders these pages for
+ * a visitor, so the Worker renders no other request for them.
  */
 export function isLearnerPage(request: Request): boolean {
-  const { pathname } = new URL(request.url);
-  return (
-    !namesFile(pathname) &&
-    Arr.some(LEARNER_ROUTE_TEMPLATES, (template) =>
-      matchesRouteTemplate(template, pathname)
-    ) &&
-    isLearnerRequest(request)
-  );
+  return namesTryoutPage(request) && isLearnerRequest(request);
 }
 
 /**
- * Whether a path lies at or beneath a learner page, where the Worker runs before
- * the static assets, so a learner's page renders with their attempt in its first
- * HTML.
- */
-function isUnderLearnerPage(pathname: string) {
-  return Arr.some(LEARNER_ROUTE_TEMPLATES, (template) =>
-    matchesRouteTemplate(`${template}/$`, pathname)
-  );
-}
-
-/**
- * The assets' answer to a read beneath a learner page that is not a learner's own
- * page: the page or the file that the build wrote. A path with no asset answers
- * nothing here, so the Worker's decisions answer it as they answer any other miss,
- * a retired or moved address and the static not-found page included. A prerender
- * and a development server bind no assets, and every other read follows the
- * assets' own order.
+ * A visitor's read of a try-out track, set or section, answered with the page that
+ * the build wrote for every visitor (`staticPagePath`), so the Worker renders
+ * nothing for it. A page that the release does not hold answers nothing here, so
+ * the Worker's decisions answer it as any other miss, with the static not-found
+ * page last. A prerender and a development server bind no assets.
  */
 export const readVisitorAsset = Effect.fn("www.routing.learner.asset")(
   function* (request: Request) {
-    const { pathname } = new URL(request.url);
     if (
       !hasStaticRelease() ||
       (request.method !== "GET" && request.method !== "HEAD") ||
-      !isUnderLearnerPage(pathname) ||
-      isLearnerPage(request)
+      !namesTryoutPage(request) ||
+      isLearnerRequest(request)
     ) {
       return Option.none<Response>();
     }
-    const asset = yield* Effect.promise(() => env.ASSETS.fetch(request));
-    if (asset.status !== NOT_FOUND) {
-      return Option.some(asset);
+    const url = new URL(request.url);
+    const page = yield* Effect.promise(() =>
+      env.ASSETS.fetch(
+        new Request(new URL(staticPagePath(url.pathname), url), request)
+      )
+    );
+    if (page.status !== NOT_FOUND) {
+      return Option.some(page);
     }
     yield* Effect.promise(async () => {
-      await asset.body?.cancel();
+      await page.body?.cancel();
     });
     return Option.none<Response>();
   }

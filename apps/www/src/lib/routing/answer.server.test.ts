@@ -165,7 +165,7 @@ beforeEach(() => {
 
 describe("decisions before the router", () => {
   it.effect(
-    "answers a visitor's try-out set with its asset before any decision",
+    "answers a visitor's try-out set with the page the build wrote, before any content read",
     () =>
       Effect.gen(function* () {
         assets.fetch.mockResolvedValue(new Response("<html>set</html>"));
@@ -177,7 +177,7 @@ describe("decisions before the router", () => {
         expect(yield* Effect.promise(() => response.text())).toBe(
           "<html>set</html>"
         );
-        expect(migration.read).not.toHaveBeenCalled();
+        expect(retired.read).not.toHaveBeenCalled();
         expect(handle).not.toHaveBeenCalled();
       })
   );

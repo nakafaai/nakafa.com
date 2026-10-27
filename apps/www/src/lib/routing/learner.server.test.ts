@@ -29,6 +29,12 @@ function signedIn(address: string, init?: RequestInit) {
   return new Request(address, { ...init, headers: { cookie: SESSION } });
 }
 
+/** The address of the one asset that the binding was asked for. */
+function fetchedAddress() {
+  const [request] = assets.fetch.mock.calls[0] ?? [];
+  return request?.url;
+}
+
 beforeEach(() => {
   release.hasStaticRelease = true;
   assets.fetch.mockReset();
@@ -48,35 +54,40 @@ describe("learner pages", () => {
     );
   });
 
-  it("leaves a visitor's page and a learner's file to the assets", () => {
+  it("renders no visitor's page, file, catalog page or school page", () => {
     expect(isLearnerPage(new Request(SET))).toBe(false);
     expect(isLearnerPage(signedIn(`${SET}.md`))).toBe(false);
     expect(
       isLearnerPage(signedIn("https://nakafa.com/en/try-out/indonesia/snbt"))
     ).toBe(false);
+    expect(
+      isLearnerPage(
+        signedIn("https://harapan.nakafa.com/en/try-out/indonesia/snbt/2027")
+      )
+    ).toBe(false);
   });
 });
 
-describe("visitor assets", () => {
+describe("visitor pages", () => {
   it.effect(
-    "answers a visitor's page and a learner's file with their asset",
+    "answers a visitor's set with the page the build wrote for it",
     () =>
       Effect.gen(function* () {
-        assets.fetch.mockImplementation(() =>
-          Promise.resolve(new Response("<html>set</html>"))
+        assets.fetch.mockResolvedValue(new Response("<html>set</html>"));
+
+        const answer = yield* readVisitorAsset(
+          new Request(`${SET}?view=single`)
         );
 
-        const page = yield* readVisitorAsset(new Request(SET));
-        const twin = yield* readVisitorAsset(signedIn(`${SET}.md`));
-
-        expect(Option.isSome(page)).toBe(true);
-        expect(Option.isSome(twin)).toBe(true);
-        expect(assets.fetch).toHaveBeenCalledTimes(2);
+        expect(Option.isSome(answer)).toBe(true);
+        expect(fetchedAddress()).toBe(
+          "https://nakafa.com/_tryout/en/try-out/indonesia/snbt/2027/set-1"
+        );
       })
   );
 
   it.effect(
-    "leaves a missing asset to the Worker's decisions, and drops the not-found body",
+    "leaves a page that the release does not hold to the Worker's decisions, and drops the not-found body",
     () =>
       Effect.gen(function* () {
         const body = new ReadableStream();
@@ -93,14 +104,15 @@ describe("visitor assets", () => {
   );
 
   it.effect(
-    "reads no asset for a learner's page, a write, a path above a track, or a prerender",
+    "reads no page for a learner, a write, a catalog page, a file, or a prerender",
     () =>
       Effect.gen(function* () {
         const reads = [
           signedIn(SET),
+          new Request(`${SET}?attemptId=attempt-id`),
           new Request(SET, { body: "{}", method: "POST" }),
           new Request("https://nakafa.com/en/try-out/indonesia/snbt"),
-          new Request("https://nakafa.com/en/articles/belajar"),
+          new Request(`${SET}.md`),
         ];
         for (const request of reads) {
           expect(Option.isNone(yield* readVisitorAsset(request))).toBe(true);

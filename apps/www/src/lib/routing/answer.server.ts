@@ -128,13 +128,13 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
 
 /**
  * Answers one request before the router runs. The address and the headers alone
- * decide each answer, in this order: a read beneath a try-out track, set or
- * section that is not a learner's own page takes the asset the build wrote, as
- * any static page does; a host under the production domain that names no school
- * moves to the main site; a non-canonical slash spelling moves to
+ * decide each answer, in this order: a host under the production domain that
+ * names no school moves to the main site; a non-canonical slash spelling moves to
  * its canonical address; a non-public spelling moves to its public address. A
- * school tree path, a refused school page and a removed address answer not found
- * (a refused school page with the static school shell), and a migrated or moved
+ * school tree path and a refused school page answer not found (a refused school
+ * page with the static school shell). A visitor's try-out track, set or section
+ * answers the page that the build wrote for every visitor, before any content
+ * read. A removed address answers not found, and a migrated or moved
  * address moves to its successor. A raw user address answers not found. A page in
  * a locale that no Worker route renders answers the static not-found page before
  * any content read, and a document that the source does not own answers not found
@@ -150,11 +150,6 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   request: Request,
   route: RouterHandler
 ) {
-  const visitorAsset = yield* readVisitorAsset(request);
-  if (Option.isSome(visitorAsset)) {
-    return visitorAsset.value;
-  }
-
   const mainSite = readMainSiteRedirect(request);
   if (Option.isSome(mainSite)) {
     return mainSite.value;
@@ -182,6 +177,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
       404,
       answerRejection(request, refused.value, route)
     );
+  }
+
+  const visitorAsset = yield* readVisitorAsset(request);
+  if (Option.isSome(visitorAsset)) {
+    return visitorAsset.value;
   }
 
   const removed = yield* readRemovedAddressNotFound(request).pipe(
