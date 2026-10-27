@@ -15,6 +15,7 @@ import {
 } from "effect";
 import { bufferResponse } from "@/lib/auth/body";
 import { readSessionCookie } from "@/lib/auth/cookie.server";
+import { withSessionHint } from "@/lib/auth/hint.server";
 import { SESSION_PATH } from "@/lib/auth/session";
 import { readRequestHost } from "@/lib/routing/school/host";
 import { runServerEffect } from "@/lib/server/fn";
@@ -210,22 +211,31 @@ function withBrowserHost(request: Request): Request {
   });
 }
 
+/** Answers one read: a session read from a visitor without a session cookie here, and every other read through Better Auth. */
+const answerRead = (handler: AuthRouteHandler, request: Request) =>
+  isSignedOutSessionRead(request)
+    ? Effect.succeed(answerSignedOutSession())
+    : readAuthResponse(handler, withBrowserHost(request)).pipe(
+        answerAuthDeadline
+      );
+
 /**
  * Builds the route methods for the Better Auth handler. A network failure that
  * is not repeated rejects the route, and the server answers 500. A session read
  * from a visitor without a session
  * cookie is answered here and never reaches Convex. Every other request reaches
- * Better Auth with the browser's host (`withBrowserHost`).
+ * Better Auth with the browser's host (`withBrowserHost`). A session read also
+ * keeps the signed-in hint (`withSessionHint`).
  */
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
     GET: (request: Request) =>
       runServerEffect(
-        isSignedOutSessionRead(request)
-          ? Effect.succeed(answerSignedOutSession())
-          : readAuthResponse(handler, withBrowserHost(request)).pipe(
-              answerAuthDeadline
+        new URL(request.url).pathname === SESSION_PATH
+          ? Effect.flatMap(answerRead(handler, request), (response) =>
+              withSessionHint(request, response)
             )
+          : answerRead(handler, request)
       ),
     POST: (request: Request) =>
       runServerEffect(
