@@ -15,6 +15,7 @@ import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { useSittingData } from "@/components/exams/sitting/context";
 import { SittingDocument } from "@/components/exams/sitting/document";
+import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import {
   choiceOf,
@@ -68,50 +69,49 @@ export function StudentScreen({
   const table = tableOf(screen.interactions);
 
   return (
-    <section aria-labelledby={titleId} className="grid gap-3">
-      <p className="text-muted-foreground text-sm">{t("screen-title")}</p>
-      <h3 className="font-medium" id={titleId}>
-        {t("question", { number: screen.number })}
-      </h3>
-      <SittingDocument
-        document={prompt}
-        key={screen.prompt}
-        label={t("prompt-label")}
-      />
-      {Option.isSome(choice) ? (
-        <SittingChoice
-          choice={choice.value}
-          disabled
-          labelledBy={titleId}
-          onChoose={Fn.constVoid}
-          response={chosenOptions(response)}
+    <PaperLockProvider locked>
+      <section aria-labelledby={titleId} className="grid gap-3">
+        <p className="text-muted-foreground text-sm">{t("screen-title")}</p>
+        <h3 className="font-medium" id={titleId}>
+          {t("question", { number: screen.number })}
+        </h3>
+        <SittingDocument
+          document={prompt}
+          key={screen.prompt}
+          label={t("prompt-label")}
         />
-      ) : null}
-      {Option.isSome(written) ? (
-        <p className="whitespace-pre-wrap rounded-md border p-3 text-sm">
-          {typedText(response) === ""
-            ? t("student-no-answer")
-            : typedText(response)}
-        </p>
-      ) : null}
-      {Option.isSome(pairing) ? (
-        <SittingPairs
-          disabled
-          labelledBy={titleId}
-          match={pairing.value}
-          onPair={Fn.constVoid}
-          pairs={madePairs(response)}
-        />
-      ) : null}
-      {Option.isSome(table) ? (
-        <SittingTable
-          cells={markedCells(response)}
-          disabled
-          labelledBy={titleId}
-          onMark={Fn.constVoid}
-          table={table.value}
-        />
-      ) : null}
-    </section>
+        {Option.isSome(choice) ? (
+          <SittingChoice
+            choice={choice.value}
+            labelledBy={titleId}
+            onChoose={Fn.constVoid}
+            response={chosenOptions(response)}
+          />
+        ) : null}
+        {Option.isSome(written) ? (
+          <p className="whitespace-pre-wrap rounded-md border p-3 text-sm">
+            {typedText(response) === ""
+              ? t("student-no-answer")
+              : typedText(response)}
+          </p>
+        ) : null}
+        {Option.isSome(pairing) ? (
+          <SittingPairs
+            labelledBy={titleId}
+            match={pairing.value}
+            onPair={Fn.constVoid}
+            pairs={madePairs(response)}
+          />
+        ) : null}
+        {Option.isSome(table) ? (
+          <SittingTable
+            cells={markedCells(response)}
+            labelledBy={titleId}
+            onMark={Fn.constVoid}
+            table={table.value}
+          />
+        ) : null}
+      </section>
+    </PaperLockProvider>
   );
 }

@@ -7,6 +7,7 @@ import spec from "@repo/backend/confect/roster/entries.spec";
 import {
   rosterEntryOf,
   rosterViewOf,
+  schoolKeys,
   writeRosterEntry,
 } from "@repo/backend/confect/roster/entry";
 import { Person } from "@repo/backend/confect/tenancy/access";
@@ -28,7 +29,7 @@ const set = FunctionImpl.make(
   Effect.fn("roster.entries.set")(function* ({ nisn, underAgeLimit }) {
     const { person: actor } = yield* Member;
     const person = yield* Person;
-    yield* writeRosterEntry(person, {
+    yield* writeRosterEntry(yield* schoolKeys(person.tenantId), person, {
       nisn: Option.fromUndefinedOr(nisn),
       underAgeLimit,
     });

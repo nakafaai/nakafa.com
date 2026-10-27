@@ -8,6 +8,7 @@ import {
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
+import { usePaperLocked } from "@/components/exams/sitting/lock";
 import {
   type MatchPart,
   pairedWith,
@@ -25,13 +26,11 @@ const answerLetter = (index: number) => String.fromCharCode(LETTER_A + index);
  * letter that another statement holds moves it to this statement, since each answer pairs one statement.
  */
 export function SittingPairs({
-  disabled = false,
   labelledBy,
   match,
   onPair,
   pairs,
 }: {
-  readonly disabled?: boolean;
   /** The id of the heading that names the question. */
   readonly labelledBy: string;
   readonly match: MatchPart;
@@ -45,6 +44,7 @@ export function SittingPairs({
     readonly target: string;
   }[];
 }) {
+  const disabled = usePaperLocked();
   const t = useTranslations("Exams");
   const items = Arr.map(match.targets, (target, index) => ({
     label: answerLetter(index),

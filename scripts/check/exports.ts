@@ -46,7 +46,7 @@ const FRAMEWORK_MODULE_PATTERN =
  * every part that its upstream ships, so a later update of a component applies
  * to an unchanged file.
  */
-const COMPONENT_SET_DIRECTORIES = [
+export const COMPONENT_SET_DIRECTORIES = [
   "packages/design-system/components/ui/",
   "packages/design-system/components/evilcharts/",
 ];

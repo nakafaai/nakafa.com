@@ -21,6 +21,7 @@ import {
 } from "@repo/backend/confect/tenancy/authority";
 import { cohortNameKey } from "@repo/backend/confect/tenancy/cohort";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
+import type { TenantKeys } from "@repo/backend/confect/vault/keys";
 import { Effect, Option } from "effect";
 
 /** What applying one row did: a new student, a changed one, or a row it skipped. */
@@ -28,10 +29,11 @@ type RowOutcome = "added" | "changed" | "skipped";
 
 /** The student whose roster row holds this NISN in the school, if any. */
 const studentByNisn = Effect.fn("roster.import.byNisn")(function* (
+  keys: TenantKeys,
   tenantId: GenericId.GenericId<"tenants">,
   nisn: (typeof ImportRow.Type)["nisn"]
 ) {
-  const blind = yield* blindNisn(tenantId, nisn);
+  const blind = yield* blindNisn(keys, nisn);
   const entry = yield* (yield* DatabaseReader)
     .table("rosterEntries")
     .index("by_tenantId_and_nisn_blind", (query) =>
@@ -95,14 +97,16 @@ const placeNamed = Effect.fn("roster.import.place")(function* (
  * names the student: the import sets the under-age flag again and places the student. A new
  * NISN adds a student: a Person with the row's name, a student grant in the period's unit,
  * the roster row with the NISN sealed and blinded, and the placement. A student who is no
- * longer active is skipped, so an import never reopens a removed Person.
+ * longer active is skipped, so an import never reopens a removed Person. The school's keys
+ * come from the batch, which reads them once for all of its rows.
  */
 export const applyRow = Effect.fn("roster.import.row")(function* (
   actor: typeof TenantActor.Type,
   period: TenantPeriodsDoc,
+  keys: TenantKeys,
   row: typeof ImportRow.Type
 ) {
-  const known = yield* studentByNisn(period.tenantId, row.nisn);
+  const known = yield* studentByNisn(keys, period.tenantId, row.nisn);
   const person = yield* Option.match(known, {
     onNone: () => createPerson(actor, period.tenantId, row.name),
     onSome: (personId) =>
@@ -120,7 +124,7 @@ export const applyRow = Effect.fn("roster.import.row")(function* (
       unitId: period.unitId,
     }).pipe(Effect.orDie);
   }
-  yield* writeRosterEntry(person, {
+  yield* writeRosterEntry(keys, person, {
     nisn: Option.some(row.nisn),
     underAgeLimit: row.underAgeLimit,
   });

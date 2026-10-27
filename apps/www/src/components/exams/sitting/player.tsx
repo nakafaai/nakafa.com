@@ -25,6 +25,7 @@ import {
 } from "@/components/exams/sitting/entry";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
+import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingLook } from "@/components/exams/sitting/look";
 import { useMarkFlag } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
@@ -43,7 +44,6 @@ import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerKeys } from "@/components/player/keys";
 import type { PlayerMode } from "@/components/player/mode";
-import type { PlayerCellModel } from "@/components/player/model";
 import { PlayerGrid } from "@/components/player/navigator/grid";
 import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
@@ -59,18 +59,21 @@ import { PlayerTimer } from "@/components/player/timer";
  * The signals run while the attempt is active.
  */
 export function StudentPlayer({
+  admission,
   attempt,
-  clockOffset,
-  deviceId,
   sitting,
   slug,
 }: {
+  /** The device the student was admitted on, and its clock's offset from the server's. */
+  readonly admission: {
+    readonly clockOffset: number;
+    readonly deviceId: string;
+  };
   readonly attempt: AttemptValue;
-  readonly clockOffset: number;
-  readonly deviceId: string;
   readonly sitting: typeof SittingView.Type;
   readonly slug: TenantSlug;
 }) {
+  const { clockOffset, deviceId } = admission;
   const t = useTranslations("Exams");
   const mode = useSittingMode();
   const sittingId = sitting.id;
@@ -100,8 +103,7 @@ export function StudentPlayer({
             <StudentFinish
               attempt={attempt}
               deviceId={deviceId}
-              locked={!takesAnswers(attempt.state)}
-              questions={projectSittingCells(paper.value)}
+              paper={paper.value}
               sittingId={sittingId}
               slug={slug}
             />
@@ -132,8 +134,7 @@ export function StudentPlayer({
               <StudentFinish
                 attempt={attempt}
                 deviceId={deviceId}
-                locked={!takesAnswers(attempt.state)}
-                questions={[]}
+                paper={null}
                 sittingId={sittingId}
                 slug={slug}
               />
@@ -154,21 +155,20 @@ export function StudentPlayer({
 }
 
 /**
- * The student's one primary action, which a lock holds closed. It reviews the flagged and the unanswered
- * questions before the answers close, and it exists only while the attempt is active.
+ * The student's one primary action, which a lock of the attempt holds closed. It reviews the flagged and the
+ * unanswered questions of the paper before the answers close, and it exists only while the attempt is active.
  */
 function StudentFinish({
   attempt,
   deviceId,
-  locked,
-  questions,
+  paper,
   sittingId,
   slug,
 }: {
   readonly attempt: AttemptValue;
   readonly deviceId: string;
-  readonly locked: boolean;
-  readonly questions: readonly PlayerCellModel[];
+  /** The paper on the screen, or none while it is not, which leaves nothing to review. */
+  readonly paper: PaperValue | null;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
@@ -180,7 +180,7 @@ function StudentFinish({
     <PlayerFinish
       description={t("finish-description")}
       label={tTryouts("complete-part-cta")}
-      locked={locked}
+      locked={!takesAnswers(attempt.state)}
       onFinish={() =>
         runSittingCall(
           () => finish({ deviceId, sittingId, slug }),
@@ -190,7 +190,7 @@ function StudentFinish({
         )
       }
       pending={false}
-      questions={questions}
+      questions={paper === null ? [] : projectSittingCells(paper)}
       title={t("finish-title")}
     />
   );
@@ -287,19 +287,20 @@ function RunningPaper({
         }
       >
         {locked ? <p>{t("student-locked")}</p> : null}
-        <PlayerQuestions>
-          {Arr.map(paper.questions, (question) => (
-            <SittingQuestion
-              attemptId={attemptId}
-              deviceId={deviceId}
-              key={question.id}
-              locked={locked}
-              question={question}
-              sittingId={sittingId}
-              slug={slug}
-            />
-          ))}
-        </PlayerQuestions>
+        <PaperLockProvider locked={locked}>
+          <PlayerQuestions>
+            {Arr.map(paper.questions, (question) => (
+              <SittingQuestion
+                attemptId={attemptId}
+                deviceId={deviceId}
+                key={question.id}
+                question={question}
+                sittingId={sittingId}
+                slug={slug}
+              />
+            ))}
+          </PlayerQuestions>
+        </PaperLockProvider>
       </PlayerMain>
       <PlayerFooter>
         <PlayerFlag locked={locked} questions={questions} />
