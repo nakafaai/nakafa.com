@@ -71,10 +71,12 @@ test("a proctor sees the question on a student's screen with the student's answe
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor
+  // A press before React takes the seat over would be lost, so the seat is pressed once it is live.
+  const seat = proctor
     .getByRole("list", { name: "Student seats" })
-    .getByRole("button", { name: LEARNER_NAME })
-    .click();
+    .getByRole("button", { name: LEARNER_NAME });
+  await waitUntilTakenOver(seat);
+  await seat.click();
   const screen = proctor.locator("section", { hasText: "Student screen" });
   await expect(screen).toContainText("Question 1", {
     timeout: readinessTimeoutMilliseconds,

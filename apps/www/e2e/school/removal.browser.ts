@@ -158,10 +158,12 @@ test("a device the proctor retired says so and offers no Finish, while the attem
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor
+  // A press before React takes the seat over would be lost, so the seat is pressed once it is live.
+  const seat = proctor
     .getByRole("list", { name: "Student seats" })
-    .getByRole("button", { name: "Acceptance Learner" })
-    .click();
+    .getByRole("button", { name: "Acceptance Learner" });
+  await waitUntilTakenOver(seat);
+  await seat.click();
   // An attempt in progress keeps Lock as the panel's main action and Allow a second device in its menu.
   await proctor
     .getByRole("button", { name: "More actions for Acceptance Learner" })
