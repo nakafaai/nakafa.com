@@ -7,14 +7,15 @@ import { resolveMember } from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
-import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
 import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import spec from "@repo/backend/confect/tenancy/profile.spec";
 import { Effect, Layer, Option } from "effect";
 
 /**
  * One unique indexed read, and the logo's address when the school has one; no
- * identity, so a signed-out visitor sees the school's name.
+ * identity, so a signed-out visitor sees the school's name. An address that no
+ * school uses answers none rather than failing, because every probe of a random
+ * School host asks it, and a failure would log an error for each one.
  */
 const get = FunctionImpl.make(
   databaseSchema,
@@ -25,12 +26,16 @@ const get = FunctionImpl.make(
       .table("tenants")
       .get("by_slug", slug)
       .pipe(
+        Effect.asSome,
         Effect.catchTags({
           DocumentDecodeError: Effect.die,
-          GetByIndexFailure: () => Effect.fail(new TenantNotFound()),
+          GetByIndexFailure: () => Effect.succeedNone,
         })
       );
-    return yield* tenantProfile(tenant);
+    if (Option.isNone(tenant)) {
+      return Option.none();
+    }
+    return Option.some(yield* tenantProfile(tenant.value));
   })
 );
 

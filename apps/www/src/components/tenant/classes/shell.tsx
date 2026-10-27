@@ -11,7 +11,7 @@ import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
@@ -46,6 +46,21 @@ import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 const ClassTab = Schema.Literals(["home", "forum", "grades"]);
 type ClassTab = typeof ClassTab.Type;
 
+/** What the class page's address decides: its tab, and the channel its forum shows. */
+const ClassPageContext = createContext<{
+  channel: Option.Option<Id<"classroomChannels">>;
+  tab: ClassTab;
+} | null>(null);
+
+/** Reads what the class page's address decides. It throws outside a class page. */
+function useClassPage() {
+  const page = use(ClassPageContext);
+  if (page === null) {
+    throw new Error("useClassPage must be used within ClassShell");
+  }
+  return page;
+}
+
 /**
  * The shell of one class page: the school header with the class's name, the class's tabs, and the
  * body of the tab. The class is read by its address once Convex has settled the session, and the
@@ -75,12 +90,9 @@ export function ClassShell({
       )}
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
-      <ClassPage
-        channel={channel}
-        classSlug={classSlug}
-        slug={slug}
-        tab={tab}
-      />
+      <ClassPageContext value={{ channel, tab }}>
+        <ClassPage classSlug={classSlug} slug={slug} />
+      </ClassPageContext>
     </ReadBoundary>
   );
 }
@@ -90,16 +102,13 @@ export function ClassShell({
  * viewer may not read shows the missing state.
  */
 function ClassPage({
-  channel,
   classSlug,
   slug,
-  tab,
 }: {
-  channel: Option.Option<Id<"classroomChannels">>;
   classSlug: string;
   slug: TenantSlug;
-  tab: ClassTab;
 }) {
+  const { channel, tab } = useClassPage();
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const resolved = useQuery(

@@ -14,7 +14,9 @@ import {
   ownerBlock,
   sharedPackageName,
 } from "#scripts/check/compiler";
+import { inspectNativeControls } from "#scripts/check/controls";
 import { inspectDictionaries } from "#scripts/check/dictionary";
+import { inspectDrillingSource } from "#scripts/check/drilling";
 import {
   effectFindings,
   effectTestViolations,
@@ -65,8 +67,8 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, array, gateway, React, state, refs, sealed message,
- * and class source policies to authored modules. The array rules read each module's types
+ * Applies the Effect-native, array, gateway, React, props drilling, state, refs,
+ * sealed message, and class source policies to authored modules. The array rules read each module's types
  * from its project on disk, and their findings join the Effect-native findings
  * before the list is sorted. Every finding is a violation: no baseline or
  * allowlist holds one back.
@@ -97,6 +99,8 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectGatewaySource(file, sourceFile),
         inspectToastSource(file, sourceFile),
         inspectReactSource(file, sourceFile),
+        inspectDrillingSource(file, sourceFile),
+        inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
         inspectSealedSource(file, sourceFile),

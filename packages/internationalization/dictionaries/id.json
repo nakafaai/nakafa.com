@@ -1007,6 +1007,7 @@
     "add-channel-title": "Tambah kanal topik",
     "add-channel-description": "Semua anggota kelas membaca kanal topik, dan namanya tampil di daftar.",
     "channel-name": "Nama kanal",
+    "channel-name-placeholder": "Tugas",
     "channel-name-taken": "Kanal lain di kelas ini sudah memakai nama ini.",
     "channel-limit-reached": "Kelas ini sudah mencapai batas jumlah kanal.",
     "add-submit": "Tambah",

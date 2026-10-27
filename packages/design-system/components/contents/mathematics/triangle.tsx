@@ -1,4 +1,3 @@
-import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   type TriangleLabels,
   TriangleProvider,
@@ -9,8 +8,14 @@ import {
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@repo/design-system/components/ui/number";
 import {
   VisualCard,
   VisualCardBody,
@@ -22,15 +27,7 @@ import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
 import { ClientOnly } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { lazy, Suspense, useState } from "react";
-import {
-  Button,
-  Group,
-  I18nProvider,
-  Input,
-  Label,
-  NumberField,
-} from "react-aria-components";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 
 // The client-only import boundary keeps offscreen lessons from loading WebGL.
 const TriangleScene = lazy(() =>
@@ -65,7 +62,6 @@ export function Triangle({
     hypotenuse: "Hypotenuse",
   },
 }: Props) {
-  const locale = useLocale();
   const config = { angle, labels, size };
 
   return (
@@ -73,9 +69,7 @@ export function Triangle({
       <TriangleProvider config={config}>
         <VisualCard>
           <VisualCardHeader description={description} title={title} />
-          <I18nProvider locale={locale}>
-            <Content />
-          </I18nProvider>
+          <Content />
         </VisualCard>
       </TriangleProvider>
     </CoordinateProvider>
@@ -94,43 +88,22 @@ function Content() {
       <VisualCardToolbar>
         <div className="mx-auto flex w-full max-w-md flex-col gap-4">
           <NumberField
-            decrementAriaLabel={t("decrease-angle")}
-            incrementAriaLabel={t("increase-angle")}
-            onChange={(value) => {
-              if (Number.isFinite(value)) {
+            onValueChange={(value) => {
+              if (value !== null) {
                 setAngleOverride(value);
               }
             }}
             value={angleValue}
           >
-            {/* biome-ignore lint/a11y/noLabelWithoutControl: React Aria connects this Label to the NumberField input through context. */}
-            <Label className="sr-only">{t("angle")}</Label>
-            <Group className="relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-input text-sm shadow-xs outline-none transition-[color,box-shadow] data-focus-within:border-ring data-disabled:opacity-50 data-focus-within:ring-3 data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40">
-              <Button
-                className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-e bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                slot="decrement"
-              >
-                <HugeIcons
-                  aria-hidden="true"
-                  className="size-4"
-                  icon={MinusSignIcon}
-                />
-              </Button>
-              <Input
-                aria-roledescription={t("number-field")}
-                className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums"
+            <NumberFieldGroup>
+              <NumberFieldDecrement aria-label={t("decrease-angle")} />
+              <NumberFieldInput
+                aria-label={t("angle")}
+                className="font-mono"
+                placeholder={`${angle}`}
               />
-              <Button
-                className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-s bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                slot="increment"
-              >
-                <HugeIcons
-                  aria-hidden="true"
-                  className="size-4"
-                  icon={PlusSignIcon}
-                />
-              </Button>
-            </Group>
+              <NumberFieldIncrement aria-label={t("increase-angle")} />
+            </NumberFieldGroup>
           </NumberField>
         </div>
       </VisualCardToolbar>

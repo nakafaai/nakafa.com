@@ -15,12 +15,13 @@ import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
 import {
   type StatusFilter,
-  StudentStatusFilter,
   StudentsTable,
+  useStatusChoices,
 } from "@/components/exams/results/students";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { TablePageBody } from "@/components/shared/table/frame";
 import {
+  TableChoice,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -101,6 +102,7 @@ function SittingResultsContent({
     [canGrade, timeZone, total]
   );
   const [status, setStatus] = useState<StatusFilter>("all");
+  const statusChoices = useStatusChoices();
   const t = useTranslations("Exams");
 
   if (QueryResult.isFailure(overview)) {
@@ -133,7 +135,12 @@ function SittingResultsContent({
               sittingId={scope.sittingId}
             >
               <TableSearch placeholder={t("results-search")} />
-              <StudentStatusFilter onChange={setStatus} value={status} />
+              <TableChoice
+                onChange={setStatus}
+                options={statusChoices}
+                title={t("filter-label")}
+                value={status}
+              />
               <QuestionsAction questions={questions} />
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>

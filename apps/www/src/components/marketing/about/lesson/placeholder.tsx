@@ -5,7 +5,6 @@ import {
   CALCIUM_ID,
 } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import { getAtomShellReadings } from "@repo/design-system/components/contents/chemistry/atom-shell/readings";
-import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
 import {
   formatTrigRatioMath,
   QUADRANT_NUMERALS,
@@ -28,6 +27,13 @@ import {
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@repo/design-system/components/ui/number";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -113,8 +119,8 @@ export function ProjectilePlaceholder({
 
 /**
  * The card of the circle lesson at its default angle, drawn before its lab loads.
- * The number field is a static box of the same frame, and the scene an empty
- * frame, so the lab takes over the same box.
+ * The number field is the lab's own field at that angle, inert until the lab
+ * takes over, and the scene an empty frame, so the lab takes over the same box.
  */
 export function CirclePlaceholder({
   formatNumber,
@@ -140,8 +146,21 @@ export function CirclePlaceholder({
     <CoordinateProvider>
       <VisualCard>
         <VisualCardToolbar>
-          <div className="mx-auto flex w-full max-w-md flex-col">
-            <div aria-hidden="true" className={stepperVariants()} />
+          <div
+            aria-hidden="true"
+            className="mx-auto flex w-full max-w-md flex-col"
+            inert
+          >
+            <NumberField readOnly value={UNIT_CIRCLE_DEFAULT_ANGLE}>
+              <NumberFieldGroup>
+                <NumberFieldDecrement />
+                <NumberFieldInput
+                  className="font-mono"
+                  placeholder={`${UNIT_CIRCLE_DEFAULT_ANGLE}`}
+                />
+                <NumberFieldIncrement />
+              </NumberFieldGroup>
+            </NumberField>
           </div>
         </VisualCardToolbar>
         {/* The unit circle draws its frame inside its body, as this does. */}

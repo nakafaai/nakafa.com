@@ -1,5 +1,5 @@
 import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
-import type { readTenantKeys } from "@repo/backend/confect/vault/keys";
+import type { TenantKeys } from "@repo/backend/confect/vault/keys";
 import {
   blindText,
   openText,
@@ -52,9 +52,6 @@ export const drawToken = Effect.fn("exams.sittings.drawToken")(function* () {
  */
 export const normalizeToken = (text: string) => text.trim().toUpperCase();
 
-/** The school keys that `readTenantKeys` returns. */
-type SchoolKeys = Effect.Success<ReturnType<typeof readTenantKeys>>;
-
 /**
  * The keyed hash of a sitting's token: the school's blind key over the token, bound to
  * the token field of the sitting. The hash never verifies for another sitting, and it
@@ -62,7 +59,7 @@ type SchoolKeys = Effect.Success<ReturnType<typeof readTenantKeys>>;
  * characters.
  */
 export const tokenHash = Effect.fn("exams.sittings.tokenHash")(function* (
-  keys: SchoolKeys,
+  keys: TenantKeys,
   sittingId: string,
   token: string
 ) {
@@ -88,7 +85,7 @@ const sealedTokenField = (sittingId: string) => ({
  * student never gets it from a read: only the proctor's dashboard opens it (ADR 0013).
  */
 export const sealToken = Effect.fn("exams.sittings.token.seal")(function* (
-  keys: SchoolKeys,
+  keys: TenantKeys,
   sittingId: string,
   token: string
 ) {
@@ -97,7 +94,7 @@ export const sealToken = Effect.fn("exams.sittings.token.seal")(function* (
 
 /** Opens the sealed token of a sitting for a proctor, with the school keys that sealed it. */
 export const openToken = Effect.fn("exams.sittings.token.open")(function* (
-  keys: SchoolKeys,
+  keys: TenantKeys,
   sittingId: string,
   sealed: ArrayBuffer
 ) {

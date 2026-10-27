@@ -4,7 +4,11 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { openNisn, rosterEntryOf } from "@repo/backend/confect/roster/entry";
+import {
+  openNisn,
+  rosterEntryOf,
+  schoolKeys,
+} from "@repo/backend/confect/roster/entry";
 import { applyRow } from "@repo/backend/confect/roster/import";
 import spec from "@repo/backend/confect/roster/imports.spec";
 import type {
@@ -31,8 +35,9 @@ const apply = FunctionImpl.make(
   Effect.fn("roster.imports.apply")(function* ({ rows }) {
     const { person: actor } = yield* Member;
     const period = yield* Period;
+    const keys = yield* schoolKeys(period.tenantId);
     const outcomes = yield* Effect.forEach(rows, (row) =>
-      applyRow(personActor(actor), period, row)
+      applyRow(personActor(actor), period, keys, row)
     );
     const count = (outcome: string) =>
       Arr.length(Arr.filter(outcomes, (found) => found === outcome));
@@ -53,7 +58,7 @@ const apply = FunctionImpl.make(
 /**
  * The students placed in the period, a page at a time, with the NISN on file and the class
  * group, for the export that the school compares with Dapodik. The NISN is opened under
- * the school key, so only the school's Admin and Staff read it.
+ * the school key, read once for the page, so only the school's Admin and Staff read it.
  */
 const list = FunctionImpl.make(
   databaseSchema,
@@ -62,6 +67,7 @@ const list = FunctionImpl.make(
   Effect.fn("roster.imports.list")(function* ({ paginationOpts }) {
     const period = yield* Period;
     const reader = yield* DatabaseReader;
+    const keys = yield* schoolKeys(period.tenantId);
     const page = yield* reader
       .table("tenantCohortMembers")
       .index("by_periodId_and_personId", (query) =>
@@ -84,7 +90,7 @@ const list = FunctionImpl.make(
         ]);
         const nisn = yield* Option.match(entry, {
           onNone: () => Effect.succeedNone,
-          onSome: openNisn,
+          onSome: (found) => openNisn(keys, found),
         });
         const line: typeof RosterLine.Type = {
           cohortName: cohort.name,

@@ -134,9 +134,8 @@ export function StudentSitting({
   if (attempt !== null && admitted !== null && isActive(attempt.state)) {
     return (
       <StudentPlayer
+        admission={admitted}
         attempt={attempt}
-        clockOffset={admitted.clockOffset}
-        deviceId={admitted.deviceId}
         sitting={sitting}
         slug={slug}
       />
