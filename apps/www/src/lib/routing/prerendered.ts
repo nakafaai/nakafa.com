@@ -1,8 +1,9 @@
 /**
  * The route templates whose pages the build prerenders as static assets. Their
  * loaders read the answers that the build keeps beside the pages, so a link to one
- * navigates in the browser and no Worker renders it. A try-out track reads the
- * learner's attempts, so it renders on the Worker and is not here.
+ * navigates in the browser and no Worker renders it. A try-out track, set and
+ * section prerender a visitor's answer, and a learner's own answer reads from the
+ * server once the page has hydrated (ADR 0038 Phase B).
  */
 export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale",
@@ -20,4 +21,7 @@ export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale/try-out",
   "/$locale/try-out/$country",
   "/$locale/try-out/$country/$exam",
+  "/$locale/try-out/$country/$exam/$track",
+  "/$locale/try-out/$country/$exam/$track/$set",
+  "/$locale/try-out/$country/$exam/$track/$set/$section",
 ] as const;

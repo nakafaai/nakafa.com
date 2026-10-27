@@ -17,12 +17,16 @@ import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
 import { readTryoutTrackFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
+import { TryoutLearnerAnswer } from "@/components/tryout/route/learner";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import { HOME_TARGET } from "@/lib/routing/target";
+import { readStaticData } from "@/lib/static/data";
 
 /**
- * One track of the try-out catalog: its heading, its exam selector and the
- * learner's own set list, read in one server request, so the page shows whole.
+ * One track of the try-out catalog: its heading, its exam selector and its set
+ * list, read in one answer, so the page shows whole. The build prerenders a
+ * visitor's answer and keeps it; a signed-in learner reads their own set list from
+ * the server after the static page has hydrated (`TryoutLearnerAnswer`).
  */
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/"
@@ -30,16 +34,17 @@ export const Route = createFileRoute(
   validateSearch: Schema.toStandardSchemaV1(CatalogQuery),
   search: { middlewares: [stripSearchParams(CATALOG_QUERY_DEFAULTS)] },
   loaderDeps: ({ search }) => catalogLoaderDeps(search),
-  loader: async ({ params, deps }) => {
-    const route = await readTryoutTrackFn({
-      data: {
-        country: params.country,
-        exam: params.exam,
-        locale: params.locale,
-        search: deps,
-        track: params.track,
-      },
-    });
+  loader: async ({ context, deps, params }) => {
+    const input = {
+      country: params.country,
+      exam: params.exam,
+      locale: params.locale,
+      search: deps,
+      track: params.track,
+    };
+    const route = await (context.signedIn
+      ? readTryoutTrackFn({ data: input })
+      : readStaticData(readTryoutTrackFn, input));
     if (route.kind === "notFound") {
       throw notFound();
     }
@@ -102,6 +107,7 @@ function TryoutTrackPage() {
           key={`${locale}:${route.page.track.publicPath}`}
           title={route.page.track.title}
         />
+        <TryoutLearnerAnswer />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

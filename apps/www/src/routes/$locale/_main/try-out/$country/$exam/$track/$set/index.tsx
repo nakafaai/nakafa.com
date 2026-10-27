@@ -3,13 +3,17 @@ import { Schema } from "effect";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
+import { TryoutLearnerAnswer } from "@/components/tryout/route/learner";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
+import { readStaticData } from "@/lib/static/data";
 
 /**
- * One set of a track. Its catalog view is the same for every learner, and the
- * learner's own attempt on it is personal, so the page is never cached. A URL
+ * One set of a track. Its catalog view is the same for every visitor, so the build
+ * prerenders it and keeps its answer. The learner's own attempt on it is personal:
+ * a signed-in learner and a URL bound to an attempt read their own answer from the
+ * server, after the static page has hydrated (`TryoutLearnerAnswer`), and a URL
  * bound to an attempt answers for that attempt alone.
  */
 export const Route = createFileRoute(
@@ -17,17 +21,18 @@ export const Route = createFileRoute(
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
   loaderDeps: ({ search }) => search,
-  loader: async ({ params, deps }) => {
-    const route = await readTryoutSetFn({
-      data: {
-        country: params.country,
-        exam: params.exam,
-        locale: params.locale,
-        search: deps,
-        set: params.set,
-        track: params.track,
-      },
-    });
+  loader: async ({ context, deps, params }) => {
+    const input = {
+      country: params.country,
+      exam: params.exam,
+      locale: params.locale,
+      search: deps,
+      set: params.set,
+      track: params.track,
+    };
+    const route = await (context.signedIn || deps.attemptId !== undefined
+      ? readTryoutSetFn({ data: input })
+      : readStaticData(readTryoutSetFn, input));
     if (route.kind === "notFound") {
       throw notFound();
     }
@@ -59,16 +64,19 @@ function TryoutSetPage() {
     return route.preview;
   }
   return (
-    <TryoutClockProvider initialNow={route.now}>
-      <TryoutSetPageClient
-        binding={route.binding}
-        content={route.content}
-        page={route.page}
-        restartTarget={route.restartTarget}
-        route={route.route}
-      >
-        {route.review}
-      </TryoutSetPageClient>
-    </TryoutClockProvider>
+    <>
+      <TryoutLearnerAnswer />
+      <TryoutClockProvider initialNow={route.now}>
+        <TryoutSetPageClient
+          binding={route.binding}
+          content={route.content}
+          page={route.page}
+          restartTarget={route.restartTarget}
+          route={route.route}
+        >
+          {route.review}
+        </TryoutSetPageClient>
+      </TryoutClockProvider>
+    </>
   );
 }

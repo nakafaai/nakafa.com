@@ -6,6 +6,7 @@ import { PRERENDER_HEADER, readStaticCalls } from "@/lib/static/calls";
 import { staticCallKey } from "@/lib/static/key";
 import {
   attachStaticCalls,
+  isPrerenderRequest,
   recordStaticCall,
 } from "@/lib/static/record.server";
 
@@ -37,6 +38,13 @@ const prerender = new Request("https://nakafa.com/id", {
 });
 
 describe("lib/static/record.server", () => {
+  it("tells the build's prerender of a page from a visitor's request", () => {
+    getRequestHeader.mockReturnValue("1");
+    expect(isPrerenderRequest()).toBe(true);
+    getRequestHeader.mockReturnValue(undefined);
+    expect(isPrerenderRequest()).toBe(false);
+  });
+
   it.effect("records nothing for a visitor's request", () =>
     Effect.gen(function* () {
       yield* recordStaticCall("/_serverFn/messages", { locale: "id" });

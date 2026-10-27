@@ -55,7 +55,7 @@ describe("static page paths", () => {
     ]);
   });
 
-  it("leaves out the search screen and every try-out track, set and section", () => {
+  it("leaves out the search screen and keeps every try-out track, set and section", () => {
     const paths = selectStaticPagePaths({
       locales: ["en"],
       sitemapPaths: [
@@ -66,7 +66,13 @@ describe("static page paths", () => {
       ],
     });
 
-    expect(paths).toEqual(["/en/articles", "/en/try-out"]);
+    expect(paths).toEqual([
+      "/en/articles",
+      "/en/try-out",
+      "/en/try-out/indonesia/snbt/2027",
+      "/en/try-out/indonesia/snbt/2027/set-1",
+      "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+    ]);
   });
 
   it("lists each path once, in a stable order", () => {
