@@ -9,7 +9,12 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PlayerMain } from "@/components/player/frame";
-import { PlayerHeader, PlayerTitle } from "@/components/player/header";
+import {
+  PlayerHeader,
+  PlayerHeaderEnd,
+  PlayerHeaderStart,
+  PlayerTitle,
+} from "@/components/player/header";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import {
@@ -65,22 +70,26 @@ export function ExamTryPaper({
   return (
     <TrySlugContext value={slug}>
       <TryStoreContext value={store}>
-        <PlayerHeader>
-          <PlayerTitle>{exam.title || t("untitled")}</PlayerTitle>
-          {gone ? null : (
-            <TargetLink className={buttonVariants()} target={editor}>
-              {t("try-finish")}
-            </TargetLink>
-          )}
-        </PlayerHeader>
-        <PlayerMain navigator={null}>
-          <p className="text-muted-foreground text-sm">
-            {gone ? <ExamGone /> : t("try-note")}
-          </p>
-          <PlayerProvider
-            keys={Arr.map(exam.questions, (question) => question.id)}
-            mode="list"
-          >
+        <PlayerProvider
+          keys={Arr.map(exam.questions, (question) => question.id)}
+          mode="list"
+        >
+          <PlayerHeader>
+            <PlayerHeaderStart>
+              <PlayerTitle>{exam.title || t("untitled")}</PlayerTitle>
+            </PlayerHeaderStart>
+            {gone ? null : (
+              <PlayerHeaderEnd>
+                <TargetLink className={buttonVariants()} target={editor}>
+                  {t("try-finish")}
+                </TargetLink>
+              </PlayerHeaderEnd>
+            )}
+          </PlayerHeader>
+          <PlayerMain navigator={null}>
+            <p className="text-muted-foreground text-sm">
+              {gone ? <ExamGone /> : t("try-note")}
+            </p>
             <PlayerQuestions>
               {Arr.map(exam.questions, (question, index) => (
                 <ExamTryQuestion
@@ -90,8 +99,8 @@ export function ExamTryPaper({
                 />
               ))}
             </PlayerQuestions>
-          </PlayerProvider>
-        </PlayerMain>
+          </PlayerMain>
+        </PlayerProvider>
       </TryStoreContext>
     </TrySlugContext>
   );
