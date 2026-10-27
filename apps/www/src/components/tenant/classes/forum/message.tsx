@@ -27,7 +27,7 @@ import {
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Clock, DateTime, Effect, Schema, String as Str } from "effect";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
   forumCall,
@@ -70,11 +70,9 @@ export function ForumMessageRow({
         ) : (
           <MessageBubble message={message} />
         )}
-        <MessageMeta
-          editing={editing}
-          message={message}
-          onEdit={() => setEditing(true)}
-        />
+        <MessageMeta editing={editing} message={message}>
+          <MessageActions message={message} onEdit={() => setEditing(true)} />
+        </MessageMeta>
       </MessageContent>
     </Message>
   );
@@ -104,17 +102,17 @@ function MessageBubble({ message }: { message: ForumMessage }) {
 }
 
 /**
- * The footer of a message: when it was written, that it was edited, and its menu, which a hidden
- * message and one in its edit field do not show.
+ * The footer of a message: when it was written, that it was edited, and the menu the caller composes,
+ * which a hidden message and one in its edit field do not show.
  */
 function MessageMeta({
+  children,
   editing,
   message,
-  onEdit,
 }: {
+  children: ReactNode;
   editing: boolean;
   message: ForumMessage;
-  onEdit: () => void;
 }) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
@@ -130,9 +128,7 @@ function MessageMeta({
       {live && message.editedAt !== null ? (
         <span>{t("message-edited")}</span>
       ) : null}
-      {live && !editing ? (
-        <MessageActions message={message} onEdit={onEdit} />
-      ) : null}
+      {live && !editing ? children : null}
     </MessageFooter>
   );
 }

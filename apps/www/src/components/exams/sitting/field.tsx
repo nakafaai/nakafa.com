@@ -6,6 +6,7 @@ import {
 import { Input } from "@repo/design-system/components/ui/input";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useTranslations } from "use-intl";
+import { usePaperLocked } from "@/components/exams/sitting/lock";
 import type { Written } from "@/components/exams/sitting/response";
 
 /** How long the student pauses typing before the answer is saved. */
@@ -24,13 +25,11 @@ const ESSAY_ROWS = 8;
  * answer is not one save per key.
  */
 export function SittingField({
-  disabled = false,
   entry,
   labelledBy,
   onType,
   text,
 }: {
-  readonly disabled?: boolean;
   readonly entry: Written;
   /** The id of the heading that names the question. */
   readonly labelledBy: string;
@@ -38,6 +37,7 @@ export function SittingField({
   /** The text the paper holds for the question when the field opens. */
   readonly text: string;
 }) {
+  const disabled = usePaperLocked();
   const t = useTranslations("Exams");
   const save = useDebouncedCallback(onType, {
     delay: TYPING_PAUSE_MILLISECONDS,

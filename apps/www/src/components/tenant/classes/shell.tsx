@@ -44,8 +44,24 @@ import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 const ClassTab = Schema.Literals(["home", "forum", "grades"]);
 type ClassTab = typeof ClassTab.Type;
 
-/** The first screen of a class page, which the page's loader read on the server. */
-const ClassPreloadContext = createContext<ClassPreload | undefined>(undefined);
+/**
+ * What the class page's address and loader decide: its tab, the channel its forum shows, and the
+ * first screen, which the loader read on the server.
+ */
+const ClassPageContext = createContext<{
+  channel: Option.Option<Id<"classroomChannels">>;
+  preload: ClassPreload | undefined;
+  tab: ClassTab;
+} | null>(null);
+
+/** Reads what the class page's address and loader decide. It throws outside a class page. */
+function useClassPage() {
+  const page = use(ClassPageContext);
+  if (page === null) {
+    throw new Error("useClassPage must be used within ClassShell");
+  }
+  return page;
+}
 
 /**
  * The shell of one class page: the school header with the class's name, the class's tabs, and the
@@ -78,14 +94,9 @@ export function ClassShell({
       )}
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
-      <ClassPreloadContext value={preload}>
-        <ClassPage
-          channel={channel}
-          classSlug={classSlug}
-          slug={slug}
-          tab={tab}
-        />
-      </ClassPreloadContext>
+      <ClassPageContext value={{ channel, preload, tab }}>
+        <ClassPage classSlug={classSlug} slug={slug} />
+      </ClassPageContext>
     </ReadBoundary>
   );
 }
@@ -105,17 +116,13 @@ type ClassPreload = Pick<
  * viewer may not read shows the missing state.
  */
 function ClassPage({
-  channel,
   classSlug,
   slug,
-  tab,
 }: {
-  channel: Option.Option<Id<"classroomChannels">>;
   classSlug: string;
   slug: TenantSlug;
-  tab: ClassTab;
 }) {
-  const preload = use(ClassPreloadContext);
+  const { channel, preload, tab } = useClassPage();
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const resolved = usePreloadedQueryResult(
@@ -214,7 +221,7 @@ function ClassForum({
   slug: TenantSlug;
   tab: Exclude<ClassTab, "grades">;
 }) {
-  const preload = use(ClassPreloadContext);
+  const { preload } = useClassPage();
   const t = useTranslations("Classroom");
   const [drafts] = useState(createChannelDrafts);
   // The channel's name ends the path, read from the same channel list the forum shows.
