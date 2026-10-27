@@ -16,12 +16,18 @@ import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { Link, type LinkTarget } from "@/lib/routing/link";
 
-/** The address of the page on screen when it is no settings section under `path`. */
+/**
+ * The address the browser shows for the page on screen, when it is no settings
+ * section under `path`. It is the public address, not the router's rewritten
+ * one: a link or a navigation reads an `href` as the browser's address and
+ * rewrites it again, so the router's own path would lead a School host to
+ * `/school/<slug>/...` and a locale page to its internal path.
+ */
 function readReturn(router: AnyRouter, path: string): Option.Option<string> {
   const { location, matches } = router.state;
   return Arr.some(matches, (match) => Str.startsWith(path)(match.fullPath))
     ? Option.none()
-    : Option.some(location.href);
+    : Option.some(location.publicHref);
 }
 
 const SettingsReturnContext = createContext<StoreApi<
