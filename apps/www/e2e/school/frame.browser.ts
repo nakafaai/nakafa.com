@@ -7,6 +7,7 @@ import {
   seedSitting,
   signInOwner,
 } from "@/e2e/support/school";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /**
  * Seeds a sitting for the learner. The seed opens it in the school's first active unit, which the
@@ -97,10 +98,13 @@ test("a student's results start at the top of the sitting body, which caps at th
   const page = await context.newPage();
 
   await page.goto(address(`/sittings/${sitting.sittingId}`));
+  // The token and the press reach the sitting only once React has taken the entry over.
+  const enter = page.getByRole("button", { name: "Enter sitting" });
+  await waitUntilTakenOver(enter);
   await page
     .getByPlaceholder("Enter the token from your proctor")
     .fill(sitting.token);
-  await page.getByRole("button", { name: "Enter sitting" }).click();
+  await enter.click();
   await page.getByRole("radiogroup").first().getByRole("radio").first().click();
   await page.getByRole("button", { exact: true, name: "Finish" }).click();
   await page
