@@ -6,20 +6,22 @@ import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 
 /**
  * Projects the questions of a running section into what the player marks in
- * its navigator and picks from the keyboard. Each question answers through
- * the same save that its response fields use.
+ * its navigator, flags, and picks from the keyboard. Each question answers
+ * through the same save that its response fields use, and flags through the
+ * flag save, which turns its flag the other way.
  */
 export function projectTryoutQuestions(input: {
   answer: (
     question: TryoutRuntimeQuestion,
     selection: Selection | null
   ) => void;
+  flag: (question: TryoutRuntimeQuestion, flagged: boolean) => void;
   questions: readonly TryoutRuntimeQuestion[];
 }): readonly PlayerQuestionModel[] {
   return Arr.map(input.questions, (question) => ({
     answered: question.response?.isComplete ?? false,
-    // Try-outs have no flag path until the engine cutover (ADR 0031 section 10).
-    flagged: false,
+    flag: () => input.flag(question, !question.flagged),
+    flagged: question.flagged,
     key: question.placementId,
     pick: (index) =>
       Option.match(pickOption(question.responseSpec, index), {

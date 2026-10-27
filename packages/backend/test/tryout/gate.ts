@@ -315,6 +315,14 @@ export const seedTryoutGate = Effect.gen(function* () {
         );
       }),
     arrange: (change: Change) => patch(t, changes[change]),
+    flag: (caller: Caller, target: Target, flagged: boolean) =>
+      call(clients[caller], refs.public.tryouts.mutations.responses.flag, {
+        flagged,
+        placementId: placements[target],
+      }),
+    flags: Effect.promise(() =>
+      t.query((ctx) => ctx.db.query("assessmentFlags").collect())
+    ),
     finish: (caller: Caller, target: Target) =>
       call(
         clients[caller],

@@ -40,6 +40,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -71,7 +72,7 @@ const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
  * The audit trail as the page's table. The header row searches the changes, filters them by
  * who made them and exports the whole trail, and shows while the body loads.
  */
-export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolAuditSettings() {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -80,14 +81,17 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
         actions={
           <>
             <TableSearch placeholder={t("audit-search")} />
-            <AuditFilter slug={slug} />
-            <AuditExport slug={slug} />
+            <AuditFilter />
+            <AuditExport />
           </>
         }
       >
         <ReadBoundary>
-          <SchoolAuditBody slug={slug} />
+          <SchoolAuditBody />
         </ReadBoundary>
+        <p className="mt-auto border-t px-4 py-3 text-muted-foreground text-sm">
+          {t("audit-footer")}
+        </p>
       </SettingsTablePage>
     </TableFiltersProvider>
   );
@@ -98,7 +102,8 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
  * school, so an actor on a later page is offered before that page loads, beside the staff
  * and the system that the journal also records.
  */
-function AuditFilter({ slug }: { slug: TenantSlug }) {
+function AuditFilter() {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const people = useQuery(journal.audit.actors, { slug });
   const actors = Arr.dedupe([
@@ -128,7 +133,8 @@ function AuditFilter({ slug }: { slug: TenantSlug }) {
  * view. The rows hold no policy value and no secret, so the page shows none. The body waits for the first page, and an empty school shows the empty
  * state alone.
  */
-function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
+function SchoolAuditBody() {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const words = useEntryWords();
@@ -265,7 +271,8 @@ const exportAuditTrail = Effect.fn("tenant.audit.export")(
  * The audit's main action: the school's whole trail as a CSV file that the school can keep or hand
  * to an inspector. The button waits while the file is made.
  */
-function AuditExport({ slug }: { slug: TenantSlug }) {
+function AuditExport() {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const words = useEntryWords();
   const [isPending, startTransition] = useTransition();

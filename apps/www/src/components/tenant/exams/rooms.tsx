@@ -33,12 +33,13 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableChoice } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
-  type RoomStateFilter,
+  RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/filter";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
@@ -57,6 +58,22 @@ type Room = typeof RoomRow.Type;
 
 /** The state the table filters by, which is every state or one of them. */
 type StateFilter = typeof RoomStateFilter.Type;
+
+/** The states of a room, in the order the Filter menu lists them after every state. */
+const ROOM_STATES = Arr.filter(
+  RoomStateFilter.literals,
+  (state): state is Exclude<StateFilter, "all"> => state !== "all"
+);
+
+/**
+ * The look of each room state, in its table cell and in the Filter menu: a clock before it opens,
+ * a running room, and a closed one, each in its tone.
+ */
+const ROOM_STATE_LOOKS = {
+  closed: { icon: CheckmarkCircle02Icon, tone: "neutral" },
+  open: { icon: PlayIcon, tone: "success" },
+  scheduled: { icon: Clock01Icon, tone: "info" },
+} as const satisfies Record<Room["state"], StatusLook>;
 
 /** How many rooms each page asks for. The next page loads when the end of the table comes into view. */
 const ROOM_PAGE_SIZE = 20;
@@ -84,7 +101,7 @@ export function ExamRooms({
       fallback={(failure) => (
         <>
           <SchoolHeader items={examsItems} />
-          <div className="flex w-full min-w-0 flex-1 flex-col">{failure}</div>
+          <TablePageBody>{failure}</TablePageBody>
         </>
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
@@ -131,9 +148,11 @@ function ExamRoomsContent({
       onNone: () => (
         <>
           <SchoolHeader items={examsItems} />
-          <p className="p-4 text-muted-foreground text-sm md:p-6">
-            {t("rooms-unavailable")}
-          </p>
+          <TablePageBody>
+            <p className="p-4 text-muted-foreground text-sm md:p-6">
+              {t("rooms-unavailable")}
+            </p>
+          </TablePageBody>
         </>
       ),
       onSome: (gone) => (
@@ -142,9 +161,11 @@ function ExamRoomsContent({
             items={[...examsItems, { label: gone.title }]}
             title={gone.title}
           />
-          <p className="p-4 text-muted-foreground text-sm md:p-6">
-            <ExamGone />
-          </p>
+          <TablePageBody>
+            <p className="p-4 text-muted-foreground text-sm md:p-6">
+              <ExamGone />
+            </p>
+          </TablePageBody>
         </>
       ),
     });
@@ -159,10 +180,22 @@ function ExamRoomsContent({
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
       >
-        <RoomStateFilterMenu onValueChange={setFilter} value={filter} />
+        <TableChoice
+          onChange={setFilter}
+          options={[
+            { icon: Calendar03Icon, label: t("state-all"), value: "all" },
+            ...Arr.map(ROOM_STATES, (state) => ({
+              icon: ROOM_STATE_LOOKS[state].icon,
+              label: t(`room-state-${state}`),
+              value: state,
+            })),
+          ]}
+          title={t("rooms-state")}
+          value={filter}
+        />
         {tenant.canOpenExams ? (
           <Link
-            className={buttonVariants()}
+            className={buttonVariants({ variant: "outline" })}
             params={{ exam: examId, slug }}
             to="/school/$slug/exams/$exam/edit"
           >
@@ -170,14 +203,14 @@ function ExamRoomsContent({
           </Link>
         ) : null}
       </SchoolHeader>
-      <div className="flex w-full min-w-0 flex-1 flex-col">
+      <TablePageBody>
         <RoomsTable
           examId={examId}
           filter={filter}
           isSettled={isSettled}
           slug={slug}
         />
-      </div>
+      </TablePageBody>
     </>
   );
 }
@@ -203,39 +236,6 @@ function RoomsEmpty({ filter }: { filter: StateFilter }) {
       act="pointing"
       description={t("rooms-empty-description")}
       title={t("rooms-empty")}
-    />
-  );
-}
-
-/** The rooms' Filter menu, in the page's header row: every room, or the rooms in one state, which the server reads. */
-function RoomStateFilterMenu({
-  onValueChange,
-  value,
-}: {
-  onValueChange: (value: StateFilter) => void;
-  value: StateFilter;
-}) {
-  const t = useTranslations("Exams");
-
-  return (
-    <TableChoice
-      onChange={onValueChange}
-      options={[
-        { icon: Calendar03Icon, label: t("state-all"), value: "all" },
-        {
-          icon: Clock01Icon,
-          label: t("room-state-scheduled"),
-          value: "scheduled",
-        },
-        { icon: PlayIcon, label: t("room-state-open"), value: "open" },
-        {
-          icon: CheckmarkCircle02Icon,
-          label: t("room-state-closed"),
-          value: "closed",
-        },
-      ]}
-      title={t("rooms-state")}
-      value={value}
     />
   );
 }
@@ -361,7 +361,13 @@ function RoomItem({
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell>{t(`room-state-${room.state}`)}</TableCell>
+      <TableCell>
+        <TableStatus
+          icon={ROOM_STATE_LOOKS[room.state].icon}
+          label={t(`room-state-${room.state}`)}
+          tone={ROOM_STATE_LOOKS[room.state].tone}
+        />
+      </TableCell>
       <TableCell>
         {room.canCancel ? <RoomMenu room={room} slug={slug} /> : null}
       </TableCell>

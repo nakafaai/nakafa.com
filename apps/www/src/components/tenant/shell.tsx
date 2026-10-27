@@ -34,7 +34,14 @@ import { textDirection } from "@repo/internationalization/src/direction";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
-import { lazy, type ReactNode, Suspense, useTransition } from "react";
+import {
+  createContext,
+  lazy,
+  type ReactNode,
+  Suspense,
+  use,
+  useTransition,
+} from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
@@ -81,6 +88,21 @@ function signOutOfSchool() {
   );
 }
 
+/** The viewer's account and name in the school, which the shell provides to the account at the sidebar's foot. */
+const ViewerAccountContext = createContext<{
+  account: typeof ViewerAccount.Type;
+  name: string;
+} | null>(null);
+
+/** Reads the viewer's account. It throws outside the shell, which always provides it. */
+function useViewerAccount() {
+  const viewer = use(ViewerAccountContext);
+  if (viewer === null) {
+    throw new Error("useViewerAccount must be used within TenantShell");
+  }
+  return viewer;
+}
+
 /**
  * The account button at the foot of the school's sidebar: the viewer's round
  * avatar, the viewer's name in the school, and the role, with the account menu.
@@ -88,15 +110,9 @@ function signOutOfSchool() {
  * has no pending state of its own. A sign-out makes the account inert until it settles, so a
  * second press signs out once. The role line is left out for a viewer with no grant.
  */
-function TenantAccount({
-  account,
-  name,
-  role,
-}: {
-  account: typeof ViewerAccount.Type;
-  name: string;
-  role: TenantValue["role"];
-}) {
+function TenantAccount() {
+  const { account, name } = useViewerAccount();
+  const { role } = useTenant();
   const t = useTranslations("School");
   const [isSigningOut, startSigningOut] = useTransition();
 
@@ -207,17 +223,7 @@ function TenantSwitcher() {
  * so on its route the pages render alone. The pathname is read here, not in the
  * shell, so the shell's context value does not change on navigation.
  */
-function TenantFrame({
-  account,
-  children,
-  personName,
-  role,
-}: {
-  account: typeof ViewerAccount.Type;
-  children: ReactNode;
-  personName: string;
-  role: TenantValue["role"];
-}) {
+function TenantFrame({ children }: { children: ReactNode }) {
   const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit", {
     exact: true,
   });
@@ -241,7 +247,7 @@ function TenantFrame({
         <SidebarContent>
           <TenantNavigation />
         </SidebarContent>
-        <TenantAccount account={account} name={personName} role={role} />
+        <TenantAccount />
       </Sidebar>
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
@@ -295,9 +301,9 @@ export function TenantShell({
           slug: profile.slug,
         }}
       >
-        <TenantFrame account={account} personName={personName} role={role}>
-          {children}
-        </TenantFrame>
+        <ViewerAccountContext value={{ account, name: personName }}>
+          <TenantFrame>{children}</TenantFrame>
+        </ViewerAccountContext>
       </TenantContext>
     </ViewerPreloadContext>
   );

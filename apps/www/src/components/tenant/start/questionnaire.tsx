@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/ui/questionnaire";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { getRouteApi } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import {
@@ -49,8 +50,8 @@ import {
 import { createTypedName } from "@/components/tenant/start/typed";
 import { reportClientException } from "@/lib/analytics/client";
 
-/** The policy pages the last question links to, from the page's published navigation. */
-type Legal = Record<"privacy" | "terms", string> | null;
+/** The page of the questionnaire, whose loader reads the policy pages the last question links to. */
+const startRoute = getRouteApi("/$locale/_entry/school/new");
 
 /** Whether an item name the questionnaire reports is one of its questions. */
 const isStartItem = (name: string): name is StartItem =>
@@ -70,13 +71,7 @@ const StartNinaContext = createContext<ReactNode>(null);
  * the page draws her; she appears with the questions, so the page does not move
  * when they arrive.
  */
-export function SchoolStart({
-  children,
-  legal,
-}: {
-  children: ReactNode;
-  legal: Legal;
-}) {
+export function SchoolStart({ children }: { children: ReactNode }) {
   // The server saw the session, but the client's Convex session settles a moment
   // later; the draft is read once it has, so the first read is never anonymous.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -89,7 +84,7 @@ export function SchoolStart({
   }
   return (
     <StartNinaContext value={children}>
-      <SchoolStartForm draft={draft.value} legal={legal} />
+      <SchoolStartForm draft={draft.value} />
     </StartNinaContext>
   );
 }
@@ -109,13 +104,8 @@ const NO_REFOCUS: Option.Option<string> = Option.none();
  * its own address once the server answers; a refused address returns to the
  * first question, where the live check names the reason.
  */
-function SchoolStartForm({
-  draft,
-  legal,
-}: {
-  draft: StartDraft;
-  legal: Legal;
-}) {
+function SchoolStartForm({ draft }: { draft: StartDraft }) {
+  const { legal } = startRoute.useLoaderData();
   const t = useTranslations("SchoolStart");
   const tCommon = useTranslations("Common");
   const nina = use(StartNinaContext);

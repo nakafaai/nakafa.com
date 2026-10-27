@@ -2,14 +2,18 @@ import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Clock, Effect, Option, Result } from "effect";
+import { Clock, Effect, Result } from "effect";
+import { updateRuntimeQueries } from "@/components/tryout/runtime/cache";
 import {
   applyOptimisticTryoutResponse,
   nextTryoutResponseVersion,
   type TryoutResponseSelection,
   tryoutSubmitFailureOf,
 } from "@/components/tryout/runtime/response/state";
-import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
+import type {
+  TryoutRuntimeQuestion,
+  TryoutSectionRuntime,
+} from "@/components/tryout/runtime/types";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
@@ -23,17 +27,17 @@ export function useTryoutResponseSubmit() {
     tryouts.mutations.responses.save
   ).withOptimisticUpdate((localStore, args) => {
     const selectedAt = Effect.runSync(Clock.currentTimeMillis);
+    const change = (runtime: TryoutSectionRuntime) =>
+      applyOptimisticTryoutResponse(runtime, args, selectedAt);
     updateRuntimeQueries(
       localStore,
       tryouts.queries.runtime.getSectionAttemptState,
-      args,
-      selectedAt
+      change
     );
     updateRuntimeQueries(
       localStore,
       tryouts.queries.runtime.getSetAttemptState,
-      args,
-      selectedAt
+      change
     );
   });
   /** Reports a failed answer: an ended attempt tells the learner to start again, a stale write is not reported, and any other failure is reported. */
@@ -100,42 +104,4 @@ export function useTryoutResponseSubmit() {
       )
     );
   };
-}
-type OptimisticStore = Parameters<
-  Parameters<ReturnType<typeof useMutation>["withOptimisticUpdate"]>[0]
->[0];
-type SaveResponseArgs = Ref.Args<typeof tryouts.mutations.responses.save>;
-
-function updateRuntimeQueries<
-  Query extends
-    | typeof tryouts.queries.runtime.getSectionAttemptState
-    | typeof tryouts.queries.runtime.getSetAttemptState,
->(
-  localStore: OptimisticStore,
-  query: Query,
-  args: SaveResponseArgs,
-  selectedAt: number
-) {
-  const queries = localStore.getAllQueries(query);
-  for (const cached of queries) {
-    const state = Option.getOrUndefined(cached.value);
-    if (!state?.runtime) {
-      continue;
-    }
-    const runtime = applyOptimisticTryoutResponse(
-      state.runtime,
-      args,
-      selectedAt
-    );
-    if (runtime) {
-      localStore.setQuery(
-        query,
-        cached.args,
-        Option.some({
-          ...state,
-          runtime,
-        })
-      );
-    }
-  }
 }

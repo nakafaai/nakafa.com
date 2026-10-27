@@ -27,11 +27,12 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { gradeItems } from "@/components/tenant/settings/choices";
@@ -40,6 +41,7 @@ import {
   SchoolCohortMenu,
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort/menu";
+import { COHORT_STATUS_LOOKS } from "@/components/tenant/settings/cohort/status";
 import { createCohortChange } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -85,14 +87,14 @@ export function SchoolCohortsSettings({ slug }: { slug: TenantSlug }) {
         fallback={(failure) => <SettingsTablePage>{failure}</SettingsTablePage>}
         read={{ args: { slug }, ref: tenancy.viewer.get }}
       >
-        <SchoolCohortsContent slug={slug} />
+        <SchoolCohortsContent />
       </ReadBoundary>
     </TableFiltersProvider>
   );
 }
 
 /** The cohorts of the school's active unit, once the viewer's units are in. */
-function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
+function SchoolCohortsContent() {
   const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
 
@@ -122,7 +124,7 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
     <CohortsUnitContext
       value={{ onChoose: setChosenUnit, unitId: unit.id, units }}
     >
-      <SchoolCohortsOfUnit slug={slug} />
+      <SchoolCohortsOfUnit />
     </CohortsUnitContext>
   );
 }
@@ -132,7 +134,8 @@ function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
  * state, which links to the periods, and no add action, because a cohort belongs to a period.
  * A failed read of the active period shows its own sentence and Try again.
  */
-function SchoolCohortsOfUnit({ slug }: { slug: TenantSlug }) {
+function SchoolCohortsOfUnit() {
+  const { slug } = useTenant();
   const { unitId } = useCohortsUnit();
 
   return (
@@ -410,7 +413,13 @@ function SchoolCohortTable({
       sortFn: "alphanumeric",
     }),
     cohortColumns.accessor((cohort) => cohort.status, {
-      cell: (info) => t(`cohort-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={COHORT_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`cohort-${info.getValue()}`)}
+          tone={COHORT_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("cohort-status"),

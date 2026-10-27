@@ -13,7 +13,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -34,6 +33,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
@@ -78,7 +78,7 @@ const memberColumns = createColumnHelper<
  * and its roles. The header row searches the names, filters by status, and holds Invite,
  * the page's main action. The list loads more rows as its end comes into view.
  */
-export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolMembersSettings() {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -100,12 +100,12 @@ export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
                 },
               ]}
             />
-            <SchoolInviteAction slug={slug} />
+            <SchoolInviteAction />
           </>
         }
       >
         <ReadBoundary>
-          <SchoolMembersBody slug={slug} />
+          <SchoolMembersBody />
         </ReadBoundary>
       </SettingsTablePage>
     </TableFiltersProvider>
@@ -113,7 +113,8 @@ export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /** The members of the school, read a page at a time, with the table and its end. */
-function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
+function SchoolMembersBody() {
+  const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.roster.members,
@@ -128,7 +129,7 @@ function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {pagination._tag === "LoadingFirstPage" ||
       (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolMemberTable members={pagination.results} slug={slug} />
+        <SchoolMemberTable members={pagination.results} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -138,13 +139,7 @@ function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
 }
 
 /** The members in a data table, or the table's empty state when the school has none. */
-function SchoolMemberTable({
-  members,
-  slug,
-}: {
-  members: readonly MemberItem[];
-  slug: TenantSlug;
-}) {
+function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   const t = useTranslations("SchoolSettings");
 
   if (Arr.isReadonlyArrayEmpty(members)) {
@@ -193,7 +188,7 @@ function SchoolMemberTable({
       cell: (info) =>
         info.row.original.removable &&
         info.row.original.status !== "invited" ? (
-          <SchoolMemberMenu member={info.row.original} slug={slug} />
+          <SchoolMemberMenu member={info.row.original} />
         ) : null,
       id: "actions",
     }),
@@ -215,13 +210,8 @@ function SchoolMemberTable({
  * the account of a member who joined loses the school at once. An invited member is handled on
  * the invitations page, and the list answers which rows the viewer may remove.
  */
-function SchoolMemberMenu({
-  member,
-  slug,
-}: {
-  member: MemberItem;
-  slug: TenantSlug;
-}) {
+function SchoolMemberMenu({ member }: { member: MemberItem }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange

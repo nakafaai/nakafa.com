@@ -1,4 +1,3 @@
-import type { Mascot } from "@repo/mascot/code";
 import { getRouteApi } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { useOptimistic, useState, useTransition } from "react";
@@ -19,7 +18,7 @@ import {
 import { SchoolMark } from "@/components/tenant/mark";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
 
-/** The school layout's route, which holds the legal notice, the address and the search. */
+/** The school layout's route, which holds the school's profile and the search. */
 const schoolRoute = getRouteApi("/school/$slug");
 
 /**
@@ -31,18 +30,14 @@ const schoolRoute = getRouteApi("/school/$slug");
  */
 export function TenantOutsider({
   account,
-  logo,
-  mascot,
   school,
 }: {
   account: string;
-  logo: string | undefined;
-  mascot: typeof Mascot.Type;
   school: string;
 }) {
   const t = useTranslations("SchoolEntry");
   const tSchool = useTranslations("School");
-  const { legal, slug } = schoolRoute.useRouteContext();
+  const { logo, mascot } = schoolRoute.useRouteContext().school.profile;
   const navigate = schoolRoute.useNavigate();
   const [left, setLeft] = useState(false);
   const [leaving, setLeaving] = useOptimistic(left);
@@ -61,15 +56,7 @@ export function TenantOutsider({
   }
 
   if (leaving) {
-    return (
-      <TenantEntry
-        legal={legal}
-        logo={logo}
-        mascot={mascot}
-        slug={slug}
-        title={tSchool("sign-in-title", { school })}
-      />
-    );
+    return <TenantEntry title={tSchool("sign-in-title", { school })} />;
   }
 
   return (

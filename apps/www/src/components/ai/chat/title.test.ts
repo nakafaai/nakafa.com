@@ -50,11 +50,11 @@ function hook() {
 }
 
 /**
- * A page shaped like the chat header: the box and the title take turns in
- * their places, and Cancel and Confirm stand beside them while the box is open.
- * The box has no element while it is hidden, as a hidden box has no ref in the
- * header, so the focus is read only once the commit has shown or hidden it.
- * The chat's menu trigger and a control the learner might choose are there too.
+ * A page shaped like the chat header: the box holds Cancel and Confirm, and it
+ * stays in the page while it is hidden, as the header's Activity keeps it, so a
+ * press on Cancel or Confirm leaves the focus on a control that hides with the
+ * box. The title takes the box's place while the box is hidden. The chat's menu
+ * trigger and a control the learner might choose are there too.
  */
 function Probe(props: { chat: ChatView }) {
   const rename = useChatRename(props.chat);
@@ -62,23 +62,26 @@ function Probe(props: { chat: ChatView }) {
   return createElement(
     "main",
     null,
-    rename.isEditing
-      ? createElement("input", { ref: rename.inputRef })
-      : createElement("h1", { ref: rename.titleRef, tabIndex: -1 }),
-    rename.isEditing
-      ? createElement("button", {
-          id: "cancel",
-          onClick: rename.closeEditor,
-          type: "button",
-        })
-      : null,
-    rename.isEditing
-      ? createElement("button", {
-          id: "confirm",
-          onClick: rename.handleSave,
-          type: "button",
-        })
-      : null,
+    createElement(
+      "fieldset",
+      { hidden: !rename.isEditing, ref: rename.boxRef },
+      createElement("input", { ref: rename.inputRef }),
+      createElement("button", {
+        id: "cancel",
+        onClick: rename.closeEditor,
+        type: "button",
+      }),
+      createElement("button", {
+        id: "confirm",
+        onClick: rename.handleSave,
+        type: "button",
+      })
+    ),
+    createElement("h1", {
+      hidden: rename.isEditing,
+      ref: rename.titleRef,
+      tabIndex: -1,
+    }),
     createElement("button", {
       id: "menu",
       ref: rename.moreActions,
@@ -178,7 +181,7 @@ describe("useChatRename", () => {
     expect(mocks.updateTitle).not.toHaveBeenCalled();
   });
 
-  it("returns the focus to the chat's menu when Confirm saves from its own button, which the commit removes", () => {
+  it("returns the focus to the chat's menu when Confirm saves from its own button, which hides with the box", () => {
     mocks.updateTitle.mockResolvedValue(Result.succeed(null));
     act(() => hook().handleEdit());
     act(() => hook().setChatTitle("Confirmed title"));
@@ -190,7 +193,7 @@ describe("useChatRename", () => {
     expect(document.activeElement).toBe(element("#menu"));
   });
 
-  it("returns the focus to the chat's menu when Cancel closes the box from its own button, which the commit removes", () => {
+  it("returns the focus to the chat's menu when Cancel closes the box from its own button, which hides with the box", () => {
     act(() => hook().handleEdit());
     act(() => element("#cancel").focus());
 

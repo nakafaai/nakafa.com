@@ -13,10 +13,8 @@ import {
   Plug01Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -30,7 +28,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
-import { useState, useTransition } from "react";
+import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -38,12 +36,13 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useViewerQuery } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { SchoolDeviceDialog } from "@/components/tenant/settings/device";
@@ -53,11 +52,14 @@ import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 
-/** The icon of each client status in the Filter menu: a plugged-in client, and an unlinked one. */
-const CLIENT_STATUS_ICONS = {
-  active: Plug01Icon,
-  revoked: Unlink01Icon,
-} as const satisfies Record<typeof IntegrationStatus.Type, IconSvgElement>;
+/**
+ * The look of each client status, in its table cell and in the Filter menu: a plugged-in client,
+ * and an unlinked one, each in its tone.
+ */
+const CLIENT_STATUS_LOOKS = {
+  active: { icon: Plug01Icon, tone: "success" },
+  revoked: { icon: Unlink01Icon, tone: "neutral" },
+} as const satisfies Record<typeof IntegrationStatus.Type, StatusLook>;
 
 const SOURCE = "components/tenant/settings/clients";
 
@@ -73,12 +75,26 @@ const clientColumns = createColumnHelper<
   ClientItem
 >();
 
+/** Shows a secret the server issued once, which the page's secret dialog holds. */
+const SecretIssueContext = createContext<((secret: string) => void) | null>(
+  null
+);
+
+/** Reads what shows an issued secret. It throws outside the clients page, which always provides it. */
+function useIssueSecret() {
+  const issue = use(SecretIssueContext);
+  if (issue === null) {
+    throw new Error("useIssueSecret must be used within SchoolClientsSettings");
+  }
+  return issue;
+}
+
 /**
  * Renders the integration clients of the school, each with the part of the school it
  * covers, in a data table with Create client in the header. A client is created, rotated
  * (which issues a new secret that is shown once), or revoked.
  */
-export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolClientsSettings() {
   const t = useTranslations("SchoolSettings");
   const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
     undefined
@@ -104,7 +120,7 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
                 {
                   column: "status",
                   options: Arr.map(IntegrationStatus.literals, (status) => ({
-                    icon: CLIENT_STATUS_ICONS[status],
+                    icon: CLIENT_STATUS_LOOKS[status].icon,
                     label: t(`client-${status}`),
                     value: status,
                   })),
@@ -119,13 +135,14 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
         }
       >
         <ReadBoundary>
-          <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+          <SecretIssueContext value={setIssuedSecret}>
+            <SchoolClientTable />
+          </SecretIssueContext>
         </ReadBoundary>
         <SchoolClientCreateDialog
           onIssued={setIssuedSecret}
           open={isCreating}
           setOpen={setIsCreating}
-          slug={slug}
         />
         <SchoolSecretDialog
           description={t("client-secret-description")}
@@ -144,13 +161,8 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
  * the school has no client. The table waits for its first page, so no empty state shows
  * before the rows arrive.
  */
-function SchoolClientTable({
-  onIssued,
-  slug,
-}: {
-  onIssued: (secret: string) => void;
-  slug: TenantSlug;
-}) {
+function SchoolClientTable() {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
@@ -197,7 +209,13 @@ function SchoolClientTable({
       sortFn: "text",
     }),
     clientColumns.accessor((client) => client.status, {
-      cell: (info) => t(`client-${info.getValue()}`),
+      cell: (info) => (
+        <TableStatus
+          icon={CLIENT_STATUS_LOOKS[info.getValue()].icon}
+          label={t(`client-${info.getValue()}`)}
+          tone={CLIENT_STATUS_LOOKS[info.getValue()].tone}
+        />
+      ),
       enableSorting: false,
       filterFn: "oneOf",
       header: t("client-status"),
@@ -206,11 +224,7 @@ function SchoolClientTable({
     clientColumns.display({
       cell: (info) =>
         info.row.original.status === "active" ? (
-          <SchoolClientMenu
-            client={info.row.original}
-            onIssued={onIssued}
-            slug={slug}
-          />
+          <SchoolClientMenu client={info.row.original} />
         ) : null,
       id: "actions",
     }),
@@ -237,15 +251,9 @@ function SchoolClientTable({
  * answers once, and revoking asks first behind a confirmation. The rotate item is disabled
  * while its request runs. A revoked client has no menu, so its cell stays empty.
  */
-function SchoolClientMenu({
-  client,
-  onIssued,
-  slug,
-}: {
-  client: ClientItem;
-  onIssued: (secret: string) => void;
-  slug: TenantSlug;
-}) {
+function SchoolClientMenu({ client }: { client: ClientItem }) {
+  const { slug } = useTenant();
+  const issueSecret = useIssueSecret();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const rotate = useMutation(integrations.clients.rotate);
@@ -278,7 +286,7 @@ function SchoolClientMenu({
                 saveSchool(
                   () => rotate({ clientId: client.id, slug }),
                   SOURCE,
-                  (issued) => onIssued(issued.secret)
+                  (issued) => issueSecret(issued.secret)
                 )
               )
             }

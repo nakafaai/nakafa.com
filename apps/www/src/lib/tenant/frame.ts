@@ -53,7 +53,7 @@ const SchoolFrameSchema = Schema.Union([
 ]);
 
 /** The frame of one request, as the school layout renders it. */
-type SchoolFrame = typeof SchoolFrameSchema.Type;
+export type SchoolFrame = typeof SchoolFrameSchema.Type;
 
 /** The refusal that answers a school page with not found. */
 const RefusedRead = Schema.TaggedStruct("Refused", {});

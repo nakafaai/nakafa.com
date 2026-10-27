@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { startTransition, useId, useState } from "react";
+import { createContext, startTransition, use, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -45,6 +45,23 @@ type Level = typeof UnitLevel.Type;
  */
 const levelsIn = (country: string): readonly Level[] =>
   Schema.is(StartCountry)(country) ? levelsOf(country) : UnitLevel.literals;
+
+/** Whether the dialog is open, and how it opens and closes, which the dialog gives its form. */
+const CreateDialogContext = createContext<{
+  open: boolean;
+  setOpen: (open: boolean) => void;
+} | null>(null);
+
+/** Reads the dialog's open state. It throws outside the dialog, which always provides it. */
+function useCreateDialog() {
+  const dialog = use(CreateDialogContext);
+  if (dialog === null) {
+    throw new Error(
+      "useCreateDialog must be used within SchoolUnitCreateDialog"
+    );
+  }
+  return dialog;
+}
 
 /**
  * The dialog that adds a school to the organisation: its name, its level, its time zone, and its
@@ -73,30 +90,27 @@ export function SchoolUnitCreateDialog({
   }
 
   return (
-    <SchoolUnitCreateForm
-      country={viewer.value.tenant.country}
-      open={open}
-      setOpen={setOpen}
-      slug={slug}
-      unit={first.value}
-    />
+    <CreateDialogContext value={{ open, setOpen }}>
+      <SchoolUnitCreateForm
+        country={viewer.value.tenant.country}
+        slug={slug}
+        unit={first.value}
+      />
+    </CreateDialogContext>
   );
 }
 
 /** The form of the dialog, which holds what the teacher picks until the school is added. */
 function SchoolUnitCreateForm({
   country,
-  open,
-  setOpen,
   slug,
   unit,
 }: {
   country: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
   slug: TenantSlug;
   unit: Unit;
 }) {
+  const { open, setOpen } = useCreateDialog();
   const t = useTranslations("SchoolSettings");
   const start = useTranslations("SchoolStart");
   const common = useTranslations("Common");

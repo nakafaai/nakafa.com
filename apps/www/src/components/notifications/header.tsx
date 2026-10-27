@@ -78,7 +78,6 @@ export function NotificationsHeader({
         home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],
-        menuLabel: tCommon("more"),
         title: t("title"),
       }}
     />

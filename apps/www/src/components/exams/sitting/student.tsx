@@ -143,7 +143,7 @@ export function StudentSitting({
     );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
-    return <StudentOutcome attempt={attempt} sitting={sitting} slug={slug} />;
+    return <StudentOutcome attempt={attempt} sitting={sitting} />;
   }
   if (attempt === null && sitting.state === "scheduled") {
     return <StudentScheduled sitting={sitting} />;
@@ -253,7 +253,9 @@ function StudentFailure({
   return error._tag === "NotInSitting" || isDenied(error) ? (
     <StudentRefusal />
   ) : (
-    <StudentRetry error={error} />
+    <SittingBody>
+      <SittingRetry error={error} />
+    </SittingBody>
   );
 }
 
@@ -272,18 +274,6 @@ function StudentRefusal() {
       >
         {t("student-back-home")}
       </Link>
-    </SittingBody>
-  );
-}
-
-/**
- * The body when the sitting could not be read for a reason other than its visibility, under its bar: the
- * sentence and the retry of `SittingRetry`, which reports the failure.
- */
-function StudentRetry({ error }: { readonly error: unknown }) {
-  return (
-    <SittingBody>
-      <SittingRetry error={error} />
     </SittingBody>
   );
 }

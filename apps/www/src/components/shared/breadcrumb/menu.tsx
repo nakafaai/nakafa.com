@@ -15,6 +15,7 @@ import {
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 
@@ -27,12 +28,12 @@ import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header
 export function BreadcrumbMenu({
   className,
   items,
-  menuLabel,
 }: {
   className: string;
   items: readonly BreadcrumbHeaderItem[];
-  menuLabel: string;
 }) {
+  const tCommon = useTranslations("Common");
+  const menuLabel = tCommon("more");
   const [open, setOpen] = useState(false);
   return (
     <BreadcrumbItem className={cn("shrink-0", className)}>

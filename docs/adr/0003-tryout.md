@@ -206,9 +206,11 @@ breakpoint and a sheet below it, and it always shows the current number. Left
 and Right move between questions and `1` to `5` pick an option of a
 single-choice question. `G` opens and closes the sheet, and from the large
 breakpoint, where the sidebar is always open, it moves focus into the sidebar
-and back to the question. Confirming a finish lists the questions still open.
-A flag key and a flag state ship with the engine's single flags table, not with
-the player.
+and back to the question. The footer's Flag button and `F` flag the current
+question to come back to, and a flagged number carries a flag mark. On the last
+question Next becomes Review. Finishing first shows a review of the flagged and
+the unanswered questions, and a number in it goes back to that question. Flags
+live in the single flags table of ADR 0031.
 
 In the list, the current question follows the reader. It is the question under
 a reading line just below the header, or the last question once the reader has

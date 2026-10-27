@@ -68,14 +68,17 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 }
 
 /**
- * Renders the direct-entry facts from the catalog, followed by the attempt's
- * score once it has one, so facts a pending page paints never move.
+ * Renders the one card of a direct-entry set: the attempt's score once it has
+ * one, and the catalog's facts (the number of questions and the time) before
+ * that. The score already says how many questions there were, so the facts
+ * never sit in a second card beside it. The server renders whichever applies,
+ * so the card never swaps after the first paint.
  */
 function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
   const attempt = value.actionAttempt;
 
-  return (
-    <>
+  if (!attempt?.score) {
+    return (
       <TryoutSectionSummary
         value={{
           score: null,
@@ -83,27 +86,28 @@ function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
           sectionStatus: null,
         }}
       />
-      {attempt?.score ? (
-        <TryoutAttemptResults
-          value={{
-            attempt: {
-              attemptId: attempt.attemptId,
-              attemptNumber: attempt.attemptNumber,
-              score: attempt.score,
-              startedAt: attempt.startedAt,
-              status: attempt.status,
-            },
-            identity: {
-              countryKey: value.page.set.countryKey,
-              examKey: value.page.set.examKey,
-              locale: value.route.locale,
-              setKey: value.page.set.setKey,
-              trackKey: value.page.set.trackKey,
-            },
-          }}
-        />
-      ) : null}
-    </>
+    );
+  }
+
+  return (
+    <TryoutAttemptResults
+      value={{
+        attempt: {
+          attemptId: attempt.attemptId,
+          attemptNumber: attempt.attemptNumber,
+          score: attempt.score,
+          startedAt: attempt.startedAt,
+          status: attempt.status,
+        },
+        identity: {
+          countryKey: value.page.set.countryKey,
+          examKey: value.page.set.examKey,
+          locale: value.route.locale,
+          setKey: value.page.set.setKey,
+          trackKey: value.page.set.trackKey,
+        },
+      }}
+    />
   );
 }
 

@@ -222,7 +222,6 @@ export function ExamCanvas({
         {Arr.map(exam.questions, (question, index) => (
           <ExamPage
             canvas={canvas}
-            count={exam.questions.length}
             index={index}
             key={question.id}
             question={question}

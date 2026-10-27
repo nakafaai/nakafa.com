@@ -7,7 +7,6 @@ import {
 import { MoreHorizontalIcon, Refresh01Icon } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -27,7 +26,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import { useId, useState, useTransition } from "react";
+import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -39,6 +38,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   addStudentChange,
@@ -63,13 +63,25 @@ type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
 /** The columns of the logins table. */
 const loginColumns = createColumnHelper<typeof dataTableFeatures, LoginItem>();
 
+/** Opens a card the server issued in the page's card dialog. */
+const CardIssueContext = createContext<((card: CardView) => void) | null>(null);
+
+/** Reads what opens an issued card. It throws outside the students page, which always provides it. */
+function useIssueCard() {
+  const issue = use(CardIssueContext);
+  if (issue === null) {
+    throw new Error("useIssueCard must be used within SchoolStudentsSettings");
+  }
+  return issue;
+}
+
 /**
  * The student accounts of the school: Add student in the header creates a student and
  * the first card in one step. The logins sit in a data table, and each login's reissue
  * action sits in its row menu. A card's code shows once, in the card dialog, which
  * prints the card.
  */
-export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolStudentsSettings() {
   const t = useTranslations("SchoolSettings");
   const [isAdding, setIsAdding] = useState(false);
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
@@ -87,32 +99,24 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
         }
       >
         <ReadBoundary>
-          <SchoolLoginsBody onIssued={setIssued} slug={slug} />
+          <CardIssueContext value={setIssued}>
+            <SchoolLoginsBody />
+          </CardIssueContext>
         </ReadBoundary>
         <SchoolStudentDialog
           onAdded={setIssued}
           open={isAdding}
           setOpen={setIsAdding}
-          slug={slug}
         />
-        <SchoolCardDialog
-          card={issued}
-          onClose={() => setIssued(undefined)}
-          slug={slug}
-        />
+        <SchoolCardDialog card={issued} onClose={() => setIssued(undefined)} />
       </SettingsTablePage>
     </TableFiltersProvider>
   );
 }
 
 /** The school's logins, read a page at a time, with the table and its end. */
-function SchoolLoginsBody({
-  onIssued,
-  slug,
-}: {
-  onIssued: (card: CardView) => void;
-  slug: TenantSlug;
-}) {
+function SchoolLoginsBody() {
+  const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     identity.logins.list,
@@ -127,11 +131,7 @@ function SchoolLoginsBody({
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {pagination._tag === "LoadingFirstPage" ||
       (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-        <SchoolLoginTable
-          logins={pagination.results}
-          onIssued={onIssued}
-          slug={slug}
-        />
+        <SchoolLoginTable logins={pagination.results} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
@@ -144,15 +144,7 @@ function SchoolLoginsBody({
  * The login names in a data table that finds a login name and sorts by when each card was
  * issued, or the table's empty state when no card is issued.
  */
-function SchoolLoginTable({
-  logins,
-  onIssued,
-  slug,
-}: {
-  logins: readonly LoginItem[];
-  onIssued: (card: CardView) => void;
-  slug: TenantSlug;
-}) {
+function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
   const t = useTranslations("SchoolSettings");
 
   if (Arr.isReadonlyArrayEmpty(logins)) {
@@ -186,13 +178,7 @@ function SchoolLoginTable({
       sortFn: "basic",
     }),
     loginColumns.display({
-      cell: (info) => (
-        <SchoolLoginMenu
-          login={info.row.original}
-          onIssued={onIssued}
-          slug={slug}
-        />
-      ),
+      cell: (info) => <SchoolLoginMenu login={info.row.original} />,
       id: "actions",
     }),
   ]);
@@ -211,15 +197,9 @@ function SchoolLoginTable({
  * A login's row menu, which reissues the card of its person. The menu waits while the
  * reissue runs, and the new card opens in the card dialog.
  */
-function SchoolLoginMenu({
-  login,
-  onIssued,
-  slug,
-}: {
-  login: LoginItem;
-  onIssued: (card: CardView) => void;
-  slug: TenantSlug;
-}) {
+function SchoolLoginMenu({ login }: { login: LoginItem }) {
+  const { slug } = useTenant();
+  const issueCard = useIssueCard();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const reissue = useMutation(identity.cards.reissue).withOptimisticUpdate(
@@ -249,7 +229,7 @@ function SchoolLoginMenu({
                 saveSchool(
                   () => reissue({ personId: login.person.id, slug }),
                   SOURCE,
-                  (card) => onIssued({ ...card, name: login.person.name })
+                  (card) => issueCard({ ...card, name: login.person.name })
                 )
               )
             }
@@ -272,13 +252,12 @@ function SchoolStudentDialog({
   onAdded,
   open,
   setOpen,
-  slug,
 }: {
   onAdded: (card: CardView) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
-  slug: TenantSlug;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const id = useId();
