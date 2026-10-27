@@ -316,28 +316,44 @@ describe("createAuthProxy", () => {
     })
   );
 
-  it.effect(
-    "answers the session read of a visitor without a session cookie with null, and never reaches Convex",
-    () =>
+  it.effect.each([GET_URL, TOKEN_URL])(
+    "answers the read %s of a visitor without a session cookie itself, and never reaches Convex",
+    (url) =>
       Effect.gen(function* () {
         const proxy = createAuthProxy(handler);
 
         const read = yield* Effect.promise(() =>
           proxy.GET(
-            new Request(GET_URL, { headers: { cookie: "NAKAFA_LOCALE=id" } })
+            new Request(url, { headers: { cookie: "NAKAFA_LOCALE=id" } })
           )
         );
 
         expect(read.status).toBe(200);
-        expect(read.headers.get("content-type")).toContain("application/json");
         expect(read.headers.get("cache-control")).toBe("no-store");
-        expect(read.headers.get("pragma")).toBe("no-cache");
+        expect(handler.GET).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "gives the token read of a session that has ended no token in place of Better Auth's 401",
+    () =>
+      Effect.gen(function* () {
+        const proxy = createAuthProxy(handler);
+        handler.GET.mockResolvedValueOnce(
+          Response.json({ code: "UNAUTHORIZED" }, { status: 401 })
+        );
+
+        const read = yield* Effect.promise(() =>
+          proxy.GET(new Request(TOKEN_URL, { headers: SESSION_COOKIE }))
+        );
+
+        expect(read.status).toBe(200);
         expect(
           yield* Effect.promise(() => read.text()).pipe(
             Effect.map((text) => Schema.decodeSync(JsonTextSchema)(text))
           )
-        ).toBeNull();
-        expect(handler.GET).not.toHaveBeenCalled();
+        ).toStrictEqual({ token: null });
+        expect(handler.GET).toHaveBeenCalledOnce();
       })
   );
 
@@ -370,99 +386,6 @@ describe("createAuthProxy", () => {
 
       expect(yield* Effect.promise(() => read.text())).toBe("answer");
       expect(handler.GET).toHaveBeenCalledOnce();
-    })
-  );
-
-  /** Reads a JSON body as data. */
-  const jsonOf = (response: Response) =>
-    Effect.promise(() => response.text()).pipe(
-      Effect.map((text) => Schema.decodeSync(JsonTextSchema)(text))
-    );
-
-  it.effect(
-    "answers the token read of a page without a session cookie with no token, and never reaches Convex",
-    () =>
-      Effect.gen(function* () {
-        const proxy = createAuthProxy(handler);
-
-        const read = yield* Effect.promise(() =>
-          proxy.GET(
-            new Request(TOKEN_URL, { headers: { cookie: "NAKAFA_LOCALE=id" } })
-          )
-        );
-
-        expect(read.status).toBe(200);
-        expect(read.headers.get("cache-control")).toBe("no-store");
-        expect(read.headers.get("pragma")).toBe("no-cache");
-        expect(yield* jsonOf(read)).toStrictEqual({ token: null });
-        expect(handler.GET).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect(
-    "answers the token read of a session that has ended with no token in place of Better Auth's 401, and keeps the cookies it clears",
-    () =>
-      Effect.gen(function* () {
-        const proxy = createAuthProxy(handler);
-        const cleared = new Headers();
-        cleared.append(
-          "set-cookie",
-          "better-auth.session_token=; Max-Age=0; Path=/"
-        );
-        cleared.append(
-          "set-cookie",
-          "better-auth.session_data=; Max-Age=0; Path=/"
-        );
-        handler.GET.mockResolvedValueOnce(
-          Response.json(
-            { code: "UNAUTHORIZED", message: "Unauthorized" },
-            { headers: cleared, status: 401 }
-          )
-        );
-
-        const read = yield* Effect.promise(() =>
-          proxy.GET(new Request(TOKEN_URL, { headers: SESSION_COOKIE }))
-        );
-
-        expect(read.status).toBe(200);
-        expect(read.headers.get("cache-control")).toBe("no-store");
-        expect(read.headers.getSetCookie()).toStrictEqual([
-          "better-auth.session_token=; Max-Age=0; Path=/",
-          "better-auth.session_data=; Max-Age=0; Path=/",
-        ]);
-        expect(yield* jsonOf(read)).toStrictEqual({ token: null });
-        expect(handler.GET).toHaveBeenCalledOnce();
-      })
-  );
-
-  it.effect(
-    "passes the token of a live session through as Better Auth gives it",
-    () =>
-      Effect.gen(function* () {
-        const proxy = createAuthProxy(handler);
-        handler.GET.mockResolvedValueOnce(Response.json({ token: "jwt" }));
-
-        const read = yield* Effect.promise(() =>
-          proxy.GET(new Request(TOKEN_URL, { headers: SESSION_COOKIE }))
-        );
-
-        expect(read.status).toBe(200);
-        expect(yield* jsonOf(read)).toStrictEqual({ token: "jwt" });
-      })
-  );
-
-  it.effect("passes a 401 of any read but the token's through", () =>
-    Effect.gen(function* () {
-      const proxy = createAuthProxy(handler);
-      handler.GET.mockResolvedValueOnce(
-        Response.json({ code: "UNAUTHORIZED" }, { status: 401 })
-      );
-
-      const read = yield* Effect.promise(() =>
-        proxy.GET(new Request(GET_URL, { headers: SESSION_COOKIE }))
-      );
-
-      expect(read.status).toBe(401);
     })
   );
 

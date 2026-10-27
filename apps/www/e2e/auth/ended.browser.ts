@@ -49,9 +49,7 @@ test("a page whose remembered session has ended loads with no console error", as
   expect(await (await tokenRead).json()).toStrictEqual({ token: null });
   await page.waitForLoadState("networkidle");
 
-  expect(Arr.isNonEmptyReadonlyArray(MutableList.toArray(tokenAnswers))).toBe(
-    true
-  );
+  expect(MutableList.toArray(tokenAnswers).length).toBeGreaterThan(0);
   expect(
     Arr.filter(MutableList.toArray(tokenAnswers), (status) => status !== 200)
   ).toEqual([]);

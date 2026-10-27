@@ -13,9 +13,8 @@ import {
   Schedule,
   Schema,
 } from "effect";
+import { answerFromAuth, answerWithoutAuth } from "@/lib/auth/answer";
 import { bufferResponse } from "@/lib/auth/body";
-import { readSessionCookie } from "@/lib/auth/cookie.server";
-import { SESSION_PATH, TOKEN_PATH } from "@/lib/auth/session";
 import { readRequestHost } from "@/lib/routing/school/host";
 import { runServerEffect } from "@/lib/server/fn";
 
@@ -159,66 +158,6 @@ export const answerAuthDeadline = (
     )
   );
 
-/** Whether a request sends nothing that could prove a session: no session cookie and no bearer token. */
-function sendsNoCredentials(request: Request) {
-  return (
-    readSessionCookie(request) === null && !request.headers.has("authorization")
-  );
-}
-
-/**
- * Whether a request asks Better Auth for the session of a visitor who sent
- * nothing that could prove one.
- *
- * Better Auth answers such a request with `null` before it reads a table, so
- * Convex has nothing to add. Without this answer each read is still one HTTP
- * action on the Convex site, because `handler.GET` fetches it: a function call
- * and its action compute, though no database I/O. Every page load and every
- * return to the tab makes this read, signed in or not, and most visitors are
- * not. The browser cannot skip the request itself, because the session cookie
- * is HttpOnly and no script can see that it is missing; only the server can.
- */
-function isSignedOutSessionRead(request: Request) {
-  return (
-    new URL(request.url).pathname === SESSION_PATH &&
-    sendsNoCredentials(request)
-  );
-}
-
-/** Whether a request asks Better Auth for the Convex token of its session. */
-function isTokenRead(request: Request) {
-  return new URL(request.url).pathname === TOKEN_PATH;
-}
-
-/**
- * The answer Better Auth gives a session read that has no session cookie: a
- * JSON `null` that no cache may keep. Its own answer also clears a Convex JWT
- * cookie, which nothing here reads, because the Better Auth helper that does is
- * used without its JWT cache.
- */
-function answerSignedOutSession() {
-  return Response.json(null, {
-    headers: { "Cache-Control": "no-store", Pragma: "no-cache" },
-  });
-}
-
-/**
- * The answer to a token read that names no live session: no token, which no
- * cache may keep, with the cookies Better Auth's own answer cleared. Better Auth
- * answers such a read 401, and the browser logs every 401 it fetches as an
- * error, though a page that remembered a session that has since ended asks for
- * its token as it loads. The page's token reader takes a missing token as it
- * takes the 401, and hands Convex `null`, which Convex reads as signed out.
- */
-function answerNoToken(cookies: readonly string[]) {
-  const headers = new Headers({
-    "Cache-Control": "no-store",
-    Pragma: "no-cache",
-  });
-  Arr.forEach(cookies, (cookie) => headers.append("set-cookie", cookie));
-  return Response.json({ token: null }, { headers });
-}
-
 /**
  * The request with the host that the browser asked for in its URL. A local
  * `next start` on its own hostname and port builds each request's URL from that
@@ -239,26 +178,20 @@ function withBrowserHost(request: Request): Request {
 }
 
 /**
- * Answers one read. A session read or a token read that sends no credentials is
- * answered here and never reaches Convex. Every other read reaches Better Auth
- * with the browser's host (`withBrowserHost`), and a token read whose session
- * has ended gets no token in place of Better Auth's 401.
+ * Answers one read: the relay's own answer for a request that sends no
+ * credentials (`answerWithoutAuth`), or else Better Auth's, reached with the
+ * browser's host (`withBrowserHost`) and given as the browser gets it
+ * (`answerFromAuth`).
  */
 function answerRead(handler: AuthRouteHandler, request: Request) {
-  if (isSignedOutSessionRead(request)) {
-    return Effect.succeed(answerSignedOutSession());
-  }
-  if (isTokenRead(request) && sendsNoCredentials(request)) {
-    return Effect.succeed(answerNoToken([]));
-  }
-  return readAuthResponse(handler, withBrowserHost(request)).pipe(
-    Effect.map((response) =>
-      isTokenRead(request) && response.status === 401
-        ? answerNoToken(response.headers.getSetCookie())
-        : response
-    ),
-    answerAuthDeadline
-  );
+  return Option.match(answerWithoutAuth(request), {
+    onNone: () =>
+      readAuthResponse(handler, withBrowserHost(request)).pipe(
+        Effect.map((response) => answerFromAuth(request, response)),
+        answerAuthDeadline
+      ),
+    onSome: (answer) => Effect.succeed(answer),
+  });
 }
 
 /**
