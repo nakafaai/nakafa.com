@@ -2,18 +2,13 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import { ClassShell } from "@/components/tenant/classes/shell";
-import {
-  GRADEBOOK_PAGE_SIZE,
-  GradebookPreload,
-} from "@/components/tenant/grades/sheet";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readClassGradesFn } from "@/lib/tenant/grades.functions";
 import { readClassAddress } from "@/lib/tenant/params";
 
 /**
  * The gradebook of one class of the school (ADR 0033, S2), which its subject teachers keep.
- * The loader reads the class, its scheme, and the gradebook's first page, so the page shows
- * whole at once. A failed address to a class is not found for every viewer.
+ * The page reads the class, its scheme, and the gradebook live from Convex in the browser. A
+ * failed address to a class is not found for every viewer.
  */
 export const Route = createFileRoute("/school/$slug/classes/$classSlug/grades")(
   {
@@ -24,18 +19,6 @@ export const Route = createFileRoute("/school/$slug/classes/$classSlug/grades")(
       }
       return { classAddress: classAddress.value };
     },
-    loader: ({ context }) => {
-      if (context.school._tag !== "Member") {
-        return;
-      }
-      return readClassGradesFn({
-        data: {
-          classSlug: context.classAddress,
-          numItems: GRADEBOOK_PAGE_SIZE,
-          slug: context.slug,
-        },
-      });
-    },
     component: SchoolClassGradesPage,
     notFoundComponent: SchoolPageNotFound,
   }
@@ -43,16 +26,12 @@ export const Route = createFileRoute("/school/$slug/classes/$classSlug/grades")(
 
 function SchoolClassGradesPage(): ReactElement {
   const { classAddress, slug } = Route.useRouteContext();
-  const preload = Route.useLoaderData();
   return (
-    <GradebookPreload value={preload}>
-      <ClassShell
-        channel={Option.none()}
-        classSlug={classAddress}
-        preload={preload}
-        slug={slug}
-        tab="grades"
-      />
-    </GradebookPreload>
+    <ClassShell
+      channel={Option.none()}
+      classSlug={classAddress}
+      slug={slug}
+      tab="grades"
+    />
   );
 }

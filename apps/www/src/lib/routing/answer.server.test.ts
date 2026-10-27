@@ -207,49 +207,47 @@ describe("decisions before the router", () => {
     })
   );
 
-  it.effect("answers a removed address with its not-found page", () =>
-    Effect.gen(function* () {
-      retired.read.mockReturnValue(Effect.succeed(true));
-
-      const { handle, response } = yield* served("/en/tryout/old");
-
-      expect(response.headers.get("content-language")).toBe("en");
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/tryout/old`);
-      expect(routedNotFound(handle)).toStrictEqual(
-        Option.some({ locale: "en", school: false })
-      );
-    })
-  );
-
-  it.effect("answers an unowned route with the static not-found page", () =>
-    Effect.gen(function* () {
-      source.read.mockReturnValue(Effect.succeed("en"));
-      assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
-      const { handle, response } = yield* served("/en/nonexistent-page");
-
-      expect(response.status).toBe(404);
-      expect(response.headers.get("cache-control")).toBe("no-store");
-      expect(assets.fetch).toHaveBeenCalledTimes(1);
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
   it.effect(
-    "answers an unowned HTML route with the static not-found page",
+    "answers a removed address that no Worker route renders with the static not-found page",
     () =>
       Effect.gen(function* () {
-        projected.read.mockReturnValue(Effect.succeed("en"));
+        retired.read.mockReturnValue(Effect.succeed(true));
         assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
 
-        const { handle, response } = yield* served("/en/subjects/missing", {
-          accept: "text/html",
-        });
+        const { handle, response } = yield* served("/en/tryout/old");
 
         expect(response.status).toBe(404);
         expect(handle).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "answers a page in a locale that no Worker route renders before any content read",
+    () =>
+      Effect.gen(function* () {
+        assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
+        const { handle, response } = yield* served("/en/nonexistent-page");
+
+        expect(response.status).toBe(404);
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        expect(source.read).not.toHaveBeenCalled();
+        expect(projected.read).not.toHaveBeenCalled();
+        expect(handle).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "answers a rendered route that the projection rejects with its own not-found page",
+    () =>
+      Effect.gen(function* () {
+        projected.read.mockReturnValue(Effect.succeed("en"));
+
+        const { handle } = yield* served("/en/search", { accept: "text/html" });
+
+        expect(Option.isSome(routedNotFound(handle))).toBe(true);
         expect(projected.read).toHaveBeenCalledWith({
           hasAttemptCapability: false,
-          pathname: "/en/subjects/missing",
+          pathname: "/en/search",
         });
       })
   );
@@ -314,14 +312,17 @@ describe("decisions before the router", () => {
   );
 
   it.effect(
-    "answers a school tree path and a raw user address with not found",
+    "answers a school tree path and a raw user address with the static not-found page",
     () =>
       Effect.gen(function* () {
+        assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
         for (const address of ["/en/school/harapan", "/en/user/abc123"]) {
-          const { handle } = yield* served(address, { accept: "text/html" });
+          const { handle, response } = yield* served(address, {
+            accept: "text/html",
+          });
 
-          expect(routedRequest(handle).url).toBe(`${ORIGIN}${address}`);
-          expect(Option.isSome(routedNotFound(handle))).toBe(true);
+          expect(response.status).toBe(404);
+          expect(handle).not.toHaveBeenCalled();
         }
       })
   );
@@ -330,41 +331,40 @@ describe("decisions before the router", () => {
     Effect.gen(function* () {
       refusal.read.mockReturnValue(Effect.succeedSome("id"));
 
-      const { handle } = yield* served("/en/articles/belajar", {
-        accept: "text/html",
-      });
+      const { handle } = yield* served("/en/search", { accept: "text/html" });
 
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/articles/belajar`);
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/search`);
       expect(routedNotFound(handle)).toStrictEqual(
         Option.some({ locale: "id", school: false })
       );
     })
   );
 
-  it.effect("answers a refused school page before its migration", () =>
-    Effect.gen(function* () {
-      refusal.read.mockReturnValue(Effect.succeedSome("id"));
-      migration.read.mockReturnValue(
-        Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
-      );
-      const handle = router();
+  it.effect(
+    "answers a refused school page with the static school shell before its migration",
+    () =>
+      Effect.gen(function* () {
+        refusal.read.mockReturnValue(Effect.succeedSome("id"));
+        migration.read.mockReturnValue(
+          Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
+        );
+        assets.fetch.mockResolvedValue(new Response("<html>shell</html>"));
+        const handle = router();
 
-      const response = yield* answerRequest(
-        new Request("https://harapan.nakafa.com/en/user/abc123/chat", {
-          headers: { accept: "text/html", host: "harapan.nakafa.com" },
-        }),
-        handle
-      );
+        const response = yield* answerRequest(
+          new Request("https://harapan.nakafa.com/en/user/abc123/chat", {
+            headers: { accept: "text/html", host: "harapan.nakafa.com" },
+          }),
+          handle
+        );
 
-      expect(routedRequest(handle).url).toBe(
-        "https://harapan.nakafa.com/en/user/abc123/chat"
-      );
-      expect(routedNotFound(handle)).toStrictEqual(
-        Option.some({ locale: "id", school: true })
-      );
-      expect(response.headers.get("content-language")).toBe("id");
-      expect(migration.read).not.toHaveBeenCalled();
-    })
+        expect(response.status).toBe(404);
+        expect(yield* Effect.promise(() => response.text())).toBe(
+          "<html>shell</html>"
+        );
+        expect(handle).not.toHaveBeenCalled();
+        expect(migration.read).not.toHaveBeenCalled();
+      })
   );
 
   it.effect("moves a host that names no school to the main site", () =>
@@ -473,7 +473,7 @@ describe("failures", () => {
     Effect.gen(function* () {
       source.read.mockReturnValue(Effect.fail(new ReaderFailure()));
 
-      const error = yield* Effect.flip(answer("/en/nonexistent-page"));
+      const error = yield* Effect.flip(answer("/en/search"));
 
       expect(error._tag).toBe("UncaughtRequestError");
     })
@@ -484,7 +484,7 @@ describe("failures", () => {
       projected.read.mockReturnValue(Effect.fail(new ReaderFailure()));
 
       const error = yield* Effect.flip(
-        answer("/en/subjects/missing", { accept: "text/html" })
+        answer("/en/search", { accept: "text/html" })
       );
 
       expect(error._tag).toBe("UncaughtRequestError");

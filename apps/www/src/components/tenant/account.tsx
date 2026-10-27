@@ -15,7 +15,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useRouter } from "@tanstack/react-router";
@@ -36,31 +35,16 @@ import { changeSchoolLanguage } from "@/components/tenant/locale";
 import { profileHref } from "@/lib/profile/href";
 import { Link } from "@/lib/routing/link";
 
-/**
- * Changes the language that the account menu chose at once, and saves it. The page shows the new language
- * before the server answers, and a save that fails returns the page to its language and says so, so the
- * viewer can choose again from the same menu.
- */
+/** Changes the language that the account menu chose, and renders the current page in it at once. */
 function changeLanguage(
   language: string,
   router: ReturnType<typeof useRouter>
 ) {
   Effect.runFork(
-    Effect.gen(function* () {
-      const outcome = yield* changeSchoolLanguage(language, () => {
-        startTransition(() => {
-          router.invalidate();
-        });
+    changeSchoolLanguage(language, () => {
+      startTransition(() => {
+        router.invalidate();
       });
-      if (outcome === "rolledBack") {
-        toast.error(
-          {
-            description: "school-language-error.description",
-            title: "school-language-error.title",
-          },
-          { position: "bottom-center" }
-        );
-      }
     })
   );
 }
