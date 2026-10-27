@@ -3,9 +3,11 @@ import { Option, Schema } from "effect";
 import type { ReactElement } from "react";
 import { SittingModeProvider } from "@/components/exams/sitting/mode";
 import { StudentSitting } from "@/components/exams/sitting/student";
-import { readPlayerModeParam } from "@/components/player/mode";
+import {
+  readBrowserPlayerMode,
+  readPlayerModeParam,
+} from "@/components/player/mode";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readStudentSittingFn } from "@/lib/tenant/exams.functions";
 import { readSittingId } from "@/lib/tenant/params";
 
 /** The address of a student's sitting: the view the learner asks for, which wins over the saved view. */
@@ -27,32 +29,18 @@ export const Route = createFileRoute("/school/$slug/sittings/$sitting/")({
     }
     return { sittingId: sittingId.value };
   },
-  loader: ({ context, deps }) => {
-    if (context.school._tag !== "Member") {
-      return;
-    }
-    return readStudentSittingFn({
-      data: {
-        sittingId: context.sittingId,
-        slug: context.slug,
-        view: readPlayerModeParam(deps),
-      },
-    });
-  },
+  // The view comes from the address, then the view the learner saved; the sitting reads live.
+  loader: ({ deps }) => readBrowserPlayerMode(readPlayerModeParam(deps)),
   component: StudentSittingPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
 function StudentSittingPage(): ReactElement | null {
   const { sittingId, slug } = Route.useRouteContext();
-  const loaded = Route.useLoaderData();
+  const mode = Route.useLoaderData();
   return (
-    <SittingModeProvider mode={loaded?.mode ?? "list"}>
-      <StudentSitting
-        preload={loaded?.preload}
-        sittingId={sittingId}
-        slug={slug}
-      />
+    <SittingModeProvider mode={mode}>
+      <StudentSitting sittingId={sittingId} slug={slug} />
     </SittingModeProvider>
   );
 }

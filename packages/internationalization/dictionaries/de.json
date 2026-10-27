@@ -2111,10 +2111,6 @@
     "open-chat": {
       "title": "Chat öffnen"
     },
-    "school-language-error": {
-      "title": "Sprache nicht geändert.",
-      "description": "Bitte versuche es erneut."
-    },
     "sign-out-error": {
       "title": "Abmelden ist fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."

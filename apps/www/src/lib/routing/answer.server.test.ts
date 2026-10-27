@@ -340,30 +340,31 @@ describe("decisions before the router", () => {
     })
   );
 
-  it.effect("answers a refused school page before its migration", () =>
-    Effect.gen(function* () {
-      refusal.read.mockReturnValue(Effect.succeedSome("id"));
-      migration.read.mockReturnValue(
-        Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
-      );
-      const handle = router();
+  it.effect(
+    "answers a refused school page with the static school shell before its migration",
+    () =>
+      Effect.gen(function* () {
+        refusal.read.mockReturnValue(Effect.succeedSome("id"));
+        migration.read.mockReturnValue(
+          Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
+        );
+        assets.fetch.mockResolvedValue(new Response("<html>shell</html>"));
+        const handle = router();
 
-      const response = yield* answerRequest(
-        new Request("https://harapan.nakafa.com/en/user/abc123/chat", {
-          headers: { accept: "text/html", host: "harapan.nakafa.com" },
-        }),
-        handle
-      );
+        const response = yield* answerRequest(
+          new Request("https://harapan.nakafa.com/en/user/abc123/chat", {
+            headers: { accept: "text/html", host: "harapan.nakafa.com" },
+          }),
+          handle
+        );
 
-      expect(routedRequest(handle).url).toBe(
-        "https://harapan.nakafa.com/en/user/abc123/chat"
-      );
-      expect(routedNotFound(handle)).toStrictEqual(
-        Option.some({ locale: "id", school: true })
-      );
-      expect(response.headers.get("content-language")).toBe("id");
-      expect(migration.read).not.toHaveBeenCalled();
-    })
+        expect(response.status).toBe(404);
+        expect(yield* Effect.promise(() => response.text())).toBe(
+          "<html>shell</html>"
+        );
+        expect(handle).not.toHaveBeenCalled();
+        expect(migration.read).not.toHaveBeenCalled();
+      })
   );
 
   it.effect("moves a host that names no school to the main site", () =>

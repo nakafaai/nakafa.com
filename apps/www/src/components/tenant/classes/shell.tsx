@@ -1,4 +1,9 @@
-import { PaginatedQueryResult, QueryResult } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
@@ -30,31 +35,24 @@ import {
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
 import {
   schoolClassForumTarget,
   schoolClassTarget,
 } from "@/lib/routing/school/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
-import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 
 /** The tabs of a class that have a page. The other tabs join with the slices that build them. */
 const ClassTab = Schema.Literals(["home", "forum", "grades"]);
 type ClassTab = typeof ClassTab.Type;
 
-/**
- * What the class page's address and loader decide: its tab, the channel its forum shows, and the
- * first screen, which the loader read on the server.
- */
+/** What the class page's address decides: its tab, and the channel its forum shows. */
 const ClassPageContext = createContext<{
   channel: Option.Option<Id<"classroomChannels">>;
-  preload: ClassPreload | undefined;
   tab: ClassTab;
 } | null>(null);
 
-/** Reads what the class page's address and loader decide. It throws outside a class page. */
+/** Reads what the class page's address decides. It throws outside a class page. */
 function useClassPage() {
   const page = use(ClassPageContext);
   if (page === null) {
@@ -74,13 +72,11 @@ function useClassPage() {
 export function ClassShell({
   channel,
   classSlug,
-  preload,
   slug,
   tab,
 }: {
   channel: Option.Option<Id<"classroomChannels">>;
   classSlug: string;
-  preload: ClassPreload | undefined;
   slug: TenantSlug;
   tab: ClassTab;
 }) {
@@ -94,22 +90,12 @@ export function ClassShell({
       )}
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
-      <ClassPageContext value={{ channel, preload, tab }}>
+      <ClassPageContext value={{ channel, tab }}>
         <ClassPage classSlug={classSlug} slug={slug} />
       </ClassPageContext>
     </ReadBoundary>
   );
 }
-
-/**
- * The first screen of a class page, which its loader read on the server: the class, and the
- * first channels on the tabs that list them. The gradebook's loader reads no channel.
- */
-type ClassPreload = Pick<
-  Awaited<ReturnType<typeof readClassForumFn>>,
-  "resolved"
-> &
-  Partial<Pick<Awaited<ReturnType<typeof readClassForumFn>>, "channels">>;
 
 /**
  * The class page once the class is resolved: its gradebook, or its home and its forum. A class the
@@ -122,13 +108,12 @@ function ClassPage({
   classSlug: string;
   slug: TenantSlug;
 }) {
-  const { channel, preload, tab } = useClassPage();
+  const { channel, tab } = useClassPage();
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const resolved = usePreloadedQueryResult(
+  const resolved = useQuery(
     classroom.classes.resolve,
-    isSettled ? { classSlug, slug } : "skip",
-    preload?.resolved
+    isSettled ? { classSlug, slug } : "skip"
   );
 
   if (QueryResult.isFailure(resolved)) {
@@ -221,15 +206,13 @@ function ClassForum({
   slug: TenantSlug;
   tab: Exclude<ClassTab, "grades">;
 }) {
-  const { preload } = useClassPage();
   const t = useTranslations("Classroom");
   const [drafts] = useState(createChannelDrafts);
   // The channel's name ends the path, read from the same channel list the forum shows.
-  const channels = usePaginatedPreloaded(
+  const channels = usePaginatedQuery(
     classroom.forum.channels.list,
     Option.isSome(shown) ? { classId: klass.id, slug } : "skip",
-    { initialNumItems: CHANNEL_PAGE_SIZE },
-    Option.fromUndefinedOr(preload?.channels)
+    { initialNumItems: CHANNEL_PAGE_SIZE }
   );
   const canManageForum = Arr.contains(klass.can, "forum.manage");
   const classItem = {
@@ -279,12 +262,7 @@ function ClassForum({
               slug={slug}
             />
           ) : (
-            <ChannelList
-              classId={klass.id}
-              drafts={drafts}
-              first={Option.fromUndefinedOr(preload?.channels)}
-              slug={slug}
-            />
+            <ChannelList classId={klass.id} drafts={drafts} slug={slug} />
           )}
         </div>
       </ClassFrame>
