@@ -11,6 +11,7 @@ import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import {
   ChannelScopeContext,
   useChannelScope,
+  useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { MessageStream } from "@/components/tenant/classes/forum/stream";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -51,11 +52,12 @@ export function ForumChannel({
         classId,
         discussion: undefined,
         everyone,
+        jump,
         slug,
       }}
     >
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-        <ChannelMessages jump={jump} key={channelId} />
+        <ChannelMessages key={channelId} />
         <footer className="shrink-0 px-4 pt-2 pb-4">
           {canPost ? (
             <ForumComposer />
@@ -77,15 +79,11 @@ export function ForumChannel({
  * its empty state, a failed read its sentence and Try again, and a viewer who lost the school's
  * access is sent to the refused page.
  */
-function ChannelMessages({
-  jump,
-}: {
-  jump: Option.Option<Id<"classroomMessages">>;
-}) {
+function ChannelMessages() {
   const t = useTranslations("Classroom");
   const { channelId, classId, slug } = useChannelScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const place = { _tag: "channel" as const, channelId };
+  const place = useReadPlace();
   const pagination = usePaginatedPreloaded(
     classroom.forum.messages.page,
     isSettled ? { channelId, classId, slug } : "skip",
@@ -130,7 +128,6 @@ function ChannelMessages({
   return (
     <MessageStream
       at={read.value.at}
-      jump={jump}
       loadOlder={
         PaginatedQueryResult.isCanLoadMore(pagination)
           ? () => pagination.loadMore(MESSAGE_PAGE_SIZE)
@@ -138,7 +135,6 @@ function ChannelMessages({
       }
       messages={Arr.reverse(pagination.results)}
       opening={Option.none()}
-      place={place}
     />
   );
 }

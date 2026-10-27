@@ -2,7 +2,6 @@ import { useMutation } from "@confect/react";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import type { ReadPlace } from "@repo/backend/confect/classroom/forum/read";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Marker,
@@ -39,7 +38,10 @@ import {
   type ForumMessage,
   markUpdate,
 } from "@/components/tenant/classes/forum/optimistic";
-import { useChannelScope } from "@/components/tenant/classes/forum/scope";
+import {
+  useChannelScope,
+  useReadPlace,
+} from "@/components/tenant/classes/forum/scope";
 
 /** How long the reader's view stays still before the read mark moves to it. */
 const MARK_DELAY_MILLISECONDS = 600;
@@ -51,31 +53,28 @@ const MARK_DELAY_MILLISECONDS = 600;
  * mark the place had when it opened, under a divider that stays where it was while the reader
  * reads, or at the newest edge when nothing is unread. It follows the newest edge only while the
  * reader is there, loads older history upward without moving the reader, and jumps to the message
- * the address names, loading older pages until it is there. The read mark follows the newest
+ * the address names for the place, loading older pages until it is there. The read mark follows the newest
  * message the reader has in view.
  */
 export function MessageStream({
   at,
-  jump,
   loadOlder,
   messages,
   opening,
-  place,
 }: {
   /** The read mark of the place now, which only moves forward. */
   at: number | null;
-  /** The message the address asks to show, if any. */
-  jump: Option.Option<Id<"classroomMessages">>;
   /** Loads the next older page, while the place holds one. */
   loadOlder: (() => void) | undefined;
   /** The loaded messages, oldest first. */
   messages: readonly ForumMessage[];
   /** A discussion's opening message, which stands above the oldest reply once the whole history is loaded. */
   opening: Option.Option<ForumMessage>;
-  place: typeof ReadPlace.Type;
 }) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
+  // The message the address asks this place to bring into view, if any.
+  const { jump } = useChannelScope();
   // The reader's day of a time, which the divider above each day's first message shows.
   const dayOf = (time: number) =>
     format.dateTime(DateTime.toDateUtc(DateTime.makeUnsafe(time)), {
@@ -170,7 +169,7 @@ export function MessageStream({
         </MessageScrollerViewport>
         <MessageScrollerButton aria-label={t("scroll-to-latest")} />
       </MessageScroller>
-      <ReadTracker at={at} messages={messages} place={place} />
+      <ReadTracker at={at} messages={messages} />
       <JumpTo jump={jump} loadOlder={loadOlder} messages={messages} />
     </Primitive.Provider>
   );
@@ -183,13 +182,12 @@ export function MessageStream({
 function ReadTracker({
   at,
   messages,
-  place,
 }: {
   at: number | null;
   messages: readonly ForumMessage[];
-  place: typeof ReadPlace.Type;
 }) {
   const { classId, slug } = useChannelScope();
+  const place = useReadPlace();
   const mark = useMutation(classroom.forum.reads.mark);
   const { visibleMessageIds } = useMessageScrollerVisibility();
   const seen = Option.getOrNull(newestSeen(messages, visibleMessageIds));

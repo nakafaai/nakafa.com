@@ -34,7 +34,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
-import { useId, useState, useTransition } from "react";
+import { type ReactNode, useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   forumCall,
@@ -312,12 +312,22 @@ export function AddToLibrary() {
           ) : null}
           {mode === "drive" ? (
             <LibraryDriveField
-              file={drive}
+              chosen={Option.isSome(drive)}
               missing={driveMissing}
               onChoose={chooseDrive}
-              onClear={() => setDrive(Option.none())}
               pending={isPicking}
-            />
+            >
+              {Option.match(drive, {
+                onNone: () => null,
+                onSome: (picked) => (
+                  <ChosenFile
+                    icon={GoogleDriveIcon}
+                    name={picked.name}
+                    onClear={() => setDrive(Option.none())}
+                  />
+                ),
+              })}
+            </LibraryDriveField>
           ) : null}
           {mode === "link" ? (
             <Field>
@@ -437,20 +447,21 @@ function ChosenFile({
 
 /**
  * The Drive file of a new item: a button that opens Google's Picker until a file is picked, then
- * the file's name with a way to clear it. An account without Drive is told so, with a link to its
+ * the chosen file, with a way to clear it, which the dialog composes. An account without Drive is told so, with a link to its
  * connections, which opens beside the class so the dialog keeps what was written.
  */
 function LibraryDriveField({
-  file,
+  children,
+  chosen,
   missing,
   onChoose,
-  onClear,
   pending,
 }: {
-  file: Option.Option<DriveFile>;
+  /** The chosen file, which the dialog composes once a file is picked. */
+  children: ReactNode;
+  chosen: boolean;
   missing: boolean;
   onChoose: () => void;
-  onClear: () => void;
   pending: boolean;
 }) {
   const t = useTranslations("Classroom");
@@ -460,17 +471,13 @@ function LibraryDriveField({
     <Field>
       {/* The button's own words name it, so the field's title is not its label. */}
       <FieldTitle>{t("library-drive")}</FieldTitle>
-      {Option.isNone(file) ? (
+      {chosen ? (
+        children
+      ) : (
         <Button disabled={pending} onClick={onChoose} variant="outline">
           <HugeIcons aria-hidden="true" icon={GoogleDriveIcon} />
           {t("library-drive-choose")}
         </Button>
-      ) : (
-        <ChosenFile
-          icon={GoogleDriveIcon}
-          name={file.value.name}
-          onClear={onClear}
-        />
       )}
       {missing ? (
         <FieldDescription>

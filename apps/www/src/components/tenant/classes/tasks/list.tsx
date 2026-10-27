@@ -32,7 +32,7 @@ const TASK_PAGE_SIZE = 20;
  * class with no task shows its empty state, a failed read its sentence and Try again, and a viewer
  * who lost the school's access is sent to the refused page.
  */
-export function TaskList({ teacher }: { teacher: boolean }) {
+export function TaskList() {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -80,7 +80,7 @@ export function TaskList({ teacher }: { teacher: boolean }) {
         </TableHeader>
         <TableBody>
           {Arr.map(pagination.results, (task) => (
-            <TaskRow key={task.id} task={task} teacher={teacher} />
+            <TaskRow key={task.id} task={task} />
           ))}
         </TableBody>
       </Table>
@@ -92,7 +92,7 @@ export function TaskList({ teacher }: { teacher: boolean }) {
 }
 
 /** One task of the list: its title, which opens it, its deadline, and where it stands for the viewer. */
-function TaskRow({ task, teacher }: { task: ClassTask; teacher: boolean }) {
+function TaskRow({ task }: { task: ClassTask }) {
   const format = useFormatter();
   const { classSlug, slug } = useClassScope();
 
@@ -116,22 +116,17 @@ function TaskRow({ task, teacher }: { task: ClassTask; teacher: boolean }) {
         )}
       </TableCell>
       <TableCell className="text-muted-foreground">
-        <TaskStanding task={task} teacher={teacher} />
+        <TaskStanding task={task} />
       </TableCell>
     </TableRow>
   );
 }
 
-/** Where a task stands: how many handed work in, for a teacher, or the viewer's own work. */
-export function TaskStanding({
-  task,
-  teacher,
-}: {
-  task: ClassTask;
-  teacher: boolean;
-}) {
+/** Where a task stands: how many handed work in, for a teacher who keeps the class's tasks, or the viewer's own work. */
+export function TaskStanding({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
-  if (teacher) {
+  const { can } = useClassScope();
+  if (Arr.contains(can, "task.manage")) {
     return t("task-handed-in-count", { count: task.handedIn });
   }
   if (task.mine === null) {

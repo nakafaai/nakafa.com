@@ -69,6 +69,20 @@ type ClassPreload =
 /** The first screen of a class page, which the page's loader read on the server. */
 const ClassPreloadContext = createContext<ClassPreload | undefined>(undefined);
 
+/** What the class page shows, which the class shell provides to the parts that draw it. */
+const ClassViewContext = createContext<typeof ClassView.Type | null>(null);
+
+/** Reads what the class page around the caller shows. */
+function useClassView() {
+  const view = use(ClassViewContext);
+
+  if (view === null) {
+    throw new Error("useClassView must be used within a class shell");
+  }
+
+  return view;
+}
+
 /** The channels the class page is saving, which the header's Add channel and the channel list share. */
 const DraftsContext = createContext<StoreApi<ChannelDrafts> | null>(null);
 
@@ -111,9 +125,11 @@ export function ClassShell({
       )}
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
-      <ClassPreloadContext value={preload}>
-        <ClassPage classSlug={classSlug} slug={slug} view={view} />
-      </ClassPreloadContext>
+      <ClassViewContext value={view}>
+        <ClassPreloadContext value={preload}>
+          <ClassPage classSlug={classSlug} slug={slug} />
+        </ClassPreloadContext>
+      </ClassViewContext>
     </ReadBoundary>
   );
 }
@@ -129,11 +145,9 @@ type Resolved = typeof ClassResolved.Type;
 function ClassPage({
   classSlug,
   slug,
-  view,
 }: {
   classSlug: string;
   slug: TenantSlug;
-  view: typeof ClassView.Type;
 }) {
   const preload = use(ClassPreloadContext);
   // The class is read once the session settles, so the first draw never asks for it signed out.
@@ -157,8 +171,15 @@ function ClassPage({
     return <SchoolHeader items={[]} />;
   }
   return (
-    <ClassScopeContext value={{ classId: resolved.value.id, classSlug, slug }}>
-      <ResolvedClass klass={resolved.value} view={view} />
+    <ClassScopeContext
+      value={{
+        can: resolved.value.can,
+        classId: resolved.value.id,
+        classSlug,
+        slug,
+      }}
+    >
+      <ResolvedClass klass={resolved.value} />
     </ClassScopeContext>
   );
 }
@@ -168,13 +189,8 @@ function ClassPage({
  * discussion's number and title end the path, read from the same channel list and discussion the
  * forum shows. A discussion the class does not hold shows the missing state.
  */
-function ResolvedClass({
-  klass,
-  view,
-}: {
-  klass: Resolved;
-  view: typeof ClassView.Type;
-}) {
+function ResolvedClass({ klass }: { klass: Resolved }) {
+  const view = useClassView();
   const preload = use(ClassPreloadContext);
   const t = useTranslations("Classroom");
   const { classSlug, slug } = useClassScope();
@@ -249,18 +265,18 @@ function ResolvedClass({
   return (
     <DraftsContext value={drafts}>
       <LibraryUploadsScope>
-        <GradesScope view={view}>
+        <GradesScope>
           {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
           <div className="flex h-svh min-h-0 flex-col">
             <SchoolHeader items={path} title={klass.name}>
-              <ForumAction klass={klass} view={view} />
+              <ForumAction klass={klass} />
             </SchoolHeader>
             <ClassTabs
               canGrade={Arr.contains(klass.can, "grade.list")}
               classSlug={classSlug}
               tab={view._tag}
             />
-            <ClassBody found={found} klass={klass} view={view} />
+            <ClassBody found={found} klass={klass} />
           </div>
         </GradesScope>
       </LibraryUploadsScope>
@@ -274,13 +290,8 @@ function ResolvedClass({
  * whoever the server lets open one there, Add to library in the library for its teachers, and New
  * task on the task list for its teachers.
  */
-function ForumAction({
-  klass,
-  view,
-}: {
-  klass: Resolved;
-  view: typeof ClassView.Type;
-}) {
+function ForumAction({ klass }: { klass: Resolved }) {
+  const view = useClassView();
   const { slug } = useClassScope();
   const drafts = useDrafts();
 
@@ -309,13 +320,8 @@ function ForumAction({
  * The gradebook's filters and panes, which its header and its body share. The other views hold
  * neither, so a table there never opens a row in a pane.
  */
-function GradesScope({
-  children,
-  view,
-}: {
-  children: ReactNode;
-  view: typeof ClassView.Type;
-}) {
+function GradesScope({ children }: { children: ReactNode }) {
+  const view = useClassView();
   if (view._tag !== "grades") {
     return children;
   }
@@ -334,12 +340,11 @@ function GradesScope({
 function ClassBody({
   found,
   klass,
-  view,
 }: {
   found: Option.Option<Ref.Returns<typeof classroom.forum.threads.get>>;
   klass: Resolved;
-  view: typeof ClassView.Type;
 }) {
+  const view = useClassView();
   const preload = use(ClassPreloadContext);
   const drafts = useDrafts();
   const { slug } = useClassScope();
@@ -392,7 +397,7 @@ function ClassBody({
   if (view._tag === "tasks") {
     return (
       <ClassScroll table>
-        <TaskList teacher={Arr.contains(klass.can, "task.manage")} />
+        <TaskList />
       </ClassScroll>
     );
   }
@@ -407,10 +412,7 @@ function ClassBody({
   if (view._tag === "task") {
     return (
       <ClassScroll>
-        <TaskPage
-          task={view.task}
-          teacher={Arr.contains(klass.can, "task.manage")}
-        />
+        <TaskPage task={view.task} />
       </ClassScroll>
     );
   }

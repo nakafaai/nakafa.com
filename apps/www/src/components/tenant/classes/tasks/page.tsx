@@ -3,7 +3,14 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TaskText } from "@repo/backend/confect/classroom/tasks/task";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { Clock, DateTime, Effect, Schema, String as Str } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  DateTime,
+  Effect,
+  Schema,
+  String as Str,
+} from "effect";
 import { useId, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -30,14 +37,8 @@ import { usePreloadedQueryResult } from "@/lib/data/preloaded";
  * gets, then the student's own hand-in or, for its teacher, the work handed in. A task the class
  * does not hold shows the missing state, a failed read its sentence and Try again.
  */
-export function TaskPage({
-  task: address,
-  teacher,
-}: {
-  task: string;
-  teacher: boolean;
-}) {
-  const { classId, slug } = useClassScope();
+export function TaskPage({ task: address }: { task: string }) {
+  const { can, classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const read = usePreloadedQueryResult(
     classroom.tasks.get,
@@ -61,14 +62,18 @@ export function TaskPage({
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-6">
-      <TaskDetails task={task} teacher={teacher} />
-      {teacher ? <TaskWorkTable task={task} /> : <HandIn task={task} />}
+      <TaskDetails task={task} />
+      {Arr.contains(can, "task.manage") ? (
+        <TaskWorkTable task={task} />
+      ) : (
+        <HandIn task={task} />
+      )}
     </div>
   );
 }
 
 /** What a task asks, its deadline, its points, and what late work gets, one fact per line. */
-function TaskDetails({ task, teacher }: { task: ClassTask; teacher: boolean }) {
+function TaskDetails({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
 
@@ -94,7 +99,7 @@ function TaskDetails({ task, teacher }: { task: ClassTask; teacher: boolean }) {
         <dd>{t(`task-late-${task.latePolicy}`)}</dd>
         <dt className="text-muted-foreground">{t("task-status")}</dt>
         <dd>
-          <TaskStanding task={task} teacher={teacher} />
+          <TaskStanding task={task} />
         </dd>
       </dl>
       <p className="wrap-anywhere whitespace-pre-wrap text-sm" dir="auto">

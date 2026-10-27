@@ -23,6 +23,7 @@ import { ForumComposer } from "@/components/tenant/classes/forum/composer";
 import {
   ChannelScopeContext,
   useChannelScope,
+  useReadPlace,
 } from "@/components/tenant/classes/forum/scope";
 import { MessageStream } from "@/components/tenant/classes/forum/stream";
 import { useClassScope } from "@/components/tenant/classes/scope";
@@ -124,11 +125,11 @@ export function ForumDiscussion({
               classId,
               discussion: thread.discussion.number,
               everyone,
+              jump,
               slug,
             }}
           >
             <DiscussionReplies
-              jump={jump}
               key={thread.discussion.number}
               number={thread.discussion.number}
               opening={thread.opening}
@@ -157,17 +158,15 @@ export function ForumDiscussion({
  * the school's access is sent to the refused page.
  */
 function DiscussionReplies({
-  jump,
   number,
   opening,
 }: {
-  jump: Option.Option<Id<"classroomMessages">>;
   number: number;
   opening: Thread["opening"];
 }) {
   const { classId, slug } = useChannelScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const place = { _tag: "discussion" as const, number };
+  const place = useReadPlace();
   const pagination = usePaginatedPreloaded(
     classroom.forum.threads.replies,
     isSettled ? { classId, number, slug } : "skip",
@@ -201,7 +200,6 @@ function DiscussionReplies({
   return (
     <MessageStream
       at={read.value.at}
-      jump={jump}
       loadOlder={
         PaginatedQueryResult.isCanLoadMore(pagination)
           ? () => pagination.loadMore(MESSAGE_PAGE_SIZE)
@@ -209,7 +207,6 @@ function DiscussionReplies({
       }
       messages={Arr.reverse(pagination.results)}
       opening={Option.some(opening)}
-      place={place}
     />
   );
 }
