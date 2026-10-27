@@ -1007,6 +1007,7 @@
     "add-channel-title": "Add a topic channel",
     "add-channel-description": "Everyone in the class reads a topic channel, and its name shows in the list.",
     "channel-name": "Channel name",
+    "channel-name-placeholder": "Homework",
     "channel-name-taken": "Another channel of this class has this name.",
     "channel-limit-reached": "This class holds the most channels it can.",
     "add-submit": "Add",

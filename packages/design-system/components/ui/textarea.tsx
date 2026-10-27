@@ -2,10 +2,16 @@ import { cn } from "cn";
 import type * as React from "react";
 import TextareaAutosize from "react-textarea-autosize";
 
+/**
+ * A multi-line text field that grows with its words, showing what to write in its placeholder.
+ */
 function Textarea({
   className,
   ...props
-}: React.ComponentProps<typeof TextareaAutosize>) {
+}: Omit<React.ComponentProps<typeof TextareaAutosize>, "placeholder"> & {
+  /** What the field shows while empty: an example or a short hint of what to write. */
+  placeholder: string;
+}) {
   return (
     <TextareaAutosize
       className={cn(
