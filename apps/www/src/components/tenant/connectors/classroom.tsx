@@ -193,12 +193,10 @@ function CourseRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
-        <span className="block truncate" dir="auto">
-          {course.section === null
-            ? course.name
-            : t("course-name", { name: course.name, section: course.section })}
-        </span>
+      <TableCell className="font-medium" dir="auto">
+        {course.section === null
+          ? course.name
+          : t("course-name", { name: course.name, section: course.section })}
       </TableCell>
       <TableCell className="hidden text-muted-foreground sm:table-cell">
         {course.students}

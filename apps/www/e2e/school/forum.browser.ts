@@ -125,16 +125,17 @@ test("every class page draws its content in the browser, without an error state 
 
   // The pages of the class, each with what it draws once it reads its rows: the forum lists the
   // channels, and a channel or a discussion names the channel in its path. The Worker serves every
-  // School page as the static shell, so each answers 200 and draws in the browser.
+  // School page as the static shell, so each answers 200 and draws in the browser. A list page holds
+  // its rows, or its empty state, in one card that fills the body under the header and the tabs.
   const pages = [
-    { path: "/classes/fisika-x-1", shows: "Fisika X-1" },
-    { path: "/classes/fisika-x-1/forum", shows: "General" },
-    { path: channel, shows: "General" },
-    { path: "/classes/fisika-x-1/forum/1", shows: "General" },
-    { path: "/classes/fisika-x-1/library", shows: "Fisika X-1" },
-    { path: "/classes/fisika-x-1/tasks", shows: "Fisika X-1" },
+    { card: false, path: "/classes/fisika-x-1", shows: "Fisika X-1" },
+    { card: true, path: "/classes/fisika-x-1/forum", shows: "General" },
+    { card: false, path: channel, shows: "General" },
+    { card: false, path: "/classes/fisika-x-1/forum/1", shows: "General" },
+    { card: true, path: "/classes/fisika-x-1/library", shows: "Fisika X-1" },
+    { card: true, path: "/classes/fisika-x-1/tasks", shows: "Fisika X-1" },
   ];
-  for (const { path, shows } of pages) {
+  for (const { card, path, shows } of pages) {
     const served = await page.goto(address(path));
     expect(served?.status(), path).toBe(200);
     await waitUntilTakenOver(
@@ -149,7 +150,31 @@ test("every class page draws its content in the browser, without an error state 
     await expect(page.getByRole("main").getByRole("alert"), path).toHaveCount(
       0
     );
+    if (card) {
+      const table = page.locator('[data-slot="table-card"]');
+      await expect(table, path).toHaveCount(1);
+      const placed = await table.evaluate((element) => ({
+        bottom: element.getBoundingClientRect().bottom,
+        viewport: window.innerHeight,
+      }));
+      // The card reaches the page's 16 px gutter above the screen's bottom.
+      expect(placed.bottom, path).toBeGreaterThanOrEqual(placed.viewport - 17);
+    }
   }
+  // The channel list's search sits in the header and keeps the channels whose name holds its text.
+  await page.goto(address("/classes/fisika-x-1/forum"));
+  const search = page
+    .locator('[data-slot="page-header"]')
+    .getByRole("textbox", { name: "Search channels" });
+  await waitUntilTakenOver(search);
+  await search.fill("zzz");
+  await expect(
+    page.getByRole("link", { name: "General", exact: true })
+  ).toHaveCount(0);
+  await search.fill("gen");
+  await expect(
+    page.getByRole("link", { name: "General", exact: true })
+  ).toBeVisible();
   expect(MutableList.toArray(errors)).toEqual([]);
   await context.close();
 });

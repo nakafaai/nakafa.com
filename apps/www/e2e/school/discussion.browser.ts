@@ -13,8 +13,8 @@ const DISCUSSION_PATH = /\/classes\/fisika-x-1\/forum\/1$/;
 
 const TITLE = "Kenapa gaya gesek berlawanan arah gerak?";
 
-/** The discussion's close button, which leads back to its channel. */
-const CLOSE = "Close discussion";
+/** The close button of the discussion's pane, or of its sheet on a phone, which leads back to its channel. */
+const CLOSE = "Close";
 
 /** The address of the channel the discussion belongs to. */
 const CHANNEL_PATH = /\/classes\/fisika-x-1\/forum\?channel=/u;
@@ -87,8 +87,8 @@ for (const viewport of [
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     // The channel stays beside the discussion from tablet width and under its sheet on a phone,
     // and it counts the reply; closing the discussion leaves the channel where it was.
-    await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
     if (viewport.width >= 768) {
+      await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();
       // The handle between the channel and the discussion resizes them.
       const panel = page.locator("[data-slot=discussion]");
       const narrow = Option.getOrThrow(
@@ -108,7 +108,7 @@ for (const viewport of [
         .poll(async () => (await panel.boundingBox())?.width ?? 0)
         .toBeGreaterThan(narrow.width + 150);
     }
-    await page.getByRole("link", { name: CLOSE }).click();
+    await page.getByRole("button", { name: CLOSE, exact: true }).click();
     await page.waitForURL(CHANNEL_PATH);
     await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "1 reply" })).toBeVisible();

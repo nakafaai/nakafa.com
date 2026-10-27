@@ -9,31 +9,27 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
-import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { PanesProvider } from "@/components/shared/panes";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
-import { AddChannel } from "@/components/tenant/classes/add";
 import {
   CHANNEL_PAGE_SIZE,
   ChannelList,
 } from "@/components/tenant/classes/channels";
-import {
-  type ChannelDrafts,
-  createChannelDrafts,
-} from "@/components/tenant/classes/drafts";
 import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { StartDiscussion } from "@/components/tenant/classes/forum/start";
 import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
+import {
+  ClassHeader,
+  ClassHeaderContext,
+} from "@/components/tenant/classes/header";
 import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { ClassHome } from "@/components/tenant/classes/home/home";
 import { channelLabel } from "@/components/tenant/classes/label";
-import { AddToLibrary } from "@/components/tenant/classes/library/create";
 import { LibraryList } from "@/components/tenant/classes/library/list";
 import { LibraryUploadsScope } from "@/components/tenant/classes/library/scope";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
@@ -42,8 +38,6 @@ import {
   ClassScopeContext,
   useClassScope,
 } from "@/components/tenant/classes/scope";
-import { ClassTabs } from "@/components/tenant/classes/tabs";
-import { NewTask } from "@/components/tenant/classes/tasks/create";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
 import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import type { ClassView } from "@/components/tenant/classes/view";
@@ -67,20 +61,6 @@ function useClassView() {
   }
 
   return view;
-}
-
-/** The channels the class page is saving, which the header's Add channel and the channel list share. */
-const DraftsContext = createContext<StoreApi<ChannelDrafts> | null>(null);
-
-/** Reads the channel drafts of the class page around the caller. */
-function useDrafts() {
-  const drafts = use(DraftsContext);
-
-  if (drafts === null) {
-    throw new Error("useDrafts must be used within a resolved class page");
-  }
-
-  return drafts;
 }
 
 /**
@@ -173,7 +153,6 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   const view = useClassView();
   const t = useTranslations("Classroom");
   const { classSlug, slug } = useClassScope();
-  const [drafts] = useState(createChannelDrafts);
   const thread = useQuery(
     classroom.forum.threads.get,
     view._tag === "discussion"
@@ -240,79 +219,24 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   );
 
   return (
-    <DraftsContext value={drafts}>
-      <LibraryUploadsScope>
-        <GradesScope>
-          {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
-          <div className="flex h-svh min-h-0 flex-col">
-            <SchoolHeader items={path} title={klass.name}>
-              <ForumAction klass={klass} />
-            </SchoolHeader>
-            <ClassTabs
-              canGrade={Arr.contains(klass.can, "grade.list")}
-              classSlug={classSlug}
-              tab={view._tag}
-            />
-            <ClassBody found={found} klass={klass} />
-          </div>
-        </GradesScope>
-      </LibraryUploadsScope>
-    </DraftsContext>
+    <ClassHeaderContext
+      value={{ items: path, tab: view._tag, title: klass.name }}
+    >
+      {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
+      <div className="flex h-svh min-h-0 flex-col">
+        <ClassBody found={found} klass={klass} />
+      </div>
+    </ClassHeaderContext>
   );
 }
 
 /**
- * The header's one action: New announcement on the class home for its subject teachers, Add
- * channel on the channel list for whoever manages the forum, New discussion in a channel for
- * whoever the server lets open one there, Add to library in the library for its teachers, and New
- * task on the task list for its teachers.
- */
-function ForumAction({ klass }: { klass: Resolved }) {
-  const view = useClassView();
-  const { slug } = useClassScope();
-  const drafts = useDrafts();
-
-  if (view._tag === "home" && Arr.contains(klass.can, "post.publish")) {
-    return <NewAnnouncement />;
-  }
-  if (view._tag === "forum" && Arr.contains(klass.can, "forum.manage")) {
-    return <AddChannel classId={klass.id} drafts={drafts} slug={slug} />;
-  }
-  if (view._tag === "channel" && klass.opens) {
-    return <StartDiscussion channelId={view.channelId} />;
-  }
-  if (view._tag === "library" && Arr.contains(klass.can, "library.manage")) {
-    return <AddToLibrary />;
-  }
-  if (view._tag === "tasks" && Arr.contains(klass.can, "task.manage")) {
-    return <NewTask />;
-  }
-  if (view._tag === "grades") {
-    return <GradebookFilters />;
-  }
-  return null;
-}
-
-/**
- * The gradebook's filters and panes, which its header and its body share. The other views hold
- * neither, so a table there never opens a row in a pane.
- */
-function GradesScope({ children }: { children: ReactNode }) {
-  const view = useClassView();
-  if (view._tag !== "grades") {
-    return children;
-  }
-  return (
-    <TableFiltersProvider>
-      <PanesProvider>{children}</PanesProvider>
-    </TableFiltersProvider>
-  );
-}
-
-/**
- * The body of the view under the tabs, as wide as the page: one channel, or one discussion beside
- * its channel, fills it as a chat does, and the class's announcements, its channel list, its
- * library, its tasks, or one task scroll within it.
+ * The view under the class's header, as wide as the page, each with the header's actions it
+ * holds: one channel fills the body as a chat does, with New discussion for whoever the server
+ * lets open one there, and one discussion beside its channel; the class's announcements, with New
+ * announcement for its subject teachers, and one task scroll within it; the channel list, the
+ * library and the task list each draw their header and their one table card; and the gradebook
+ * shares its filters and its panes between its header and its body.
  */
 function ClassBody({
   found,
@@ -322,7 +246,6 @@ function ClassBody({
   klass: Resolved;
 }) {
   const view = useClassView();
-  const drafts = useDrafts();
   const { slug } = useClassScope();
   const canManage = Arr.contains(klass.can, "forum.manage");
   const canPost = Arr.contains(klass.can, "forum.post");
@@ -331,99 +254,104 @@ function ClassBody({
 
   if (view._tag === "channel") {
     return (
-      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
-        <ForumChannel
-          canManage={canManage}
-          canPost={canPost}
-          channelId={view.channelId}
-          everyone={everyone}
-          jump={view.jump}
-        />
-      </div>
+      <>
+        <ClassHeader>
+          {klass.opens ? <StartDiscussion channelId={view.channelId} /> : null}
+        </ClassHeader>
+        <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+          <ForumChannel
+            canManage={canManage}
+            canPost={canPost}
+            channelId={view.channelId}
+            everyone={everyone}
+            jump={view.jump}
+          />
+        </div>
+      </>
     );
   }
   if (view._tag === "discussion") {
-    return Option.match(found, {
-      onNone: () => null,
-      onSome: (thread) => (
-        <ForumDiscussion
-          canManage={canManage}
-          canPost={canPost}
-          everyone={everyone}
-          jump={view.jump}
-          thread={thread}
-        />
-      ),
-    });
+    return (
+      <>
+        <ClassHeader />
+        {Option.match(found, {
+          onNone: () => null,
+          onSome: (thread) => (
+            <ForumDiscussion
+              canManage={canManage}
+              canPost={canPost}
+              everyone={everyone}
+              jump={view.jump}
+              thread={thread}
+            />
+          ),
+        })}
+      </>
+    );
   }
   if (view._tag === "home") {
     return (
-      <ClassScroll>
-        <ClassHome />
-      </ClassScroll>
+      <>
+        <ClassHeader>
+          {Arr.contains(klass.can, "post.publish") ? <NewAnnouncement /> : null}
+        </ClassHeader>
+        <ClassScroll>
+          <ClassHome />
+        </ClassScroll>
+      </>
     );
   }
   if (view._tag === "library") {
     return (
-      <ClassScroll table>
-        <LibraryList teacher={Arr.contains(klass.can, "library.manage")} />
-      </ClassScroll>
+      <LibraryUploadsScope>
+        <LibraryList />
+      </LibraryUploadsScope>
     );
   }
   if (view._tag === "tasks") {
-    return (
-      <ClassScroll table>
-        <TaskList />
-      </ClassScroll>
-    );
+    return <TaskList />;
   }
   if (view._tag === "grades") {
-    // The header's 4rem and the tabs' 3rem stand above the gradebook's panes.
     return (
-      <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
-        <ClassGradebook classId={klass.id} slug={slug} />
-      </div>
+      <TableFiltersProvider>
+        <PanesProvider>
+          <ClassHeader>
+            <GradebookFilters />
+          </ClassHeader>
+          {/* The header's 4rem and the tabs' 3rem stand above the gradebook's panes. */}
+          <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">
+            <ClassGradebook classId={klass.id} slug={slug} />
+          </div>
+        </PanesProvider>
+      </TableFiltersProvider>
     );
   }
   if (view._tag === "task") {
     return (
-      <ClassScroll>
-        <TaskPage task={view.task} />
-      </ClassScroll>
+      <>
+        <ClassHeader />
+        <ClassScroll>
+          <TaskPage task={view.task} />
+        </ClassScroll>
+      </>
     );
   }
-  return (
-    <ClassScroll table>
-      <ChannelList drafts={drafts} />
-    </ClassScroll>
-  );
+  return <ChannelList />;
 }
 
 /**
- * A body that scrolls within itself under the tabs, at the app's page width, so the header and
- * the tabs stay. A table is the whole body and runs from edge to edge of it, as every School table
- * page's does; other content keeps the page's margin.
+ * A body that scrolls within itself under the tabs, at the app's page width within the page's
+ * margin, so the header and the tabs stay.
  */
-function ClassScroll({
-  children,
-  table = false,
-}: {
-  children: ReactNode;
-  table?: boolean;
-}) {
+function ClassScroll({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className={classBody({ table })}>{children}</div>
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6">
+        {children}
+      </div>
     </div>
   );
 }
-
-/** The content of a scrolling body: a table from edge to edge, or other content within the page's margin. */
-const classBody = cva("mx-auto flex w-full max-w-7xl flex-1 flex-col", {
-  variants: {
-    table: { false: "gap-6 px-4 py-6", true: "" },
-  },
-});
 
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
 function ClassMissing() {

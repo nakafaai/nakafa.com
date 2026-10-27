@@ -12,14 +12,7 @@ import {
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
+import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -28,12 +21,20 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
-import { TableEmpty } from "@/components/shared/table/frame";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
+import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import {
+  TableFiltersProvider,
+  TableSearch,
+} from "@/components/shared/table/toolbar";
 import {
   forumCall,
   runForumCall,
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
+import { ClassHeader } from "@/components/tenant/classes/header";
+import { AddToLibrary } from "@/components/tenant/classes/library/create";
 import {
   type LibraryItem,
   removeItemUpdate,
@@ -57,16 +58,38 @@ const KIND_ICONS = {
   pdf: Pdf02Icon,
 };
 
+/** A saved item of the library as a row of its table. */
+const itemRow = (item: LibraryItem) => ({ _tag: "item" as const, item });
+
+/** A file the teacher is adding, as a row of the library's table until its own row arrives. */
+const uploadRow = (upload: LibraryUpload) => ({
+  _tag: "upload" as const,
+  upload,
+});
+
+/** One row of the library's table. */
+type LibraryRow = ReturnType<typeof itemRow> | ReturnType<typeof uploadRow>;
+
+/** The fields every row shows: a saved item's, or those of a file being added. */
+const shownOf = (row: LibraryRow) =>
+  row._tag === "item" ? row.item : row.upload;
+
+/** The columns of the library's table. */
+const libraryColumns = createColumnHelper<
+  typeof dataTableFeatures,
+  LibraryRow
+>();
+
 /**
- * The library of a class, the newest item first, in a table that fills the page: each item's
- * title, which opens it in a new tab, who added it, and when. The files the teacher is adding show
- * first from the moment the dialog closes, until their own rows arrive. A teacher removes an item
- * from its row's menu. A class with no item shows its empty state, a failed read its sentence and
- * Try again, and a viewer who lost the school's access is sent to the refused page.
+ * The library of a class: the class header with the search over the items' titles and Add to
+ * library for its teachers, and the items, the newest first, in the page's one table card. The
+ * files the teacher is adding show first from the moment the dialog closes, until their own rows
+ * arrive. A class with no item shows the empty state without a search, a failed read its sentence
+ * and Try again, and a viewer who lost the school's access is sent to the refused page.
  */
-export function LibraryList({ teacher }: { teacher: boolean }) {
+export function LibraryList() {
   const t = useTranslations("Classroom");
-  const { classId, slug } = useClassScope();
+  const { can, classId, slug } = useClassScope();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const uploads = useStore(useLibraryUploads(), (state) => state.uploads);
   const [seen, setSeen] = useState<readonly string[]>([]);
@@ -92,167 +115,190 @@ export function LibraryList({ teacher }: { teacher: boolean }) {
   ) {
     throw pagination.error;
   }
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    return (
-      <div className="p-4">
-        <DataFailure onRetry={reloadPage} />
-      </div>
-    );
-  }
-  if (pagination._tag === "LoadingFirstPage") {
-    return null;
-  }
-  if (Arr.isReadonlyArrayEmpty(items) && Arr.isReadonlyArrayEmpty(pending)) {
-    return (
-      <TableEmpty
-        act="reading"
-        description={t("library-empty-description")}
-        title={t("library-empty")}
-      />
-    );
-  }
+  const loadingFirst = pagination._tag === "LoadingFirstPage";
+  const failed = PaginatedQueryResult.isFailure(pagination);
+  const empty =
+    !(loadingFirst || failed) &&
+    Arr.isReadonlyArrayEmpty(items) &&
+    Arr.isReadonlyArrayEmpty(pending);
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("library-title")}</TableHead>
-            <TableHead className="hidden sm:table-cell">
-              {t("library-added-by")}
-            </TableHead>
-            <TableHead className="hidden md:table-cell">
-              {t("library-added")}
-            </TableHead>
-            {teacher ? <TableHead className="w-12" /> : null}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(pending, (upload) => (
-            <UploadRow
-              key={upload.clientKey}
-              teacher={teacher}
-              upload={upload}
-            />
-          ))}
-          {Arr.map(items, (item) => (
-            <ItemRow item={item} key={item.id} teacher={teacher} />
-          ))}
-        </TableBody>
-      </Table>
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection
-          onIntersect={() => pagination.loadMore(LIBRARY_PAGE_SIZE)}
-        />
-      ) : null}
-    </>
+    <TableFiltersProvider>
+      <ClassHeader>
+        {empty ? null : <TableSearch placeholder={t("library-search")} />}
+        {Arr.contains(can, "library.manage") ? <AddToLibrary /> : null}
+      </ClassHeader>
+      <TablePageBody>
+        {empty ? (
+          <TableEmpty
+            act="reading"
+            description={t("library-empty-description")}
+            title={t("library-empty")}
+          />
+        ) : (
+          <LibraryRows
+            failed={failed}
+            items={items}
+            loadingFirst={loadingFirst}
+            pending={pending}
+          />
+        )}
+        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+          <Intersection
+            onIntersect={() => pagination.loadMore(LIBRARY_PAGE_SIZE)}
+          />
+        ) : null}
+      </TablePageBody>
+    </TableFiltersProvider>
   );
 }
 
-/** One item of the library: its kind and title, which opens it, who added it, when, and its menu for a teacher. */
-function ItemRow({ item, teacher }: { item: LibraryItem; teacher: boolean }) {
+/**
+ * The rows of the library: each item's title, which opens it in a new tab, who added it, and when,
+ * with the files being added first, in a data table, or nothing while the first page loads. A
+ * teacher removes an item from its row's menu. A failed read shows its sentence and Try again in
+ * the table's place.
+ */
+function LibraryRows({
+  failed,
+  items,
+  loadingFirst,
+  pending,
+}: {
+  failed: boolean;
+  items: readonly LibraryItem[];
+  loadingFirst: boolean;
+  pending: readonly LibraryUpload[];
+}) {
   const t = useTranslations("Classroom");
   const format = useFormatter();
+  const { can } = useClassScope();
+
+  if (failed) {
+    return <DataFailure onRetry={reloadPage} />;
+  }
+  if (loadingFirst) {
+    return null;
+  }
+  const rows: readonly LibraryRow[] = Arr.appendAll(
+    Arr.map(pending, uploadRow),
+    Arr.map(items, itemRow)
+  );
+  const columns = libraryColumns.columns([
+    libraryColumns.accessor((row) => shownOf(row).title, {
+      cell: (info) => <LibraryTitle row={info.row.original} />,
+      enableSorting: false,
+      filterFn: "includesString",
+      header: t("library-title"),
+      id: "title",
+    }),
+    libraryColumns.accessor((row) => shownOf(row).author, {
+      cell: (info) => (
+        <span className="text-muted-foreground" dir="auto">
+          {info.getValue()}
+        </span>
+      ),
+      enableSorting: false,
+      header: t("library-added-by"),
+      id: "author",
+    }),
+    libraryColumns.accessor((row) => shownOf(row).createdAt, {
+      cell: (info) => (
+        <span className="text-muted-foreground tabular-nums">
+          {format.dateTime(
+            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
+            { dateStyle: "medium" }
+          )}
+        </span>
+      ),
+      enableSorting: false,
+      header: t("library-added"),
+      id: "added",
+    }),
+    ...(Arr.contains(can, "library.manage")
+      ? [
+          libraryColumns.display({
+            cell: (info) =>
+              info.row.original._tag === "item" ? (
+                <LibraryRemove item={info.row.original.item} />
+              ) : null,
+            header: "",
+            id: "actions",
+          }),
+        ]
+      : []),
+  ]);
+
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      rowId={(row) =>
+        row._tag === "item" ? row.item.id : row.upload.clientKey
+      }
+      search="title"
+    />
+  );
+}
+
+/**
+ * An item's kind and title: a saved item with an address opens it in a new tab, and a file being
+ * added shows its title without a link until the server keeps it.
+ */
+function LibraryTitle({ row }: { row: LibraryRow }) {
+  const t = useTranslations("Classroom");
+  const shown = shownOf(row);
+  const address = row._tag === "item" ? row.item.address : null;
+
+  return (
+    <span className="flex items-center gap-2 font-medium">
+      <HugeIcons
+        aria-label={t(`library-kind-${shown.kind}`)}
+        className="shrink-0 text-muted-foreground"
+        icon={KIND_ICONS[shown.kind]}
+      />
+      {address === null ? (
+        <span dir="auto">{shown.title}</span>
+      ) : (
+        <a
+          className="underline-offset-4 hover:underline"
+          dir="auto"
+          href={address}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {shown.title}
+        </a>
+      )}
+    </span>
+  );
+}
+
+/** The menu of a saved item for a teacher: Remove, which asks first and takes the row away at once. */
+function LibraryRemove({ item }: { item: LibraryItem }) {
+  const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const remove = useMutation(classroom.library.remove);
 
   return (
-    <TableRow className="h-12">
-      <TableCell className="font-medium">
-        <span className="flex min-w-0 items-center gap-2">
-          <HugeIcons
-            aria-label={t(`library-kind-${item.kind}`)}
-            className="shrink-0 text-muted-foreground"
-            icon={KIND_ICONS[item.kind]}
-          />
-          {item.address === null ? (
-            <span className="truncate" dir="auto">
-              {item.title}
-            </span>
-          ) : (
-            <a
-              className="truncate underline-offset-4 hover:underline"
-              dir="auto"
-              href={item.address}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              {item.title}
-            </a>
-          )}
-        </span>
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground sm:table-cell">
-        {item.author}
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground md:table-cell">
-        {format.dateTime(
-          DateTime.toDateUtc(DateTime.makeUnsafe(item.createdAt)),
-          { dateStyle: "medium" }
-        )}
-      </TableCell>
-      {teacher ? (
-        <TableCell>
-          <ConfirmRowMenu
-            action={t("library-remove")}
-            confirm={t("library-remove")}
-            description={t("library-remove-description")}
-            icon={Delete02Icon}
-            onConfirm={() =>
-              runForumCall(
-                forumCall(() =>
-                  remove.withOptimisticUpdate(removeItemUpdate)({
-                    classId,
-                    itemId: item.id,
-                    slug,
-                  })
-                ),
-                toastForumFailure
-              )
-            }
-            title={t("library-remove-title")}
-          />
-        </TableCell>
-      ) : null}
-    </TableRow>
-  );
-}
-
-/** A file the teacher is adding, shown as its row will be, without its address until the server keeps it. */
-function UploadRow({
-  teacher,
-  upload,
-}: {
-  teacher: boolean;
-  upload: LibraryUpload;
-}) {
-  const t = useTranslations("Classroom");
-  const format = useFormatter();
-
-  return (
-    <TableRow className="h-12">
-      <TableCell className="font-medium">
-        <span className="flex min-w-0 items-center gap-2">
-          <HugeIcons
-            aria-label={t(`library-kind-${upload.kind}`)}
-            className="shrink-0 text-muted-foreground"
-            icon={KIND_ICONS[upload.kind]}
-          />
-          <span className="truncate" dir="auto">
-            {upload.title}
-          </span>
-        </span>
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground sm:table-cell">
-        {upload.author}
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground md:table-cell">
-        {format.dateTime(
-          DateTime.toDateUtc(DateTime.makeUnsafe(upload.createdAt)),
-          { dateStyle: "medium" }
-        )}
-      </TableCell>
-      {teacher ? <TableCell /> : null}
-    </TableRow>
+    <ConfirmRowMenu
+      action={t("library-remove")}
+      confirm={t("library-remove")}
+      description={t("library-remove-description")}
+      icon={Delete02Icon}
+      onConfirm={() =>
+        runForumCall(
+          forumCall(() =>
+            remove.withOptimisticUpdate(removeItemUpdate)({
+              classId,
+              itemId: item.id,
+              slug,
+            })
+          ),
+          toastForumFailure
+        )
+      }
+      title={t("library-remove-title")}
+    />
   );
 }

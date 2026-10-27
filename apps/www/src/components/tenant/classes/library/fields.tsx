@@ -85,7 +85,7 @@ export function ChosenFile({
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-lg border py-1 pr-1 pl-3 text-sm">
       <HugeIcons aria-hidden="true" icon={icon} />
-      <span className="min-w-0 flex-1 truncate" dir="auto">
+      <span className="wrap-anywhere min-w-0 flex-1" dir="auto">
         {name}
       </span>
       <Button
