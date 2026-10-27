@@ -41,4 +41,25 @@ describe("readBrowserSessionToken", () => {
       expect(fetcher).toHaveBeenCalledOnce();
     })
   );
+
+  it.effect(
+    "answers no token when the route answers a null token, as it does for a visitor's read",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(Response.json({ token: null }));
+
+        expect(yield* readToken()).toBeUndefined();
+        expect(fetcher).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect("fails on a 200 that carries no token field", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(Response.json({}));
+
+      const error = yield* Effect.flip(readToken());
+
+      expect(error.reason).toBe("body");
+    })
+  );
 });

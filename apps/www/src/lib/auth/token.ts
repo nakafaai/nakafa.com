@@ -27,13 +27,15 @@ export class SessionTokenUnavailable extends Schema.TaggedError<SessionTokenUnav
   }
 ) {}
 
+/** The token route's 200 answer: the token, or `null` for a request whose session is missing or has ended. */
 const TokenResponseSchema = Schema.Struct({
-  token: Schema.String,
+  token: Schema.NullOr(Schema.String),
 });
 
 /**
- * Classifies the token route's answer. A 200 must decode to a token, a 401 means
- * no session, a 5xx may be tried again, and every other status is final.
+ * Classifies the token route's answer. A 200 must decode to a token or to `null`,
+ * which means no session, as a 401 does; a 5xx may be tried again, and every
+ * other status is final.
  */
 const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
   response: HttpClientResponse.HttpClientResponse
@@ -47,6 +49,9 @@ const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
     )(response).pipe(
       Effect.mapError(() => new SessionTokenUnavailable({ reason: "body" }))
     );
+    if (token === null) {
+      return;
+    }
     return token;
   }
   const failure = new SessionTokenUnavailable({
