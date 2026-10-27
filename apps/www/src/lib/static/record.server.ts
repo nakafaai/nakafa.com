@@ -26,15 +26,6 @@ function isPrerender(header: string | null | undefined): boolean {
 }
 
 /**
- * Whether the request that the server answers now is the build's prerender of a
- * page, so a route can tell an answer that the build keeps for every visitor from
- * one that a visitor's own request read.
- */
-export function isPrerenderRequest(): boolean {
-  return isPrerender(getRequestHeader(PRERENDER_HEADER));
-}
-
-/**
  * Records one server function call of a page that the build prerenders, so the
  * build can write its answer as a static file. A visitor's request records
  * nothing and computes no key.

@@ -49,8 +49,8 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the
   active release from the sitemap readers: every sitemap URL except the search
-  screen and the try-out tracks, sets and sections, plus the articles index and the
-  try-out hub of each locale. The sitemap files drop the same paths
+  screen and the try-out tracks, sets and sections (which Phase B for try-out adds),
+  plus the articles index and the try-out hub of each locale. The sitemap files drop the same paths
   (`apps/www/src/lib/sitemap/files.ts`), so every sitemap URL is a static page.
   `scripts/static/run.mjs pages` writes the list before the client build, and
   `vite.config.ts` gives it to TanStack's prerender with `autoStaticPathsDiscovery`
@@ -101,6 +101,29 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   on that repository. A target whose `NAKAFA_DEPLOY_SURFACE` is `none` (development)
   starts nothing. The cache POST and its receipt are deleted. The Nakafa deploy
   workflow has no repository dispatch trigger.
+
+## Phase B for try-out, slice 1, as implemented
+
+- **Visitor pages.** The page list and the sitemap now include every try-out track, set and section
+  (`apps/www/src/lib/static/pages.ts`, `apps/www/src/lib/sitemap/files.ts`), and their loaders read
+  the build's visitor answer (`readStaticData`) unless the signed-in hint is set or the address binds
+  an attempt.
+- **Learner pages on the Worker.** The Worker runs before the assets at and beneath a track
+  (`runWorkerFirst` in `apps/www/worker.ts`, derived from `LEARNER_ROUTE_TEMPLATES`). A page request
+  that sends a session cookie or binds an attempt renders on the Worker as before (`isLearnerPage` in
+  `apps/www/src/lib/routing/learner.server.ts`), so the learner's attempt, the shell lock, the score
+  card and the player's view are in the first HTML. Every other read takes the asset that the build
+  wrote (`readVisitorAsset`), and a miss goes through the Worker's decisions, which answer the static
+  not-found page without a render.
+- **No swap after hydration.** The assets match a path without its query, so serving the static page
+  to everyone would give a learner's hard load, `?attemptId` included, the visitor's HTML. Their own
+  page would replace it after hydration: the shell lock moving the header, the player replacing the
+  set page, the score card replacing the facts card, and Start turning into Continue. The player's view
+  would also leave the first HTML.
+- **Cost.** A visitor's read beneath a track is one Worker request that reads one asset; before, it
+  was a render, 40 to 333 ms of CPU for a missing set. A learner's view costs what it did. Slice 2
+  moves the attempt into the browser, after which the Worker-first rule and `isLearnerPage` are
+  deleted.
 
 ## Phase B for School as implemented
 

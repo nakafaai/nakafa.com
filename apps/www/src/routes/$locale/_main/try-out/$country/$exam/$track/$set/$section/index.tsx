@@ -3,7 +3,6 @@ import { Schema } from "effect";
 import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
-import { TryoutLearnerAnswer } from "@/components/tryout/route/learner";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
@@ -13,8 +12,8 @@ import { readStaticData } from "@/lib/static/data";
  * One section of a set. Its catalog view is shared, so the build prerenders it and
  * keeps its answer. The learner's attempt through it is personal: a signed-in
  * learner and a URL bound to an attempt read their own answer from the server,
- * after the static page has hydrated (`TryoutLearnerAnswer`), and a URL bound to an
- * attempt answers for that attempt alone.
+ * which renders their page for their request (`isLearnerPage`), and a URL bound to
+ * an attempt answers for that attempt alone.
  */
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/$set/$section/"
@@ -65,19 +64,16 @@ function TryoutSectionPage() {
     return route.preview;
   }
   return (
-    <>
-      <TryoutLearnerAnswer />
-      <TryoutClockProvider initialNow={route.now}>
-        <TryoutSectionPageClient
-          binding={route.binding}
-          content={route.content}
-          page={route.page}
-          route={route.route}
-          setPath={route.setPath}
-        >
-          {route.review}
-        </TryoutSectionPageClient>
-      </TryoutClockProvider>
-    </>
+    <TryoutClockProvider initialNow={route.now}>
+      <TryoutSectionPageClient
+        binding={route.binding}
+        content={route.content}
+        page={route.page}
+        route={route.route}
+        setPath={route.setPath}
+      >
+        {route.review}
+      </TryoutSectionPageClient>
+    </TryoutClockProvider>
   );
 }

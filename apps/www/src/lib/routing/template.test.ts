@@ -3,6 +3,7 @@ import {
   isBarePath,
   isRenderedPath,
   matchesRouteTemplate,
+  namesFile,
 } from "@/lib/routing/template";
 
 describe("route templates", () => {
@@ -23,6 +24,15 @@ describe("route templates", () => {
     expect(
       matchesRouteTemplate("/$locale/materials/$subject/$topic/$", "/en/x/y")
     ).toBe(false);
+  });
+});
+
+describe("file addresses", () => {
+  it("names a file by the extension of its last segment, and a page by none", () => {
+    expect(namesFile("/assets/old.js")).toBe(true);
+    expect(namesFile("/en/try-out/indonesia/snbt/2027.md")).toBe(true);
+    expect(namesFile("/en/try-out/indonesia/snbt/2027")).toBe(false);
+    expect(namesFile("/v1.2/en/page")).toBe(false);
   });
 });
 

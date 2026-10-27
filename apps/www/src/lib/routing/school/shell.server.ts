@@ -4,9 +4,7 @@ import { Effect, Option } from "effect";
 import { hasStaticRelease } from "@/lib/routing/release";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 import { SCHOOL_SHELL_PATH } from "@/lib/routing/school/shell";
-
-/** An address whose last segment names a file, such as `/assets/old.js`. */
-const FILE_ADDRESS = /\.[^/]*$/;
+import { namesFile } from "@/lib/routing/template";
 
 /**
  * Whether the release's static shell answers a request: a read of a school host's
@@ -28,7 +26,7 @@ function readsSchoolShell(request: Request) {
       Option.flatMap(readRequestHostname(request.headers), readSchoolSlug)
     ) &&
     !isSharedPath(pathname) &&
-    !FILE_ADDRESS.test(pathname)
+    !namesFile(pathname)
   );
 }
 

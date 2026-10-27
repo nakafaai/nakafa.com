@@ -8,6 +8,7 @@ import {
 } from "@repo/site/keys";
 import { Array as Arr, Record, Redacted } from "effect";
 import { setValues } from "#www/deploy/environment";
+import { LEARNER_ROUTE_TEMPLATES } from "#www/src/lib/routing/prerendered";
 import { weatherKeys } from "#www/src/lib/weather/keys";
 
 /**
@@ -20,6 +21,18 @@ const HTML_HANDLING = "drop-trailing-slash" as const;
 
 /** A path with no asset answers the nearest `404.html`. */
 const NOT_FOUND_HANDLING = "404-page" as const;
+
+/**
+ * The paths where the Worker runs before the static assets: a try-out track, set
+ * or section and every path beneath it, so a learner's page renders with their
+ * attempt in its first HTML, while a visitor's read answers the asset the build
+ * wrote (`readVisitorAsset`). Each `$name` segment of a template becomes `*`,
+ * which Cloudflare also matches across the segments below.
+ * https://developers.cloudflare.com/workers/static-assets/binding/#run_worker_first
+ */
+const WORKER_FIRST = Arr.map(LEARNER_ROUTE_TEMPLATES, (template) =>
+  template.replaceAll(/\$[^/]+/g, "*")
+);
 
 export const workerSettings = {
   /**
@@ -57,11 +70,13 @@ export const workerSettings = {
    * alike. A prerendered page is `<path>/index.html`, and its URL has no trailing
    * slash, so the asset answers at `/en` instead of redirecting to `/en/`. A path
    * with no asset reaches the Worker, a browser navigation included under the
-   * flag above, and the Worker answers the nearest `404.html`.
+   * flag above, and the Worker answers the nearest `404.html`. Beneath a try-out
+   * track, the Worker runs first (`WORKER_FIRST`).
    */
   assets: {
     htmlHandling: HTML_HANDLING,
     notFoundHandling: NOT_FOUND_HANDLING,
+    runWorkerFirst: WORKER_FIRST,
   },
 };
 
