@@ -6,7 +6,12 @@ import { cn } from "cn";
 import { useTranslations } from "use-intl";
 import { readTimeNotice, splitTime } from "@/components/player/time";
 
-/** Animates timer digits without changing the width at minute or hour rollover. */
+/**
+ * Animates timer digits without changing the width at minute or hour rollover.
+ * It holds the width of its eight monospace characters (HH:MM:SS) from the first
+ * paint, before the animated digits render, so the row around it never moves
+ * when they arrive.
+ */
 export function PlayerDigits({
   className,
   seconds,
@@ -19,7 +24,7 @@ export function PlayerDigits({
   return (
     <time
       className={cn(
-        "inline-flex shrink-0 items-baseline font-mono text-base tabular-nums",
+        "inline-flex w-[8ch] shrink-0 items-baseline justify-center font-mono text-base tabular-nums",
         className
       )}
       dateTime={`PT${seconds}S`}
