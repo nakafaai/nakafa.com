@@ -14,6 +14,7 @@ import {
   ownerBlock,
   sharedPackageName,
 } from "#scripts/check/compiler";
+import { inspectNativeControls } from "#scripts/check/controls";
 import { inspectDictionaries } from "#scripts/check/dictionary";
 import { inspectDrillingSource } from "#scripts/check/drilling";
 import {
@@ -99,6 +100,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectToastSource(file, sourceFile),
         inspectReactSource(file, sourceFile),
         inspectDrillingSource(file, sourceFile),
+        inspectNativeControls(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
         inspectSealedSource(file, sourceFile),

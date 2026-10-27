@@ -63,8 +63,6 @@ const readProfile = Effect.fn("www.tenant.read.profile")(function* (
 ) {
   return yield* HttpClient.HttpClient.pipe(
     Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
-    Effect.asSome,
-    Effect.catchTag("TenantNotFound", () => Effect.succeedNone),
     Effect.provide(httpLayer()),
     Effect.mapError((cause) => new SchoolReadFailed({ cause }))
   );
