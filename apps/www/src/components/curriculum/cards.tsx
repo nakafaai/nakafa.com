@@ -29,7 +29,9 @@ export function CurriculumCardGrid({
       <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
         {Arr.map(cards, ({ route, visual }, index) => (
           <CatalogCard
-            action={<PublicPathLink publicPath={route.publicPath} />}
+            action={(anchor) => (
+              <PublicPathLink {...anchor} publicPath={route.publicPath} />
+            )}
             key={route.publicPath}
             title={route.title}
           >

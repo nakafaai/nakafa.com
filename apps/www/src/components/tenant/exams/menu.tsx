@@ -3,7 +3,6 @@ import {
   FileImportIcon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { SplitMenuTrigger } from "@/components/shared/split";
@@ -85,28 +85,23 @@ export function ExamMenu() {
 }
 
 /**
- * Opens the exam as a student sees it. The link renders through Button, so it carries the button slot
- * that ButtonGroup joins on: a bare link styled as a button kept its own corners and border, and the
- * pair read as two buttons.
+ * Opens the exam as a student sees it. The link carries the button slot that ButtonGroup joins on:
+ * without it the link kept its own corners and border, and the pair read as two buttons.
  */
 function TryAsStudent() {
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
 
   return (
-    <Button
+    <Link
       aria-label={t("try-action")}
-      nativeButton={false}
-      render={
-        <Link
-          params={{ exam: exam.id, slug }}
-          to="/school/$slug/exams/$exam/try"
-        />
-      }
-      variant="outline"
+      className={buttonVariants({ variant: "outline" })}
+      data-slot="button"
+      params={{ exam: exam.id, slug }}
+      to="/school/$slug/exams/$exam/try"
     >
       <HugeIcons aria-hidden="true" icon={ViewIcon} />
       <span className="max-sm:sr-only">{t("try-action")}</span>
-    </Button>
+    </Link>
   );
 }
