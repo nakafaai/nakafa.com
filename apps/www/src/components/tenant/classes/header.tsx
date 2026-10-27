@@ -6,12 +6,31 @@ import { ClassTabs } from "@/components/tenant/classes/tabs";
 import type { ClassView } from "@/components/tenant/classes/view";
 import { SchoolHeader } from "@/components/tenant/header";
 
-/** The class page's path, its title, and its current tab, which the resolved class provides to the view that draws its header. */
-export const ClassHeaderContext = createContext<{
+/** The class page's path, its title, and its current tab. */
+const ClassHeaderContext = createContext<{
   items: readonly BreadcrumbHeaderItem[];
   tab: (typeof ClassView.Type)["_tag"];
   title: string;
 } | null>(null);
+
+/** Gives the view of a resolved class page the path, the title, and the current tab that its header shows. */
+export function ClassHeaderProvider({
+  children,
+  items,
+  tab,
+  title,
+}: {
+  children: ReactNode;
+  items: readonly BreadcrumbHeaderItem[];
+  tab: (typeof ClassView.Type)["_tag"];
+  title: string;
+}) {
+  return (
+    <ClassHeaderContext value={{ items, tab, title }}>
+      {children}
+    </ClassHeaderContext>
+  );
+}
 
 /**
  * The top of a class page, one height on every view: the school header with the class's path and

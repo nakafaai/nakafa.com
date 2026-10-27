@@ -25,7 +25,7 @@ import { StartDiscussion } from "@/components/tenant/classes/forum/start";
 import { ForumDiscussion } from "@/components/tenant/classes/forum/thread";
 import {
   ClassHeader,
-  ClassHeaderContext,
+  ClassHeaderProvider,
 } from "@/components/tenant/classes/header";
 import { NewAnnouncement } from "@/components/tenant/classes/home/compose";
 import { ClassHome } from "@/components/tenant/classes/home/home";
@@ -145,7 +145,8 @@ function ClassPage({
 }
 
 /**
- * The resolved class: its header, its tabs, and the body of the view. The channel's name and the
+ * The resolved class: the path and the title that its header shows, given to the view, which
+ * draws the header with its own actions, the tabs, and its body. The channel's name and the
  * discussion's number and title end the path, read from the same channel list and discussion the
  * forum shows. A discussion the class does not hold shows the missing state.
  */
@@ -219,14 +220,12 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   );
 
   return (
-    <ClassHeaderContext
-      value={{ items: path, tab: view._tag, title: klass.name }}
-    >
+    <ClassHeaderProvider items={path} tab={view._tag} title={klass.name}>
       {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
       <div className="flex h-svh min-h-0 flex-col">
         <ClassBody found={found} klass={klass} />
       </div>
-    </ClassHeaderContext>
+    </ClassHeaderProvider>
   );
 }
 
