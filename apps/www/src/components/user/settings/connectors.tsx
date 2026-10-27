@@ -6,9 +6,9 @@ import {
 } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { GOOGLE_MANIFEST } from "@repo/backend/confect/connectors/google/manifest";
-import type { ConnectOutcome } from "@repo/backend/confect/connectors/schema";
 import { Array as Arr, Effect, Option } from "effect";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ConnectorActionsContext } from "@/components/connectors/actions";
 import { connectCallback } from "@/components/connectors/address";
 import { ConnectorList } from "@/components/connectors/list";
 import { disconnectOwnUpdate } from "@/components/connectors/optimistic";
@@ -29,11 +29,7 @@ const CONNECTION_PAGE_SIZE = 20;
  * reads for this account alone. Connecting sends the browser to Google and back
  * to this page; disconnecting ends the connection at once.
  */
-export function UserSettingsConnectors({
-  outcome,
-}: {
-  outcome: (typeof ConnectOutcome.Type)["outcome"] | undefined;
-}) {
+export function UserSettingsConnectors() {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const offered = useQuery(connectors.google.offered, isSettled ? {} : "skip");
   const connections = usePaginatedPreloaded(
@@ -59,39 +55,41 @@ export function UserSettingsConnectors({
   }
 
   return (
-    <ConnectorList
-      connections={connections.results}
-      offered={Arr.filter(
-        offered.value,
-        (connector) => GOOGLE_MANIFEST[connector].owner === "personal"
-      )}
-      onConnect={(connector) =>
-        runForumCall(
-          forumCall(() =>
-            start({
-              connector,
-              redirectUri: connectCallback(window.location, null),
-              returnPath: window.location.pathname,
-            })
-          ).pipe(
-            Effect.tap(({ url }) =>
-              Effect.sync(() => window.location.assign(url))
-            )
+    <ConnectorActionsContext
+      value={{
+        connect: (connector) =>
+          runForumCall(
+            forumCall(() =>
+              start({
+                connector,
+                redirectUri: connectCallback(window.location, null),
+                returnPath: window.location.pathname,
+              })
+            ).pipe(
+              Effect.tap(({ url }) =>
+                Effect.sync(() => window.location.assign(url))
+              )
+            ),
+            toastForumFailure
           ),
-          toastForumFailure
-        )
-      }
-      onDisconnect={(connection) =>
-        runForumCall(
-          forumCall(() =>
-            disconnect.withOptimisticUpdate(disconnectOwnUpdate)({
-              connectionId: connection.id,
-            })
+        disconnect: (connection) =>
+          runForumCall(
+            forumCall(() =>
+              disconnect.withOptimisticUpdate(disconnectOwnUpdate)({
+                connectionId: connection.id,
+              })
+            ),
+            toastForumFailure
           ),
-          toastForumFailure
-        )
-      }
-      outcome={outcome}
-    />
+      }}
+    >
+      <ConnectorList
+        connections={connections.results}
+        offered={Arr.filter(
+          offered.value,
+          (connector) => GOOGLE_MANIFEST[connector].owner === "personal"
+        )}
+      />
+    </ConnectorActionsContext>
   );
 }

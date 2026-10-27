@@ -6,9 +6,9 @@ import {
 } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { GOOGLE_MANIFEST } from "@repo/backend/confect/connectors/google/manifest";
-import type { ConnectOutcome } from "@repo/backend/confect/connectors/schema";
 import { Array as Arr, Effect, Option } from "effect";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ConnectorActionsContext } from "@/components/connectors/actions";
 import { connectCallback } from "@/components/connectors/address";
 import { ConnectorList } from "@/components/connectors/list";
 import {
@@ -35,14 +35,10 @@ const CONNECTION_PAGE_SIZE = 20;
 const RETURN_PATH = "/settings/connections";
 
 /** The school's connections as a settings page: the school header and the connectors. */
-export function SchoolConnectionsSettings({
-  outcome,
-}: {
-  outcome: (typeof ConnectOutcome.Type)["outcome"] | undefined;
-}) {
+export function SchoolConnectionsSettings() {
   return (
     <SettingsPage>
-      <SchoolConnections outcome={outcome} />
+      <SchoolConnections />
     </SettingsPage>
   );
 }
@@ -53,11 +49,7 @@ export function SchoolConnectionsSettings({
  * classes. Connecting sends the browser to Google at the site's own callback and
  * back to this page on the school's host.
  */
-function SchoolConnections({
-  outcome,
-}: {
-  outcome: (typeof ConnectOutcome.Type)["outcome"] | undefined;
-}) {
+function SchoolConnections() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const offered = useQuery(connectors.google.offered, isSettled ? {} : "skip");
@@ -93,42 +85,44 @@ function SchoolConnections({
 
   return (
     <div className="flex flex-col gap-6">
-      <ConnectorList
-        connections={connections.results}
-        offered={Arr.filter(
-          offered.value,
-          (connector) => GOOGLE_MANIFEST[connector].owner === "school"
-        )}
-        onConnect={(connector) =>
-          runForumCall(
-            forumCall(() =>
-              start({
-                connector,
-                redirectUri: connectCallback(window.location, slug),
-                returnPath: RETURN_PATH,
-                slug,
-              })
-            ).pipe(
-              Effect.tap(({ url }) =>
-                Effect.sync(() => window.location.assign(url))
-              )
+      <ConnectorActionsContext
+        value={{
+          connect: (connector) =>
+            runForumCall(
+              forumCall(() =>
+                start({
+                  connector,
+                  redirectUri: connectCallback(window.location, slug),
+                  returnPath: RETURN_PATH,
+                  slug,
+                })
+              ).pipe(
+                Effect.tap(({ url }) =>
+                  Effect.sync(() => window.location.assign(url))
+                )
+              ),
+              toastForumFailure
             ),
-            toastForumFailure
-          )
-        }
-        onDisconnect={(connection) =>
-          runForumCall(
-            forumCall(() =>
-              disconnect.withOptimisticUpdate(disconnectSchoolUpdate)({
-                connectionId: connection.id,
-                slug,
-              })
+          disconnect: (connection) =>
+            runForumCall(
+              forumCall(() =>
+                disconnect.withOptimisticUpdate(disconnectSchoolUpdate)({
+                  connectionId: connection.id,
+                  slug,
+                })
+              ),
+              toastForumFailure
             ),
-            toastForumFailure
-          )
-        }
-        outcome={outcome}
-      />
+        }}
+      >
+        <ConnectorList
+          connections={connections.results}
+          offered={Arr.filter(
+            offered.value,
+            (connector) => GOOGLE_MANIFEST[connector].owner === "school"
+          )}
+        />
+      </ConnectorActionsContext>
       {Option.exists(classroom, (row) => row.status === "active") ? (
         <ClassroomImport />
       ) : null}

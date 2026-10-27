@@ -15,6 +15,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Option } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { useConnectorActions } from "@/components/connectors/actions";
 import type { Connection } from "@/components/connectors/optimistic";
 import {
   CardSection,
@@ -37,15 +38,12 @@ const CONNECTOR_ICONS = {
 export function ConnectorCard({
   connection,
   connector,
-  onConnect,
-  onDisconnect,
 }: {
   connection: Option.Option<Connection>;
   connector: GoogleConnector;
-  onConnect: () => Promise<void>;
-  onDisconnect: (connection: Connection) => void;
 }) {
   const t = useTranslations("Connectors");
+  const { disconnect } = useConnectorActions();
   const common = useTranslations("Common");
   const [confirming, setConfirming] = useState(false);
   const reconnect = Option.exists(
@@ -70,11 +68,11 @@ export function ConnectorCard({
         tone={reconnect ? "destructive" : "muted"}
       >
         {Option.isNone(connection) ? (
-          <ConnectButton onConnect={onConnect} reconnect={false} />
+          <ConnectButton connector={connector} reconnect={false} />
         ) : (
           <>
             {reconnect ? (
-              <ConnectButton onConnect={onConnect} reconnect={true} />
+              <ConnectButton connector={connector} reconnect={true} />
             ) : null}
             <Button onClick={() => setConfirming(true)} variant="destructive">
               {t("disconnect")}
@@ -92,7 +90,7 @@ export function ConnectorCard({
                   <Button
                     onClick={() => {
                       setConfirming(false);
-                      onDisconnect(connection.value);
+                      disconnect(connection.value);
                     }}
                     variant="destructive"
                   >
@@ -116,19 +114,20 @@ export function ConnectorCard({
  * for one whose token Google stopped accepting. It stays pressed while the start runs.
  */
 function ConnectButton({
-  onConnect,
+  connector,
   reconnect,
 }: {
-  onConnect: () => Promise<void>;
+  connector: GoogleConnector;
   reconnect: boolean;
 }) {
   const t = useTranslations("Connectors");
+  const { connect } = useConnectorActions();
   const [isConnecting, startConnecting] = useTransition();
 
   return (
     <Button
       disabled={isConnecting}
-      onClick={() => startConnecting(onConnect)}
+      onClick={() => startConnecting(() => connect(connector))}
       variant={reconnect ? "outline" : "default"}
     >
       {reconnect ? t("reconnect") : t("connect")}

@@ -24,7 +24,7 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { useState, useTransition } from "react";
+import { type ReactNode, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import {
   CardSection,
@@ -79,7 +79,16 @@ export function ClassroomImport() {
       {Option.match(shown, {
         onNone: () => null,
         onSome: (found) => (
-          <CourseTable preview={found} setPreview={setShown} />
+          <CourseTable empty={Arr.isReadonlyArrayEmpty(found.courses)}>
+            {Arr.map(found.courses, (course) => (
+              <CourseRow
+                course={course}
+                key={course.courseId}
+                preview={found}
+                setPreview={setShown}
+              />
+            ))}
+          </CourseTable>
         ),
       })}
       <CardSectionFooter hint={t("courses-hint")}>
@@ -91,17 +100,17 @@ export function ClassroomImport() {
   );
 }
 
-/** The courses of a preview, each with its students and the class it fills. */
+/** The courses of a preview in a table, each row composed by the import, or a sentence when it has none. */
 function CourseTable({
-  preview,
-  setPreview,
+  children,
+  empty,
 }: {
-  preview: Preview;
-  setPreview: (preview: Option.Option<Preview>) => void;
+  children: ReactNode;
+  empty: boolean;
 }) {
   const t = useTranslations("Connectors");
 
-  if (Arr.isReadonlyArrayEmpty(preview.courses)) {
+  if (empty) {
     return (
       <p className="px-6 text-muted-foreground text-sm">{t("courses-none")}</p>
     );
@@ -120,16 +129,7 @@ function CourseTable({
               <TableHead>{t("course-class")}</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {Arr.map(preview.courses, (course) => (
-              <CourseRow
-                course={course}
-                key={course.courseId}
-                preview={preview}
-                setPreview={setPreview}
-              />
-            ))}
-          </TableBody>
+          <TableBody>{children}</TableBody>
         </Table>
       </TableFrame>
     </div>

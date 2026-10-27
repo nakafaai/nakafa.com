@@ -1,6 +1,7 @@
 import { ConnectOutcome } from "@repo/backend/confect/connectors/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
+import { ConnectOutcomeContext } from "@/components/connectors/actions";
 import { UserSettingsConnectors } from "@/components/user/settings/connectors";
 import { privateHead } from "@/lib/account/head";
 import { connectorsScreenFn } from "@/lib/account/settings.functions";
@@ -24,5 +25,9 @@ export const Route = createFileRoute(
 
 function ConnectorsPage() {
   const { connect } = Route.useSearch();
-  return <UserSettingsConnectors outcome={connect} />;
+  return (
+    <ConnectOutcomeContext value={connect}>
+      <UserSettingsConnectors />
+    </ConnectOutcomeContext>
+  );
 }

@@ -1,12 +1,13 @@
 import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
-import type { ConnectOutcome } from "@repo/backend/confect/connectors/schema";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from "@repo/design-system/components/ui/alert";
 import { Array as Arr } from "effect";
+import { use } from "react";
 import { useTranslations } from "use-intl";
+import { ConnectOutcomeContext } from "@/components/connectors/actions";
 import { ConnectorCard } from "@/components/connectors/card";
 import {
   type Connection,
@@ -23,17 +24,12 @@ import { TableEmpty } from "@/components/shared/table/frame";
 export function ConnectorList({
   connections,
   offered,
-  onConnect,
-  onDisconnect,
-  outcome,
 }: {
   connections: readonly Connection[];
   offered: readonly GoogleConnector[];
-  onConnect: (connector: GoogleConnector) => Promise<void>;
-  onDisconnect: (connection: Connection) => void;
-  outcome: (typeof ConnectOutcome.Type)["outcome"] | undefined;
 }) {
   const t = useTranslations("Connectors");
+  const outcome = use(ConnectOutcomeContext);
 
   if (Arr.isReadonlyArrayEmpty(offered)) {
     return (
@@ -58,8 +54,6 @@ export function ConnectorList({
           connection={currentConnection(connections, connector)}
           connector={connector}
           key={connector}
-          onConnect={() => onConnect(connector)}
-          onDisconnect={onDisconnect}
         />
       ))}
     </div>

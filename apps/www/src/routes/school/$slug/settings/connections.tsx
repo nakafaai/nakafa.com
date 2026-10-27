@@ -2,6 +2,7 @@ import { ConnectOutcome } from "@repo/backend/confect/connectors/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
 import type { ReactElement } from "react";
+import { ConnectOutcomeContext } from "@/components/connectors/actions";
 import { SchoolConnectionsSettings } from "@/components/tenant/connectors/page";
 
 /** What the connect callback appends when the browser comes back: how the connect ended. */
@@ -17,5 +18,9 @@ export const Route = createFileRoute("/school/$slug/settings/connections")({
 
 function SchoolConnectionsPage(): ReactElement {
   const { connect } = Route.useSearch();
-  return <SchoolConnectionsSettings outcome={connect} />;
+  return (
+    <ConnectOutcomeContext value={connect}>
+      <SchoolConnectionsSettings />
+    </ConnectOutcomeContext>
+  );
 }
