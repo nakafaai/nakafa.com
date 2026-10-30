@@ -1,6 +1,7 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   SheetDescription,
   SheetHeader,
@@ -66,12 +67,16 @@ export function PaneHeader({
 }
 
 /**
- * A detail's body, which scrolls on its own. It keeps the same padding in the pane and in the phone's sheet: both
- * headers end on a rule, so the body's first field needs the room above it, and its focus ring stays inside the
- * scrolling box.
+ * A detail's body, which scrolls on its own under an overlay bar that takes no room. It keeps the same padding in
+ * the pane and in the phone's sheet: both headers end on a rule, so the body's first field needs the room above it,
+ * and its focus ring stays inside the scrolling box.
  */
 export function PaneBody({ children }: { children: ReactNode }) {
-  return <div className="min-h-0 flex-1 overflow-y-auto p-4">{children}</div>;
+  return (
+    <ScrollArea className="flex-1">
+      <div className="p-4">{children}</div>
+    </ScrollArea>
+  );
 }
 
 /** A detail's footer: its actions at the end, on a second row where a narrow pane cannot hold them in one. */

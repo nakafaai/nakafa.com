@@ -66,14 +66,17 @@ const PROJECTS = {
     workers: 2,
   },
   // Visual cards take the whole screen through the Fullscreen API on
-  // desktop, Android, and iPad, and cover the viewport on iPhone, so their
-  // suite also runs in WebKit. Its project runs after the navigation checks,
-  // so no other browser shares the runner while those checks measure timing.
+  // desktop, Android, and iPad, and cover the viewport on iPhone, and a press
+  // into a lesson must draw it whole in Safari too, so both suites also run in
+  // WebKit. Its project runs after the navigation checks, so no other browser
+  // shares the runner while those checks measure timing.
   webkit: {
-    // The visual cards, and the lesson breadcrumb that must paint once in Safari too.
+    // The visual cards, the lesson breadcrumb that must paint once, and a press into a lesson
+    // that must draw it whole, in Safari too.
     testMatch: [
       "**/visual/cards.browser.ts",
       "**/curriculum/placement.browser.ts",
+      "**/reading/press.browser.ts",
     ],
     use: { browserName: "webkit" },
     workers: 1,
