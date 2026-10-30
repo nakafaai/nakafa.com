@@ -121,3 +121,83 @@ export function PaperLine({ essay = false }: { essay?: boolean }) {
     />
   );
 }
+
+/**
+ * A true or false table on a paper, as the student's player draws it: one bordered grid, a numbers column, the
+ * statements, then a column for each choice. The live editor and the drawing without editors both build on it, so a
+ * page keeps its size when its editors mount.
+ */
+export function PaperTable({
+  children,
+  columns,
+}: {
+  children: ReactNode;
+  /** How many choices the table has, each a column of its own. */
+  columns: number;
+}) {
+  return (
+    <div
+      className="grid min-w-0 overflow-hidden rounded-xl border"
+      style={{
+        gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns}, minmax(6rem, auto))`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** The header row of a paper's table: an empty cell over the numbers, the statements' heading, then each column's header. */
+export function PaperTableHead({
+  children,
+  heading,
+}: {
+  children: ReactNode;
+  heading: string;
+}) {
+  return (
+    <div className="col-span-full grid grid-cols-subgrid bg-muted/50 font-medium text-sm">
+      <div aria-hidden="true" className="py-3 pl-4" />
+      <div className="px-3 py-3">{heading}</div>
+      {children}
+    </div>
+  );
+}
+
+/** The header of one choice's column, which names the marks under it. */
+export function PaperTableHeader({
+  children,
+  id,
+}: {
+  children: ReactNode;
+  id?: string;
+}) {
+  return (
+    <div className="px-2 py-2 text-center" id={id}>
+      {children}
+    </div>
+  );
+}
+
+/** The number at the start of a statement's row. */
+export function PaperTableNumber({ number }: { number: number }) {
+  return (
+    <span className="flex items-start border-t py-3 pl-4 font-medium tabular-nums">
+      {number}.
+    </span>
+  );
+}
+
+/** The statement of a row. */
+export function PaperTableStatement({ children }: { children: ReactNode }) {
+  return <div className="min-w-0 border-t px-3 py-2">{children}</div>;
+}
+
+/** The cell of a row under one column, which holds the row's mark for that choice. */
+export function PaperTableMark({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-12 items-center justify-center border-t px-2 py-3">
+      {children}
+    </div>
+  );
+}

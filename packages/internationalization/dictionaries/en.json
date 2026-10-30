@@ -485,7 +485,6 @@
     "pair-hint": "Each answer pairs one statement, and the key saves once every statement has one.",
     "pair-statement": "Answer for statement {number}",
     "template-table": "True or false table",
-    "table-columns": "Columns",
     "column-of": "Question {number}, column {name}",
     "column-placeholder": "Column",
     "cell-of": "Column for statement {name} of question {number}",
