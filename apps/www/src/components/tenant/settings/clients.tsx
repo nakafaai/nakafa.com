@@ -227,7 +227,7 @@ function SchoolClientTable() {
           <SchoolClientMenu client={info.row.original} />
         ) : null,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

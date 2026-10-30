@@ -37,11 +37,21 @@ import { EmptyNina } from "@/components/state/empty";
 /** The arrow of a column sorted each way. */
 const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };
 
-/** Where a column's head and cells stand, as its meta says: at the start, in the middle for badges, or at the end. */
+/**
+ * Where a column's head and cells stand, as its meta says: at the start, in the middle for badges, or at the end, where
+ * numbers and dates take digits of one width so they line up from row to row. The row's menu stays at the table's end
+ * edge on the row's own background while a table wider than the phone scrolls under it, so every row's actions stay in
+ * reach.
+ */
 const columnAlign = cva("", {
   defaultVariants: { align: "start" },
   variants: {
-    align: { center: "text-center", end: "text-end", start: "" },
+    align: {
+      center: "text-center",
+      end: "text-end tabular-nums",
+      menu: "sticky end-0 bg-card in-[tr:hover]:bg-accent in-aria-selected:bg-accent text-end",
+      start: "",
+    },
   },
 });
 
@@ -49,7 +59,7 @@ const columnAlign = cva("", {
 const sortButton = cva("", {
   defaultVariants: { align: "start" },
   variants: {
-    align: { center: "", end: "-me-3", start: "-ms-3" },
+    align: { center: "", end: "-me-3", menu: "-me-3", start: "-ms-3" },
   },
 });
 

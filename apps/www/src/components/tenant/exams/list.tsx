@@ -221,6 +221,7 @@ function ExamListRows({
       enableSorting: false,
       header: t("created-column"),
       id: "created",
+      meta: { align: "end" },
     }),
     examColumns.display({
       cell: (info) =>
@@ -228,7 +229,7 @@ function ExamListRows({
           <ExamRowMenu exam={info.row.original} />
         ),
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

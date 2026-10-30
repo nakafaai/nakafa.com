@@ -208,7 +208,7 @@ function GuardianLinkTable() {
     linkColumns.display({
       cell: (info) => <GuardianLinkMenu link={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

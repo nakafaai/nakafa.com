@@ -104,6 +104,7 @@ export function SchoolCohortMembers({
           />
         ) : null,
       id: "actions",
+      meta: { align: "menu" },
     }),
   ]);
 

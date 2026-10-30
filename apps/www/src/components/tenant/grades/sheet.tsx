@@ -201,7 +201,7 @@ export function ClassGradebook({
     lineColumns.display({
       cell: (info) => <GradeLineMenu line={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 
