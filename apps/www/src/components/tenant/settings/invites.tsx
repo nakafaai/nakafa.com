@@ -180,7 +180,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     inviteColumns.display({
       cell: (info) => <SchoolInviteMenu invite={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

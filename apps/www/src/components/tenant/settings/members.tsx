@@ -197,7 +197,7 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
     memberColumns.display({
       cell: (info) => <SchoolMemberMenu member={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

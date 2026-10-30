@@ -114,7 +114,7 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
           <SchoolGrantMenu grant={info.row.original} />
         ) : null,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

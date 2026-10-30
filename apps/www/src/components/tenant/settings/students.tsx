@@ -181,6 +181,7 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
     loginColumns.display({
       cell: (info) => <SchoolLoginMenu login={info.row.original} />,
       id: "actions",
+      meta: { align: "menu" },
     }),
   ]);
 
