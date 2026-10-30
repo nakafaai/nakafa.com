@@ -38,7 +38,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Crypto, Effect, Schema } from "effect";
 import { Hex } from "effect/encoding";
 
-type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+type ArtifactLocaleCode = typeof ArtifactLocaleSchema.Encoded;
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`

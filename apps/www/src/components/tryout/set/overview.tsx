@@ -99,6 +99,7 @@ function TryoutSetResult({ value }: TryoutSetOverviewProps) {
           setKey: value.page.set.setKey,
           trackKey: value.page.set.trackKey,
         },
+        publicPath: value.page.set.publicPath,
       }}
     />
   );

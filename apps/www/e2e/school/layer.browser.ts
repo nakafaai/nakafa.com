@@ -38,13 +38,16 @@ async function centreOf(control: Locator) {
 /** How far above the first grip the pointer ends, so the dragged page passes its middle. */
 const ABOVE_THE_FIRST_GRIP = 120;
 
+/** A desktop window tall enough to show both questions' grips, so the drag presses grips the teacher can see. */
+const DESKTOP = { height: 900, width: 1440 };
+
 test("a teacher sets the points, the key and the explanation, moves a question with the keyboard and by drag, and the editor opens with all of it", async ({
   browser,
   baseURL,
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
@@ -96,9 +99,12 @@ test("a teacher sets the points, the key and the explanation, moves a question w
   await expect(
     panel.getByRole("textbox", { name: "Rubric of question 1" })
   ).toHaveCount(0);
-  await panel
-    .getByRole("textbox", { name: "Explanation of question 1" })
-    .click();
+  // The explanation takes typing once it has opened its document, as a question's text does.
+  const explanation = panel.getByRole("textbox", {
+    name: "Explanation of question 1",
+  });
+  await expect(explanation).toBeEditable();
+  await explanation.click();
   await page.keyboard.type("Dua tambah tiga sama dengan lima.");
 
   // The arrow keys move the focused grip's page one place, and the focus stays on that grip.
@@ -125,6 +131,8 @@ test("a teacher sets the points, the key and the explanation, moves a question w
   const target = await centreOf(
     page.getByRole("button", { name: GRIP_OF_FIRST })
   );
+  // A press off the window lands on no grip and starts no drag.
+  expect(source.y).toBeLessThan(DESKTOP.height);
   await page.mouse.move(source.x, source.y);
   await page.mouse.down();
   await page.mouse.move(target.x, target.y - ABOVE_THE_FIRST_GRIP, {

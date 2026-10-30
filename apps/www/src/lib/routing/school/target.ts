@@ -29,30 +29,12 @@ export function schoolExamsTarget(slug: TenantSlug): LinkTarget {
   } satisfies LinkTarget;
 }
 
-/** The school's report cards, by cohort. */
-export function schoolReportsTarget(slug: TenantSlug): LinkTarget {
+/** The viewer's notifications from the school, in the school. */
+export function schoolNotificationsTarget(slug: TenantSlug): LinkTarget {
   return {
     from: LOCALE_ROUTE,
     params: { slug },
-    to: "/school/$slug/reports",
-  } satisfies LinkTarget;
-}
-
-/** The school's members, in its settings. */
-export function schoolMembersTarget(slug: TenantSlug): LinkTarget {
-  return {
-    from: LOCALE_ROUTE,
-    params: { slug },
-    to: "/school/$slug/settings/members",
-  } satisfies LinkTarget;
-}
-
-/** The school's settings, at their first section, the school's profile. */
-export function schoolSettingsTarget(slug: TenantSlug): LinkTarget {
-  return {
-    from: LOCALE_ROUTE,
-    params: { slug },
-    to: "/school/$slug/settings/profile",
+    to: "/school/$slug/notifications",
   } satisfies LinkTarget;
 }
 
