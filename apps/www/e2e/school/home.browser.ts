@@ -19,9 +19,6 @@ const SEEDED_ROOM = /Lab 2/u;
 /** The room of the second sitting that the seed schedules for the next day. */
 const UPCOMING_ROOM = /Lab 3/u;
 
-/** The address of the setup row that invites a teacher: the school path, which the school host shows as the settings page. */
-const SETUP_INVITES_HREF = /\/settings\/invites$/u;
-
 /** The address of every update of the school. */
 const UPDATES_HREF = /\/notifications$/u;
 
@@ -41,7 +38,7 @@ const homeDrawn = (page: Page) =>
     timeout: readinessTimeoutMilliseconds,
   });
 
-test("the owner's home is a greeting with no page action, then the setup and the updates under their headings", async ({
+test("the owner's home is a greeting with no page action, no setup and no shortcuts, then the updates", async ({
   baseURL,
   browser,
 }) => {
@@ -61,12 +58,13 @@ test("the owner's home is a greeting with no page action, then the setup and the
   await expect(header.getByRole("button", { name: "Create exam" })).toHaveCount(
     0
   );
-  // A new school has no teacher, so the owner's setup links the step that completes it.
+  // A new school still lacks a teacher, yet the home holds no setup, no step to invite one and no shortcut cards.
   await expect(
-    section(page, "Set up the school").getByRole("link", {
-      name: "Invite a teacher",
-    })
-  ).toHaveAttribute("href", SETUP_INVITES_HREF);
+    page.getByRole("link", { name: "Invite a teacher" })
+  ).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Shortcuts" })).toHaveCount(
+    0
+  );
   // The updates link to every update; the owner's first one is the invitation that opened the school.
   await expect(
     section(page, UPDATES).getByRole("link", { name: "All updates" })
@@ -140,7 +138,9 @@ test("a teacher's home has no setup and no page action", async ({
   await expect(page.getByRole("button", { name: "Create exam" })).toHaveCount(
     0
   );
-  await expect(section(page, "Set up the school")).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Invite a teacher" })
+  ).toHaveCount(0);
   await context.close();
 });
 
@@ -383,7 +383,7 @@ test("the home shows its greeting and every row's title whole from a 320 px phon
   await learnerContext.close();
 });
 
-test("the home takes the app's page width on a wide screen, centred beside the sidebar", async ({
+test("the home takes the app's page width on a wide screen, and its header row's content starts and ends where the body's does", async ({
   baseURL,
   browser,
 }) => {
@@ -400,7 +400,24 @@ test("the home takes the app's page width on a wide screen, centred beside the s
   await homeDrawn(page);
 
   // Every app page keeps max-w-7xl (80rem, 1280 px), and the page's side padding sits inside it.
-  const content = await page.locator("article").first().boundingBox();
+  const body = page.locator("article").first();
+  const content = await body.boundingBox();
   expect(content?.width).toBe(1280);
+
+  // The header row and the body share one gutter, so what each holds starts and ends on the same two edges.
+  const row = page.locator('[data-slot="page-header"] > div').first();
+  const contentEdges = (locator: typeof body) =>
+    locator.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return [
+        box.left + Number.parseFloat(style.paddingLeft),
+        box.right - Number.parseFloat(style.paddingRight),
+      ];
+    });
+  for (const width of [1440, 1920, 2560]) {
+    await page.setViewportSize({ height: 1080, width });
+    expect(await contentEdges(row)).toEqual(await contentEdges(body));
+  }
   await context.close();
 });

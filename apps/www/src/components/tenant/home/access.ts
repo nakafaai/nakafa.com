@@ -42,11 +42,11 @@ export const homeAccess = (
 };
 
 /**
- * Whether the home shows the student's view, with the student's sittings and results. That is a
- * student, and also a member with no grant, which the layout reads as no role, who may neither create exams nor watch
- * rooms and does not manage the school. Such a member has no staff tile to show, so the student's quiet state tells
- * them that nothing is open yet. Staff with a role keep the staff home, which holds only the tiles their actions allow,
- * since the student's sentence is not theirs.
+ * Whether the home shows the student's view, with the student's exams, results and classes. That is a student, and
+ * also a member with no grant, which the layout reads as no role, who may neither create exams nor watch rooms and does
+ * not manage the school: such a member has no room to watch, and the student's view tells them they are in no class
+ * yet. Staff with a role keep the staff home, which shows only what their actions allow, since the student's sentences
+ * are not theirs.
  */
 export const showsStudentHome = (
   viewer: {

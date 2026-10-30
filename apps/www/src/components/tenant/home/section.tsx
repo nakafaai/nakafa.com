@@ -9,8 +9,8 @@ import { cva } from "class-variance-authority";
 import { type ComponentProps, type ReactNode, useId } from "react";
 
 /**
- * The two columns of the school home from a desktop width: the viewer's work in the wider one, and the setup and the
- * updates beside it. A home with nothing for the wider column gives the whole width to the other. On a phone and a
+ * The two columns of the school home from a desktop width: the viewer's work in the wider one, and the updates beside
+ * it. A home with nothing for the wider column gives the whole width to the other. On a phone and a
  * tablet the columns stack in that order.
  */
 const columnVariants = cva("flex min-w-0 flex-col gap-8", {

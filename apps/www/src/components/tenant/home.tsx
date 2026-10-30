@@ -13,7 +13,7 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
  * The home of a school: the viewer's own desk, never a report of one feature. Its header is the greeting alone, with no
  * page action, because an action belongs beside what it acts on. Its body holds at most three sections for the
  * viewer's role. A student sees the student's exams, classes and the school's updates. Staff see the rooms they watch
- * now, their classes, the setup while the school is not set up, and the updates. A member with no grant, who may
+ * now, their classes, and the updates. A member with no grant, who may
  * neither create nor watch, sees the student's home. The school's context carries the viewer's access and the
  * greeting, so the header draws with the first frame.
  */
@@ -23,7 +23,8 @@ export function TenantHome() {
   return (
     <HomeClock>
       <SchoolHeader heading={<HomeGreeting />} items={[]} />
-      <LayoutContent className="w-full py-6" width="page">
+      {/* The body keeps the School header's gutter, so the greeting and the sections start on one edge. */}
+      <LayoutContent className="w-full px-4 py-6" width="page">
         {showsStudentHome(tenant, tenant.home) ? (
           <StudentHome />
         ) : (

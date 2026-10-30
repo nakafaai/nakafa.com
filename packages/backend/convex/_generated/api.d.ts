@@ -9146,14 +9146,6 @@ export declare const api: {
         }
       >;
     };
-    home: {
-      setup: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        { hasPendingInvite: boolean; hasStudent: boolean; hasTeacher: boolean }
-      >;
-    };
     invites: {
       invite: FunctionReference<
         "mutation",
