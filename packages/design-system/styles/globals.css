@@ -548,18 +548,22 @@
  * MathLive's virtual keyboard, which never opens.
  */
 math-field {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  outline: none;
-  font-size: var(--text-lg);
-  color: var(--foreground);
   --caret-color: var(--primary);
   --primary-color: var(--primary);
-  --selection-background-color: color-mix(in oklch, var(--primary) 20%, transparent);
+  --selection-background-color: color-mix(
+    in oklch,
+    var(--primary) 20%,
+    transparent
+  );
   --contains-highlight-background-color: var(--accent);
   --placeholder-color: var(--muted-foreground);
   --smart-fence-color: var(--muted-foreground);
+  width: 100%;
+  font-size: var(--text-lg);
+  color: var(--foreground);
+  outline: none;
+  background: transparent;
+  border: 0;
 }
 
 math-field::part(menu-toggle),
