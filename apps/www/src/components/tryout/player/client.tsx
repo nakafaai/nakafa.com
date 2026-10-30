@@ -78,7 +78,7 @@ export function TryoutPlayer({
         <PlayerHeaderStart>
           <TryoutPageLink
             aria-label={tCommon("back")}
-            className={buttonVariants({ size: "icon", variant: "ghost" })}
+            className={buttonVariants({ size: "icon", variant: "outline" })}
             {...finish.returnAddress}
           >
             <HugeIcons icon={ArrowLeft01Icon} />

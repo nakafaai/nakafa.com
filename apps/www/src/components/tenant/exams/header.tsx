@@ -14,7 +14,6 @@ import { Function as Fn, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
-import { isLocked } from "@/components/tenant/exams/freeze";
 import { ExamMenu } from "@/components/tenant/exams/menu";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { ExamPresence } from "@/components/tenant/exams/presence";
@@ -34,8 +33,8 @@ import { Link } from "@/lib/routing/link";
  * joined to it (ExamMenu), and Schedule, the main action. The title takes the room left between
  * them, truncated while the field is not focused. On a phone the buttons keep their icons and their
  * names for screen readers, so the title keeps room to read at 375 pixels.
- * A frozen exam says why its questions are fixed in a line under the header (ExamLockedNote), and a gone exam
- * keeps its title with neither button.
+ * An exam of an archived unit says why it is locked in a line under the header (ExamLockedNote), and a gone
+ * exam keeps its title with neither button.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -104,9 +103,9 @@ export function ExamHeader() {
 }
 
 /**
- * The sentence the editor shows under its header, across the page, when its exam is locked:
- * why its questions are fixed, because a sitting is scheduled or its school is archived, or that
- * the exam is gone, with the way back to the exams. It wraps on a phone instead of being cut short
+ * The sentence the editor shows under its header, across the page: that the unit holding the exam is
+ * archived, which locks it, or that the exam is gone, with the way back to the exams. A scheduled or
+ * running exam takes changes, and a finished one reads as fixed without a sentence. It wraps on a phone instead of being cut short
  * beside the title.
  */
 export function ExamLockedNote() {
@@ -119,13 +118,14 @@ export function ExamLockedNote() {
       </p>
     );
   }
-  if (!isLocked(exam)) {
+  // A finished exam reads as fixed on its own; only an archived unit says why its exam is locked.
+  if (!exam.archived) {
     return null;
   }
 
   return (
     <p className="border-b px-4 py-2 text-muted-foreground text-sm">
-      {exam.archived ? t("archived-note") : t("frozen-note")}
+      {t("archived-note")}
     </p>
   );
 }

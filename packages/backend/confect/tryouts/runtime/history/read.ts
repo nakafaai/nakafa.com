@@ -22,9 +22,12 @@ import {
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
-/** Reads a bounded signed batch under fresh session, ownership and phase checks. */
+/**
+ * Reads a bounded signed batch under fresh session, ownership and phase checks. A batch with a body
+ * stored under an older artifact contract has none, as the attempt is retired.
+ */
 export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
   request: TryoutHistoryRequest
 ) {
@@ -89,7 +92,11 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
   let items = empty.items;
   let responseBytes = protectedRuntimeResponseBytes(empty);
   for (const placement of placements) {
-    const item = yield* readHistoryArtifact(placement);
+    const found = yield* readHistoryArtifact(placement);
+    if (Option.isNone(found)) {
+      return null;
+    }
+    const item = found.value;
     responseBytes +=
       protectedRuntimeResponseBytes(item) + (items.length > 0 ? 1 : 0);
     if (responseBytes > MAX_PROTECTED_RUNTIME_RESPONSE_BYTES) {

@@ -51,10 +51,16 @@ export const grade = Effect.fn("exams.results.grade")(function* (args: {
   if (Option.isNone(row)) {
     return yield* new ResultNotFound();
   }
+  // The exam takes changes while it runs (ADR 0031), so a result can outlive its question.
   const question = yield* reader
     .table("examQuestions")
     .get(args.questionId)
-    .pipe(Effect.orDie);
+    .pipe(
+      Effect.catchTags({
+        DocumentDecodeError: Effect.die,
+        GetByIdFailure: () => Effect.fail(new ResultNotFound()),
+      })
+    );
   if (args.points > question.points) {
     return yield* new PointsAboveWeight();
   }

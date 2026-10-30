@@ -6,7 +6,7 @@ import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { contentRuntimeKeys } from "@repo/site/keys";
 import { getRequest } from "@tanstack/react-start/server";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Predicate } from "effect";
 import { renderLiveItem } from "@/components/tryout/content/artifact";
 import {
   planTryoutContentBatches,
@@ -67,12 +67,7 @@ export const renderSignedTryoutRows = Effect.fn(
   }
   return yield* renderContentPlan(plan, (selectors, index) =>
     renderAttemptBatch(selectors, rows[index]).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ContentRuntimeVerificationError({
-            cause,
-          })
-      )
+      Effect.mapError(toVerificationFailure)
     )
   );
 });
@@ -125,33 +120,36 @@ const renderContentPlan = Effect.fn("NakafaContent.renderTryoutContentPlan")(
 );
 
 /** Authorizes one attempt batch on every request: getBatch checks the session and the attempt. */
-const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(
-  function* (
-    attemptId: Id<"tryoutAttempts">,
-    token: string,
-    selectors: readonly TryoutSelector[]
-  ) {
-    const row = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.content.getBatch, {
-        attemptId,
-        selectors: [...selectors],
+const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
+  attemptId: Id<"tryoutAttempts">,
+  token: string,
+  selectors: readonly TryoutSelector[]
+) {
+  const row = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(tryouts.queries.content.getBatch, {
+      attemptId,
+      selectors: [...selectors],
+    })
+  ).pipe(
+    Effect.provide(
+      httpLayer({
+        auth: token,
       })
-    ).pipe(
-      Effect.provide(
-        httpLayer({
-          auth: token,
-        })
-      )
-    );
-    return yield* renderAttemptBatch(selectors, row);
-  },
-  Effect.mapError(
-    (cause) =>
-      new ContentRuntimeVerificationError({
-        cause,
-      })
-  )
-);
+    )
+  );
+  return yield* renderAttemptBatch(selectors, row);
+}, Effect.mapError(toVerificationFailure));
+
+/**
+ * Wraps one failure of an attempt batch as a verification failure, except an absent batch, which
+ * stays itself: the backend answers none for an attempt whose bodies it no longer serves, such as a
+ * retired attempt, so its page shows the attempt without them rather than an error.
+ */
+function toVerificationFailure<E>(cause: E) {
+  return Predicate.isTagged(cause, "ContentRuntimeMissingError")
+    ? cause
+    : new ContentRuntimeVerificationError({ cause });
+}
 
 /**
  * Verifies one attempt batch through the verified-batch cache, then renders it on

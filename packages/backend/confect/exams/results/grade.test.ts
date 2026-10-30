@@ -202,4 +202,22 @@ describe("exams/results grade", () => {
         expect(gone).toMatchObject({ _tag: "ResultNotFound" });
       })
   );
+  it.effect(
+    "answers a result whose question the teacher removed during the sitting as not found",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const essay = yield* submittedEssay(fixture);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("examQuestions").delete(essay.questionId)
+          ).pipe(Effect.orDie)
+        );
+        const gone = yield* gradeAs(fixture, "teacher", {
+          ...essay,
+          points: 1,
+        }).pipe(Effect.flip);
+        expect(gone).toMatchObject({ _tag: "ResultNotFound" });
+      })
+  );
 });

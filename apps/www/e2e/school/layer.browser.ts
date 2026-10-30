@@ -80,9 +80,9 @@ test("a teacher sets the points, the key and the explanation, moves a question w
   await expect(
     page
       .getByRole("region", { name: FIRST_QUESTION })
-      .getByRole("spinbutton", { name: "Points" })
+      .getByRole("textbox", { name: "Points" })
   ).toHaveCount(0);
-  const points = panel.getByRole("spinbutton", { name: "Points" });
+  const points = panel.getByRole("textbox", { name: "Points" });
   await expect(points).toHaveValue("1");
   await points.fill("5");
   await points.press("Enter");
@@ -160,7 +160,7 @@ test("a teacher sets the points, the key and the explanation, moves a question w
     name: "For teachers",
   });
   await expect(
-    reopenedPanel.getByRole("spinbutton", { name: "Points" })
+    reopenedPanel.getByRole("textbox", { name: "Points" })
   ).toHaveValue("5");
   await expect(
     reopenedPanel.getByRole("button", {
