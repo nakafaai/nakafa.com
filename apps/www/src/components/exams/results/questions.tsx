@@ -12,6 +12,7 @@ import {
   MinusSignCircleIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { optionLetter } from "@repo/backend/confect/exams/letters";
 import type {
   AnswerRow as AnswerRowSchema,
   QuestionSummary as QuestionSummarySchema,
@@ -52,7 +53,6 @@ import {
 import { GradeField } from "@/components/exams/results/grade";
 import {
   correctShare,
-  optionLetter,
   responseText,
   verdictKeys,
 } from "@/components/exams/results/model";
@@ -120,7 +120,11 @@ function QuestionPanel({ question }: { readonly question: Question }) {
           <ul className="grid gap-2">
             {Arr.map(stats.value.optionCounts, (option, index) => (
               <li className="flex justify-between gap-4" key={option.optionId}>
-                <span>{t("option", { letter: optionLetter(index) })}</span>
+                <span>
+                  {t("option", {
+                    letter: optionLetter(index, question.optionScript),
+                  })}
+                </span>
                 <span className="tabular-nums">{option.count}</span>
               </li>
             ))}

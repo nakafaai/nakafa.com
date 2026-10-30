@@ -2,6 +2,7 @@ import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
+import { LetterScript } from "@repo/backend/confect/exams/letters";
 import { QuestionPoints } from "@repo/backend/confect/exams/question";
 import {
   GradePoints,
@@ -29,9 +30,13 @@ export const QuestionSummary = Schema.Struct({
   id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
+  /** The script that names the options: Arabic letters for a set written in Arabic. */
+  optionScript: LetterScript,
   points: QuestionPoints,
   sourceIds: Schema.Array(LocalIdSchema),
   targetIds: Schema.Array(LocalIdSchema),
+  /** The script that names the answers of a match or the columns of a table. */
+  targetScript: LetterScript,
 });
 
 /**
@@ -102,10 +107,12 @@ const StudentAnswer = Schema.Struct({
   id: Id("examQuestions"),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   optionIds: Schema.Array(LocalIdSchema),
+  optionScript: LetterScript,
   points: QuestionPoints,
   response: ExamResponse,
   sourceIds: Schema.Array(LocalIdSchema),
   targetIds: Schema.Array(LocalIdSchema),
+  targetScript: LetterScript,
   verdict: Verdict,
 });
 
