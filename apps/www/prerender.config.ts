@@ -12,6 +12,7 @@ import { Effect, Option, Result, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import { toJSONAsync } from "seroval";
 import type { Plugin } from "vite";
+import { staticPagePath } from "#www/src/lib/routing/prerendered";
 import {
   readStaticCalls,
   type StaticCall,
@@ -58,7 +59,7 @@ function assertPrerenderedPages(
   pages: readonly string[]
 ) {
   const expected = pages.map((path) =>
-    join(clientOutputDirectory, path, "index.html")
+    join(clientOutputDirectory, staticPagePath(path), "index.html")
   );
   const written = readdirSync(clientOutputDirectory, {
     encoding: "utf8",
@@ -120,7 +121,11 @@ function takeStaticCalls(
 ): readonly StaticCall[] {
   const calls = new Map<string, StaticCall>();
   for (const path of pages) {
-    const file = join(clientOutputDirectory, path, "index.html");
+    const file = join(
+      clientOutputDirectory,
+      staticPagePath(path),
+      "index.html"
+    );
     const read = readStaticCalls(readFileSync(file, "utf8"));
     if (Option.isNone(read)) {
       throw new Error(`The prerendered page ${path} lists no server calls.`);
@@ -235,7 +240,7 @@ export const deferStaticPageScripts = (pages: readonly string[]): Plugin => ({
     handler: (builder) => {
       const outDir = builder.environments.client.config.build.outDir;
       for (const path of pages) {
-        const file = join(outDir, path, "index.html");
+        const file = join(outDir, staticPagePath(path), "index.html");
         const deferred = Result.getOrThrowWith(
           deferStaticScripts(readFileSync(file, "utf8")),
           (error) =>
