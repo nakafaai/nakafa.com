@@ -209,6 +209,17 @@ function usePaletteGroups(): readonly PaletteGroup[] {
               to: "/school/$slug/grades",
             },
           } satisfies PaletteItem,
+          {
+            icon: { hugeicon: Certificate01Icon },
+            key: "cards",
+            label: tReports("own-title"),
+            place: undefined,
+            target: {
+              from: LOCALE_ROUTE,
+              params: { slug },
+              to: "/school/$slug/cards",
+            },
+          } satisfies PaletteItem,
         ]
       : []),
     ...(canOpenExams
