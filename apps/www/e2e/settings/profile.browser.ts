@@ -4,7 +4,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { MAIN_DOMAIN } from "@repo/site/domains";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Schema } from "effect";
 import { animalMarkup, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { appRoutes } from "@/e2e/support/route";
@@ -202,7 +202,7 @@ test("a learner typing a new username keeps the last answer under the field unti
       ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(AnswerLine)));
       yield* Effect.sync(() => {
         expect(line.emptied).toBe(0);
-        expect(new Set(line.heights).size).toBe(1);
+        expect(HashSet.size(HashSet.fromIterable(line.heights))).toBe(1);
       });
     })
   );
