@@ -64,18 +64,33 @@ for (const viewport of [
         placed.viewport - GUTTER - 1
       );
 
-      // Each value of the Filter menu draws an icon of its own, and each status cell is a toned badge.
-      await page
-        .locator("header")
-        .getByRole("button", { name: "Filter" })
-        .click();
+      // The status filter sits in its column's head, not in the header, and each of its values draws an icon of its
+      // own; each status cell is a toned badge in the middle of its column, under its head, and every row has a menu.
+      await expect(
+        page.locator("header").getByRole("button", { name: "Filter" })
+      ).toHaveCount(0);
+      const head = card.getByRole("button", { name: "Filter by Status" });
+      await head.click();
       const menu = page.getByRole("menu");
       await expect(menu.getByRole("menuitemcheckbox")).not.toHaveCount(0);
       expect(await readRepeatedIcons(menu, "[role=menuitemcheckbox]")).toEqual(
         []
       );
       await page.keyboard.press("Escape");
-      await expect(card.locator('[data-slot="badge"]').first()).toBeVisible();
+      const badge = card.locator('[data-slot="badge"]').first();
+      await expect(badge).toBeVisible();
+      const [badgeBox, headBox] = await Promise.all([
+        badge.boundingBox(),
+        head.boundingBox(),
+      ]);
+      const middle = (box: typeof badgeBox) =>
+        (box?.x ?? 0) + (box?.width ?? 0) / 2;
+      expect(Math.abs(middle(badgeBox) - middle(headBox))).toBeLessThanOrEqual(
+        24
+      );
+      await expect(
+        card.getByRole("button", { name: "More actions" }).first()
+      ).toBeVisible();
       await context.close();
     });
   });
@@ -83,9 +98,10 @@ for (const viewport of [
 
 /**
  * The working tables of an exam (the exam list, its rooms, and a room's results) each fill one card
- * at the page width, give a state its badge, and keep a value that is not there yet in words.
+ * at the page width, give a state its badge, keep a value that is not there yet in words, and hold
+ * a row's actions in its menu.
  */
-test("the exam list, its rooms and a room's results fill the page card, with states as badges and no blank cell", async ({
+test("the exam list, its rooms and a room's results fill the page card, with states as badges, row menus and no blank cell", async ({
   baseURL,
   browser,
 }) => {
@@ -110,13 +126,21 @@ test("the exam list, its rooms and a room's results fill the page card, with sta
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner, 2));
   const page = await context.newPage();
 
-  // The exam list: its rooms one click away in their own column, and no row menu repeating the title.
+  // The exam list: each row says where the exam belongs, how many questions it holds and when it was created, and its
+  // menu opens the editor, the rooms, the student's view and Delete.
   await page.goto(address("/exams"));
   const card = page.locator('[data-slot="table-card"]');
-  await expect(card.getByRole("link", { name: "Rooms" }).first()).toBeVisible();
-  await expect(card.getByRole("button", { name: "More actions" })).toHaveCount(
-    0
-  );
+  for (const column of ["Unit", "Questions", "Created"]) {
+    await expect(
+      card.getByRole("columnheader", { name: column, exact: true })
+    ).toBeVisible();
+  }
+  await card.getByRole("button", { name: "More actions" }).first().click();
+  const menu = page.getByRole("menu");
+  for (const item of ["Edit", "Rooms", "Try as student", "Delete"]) {
+    await expect(menu.getByRole("menuitem", { name: item })).toBeVisible();
+  }
+  await page.keyboard.press("Escape");
   expect((await card.boundingBox())?.width ?? 0).toBeLessThanOrEqual(1280);
 
   // The rooms: an open room's state is a badge with its icon.

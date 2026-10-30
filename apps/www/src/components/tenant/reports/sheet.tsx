@@ -42,11 +42,11 @@ import {
   PanesProvider,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -112,7 +112,7 @@ export function CohortReports() {
   );
 }
 
-/** The page's header: the path back to the report cards and the class group's name, then the search and the state filter. */
+/** The page's header: the path back to the report cards and the class group's name, then the search; the status column filters the students by state. */
 function CohortReportsHeader() {
   const t = useTranslations("SchoolReports");
   const args = useCohortArgs();
@@ -136,22 +136,6 @@ function CohortReportsHeader() {
       title={title}
     >
       <TableSearch placeholder={t("search-students")} />
-      <TableFilter
-        facets={[
-          {
-            column: "status",
-            options: Arr.map(
-              ["none", "draft", "completed", "approved", "locked"] as const,
-              (state) => ({
-                icon: STATE_ICONS[state],
-                label: t(`state-${state}`),
-                value: state,
-              })
-            ),
-            title: t("status"),
-          },
-        ]}
-      />
     </SchoolHeader>
   );
 }
@@ -202,12 +186,26 @@ function CohortReportsBody() {
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("status"),
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(
+            ["none", "draft", "completed", "approved", "locked"] as const,
+            (state) => ({
+              icon: STATE_ICONS[state],
+              label: t(`state-${state}`),
+              value: state,
+            })
+          )}
+          title={t("status")}
+        />
+      ),
       id: "status",
     }),
     lineColumns.display({
       cell: (info) => <ReportLineMenu line={info.row.original} />,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

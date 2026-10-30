@@ -70,15 +70,20 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
 }
 
 /**
- * Renders one table row with the shared Nakafa table styles.
+ * Renders one table row with the shared Nakafa table styles. A row lights up under the pointer only when it takes a
+ * press itself, so a hover always means the whole row is clickable; a header row, an empty row and a row of plain
+ * values keep still. The row says so with `data-pressable`, which a cell that paints its own background, such as a
+ * sticky one, keys on to light with the row. A row marked `data-state="selected"` (the one open beside a list) keeps
+ * the accent.
  */
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "border-b transition-colors hover:bg-accent hover:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground",
+        "border-b transition-colors data-pressable:cursor-pointer data-[state=selected]:bg-accent data-[state=selected]:text-accent-foreground data-pressable:hover:bg-accent data-pressable:hover:text-accent-foreground",
         className
       )}
+      data-pressable={props.onClick === undefined ? undefined : ""}
       data-slot="table-row"
       {...props}
     />

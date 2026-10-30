@@ -4,8 +4,6 @@ import type {
   OptimisticUpdate,
 } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { HOME_DRAFT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
-import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Option } from "effect";
@@ -13,8 +11,8 @@ import { Array as Arr, Option } from "effect";
 /** One exam with its questions in order, as the editor reads it. */
 export type ExamView = Ref.Returns<typeof exams.exams.open>;
 
-/** One exam as the list shows it: its ID and its title. */
-export type ExamSummary = Ref.Returns<typeof exams.exams.list>["page"][number];
+/** One exam as the list shows it: its title, when it was created, how many questions it holds, and its scope. */
+export type ListedExam = Ref.Returns<typeof exams.exams.list>["page"][number];
 
 /** One question of an exam, as the editor reads it. */
 export type Question = ExamView["questions"][number];
@@ -277,12 +275,14 @@ export const copyQuestionUpdate =
     );
 
 /**
- * Shows a new exam while the server saves it: at the top of the first page of each open list,
- * and at the top of the drafts of the school home when the home is open. A list past its first
- * page keeps its pages, as the server's answer shows.
+ * Shows a new exam while the server saves it: at the top of the first page of each open list, with the one question it
+ * is created with, in the scope it is created in. A list past its first page keeps its pages, as the server's answer
+ * shows.
  */
 export const insertDraftExam =
-  (draft: typeof HomeDraft.Type): OptimisticUpdate<typeof exams.exams.create> =>
+  (
+    draft: Pick<ListedExam, "createdAt" | "id" | "title">
+  ): OptimisticUpdate<typeof exams.exams.create> =>
   (localStore, args) => {
     for (const query of localStore.getAllQueries(exams.exams.list)) {
       if (
@@ -294,20 +294,12 @@ export const insertDraftExam =
           query.args,
           Option.some({
             ...query.value.value,
-            page: [draft, ...query.value.value.page],
+            page: [
+              { ...draft, questionCount: 1, scope: args.scope },
+              ...query.value.value.page,
+            ],
           })
         );
       }
-    }
-    const home = localStore.getQuery(exams.exams.home, { slug: args.slug });
-    if (Option.isSome(home)) {
-      localStore.setQuery(
-        exams.exams.home,
-        { slug: args.slug },
-        Option.some({
-          ...home.value,
-          drafts: Arr.take([draft, ...home.value.drafts], HOME_DRAFT_LIMIT),
-        })
-      );
     }
   };

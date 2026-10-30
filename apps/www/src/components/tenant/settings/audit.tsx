@@ -31,12 +31,12 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -45,7 +45,7 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
-/** The icons of the people in the trail's Filter menu, one of a person for each. */
+/** The icons of the people in the Who column's filter, one of a person for each. */
 const PERSON_ICONS = [
   UserIcon,
   UserCircleIcon,
@@ -69,8 +69,8 @@ type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 
 /**
- * The audit trail as the page's table. The header row searches the changes, filters them by
- * who made them and exports the whole trail, and shows while the body loads.
+ * The audit trail as the page's table. The header row searches the changes and exports the
+ * whole trail, the Who column filters them by who made them, and the header shows while the body loads.
  */
 export function SchoolAuditSettings() {
   const t = useTranslations("SchoolSettings");
@@ -81,7 +81,6 @@ export function SchoolAuditSettings() {
         actions={
           <>
             <TableSearch placeholder={t("audit-search")} />
-            <AuditFilter />
             <AuditExport />
           </>
         }
@@ -98,11 +97,11 @@ export function SchoolAuditSettings() {
 }
 
 /**
- * The audit's Filter menu, by who made each change. It lists every active member of the
- * school, so an actor on a later page is offered before that page loads, beside the staff
- * and the system that the journal also records.
+ * The head of the audit's Who column, which filters the changes by who made them. It lists every active member of the
+ * school, so an actor on a later page is offered before that page loads, beside the staff and the system that the
+ * journal also records.
  */
-function AuditFilter() {
+function AuditWhoFilter() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const people = useQuery(journal.audit.actors, { slug });
@@ -115,14 +114,10 @@ function AuditFilter() {
   ]);
 
   return (
-    <TableFilter
-      facets={[
-        {
-          column: "who",
-          options: namedOptions(actors, PERSON_ICONS),
-          title: t("audit-who"),
-        },
-      ]}
+    <ColumnFilter
+      column="who"
+      options={namedOptions(actors, PERSON_ICONS)}
+      title={t("audit-who")}
     />
   );
 }
@@ -169,10 +164,10 @@ function SchoolAuditBody() {
       sortFn: "basic",
     }),
     entryColumns.accessor(words.actor, {
+      enableSorting: false,
       filterFn: "oneOf",
-      header: t("audit-who"),
+      header: () => <AuditWhoFilter />,
       id: "who",
-      sortFn: "text",
     }),
     entryColumns.accessor(words.change, {
       filterFn: "includesString",

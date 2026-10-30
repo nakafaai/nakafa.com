@@ -3,7 +3,7 @@ import type { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
 import type { StatusLook } from "@/components/shared/table/status";
 
 /**
- * The look of each cohort status, in the cohorts table and in its Filter menu: the class together,
+ * The look of each cohort status, in the cohorts table and in its column's filter: the class together,
  * and an archive, each in its tone.
  */
 export const COHORT_STATUS_LOOKS = {

@@ -17,6 +17,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-shell";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { SidebarToggle } from "@/components/sidebar/toggle";
 import { PublicPathLink } from "@/lib/routing/public/link";
 
 /** The outline panel: its heading slot, the outline, and the page's actions. */
@@ -46,7 +47,7 @@ export function SidebarRightHeader({
   title: string;
 }) {
   return (
-    <SidebarHeader className="border-b">
+    <SidebarHeader className="border-b group-data-[collapsible=icon]:hidden">
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
@@ -99,7 +100,7 @@ export function SidebarRight(props: SidebarRightProps) {
 export function SidebarRightProvider({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider
-      className="min-w-0 transition-[padding-right] duration-surface motion-reduce:transition-none xl:pr-64 xl:has-[[data-side=right][data-sidebar-state=collapsed]]:pr-0"
+      className="min-w-0 transition-[padding-right] duration-surface motion-reduce:transition-none xl:pr-64 xl:has-[[data-side=right][data-sidebar-state=collapsed]]:pr-12"
       cookieName="sidebar_state:right"
       keyboardShortcut="shift+x"
       sidebarDesktop={1279.98}
@@ -109,7 +110,11 @@ export function SidebarRightProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Renders the outline panel using the page's nearest sidebar provider. */
+/**
+ * Renders the outline panel using the page's nearest sidebar provider. Beside
+ * the page it folds into a rail with its page actions and its own toggle at its
+ * foot, which opens it again, so the page header holds no toggle there.
+ */
 export function SidebarRightPanel({
   children,
   footer,
@@ -121,14 +126,18 @@ export function SidebarRightPanel({
   return (
     <aside>
       <Sidebar
+        collapsible="icon"
         containerClassName="lg:hidden xl:block [&>[data-slot=sidebar-gap]]:hidden"
         label={tCommon("on-this-page")}
         side="right"
         {...props}
       >
         {header}
-        <SidebarContent>{children}</SidebarContent>
+        <SidebarContent className="group-data-[collapsible=icon]:hidden">
+          {children}
+        </SidebarContent>
         {footer}
+        <SidebarToggle label={tCommon("on-this-page")} side="right" />
       </Sidebar>
     </aside>
   );

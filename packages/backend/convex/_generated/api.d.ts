@@ -3792,23 +3792,6 @@ export declare const api: {
         "public",
         { slug: string },
         {
-          canManageSetup: boolean;
-          closed: Array<{
-            canRelease: boolean;
-            closesAt: number;
-            cohortId: Id<"tenantCohorts"> | null;
-            examId: Id<"exams">;
-            examTitle: string;
-            id: Id<"examSittings">;
-            opensAt: number;
-            resultsReleased: boolean;
-            room: string;
-            state: "scheduled" | "open" | "closed";
-            timeZone: string;
-            unitId: Id<"tenantUnits">;
-          }>;
-          drafts: Array<{ createdAt: number; id: Id<"exams">; title: string }>;
-          draftsBounded: boolean;
           live: Array<{
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
@@ -3833,11 +3816,6 @@ export declare const api: {
             timeZone: string;
             unitId: Id<"tenantUnits">;
           }>;
-          setup?: {
-            hasPendingInvite: boolean;
-            hasStudent: boolean;
-            hasTeacher: boolean;
-          };
         }
       >;
       list: FunctionReference<
@@ -3857,7 +3835,14 @@ export declare const api: {
         {
           continueCursor: string;
           isDone: boolean;
-          page: Array<{ id: Id<"exams">; title: string }>;
+          page: Array<{
+            createdAt: number;
+            id: Id<"exams">;
+            questionCount: number;
+            scope:
+              { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+            title: string;
+          }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
@@ -9159,14 +9144,6 @@ export declare const api: {
           name: string;
           status: "active" | "archived";
         }
-      >;
-    };
-    home: {
-      setup: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        { hasPendingInvite: boolean; hasStudent: boolean; hasTeacher: boolean }
       >;
     };
     invites: {
