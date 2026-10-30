@@ -627,9 +627,9 @@
     "period-start-placeholder": "Ersten Tag wählen",
     "period-end-placeholder": "Letzten Tag wählen",
     "period-add-footer": "Eine neue Periode beginnt als geplant.",
-    "period-rename": "Umbenennen",
-    "period-rename-description": "Der Zeitraum behält seine Klassen und Daten.",
-    "period-rename-save": "Speichern",
+    "period-edit": "Bearbeiten",
+    "period-edit-description": "Die Periode behält ihre Klassen.",
+    "period-edit-save": "Speichern",
     "periods-empty": "Noch kein Zeitraum.",
     "periods-search": "Zeitraum suchen",
     "cohorts": "Klassen",
@@ -782,7 +782,8 @@
         "opened": "Zeitraum geöffnet",
         "archived": "Zeitraum archiviert",
         "rename": "Zeitraum umbenannt",
-        "restored": "Zeitraum wiederhergestellt"
+        "restored": "Zeitraum wiederhergestellt",
+        "rescheduled": "Zeitraumdaten geändert"
       },
       "person": {
         "claimed": "Konto übernommen",
