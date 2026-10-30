@@ -7,9 +7,17 @@ import { Effect } from "effect";
  * The tries that the sittings take (ADR 0013). A device may try five times a minute. One
  * person may fail five times a minute in one sitting, so no number of devices can guess a
  * token quickly, and one student's failures never lock out the other students of the sitting.
- * A token bucket refills its tries evenly, so each limit is the number of tries a minute.
+ * An account that joins a school by a room's code may fail five times a minute in that school,
+ * however many rooms it tries. A token bucket refills its tries evenly, so each limit is the
+ * number of tries a minute.
  */
 const limits = new RateLimiter(components.agentRateLimiter, {
+  roomFailedJoinsByAccount: {
+    capacity: 5,
+    kind: "token bucket",
+    period: MINUTE,
+    rate: 5,
+  },
   sittingFailedTriesByPerson: {
     capacity: 5,
     kind: "token bucket",
@@ -63,6 +71,38 @@ export const countFailedTry = Effect.fn("exams.sittings.rate.failed")(
     yield* Effect.tryPromise(() =>
       limits.limit(ctx, "sittingFailedTriesByPerson", {
         key: personKey(sittingId, personId),
+      })
+    ).pipe(Effect.orDie);
+  }
+);
+
+/** The key of one account's failed joins in one school. */
+const accountKey = (tenantId: string, userId: string) =>
+  `${tenantId}:${userId}`;
+
+/**
+ * Whether one account may fail again to join one school by a room's code. It reads the limit
+ * without using a try, so an account that has run out is refused even with the right code.
+ */
+export const accountMayFail = Effect.fn("exams.sittings.rate.account")(
+  function* (tenantId: string, userId: string) {
+    const ctx = yield* MutationCtx;
+    const quota = yield* Effect.tryPromise(() =>
+      limits.check(ctx, "roomFailedJoinsByAccount", {
+        key: accountKey(tenantId, userId),
+      })
+    ).pipe(Effect.orDie);
+    return quota.ok;
+  }
+);
+
+/** Counts one failed join of one account in one school against that account's limit. */
+export const countFailedJoin = Effect.fn("exams.sittings.rate.failedJoin")(
+  function* (tenantId: string, userId: string) {
+    const ctx = yield* MutationCtx;
+    yield* Effect.tryPromise(() =>
+      limits.limit(ctx, "roomFailedJoinsByAccount", {
+        key: accountKey(tenantId, userId),
       })
     ).pipe(Effect.orDie);
   }

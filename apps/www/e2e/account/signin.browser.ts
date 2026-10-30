@@ -2,17 +2,17 @@ import {
   type Browser,
   type BrowserContextOptions,
   expect,
-  type Request,
   test,
 } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SIGN_IN = "/en/auth";
 const HOME = "/en/home";
@@ -22,45 +22,61 @@ const HOME = "/en/home";
  */
 const ONBOARDING = "/en/onboarding";
 const PRICING = "/en/pricing";
-/** The status of the server's redirect away from the sign-in page. */
-const TEMPORARY_REDIRECT = 307;
 /**
  * A window property that marks the learner's document. A full document load
  * replaces the window, so the marker is gone afterwards, while a client navigation
  * keeps it.
  */
 const LEARNER_DOCUMENT = "nakafaLearnerDocument";
+/**
+ * The window property that the sign-in page's watch writes: the path its document
+ * opened at, and whether the sign-in title was visible on any frame.
+ */
+const SIGN_IN_WATCH = "nakafaSignInWatch";
 
 /** The context options of every test: the runtime's origin, without service workers. */
 function contextOptions(origin: string): BrowserContextOptions {
   return { baseURL: origin, serviceWorkers: "block" };
 }
 
-/** The first request of a redirect chain: the address the page asked for. */
-function firstRequestOf(request: Request): Request {
-  return Option.match(Option.fromNullishOr(request.redirectedFrom()), {
-    onNone: () => request,
-    onSome: firstRequestOf,
-  });
-}
-
 /**
- * Opens one address as a signed-in learner and proves the server's answer: the
- * sign-in page answers 307 to the given path, so the browser never receives the
- * sign-in page, and the document settles on the landing path.
+ * Opens one address as a signed-in learner and proves what the learner sees: the
+ * sign-in address answers its static page, whose body the signed-in hint hides
+ * before the first paint, and the page sends the learner on in the same
+ * document. The sign-in title is visible on no frame.
  */
-const expectRedirected = Effect.fn("NakafaE2E.expectSignInRedirect")(function* (
+const expectSentOn = Effect.fn("NakafaE2E.expectSignInSentOn")(function* (
   origin: string,
   browser: Browser,
   route: {
     readonly from: string;
     readonly landing: string;
-    readonly to: string;
   }
 ) {
   yield* withBrowserContext(browser, contextOptions(origin), (context) =>
     Effect.gen(function* () {
       yield* signInLearner(context, origin);
+      yield* Effect.promise(() =>
+        context.addInitScript(
+          ({ property, title }) => {
+            const watch = { opened: location.pathname, visible: false };
+            Reflect.set(window, property, watch);
+            const look = () => {
+              for (const heading of document.querySelectorAll("h1")) {
+                if (
+                  heading.textContent === title &&
+                  heading.checkVisibility()
+                ) {
+                  watch.visible = true;
+                }
+              }
+              requestAnimationFrame(look);
+            };
+            requestAnimationFrame(look);
+          },
+          { property: SIGN_IN_WATCH, title: app.Auth["sign-in-title"] }
+        )
+      );
       const page = yield* Effect.promise(() => context.newPage());
       yield* withObservedPageErrors(
         page,
@@ -68,30 +84,24 @@ const expectRedirected = Effect.fn("NakafaE2E.expectSignInRedirect")(function* (
           const response = yield* Effect.promise(() =>
             page.goto(route.from, { waitUntil: "load" })
           );
-          const signIn = yield* Effect.promise(async () => {
-            const first = Option.map(Option.fromNullishOr(response), (answer) =>
-              firstRequestOf(answer.request())
-            );
-            return Option.fromNullishOr(
-              await Option.getOrUndefined(first)?.response()
-            );
-          });
           yield* Effect.sync(() => {
-            expect(
-              Option.map(signIn, (answer) => ({
-                location: new URL(answer.headers().location ?? "", origin)
-                  .pathname,
-                status: answer.status(),
-              }))
-            ).toStrictEqual(
-              Option.some({ location: route.to, status: TEMPORARY_REDIRECT })
-            );
-            expect(new URL(page.url()).pathname).toBe(route.landing);
+            expect(response?.status()).toBe(200);
+            expect(response?.request().redirectedFrom()).toBeNull();
           });
           yield* Effect.promise(() =>
-            expect(
-              page.getByRole("heading", { name: app.Auth["sign-in-title"] })
-            ).toHaveCount(0)
+            page.waitForURL((url) => url.pathname === route.landing)
+          );
+          const watch = yield* Effect.promise(() =>
+            page.evaluate(
+              (property) => Reflect.get(window, property),
+              SIGN_IN_WATCH
+            )
+          );
+          yield* Effect.sync(() =>
+            expect(watch).toStrictEqual({
+              opened: new URL(route.from, origin).pathname,
+              visible: false,
+            })
           );
         })
       );
@@ -105,10 +115,9 @@ test("a signed-in learner who opens the sign-in page lands on home", async ({
 }) => {
   expect(baseURL).toBeTruthy();
   await Effect.runPromise(
-    expectRedirected(baseURL ?? "", browser, {
+    expectSentOn(baseURL ?? "", browser, {
       from: SIGN_IN,
       landing: ONBOARDING,
-      to: HOME,
     })
   );
 });
@@ -120,10 +129,9 @@ test("a signed-in learner who opens the sign-in page with an intent lands on it"
   expect(baseURL).toBeTruthy();
   const intent = `${SIGN_IN}?${new URLSearchParams({ redirect: LESSON_PATH })}`;
   await Effect.runPromise(
-    expectRedirected(baseURL ?? "", browser, {
+    expectSentOn(baseURL ?? "", browser, {
       from: intent,
       landing: LESSON_PATH,
-      to: LESSON_PATH,
     })
   );
 });
@@ -151,7 +159,7 @@ test("the Free plan's action opens home for a signed-in learner", async ({
             yield* Effect.promise(() =>
               page.goto(PRICING, { waitUntil: "load" })
             );
-            // The action is a link drawn as a button, so it carries the button role.
+            // The action is a link with a button's look.
             const action = page.locator('[data-pricing-plan="free"] a:visible');
             yield* Effect.promise(() => expect(action).toHaveCount(1));
             yield* Effect.promise(() =>
@@ -160,6 +168,9 @@ test("the Free plan's action opens home for a signed-in learner", async ({
             yield* Effect.promise(() =>
               expect(action).toHaveText(app.Pricing["free-cta"])
             );
+            // The page is static, so before React takes the link over a press
+            // loads home as a new document; only React moves in the same one.
+            yield* Effect.promise(() => waitUntilTakenOver(action));
             yield* Effect.promise(() =>
               page.evaluate((name) => {
                 Object.assign(window, { [name]: true });

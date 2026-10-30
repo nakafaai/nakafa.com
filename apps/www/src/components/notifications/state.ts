@@ -25,14 +25,17 @@ export function markRowRead(
 }
 
 /**
- * Every unread row of the page, read at the given moment. A row that is read
- * already keeps its own read time.
+ * Every unread row of the page, read at the given moment, or only those of the
+ * school that `slug` names. A row that is read already keeps its own read time.
  */
 export function markPageRead(
   page: readonly ListNotification[],
-  readAt: number
+  readAt: number,
+  slug: ListNotification["tenant"]["slug"] | undefined
 ) {
   return Arr.map(page, (row) =>
-    row.readAt === undefined ? { ...row, readAt } : row
+    row.readAt === undefined && (slug === undefined || row.tenant.slug === slug)
+      ? { ...row, readAt }
+      : row
   );
 }

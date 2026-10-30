@@ -1,5 +1,6 @@
 import { Array as Arr, HashMap, HashSet, Option } from "effect";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface";
+import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
@@ -79,54 +80,30 @@ function ReviewedCategoryResponse({
         ])
       : []
   );
+  const id = `review-question-${questionOrder}`;
   return (
-    <div className="space-y-6">
-      {Arr.map(responseSpec.statements, (statement) => {
-        const statementId = `review-question-${questionOrder}-${statement.statementKey}`;
-        const statementLabelId = `${statementId}-label`;
-        const assignedCategory = Option.getOrUndefined(
+    <TryoutChoiceTable
+      columns={Arr.map(responseSpec.categories, (category) => ({
+        id: category.categoryKey,
+        label: (
+          <TryoutResponseLabel id={`${id}-category-${category.categoryKey}`}>
+            {category.label}
+          </TryoutResponseLabel>
+        ),
+      }))}
+      disabled
+      statements={Arr.map(responseSpec.statements, (statement) => ({
+        correct: statement.correctCategoryKey,
+        id: statement.statementKey,
+        label: (
+          <TryoutResponseLabel id={`${id}-${statement.statementKey}`}>
+            {statement.label}
+          </TryoutResponseLabel>
+        ),
+        marked: Option.getOrUndefined(
           HashMap.get(assigned, statement.statementKey)
-        );
-        return (
-          <section className="space-y-3" key={statement.statementKey}>
-            <div id={statementLabelId}>
-              <TryoutResponseLabel id={statementId}>
-                {statement.label}
-              </TryoutResponseLabel>
-            </div>
-            <fieldset
-              aria-labelledby={statementLabelId}
-              className="m-0 grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
-            >
-              {Arr.map(responseSpec.categories, (category) => (
-                <TryoutReviewedChoice
-                  checked={assignedCategory === category.categoryKey}
-                  id={`${statementId}-${category.categoryKey}`}
-                  isCorrect={
-                    statement.correctCategoryKey === undefined
-                      ? undefined
-                      : statement.correctCategoryKey === category.categoryKey
-                  }
-                  key={category.categoryKey}
-                  label={
-                    <TryoutResponseLabel
-                      correctness={
-                        statement.correctCategoryKey === undefined
-                          ? undefined
-                          : statement.correctCategoryKey ===
-                            category.categoryKey
-                      }
-                      id={`${statementId}-${category.categoryKey}`}
-                    >
-                      {category.label}
-                    </TryoutResponseLabel>
-                  }
-                />
-              ))}
-            </fieldset>
-          </section>
-        );
-      })}
-    </div>
+        ),
+      }))}
+    />
   );
 }

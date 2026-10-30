@@ -16,7 +16,7 @@ test("a wrong card code is refused with one message that does not say whether th
   const school = await Effect.runPromise(createSchool());
   await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
 
-  await page.getByRole("button", { name: "Sign in with a username" }).click();
+  await page.getByRole("link", { name: "Sign in with a username" }).click();
   await page.waitForURL(USERNAME_ADDRESS);
   await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
   await page.getByLabel("School username").fill("guru.tidak");
@@ -66,7 +66,7 @@ test("a student whose card an Admin printed signs in with the school username, t
   const card = await Effect.runPromise(seedCard(school.slug));
   await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
 
-  await page.getByRole("button", { name: "Sign in with a username" }).click();
+  await page.getByRole("link", { name: "Sign in with a username" }).click();
   await page.waitForURL(USERNAME_ADDRESS);
   await waitUntilTakenOver(page.getByRole("button", { name: "Sign in" }));
   await page.getByLabel("School username").fill(card.loginName);
@@ -78,7 +78,7 @@ test("a student whose card an Admin printed signs in with the school username, t
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(
-    page.getByRole("button", { name: "Sign in with a username" })
+    page.getByRole("link", { name: "Sign in with a username" })
   ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
 });
 

@@ -61,10 +61,15 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
 });
 
 /**
- * Waits until the client router has started on the page. TanStack's history
- * writes its route key into the state of the current entry when the router is
- * created, which can happen before hydration finishes, so the key does not
- * prove hydration. `waitForHydratedLink` checks the Link itself.
+ * Waits until the client router has started on the page and React holds its
+ * presses. TanStack's history writes its route key into the state of the current
+ * entry when the router is created, which can come before React hydrates the
+ * page (1.28 s against 1.50 s on a train runtime, 2.48 s against 3.33 s at four
+ * times CPU throttling), and a press in between loads its target as a new
+ * document. React writes its fiber onto the body once it hydrates the document,
+ * and from then on its root listener holds every press, replaying one that lands
+ * on a part still hydrating, so a spec may press any control. `waitForHydratedLink`
+ * still checks a Link itself before a measured navigation.
  */
 export const waitForCommittedAppRouter = Effect.fn(
   "NakafaE2E.waitForCommittedAppRouter"
@@ -77,7 +82,11 @@ export const waitForCommittedAppRouter = Effect.fn(
   const committedState = yield* Effect.tryPromise({
     try: () =>
       page.waitForFunction(
-        () => window.history.state?.__TSR_key !== undefined,
+        () =>
+          window.history.state?.__TSR_key !== undefined &&
+          Object.keys(document.body).some((key) =>
+            key.startsWith("__reactFiber$")
+          ),
         undefined,
         { timeout: timeoutMilliseconds }
       ),

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { JOURNAL_COMMIT_LAG } from "@repo/backend/confect/journal/cursor";
 import {
@@ -26,6 +27,10 @@ import {
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option, Schema } from "effect";
+
+/** The journal entry that an invitation row was read from; a class row has none. */
+const entryOf = (row: NotificationsDoc) =>
+  row.changeType === "person.invited" ? row.journalEntryId : null;
 
 const GURU = "guru@harapan.example.test";
 const LAIN = "lain@lain.example.test";
@@ -106,9 +111,10 @@ describe("notifications/inbox run", () => {
         const first = yield* invitedEntry(fixture, 1);
         yield* fixture.run(noteInvite(fixture.tenants.nf, first));
         yield* consumeSchool(fixture, fixture.tenants.nf);
-        expect(
-          Arr.map(yield* storedRows(fixture), (row) => row.journalEntryId)
-        ).toEqual([earlier, first]);
+        expect(Arr.map(yield* storedRows(fixture), entryOf)).toEqual([
+          earlier,
+          first,
+        ]);
       })
   );
 
@@ -159,9 +165,7 @@ describe("notifications/inbox run", () => {
         expect(made).toBeGreaterThan(1);
         const rows = yield* storedRows(fixture);
         expect(rows).toHaveLength(BURST);
-        expect(
-          Arr.dedupe(Arr.map(rows, (row) => row.journalEntryId))
-        ).toHaveLength(BURST);
+        expect(Arr.dedupe(Arr.map(rows, entryOf))).toHaveLength(BURST);
         expect(yield* cursors(fixture)).toMatchObject([{ pending: false }]);
       })
   );

@@ -50,7 +50,7 @@ const statesOf = (
 
 describe("exams/sittings closing", () => {
   it.effect(
-    "closes the sitting: it cancels its jobs, closes each open attempt, and records the close",
+    "closes the sitting: it cancels its jobs, freezes the exam, closes each open attempt, and records the close",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -82,9 +82,15 @@ describe("exams/sittings closing", () => {
         expect(Arr.map(closeAtJobs, (job) => job.state.kind)).toEqual([
           "canceled",
         ]);
-        expect(yield* sittingRow(fixture, made.id)).toMatchObject({
-          state: "closed",
-        });
+        const closed = yield* sittingRow(fixture, made.id);
+        expect(closed).toMatchObject({ state: "closed" });
+        // A finished sitting fixes the paper its students sat (ADR 0031).
+        const exam = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("exams").get(closed.examId).pipe(Effect.orDie)
+          )
+        );
+        expect(exam.frozenAt).toBe(OPENS_AT);
         yield* fixture.internal.mutation(timers.closeDue, {
           atDeadline: "now",
           sittingId: made.id,

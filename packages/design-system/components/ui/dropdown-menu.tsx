@@ -1,8 +1,10 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { ArrowRight01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
@@ -36,7 +38,10 @@ function DropdownMenuContent({
     keepMounted?: boolean;
   }) {
   return (
-    <MenuPrimitive.Portal keepMounted={keepMounted}>
+    <MenuPrimitive.Portal
+      container={use(PortalContainer)}
+      keepMounted={keepMounted}
+    >
       <MenuPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}

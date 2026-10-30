@@ -47,6 +47,21 @@ export function choiceOf(
 }
 
 /**
+ * The option that a digit key picks: the option at `index` of a single choice. A question of
+ * another shape, or a multiple choice, has no option that a digit key picks.
+ */
+export function pickedOption(
+  interactions: readonly Interaction[],
+  index: number
+): Option.Option<string> {
+  return Option.flatMap(choiceOf(interactions), (choice) =>
+    choice.maxChoices === 1
+      ? Option.map(Arr.get(choice.options, index), (option) => option.id)
+      : Option.none()
+  );
+}
+
+/**
  * The response after one option of a multiple choice is checked or unchecked. Checking adds the
  * option while the response holds fewer options than the choice takes, and unchecking removes it.
  * A check beyond the maximum leaves the response as it was.

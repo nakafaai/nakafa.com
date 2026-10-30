@@ -2,6 +2,7 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import {
   ClockAlertIcon,
@@ -25,13 +26,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  createContext,
-  startTransition,
-  use,
-  useState,
-  useTransition,
-} from "react";
+import { startTransition, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -59,20 +54,11 @@ import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/invites";
 
 /** How many invites one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first page of the list, which its loader read on the server. */
-type InvitesFirstPage = PreloadedPage<
-  PaginatedQueryItem<typeof tenancy.invites.list>
->;
+const PAGE_SIZE = 25;
 
 /** One pending invite as the invites list shows it. */
 type InviteItem = PaginatedQueryItem<typeof tenancy.invites.list>;
@@ -83,22 +69,13 @@ const inviteColumns = createColumnHelper<
   InviteItem
 >();
 
-/** The first page of the invites, which the page's loader read on the server. */
-const InvitesFirstPageContext = createContext<InvitesFirstPage | undefined>(
-  undefined
-);
-
 /**
  * The invites of the school: Invite in the header, then every pending and expired invite in a
  * data table with its role, its expiry and its row menu. A pending invite sends again or
  * revokes; an expired one stays listed as expired and is sent again as a new invite. With no
  * invite, the table says what it will hold. The list loads more rows as its end comes into view.
  */
-export function SchoolInvitesSettings({
-  first,
-}: {
-  first: InvitesFirstPage | undefined;
-}) {
+export function SchoolInvitesSettings() {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -112,9 +89,7 @@ export function SchoolInvitesSettings({
         }
       >
         <ReadBoundary>
-          <InvitesFirstPageContext value={first}>
-            <SchoolInvitesBody />
-          </InvitesFirstPageContext>
+          <SchoolInvitesBody />
         </ReadBoundary>
       </SettingsTablePage>
     </TableFiltersProvider>
@@ -124,13 +99,11 @@ export function SchoolInvitesSettings({
 /** The invites of the school, read a page at a time, with the table and its end. */
 function SchoolInvitesBody() {
   const { slug } = useTenant();
-  const first = use(InvitesFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     tenancy.invites.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

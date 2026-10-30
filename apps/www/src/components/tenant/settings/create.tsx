@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { QueryResult, useMutation } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
@@ -34,7 +33,6 @@ import { addUnitChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
 import type { Unit } from "@/components/tenant/settings/state";
 import { levelsOf } from "@/components/tenant/start/state";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 const SOURCE = "components/tenant/settings/create";
 
@@ -68,27 +66,20 @@ function useCreateDialog() {
 /**
  * The dialog that adds a school to the organisation: its name, its level, its time zone, and its
  * page language. The first choices are those of the school the organisation holds first. The
- * units come from the page's loader, and the viewer from the school's, so the dialog's first frame
- * already has its choices and never waits for a subscription that opens after it.
+ * units and the viewer are read live, and the dialog draws once both have answered.
  */
 export function SchoolUnitCreateDialog({
   open,
-  preload,
   setOpen,
   slug,
 }: {
   open: boolean;
-  preload: Ref.Returns<typeof tenancy.units.list> | undefined;
   setOpen: (open: boolean) => void;
   slug: TenantSlug;
 }) {
   // The units are read once the session settles, so the dialog never asks signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const units = usePreloadedQueryResult(
-    tenancy.units.list,
-    isSettled ? { slug } : "skip",
-    preload
-  );
+  const units = useQuery(tenancy.units.list, isSettled ? { slug } : "skip");
   const viewer = useViewerQuery();
   if (!(QueryResult.isSuccess(units) && QueryResult.isSuccess(viewer))) {
     return null;

@@ -80,7 +80,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   ).toContainText(PROMPT, { timeout: readinessTimeoutMilliseconds });
 
   // The try action sits beside Schedule in the editor's header, and opens the try.
-  await trying.getByRole("button", { name: "Try as student" }).click();
+  await trying.getByRole("link", { name: "Try as student" }).click();
   await trying.waitForURL(TRY_PATH);
   // Every change the page sent but the editor's leave of its room, which is no answer of the try.
   const sentByTry = () => changes.sent - changes.argumentsOf(LEAVE).length;

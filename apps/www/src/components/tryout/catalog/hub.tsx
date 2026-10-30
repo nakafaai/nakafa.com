@@ -104,14 +104,15 @@ function TryoutHubCountries({
       <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
         {Arr.map(Arr.zip(countries, visuals), ([country, visual], index) => (
           <CatalogCard
-            action={
+            action={(anchor) => (
               <TryoutPageLink
+                {...anchor}
                 onClick={
                   onPick === undefined ? undefined : () => onPick(country)
                 }
                 publicPath={country.publicPath}
               />
-            }
+            )}
             key={country.countryKey}
             title={country.title}
           >

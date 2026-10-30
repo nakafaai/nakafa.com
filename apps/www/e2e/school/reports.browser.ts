@@ -55,7 +55,7 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await Effect.runPromise(signInOwner(owner, school.slug, address("/")));
   const settings = await owner.newPage();
   await settings.goto(address("/settings/cohorts"));
-  const cohortLink = settings.getByRole("link", { name: "X-1" });
+  const cohortLink = settings.getByRole("link", { exact: true, name: "X-1" });
   await waitUntilTakenOver(cohortLink);
   await cohortLink.click();
   await settings
@@ -90,7 +90,7 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
 
   // The homeroom teacher opens the class group from the report cards and writes the note.
   await page.goto(address("/reports"));
-  const reportsCohort = page.getByRole("link", { name: "X-1" });
+  const reportsCohort = page.getByRole("link", { exact: true, name: "X-1" });
   await expect(reportsCohort).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

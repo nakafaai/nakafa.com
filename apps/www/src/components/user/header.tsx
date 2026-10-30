@@ -1,8 +1,8 @@
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
 import { ShareProfileButton } from "@/components/user/share";
 import type { PublicProfile } from "@/lib/profile/public";
@@ -48,20 +48,17 @@ export function UserHeader({
       ) : null}
       <div className="flex items-center gap-2">
         {isOwner && (
-          <Button
-            className="flex-1"
-            nativeButton={false}
-            render={
-              <Link
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                to="/$locale/user/settings"
-              >
-                <HugeIcons icon={PencilEdit02Icon} />
-                {t("edit-profile")}
-              </Link>
-            }
-            variant="outline"
-          />
+          <Link
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            className={buttonVariants({
+              className: "flex-1",
+              variant: "outline",
+            })}
+            to="/$locale/user/settings"
+          >
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("edit-profile")}
+          </Link>
         )}
         {profile.shareable ? (
           <ShareProfileButton username={profile.username} />

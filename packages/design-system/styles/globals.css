@@ -11,7 +11,7 @@
  * takes their mean, 106.26%; Roboto takes the same width through Capsize's Roboto to Arial ratio
  * (107.355% over 107.119%). Each ascent and descent is Inter's (0.96875 and 0.241211 of the em)
  * over that adjustment. They cover Inter's own subsets only, so an Arabic character still falls
- * through to Amiri. */
+ * through to Amiri Quran. */
 @font-face {
   font-family: "Inter Fallback Roboto";
   src: local("Roboto Regular"), local("Roboto-Regular");
@@ -232,13 +232,15 @@
 @theme inline {
   --text-chat: 15px;
   --text-chat--line-height: 1.625;
-  /* Amiri follows Inter so an Arabic glyph takes its face in the same line, and each Arabic subset
-   * loads only when a page draws an Arabic character (its unicode-range), so a Latin page loads none. */
+  /* Amiri Quran follows Inter so an Arabic glyph takes its face in the same line, and each Arabic
+   * subset loads only when a page draws an Arabic character (its unicode-range), so a Latin page
+   * loads none. */
   --font-sans:
-    "Inter Variable", "Inter Fallback Roboto", "Inter Fallback Arial", "Amiri",
-    ui-sans-serif, system-ui, sans-serif;
-  /* The app declares Amiri's faces with optional display, so Arabic text never moves when Amiri arrives. */
-  --font-quran: "Amiri", ui-serif, serif;
+    "Inter Variable", "Inter Fallback Roboto", "Inter Fallback Arial",
+    "Amiri Quran", ui-sans-serif, system-ui, sans-serif;
+  /* The app declares Amiri Quran's faces with block display, so Arabic text waits for the face and
+   * never shows in another one. */
+  --font-quran: "Amiri Quran", ui-serif, serif;
   /* Geist Mono's variable exists only inside a scope that applies it. Outside
    * every scope, a monospace element falls back to the system stack. Tailwind
    * inlines --default-mono-font-family into preflight's bare code, keyboard keys

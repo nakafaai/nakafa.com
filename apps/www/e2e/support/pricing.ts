@@ -20,7 +20,6 @@ type PricingGeometry = typeof PricingGeometrySchema.Type;
 // The page's observer writes these fields in place, so they stay mutable.
 const PricingTransitionObservationSchema = Schema.Struct({
   after: Schema.mutableKey(Schema.NullOr(PricingGeometrySchema)),
-  before: Schema.mutableKey(Schema.NullOr(PricingGeometrySchema)),
   layoutShift: Schema.mutableKey(Schema.Finite),
 });
 
@@ -37,7 +36,7 @@ function countOccurrences(value: string, pattern: string) {
   return value.split(pattern).length - 1;
 }
 
-/** Proves the streamed HTML keeps both plans around price-only fallbacks. */
+/** Proves the static HTML holds both plans and both price slots, each price already written as text. */
 export const expectStablePricingAppShell = Effect.fn(
   "NakafaE2E.expectStablePricingAppShell"
 )(function* (page: Page) {
@@ -52,9 +51,6 @@ export const expectStablePricingAppShell = Effect.fn(
     expect(response.ok()).toBe(true);
     expect(countOccurrences(html, "data-pricing-plan=")).toBe(2);
     expect(countOccurrences(html, "data-pricing-price-slot=")).toBe(2);
-    expect(countOccurrences(html, 'data-pricing-price-fallback="true"')).toBe(
-      2
-    );
   });
 });
 
@@ -66,7 +62,6 @@ const installPricingTransitionObserver = Effect.fn(
     page.addInitScript(() => {
       const observation: PricingTransitionObservation = {
         after: null,
-        before: null,
         layoutShift: 0,
       };
       window.__pricingTransition = observation;
@@ -119,14 +114,6 @@ const installPricingTransitionObserver = Effect.fn(
 
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
-            const fallbackCount = document.querySelectorAll(
-              "[data-pricing-price-fallback]"
-            ).length;
-            if (fallbackCount > 0) {
-              finishing = false;
-              return;
-            }
-
             addLayoutShifts(layoutShiftObserver.takeRecords());
             layoutShiftObserver.disconnect();
             mutationObserver.disconnect();
@@ -135,49 +122,8 @@ const installPricingTransitionObserver = Effect.fn(
         );
       };
 
-      const recordFallbackBaseline = () => {
-        if (observation.before) {
-          return;
-        }
-
-        const fallbacks = [
-          ...document.querySelectorAll("[data-pricing-price-fallback]"),
-        ];
-        if (fallbacks.length !== 2) {
-          return;
-        }
-        const fallbackRects = fallbacks.map(readRect);
-        if (
-          fallbackRects.some((rect) => rect.height === 0 || rect.width === 0)
-        ) {
-          return;
-        }
-
-        const geometry = readGeometry();
-        const renderedPlans = Object.values(geometry.plans);
-
-        if (
-          renderedPlans.length !== 2 ||
-          renderedPlans.some((rect) => rect.height === 0 || rect.width === 0)
-        ) {
-          return;
-        }
-
-        observation.before = geometry;
-      };
-
       const mutationObserver = new MutationObserver(() => {
-        const fallbackCount = document.querySelectorAll(
-          "[data-pricing-price-fallback]"
-        ).length;
-        const planCount = document.querySelectorAll(
-          "[data-pricing-plan]"
-        ).length;
-
-        if (planCount === 2 && fallbackCount === 2) {
-          recordFallbackBaseline();
-        }
-        if (planCount === 2 && fallbackCount === 0) {
+        if (document.querySelectorAll("[data-pricing-plan]").length === 2) {
           finish();
         }
       });
@@ -210,34 +156,11 @@ export const observeStablePricingReload = Effect.fn(
   return observation;
 });
 
-/** Asserts that localized price resolution preserved all plan geometry. */
+/** Asserts that the reloaded page laid out both plans without a layout shift. */
 export function expectStablePricingTransition(
   observation: PricingTransitionObservation | undefined
 ) {
   expect(observation).toBeDefined();
-  if (!observation) {
-    return;
-  }
-
-  expect(observation.after).not.toBeNull();
-  expect(observation.layoutShift).toBe(0);
-
-  // A fast streamed response can replace both fallbacks before either receives
-  // a painted layout box. The HTML-shell assertion still proves the fallbacks
-  // exist, while the layout-shift observer covers the rendered transition.
-  if (!(observation.after && observation.before)) {
-    return;
-  }
-
-  for (const plan of ["free", "pro"] as const) {
-    expect(observation.after.plans[plan]).toEqual(
-      observation.before.plans[plan]
-    );
-    expect(observation.after.slots[plan].height).toBe(
-      observation.before.slots[plan].height
-    );
-    expect(observation.after.slots[plan].y).toBe(
-      observation.before.slots[plan].y
-    );
-  }
+  expect(observation?.after).not.toBeNull();
+  expect(observation?.layoutShift).toBe(0);
 }

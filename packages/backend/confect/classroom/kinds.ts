@@ -19,7 +19,8 @@ const classReaders: (typeof RuleRole.Type)[] = ["admin", "principal", "deputy"];
  * archived class keeps its channels readable and takes no new one. A member of the
  * class or a subject teacher writes messages, and the school's leaders read them
  * and write none (ADR 0025). Whoever manages the forum hides a message, which the
- * journal records without its text.
+ * journal records without its text. A subject teacher adds and removes the
+ * items of its library, which its forum readers read.
  */
 export const classKind = Kind.make("class", "classes", {
   actions: {
@@ -52,6 +53,26 @@ export const classKind = Kind.make("class", "classes", {
       relations: ["classMember", "subjectTeacher"],
       roles: classReaders,
     },
+    "library.manage": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["subjectTeacher"],
+    },
+    "post.publish": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["subjectTeacher"],
+    },
+    "task.manage": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["subjectTeacher"],
+    },
+    "task.submit": {
+      access: "write",
+      grantedBy: "relations",
+      relations: ["classMember"],
+    },
   },
   changes: [
     Schema.Struct({ type: Schema.Literal("class.created") }),
@@ -69,8 +90,24 @@ export const classKind = Kind.make("class", "classes", {
       message: Id("classroomMessages"),
       type: Schema.Literal("message.hidden"),
     }),
+    Schema.Struct({
+      post: Id("classroomPosts"),
+      type: Schema.Literal("announcement.posted"),
+    }),
+    Schema.Struct({
+      task: Id("classroomTasks"),
+      type: Schema.Literal("assignment.published"),
+    }),
+    Schema.Struct({
+      task: Id("classroomTasks"),
+      type: Schema.Literal("assignment.deadlineChanged"),
+    }),
   ],
-  published: [],
+  published: [
+    "announcement.posted",
+    "assignment.published",
+    "assignment.deadlineChanged",
+  ],
   relations: ["classMember", "subjectTeacher"],
 });
 

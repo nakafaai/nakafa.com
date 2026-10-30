@@ -1,6 +1,5 @@
 import {
   Sheet,
-  SheetFooter,
   SheetHeader,
   SheetPopup,
   SheetTitle,
@@ -9,14 +8,13 @@ import { monospace } from "@repo/design-system/lib/monospace";
 import { cn } from "cn";
 import { type ReactNode, useRef } from "react";
 import { useTranslations } from "use-intl";
-import { PlayerModeToggle } from "@/components/player/navigator/toggle";
 import { usePlayer } from "@/components/player/provider";
 
 /**
  * The navigator below the large breakpoint: a sheet that the footer opens, with
- * the numbers in its body and the view in its footer. It opens on the current
- * number. Picking a number closes the sheet first, and the question is revealed
- * once the sheet has finished closing, because the page cannot scroll while the
+ * the numbers and their legend in its body. It opens on the current number.
+ * Picking a number closes the sheet first, and the question is revealed once
+ * the sheet has finished closing, because the page cannot scroll while the
  * sheet holds it.
  */
 export function PlayerSheet({ children }: { children: ReactNode }) {
@@ -56,9 +54,6 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
         >
           {children}
         </div>
-        <SheetFooter>
-          <PlayerModeToggle />
-        </SheetFooter>
       </SheetPopup>
     </Sheet>
   );

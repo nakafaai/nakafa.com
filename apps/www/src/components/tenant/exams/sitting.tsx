@@ -1,7 +1,14 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Building03Icon, UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import type { ScheduleInvalid } from "@repo/backend/confect/exams/sittings/errors";
+import {
+  keyMissing,
+  type QuestionTemplate,
+} from "@repo/backend/confect/exams/question";
+import type {
+  KeysMissing,
+  ScheduleInvalid,
+} from "@repo/backend/confect/exams/sittings/errors";
 import {
   RoomName,
   type SittingGroup,
@@ -30,6 +37,7 @@ import {
   DateTime,
   Effect,
   Function as Fn,
+  Match,
   Option,
   Schema,
   String as Str,
@@ -51,13 +59,17 @@ const DEFAULT_MINUTES = 60;
 const UNIT_AUDIENCE = "unit";
 
 /**
- * The refusals that the dialog explains in its body: a question without a key that fits it,
- * and a start that has passed. Any other refusal shows the action-error toast.
+ * The sentence that names a question whose key is missing, in the words of its template: a choice,
+ * a set of choices, true or false and cause and effect take their correct answer, a short answer an
+ * accepted answer, a matching its pairs, and a true or false table a mark for every statement.
  */
-const Refusal = Schema.Literals(["keys", "past"]);
-
-/** One refusal that the dialog explains. */
-type Refusal = typeof Refusal.Type;
+const keyNotice = (template: QuestionTemplate) =>
+  Match.value(template).pipe(
+    Match.when("short", () => "schedule-key-short" as const),
+    Match.when("match", () => "schedule-key-match" as const),
+    Match.when("table", () => "schedule-key-table" as const),
+    Match.orElse(() => "schedule-key-choice" as const)
+  );
 
 /**
  * The dialog that schedules one sitting of the exam: its unit, its room, its start, and its
@@ -85,7 +97,9 @@ export function ScheduleSitting({
   const [room, setRoom] = useState("");
   const [minutes, setMinutes] = useState(DEFAULT_MINUTES);
   const [audience, setAudience] = useState(UNIT_AUDIENCE);
-  const [refusal, setRefusal] = useState<Refusal | null>(null);
+  // The questions the server named as missing their key, when the dialog's view of them was behind.
+  const [refusedKeys, setRefusedKeys] = useState<readonly number[]>([]);
+  const [pastStart, setPastStart] = useState(false);
   const [pending, startTransition] = useTransition();
   const unitItems = Arr.map(units, (unit) => ({
     label: unit.name,
@@ -121,11 +135,15 @@ export function ScheduleSitting({
     sittingTimes(starts, minutes, named)
   );
   const roomName = Str.trim(room);
-  // The numbers of the questions that have no correct answer yet, in the order of the exam.
-  const missingKeys = Arr.flatMap(exam.questions, (question, index) =>
-    question.key === null ? [index + 1] : []
-  );
-  const keysMissing = !Arr.isReadonlyArrayEmpty(missingKeys);
+  // Each question by its number, and whether it keeps the exam from being scheduled (`keyMissing`), the
+  // rule the server applies: an essay needs no key, and every other template a key that fits it.
+  const numbered = Arr.map(exam.questions, (question, index) => ({
+    missing: keyMissing(question),
+    number: index + 1,
+    template: question.template,
+  }));
+  const unkeyed = Arr.findFirst(numbered, (entry) => entry.missing);
+  const keysMissing = Option.isSome(unkeyed);
   const ready =
     Option.isSome(choice) &&
     Option.isSome(times) &&
@@ -133,10 +151,10 @@ export function ScheduleSitting({
     !keysMissing &&
     !pending;
 
-  /** The server refused the schedule because a question has no key that fits it: the body says so. */
-  const refuseKeys = () =>
+  /** The server refused the schedule because a question has no key that fits it: the footer names the first one. */
+  const refuseKeys = (error: KeysMissing) =>
     Effect.sync(() => {
-      setRefusal("keys");
+      setRefusedKeys(error.questions);
     });
 
   /**
@@ -146,7 +164,7 @@ export function ScheduleSitting({
   const refuseStart = (error: ScheduleInvalid) =>
     error.reason === "opensAt"
       ? Effect.sync(() => {
-          setRefusal("past");
+          setPastStart(true);
         })
       : Effect.fail(error);
 
@@ -169,7 +187,8 @@ export function ScheduleSitting({
         onSome: (cohort) => ({ cohortId: cohort.id, kind: "cohort" }),
       }
     );
-    setRefusal(null);
+    setRefusedKeys([]);
+    setPastStart(false);
     startTransition(async () => {
       await runExamAction(
         sentAction(() =>
@@ -207,9 +226,12 @@ export function ScheduleSitting({
       footer={
         <>
           <ScheduleNotices
-            keysMissing={keysMissing}
-            missingKeys={missingKeys}
-            refusal={refusal}
+            missing={Option.orElse(unkeyed, () =>
+              Option.flatMap(Arr.head(refusedKeys), (number) =>
+                Arr.get(numbered, number - 1)
+              )
+            )}
+            pastStart={pastStart}
           />
           <Button onClick={() => setOpen(false)} variant="outline">
             {common("cancel")}
@@ -282,9 +304,6 @@ export function ScheduleSitting({
             placeholder={t("room-placeholder")}
             value={room}
           />
-          {roomName === "" ? (
-            <FieldDescription>{t("room-needed")}</FieldDescription>
-          ) : null}
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-starts`}>{t("starts")}</FieldLabel>
@@ -334,39 +353,34 @@ export function ScheduleSitting({
 }
 
 /**
- * The sentences at the foot of the dialog that explain why the schedule is not made yet: the questions that
- * have no key, the refusal of a key that does not fit a question, and a start that has passed.
+ * The sentence at the foot of the dialog that says why the schedule is not made yet, one line in the
+ * destructive colour: the first question that still needs its key, in the words of its template, or a
+ * start that has passed.
  */
 function ScheduleNotices({
-  keysMissing,
-  missingKeys,
-  refusal,
+  missing,
+  pastStart,
 }: {
-  readonly keysMissing: boolean;
-  readonly missingKeys: readonly number[];
-  readonly refusal: Refusal | null;
+  readonly missing: Option.Option<{
+    readonly number: number;
+    readonly template: QuestionTemplate;
+  }>;
+  readonly pastStart: boolean;
 }) {
   const t = useTranslations("Exams");
 
   return (
     <>
-      {keysMissing || refusal === "keys" ? (
-        <p className="me-auto text-muted-foreground text-sm">
-          {keysMissing
-            ? t("schedule-keys-numbered", {
-                count: missingKeys.length,
-                questions: Arr.join(
-                  Arr.map(missingKeys, (number) => `${number}`),
-                  ", "
-                ),
-              })
-            : t("schedule-keys")}
-        </p>
-      ) : null}
-      {refusal === "past" ? (
-        <p className="me-auto text-muted-foreground text-sm">
-          {t("schedule-past")}
-        </p>
+      {Option.match(missing, {
+        onNone: () => null,
+        onSome: (entry) => (
+          <p className="me-auto text-destructive text-sm">
+            {t(keyNotice(entry.template), { number: entry.number })}
+          </p>
+        ),
+      })}
+      {pastStart ? (
+        <p className="me-auto text-destructive text-sm">{t("schedule-past")}</p>
       ) : null}
     </>
   );

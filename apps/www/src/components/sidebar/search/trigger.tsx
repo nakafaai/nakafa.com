@@ -41,20 +41,46 @@ export function SearchMenu() {
   }));
 
   return (
+    <SidebarSearchButton
+      label={t("search-bar-placeholder")}
+      onIntent={preload.onFocus}
+      onOpen={() => setOpen(true)}
+      open={open}
+    />
+  );
+}
+
+/**
+ * The search row at the head of a sidebar, in both apps: the palette's placeholder,
+ * and its keys on a wide screen. A press opens the palette, and intent warms it.
+ */
+export function SidebarSearchButton({
+  label,
+  onIntent,
+  onOpen,
+  open,
+}: {
+  label: string;
+  onIntent: () => void;
+  onOpen: () => void;
+  open: boolean;
+}) {
+  return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
           className="justify-between text-muted-foreground"
           isActive={open}
-          onClick={() => setOpen(true)}
-          onFocus={preload.onFocus}
-          onMouseEnter={preload.onMouseEnter}
-          onTouchStart={preload.onTouchStart}
+          onClick={onOpen}
+          onFocus={onIntent}
+          onMouseEnter={onIntent}
+          onTouchStart={onIntent}
+          tooltip={label}
           variant="outline"
         >
           <div className="flex items-center gap-2">
             <HugeIcons className="size-4" icon={Search02Icon} />
-            <span>{t("search-bar-placeholder")}</span>
+            <span>{label}</span>
           </div>
           <div className="hidden items-center lg:flex">
             <kbd className="rounded">
