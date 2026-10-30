@@ -20,7 +20,7 @@ const storageFailure = (method: string, key?: string) => (cause: unknown) =>
  * that refuses its storage fails the store's calls with a `KeyValueStoreError`, so the caller reports it
  * and the page still answers.
  */
-export const sittingStorage = Layer.effect(KeyValueStore.KeyValueStore)(
+export const keptStorage = Layer.effect(KeyValueStore.KeyValueStore)(
   Effect.map(
     Effect.try({
       catch: storageFailure("open"),

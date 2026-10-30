@@ -9,16 +9,12 @@ import { Array as Arr, Effect, Option } from "effect";
 import { useEffect, useRef, useState } from "react";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { useSendAnswer } from "@/components/exams/sitting/answer";
-import {
-  keptAnswersFor,
-  readKept,
-  readKeptResponse,
-} from "@/components/exams/sitting/keep";
+import { keptAttempt } from "@/components/exams/sitting/keep";
 import type {
   PaperQuestion,
   PaperValue,
 } from "@/components/exams/sitting/paper";
-import { sittingStorage } from "@/components/exams/sitting/storage";
+import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
@@ -52,15 +48,12 @@ export function useResendKeptAnswers({
     }
     resumed.current = true;
     Effect.runPromise(
-      readKept(sittingId, attemptId).pipe(
-        Effect.provide(sittingStorage),
-        Effect.flatMap((kept) =>
-          Effect.forEach(
-            keptAnswersFor(
-              kept,
-              Arr.map(paper.questions, (question) => question.id)
-            ),
-            ({ answer, questionId }) =>
+      keptAttempt(sittingId, attemptId)
+        .answersFor(Arr.map(paper.questions, (question) => question.id))
+        .pipe(
+          Effect.provide(keptStorage),
+          Effect.flatMap((kept) =>
+            Effect.forEach(kept, ({ answer, questionId }) =>
               send(
                 {
                   attemptId,
@@ -73,17 +66,17 @@ export function useResendKeptAnswers({
                 },
                 answer.answeredAt
               )
+            )
+          ),
+          Effect.flatMap((failures) =>
+            sittingCallFailures(Arr.getSomes(failures))
+          ),
+          Effect.catchTag("KeyValueStoreError", (error) =>
+            reportClientException(error, {
+              source: "components/exams/sitting/resend",
+            })
           )
-        ),
-        Effect.flatMap((failures) =>
-          sittingCallFailures(Arr.getSomes(failures))
-        ),
-        Effect.catchTag("KeyValueStoreError", (error) =>
-          reportClientException(error, {
-            source: "components/exams/sitting/resend",
-          })
         )
-      )
     );
   }, [attemptId, deviceId, locked, paper, send, sittingId, slug]);
 }
@@ -105,19 +98,21 @@ export function useKeptText({
 }) {
   const [text] = useState(() =>
     Effect.runSync(
-      readKeptResponse(sittingId, attemptId, question.id).pipe(
-        Effect.provide(sittingStorage),
-        Effect.catchTag("KeyValueStoreError", (error) =>
-          reportClientException(error, {
-            source: "components/exams/sitting/kept",
-          }).pipe(Effect.as(Option.none<ExamResponse>()))
-        ),
-        Effect.map((kept) =>
-          typedText(
-            Option.getOrElse(kept, () => question.response ?? NO_RESPONSE)
+      keptAttempt(sittingId, attemptId)
+        .responseOf(question.id)
+        .pipe(
+          Effect.provide(keptStorage),
+          Effect.catchTag("KeyValueStoreError", (error) =>
+            reportClientException(error, {
+              source: "components/exams/sitting/kept",
+            }).pipe(Effect.as(Option.none<ExamResponse>()))
+          ),
+          Effect.map((kept) =>
+            typedText(
+              Option.getOrElse(kept, () => question.response ?? NO_RESPONSE)
+            )
           )
         )
-      )
     )
   );
   return text;
