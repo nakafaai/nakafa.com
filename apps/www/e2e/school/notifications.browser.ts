@@ -35,7 +35,7 @@ for (const viewport of [
     page.on("pageerror", (error) => MutableList.append(errors, String(error)));
     await page.goto(address("/"));
 
-    // The sidebar's main pages lead to it; on a phone the sidebar opens from its trigger.
+    // The sidebar's For you group leads to the page; on a phone the sidebar opens from its trigger.
     if (viewport.width < 768) {
       const trigger = page.getByRole("button", { name: "Toggle Sidebar" });
       await waitUntilTakenOver(trigger);

@@ -59,7 +59,12 @@
     "draft-created": "Dibuat {age}",
     "schedule-bound": "Jadwal hanya menggambar {count} ruang pertama.",
     "results-bound": "Hanya {count} hasil terbaru yang tercantum.",
-    "all-exams": "Semua ujian"
+    "all-exams": "Semua ujian",
+    "search": "Cari",
+    "search-placeholder": "Cari di sekolah...",
+    "search-description": "Buka halaman, kelas, atau pengaturan sekolah.",
+    "search-empty": "Tidak ada yang bernama itu di sekolah ini.",
+    "pages": "Halaman"
   },
   "SchoolEntry": {
     "username-placeholder": "ayu.lestari",

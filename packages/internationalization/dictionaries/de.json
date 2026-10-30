@@ -59,7 +59,12 @@
     "draft-created": "Erstellt {age}",
     "schedule-bound": "Der Zeitplan zeigt nur die ersten {count} Räume.",
     "results-bound": "Nur die neuesten {count} Ergebnisse sind aufgeführt.",
-    "all-exams": "Alle Prüfungen"
+    "all-exams": "Alle Prüfungen",
+    "search": "Suchen",
+    "search-placeholder": "Schule durchsuchen...",
+    "search-description": "Öffne eine Seite, eine Klasse oder eine Einstellung der Schule.",
+    "search-empty": "Nichts in der Schule heißt so.",
+    "pages": "Seiten"
   },
   "SchoolEntry": {
     "username-placeholder": "ayu.lestari",

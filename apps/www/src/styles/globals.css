@@ -108,3 +108,16 @@
 :root:not([data-signed-in="yes"]) [data-account="member"] {
   display: none;
 }
+
+/*
+ * A control pressed before React took the page over keeps the pressed look of
+ * the `pressable` utility until React replays the press. The pre-paint script
+ * marks it with `data-pressed` (`src/lib/press/prepaint.ts`).
+ */
+[data-press][data-pressed] {
+  cursor: progress;
+
+  @media (prefers-reduced-motion: no-preference) {
+    scale: 0.96;
+  }
+}

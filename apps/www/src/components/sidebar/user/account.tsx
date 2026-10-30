@@ -19,6 +19,7 @@ import { lazy, Suspense, useEffect, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
+import { Authenticated } from "@/components/auth/gate";
 import { useLiveSession } from "@/components/providers/live";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import {
@@ -174,11 +175,14 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
+      {/* The schools are the account's own, so they are read only once Convex holds its session. */}
       <Suspense fallback={null}>
         <ClientOnly fallback={null}>
-          <SidebarSchoolMenuItems
-            canOpenSchool={!isLoginAddress(user.authUser.email)}
-          />
+          <Authenticated>
+            <SidebarSchoolMenuItems
+              canOpenSchool={!isLoginAddress(user.authUser.email)}
+            />
+          </Authenticated>
         </ClientOnly>
       </Suspense>
       <DropdownMenuGroup>

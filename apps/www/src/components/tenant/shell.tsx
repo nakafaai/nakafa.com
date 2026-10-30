@@ -43,6 +43,7 @@ import {
   useTransition,
 } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { Authenticated } from "@/components/auth/gate";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
 import { TenantAccountItems } from "@/components/tenant/account";
@@ -56,6 +57,7 @@ import type { HomeAccess } from "@/components/tenant/home/access";
 import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
+import { TenantSearch } from "@/components/tenant/search";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
 import { Link, useRouteMatched } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
@@ -183,7 +185,9 @@ function TenantSwitcher() {
           {warmed ? (
             <Suspense fallback={null}>
               <ClientOnly fallback={null}>
-                <SidebarSchoolMenuItems canOpenSchool={false} />
+                <Authenticated>
+                  <SidebarSchoolMenuItems canOpenSchool={false} />
+                </Authenticated>
               </ClientOnly>
             </Suspense>
           ) : null}
@@ -243,6 +247,7 @@ function TenantFrame({ children }: { children: ReactNode }) {
           <SidebarMenu>
             <TenantSwitcher />
           </SidebarMenu>
+          <TenantSearch />
         </SidebarHeader>
         <SidebarContent>
           <TenantNavigation />
