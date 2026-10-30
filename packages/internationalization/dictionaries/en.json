@@ -426,7 +426,6 @@
     "no-unit-description": "Every exam belongs to a unit, so add or restore one in the settings first.",
     "no-unit-action": "Open units",
     "no-unit-member": "Every exam belongs to a unit, so ask an admin of this school to add one.",
-    "room-needed": "Give the room a name first.",
     "starts-needed": "Choose when the sitting starts.",
     "seats-empty-title": "No seat yet",
     "seats-filter-title": "No seat matches",

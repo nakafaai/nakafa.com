@@ -304,9 +304,6 @@ export function ScheduleSitting({
             placeholder={t("room-placeholder")}
             value={room}
           />
-          {roomName === "" ? (
-            <FieldDescription>{t("room-needed")}</FieldDescription>
-          ) : null}
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-starts`}>{t("starts")}</FieldLabel>
