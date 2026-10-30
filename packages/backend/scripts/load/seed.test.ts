@@ -73,10 +73,7 @@ describe("load seed", () => {
         );
         expect(
           Arr.map(batches, (batch) => [batch.kind, batch.seats.length])
-        ).toEqual([
-          ...Arr.replicate(["student", 10], 12),
-          ["proctor", 4],
-        ]);
+        ).toEqual([...Arr.replicate(["student", 10], 12), ["proctor", 4]]);
         expect(
           Arr.every(Arr.drop(made, 1), (call, index) =>
             Arr.every(batches[index]?.seats ?? [], (seat) =>
