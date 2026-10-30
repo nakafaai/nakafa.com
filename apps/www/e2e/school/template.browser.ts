@@ -163,7 +163,9 @@ test("a teacher turns a question into true or false and then cause and effect, w
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "True or false" }).click();
+  await page
+    .getByRole("menuitemradio", { exact: true, name: "True or false" })
+    .click();
   const optionOf = (letter: string) =>
     page.getByRole("textbox", { name: `Question 1, option ${letter}` });
   await expect(optionOf("A")).toContainText("True");
@@ -445,7 +447,10 @@ test("a teacher turns a question into a true or false table, marks the key in th
   const trying = await context.newPage();
   await trying.goto(page.url().replace(EDIT_SUFFIX, "/try"));
   await trying.waitForURL(TRY_PATH);
-  const first = trying.getByRole("radiogroup", { name: "Statement 1" });
+  // Each statement's row is a radio group named by the statement it asks about.
+  const first = trying.getByRole("radiogroup", {
+    name: "Air mendidih pada 100 derajat Celsius.",
+  });
   await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await first.getByRole("radio", { exact: true, name: "True" }).click();
   await expect(
