@@ -1988,11 +1988,13 @@
     "latex": "LaTeX",
     "image": "Bild",
     "image-add": "Bild hinzufügen",
+    "image-add-description": "Das Bild erscheint in der Frage, sobald es hinzugefügt ist.",
     "image-alt": "Alternativtext",
     "image-alt-hint": "Was ein Schüler wissen muss, der das Bild nicht sehen kann",
     "image-cancel": "Abbrechen",
     "image-delete": "Bild löschen",
     "image-edit": "Alternativtext ändern",
+    "image-edit-description": "Das Bild bleibt, nur sein Alternativtext ändert sich.",
     "image-save": "Speichern"
   },
   "Memory": {

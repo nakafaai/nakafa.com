@@ -1988,11 +1988,13 @@
     "latex": "LaTeX",
     "image": "Image",
     "image-add": "Add image",
+    "image-add-description": "The image shows in the question once it is added.",
     "image-alt": "Alt text",
     "image-alt-hint": "What a student who cannot see the image needs to know",
     "image-cancel": "Cancel",
     "image-delete": "Delete image",
     "image-edit": "Edit alt text",
+    "image-edit-description": "The image stays and only its alt text changes.",
     "image-save": "Save"
   },
   "Memory": {

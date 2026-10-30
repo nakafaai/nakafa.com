@@ -1988,11 +1988,13 @@
     "latex": "LaTeX",
     "image": "Gambar",
     "image-add": "Tambah gambar",
+    "image-add-description": "Gambar tampil di soal setelah ditambahkan.",
     "image-alt": "Teks alternatif",
     "image-alt-hint": "Yang perlu diketahui siswa yang tidak dapat melihat gambar",
     "image-cancel": "Batal",
     "image-delete": "Hapus gambar",
     "image-edit": "Ubah teks alternatif",
+    "image-edit-description": "Gambarnya tetap, hanya teks alternatifnya yang berubah.",
     "image-save": "Simpan"
   },
   "Memory": {
