@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Schema } from "effect";
 
 const MATERIAL_PATH =
@@ -60,10 +61,10 @@ const PaintRecord = Schema.Struct({
     Schema.Struct({
       path: Schema.String,
       text: Schema.String,
-      top: Schema.NullOr(Schema.Number),
+      top: Schema.NullOr(Schema.Finite),
     })
   ),
-  shifts: Schema.Array(Schema.Number),
+  shifts: Schema.Array(Schema.Finite),
 });
 
 /** Waits until the lesson's breadcrumb shows its placement, then a little longer, and returns what was painted. */
@@ -91,8 +92,11 @@ for (const viewport of VIEWPORTS) {
   test(`the breadcrumb of a lesson under a curriculum hint paints once, on a hard load cold and warm, at ${viewport.width}px`, async ({
     browser,
     baseURL,
-  }) => {
-    const context = await browser.newContext({ baseURL, viewport });
+  }, testInfo) => {
+    const context = await browser.newContext({
+      baseURL: baseURL ?? "",
+      viewport,
+    });
     await context.addInitScript(SAMPLER);
     const page = await context.newPage();
     for (const visit of ["cold", "warm"]) {
@@ -108,9 +112,10 @@ for (const viewport of VIEWPORTS) {
         ),
       ];
       const shift = shifts.reduce((sum, value) => sum + value, 0);
-      console.log(
-        `PAINT hard ${visit} ${viewport.width}px texts=${texts.length} shift=${shift} titleTops=${tops.length} final="${texts.at(-1)}"`
-      );
+      await testInfo.attach(`paint-hard-${visit}-${viewport.width}.json`, {
+        body: Buffer.from(encodeJsonText({ shift, texts, tops })),
+        contentType: "application/json",
+      });
       expect(texts, visit).toHaveLength(1);
       expect(shift, visit).toBe(0);
       expect(tops, visit).toHaveLength(1);
@@ -121,8 +126,11 @@ for (const viewport of VIEWPORTS) {
   test(`the breadcrumb of a lesson reached from its curriculum paints once, at ${viewport.width}px`, async ({
     browser,
     baseURL,
-  }) => {
-    const context = await browser.newContext({ baseURL, viewport });
+  }, testInfo) => {
+    const context = await browser.newContext({
+      baseURL: baseURL ?? "",
+      viewport,
+    });
     await context.addInitScript(SAMPLER);
     const page = await context.newPage();
     await page.goto(CURRICULUM_PATH);
@@ -132,9 +140,10 @@ for (const viewport of VIEWPORTS) {
     await expect(page).toHaveURL(new RegExp(MATERIAL_PATH));
     const { samples } = await settle(page);
     const texts = paintedTexts(samples);
-    console.log(
-      `PAINT client ${viewport.width}px texts=${texts.length} final="${texts.at(-1)}"`
-    );
+    await testInfo.attach(`paint-client-${viewport.width}.json`, {
+      body: Buffer.from(encodeJsonText({ texts })),
+      contentType: "application/json",
+    });
     expect(texts).toHaveLength(1);
     await context.close();
   });

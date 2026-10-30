@@ -192,7 +192,7 @@ export const Route = createFileRoute(
           readLessonPlacement({
             ctx: Option.getOrUndefined(
               Option.flatMapNullishOr(
-                Schema.decodeUnknownOption(MaterialSearch)(location.search),
+                Schema.decodeOption(MaterialSearch)(location.search),
                 (search) => search.ctx
               )
             ),
