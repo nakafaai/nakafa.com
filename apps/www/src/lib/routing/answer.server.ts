@@ -5,6 +5,7 @@ import {
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readProfileGate } from "@/lib/profile/gate";
+import { readBrowserPage } from "@/lib/routing/browser.server";
 import { isLearnerPage, readVisitorAsset } from "@/lib/routing/learner.server";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
@@ -136,9 +137,10 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * its canonical address; a non-public spelling moves to its public address. A
  * school tree path answers not found, a file that a school host's address names
  * answers the static not-found page before any read, and a refused school page
- * answers not found with the static school shell. A visitor's try-out track, set or section
- * answers the page that the build wrote for every visitor, before any content
- * read. A removed address answers not found, and a migrated or moved
+ * answers not found with the static school shell. A page whose route renders only
+ * in the browser, such as a learner's home or settings, answers the browser shell.
+ * A visitor's try-out track, set or section answers the page that the build wrote
+ * for every visitor, before any content read. A removed address answers not found, and a migrated or moved
  * address moves to its successor. A raw user address answers not found. A page in
  * a locale that no Worker route renders answers the static not-found page before
  * any content read, and a document that the source does not own answers not found
@@ -186,6 +188,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
       404,
       answerRejection(request, refused.value, route)
     );
+  }
+
+  const browserPage = yield* readBrowserPage(request);
+  if (Option.isSome(browserPage)) {
+    return browserPage.value;
   }
 
   const visitorAsset = yield* readVisitorAsset(request);

@@ -143,11 +143,19 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   nothing before it commits. Every School server function, its handler and its tests are
   deleted, and so are the school language save (the browser writes its cookie) and the `httpOnly` flag
   of the saved player view, which the browser now reads.
-- **Static shell.** The build prerenders the root document once as `/_school.html` (Start's `spa`
+- **Static shell.** The build prerenders the root document once as `/_shell.html` (Start's `spa`
   option, masked at `/`, which redirects to a locale). The Worker answers every page of a school host
   with that asset after the refusal check, with status 404 for a refused school and 200 otherwise
   (`src/lib/routing/school/shell.server.ts`), so a school page costs no render. `/api/*`, `/_serverFn/*`
-  and every asset keep their answers on the same host.
+  and every asset keep their answers on the same host. (Amended 30 Oct 2026: the asset was `/_school.html`;
+  the signed-in screens below answer with it too.)
+- **Signed-in screens (30 Oct 2026).** The account screens (home, notifications and settings),
+  onboarding and the School questionnaire are client-only routes (`ssr: false`). The Worker answers a
+  read of any page of such a route with the same shell (`src/lib/routing/browser.server.ts`), read from
+  the route tree (`BROWSER_ROUTE_TEMPLATES` in `src/lib/routing/rendered.ts`), and the account gate
+  sends a visitor to sign-in in the browser. Rendered on the Worker, `/en/home` cost a median of 393 ms
+  of CPU and its visitor redirect 134 ms, against the 10 ms of Workers Free. Chat and search follow in
+  their own changes, and the screens' own server functions move to Convex reads in the browser.
 - **One Worker, not two.** A second, assets-only School Worker would need its own asset set built in
   the same deploy. Alchemy 2.0.0-beta.84 reads a Worker's asset folder when it plans an update, before
   the Web build writes it, and resolves a binding to the web Worker by its stable name, so nothing

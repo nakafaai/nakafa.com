@@ -24,11 +24,13 @@ const OnboardingSearch = Schema.Struct({
 });
 
 /**
- * The first-run questionnaire of a signed-in account. The server decides first:
- * a visitor, or an account that is done, is redirected before the stream, so
- * the page never shows the questionnaire to someone who must leave it.
+ * The first-run questionnaire of a signed-in account. It renders only in the
+ * browser (ADR 0038 D2), and its loader asks the server first: a visitor, or an
+ * account that is done, is redirected before the page renders, so it never shows
+ * the questionnaire to someone who must leave it.
  */
 export const Route = createFileRoute("/$locale/_entry/onboarding")({
+  ssr: false,
   validateSearch: Schema.toStandardSchemaV1(OnboardingSearch),
   loaderDeps: ({ search }) => ({ intent: search.intent }),
   loader: async ({ deps, params }) => {

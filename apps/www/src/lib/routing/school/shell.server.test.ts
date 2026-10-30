@@ -54,7 +54,7 @@ describe("answerSchoolPage", () => {
         );
 
         const [shell] = assets.fetch.mock.calls[0] ?? [];
-        expect(shell?.url).toBe("https://harapan.nakafa.com/_school");
+        expect(shell?.url).toBe("https://harapan.nakafa.com/_shell");
         expect(response.status).toBe(404);
         expect(response.headers.get("etag")).toBe('"shell"');
         expect(response.headers.get("content-type")).toBe(

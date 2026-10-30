@@ -1,9 +1,8 @@
-import { env } from "cloudflare:workers";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Effect, Option } from "effect";
 import { hasStaticRelease } from "@/lib/routing/release";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
-import { SCHOOL_SHELL_PATH } from "@/lib/routing/school/shell";
+import { answerShell } from "@/lib/routing/shell.server";
 import { namesFile } from "@/lib/routing/template";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 
@@ -51,22 +50,6 @@ export const readSchoolFile = Effect.fn("www.routing.school.file")(function* (
   return Option.some(yield* answerUnmatchedRequest(request));
 });
 
-/** The release's static shell at the visitor's address, with the given status. */
-const answerSchoolShell = Effect.fn("www.routing.school.shell")(function* (
-  request: Request,
-  status: 200 | 404
-) {
-  const shell = yield* Effect.promise(() =>
-    env.ASSETS.fetch(new Request(new URL(SCHOOL_SHELL_PATH, request.url)))
-  );
-  const headers = new Headers(shell.headers);
-  headers.set("Content-Type", "text/html; charset=utf-8");
-  return new Response(request.method === "HEAD" ? null : shell.body, {
-    headers,
-    status,
-  });
-});
-
 /**
  * Answers a page of a school host with the release's static shell and the given
  * status, and any other request with `otherwise`. A school renders only in the
@@ -79,7 +62,7 @@ export const answerSchoolPage = Effect.fn("www.routing.school.page")(function* <
   R,
 >(request: Request, status: 200 | 404, otherwise: Effect.Effect<A, E, R>) {
   if (readsSchoolShell(request)) {
-    return yield* answerSchoolShell(request, status);
+    return yield* answerShell(request, status);
   }
   return yield* otherwise;
 });

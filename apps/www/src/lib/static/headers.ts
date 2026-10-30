@@ -2,7 +2,7 @@ import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr } from "effect";
 // The Vite config imports this module, and only package imports resolve there.
 import { LLMS_CACHE_CONTROL } from "#www/src/lib/llms/cache";
-import { SCHOOL_SHELL_PATH } from "#www/src/lib/routing/school/shell";
+import { SHELL_PATH } from "#www/src/lib/routing/shell";
 import type { HeaderRule, WwwHeader } from "#www/src/lib/security/headers";
 
 /** A sitemap and a feed may live on a CDN for a day, and a stale copy is served while the next one renders. */
@@ -58,11 +58,12 @@ const SOCIAL_IMAGE_RULES: readonly HeaderRule[] = Arr.map(
 );
 
 /**
- * The School shell answers every page of a school host through the Worker, which
- * marks it unindexed (ADR 0038). The same file is also an asset at its own
- * address on every host, where nothing links to it, so it says the same there.
+ * The browser shell answers every page of a school host and every signed-in
+ * screen through the Worker, which marks it unindexed (ADR 0038). The same file
+ * is also an asset at its own address on every host, where nothing links to it,
+ * so it says the same there.
  */
-const SCHOOL_SHELL_HEADERS: readonly WwwHeader[] = [
+const SHELL_HEADERS: readonly WwwHeader[] = [
   { key: "X-Robots-Tag", value: "noindex" },
 ];
 
@@ -110,6 +111,6 @@ export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/llms.txt", headers: LLMS_HEADERS },
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
   { path: "/_data/*", headers: STATIC_ANSWER_HEADERS },
-  { path: SCHOOL_SHELL_PATH, headers: SCHOOL_SHELL_HEADERS },
+  { path: SHELL_PATH, headers: SHELL_HEADERS },
   ...SOCIAL_IMAGE_RULES,
 ];

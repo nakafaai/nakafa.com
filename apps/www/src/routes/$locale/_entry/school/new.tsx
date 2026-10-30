@@ -10,11 +10,13 @@ import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
 /**
- * The page where anyone opens a Nakafa School by answering five questions. The
- * server sends a visitor to sign in first, and mounts the questionnaire with the
- * policy pages of its locale for a signed-in account.
+ * The page where anyone opens a Nakafa School by answering five questions. It
+ * renders only in the browser (ADR 0038 D2): its loader asks the server, which
+ * sends a visitor to sign in first, and mounts the questionnaire with the policy
+ * pages of its locale for a signed-in account.
  */
 export const Route = createFileRoute("/$locale/_entry/school/new")({
+  ssr: false,
   loader: async ({ params }) => {
     const [page, messages] = await Promise.all([
       readSchoolStartPageFn({ data: { locale: params.locale } }),
