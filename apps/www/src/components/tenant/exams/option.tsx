@@ -4,6 +4,7 @@ import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import { depthGuard } from "@repo/design-system/components/editor/depth";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
+import { articleProse } from "@repo/design-system/components/editor/prose";
 import { documentSizeGuard } from "@repo/design-system/components/editor/size";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -28,12 +29,13 @@ import { makeQuietSaver } from "@/lib/save/quiet";
 const OPTION_SAVE_QUIET = "500 millis";
 
 /**
- * The extensions of an option: the assessment document, without a collab session, and the bounds the
- * server holds it to. An option draws no paragraph classes of the article, since its paragraphs take
- * no margin: the frame around the text gives the spacing.
+ * The extensions of an option: the assessment document, without a collab session, the classes of the
+ * published article's text, and the bounds the server holds it to. An option draws no paragraph classes
+ * of the article, since its paragraphs take no margin: the frame around the text gives the spacing.
  */
 const OPTION_EXTENSIONS = [
   ...RICH_EXTENSIONS,
+  articleProse.configure({ paragraphs: false }),
   depthGuard(MAX_DOCUMENT_DEPTH),
   documentSizeGuard(MAX_DOCUMENT_BYTES),
 ];
