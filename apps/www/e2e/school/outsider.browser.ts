@@ -34,7 +34,10 @@ test("a signed-in learner who is not a member gets the card form at once, while 
   await expect(page.getByLabel("School username")).toBeVisible();
   await expect(page).toHaveURL(USERNAME_ADDRESS);
 
+  // The home reads signed out only once the sign-out has answered, so the reload waits for it.
+  const signedOut = page.waitForResponse("**/api/auth/sign-out");
   Effect.runSync(Deferred.succeed(released, undefined));
+  await signedOut;
   await expect(page.getByLabel("School username")).toBeVisible();
   await page.goto(schoolHome);
   await expect(

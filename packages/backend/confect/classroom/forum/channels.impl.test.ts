@@ -20,7 +20,12 @@ const grants = refs.public.access.grants;
 const placements = refs.public.tenancy.placements;
 
 /** The general channel of every class, as the list shows it. */
-const general = { id: expect.any(String), kind: "general", name: "general" };
+const general = {
+  id: expect.any(String),
+  kind: "general",
+  name: "general",
+  unread: false,
+};
 
 describe("classroom/forum channels", () => {
   it.effect(
@@ -89,10 +94,11 @@ describe("classroom/forum channels", () => {
           id: expect.any(String),
           kind: "topic",
           name: "Tugas",
+          unread: false,
         });
         expect(listed.page).toEqual([
           general,
-          { id: added.id, kind: "topic", name: "Tugas" },
+          { id: added.id, kind: "topic", name: "Tugas", unread: false },
         ]);
       })
   );

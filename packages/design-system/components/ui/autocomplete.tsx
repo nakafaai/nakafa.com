@@ -2,9 +2,11 @@ import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomple
 import { ArrowDown01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 
 const autocompleteInputVariants = cva(
   "flex w-full min-w-0 rounded-md border border-input bg-transparent text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm",
@@ -116,7 +118,10 @@ function AutocompletePopup({
   sideOffset?: AutocompletePrimitive.Positioner.Props["sideOffset"];
 }) {
   return (
-    <AutocompletePrimitive.Portal {...portalProps}>
+    <AutocompletePrimitive.Portal
+      container={use(PortalContainer)}
+      {...portalProps}
+    >
       <AutocompletePrimitive.Positioner
         align={align}
         alignOffset={alignOffset}

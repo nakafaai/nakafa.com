@@ -142,7 +142,10 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
   }
 );
 
-/** Returns an unchanged artifact only after its exact frozen body checks pass. */
+/**
+ * Returns an unchanged artifact only after its exact frozen body checks pass, and none when the stored
+ * body no longer decodes under the current artifact contract, as a retired attempt's body does.
+ */
 export const readHistoryArtifact = Effect.fn("tryouts.history.readArtifact")(
   function* (
     placement: NonNullable<
@@ -161,7 +164,14 @@ export const readHistoryArtifact = Effect.fn("tryouts.history.readArtifact")(
     if (!stored) {
       return yield* historyIntegrity("Try-out placement lost its signed body.");
     }
-    const artifact = yield* decodeArtifactJson(stored.artifactJson);
+    const decoded = yield* Effect.option(
+      decodeArtifactJson(stored.artifactJson)
+    );
+    if (Option.isNone(decoded)) {
+      // A body stored under an older artifact contract can no longer be served: its attempt is retired.
+      return Option.none();
+    }
+    const artifact = decoded.value;
     if (
       artifact.artifactHash !== selector.artifactHash ||
       artifact.payload.contentKey !== selector.contentKey ||
@@ -173,11 +183,11 @@ export const readHistoryArtifact = Effect.fn("tryouts.history.readArtifact")(
       );
     }
     const kind = selector.delivery === "authenticated" ? "question" : "answer";
-    return {
+    return Option.some({
       artifactJson: stored.artifactJson,
       delivery: selector.delivery,
       sourcePath: `${frozen.sourcePath}/${kind}.${artifactLocale}.mdx`,
-    };
+    });
   }
 );
 

@@ -292,6 +292,31 @@ describe("tryouts/runtime/history/read", () => {
       })
   );
   it.effect(
+    "answers none, never an error, for a body stored under an older artifact contract",
+    () =>
+      Effect.gen(function* () {
+        const { owned, seed, t } = yield* Effect.promise(() => setup(true));
+        const question = seed.request.selectors[0];
+        assert.isDefined(question);
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const stored = await ctx.db
+              .query("contentArtifacts")
+              .withIndex("by_artifactHash", (index) =>
+                index.eq("artifactHash", question.artifactHash)
+              )
+              .unique();
+            assert.isNotNull(stored);
+            // An older artifact shape carries a field the current contract refuses.
+            await ctx.db.patch(stored._id, {
+              artifactJson: `{"retiredField":true,${stored.artifactJson.slice(1)}`,
+            });
+          })
+        );
+        assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
+      })
+  );
+  it.effect(
     "rejects damaged frozen snapshot membership with a typed error",
     () =>
       Effect.gen(function* () {

@@ -2,6 +2,7 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import { MoreHorizontalIcon, Refresh01Icon } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
@@ -50,31 +51,17 @@ import {
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/students";
 
 /** How many login names one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first page of the list, which its loader read on the server. */
-type StudentsFirstPage = PreloadedPage<
-  PaginatedQueryItem<typeof identity.logins.list>
->;
+const PAGE_SIZE = 25;
 
 /** One school login as the logins list shows it. */
 type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
 
 /** The columns of the logins table. */
 const loginColumns = createColumnHelper<typeof dataTableFeatures, LoginItem>();
-
-/** The first page of the logins, which the page's loader read on the server. */
-const StudentsFirstPageContext = createContext<StudentsFirstPage | undefined>(
-  undefined
-);
 
 /** Opens a card the server issued in the page's card dialog. */
 const CardIssueContext = createContext<((card: CardView) => void) | null>(null);
@@ -94,11 +81,7 @@ function useIssueCard() {
  * action sits in its row menu. A card's code shows once, in the card dialog, which
  * prints the card.
  */
-export function SchoolStudentsSettings({
-  first,
-}: {
-  first: StudentsFirstPage | undefined;
-}) {
+export function SchoolStudentsSettings() {
   const t = useTranslations("SchoolSettings");
   const [isAdding, setIsAdding] = useState(false);
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
@@ -116,11 +99,9 @@ export function SchoolStudentsSettings({
         }
       >
         <ReadBoundary>
-          <StudentsFirstPageContext value={first}>
-            <CardIssueContext value={setIssued}>
-              <SchoolLoginsBody />
-            </CardIssueContext>
-          </StudentsFirstPageContext>
+          <CardIssueContext value={setIssued}>
+            <SchoolLoginsBody />
+          </CardIssueContext>
         </ReadBoundary>
         <SchoolStudentDialog
           onAdded={setIssued}
@@ -136,13 +117,11 @@ export function SchoolStudentsSettings({
 /** The school's logins, read a page at a time, with the table and its end. */
 function SchoolLoginsBody() {
   const { slug } = useTenant();
-  const first = use(StudentsFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     identity.logins.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

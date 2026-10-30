@@ -49,10 +49,12 @@ for (const width of [390, 1440]) {
     ).toBeVisible();
     await revokeRole(owner, ADMIN_GRANT);
 
-    await expect(admin.getByText(NOT_FOUND)).toBeVisible();
+    // The page names itself in the School header and in its body; its heading is the one.
+    const notFound = admin.getByRole("heading", { level: 1, name: NOT_FOUND });
+    await expect(notFound).toBeVisible();
     await expect(admin).toHaveURL(address("/settings/roles"));
     await admin.reload();
-    await expect(admin.getByText(NOT_FOUND)).toBeVisible();
+    await expect(notFound).toBeVisible();
 
     await ownerContext.close();
     await learnerContext.close();

@@ -1,3 +1,4 @@
+import { calendarCapability } from "@repo/backend/confect/nina/calendar/capability";
 import type { Capability } from "@repo/backend/confect/nina/capability/define";
 import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import { mathCapability } from "@repo/backend/confect/nina/math/capability";
@@ -21,4 +22,5 @@ export const registry = {
   deepResearch: researchCapability,
   math: mathCapability,
   memory: memoryCapability,
+  calendar: calendarCapability,
 } satisfies Record<LearningCapabilityName, Capability>;

@@ -1,7 +1,8 @@
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
+import { cn } from "cn";
 import { useTranslations } from "use-intl";
 import { nakafaIcons } from "@/components/ai/message/evidence/nakafa/icons";
 import { Step } from "@/components/ai/message/evidence/step";
@@ -23,28 +24,27 @@ export function QuranPart({ message }: Props) {
 
   return (
     <Step icon={nakafaIcons.quran} label={t("nakafa-quran")}>
-      <Button
-        className="h-auto min-h-8 max-w-full self-start whitespace-normal py-1 text-start"
-        nativeButton={false}
-        render={
-          <a
-            className="min-w-0"
-            href={url}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <span className="flex min-w-0 flex-wrap items-center">
-              <span className="min-w-0 max-w-full truncate">{name}</span>
-              <span className="shrink-0">
-                : {from === to ? from : `${from}-${to}`}
-              </span>
-              <HugeIcons className="ms-1.5" icon={ArrowUpRight01Icon} />
-            </span>
-          </a>
-        }
-        size="sm"
-        variant="outline"
-      />
+      <a
+        className={cn(
+          buttonVariants({
+            className:
+              "h-auto min-h-8 min-w-0 max-w-full self-start whitespace-normal py-1 text-start",
+            size: "sm",
+            variant: "outline",
+          })
+        )}
+        href={url}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <span className="flex min-w-0 flex-wrap items-center">
+          <span className="min-w-0 max-w-full truncate">{name}</span>
+          <span className="shrink-0">
+            : {from === to ? from : `${from}-${to}`}
+          </span>
+          <HugeIcons className="ms-1.5" icon={ArrowUpRight01Icon} />
+        </span>
+      </a>
     </Step>
   );
 }

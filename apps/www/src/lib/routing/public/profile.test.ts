@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   token: vi.fn(),
 }));
-vi.mock("@/lib/auth/token", () => ({ readSessionToken: mocks.token }));
+vi.mock("@/lib/auth/token.server", () => ({ readSessionToken: mocks.token }));
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: vi.fn(),
 }));
