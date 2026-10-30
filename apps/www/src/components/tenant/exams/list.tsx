@@ -43,8 +43,9 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
  * into view, so the list has no button. The page holds one create action, shown when the viewer
  * can create an exam in at least one place: in the school's one header beside the exams, or in
  * the empty state while the school has no saved exam (K27), so a new teacher meets one step in
- * the middle of the page. An exam that is still saving does not end the empty state, so its
- * create action stays where it was pressed until the editor opens. A failed read of the list
+ * the middle of the page. While the first page loads the page holds no create action, since it
+ * cannot know yet where the action goes. An exam that is still saving does not end the empty
+ * state, so its create action stays where it was pressed until the editor opens. A failed read of the list
  * shows its own sentence and a retry, and a viewer who lost the school's access is sent to the
  * refused page.
  */
@@ -76,12 +77,16 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   const empty =
     !(loadingFirst || failed) &&
     Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
+  // Until the first page arrives the page cannot know whether search and Create belong in the
+  // header or Create in the empty state, so the header holds neither: a dialog opened from the
+  // header would close, and lose its title, when an empty list moved Create into the page.
+  const listed = !(loadingFirst || empty);
   return (
     <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
         <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-          {empty ? null : <TableSearch placeholder={t("exams-search")} />}
-          {tenant.home.canCreate && !empty ? (
+          {listed ? <TableSearch placeholder={t("exams-search")} /> : null}
+          {tenant.home.canCreate && listed ? (
             <CreateExam choices={tenant.home.choices} slug={slug} />
           ) : null}
         </SchoolHeader>
