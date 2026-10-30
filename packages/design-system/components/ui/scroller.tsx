@@ -1,6 +1,8 @@
+import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollBar } from "@repo/design-system/components/ui/scroll-area";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
@@ -23,19 +25,29 @@ export function MessageScroller({
   );
 }
 
+/**
+ * The scrolling part of a message list. The package's viewport, which keeps the list at its end, is the viewport
+ * of a scroll area, so its bar overlays the messages and takes no room, as every other scroller's does.
+ */
 export function MessageScrollerViewport({
   className,
   ...props
 }: ComponentProps<typeof Primitive.Viewport>) {
   return (
-    <Primitive.Viewport
-      className={cn(
-        "size-full min-h-0 min-w-0 overflow-y-auto overscroll-contain contain-content [scrollbar-gutter:stable] [scrollbar-width:thin] data-pending-scroll:invisible",
-        className
-      )}
-      data-slot="message-scroller-viewport"
-      {...props}
-    />
+    <ScrollAreaPrimitive.Root
+      className="relative size-full min-h-0 min-w-0"
+      data-slot="message-scroller-area"
+    >
+      <ScrollAreaPrimitive.Viewport
+        className={cn(
+          "size-full min-h-0 min-w-0 overscroll-contain outline-none contain-content data-pending-scroll:invisible",
+          className
+        )}
+        data-slot="message-scroller-viewport"
+        render={<Primitive.Viewport {...props} />}
+      />
+      <ScrollBar />
+    </ScrollAreaPrimitive.Root>
   );
 }
 

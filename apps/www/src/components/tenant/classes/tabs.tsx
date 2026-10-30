@@ -38,7 +38,7 @@ export function ClassTabs({
     <div className="shrink-0 border-b">
       <nav
         aria-label={t("tabs-label")}
-        className="scrollbar-hide mx-auto -mb-px flex h-12 w-full max-w-7xl gap-1 overflow-x-auto px-1"
+        className="mx-auto -mb-px flex h-12 w-full max-w-7xl gap-1 overflow-x-auto px-1"
       >
         <Link
           activeOptions={EXACT_ACTIVE_OPTIONS}

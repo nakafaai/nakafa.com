@@ -10,6 +10,7 @@ import {
 import { TASK_VIEW } from "@repo/design-system/components/editor/task";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
 import { EditorPreview } from "@repo/design-system/components/editor/words";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { cn } from "cn";
@@ -157,7 +158,9 @@ export function RichEditor({
       <EditorLabelsContext value={labels}>
         <div className={editorFrame()} data-slot="editor">
           <EditorToolbar />
-          <EditorContent className={editorScroll()} editor={editor} />
+          <ScrollArea className="flex-1">
+            <EditorContent className={editorScroll()} editor={editor} />
+          </ScrollArea>
         </div>
       </EditorLabelsContext>
     </EditorContext>

@@ -13,10 +13,12 @@ export const sidebarRows = (page: Page) =>
 export const sidebarSearch = (page: Page) =>
   page.getByPlaceholder("Search your chats...").filter({ visible: true });
 
-/** The scrolling part of the sidebar that holds the chats. */
+/** The scrolling part of the sidebar that holds the chats: the viewport of its scroll area. */
 export const sidebarScroller = (page: Page) =>
   page
-    .locator('[data-slot="sidebar-content"]')
+    .locator(
+      '[data-slot="sidebar-content"] > [data-slot="scroll-area-viewport"]'
+    )
     .filter({ has: page.locator('a[href^="/en/chat/"]') })
     .filter({ visible: true });
 
@@ -53,7 +55,7 @@ export const placesOf = (rows: Locator) =>
     elements.map((element) => {
       const box = element.getBoundingClientRect();
       const scroller = element.closest(
-        '[data-slot="sidebar-content"], [role="menu"]'
+        '[data-slot="scroll-area-viewport"], [role="menu"]'
       );
       const origin = scroller
         ? scroller.getBoundingClientRect().top - scroller.scrollTop

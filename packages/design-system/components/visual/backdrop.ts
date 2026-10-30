@@ -11,7 +11,7 @@ export const VisualPlaceSchema = Schema.Struct({
   marginTop: Schema.String,
 });
 
-/** The root's padding that stands in for its scrollbar gutters. */
+/** The root's padding that keeps the page's layout behind a card that fills the screen. */
 const VisualPaddingSchema = Schema.Struct({
   paddingLeft: Schema.String,
   paddingRight: Schema.String,
@@ -35,11 +35,10 @@ const measurePlace = Effect.fn("designSystem.visual.measurePlace")(
 );
 
 /**
- * Measures the root's padding plus the scrollbar gutter at each side of the
- * viewport. Where scrollbars take space, such as on Windows and Linux, the
- * root keeps its gutters (`scrollbar-gutter: stable`) even while it cannot
- * scroll. Overlay scrollbars, on phones and by default on macOS, take none,
- * and a pinch-zoomed phone can report a viewport narrower than the page.
+ * Measures the root's padding plus any room between the root and each side of
+ * the viewport. Native scrollbars take none (globals.css hides a fine
+ * pointer's, and a touch screen's are overlays), but a pinch-zoomed phone can
+ * report a viewport narrower than the page.
  */
 const measurePadding = Effect.fn("designSystem.visual.measurePadding")(
   (root: HTMLElement) =>
@@ -61,7 +60,7 @@ const measurePadding = Effect.fn("designSystem.visual.measurePadding")(
 /**
  * Reads the backdrop of a card, the page around it, while the card is still in
  * it: the card's place, which its slot keeps while the card fills the screen,
- * and the root's scrollbar gutters. It writes nothing, so it lays the page out
+ * and the room at the root's sides. It writes nothing, so it lays the page out
  * at most once.
  */
 export const measureBackdrop = Effect.fn("designSystem.visual.measureBackdrop")(
@@ -110,11 +109,10 @@ const holdInert = Effect.fn("designSystem.visual.holdInert")(
 );
 
 /**
- * Stops the page from scrolling and closes the root's scrollbar gutters until
- * the scope closes. The browser's full screen and the immersive card fill the
- * viewport, which an open gutter narrows, leaving strips of the page at its
- * edges. The root takes the gutters' width as padding instead, so the page
- * keeps its layout behind the card.
+ * Stops the page from scrolling until the scope closes. The browser's full
+ * screen and the immersive card fill the viewport, so the root takes the room
+ * measured at its sides as padding, and the page keeps its layout behind the
+ * card.
  */
 const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
   (root: HTMLElement, padding: typeof VisualPaddingSchema.Type) =>
@@ -125,13 +123,8 @@ const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
           overflow: style.overflow,
           paddingLeft: style.paddingLeft,
           paddingRight: style.paddingRight,
-          scrollbarGutter: style.scrollbarGutter,
         };
-        Object.assign(style, {
-          ...padding,
-          overflow: "hidden",
-          scrollbarGutter: "auto",
-        });
+        Object.assign(style, { ...padding, overflow: "hidden" });
         return saved;
       }),
       (saved) =>

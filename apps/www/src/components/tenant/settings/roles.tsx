@@ -5,6 +5,7 @@ import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
   SheetClose,
@@ -122,16 +123,18 @@ function SchoolRoleGuide({
           <SheetTitle>{t("roles-overview")}</SheetTitle>
           <SheetDescription>{t("roles-overview-description")}</SheetDescription>
         </SheetHeader>
-        <ul className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
-          {Arr.map(BuiltinRole.literals, (role) => (
-            <li className="flex flex-col items-start gap-1.5" key={role}>
-              <RoleBadge role={role} />
-              <p className="text-muted-foreground text-sm">
-                {t(`role-description.${role}`)}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <ScrollArea className="flex-1">
+          <ul className="flex flex-col gap-5 p-4">
+            {Arr.map(BuiltinRole.literals, (role) => (
+              <li className="flex flex-col items-start gap-1.5" key={role}>
+                <RoleBadge role={role} />
+                <p className="text-muted-foreground text-sm">
+                  {t(`role-description.${role}`)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </ScrollArea>
         <SheetFooter className="flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
             {t("roles-overview-footer")}

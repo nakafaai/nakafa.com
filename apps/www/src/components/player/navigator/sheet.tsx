@@ -1,3 +1,4 @@
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
   SheetHeader,
@@ -48,12 +49,9 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
         <SheetHeader>
           <SheetTitle>{t("navigator")}</SheetTitle>
         </SheetHeader>
-        <div
-          className={cn(monospace, "grid gap-4 overflow-y-auto p-4")}
-          ref={body}
-        >
-          {children}
-        </div>
+        <ScrollArea className="flex-1" ref={body}>
+          <div className={cn(monospace, "grid gap-4 p-4")}>{children}</div>
+        </ScrollArea>
       </SheetPopup>
     </Sheet>
   );

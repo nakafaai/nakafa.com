@@ -45,43 +45,39 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
         className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border"
         data-catalog-snapshot={data.snapshotId}
       >
-        <div
-          className="min-h-0 min-w-0 flex-1 overflow-auto"
-          ref={setScrollRoot}
+        <Table
+          className="min-w-176 table-fixed"
+          containerClassName="min-h-0 min-w-0 flex-1"
+          viewportRef={setScrollRoot}
         >
-          <Table
-            className="min-w-176 table-fixed"
-            containerClassName="overflow-visible"
-          >
-            <TableCaption className="sr-only">{title}</TableCaption>
-            <colgroup>
-              <col />
-              <col className="w-40" />
-              <col className="w-32" />
-              <col className="w-28" />
-              <col className="w-28" />
-            </colgroup>
-            <TryoutTableHeader />
-            <TableBody>
-              <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
-              {canLoadMore && (
-                <TableRow
-                  aria-hidden="true"
-                  className="h-px hover:bg-transparent"
-                >
-                  <TableCell className="p-0" colSpan={5}>
-                    <Intersection
-                      className="h-px"
-                      key={`${filter}:${sort.field}:${sort.direction}:${data.rows.length}`}
-                      onIntersect={data.loadMore}
-                      root={scrollRoot}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+          <TableCaption className="sr-only">{title}</TableCaption>
+          <colgroup>
+            <col />
+            <col className="w-40" />
+            <col className="w-32" />
+            <col className="w-28" />
+            <col className="w-28" />
+          </colgroup>
+          <TryoutTableHeader />
+          <TableBody>
+            <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
+            {canLoadMore && (
+              <TableRow
+                aria-hidden="true"
+                className="h-px hover:bg-transparent"
+              >
+                <TableCell className="p-0" colSpan={5}>
+                  <Intersection
+                    className="h-px"
+                    key={`${filter}:${sort.field}:${sort.direction}:${data.rows.length}`}
+                    onIntersect={data.loadMore}
+                    root={scrollRoot}
+                  />
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
         <span
           aria-live="polite"
           className="pointer-events-none absolute inset-x-4 bottom-3 text-muted-foreground text-xs empty:hidden"

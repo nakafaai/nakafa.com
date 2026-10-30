@@ -1,29 +1,33 @@
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import type * as React from "react";
 
 /**
- * Renders the responsive table container used by markdown and content tables.
+ * Renders the responsive table container used by markdown, content and data tables. A table wider or taller than
+ * its container scrolls under overlay bars that take no room, and a sticky head sticks inside it.
  */
-
 function Table({
   containerClassName,
   className,
+  viewportRef,
   ...props
-}: React.ComponentProps<"table"> & { containerClassName?: string }) {
+}: React.ComponentProps<"table"> & {
+  containerClassName?: string;
+  /** The element that scrolls the table, for a caller that observes its scroll, such as an infinite list. */
+  viewportRef?: React.Ref<HTMLDivElement>;
+}) {
   return (
-    <div
-      className={cn(
-        "relative grid w-full grid-cols-1 overflow-x-auto",
-        containerClassName
-      )}
+    <ScrollArea
+      className={cn("w-full", containerClassName)}
       data-slot="table-container"
+      viewportRef={viewportRef}
     >
       <table
         className={cn("w-full caption-bottom text-sm", className)}
         data-slot="table"
         {...props}
       />
-    </div>
+    </ScrollArea>
   );
 }
 

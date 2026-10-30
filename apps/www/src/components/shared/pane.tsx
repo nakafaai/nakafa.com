@@ -1,6 +1,7 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   SheetDescription,
   SheetHeader,
@@ -67,17 +68,21 @@ export function PaneHeader({
 }
 
 /** The spacing of a detail's body: the pane's own padding, or the sheet's, under its header. */
-const paneBody = cva("min-h-0 flex-1 overflow-y-auto", {
+const paneBody = cva("", {
   variants: {
     place: { aside: "p-4", sheet: "px-4 pb-4" },
   },
 });
 
-/** A detail's body, which scrolls on its own. */
+/** A detail's body, which scrolls on its own under an overlay bar that takes no room. */
 export function PaneBody({ children }: { children: ReactNode }) {
   const { place } = usePaneMode();
 
-  return <div className={paneBody({ place })}>{children}</div>;
+  return (
+    <ScrollArea className="flex-1">
+      <div className={paneBody({ place })}>{children}</div>
+    </ScrollArea>
+  );
 }
 
 /** A detail's footer: its actions at the end, on a second row where a narrow pane cannot hold them in one. */

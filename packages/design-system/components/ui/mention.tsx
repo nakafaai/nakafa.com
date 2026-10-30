@@ -1,4 +1,5 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -44,19 +45,21 @@ export function MentionPopup({
           sideOffset={6}
         >
           <PopoverPrimitive.Popup
-            className="max-h-64 w-64 max-w-[calc(100vw-1rem)] origin-(--transform-origin) overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden"
+            className="flex max-h-64 w-64 max-w-[calc(100vw-1rem)] origin-(--transform-origin) flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md outline-hidden"
             data-slot="mention-popup"
             finalFocus={false}
             initialFocus={false}
           >
-            <div
-              aria-label={label}
-              className="flex flex-col"
-              id={id}
-              role="listbox"
-            >
-              {children}
-            </div>
+            <ScrollArea>
+              <div
+                aria-label={label}
+                className="flex flex-col p-1"
+                id={id}
+                role="listbox"
+              >
+                {children}
+              </div>
+            </ScrollArea>
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>
       </PopoverPrimitive.Portal>

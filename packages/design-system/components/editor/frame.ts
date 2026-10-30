@@ -43,10 +43,8 @@ export const editorContent = cva("", {
   },
 });
 
-/** The box that scrolls the text. */
-export const editorScroll = cva(
-  "min-h-0 flex-1 overflow-y-auto text-sm/relaxed"
-);
+/** The text inside the scroll area that scrolls it, under an overlay bar that takes no room. */
+export const editorScroll = cva("text-sm/relaxed");
 
 /**
  * The placeholder of an empty editor: Tiptap marks its empty first block and gives

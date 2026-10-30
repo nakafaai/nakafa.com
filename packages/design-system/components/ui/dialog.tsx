@@ -157,18 +157,12 @@ function DialogFooter({
 function DialogPanel({
   className,
   scrollFade = true,
-  scrollbarGutter = true,
   ...props
 }: ComponentProps<"div"> & {
   scrollFade?: boolean;
-  scrollbarGutter?: boolean;
 }) {
   return (
-    <ScrollArea
-      className="min-h-0 flex-1 touch-auto"
-      scrollbarGutter={scrollbarGutter}
-      scrollFade={scrollFade}
-    >
+    <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade={scrollFade}>
       <div
         className={cn("min-w-0 p-6 pt-1", className)}
         data-slot="dialog-panel"

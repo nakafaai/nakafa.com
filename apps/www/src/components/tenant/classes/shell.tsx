@@ -9,6 +9,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
@@ -344,11 +345,11 @@ function ClassBody({
  */
 function ClassScroll({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+    <ScrollArea className="flex-1" viewportClassName="flex flex-col">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6">
         {children}
       </div>
-    </div>
+    </ScrollArea>
   );
 }
 

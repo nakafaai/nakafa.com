@@ -2,6 +2,7 @@
 
 import { useRender } from "@base-ui/react/use-render";
 import { Input } from "@repo/design-system/components/ui/input";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
@@ -63,18 +64,20 @@ export function SidebarSeparator({
   );
 }
 
-/** Renders the scrollable content region between sidebar header and footer. */
+/**
+ * Renders the scrollable content region between sidebar header and footer. Its bar overlays the rows and takes
+ * no room, so a sidebar keeps its width on every system.
+ */
 export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
   return (
-    <div
-      className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
-        className
-      )}
+    <ScrollArea
+      className="flex-1"
       data-sidebar="content"
       data-slot="sidebar-content"
-      {...props}
-    />
+      viewportClassName="group-data-[collapsible=icon]:overflow-hidden"
+    >
+      <div className={cn("flex flex-col gap-2", className)} {...props} />
+    </ScrollArea>
   );
 }
 

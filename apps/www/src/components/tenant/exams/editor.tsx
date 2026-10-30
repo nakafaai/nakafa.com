@@ -69,7 +69,7 @@ export function ExamEditor({
  * The footer's grid button shows every question as a tile in place of the canvas and the panel.
  */
 function ExamWorkspace() {
-  const canvas = useRef<HTMLElement>(null);
+  const canvas = useRef<HTMLDivElement>(null);
   const setZoom = useExamZoom((zoom) => zoom.set);
   const grid = useEditorView((view) => view.mode === "grid");
 

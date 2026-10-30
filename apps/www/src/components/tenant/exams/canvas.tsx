@@ -2,6 +2,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef, useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";
@@ -97,7 +98,7 @@ function useReveal(canvas: RefObject<HTMLElement | null>) {
 export function ExamCanvas({
   canvas,
 }: {
-  canvas: RefObject<HTMLElement | null>;
+  canvas: RefObject<HTMLDivElement | null>;
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
@@ -209,11 +210,16 @@ export function ExamCanvas({
   };
 
   return (
-    <section
+    // The canvas scrolls in its scroll area's viewport, under an overlay bar that takes no room, so the
+    // pages keep their width on every system. The viewport is what the canvas ref, its listeners, the
+    // reveal, the footer's moves and the pages' windowing read.
+    <ScrollArea
       aria-label={t("pages-label")}
-      className="relative min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/40"
-      onScroll={syncPage}
-      ref={canvas}
+      className="min-w-0 flex-1 bg-muted/40"
+      onViewportScroll={syncPage}
+      render={<section />}
+      viewportClassName="relative"
+      viewportRef={canvas}
     >
       <div
         className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-6"
@@ -239,6 +245,6 @@ export function ExamCanvas({
           </Button>
         )}
       </div>
-    </section>
+    </ScrollArea>
   );
 }

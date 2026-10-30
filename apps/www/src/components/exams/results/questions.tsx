@@ -24,6 +24,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
   SheetClose,
@@ -247,28 +248,30 @@ export function QuestionsAction({
         <SheetHeader>
           <SheetTitle>{t("questions")}</SheetTitle>
         </SheetHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <div className="flex flex-wrap gap-2">
-            {Arr.map(questions, (question, index) => (
-              <Button
-                aria-pressed={index === selected}
-                key={question.id}
-                onClick={() => setSelected(index)}
-                size="sm"
-                type="button"
-                variant={index === selected ? "secondary" : "outline"}
-              >
-                {t("question", { number: question.number })}
-              </Button>
-            ))}
+        <ScrollArea className="flex-1">
+          <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-wrap gap-2">
+              {Arr.map(questions, (question, index) => (
+                <Button
+                  aria-pressed={index === selected}
+                  key={question.id}
+                  onClick={() => setSelected(index)}
+                  size="sm"
+                  type="button"
+                  variant={index === selected ? "secondary" : "outline"}
+                >
+                  {t("question", { number: question.number })}
+                </Button>
+              ))}
+            </div>
+            {Option.match(current, {
+              onNone: () => null,
+              onSome: (question) => (
+                <QuestionPanel key={question.id} question={question} />
+              ),
+            })}
           </div>
-          {Option.match(current, {
-            onNone: () => null,
-            onSome: (question) => (
-              <QuestionPanel key={question.id} question={question} />
-            ),
-          })}
-        </div>
+        </ScrollArea>
         <SheetFooter>
           <SheetClose
             render={

@@ -367,20 +367,6 @@
     @apply border-border outline-ring/50;
   }
 
-  html {
-    scrollbar-gutter: stable both-edges;
-  }
-
-  /* A gutter on both edges keeps the page centred, and where a browser's
-   * scrollbars take room it costs the page two scrollbar widths. Under 24rem
-   * the page keeps one gutter, so a page that narrow keeps the room that its
-   * content needs. */
-  @media (width < 24rem) {
-    html {
-      scrollbar-gutter: stable;
-    }
-  }
-
   body {
     @apply bg-background text-foreground selection:bg-primary selection:text-primary-foreground overscroll-y-none;
   }
@@ -450,30 +436,6 @@
   letter-spacing: normal;
 }
 
-@utility scrollbar-hide {
-  /* Firefox */
-  -ms-overflow-style: none;
-  /* Firefox */
-  scrollbar-width: none;
-
-  /* Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-@utility scrollbar-default {
-  /* Firefox */
-  -ms-overflow-style: auto;
-  /* Firefox */
-  scrollbar-width: auto;
-
-  /* Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: block;
-  }
-}
-
 /* Measured fallback heights keep skipped learn blocks close to their rendered size. */
 @utility content-auto-table {
   contain-intrinsic-size: auto none auto 12rem;
@@ -500,29 +462,22 @@
   content-visibility: auto;
 }
 
-@layer utilities {
-  /* Style scrollbar for webkit browsers (Chrome, Safari, etc) */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
+@layer base {
+  /* A native scrollbar never takes room. A fine pointer's system may draw
+   * classic bars, as Windows and Linux do, that would narrow every sidebar,
+   * pane and page they scroll, so there every scroller hides its own: the
+   * design system's ScrollArea draws an overlay bar that shows on hover and
+   * while scrolling, and the page draws its own (PageScrollbar), so nothing
+   * moves when a bar appears. A touch screen's bars are overlays already, and
+   * stay. */
+  @media (pointer: fine) {
+    * {
+      scrollbar-width: none;
+    }
 
-  ::-webkit-scrollbar-track {
-    background: transparent;
-    border-left: 1px solid transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: var(--muted-foreground);
-    background-clip: padding-box;
-    border: 2px solid transparent;
-    border-radius: 9999px;
-  }
-
-  /* Style scrollbar for Firefox */
-  * {
-    scrollbar-color: var(--muted-foreground) transparent;
-    scrollbar-width: thin;
+    ::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 

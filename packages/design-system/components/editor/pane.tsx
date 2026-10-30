@@ -6,6 +6,7 @@ import {
   editorRow,
   editorScroll,
 } from "@repo/design-system/components/editor/frame";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 
@@ -22,11 +23,13 @@ export function EditorPane({ children }: { children: ReactNode }) {
       <div aria-hidden className={editorBar()}>
         <div className={editorRow()} />
       </div>
-      <div className={editorScroll()}>
-        <div className={cn(editorPlaceholder(), editorDocument())} dir="auto">
-          {children}
+      <ScrollArea className="flex-1">
+        <div className={editorScroll()}>
+          <div className={cn(editorPlaceholder(), editorDocument())} dir="auto">
+            {children}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 }
