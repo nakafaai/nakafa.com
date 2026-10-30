@@ -79,7 +79,7 @@ describe("dependency policy sources", () => {
       );
       assert.include(
         problems,
-        "react has 0 declarations; expected at least 1."
+        "mermaid has 0 declarations; expected at least 1."
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );

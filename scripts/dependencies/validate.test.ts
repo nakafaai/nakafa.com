@@ -221,8 +221,8 @@ describe("dependency policy validation", () => {
     },
     {
       name: "a missing held dependency",
-      change: (input) => withoutDependency(input, "react"),
-      problem: "react has 0 declarations; expected at least 1.",
+      change: (input) => withoutDependency(input, "mermaid"),
+      problem: "mermaid has 0 declarations; expected at least 1.",
     },
     {
       name: "an obsolete Next package",
