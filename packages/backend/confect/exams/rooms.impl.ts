@@ -31,23 +31,13 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (
     .get(row.unitId)
     .pipe(Effect.orDie);
   if (row.cohortId === null) {
-    return roomRow(
-      row,
-      { kind: "unit", name: unit.name },
-      unit.timeZone,
-      canCancel
-    );
+    return roomRow(row, unit.name, unit.timeZone, canCancel);
   }
   const cohort = yield* reader
     .table("tenantCohorts")
     .get(row.cohortId)
     .pipe(Effect.orDie);
-  return roomRow(
-    row,
-    { kind: "cohort", name: cohort.name },
-    unit.timeZone,
-    canCancel
-  );
+  return roomRow(row, cohort.name, unit.timeZone, canCancel);
 });
 
 /**

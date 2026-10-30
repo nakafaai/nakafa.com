@@ -79,7 +79,8 @@ describe("exams/rooms", () => {
           {
             canCancel: true,
             closesAt: CLOSES,
-            group: { kind: "unit", name: "SMP Nakafa" },
+            group: { kind: "unit", unitId: fixture.units.smp },
+            groupName: "SMP Nakafa",
             id: early.id,
             opensAt: OPENS,
             room: "Lab 2",
@@ -89,7 +90,8 @@ describe("exams/rooms", () => {
           {
             canCancel: true,
             closesAt: CLOSES,
-            group: { kind: "unit", name: "SMP Nakafa" },
+            group: { kind: "unit", unitId: fixture.units.smp },
+            groupName: "SMP Nakafa",
             id: late.id,
             opensAt: LATER,
             room: "Lab 3",
@@ -157,7 +159,7 @@ describe("exams/rooms", () => {
       });
       const page = yield* roomsOf(fixture, "teacher", examId);
       expect(page.page).toMatchObject([
-        { group: { kind: "cohort", name: "10A" }, id: made.id },
+        { group: { cohortId, kind: "cohort" }, groupName: "10A", id: made.id },
       ]);
       expect(mentions(page.page, made.token)).toBe(false);
     })
