@@ -4,7 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { SittingGroup } from "@repo/backend/confect/exams/sittings/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option, pipe, Schema } from "effect";
 
 /**
  * The state that the rooms table filters by: every room, or the rooms in one of the sitting
@@ -46,13 +46,13 @@ export const roomGroupKey = (group: typeof SittingGroup.Type) =>
  * filter, each with its key, its kind and its name.
  */
 export const roomGroups = (rooms: readonly (typeof RoomRow.Type)[]) =>
-  Arr.dedupeWith(
+  pipe(
     Arr.map(rooms, (room) => ({
       key: roomGroupKey(room.group),
       kind: room.group.kind,
       name: room.groupName,
     })),
-    (one, other) => one.key === other.key
+    Arr.dedupeWith((one, other) => one.key === other.key)
   );
 
 /**
