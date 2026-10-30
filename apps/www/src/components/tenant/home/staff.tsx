@@ -6,15 +6,16 @@ import {
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { Fragment } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
-import { countLabel, reachesBound } from "@/components/tenant/home/count";
+import { ClassesCell } from "@/components/tenant/home/classes";
+import { reachesBound } from "@/components/tenant/home/count";
 import { DraftsCell } from "@/components/tenant/home/drafts";
 import { LiveCell } from "@/components/tenant/home/live";
-import { MetricCell } from "@/components/tenant/home/metrics";
 import { useHomeExams, useHomeSetup } from "@/components/tenant/home/query";
 import { ResultsCell } from "@/components/tenant/home/results";
 import {
@@ -23,7 +24,6 @@ import {
 } from "@/components/tenant/home/schedule";
 import { SetupCell, useSetupShown } from "@/components/tenant/home/setup";
 import { staffShown } from "@/components/tenant/home/shown";
-import { waitingOf } from "@/components/tenant/home/waiting";
 import { schoolDayTimeText } from "@/components/tenant/settings/clock";
 import { schoolExamSittingTarget } from "@/lib/routing/school/target";
 
@@ -31,23 +31,27 @@ import { schoolExamSittingTarget } from "@/lib/routing/school/target";
 type Room = (typeof HomeView.Type)["next"][number];
 
 /**
- * The row of four numbers and the cards of a staff home, each card one concern. One read brings the rooms, the
- * results, and the drafts, and the setup cell reads the school's setup on its own. Until the reads that the cells need
- * have answered, nothing shows below the header, and then every cell appears at once, so no cell that is shown moves
- * when another arrives. The cells lay out in rows that fill the dashboard at each width, so a cell that is not shown
- * leaves no gap.
+ * The cards of a staff home, each card one concern: the viewer's classes first, then the rooms, the results, the
+ * drafts and the setup. One read brings the rooms, the results, and the drafts, the classes come from the viewer's
+ * classes read, and the setup cell reads the school's setup on its own. Until the reads that the cells need have
+ * answered, nothing shows below the header's row of shortcuts, and then every cell appears at once, so no cell that is
+ * shown moves when another arrives. The cells lay out in rows that fill the dashboard at each width, so a cell that is
+ * not shown leaves no gap.
  */
 export function StaffHome() {
   const tenant = useTenant();
   const exams = useHomeExams();
+  const classes = useMyClasses();
   const setup = useHomeSetup();
   const viewer = useViewerQuery();
   const setupShown = useSetupShown();
   const locale = useLocale();
-  const t = useTranslations("School");
 
   if (QueryResult.isFailure(exams)) {
     throw exams.error;
+  }
+  if (QueryResult.isFailure(classes)) {
+    throw classes.error;
   }
   // A failed read counts as an answer, because its cell shows its own failure. The owner's and the admin's setup
   // also waits for the viewer's units, which decide its first step.
@@ -57,14 +61,17 @@ export function StaffHome() {
     QueryResult.isSuccess(viewer) || QueryResult.isFailure(viewer);
   const ready =
     QueryResult.isSuccess(exams) &&
+    QueryResult.isSuccess(classes) &&
     (!tenant.canManage || (setupAnswered && viewerAnswered));
   if (!ready) {
     return null;
   }
-  const { closed, drafts: draftRows, draftsBounded, live, next } = exams.value;
+  const { closed, drafts: draftRows, live, next } = exams.value;
+  const classRows = QueryResult.isSuccess(classes) ? classes.value : [];
   const shown = staffShown({
     canCreate: tenant.home.canCreate,
     canWatch: tenant.home.canWatch,
+    classes: classRows.length,
     closed: closed.length,
     drafts: draftRows.length,
     live: live.length,
@@ -72,78 +79,14 @@ export function StaffHome() {
     setupShown,
   });
   const nextBound = reachesBound(next.length, HOME_ROOM_LIMIT);
-  // The numbers pair up on a phone; an odd last number takes its row alone.
-  const counts = Arr.filter(
-    ["count-live", "count-next", "count-waiting", "count-drafts"] as const,
-    (key) => shown[key]
-  );
-  const paired = (key: (typeof counts)[number]) =>
-    counts.length % 2 === 0 ||
-    Arr.last(counts).pipe(Option.exists((last) => last !== key));
   const closedBound = reachesBound(closed.length, HOME_RESULT_LIMIT);
   const cells = placeCells([
     {
-      draw: (span) => (
-        <MetricCell
-          count={countLabel(
-            live.length,
-            reachesBound(live.length, HOME_ROOM_LIMIT)
-          )}
-          pair={paired("count-live")}
-          period={t("metric-live-period")}
-          span={span}
-          title={t("metric-live")}
-        />
-      ),
-      key: "count-live",
-      narrow: 1,
-      shown: shown["count-live"],
-      wide: 3,
-    },
-    {
-      draw: (span) => (
-        <MetricCell
-          count={countLabel(next.length, nextBound)}
-          pair={paired("count-next")}
-          period={t("metric-next-period")}
-          span={span}
-          title={t("metric-next")}
-        />
-      ),
-      key: "count-next",
-      narrow: 1,
-      shown: shown["count-next"],
-      wide: 3,
-    },
-    {
-      draw: (span) => (
-        <MetricCell
-          count={countLabel(waitingOf(closed), closedBound)}
-          pair={paired("count-waiting")}
-          period={t("metric-waiting-period")}
-          span={span}
-          title={t("metric-waiting")}
-        />
-      ),
-      key: "count-waiting",
-      narrow: 1,
-      shown: shown["count-waiting"],
-      wide: 3,
-    },
-    {
-      draw: (span) => (
-        <MetricCell
-          count={countLabel(draftRows.length, draftsBounded)}
-          pair={paired("count-drafts")}
-          period={t("metric-drafts-period")}
-          span={span}
-          title={t("metric-drafts")}
-        />
-      ),
-      key: "count-drafts",
-      narrow: 1,
-      shown: shown["count-drafts"],
-      wide: 3,
+      draw: (span) => <ClassesCell classes={classRows} span={span} />,
+      key: "classes",
+      narrow: 2,
+      shown: shown.classes,
+      wide: 8,
     },
     {
       draw: (span) => (

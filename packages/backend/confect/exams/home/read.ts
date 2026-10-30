@@ -116,8 +116,7 @@ const firstViewable = Effect.fn("exams.home.firstViewable")(function* (
  * The exams of one school that the author created and may still edit, newest created first. The author
  * is the account that `exams.create` records, so a draft is the author's own exam. The index reads the
  * author's newest `HOME_DRAFT_SCAN` exams and keeps the ones the author may edit. Convex allows one
- * paginated read per function, so the scan is one bounded read. The result tells whether the read stopped
- * at a bound, because an older draft may then exist beyond the drafts listed.
+ * paginated read per function, so the scan is one bounded read.
  */
 const draftsOf = Effect.fn("exams.home.drafts")(function* (
   tenantId: GenericId.GenericId<"tenants">,
@@ -137,14 +136,10 @@ const draftsOf = Effect.fn("exams.home.drafts")(function* (
       .allowed(row)
       .pipe(Effect.map((actions) => Arr.contains(actions, "exam.edit")))
   );
-  const kept = Arr.take(editable, HOME_DRAFT_LIMIT);
-  return {
-    bounded: rows.length >= HOME_DRAFT_SCAN || kept.length >= HOME_DRAFT_LIMIT,
-    drafts: Arr.map(kept, (row) => ({
-      ...examSummary(row),
-      createdAt: row.createdAt,
-    })),
-  };
+  return Arr.map(Arr.take(editable, HOME_DRAFT_LIMIT), (row) => ({
+    ...examSummary(row),
+    createdAt: row.createdAt,
+  }));
 });
 
 /**
@@ -177,12 +172,10 @@ export const readHome = Effect.fn("exams.home.read")(function* () {
   );
   const next = yield* firstViewable(upcoming);
   const can = yield* tenantAuthority.allowed(member.tenant);
-  const drafts = yield* draftsOf(member.tenant._id, appUser._id);
   const home = {
     canManageSetup: Arr.contains(can, "tenant.manage"),
     closed: yield* closedResults(watched),
-    draftsBounded: drafts.bounded,
-    drafts: drafts.drafts,
+    drafts: yield* draftsOf(member.tenant._id, appUser._id),
     live: yield* sittingViews(live),
     next: yield* sittingViews(next),
   };
