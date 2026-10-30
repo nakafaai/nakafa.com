@@ -38,6 +38,7 @@ import {
   markedOptions,
   optionLetter,
 } from "@/components/tenant/exams/answer";
+import { TableKey } from "@/components/tenant/exams/cells";
 import type { QuestionEditing } from "@/components/tenant/exams/edits";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { matchOf } from "@/components/tenant/exams/match";
@@ -49,6 +50,7 @@ import { MatchKey } from "@/components/tenant/exams/pairing";
 import { PreviewProse } from "@/components/tenant/exams/preview";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";
 import { ExamDocument } from "@/components/tenant/exams/rich";
+import { tableOf } from "@/components/tenant/exams/table";
 
 /** The rich texts of the layer load with the page's editors, never with the page. */
 const ExamText = lazy(() =>
@@ -257,8 +259,7 @@ export function TeacherLayer({
         letter: optionLetter(index),
       })),
   });
-  // A table's key is marked in its rows on the canvas, so the panel holds no key part for it.
-  const keyed = needsKey(shown.template) && shown.template !== "table";
+  const keyed = needsKey(shown.template);
 
   return (
     <FieldGroup>
@@ -288,7 +289,22 @@ export function TeacherLayer({
           />
         ),
       })}
-      {keyed && shown.template !== "short" && shown.template !== "match" ? (
+      {Option.match(tableOf(shown.answers), {
+        onNone: () => null,
+        onSome: (table) => (
+          <TableKey
+            editable={editable}
+            keyed={shown.key}
+            number={number}
+            onCells={editing.setCells}
+            table={table}
+          />
+        ),
+      })}
+      {keyed &&
+      shown.template !== "short" &&
+      shown.template !== "match" &&
+      shown.template !== "table" ? (
         <AnswerKey
           editable={editable}
           marked={markedOptions(shown.key)}

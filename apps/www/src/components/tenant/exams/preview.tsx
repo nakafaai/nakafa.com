@@ -191,7 +191,7 @@ export function PreviewProse({
 }
 
 /** The label of one option drawn without an editor, at the size an option's editor takes. */
-function OptionSketch({ label }: { label: OptionLabel }) {
+export function OptionSketch({ label }: { label: OptionLabel }) {
   const doc = useMemo(
     () => Option.some(Node.fromJSON(assessmentSchema, label)),
     [label]
@@ -294,12 +294,7 @@ function TableSketch({
             <OptionSketch label={statement.label} />
           </PaperTableStatement>
           {Arr.map(columns, (column) => (
-            <PaperTableMark key={column.id}>
-              <span
-                aria-hidden
-                className="size-4 rounded-full border border-input bg-background shadow-xs"
-              />
-            </PaperTableMark>
+            <PaperTableMark key={column.id} />
           ))}
         </div>
       ))}
