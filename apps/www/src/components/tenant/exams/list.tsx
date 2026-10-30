@@ -171,14 +171,11 @@ function ExamListRows({
       id: "unit",
     }),
     examColumns.accessor((exam) => exam.questionCount, {
-      cell: (info) => (
-        <span className="block text-end tabular-nums">{info.getValue()}</span>
-      ),
+      cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
       enableSorting: false,
-      header: () => (
-        <span className="block text-end">{t("questions-column")}</span>
-      ),
+      header: t("questions-column"),
       id: "questions",
+      meta: { align: "end" },
     }),
     examColumns.accessor((exam) => exam.createdAt, {
       cell: (info) => (
@@ -199,6 +196,7 @@ function ExamListRows({
           <ExamRowMenu exam={info.row.original} />
         ),
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 
