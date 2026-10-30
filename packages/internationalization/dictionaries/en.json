@@ -731,7 +731,8 @@
         "renamed": "Classroom renamed",
         "archived": "Classroom archived",
         "teacherAssigned": "Teacher assigned to classroom",
-        "teacherRemoved": "Teacher removed from classroom"
+        "teacherRemoved": "Teacher removed from classroom",
+        "restored": "Class restored"
       },
       "grade": {
         "released": "Grade released"

@@ -200,6 +200,7 @@ describe("access/catalog", () => {
           "class.created",
           "class.renamed",
           "class.archived",
+          "class.restored",
           "class.teacherAssigned",
           "class.teacherRemoved",
           "message.hidden",

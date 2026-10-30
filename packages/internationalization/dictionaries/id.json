@@ -731,7 +731,8 @@
         "renamed": "Ruang kelas diganti nama",
         "archived": "Ruang kelas diarsipkan",
         "teacherAssigned": "Guru ditetapkan ke ruang kelas",
-        "teacherRemoved": "Guru dilepas dari ruang kelas"
+        "teacherRemoved": "Guru dilepas dari ruang kelas",
+        "restored": "Kelas dipulihkan"
       },
       "grade": {
         "released": "Nilai dirilis"

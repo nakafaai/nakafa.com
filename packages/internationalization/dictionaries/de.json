@@ -731,7 +731,8 @@
         "renamed": "Lerngruppe umbenannt",
         "archived": "Lerngruppe archiviert",
         "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
-        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt"
+        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt",
+        "restored": "Klasse wiederhergestellt"
       },
       "grade": {
         "released": "Note freigegeben"
