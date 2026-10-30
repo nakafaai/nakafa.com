@@ -1128,6 +1128,9 @@
     "task-hand-in-again": "Hand in again",
     "task-work-empty": "No work yet",
     "task-work-empty-description": "The work students hand in shows here.",
+    "task-work-search": "Search students",
+    "task-work-no-match": "No matching work",
+    "task-work-no-match-description": "No student whose name matches has handed work in.",
     "task-new": "New task",
     "task-new-description": "Everyone in the class gets it in their notifications.",
     "task-publish": "Publish"

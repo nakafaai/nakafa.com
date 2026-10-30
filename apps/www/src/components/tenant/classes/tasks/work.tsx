@@ -27,6 +27,10 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import {
+  TableSearch,
+  useServerSearch,
+} from "@/components/shared/table/toolbar";
+import {
   forumCall,
   runForumCall,
   toastForumFailure,
@@ -38,22 +42,42 @@ import {
   type TaskWork,
 } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { useKeptRows } from "@/lib/data/kept";
 
 /** How many pieces of work the table reads each time its end comes into view. */
 const WORK_PAGE_SIZE = 30;
 
+/** The search of the work handed in, in the task page's header, for its teacher. */
+export function TaskWorkSearch() {
+  const t = useTranslations("Classroom");
+  return <TableSearch placeholder={t("task-work-search")} />;
+}
+
 /**
  * The work handed in for a task, as its teacher reads it: each student, the work, whether it came
  * late, and its points, which the teacher gives in place. The next page loads as the end of the
- * table comes into view. A task with no work yet shows its empty state.
+ * table comes into view. The header's search reads the work of the students whose names match it,
+ * on the server, and the work already shown stays while a new search's first page loads. A task
+ * with no work yet shows its empty state, and a search that matches no work says so once the list
+ * ends.
  */
 export function TaskWorkTable({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
+  const search = useServerSearch();
   const pagination = usePaginatedQuery(
     classroom.tasks.submissions,
-    { classId, slug, task: task.slug },
+    {
+      classId,
+      slug,
+      task: task.slug,
+      ...(search === "" ? {} : { search }),
+    },
     { initialNumItems: WORK_PAGE_SIZE }
+  );
+  const kept = useKeptRows(
+    PaginatedQueryResult.isLoadingFirstPage(pagination),
+    pagination.results
   );
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -64,15 +88,24 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
   if (PaginatedQueryResult.isFailure(pagination)) {
     return <DataFailure onRetry={reloadPage} />;
   }
-  if (pagination._tag === "LoadingFirstPage") {
+  if (Option.isNone(kept)) {
     return null;
   }
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+  if (Arr.isReadonlyArrayEmpty(kept.value)) {
+    if (search !== "" && !PaginatedQueryResult.isExhausted(pagination)) {
+      return PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(WORK_PAGE_SIZE)} />
+      ) : null;
+    }
     return (
       <TableEmpty
         act="reading"
-        description={t("task-work-empty-description")}
-        title={t("task-work-empty")}
+        description={t(
+          search === ""
+            ? "task-work-empty-description"
+            : "task-work-no-match-description"
+        )}
+        title={t(search === "" ? "task-work-empty" : "task-work-no-match")}
       />
     );
   }
@@ -89,7 +122,7 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Arr.map(pagination.results, (work) => (
+            {Arr.map(kept.value, (work) => (
               <WorkRow key={work.id} points={task.points} work={work} />
             ))}
           </TableBody>

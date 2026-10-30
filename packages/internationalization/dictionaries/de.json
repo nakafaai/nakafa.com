@@ -1128,6 +1128,9 @@
     "task-hand-in-again": "Erneut abgeben",
     "task-work-empty": "Noch keine Arbeit",
     "task-work-empty-description": "Die Arbeiten der Schüler erscheinen hier.",
+    "task-work-search": "Schüler suchen",
+    "task-work-no-match": "Keine passende Abgabe",
+    "task-work-no-match-description": "Kein Schüler mit passendem Namen hat etwas abgegeben.",
     "task-new": "Neue Aufgabe",
     "task-new-description": "Alle in der Klasse erhalten sie in ihren Benachrichtigungen.",
     "task-publish": "Veröffentlichen"
