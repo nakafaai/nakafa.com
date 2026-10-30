@@ -277,8 +277,8 @@ export const copyQuestionUpdate =
     );
 
 /**
- * Shows a new exam while the server saves it: at the top of the first page of each open list, with no question yet in
- * the scope it is created in, and at the top of the drafts of the school home when the home is open. A list past its
+ * Shows a new exam while the server saves it: at the top of the first page of each open list, with the one question it
+ * is created with, in the scope it is created in, and at the top of the drafts of the school home when the home is open. A list past its
  * first page keeps its pages, as the server's answer shows.
  */
 export const insertDraftExam =
@@ -295,7 +295,7 @@ export const insertDraftExam =
           Option.some({
             ...query.value.value,
             page: [
-              { ...draft, questionCount: 0, scope: args.scope },
+              { ...draft, questionCount: 1, scope: args.scope },
               ...query.value.value.page,
             ],
           })

@@ -411,7 +411,7 @@ describe("the optimistic updates of the new questions", () => {
       Option.some({
         isDone: false,
         page: [
-          { ...draft, questionCount: 0, scope: { kind: "tenant" } },
+          { ...draft, questionCount: 1, scope: { kind: "tenant" } },
           existing,
         ],
       })

@@ -126,7 +126,8 @@ describe("exams/exams", () => {
           "Kelas SMP",
           "Seluruh sekolah",
         ]);
-        // Each row says when it was created, how many questions it holds, and where it belongs.
+        // Each row says when it was created, how many questions it holds (the first one comes with it), and where it
+        // belongs.
         expect(
           Arr.map(admin.page, ({ createdAt, questionCount, scope }) => ({
             createdAt,
@@ -136,17 +137,17 @@ describe("exams/exams", () => {
         ).toEqual([
           {
             createdAt: LATEST,
-            questionCount: 0,
+            questionCount: 1,
             scope: { kind: "unit", unitId: fixture.units.sma },
           },
           {
             createdAt: LATER,
-            questionCount: 0,
+            questionCount: 1,
             scope: { kind: "unit", unitId: fixture.units.smp },
           },
           {
             createdAt: TENANCY_NOW,
-            questionCount: 0,
+            questionCount: 1,
             scope: { kind: "tenant" },
           },
         ]);
