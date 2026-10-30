@@ -182,7 +182,8 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
           ))}
         </nav>
       ) : null}
-      <div className="flex min-h-12 items-center gap-2 px-3 py-1.5">
+      {/* On the narrowest phones the controls wrap under the teacher layer's button rather than widen the page. */}
+      <div className="flex min-h-12 flex-wrap items-center gap-2 px-3 py-1.5">
         {grid ? null : <ExamPanelButton />}
         <div className="ms-auto flex items-center gap-1">
           {grid ? null : (
