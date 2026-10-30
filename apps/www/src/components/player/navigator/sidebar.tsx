@@ -7,7 +7,7 @@ import { usePlayer } from "@/components/player/provider";
 /**
  * The navigator in its pane beside the questions from the large breakpoint: the
  * numbers, then the keys, in a column as wide as its pane that stays under the
- * toolbar while the questions scroll, and scrolls by itself to keep the current
+ * header while the questions scroll, and scrolls by itself to keep the current
  * number in view. The page never moves for it.
  */
 export function PlayerSidebar({ children }: { children: ReactNode }) {
@@ -33,7 +33,7 @@ export function PlayerSidebar({ children }: { children: ReactNode }) {
   return (
     <aside
       aria-label={t("navigator")}
-      className="sticky top-28 hidden h-[calc(100svh-11rem-env(safe-area-inset-bottom,0px))] w-full min-w-0 flex-col gap-4 overflow-y-auto px-6 py-4 lg:flex"
+      className="sticky top-16 hidden h-[calc(100svh-8rem-env(safe-area-inset-bottom,0px))] w-full min-w-0 flex-col gap-4 overflow-y-auto px-6 py-4 lg:flex"
       data-player-sidebar=""
       ref={column}
     >

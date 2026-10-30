@@ -55,8 +55,8 @@ export const questionHeading = (page: Page, number: number) =>
 /** The navigator column that the large breakpoint shows beside the questions. */
 export const sidebarOf = (page: Page) => page.locator("[data-player-sidebar]");
 
-/** The toolbar row under the player's header, which holds the view. */
-const toolbarOf = (page: Page) => page.locator("[data-player-toolbar]");
+/** The view in the player's header: two buttons from the small breakpoint, a menu on a phone. */
+const viewOf = (page: Page) => page.locator("[data-player-view]");
 
 /** The button in the footer that opens the navigator sheet and names the current question. */
 const openerOf = (page: Page) =>
@@ -221,25 +221,37 @@ export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
 );
 
 /**
- * Switches the player to one of its views from the toolbar row under the
- * header, which every width shows.
+ * Switches the player to one of its views from its header: a button of the
+ * group from the small breakpoint, and the item of the menu on a phone.
  */
 export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   page: Page,
   hasTouch: boolean,
   view: PlayerView
 ) {
-  const choice = toolbarOf(page).getByRole("button", {
-    exact: true,
-    name: view,
-  });
-  // A page that was just loaded may not be React's yet, and a press before then is lost.
-  yield* Effect.promise(() => waitUntilTakenOver(choice));
-  yield* activate(choice, hasTouch);
-  yield* Effect.promise(() =>
-    expect(choice).toHaveAttribute("aria-pressed", "true", {
-      timeout: readinessTimeoutMilliseconds,
-    })
+  const choice = viewOf(page)
+    .getByRole("button", { exact: true, name: view })
+    .filter({ visible: true });
+  if ((yield* Effect.promise(() => choice.count())) > 0) {
+    // A page that was just loaded may not be React's yet, and a press before then is lost.
+    yield* Effect.promise(() => waitUntilTakenOver(choice));
+    yield* activate(choice, hasTouch);
+    yield* Effect.promise(() =>
+      expect(choice).toHaveAttribute("aria-pressed", "true", {
+        timeout: readinessTimeoutMilliseconds,
+      })
+    );
+    return;
+  }
+  // On a phone the view is a menu behind one icon button.
+  const menu = viewOf(page)
+    .getByRole("button", { exact: true, name: "View" })
+    .filter({ visible: true });
+  yield* Effect.promise(() => waitUntilTakenOver(menu));
+  yield* activate(menu, hasTouch);
+  yield* activate(
+    page.getByRole("menuitemradio", { exact: true, name: view }),
+    hasTouch
   );
 });
 

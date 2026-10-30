@@ -54,7 +54,7 @@ export function PlayerFlag({
       variant="outline"
     >
       <HugeIcons icon={Flag02Icon} />
-      <span className="max-sm:sr-only">{t("flag")}</span>
+      {t("flag")}
     </Button>
   );
 }
@@ -91,11 +91,11 @@ export function PlayerQuestionFlag({
       className={flagButton({ className: "absolute end-0 top-0" })}
       disabled={locked}
       onClick={onFlag}
-      size="icon"
       type="button"
       variant="outline"
     >
       <HugeIcons icon={Flag02Icon} />
+      {t("flag")}
     </Button>
   );
 }
