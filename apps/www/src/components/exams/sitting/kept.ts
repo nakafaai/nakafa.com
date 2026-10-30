@@ -1,11 +1,23 @@
 import type { GenericId } from "@confect/core";
+import {
+  type ExamResponse,
+  NO_RESPONSE,
+  typedText,
+} from "@repo/backend/confect/exams/sittings/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Effect } from "effect";
-import { useEffect, useRef } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import { useEffect, useRef, useState } from "react";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { useSendAnswer } from "@/components/exams/sitting/answer";
-import { keptAnswersFor, readKept } from "@/components/exams/sitting/keep";
-import type { PaperValue } from "@/components/exams/sitting/paper";
+import {
+  keptAnswersFor,
+  readKept,
+  readKeptResponse,
+} from "@/components/exams/sitting/keep";
+import type {
+  PaperQuestion,
+  PaperValue,
+} from "@/components/exams/sitting/paper";
 import { sittingStorage } from "@/components/exams/sitting/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -74,4 +86,39 @@ export function useResendKeptAnswers({
       )
     );
   }, [attemptId, deviceId, locked, paper, send, sittingId, slug]);
+}
+
+/**
+ * The text that a typed answer opens with: the text that the browser kept for the question and the server has
+ * not confirmed, else the saved text. The field takes its text once, so it is read once, when the question
+ * shows; the paper shows the saved text until the kept answer is sent again. A school renders only in the
+ * browser, so its storage is there to read.
+ */
+export function useKeptText({
+  attemptId,
+  question,
+  sittingId,
+}: {
+  readonly attemptId: GenericId.GenericId<"examAttempts">;
+  readonly question: PaperQuestion;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+}) {
+  const [text] = useState(() =>
+    Effect.runSync(
+      readKeptResponse(sittingId, attemptId, question.id).pipe(
+        Effect.provide(sittingStorage),
+        Effect.catchTag("KeyValueStoreError", (error) =>
+          reportClientException(error, {
+            source: "components/exams/sitting/kept",
+          }).pipe(Effect.as(Option.none<ExamResponse>()))
+        ),
+        Effect.map((kept) =>
+          typedText(
+            Option.getOrElse(kept, () => question.response ?? NO_RESPONSE)
+          )
+        )
+      )
+    )
+  );
+  return text;
 }

@@ -114,6 +114,21 @@ export const readKept = Effect.fn("exams.sitting.keep.read")(function* (
   );
 });
 
+/**
+ * The response that the browser keeps for one question, which the server has not confirmed yet. A field the
+ * student types in opens with it, so the keys typed before a reload or a closed tab show again while the
+ * kept answer is sent again.
+ */
+export const readKeptResponse = Effect.fn("exams.sitting.keep.response")(
+  function* (sittingId: string, attemptId: string, questionId: string) {
+    const kept = yield* readKept(sittingId, attemptId);
+    return Option.map(
+      Rec.get(questionId)(kept.answers),
+      (answer) => answer.response
+    );
+  }
+);
+
 /** Writes what the browser keeps for an attempt after one change, read and written in turn. */
 const change = Effect.fn("exams.sitting.keep.change")(function* (
   sittingId: string,

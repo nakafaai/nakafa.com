@@ -1,4 +1,4 @@
-import { useDebouncedCallback } from "@mantine/hooks";
+import { useDebouncedCallback, useWindowEvent } from "@mantine/hooks";
 import {
   ESSAY_RESPONSE_MAX,
   TEXT_RESPONSE_MAX,
@@ -21,20 +21,28 @@ const ESSAY_ROWS = 8;
 /**
  * The answer field of a short answer or an essay: one line the student types a short answer on, or an
  * area the student writes an essay in, as a paper exam leaves room to write. The field shows each key at
- * once and saves the text once the student pauses, leaves the field, or leaves the question, so a typed
- * answer is not one save per key.
+ * once and keeps the text in the browser on every key, then sends it once the student pauses, leaves the
+ * field, leaves the question, or the page hides or closes, so a typed answer is not one save per key and a
+ * reload or a closed tab loses no key.
  */
 export function SittingField({
   entry,
   labelledBy,
+  onKeep,
   onType,
   text,
 }: {
   readonly entry: Written;
   /** The id of the heading that names the question. */
   readonly labelledBy: string;
+  /**
+   * Keeps the text in the browser until the server confirms it. A teacher's try of the paper sends nothing
+   * to a server, so it keeps nothing.
+   */
+  readonly onKeep?: (text: string) => void;
+  /** Sends the text. */
   readonly onType: (text: string) => void;
-  /** The text the paper holds for the question when the field opens. */
+  /** The text the field opens with: the kept text the server has not confirmed, else the saved text. */
   readonly text: string;
 }) {
   const disabled = usePaperLocked();
@@ -44,6 +52,19 @@ export function SittingField({
     flushOnUnmount: true,
     maxWait: TYPING_WAIT_MILLISECONDS,
   });
+  // A page that hides or closes unmounts nothing, so it sends the text waiting for a pause at once.
+  useWindowEvent("pagehide", () => save.flush());
+  useWindowEvent("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      save.flush();
+    }
+  });
+
+  /** Keeps every key at once, and sends the text after a pause. */
+  function write(value: string) {
+    onKeep?.(value);
+    save(value);
+  }
 
   if (entry.kind === "extendedText") {
     return (
@@ -54,7 +75,7 @@ export function SittingField({
         maxLength={ESSAY_RESPONSE_MAX}
         name={entry.id}
         onBlur={() => save.flush()}
-        onChange={(event) => save(event.currentTarget.value)}
+        onChange={(event) => write(event.currentTarget.value)}
         placeholder={t("essay-placeholder")}
         rows={ESSAY_ROWS}
       />
@@ -70,7 +91,7 @@ export function SittingField({
       maxLength={TEXT_RESPONSE_MAX}
       name={entry.id}
       onBlur={() => save.flush()}
-      onChange={(event) => save(event.currentTarget.value)}
+      onChange={(event) => write(event.currentTarget.value)}
       placeholder={t("short-placeholder")}
       spellCheck={false}
     />
