@@ -83,7 +83,7 @@ test("a member with no class sees no Classes group in the sidebar", async ({
   await context.close();
 });
 
-test("a settings group stays open when the viewer opens a section of another group, so the sidebar does not move under the pointer", async ({
+test("every settings group lists its sections under its own name, so a section opens without a fold and the sidebar does not move under the pointer", async ({
   browser,
   baseURL,
 }) => {
@@ -98,9 +98,15 @@ test("a settings group stays open when the viewer opens a section of another gro
   const sidebar = page.locator('[data-slot="sidebar-content"]');
   const profile = sidebar.getByRole("link", { name: "Profile", exact: true });
   await expect(profile).toBeVisible();
-  await waitUntilTakenOver(sidebar.getByRole("button", { name: "People" }));
-  await sidebar.getByRole("button", { name: "People" }).click();
+  // No group folds: each one's name labels the sections below it.
+  for (const group of ["School", "People", "Integrations", "Security"]) {
+    await expect(
+      sidebar.locator('[data-sidebar="group-label"]', { hasText: group })
+    ).toHaveText(group);
+  }
+  await expect(sidebar.getByRole("button", { name: "People" })).toHaveCount(0);
   const members = sidebar.getByRole("link", { name: "Members", exact: true });
+  await waitUntilTakenOver(members);
   // Every settings item carries its icon beside its name.
   await expect(members.locator("svg")).toHaveCount(1);
   await expect(profile.locator("svg")).toHaveCount(1);
@@ -109,13 +115,13 @@ test("a settings group stays open when the viewer opens a section of another gro
 
   await expect(page).toHaveURL(address("/settings/members"));
   await expect(members).toHaveAttribute("data-active", "true");
-  // The School group the viewer came from stays open, so Members keeps its place.
+  // Every group stays as it was, so Members keeps its place.
   await expect(profile).toBeVisible();
   expect((await members.boundingBox())?.y).toBe(before?.y);
   await context.close();
 });
 
-test("no two entries of the settings sidebar draw the same icon, a group and its sections included", async ({
+test("no two entries of the settings sidebar draw the same icon", async ({
   browser,
   baseURL,
 }) => {
@@ -128,26 +134,16 @@ test("no two entries of the settings sidebar draw the same icon, a group and its
   await page.goto(address("/settings/profile"));
 
   const sidebar = page.locator('[data-slot="sidebar-content"]');
-  await waitUntilTakenOver(sidebar.getByRole("button", { name: "People" }));
-  for (const group of ["People", "Integrations", "Security"]) {
-    await sidebar.getByRole("button", { name: group }).click();
-  }
-  // A group's button is the trigger of its fold, so it keeps the sidebar's own mark, not its slot.
-  const entries = sidebar.locator(
-    '[data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]'
-  );
+  const entries = sidebar.locator('[data-sidebar="menu-button"]');
   await expect(
     sidebar.getByRole("link", { name: "Audit trail", exact: true })
   ).toBeVisible();
 
-  // Each entry's first icon is its own; the fold arrow after a group's name is not an entry's icon.
+  // Each entry's first icon is its own: the way back, then every section of every group.
   const icons = await entries.evaluateAll((nodes) =>
     nodes.map((node) => node.querySelector("svg")?.innerHTML ?? "")
   );
-  // The groups' own buttons are among the entries compared, beside every section's link.
-  expect(icons.length).toBeGreaterThan(
-    await sidebar.locator('[data-sidebar="menu-sub-button"]').count()
-  );
+  expect(icons.length).toBeGreaterThan(4);
   expect(Arr.dedupe(icons)).toEqual(icons);
   await context.close();
 });

@@ -23,7 +23,7 @@ const decodeProjection = Schema.decodeUnknownSync(
 );
 describe("contentRelease/material", () => {
   it.effect(
-    "returns the exact material identity and date through discovery and sitemap queries",
+    "returns the material's content key, path and date through discovery and sitemap queries",
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
@@ -50,18 +50,6 @@ describe("contentRelease/material", () => {
           )
         );
         const material = api.contentRelease.material;
-        const identity = yield* Effect.promise(() =>
-          t.query(material.identity, {
-            appLocale: "en",
-            contentKey: source.contentKey,
-            expectedMaterialKey: source.materialKey,
-            expectedSectionKey: source.sectionKey,
-          })
-        );
-        expect(identity).toMatchObject({
-          managed: true,
-          publicPath: source.publicPath,
-        });
         const latest = yield* Effect.promise(() =>
           t.query(material.latest, {
             appLocale: "en",
@@ -105,6 +93,7 @@ describe("contentRelease/material", () => {
           Arr.flatMap(results, ({ sitemap }) => sitemap?.routes ?? [])
         ).toEqual([
           {
+            contentKey: source.contentKey,
             lastModified: dateModified,
             publicPath: source.publicPath,
           },

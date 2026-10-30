@@ -1,5 +1,32 @@
-# Advisories with no patched release that reach only development tooling.
+# Advisories that no upgrade here can clear: no patched release exists, or every patched
+# release breaks a dependency the runtime requires. An entry reaches only development
+# tooling, or a feature this repository does not enable.
 # Add an entry in its own change, with ignoreUntil at most 14 days out and a reason
 # that names the dependency path and why the advisory cannot be exploited.
 # Each entry expires on its ignoreUntil date and the audit fails again, so it is reviewed
-# then; delete it as soon as a patched release ships.
+# then; delete it as soon as a patched release ships that the runtime can take.
+
+[[IgnoredVulns]]
+id = "GHSA-gcqx-w48m-w2h4"
+ignoreUntil = 2026-11-13
+reason = "deepmerge 4.3.1 is the newest release and the advisory lists no fix. Only the root devDependency ultracite reaches it (ultracite -> deepmerge), which merges its own preset objects while it writes or checks lint configuration, so no untrusted object reaches mergeObject. The runtime path (@react-email/render -> html-to-text 9 -> deepmerge) is gone: @react-email/render 2.2.0 uses html-to-text 10, which merges with deepmerge-ts. Checked on 30 October 2026: ultracite 8.1.0 still depends on deepmerge ^4.3.1."
+
+[[IgnoredVulns]]
+id = "GHSA-965c-763c-88jm"
+ignoreUntil = 2026-11-13
+reason = "better-auth before 1.7.7 accepts an OAuth state value as a Magic Link token only when the Magic Link plugin is enabled. The backend enables openAPI, username, the Convex plugin and its own route guards (packages/backend/confect/auth/runtime.ts), and no module imports magicLink, so the token path does not exist. The fix is in 1.7.7, but @convex-dev/better-auth 0.12.6, the latest adapter, peers better-auth >=1.6.11 <1.7.0 and its convex() plugin imports better-auth/plugins/oidc-provider, which 1.7 removed, so a 1.7 release fails the Convex component bundle (get-convex/better-auth#433; the adapter's 1.7 migration is get-convex/better-auth#430). Delete this entry with the adapter release that accepts 1.7."
+
+[[IgnoredVulns]]
+id = "GHSA-r4xp-prcw-77qf"
+ignoreUntil = 2026-11-13
+reason = "better-auth before 1.7.7 lets the OAuth Proxy plugin trust a decrypted profile. The backend does not enable oAuthProxy (packages/backend/confect/auth/runtime.ts enables openAPI, username, the Convex plugin and its own route guards), so the path does not exist. The fix needs better-auth 1.7, which the Convex adapter cannot bundle yet, as GHSA-965c-763c-88jm records."
+
+[[IgnoredVulns]]
+id = "GHSA-q84f-53jg-9ppm"
+ignoreUntil = 2026-11-13
+reason = "better-auth before 1.7.0-rc.3 shows no client or permissions on device login approval, which only the opt-in deviceAuthorization() plugin serves. The backend does not enable it (packages/backend/confect/auth/runtime.ts), so the path does not exist. The fix needs better-auth 1.7, which the Convex adapter cannot bundle yet, as GHSA-965c-763c-88jm records."
+
+[[IgnoredVulns]]
+id = "GHSA-44jh-23m7-hpcf"
+ignoreUntil = 2026-11-13
+reason = "Concurrent requests can pass a database-backed rate limit on PostgreSQL through @better-auth/drizzle-adapter or @better-auth/kysely-adapter. better-auth installs both adapters as dependencies, but the backend stores everything through the Convex adapter (@convex-dev/better-auth) and keeps no rate-limit records in PostgreSQL, so neither adapter runs. The fix needs better-auth 1.7, which the Convex adapter cannot bundle yet, as GHSA-965c-763c-88jm records."

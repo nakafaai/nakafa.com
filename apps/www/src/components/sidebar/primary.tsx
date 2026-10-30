@@ -4,7 +4,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
 } from "@repo/design-system/components/ui/sidebar-content";
 import {
   SidebarMenu,
@@ -16,8 +15,8 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { ConvexIsland } from "@/components/providers/island";
 import {
-  getForYouNavigationItems,
-  getForYouNavigationTarget,
+  getPrimaryNavigationItems,
+  getPrimaryNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
 import {
@@ -29,23 +28,21 @@ import {
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
-type ForYouItem = ReturnType<typeof getForYouNavigationItems>[number];
+type PrimaryItem = ReturnType<typeof getPrimaryNavigationItems>[number];
 
 /**
- * Renders the primary app navigation shared by every audience. Each shortcut is
- * its own island, so the group never remounts when the page's client arrives: a
- * shortcut shows its shared destination until the learner's preference is read.
+ * Renders the primary app navigation shared by every audience, the first group of
+ * the sidebar, which needs no label. Each shortcut is its own island, so the group
+ * never remounts when the page's client arrives: a shortcut shows its shared
+ * destination until the learner's preference is read.
  */
-export function NavForYou() {
-  const tCommon = useTranslations("Common");
-
+export function NavPrimary() {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{tCommon("for-you")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {Arr.map(getForYouNavigationItems(), (item) => (
-            <ForYouMenuItem item={item} key={item.id} />
+          {Arr.map(getPrimaryNavigationItems(), (item) => (
+            <PrimaryMenuItem item={item} key={item.id} />
           ))}
         </SidebarMenu>
       </SidebarGroupContent>
@@ -54,27 +51,30 @@ export function NavForYou() {
 }
 
 /** One shortcut, whose destination reads the learner's preferences on the page's Convex island. */
-function ForYouMenuItem({ item }: { item: ForYouItem }) {
+function PrimaryMenuItem({ item }: { item: PrimaryItem }) {
   return (
     <ConvexIsland
       fallback={
-        <ForYouLink destination={getForYouNavigationTarget(item)} item={item} />
+        <PrimaryLink
+          destination={getPrimaryNavigationTarget(item)}
+          item={item}
+        />
       }
     >
-      <LearnerForYouMenuItem item={item} />
+      <LearnerPrimaryMenuItem item={item} />
     </ConvexIsland>
   );
 }
 
 /** Reads the learner's preferences on the page's Convex island. */
-function LearnerForYouMenuItem({ item }: { item: ForYouItem }) {
+function LearnerPrimaryMenuItem({ item }: { item: PrimaryItem }) {
   const locale = useCurrentLocale();
   const preferredCurriculumTarget = usePreferredCurriculumTarget(locale);
   const preferredTryoutTarget = usePreferredTryoutTarget(locale);
 
   return (
-    <ForYouLink
-      destination={getForYouNavigationTarget(item, {
+    <PrimaryLink
+      destination={getPrimaryNavigationTarget(item, {
         preferredCurriculumTarget,
         preferredTryoutTarget,
       })}
@@ -84,12 +84,12 @@ function LearnerForYouMenuItem({ item }: { item: ForYouItem }) {
 }
 
 /** One shortcut row, which preloads the chat that the Ask Nina shortcut leads to on intent. */
-function ForYouLink({
+function PrimaryLink({
   destination,
   item,
 }: {
   destination: LinkTarget;
-  item: ForYouItem;
+  item: PrimaryItem;
 }) {
   const router = useRouter();
   const tAi = useTranslations("Ai");

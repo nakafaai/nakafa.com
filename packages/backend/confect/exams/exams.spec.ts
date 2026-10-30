@@ -4,7 +4,7 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GrantScope } from "@repo/backend/confect/access/schema";
 import { DocumentTooLarge } from "@repo/backend/confect/editor/document";
 import { ExamAccess } from "@repo/backend/confect/exams/access";
-import { ExamFrozen } from "@repo/backend/confect/exams/errors";
+import { ExamInUse } from "@repo/backend/confect/exams/errors";
 import {
   ExamSummary,
   ExamTitle,
@@ -31,7 +31,7 @@ import { Schema } from "effect";
 /**
  * The school exams. A Teacher, an Admin, or the Owner creates an exam in a scope
  * they may edit, lists and opens the exams they may view, and renames or deletes an
- * exam they may edit; a scheduled exam is frozen and cannot be deleted. Each exam
+ * exam they may edit; an exam that has a sitting cannot be deleted. Each exam
  * starts with one question, so an exam is never empty.
  */
 export default GroupSpec.make()
@@ -89,7 +89,7 @@ export default GroupSpec.make()
       name: "remove",
       args: () => ({ examId: Id("exams"), slug: TenantSlug }),
       returns: () => Schema.Null,
-      error: () => Schema.Union([AccessDenied, ExamFrozen]),
+      error: () => Schema.Union([AccessDenied, ExamInUse]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   )
   .addFunction(

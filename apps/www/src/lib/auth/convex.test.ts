@@ -5,6 +5,7 @@ import {
   Effect,
   Exit,
   Fiber,
+  MutableList,
   Option,
   Queue,
   Scope,
@@ -200,6 +201,39 @@ describe("Convex authentication", () => {
       expect(store.getState().confirmation).toStrictEqual(Option.none());
       expect(client.setAuth).toHaveBeenCalledTimes(1);
     })
+  );
+
+  it.effect(
+    "tells the readers of a session with no token before Convex runs a query without one",
+    () =>
+      Effect.gen(function* () {
+        const { client, store } = yield* startSession(failedRead(false));
+        const { fetchToken } = readBinding(client);
+        const heard = MutableList.make<string>();
+        // The store's change queues React's render, which drops the readers'
+        // subscriptions, before Convex's continuation drops its credentials.
+        store.subscribe(({ confirmation }) => {
+          MutableList.append(
+            heard,
+            `store ${Option.exists(confirmation, (answer) => answer.isAuthenticated)}`
+          );
+        });
+        const token = yield* Effect.promise(() =>
+          fetchToken({ forceRefreshToken: true }).then((answer) => {
+            MutableList.append(heard, `convex ${answer}`);
+            return answer;
+          })
+        );
+
+        expect(token).toBeNull();
+        expect(MutableList.toArray(heard)).toStrictEqual([
+          "store false",
+          "convex null",
+        ]);
+        expect(store.getState().confirmation).toStrictEqual(
+          answer("session-1", false)
+        );
+      })
   );
 
   it.effect(

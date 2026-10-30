@@ -103,11 +103,12 @@ for (const viewport of [
         slug: school.slug,
       })
     );
-    const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+    // The seed writes the sitting as the school's Owner, so the Owner signs in first.
     const ownerContext = await browser.newContext({ viewport });
     await Effect.runPromise(
       signInOwner(ownerContext, school.slug, address("/"))
     );
+    const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
 
     const owner = await ownerContext.newPage();
     await owner.goto(address("/"));

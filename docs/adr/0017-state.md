@@ -7,7 +7,8 @@
 Accepted. Amended on 13 October 2026: the assessment player and the school
 working set are two more instances of the store rule (Instances Of The Store
 Rule). Amended on 17 October 2026: the pending actions of the chat stay out of
-transitions (Pending Actions Are Not Transitions).
+transitions (Pending Actions Are Not Transitions). Amended on 30 October 2026:
+a press before hydration is kept and replayed (A Press Before Hydration).
 
 ## Decision
 
@@ -78,6 +79,34 @@ holds the pending flags of a send, a stop, or a retry. The admission
 navigation tests in `apps/www/e2e/chat/leave.browser.ts` check that a learner
 can leave while an admission is pending. Rename, sharing, and delete need no pending state: they
 update the loaded lists optimistically and roll back on failure.
+
+## A Press Before Hydration
+
+A static page starts its scripts only after it paints (`deferStaticScripts` in
+`apps/www/src/lib/static/scripts.ts`), and React hydrates it once they arrive:
+under a second on a fast connection, several seconds on a low-end phone. A
+control that the server drew reaches no handler in between, and React replays
+only the events that arrive after `hydrateRoot` runs. A press in that window is
+kept, so no first press is a dead click.
+
+- A control whose state belongs in the address is a real link or form, which
+  works before hydration.
+- Any other control spreads the props of `useEarlyPress` from
+  `apps/www/src/lib/press/replay.ts`. The pre-paint script `EARLY_PRESS_SCRIPT`
+  (`apps/www/src/lib/press/prepaint.ts`), which the root document runs from its
+  head beside the theme, currency, and signed-in hint scripts, listens in the
+  capture phase and marks the nearest pressed `[data-press]` control with
+  `data-pressed`. The control shows the pressed look at once
+  (`apps/www/src/styles/globals.css`). When React mounts it, the hook clears the
+  mark and runs the press, and after that the control's own `onClick` runs it
+  and clears the mark the script set.
+- The mark lives on the control, so a control that adopts the mechanism needs
+  no other code. The hook hydrates the control with `suppressHydrationWarning`,
+  because the mark is an attribute React did not render.
+
+Nina's entry on lessons, articles, and Quran pages is the first control that
+keeps its press: `apps/www/e2e/chat/sheet.browser.ts` presses it right after
+the page loads.
 
 ## Instances Of The Store Rule
 

@@ -4,10 +4,9 @@ import { AiChatHeader } from "@/components/ai/chat/header";
 import { NinaTranscript } from "@/components/ai/transcript";
 
 /**
- * A chat's page in the forum's composition: its header, its transcript as wide
- * as the page's column with each message at a readable measure, and the
- * composer under them as wide as the transcript. A reader's page passes its own
- * `footer` in the composer's place, since a reader cannot write to the chat.
+ * A chat's page: its header, its transcript, and the composer under them. A
+ * reader's page passes its own `footer` in the composer's place, since a reader
+ * cannot write to the chat.
  */
 export function AiChat({ footer }: { footer?: ReactNode }) {
   return (
@@ -17,7 +16,7 @@ export function AiChat({ footer }: { footer?: ReactNode }) {
       <NinaTranscript />
 
       {footer ?? (
-        <ChatComposer className="mx-auto w-full max-w-7xl px-4 pb-4" />
+        <ChatComposer className="mx-auto w-full max-w-3xl px-4 pb-4" />
       )}
     </div>
   );

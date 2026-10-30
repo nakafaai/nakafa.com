@@ -35,24 +35,24 @@ function readLabelEntries(
   response: QuestionResponse
 ): readonly LabelEntry[] {
   if (response.kind === "category") {
-    return Arr.flatMap(response.statements, (statement) => [
-      [
-        statementLabelId(responseId, statement.statementKey),
-        statement.label,
-      ] as const,
+    return [
+      ...Arr.map(
+        response.statements,
+        (statement) =>
+          [
+            statementLabelId(responseId, statement.statementKey),
+            statement.label,
+          ] as const
+      ),
       ...Arr.map(
         response.categories,
         (category) =>
           [
-            categoryLabelId(
-              responseId,
-              statement.statementKey,
-              category.categoryKey
-            ),
+            categoryLabelId(responseId, category.categoryKey),
             category.label,
           ] as const
       ),
-    ]);
+    ];
   }
   if (response.kind === "short-answer" || response.kind === "rubric") {
     return [];

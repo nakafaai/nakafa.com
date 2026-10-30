@@ -225,6 +225,7 @@ describe("access/catalog", () => {
           "sitting.changeToken",
           "sitting.allowDevice",
           "sitting.finish",
+          "sitting.join",
           "sitting.cancel",
           "sitting.close",
           "exam.results.released",

@@ -8,11 +8,7 @@ export function statementLabelId(responseId: string, statementKey: string) {
   return `${responseId}-${statementKey}`;
 }
 
-/** Stable DOM identifier for one category choice label. */
-export function categoryLabelId(
-  responseId: string,
-  statementKey: string,
-  categoryKey: string
-) {
-  return `${statementLabelId(responseId, statementKey)}-${categoryKey}`;
+/** Stable DOM identifier for one category's label, which heads its column of the table. */
+export function categoryLabelId(responseId: string, categoryKey: string) {
+  return `${responseId}-category-${categoryKey}`;
 }
