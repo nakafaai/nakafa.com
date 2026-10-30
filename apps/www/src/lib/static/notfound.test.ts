@@ -3,6 +3,7 @@ import { Array as Arr } from "effect";
 import {
   notFoundOutputPath,
   notFoundPagePath,
+  schoolNotFoundPath,
   staticNotFoundDocument,
 } from "@/lib/static/notfound";
 
@@ -29,6 +30,7 @@ describe("lib/static/notfound", () => {
   it("names the page and the output of one locale", () => {
     expect(notFoundPagePath("id")).toBe("/_notfound/id");
     expect(notFoundOutputPath("id")).toBe("/id/404");
+    expect(schoolNotFoundPath("id")).toBe("/_notfound/school/id");
   });
 
   it("keeps the markup, the stylesheets and the named script, and drops every other script and module preload", () => {

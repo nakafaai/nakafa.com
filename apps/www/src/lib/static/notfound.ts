@@ -9,6 +9,14 @@ export function notFoundPagePath(locale: string) {
   return `/_notfound/${locale}`;
 }
 
+/**
+ * The path of one locale's not-found page for a school host, which is also where the build writes it, without its
+ * `.html` extension, so the assets answer it at that address.
+ */
+export function schoolNotFoundPath(locale: string) {
+  return `/_notfound/school/${locale}`;
+}
+
 /** Where the build writes one locale's not-found page, without its `.html` extension. */
 export function notFoundOutputPath(locale: string) {
   return `/${locale}/404`;
