@@ -176,6 +176,7 @@ export function SchoolPeriodMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog
+        description={t("period-rename-description")}
         footer={
           <>
             <Button
