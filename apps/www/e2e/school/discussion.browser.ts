@@ -57,15 +57,18 @@ for (const viewport of [
       timeout: readinessTimeoutMilliseconds,
     });
 
-    // The discussion opens at its own address, with its title in the path and as its heading.
+    // The discussion opens at its own address, with its title as its heading, and in the path beside it from tablet
+    // width; on a phone it is a modal sheet, which takes the page behind it, the header's path included, out of reach.
     await page.getByRole("link", { name: "Reply", exact: true }).click();
     await page.waitForURL(DISCUSSION_PATH);
     await expect(
       page.getByRole("heading", { name: `#1 ${TITLE}`, level: 2 })
     ).toBeVisible();
-    await expect(
-      page.getByRole("navigation", { name: "breadcrumb" })
-    ).toContainText("#1");
+    if (viewport.width >= 768) {
+      await expect(
+        page.getByRole("navigation", { name: "breadcrumb" })
+      ).toContainText("#1");
+    }
     const discussion = page.locator("[data-slot=discussion]");
     await expect(
       discussion.getByText("Tuliskan contohnya di sini.")
