@@ -196,9 +196,10 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
 
   const student = await studentContext.newPage();
   await student.goto(address("/"));
+  // The home draws once Convex holds the session and the student's sittings answer.
   await expect(
     student.getByRole("heading", { name: "Now", exact: true })
-  ).toBeVisible();
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   // The open room comes first in the tile, and its row enters the sitting.
   await expect(
     student.getByRole("link", { name: OPEN_ROOM_ROW }).first()
