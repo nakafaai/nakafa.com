@@ -62,15 +62,18 @@ function placeMiddle(
  * `shift` that its `Tile` takes. The seed comes back so that a tile is never
  * drawn from another seed than the one its list placed it by.
  */
-function look(icon: IconSvgElement, seed: string, shift: number) {
+function look<Icon>(icon: Icon, seed: string, shift: number) {
   return { icon, seed, shift };
 }
 
-/** The icon and the turn that a list gave to one tile. */
-export type TileLook = ReturnType<typeof look>;
+/**
+ * The icon and the turn that a list gave to one tile. The icon is a Hugeicons
+ * element, or any other value that names one, such as the symbol of a sprite.
+ */
+export type TileLook<Icon = IconSvgElement> = ReturnType<typeof look<Icon>>;
 
 /** The middle hue that a tile is drawn with, from its seed and its turn. */
-function middleOf({ seed, shift }: Pick<TileLook, "seed" | "shift">) {
+function middleOf({ seed, shift }: Pick<TileLook<unknown>, "seed" | "shift">) {
   return wrap(readSeed(seed).middle + shift);
 }
 
@@ -137,12 +140,12 @@ export function getTileShifts(
  * list longer than its pool repeats an icon only as late and as evenly as it
  * must.
  */
-function pickIcon(
-  pool: Arr.NonEmptyReadonlyArray<IconSvgElement>,
+function pickIcon<Icon>(
+  pool: Arr.NonEmptyReadonlyArray<Icon>,
   seed: string,
-  taken: readonly IconSvgElement[]
+  taken: readonly Icon[]
 ) {
-  const holders = (icon: IconSvgElement) =>
+  const holders = (icon: Icon) =>
     Arr.filter(taken, (other) => Equal.equals(other, icon)).length;
 
   return Arr.min(
@@ -155,8 +158,8 @@ function pickIcon(
  * The icon that a tile on its own takes from its pool: the one its seed points
  * at. A list gives the same icon to a tile that has no earlier tile to avoid.
  */
-export function getTileIcon(
-  pool: Arr.NonEmptyReadonlyArray<IconSvgElement>,
+export function getTileIcon<Icon>(
+  pool: Arr.NonEmptyReadonlyArray<Icon>,
   seed: string
 ) {
   return pickIcon(pool, seed, Arr.empty());
@@ -166,8 +169,8 @@ export function getTileIcon(
  * What `getTileLooks` reads of one tile: the pool of icons its key may show,
  * best known first, and its seed.
  */
-export type TileRow = readonly [
-  pool: Arr.NonEmptyReadonlyArray<IconSvgElement>,
+export type TileRow<Icon = IconSvgElement> = readonly [
+  pool: Arr.NonEmptyReadonlyArray<Icon>,
   seed: string,
 ];
 
@@ -190,18 +193,18 @@ export type TileRow = readonly [
  * @param shown - The looks of the tiles that the page already shows before this list
  * @returns Each tile's icon, seed, and `shift`, and each string as it came, in the same order
  */
-export function getTileLooks(
-  rows: readonly TileRow[],
-  shown?: readonly TileLook[]
-): readonly TileLook[];
-export function getTileLooks<Passed extends string>(
-  rows: readonly (TileRow | Passed)[],
-  shown?: readonly TileLook[]
-): readonly (TileLook | Passed)[];
-export function getTileLooks(
-  rows: readonly (TileRow | string)[],
-  shown: readonly TileLook[] = []
-): readonly (TileLook | string)[] {
+export function getTileLooks<Icon = IconSvgElement>(
+  rows: readonly TileRow<Icon>[],
+  shown?: readonly TileLook<Icon>[]
+): readonly TileLook<Icon>[];
+export function getTileLooks<Passed extends string, Icon = IconSvgElement>(
+  rows: readonly (TileRow<Icon> | Passed)[],
+  shown?: readonly TileLook<Icon>[]
+): readonly (TileLook<Icon> | Passed)[];
+export function getTileLooks<Icon>(
+  rows: readonly (TileRow<Icon> | string)[],
+  shown: readonly TileLook<Icon>[] = []
+): readonly (TileLook<Icon> | string)[] {
   const onPage = Arr.map(shown, middleOf);
   const start = Tuple.make(
     Arr.map(shown, ({ icon }) => icon),
@@ -210,7 +213,7 @@ export function getTileLooks(
   const [, looks] = Arr.mapAccum(
     rows,
     start,
-    (placed, row): readonly [typeof start, TileLook | string] => {
+    (placed, row): readonly [typeof start, TileLook<Icon> | string] => {
       if (Predicate.isString(row)) {
         return Tuple.make(placed, row);
       }
