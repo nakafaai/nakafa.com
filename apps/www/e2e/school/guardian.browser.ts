@@ -55,10 +55,14 @@ test("an admin links a parent, who signs in with the email code, opens the child
     seedGuardianCode(school.slug, email, NISN)
   );
   await home.getByLabel("Sign-in code").fill("000000");
-  await home.getByRole("button", { name: "Sign in" }).click();
+  const signIn = home.getByRole("button", { name: "Sign in" });
+  const pressed = await signIn.boundingBox();
+  await signIn.click();
   await expect(home.locator("form").getByRole("alert")).toHaveText(
     "The code is wrong or has expired."
   );
+  // Each message takes the line kept for it, so the form never moves the button it answers.
+  expect((await signIn.boundingBox())?.y).toBe(pressed?.y);
   await home.getByLabel("Sign-in code").fill(seeded.code);
   await home.getByRole("button", { name: "Sign in" }).click();
 
@@ -71,10 +75,17 @@ test("an admin links a parent, who signs in with the email code, opens the child
   await expect(child.getByRole("heading", { name: "Siswa Uji" })).toBeVisible();
   await waitUntilTakenOver(child.getByLabel("Child's NISN"));
   await child.getByLabel("Child's NISN").fill("9999999999");
+  const field = child.locator('[data-slot="field"]');
+  const typed = await field.boundingBox();
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child.getByRole("alert")).toHaveText(
     "The details do not match, check them or contact the school."
   );
+  // The hint stays, and the refusal takes the line under it that the field kept from the start.
+  await expect(
+    field.getByText("Enter your child's NISN to confirm this link.")
+  ).toBeVisible();
+  expect((await field.boundingBox())?.height).toBe(typed?.height);
   await child.getByLabel("Child's NISN").fill(NISN);
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child).toHaveAttribute("data-child", "verified");
