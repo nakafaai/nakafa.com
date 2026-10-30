@@ -134,7 +134,7 @@ export function SchoolCohortMenu({
                       { title: "school-cohort-archived.title" },
                       {
                         action: {
-                          label: "undo.title",
+                          label: "undo",
                           onClick: () =>
                             startTransition(() =>
                               saveSchool(

@@ -1329,6 +1329,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "undo": "Urungkan",
     "arabic-fatha": "Fathah",
     "arabic-kasra": "Kasrah",
     "arabic-damma": "Dammah",
@@ -2245,9 +2246,6 @@
     "admitted-elsewhere": {
       "title": "Nina sedang menjawab di chat baru"
     },
-    "open-chat": {
-      "title": "Buka chat"
-    },
     "sign-out-error": {
       "title": "Kamu belum bisa keluar.",
       "description": "Periksa koneksimu, lalu coba lagi."
@@ -2271,9 +2269,6 @@
     "school-save-error": {
       "title": "Jawabanmu belum tersimpan.",
       "description": "Coba lagi."
-    },
-    "undo": {
-      "title": "Batalkan pengarsipan"
     },
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."

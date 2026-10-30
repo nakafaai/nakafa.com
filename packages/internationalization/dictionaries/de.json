@@ -1329,6 +1329,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "undo": "Rückgängig",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -2245,9 +2246,6 @@
     "admitted-elsewhere": {
       "title": "Nina antwortet in einem neuen Chat"
     },
-    "open-chat": {
-      "title": "Chat öffnen"
-    },
     "sign-out-error": {
       "title": "Abmelden ist fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
@@ -2271,9 +2269,6 @@
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
-    },
-    "undo": {
-      "title": "Archivierung rückgängig"
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."

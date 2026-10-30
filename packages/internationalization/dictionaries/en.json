@@ -1329,6 +1329,7 @@
     "classification": "Education"
   },
   "Common": {
+    "undo": "Undo",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -2245,9 +2246,6 @@
     "admitted-elsewhere": {
       "title": "Nina is answering in a new chat"
     },
-    "open-chat": {
-      "title": "Open chat"
-    },
     "sign-out-error": {
       "title": "We could not sign you out.",
       "description": "Check your connection, then try again."
@@ -2271,9 +2269,6 @@
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
-    },
-    "undo": {
-      "title": "Undo archive"
     },
     "school-cohort-archived": {
       "title": "Class archived."
