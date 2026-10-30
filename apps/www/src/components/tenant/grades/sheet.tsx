@@ -1,4 +1,10 @@
-import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  useMutation,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import {
   CircleIcon,
   Edit02Icon,
@@ -24,13 +30,7 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useState,
-  useTransition,
-} from "react";
+import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -59,14 +59,11 @@ import {
   type SheetLine,
 } from "@/components/tenant/grades/change";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readClassGradesFn } from "@/lib/tenant/grades.functions";
 
 const SOURCE = "components/tenant/grades/sheet";
 
 /** How many students one page of the gradebook loads, and each page after it. */
-export const GRADEBOOK_PAGE_SIZE = 50;
+const GRADEBOOK_PAGE_SIZE = 50;
 
 /** The states a line's grade is in, each with its icon, as the list, its filter, and the open student show them. */
 const LINE_STATE_ICONS = {
@@ -84,28 +81,6 @@ const lineColumns = createColumnHelper<typeof dataTableFeatures, SheetLine>();
 
 /** Whether a typed text is a grade value the scheme accepts. */
 const decodeValue = Schema.decodeOption(GradeValue);
-
-/** The first screen of the gradebook, which the page's loader read on the server. */
-type GradesPreload = Pick<
-  Awaited<ReturnType<typeof readClassGradesFn>>,
-  "scheme" | "sheet"
->;
-
-/** The loader's first screen of the gradebook, which its reads take their first values from. */
-const GradesPreloadContext = createContext<GradesPreload | undefined>(
-  undefined
-);
-
-/** Provides the loader's first screen to the gradebook that the class shell renders. */
-export function GradebookPreload({
-  children,
-  value,
-}: {
-  children: ReactNode;
-  value: GradesPreload | undefined;
-}) {
-  return <GradesPreloadContext value={value}>{children}</GradesPreloadContext>;
-}
 
 /** The class, the school, and the scheme of the next entry, which every cell of the gradebook reads. */
 const GradebookContext = createContext<
@@ -169,20 +144,12 @@ export function ClassGradebook({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolGrades");
-  const preload = use(GradesPreloadContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const args = isSettled ? { classId, slug } : "skip";
-  const scheme = usePreloadedQueryResult(
-    records.grades.scheme,
-    args,
-    preload?.scheme
-  );
-  const pagination = usePaginatedPreloaded(
-    records.grades.sheet,
-    args,
-    { initialNumItems: GRADEBOOK_PAGE_SIZE },
-    Option.fromUndefinedOr(preload?.sheet)
-  );
+  const scheme = useQuery(records.grades.scheme, args);
+  const pagination = usePaginatedQuery(records.grades.sheet, args, {
+    initialNumItems: GRADEBOOK_PAGE_SIZE,
+  });
 
   if (QueryResult.isFailure(scheme)) {
     throw scheme.error;

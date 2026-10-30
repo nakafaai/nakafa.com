@@ -12,7 +12,7 @@ export function Header() {
       <div className="flex w-full items-center justify-between gap-2 px-6">
         <div className="flex items-center gap-6 sm:w-full">
           <SidebarTrigger
-            className="size-9"
+            className="size-9 lg:hidden"
             label={tCommon("toggle-sidebar")}
             variant="outline"
           />

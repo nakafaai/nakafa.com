@@ -330,7 +330,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
         yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
         const countryHref = "/en/try-out/indonesia";
-        const country = page.getByRole("button", {
+        const country = page.getByRole("link", {
           exact: true,
           name: "View exams Indonesia",
         });
@@ -346,7 +346,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
         );
 
         const examHref = `${countryHref}/snbt`;
-        const exam = page.getByRole("button", {
+        const exam = page.getByRole("link", {
           exact: true,
           name: "View options SNBT",
         });
@@ -362,7 +362,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
         );
 
         const trackHref = `${examHref}/2027`;
-        const track = page.getByRole("button", {
+        const track = page.getByRole("link", {
           exact: true,
           name: "View sets Year 2027",
         });

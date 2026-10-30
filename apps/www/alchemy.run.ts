@@ -6,6 +6,7 @@ import { deployNakafaBots } from "#www/deploy/bots";
 import { deployCas } from "#www/deploy/cas";
 import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
+import { readActiveContentRelease } from "#www/deploy/release";
 import {
   productionHostExposure,
   WORKER_OBSERVABILITY,
@@ -27,7 +28,10 @@ import { deployedWorkerBindings, workerSettings } from "#www/worker";
  * settings and the bindings come from worker.ts, the same owner that
  * vite.config.ts reads. Every Worker binds the stage it deploys as
  * NAKAFA_DEPLOY_STAGE, which is the production identity of the runtime, and
- * takes its readable name from workerName.
+ * takes its readable name from workerName. The web Worker also binds the active
+ * content release as NAKAFA_CONTENT_RELEASE: Alchemy rebuilds a Vite Worker only
+ * when its files or its bindings change, so an activation's deploy of an unchanged
+ * commit rebuilds the static pages of the new release (ADR 0038 D8).
  *
  * Production Workers and the DNS records are retained: a stack change that drops
  * one leaves the cloud object in place, and never deletes it.
@@ -44,6 +48,9 @@ export default Stack(
 
     // Reads every bound value before any resource changes, so a required value that a reader refuses fails the deploy here.
     const bindings = deployedWorkerBindings();
+    // The stack's program fails only on configuration, so a release that cannot be
+    // read ends the deploy with its whole cause before any resource changes.
+    const release = yield* readActiveContentRelease().pipe(Effect.orDie);
 
     // Production declares the zones first: the web Worker attaches nakafa.com by zone name.
     if (isProduction) {
@@ -61,7 +68,11 @@ export default Stack(
         date: workerSettings.compatibilityDate,
         flags: workerSettings.compatibilityFlags,
       },
-      env: { ...bindings, NAKAFA_DEPLOY_STAGE: stage },
+      env: {
+        ...bindings,
+        NAKAFA_CONTENT_RELEASE: release,
+        NAKAFA_DEPLOY_STAGE: stage,
+      },
       viteEnvironments: workerSettings.viteEnvironments,
       observability: WORKER_OBSERVABILITY,
       placement: WORKER_PLACEMENT,

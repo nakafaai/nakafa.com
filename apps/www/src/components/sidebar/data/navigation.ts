@@ -8,7 +8,7 @@ import { Option } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
-const forYouNavigationItems = {
+const navigationItems = {
   subject: {
     icon: Books02Icon,
     id: "subject",
@@ -35,13 +35,13 @@ const forYouNavigationItems = {
   },
 } as const;
 
-type ForYouNavigationItem =
-  (typeof forYouNavigationItems)[keyof typeof forYouNavigationItems];
+type PrimaryNavigationItem =
+  (typeof navigationItems)[keyof typeof navigationItems];
 
 const primaryNavigationItems = [
-  forYouNavigationItems.subject,
-  forYouNavigationItems.tryOut,
-  forYouNavigationItems.askNina,
+  navigationItems.subject,
+  navigationItems.tryOut,
+  navigationItems.askNina,
 ] as const;
 
 /**
@@ -50,7 +50,7 @@ const primaryNavigationItems = [
  * One list serves every audience; only each resolved destination follows the
  * learner's stored preferences.
  */
-export function getForYouNavigationItems() {
+export function getPrimaryNavigationItems() {
   return primaryNavigationItems;
 }
 
@@ -59,8 +59,8 @@ export function getForYouNavigationItems() {
  * stored curriculum or try-out target replaces the row's own route on the row
  * that it names; otherwise the row's own route is returned.
  */
-export function getForYouNavigationTarget(
-  item: ForYouNavigationItem,
+export function getPrimaryNavigationTarget(
+  item: PrimaryNavigationItem,
   preferences: {
     preferredCurriculumTarget?: Option.Option<LinkTarget> | undefined;
     preferredTryoutTarget?: Option.Option<LinkTarget> | undefined;

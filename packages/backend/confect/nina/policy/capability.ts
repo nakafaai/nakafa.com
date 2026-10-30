@@ -22,7 +22,7 @@ export function denied(reason: string) {
  * without it has no memory capability. No page refuses a capability, so nothing
  * of the page is part of it.
  */
-export type OfferContext = Pick<AgentContext, "memory">;
+export type OfferContext = Pick<AgentContext, "calendar" | "memory">;
 
 /** The part of a capability that the policy reads. */
 interface Offering {

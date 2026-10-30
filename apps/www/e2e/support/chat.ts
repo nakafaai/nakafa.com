@@ -20,7 +20,7 @@ import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
 /** The new chat page of a language of the site. */
-export const chatPathOf = (locale: PromptLocale) => `/${locale}/chat`;
+const chatPathOf = (locale: PromptLocale) => `/${locale}/chat`;
 /** The new chat page of the English site. */
 export const CHAT_PATH = chatPathOf("en");
 /** A lesson, where Nina's sheet opens beside the page. */

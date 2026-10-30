@@ -128,18 +128,18 @@ for (const width of [320, 1440]) {
             const grid = yield* openHome(page, (route) =>
               route.fulfill({ status: 500 })
             );
-            // The skeleton shows while the request tries, and goes once it has
-            // given up. The request tries again after one, two and four seconds
-            // (lib/weather/request.ts) and this route answers at once, so the
-            // wait is those seven seconds. The suite's time for a deferred card
-            // to reveal itself holds them.
-            const skeleton = grid.locator('[data-slot="skeleton"]');
-            yield* Effect.promise(async () => {
-              await expect(skeleton.first()).toBeVisible();
-              await expect(skeleton).toHaveCount(0, {
-                timeout: revealTimeoutMilliseconds,
-              });
-            });
+            // The card's empty frame holds the cell while the request tries, and
+            // the empty cell takes its place once it has given up. The request
+            // tries again after one, two and four seconds (lib/weather/request.ts)
+            // and this route answers at once, so the wait is those seven seconds.
+            // The suite's time for a deferred card to reveal itself holds them.
+            yield* Effect.promise(() =>
+              expect
+                .poll(async () => (await grid.evaluate(readCells))[1]?.border, {
+                  timeout: revealTimeoutMilliseconds,
+                })
+                .toBe(0)
+            );
             const cells = yield* Effect.promise(() => grid.evaluate(readCells));
 
             yield* Effect.sync(() => {

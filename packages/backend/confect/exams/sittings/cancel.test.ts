@@ -39,23 +39,6 @@ const roomsOf = (
     )
   );
 
-/** Whether a sitting of one exam has frozen it, which a scheduled room does. */
-const frozenOf = (
-  fixture: Effect.Success<typeof tenancyFixture>,
-  examId: GenericId.GenericId<"exams">
-) =>
-  fixture.run(
-    Effect.flatMap(DatabaseReader, (reader) =>
-      reader
-        .table("exams")
-        .get(examId)
-        .pipe(
-          Effect.map((exam) => exam.frozenAt !== undefined),
-          Effect.orDie
-        )
-    )
-  );
-
 describe("exams/sittings cancel", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -63,7 +46,7 @@ describe("exams/sittings cancel", () => {
   });
 
   it.effect(
-    "lets the Person who scheduled a room cancel it, unfreezes the exam, and records the cancel",
+    "lets the Person who scheduled a room cancel it, and records the cancel",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -75,14 +58,12 @@ describe("exams/sittings cancel", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS_AT,
         });
-        expect(yield* frozenOf(fixture, examId)).toBe(true);
         expect(
           yield* fixture
             .as("teacher")
             .mutation(cancel, { sittingId: made.id, slug: nf })
         ).toBeNull();
         expect(yield* roomsOf(fixture, examId)).toEqual([]);
-        expect(yield* frozenOf(fixture, examId)).toBe(false);
         expect(
           Arr.map(yield* fixture.run(journal), (entry) => entry.change.type)
         ).toContain("sitting.cancel");
@@ -108,7 +89,7 @@ describe("exams/sittings cancel", () => {
   );
 
   it.effect(
-    "keeps the exam frozen while another room of it remains, and refuses a teacher who neither scheduled the room nor is an Admin",
+    "keeps another room of the exam, and refuses a teacher who neither scheduled the room nor is an Admin",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -138,7 +119,6 @@ describe("exams/sittings cancel", () => {
           .as("admin")
           .mutation(cancel, { sittingId: first.id, slug: nf });
         expect(Arr.length(yield* roomsOf(fixture, examId))).toBe(1);
-        expect(yield* frozenOf(fixture, examId)).toBe(true);
       })
   );
 

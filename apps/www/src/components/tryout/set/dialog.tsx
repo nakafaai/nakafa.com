@@ -1,8 +1,8 @@
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "use-intl";
 
 interface TryoutStartDialogProps {
@@ -34,9 +34,13 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
           >
             {t("cancel-cta")}
           </Button>
-          {/* While the attempt starts the actions hold still, with no pending look. */}
+          {/* While the attempt starts the actions hold still, and the primary shows its loader. */}
           <Button inert={props.busy} onClick={props.onPrimary} type="button">
-            <HugeIcons data-icon="inline-start" icon={Rocket01Icon} />
+            <Spinner
+              data-icon="inline-start"
+              icon={Rocket01Icon}
+              isLoading={props.busy}
+            />
             {copy.primary}
           </Button>
         </div>
