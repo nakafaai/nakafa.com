@@ -1,22 +1,15 @@
 import { HttpClient } from "@confect/js";
 import { useMutation } from "@confect/react";
-import {
-  Alert02Icon,
-  Delete02Icon,
-  Login01Icon,
-} from "@hugeicons/core-free-icons";
+import { Delete02Icon, Login01Icon } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import {
-  Alert,
-  AlertDescription,
-} from "@repo/design-system/components/ui/alert";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { FieldError } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -75,12 +68,10 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
     }
     setOpen(nextOpen);
   }
-  /**
-   * Runs the durable account-deletion flow from the browser event boundary. A
-   * shown error stays until the next answer replaces it, so the dialog never
-   * shrinks and grows again while the deletion is retried.
-   */
+  /** Runs the durable account-deletion flow from the browser event boundary. */
   function handleDelete() {
+    // A refusal stays on its line while the deletion is tried again: the next
+    // answer replaces it, and it is forgotten once the dialog has closed.
     startTransition(async () => {
       const result = await Effect.runPromise(
         requireConvexOnline(convex).pipe(
@@ -132,11 +123,8 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
       startTransition(() => setError(dialogError.generic));
     });
   }
-  // An expired session cannot delete: Delete stays in place but waits, and
-  // signing in again is the one action, on its own line in the alert.
-  const expired = error === dialogError.sessionExpired;
   let errorMessage = t("delete-account-error");
-  if (expired) {
+  if (error === dialogError.sessionExpired) {
     errorMessage = t("delete-account-session-expired");
   }
   return (
@@ -172,21 +160,31 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
             >
               {common("cancel")}
             </Button>
-            <Button
-              disabled={isPending || expired}
-              onClick={handleDelete}
-              type="button"
-              variant="destructive"
-            >
-              <Spinner icon={Delete02Icon} isLoading={isPending && !expired} />
-              {t("delete-account")}
-            </Button>
+            {error === dialogError.sessionExpired ? (
+              <Button
+                disabled={isPending}
+                onClick={handleReauthenticate}
+                type="button"
+              >
+                <Spinner icon={Login01Icon} isLoading={isPending} />
+                {t("delete-account-sign-in-again")}
+              </Button>
+            ) : (
+              <Button
+                disabled={isPending}
+                onClick={handleDelete}
+                type="button"
+                variant="destructive"
+              >
+                <Spinner icon={Delete02Icon} isLoading={isPending} />
+                {t("delete-account")}
+              </Button>
+            )}
           </>
         }
-        // The error leaves once the dialog has closed, so it never vanishes
-        // while the dialog is still on screen.
-        onOpenChangeComplete={(nextOpen) => {
-          if (!nextOpen) {
+        // The error is forgotten once the dialog has closed, so the closing dialog keeps its line.
+        onOpenChangeComplete={(next) => {
+          if (!next) {
             setError(null);
           }
         }}
@@ -194,26 +192,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         setOpen={handleOpenChange}
         title={t("delete-account-dialog-title")}
       >
-        {error && (
-          <Alert variant="destructive">
-            <HugeIcons icon={Alert02Icon} />
-            <AlertDescription>
-              <p>{errorMessage}</p>
-              {expired && (
-                <Button
-                  disabled={isPending}
-                  onClick={handleReauthenticate}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <Spinner icon={Login01Icon} isLoading={isPending} />
-                  {t("delete-account-sign-in-again")}
-                </Button>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
+        <FieldError>{error ? errorMessage : null}</FieldError>
       </ResponsiveDialog>
     </>
   );

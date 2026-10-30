@@ -253,25 +253,31 @@ const verifyRefusedDeletion = Effect.fn("NakafaE2E.verifyRefusedDeletion")(
 );
 
 /**
- * Records, in the page, each time the deletion dialog is on screen without its
- * alert, once the alert has shown. A dialog fading out still counts as on screen.
+ * Records, in the page, each time the deletion dialog is on screen with its
+ * refusal line empty, once the refusal has shown. A dialog fading out still
+ * counts as on screen.
  */
-function watchDialogAlert() {
+function watchDialogRefusal() {
   const record = { missing: 0 };
-  Object.assign(window, { nakafaDeletionAlert: record });
+  Object.assign(window, { nakafaDeletionRefusal: record });
   new MutationObserver(() => {
     const dialog = document.querySelector('[role="dialog"]');
+    const line = dialog?.querySelector('[data-slot="field-error"]');
     if (
       dialog?.checkVisibility({ opacityProperty: true }) &&
-      dialog.querySelector('[data-slot="alert"]') === null
+      (line?.textContent ?? "").trim() === ""
     ) {
       record.missing += 1;
     }
-  }).observe(document.body, { childList: true, subtree: true });
+  }).observe(document.body, {
+    characterData: true,
+    childList: true,
+    subtree: true,
+  });
 }
 
 /**
- * A refused deletion keeps its alert while the learner tries again and while
+ * A refused deletion keeps its line while the learner tries again and while
  * the dialog closes: the next answer replaces it, and it leaves with the dialog.
  */
 const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
@@ -301,7 +307,7 @@ const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
       dialog.getByText(app.Auth["delete-account-error"])
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await expect(confirm).toBeEnabled();
-    await page.evaluate(watchDialogAlert);
+    await page.evaluate(watchDialogRefusal);
 
     const retried = page.waitForResponse((response) =>
       response.url().includes("/api/auth/delete-user")
@@ -317,7 +323,7 @@ const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
     await expect(dialog).toHaveCount(0);
     expect(
       await page.evaluate(
-        () => Reflect.get(window, "nakafaDeletionAlert").missing
+        () => Reflect.get(window, "nakafaDeletionRefusal").missing
       )
     ).toBe(0);
   });

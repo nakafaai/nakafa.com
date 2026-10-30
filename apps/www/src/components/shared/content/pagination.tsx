@@ -123,6 +123,10 @@ function PaginationLabel({
  * likely to continue, and a phone gives no hover to prefetch on, so the next
  * link preloads its page in view. Previous waits for intent, which spares a
  * reader who only moves forward the second server render.
+ *
+ * It follows the page's article, and shows only once the article has its body:
+ * after a client navigation the body of a server component arrives a moment
+ * after the page around it, and links drawn before it would be pushed down.
  */
 export function PaginationContent({ pagination, className }: Props) {
   const t = useTranslations("Common");
@@ -130,7 +134,7 @@ export function PaginationContent({ pagination, className }: Props) {
   return (
     <nav
       aria-label="Pagination navigation"
-      className={cn("mt-10 pt-10", className)}
+      className={cn("mt-10 pt-10 [article:empty~&]:hidden", className)}
     >
       <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
         <PaginationItem
