@@ -66,7 +66,8 @@ export function SidebarSeparator({
 
 /**
  * Renders the scrollable content region between sidebar header and footer. Its bar overlays the rows and takes
- * no room, so a sidebar keeps its width on every system.
+ * no room, so a sidebar keeps its width on every system. A sidebar folded to its icons does not scroll; the
+ * viewport scrolls by an inline style, so the fold overrides it.
  */
 export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
   return (
@@ -74,7 +75,7 @@ export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
       className="flex-1"
       data-sidebar="content"
       data-slot="sidebar-content"
-      viewportClassName="group-data-[collapsible=icon]:overflow-hidden"
+      viewportClassName="group-data-[collapsible=icon]:overflow-hidden!"
     >
       <div className={cn("flex flex-col gap-2", className)} {...props} />
     </ScrollArea>
