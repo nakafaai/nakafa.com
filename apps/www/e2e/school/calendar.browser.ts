@@ -7,6 +7,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 
+/** The day the spec chooses, named by its month and date whatever the weekday. */
+const CHOSEN_DAY = /December 15/;
+
 /** A phone and a desktop, where the calendar opens in a drawer's or a dialog's picker. */
 const WIDTHS = [
   { height: 844, width: 390 },
@@ -32,7 +35,7 @@ async function chooseThroughSelects(page: Page, picker: Locator) {
     "December"
   );
   await expect(year).toHaveText(next);
-  await calendar.getByRole("button", { name: /December 15/ }).click();
+  await calendar.getByRole("button", { name: CHOSEN_DAY }).click();
   await expect(calendar).toHaveCount(0);
   await expect(picker).toHaveText(`Dec 15, ${next}`);
 }
