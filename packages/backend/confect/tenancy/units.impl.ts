@@ -18,6 +18,7 @@ import {
   UNIT_LIMIT,
   type UnitStatus,
 } from "@repo/backend/confect/tenancy/schema";
+import { edit } from "@repo/backend/confect/tenancy/units.edit";
 import spec from "@repo/backend/confect/tenancy/units.spec";
 import { addUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { Array as Arr, Effect, Layer, Schema, Struct } from "effect";
@@ -125,47 +126,6 @@ const setNpsn = FunctionImpl.make(
       type: "unit.npsn.set",
     });
     return npsn;
-  })
-);
-
-/**
- * Sets the name and the level of one school, which its creation chose. The school's Admin may change them
- * (`tenant.manage`) and the school must allow its changes (`unit.manage`). Each value that changes is recorded on
- * its own, and values already stored write and record nothing.
- */
-const edit = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "edit",
-  Effect.fn("tenancy.units.edit")(function* ({ level, name, unitId }) {
-    const { person } = yield* Member;
-    const unit = yield* unitAuthority.authorize("unit.manage", unitId);
-    if (unit.level === level && unit.name === name) {
-      return { level, name };
-    }
-    yield* (yield* DatabaseWriter)
-      .table("tenantUnits")
-      .replace(
-        unit._id,
-        Struct.assign(Struct.omit(unit, ["_creationTime", "_id"]), {
-          level,
-          name,
-        })
-      )
-      .pipe(Effect.orDie);
-    if (unit.name !== name) {
-      yield* unitAuthority.record(personActor(person), unit, {
-        name,
-        type: "unit.name.set",
-      });
-    }
-    if (unit.level !== level) {
-      yield* unitAuthority.record(personActor(person), unit, {
-        level,
-        type: "unit.level.set",
-      });
-    }
-    return { level, name };
   })
 );
 

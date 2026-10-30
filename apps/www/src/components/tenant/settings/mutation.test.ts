@@ -115,7 +115,7 @@ describe("components/tenant/settings/mutation", () => {
       expect(shown).toHaveLength(3);
     });
 
-    it("shows the time zone and page language of a unit in the viewer and the list at once", () => {
+    it("shows the time zone, page language, name and level of a unit in the viewer and the list at once", () => {
       const local = createLocalStore();
       local.seed(tenancy.viewer.get, { slug }, viewer());
       local.seed(tenancy.units.list, { slug }, [unit(smp), unit(sma)]);
@@ -123,6 +123,12 @@ describe("components/tenant/settings/mutation", () => {
         contentLanguage: "en",
         slug,
         timeZone: "Asia/Makassar",
+        unitId: smp,
+      });
+      editUnitChange(local.store, {
+        level: "mts",
+        name: "MTs Nakafa",
+        slug,
         unitId: smp,
       });
       const shown = Option.getOrThrow(
@@ -135,41 +141,16 @@ describe("components/tenant/settings/mutation", () => {
         expect.objectContaining({
           contentLanguage: "en",
           id: smp,
+          level: "mts",
+          name: "MTs Nakafa",
           timeZone: "Asia/Makassar",
         }),
       ]);
-      expect(Arr.map(listed, (item) => [item.id, item.timeZone])).toEqual([
-        [smp, "Asia/Makassar"],
-        [sma, "Asia/Jakarta"],
-      ]);
-    });
-
-    it("shows the new name and level of a unit in the viewer and the list at once", () => {
-      const local = createLocalStore();
-      local.seed(tenancy.viewer.get, { slug }, viewer());
-      local.seed(tenancy.units.list, { slug }, [unit(smp), unit(sma)]);
-      editUnitChange(local.store, {
-        level: "mts",
-        name: "MTs Nurul Fikri",
-        slug,
-        unitId: smp,
-      });
-      const shown = Option.getOrThrow(
-        local.store.getQuery(tenancy.viewer.get, { slug })
-      );
-      const listed = Option.getOrThrow(
-        local.store.getQuery(tenancy.units.list, { slug })
-      );
-      expect(shown.units).toEqual([
-        expect.objectContaining({
-          id: smp,
-          level: "mts",
-          name: "MTs Nurul Fikri",
-        }),
-      ]);
-      expect(Arr.map(listed, (item) => [item.id, item.name])).toEqual([
-        [smp, "MTs Nurul Fikri"],
-        [sma, unit(sma).name],
+      expect(
+        Arr.map(listed, (item) => [item.id, item.timeZone, item.name])
+      ).toEqual([
+        [smp, "Asia/Makassar", "MTs Nakafa"],
+        [sma, "Asia/Jakarta", unit(sma).name],
       ]);
     });
 
