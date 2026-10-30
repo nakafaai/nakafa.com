@@ -5,7 +5,6 @@ import {
   PRELOADED_FONT_SELECTOR,
   readTypefaceFiles,
 } from "@/e2e/support/fonts";
-import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { settleRouter } from "@/e2e/support/navigation/settle";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -13,7 +12,7 @@ import { collectUnusedPreloads } from "@/e2e/support/preload";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** Longer than the 100 ms block period of optional display. */
+/** A second late: longer than a served page takes to paint, shorter than the 3 s block period. */
 const lateTypefaceMilliseconds = 1000;
 
 const verifyQuranTypefaceScope = Effect.fn(
@@ -115,17 +114,17 @@ const verifySurahPreloadsTypeface = Effect.fn(
 
   yield* openSurah(page, href);
   const fonts = yield* readQuranTextFonts(page);
-  yield* Effect.sync(() => expect(fonts).toContain("Amiri"));
+  yield* Effect.sync(() => expect(fonts).toEqual(["Amiri Quran"]));
 });
 
 /**
- * Optional display never swaps a late typeface in, so a surah whose Amiri
- * arrives after the block period keeps the system face it was laid out in
- * and stays still. Routing bypasses the HTTP cache, so the second view
- * requests the typeface again and the route holds it back.
+ * Block display never draws Quran text in another face: a surah whose Amiri
+ * Quran arrives a second late waits for it and then shows its words in it alone.
+ * Routing bypasses the HTTP cache, so the second view requests the typeface
+ * again and the route holds it back.
  */
-const verifyLateTypefaceKeepsSurahStill = Effect.fn(
-  "NakafaE2E.verifyLateTypefaceKeepsSurahStill"
+const verifyLateTypefaceNeverShowsFallback = Effect.fn(
+  "NakafaE2E.verifyLateTypefaceNeverShowsFallback"
 )(function* (page: Page, surah: number) {
   yield* seedAnalyticsConsent(page, "denied");
   const href = `/en/quran/${surah}`;
@@ -160,12 +159,10 @@ const verifyLateTypefaceKeepsSurahStill = Effect.fn(
     readinessTimeoutMilliseconds
   );
   yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-  const layoutShift = yield* readLayoutShift(page);
   const fonts = yield* readQuranTextFonts(page);
   yield* Effect.sync(() => {
     expect(MutableList.toArray(held)).not.toHaveLength(0);
-    expect(fonts).not.toContain("Amiri");
-    expect(layoutShift).toBe(0);
+    expect(fonts).toEqual(["Amiri Quran"]);
   });
 });
 
@@ -192,13 +189,13 @@ for (const [device, viewport, surah] of [
   test.describe(`Quran typeface on a ${device}`, () => {
     test.use({ viewport });
 
-    test(`keeps surah ${surah} still when it arrives late`, async ({
+    test(`shows surah ${surah} only in Amiri Quran when it arrives late`, async ({
       page,
     }) => {
       await Effect.runPromise(
         withObservedPageErrors(
           page,
-          verifyLateTypefaceKeepsSurahStill(page, surah)
+          verifyLateTypefaceNeverShowsFallback(page, surah)
         )
       );
     });
