@@ -8,7 +8,8 @@ function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset
       className={cn(
-        "flex flex-col gap-6",
+        // A fieldset keeps the browser's min-content floor, so a long value would widen it past its container.
+        "flex min-w-0 flex-col gap-6",
         "has-[>[data-slot=checkbox-group]]:gap-3 has-[>[data-slot=radio-group]]:gap-3",
         className
       )}
@@ -51,8 +52,9 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// The field is a fieldset, which keeps the browser's min-content floor; min-w-0 lets it narrow with its container.
 const fieldVariants = cva(
-  "group/field flex w-full gap-3 data-[invalid=true]:text-destructive",
+  "group/field flex w-full min-w-0 gap-3 data-[invalid=true]:text-destructive",
   {
     variants: {
       orientation: {

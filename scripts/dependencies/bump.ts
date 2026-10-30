@@ -10,7 +10,7 @@ import {
   Schema,
 } from "effect";
 import { DependencyCommandError, runBun } from "#scripts/dependencies/command";
-import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
+import { REGISTRY_REVIEWS } from "#scripts/dependencies/reviews";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 import { heldDependencyNames } from "#scripts/dependencies/validate";
 import { runEntry } from "#scripts/entry";
