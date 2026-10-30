@@ -1705,6 +1705,7 @@
     "set-update-error": "Unable to update results.",
     "set-offline": "Connection lost.",
     "answer": "Answer",
+    "statement": "Statement",
     "check-answer": "Check answer",
     "correct": "Correct",
     "incorrect": "Incorrect",
