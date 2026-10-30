@@ -255,8 +255,12 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     })
   ).toHaveAttribute("aria-current", "step");
 
-  // The footer's flag marks the current question, the second, and the navigator marks it as well.
-  const flag = student.getByRole("button", { exact: true, name: "Flag" });
+  // In the list each question carries its own flag: the second question's flag marks it, and the navigator marks
+  // it as well.
+  const flag = student.getByRole("button", {
+    exact: true,
+    name: "Flag question 2",
+  });
   await flag.click();
   await expect(flag).toHaveAttribute("aria-pressed", "true");
   await expect(
