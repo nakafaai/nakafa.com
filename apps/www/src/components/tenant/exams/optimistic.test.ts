@@ -3,7 +3,6 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
 import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/question";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
@@ -303,14 +302,10 @@ describe("insertedAfter", () => {
 });
 
 /** A store that holds the given list pages, each with its arguments, and records what is written. */
-const listStore = (
-  pages: unknown[],
-  home: Option.Option<unknown> = Option.none()
-) => {
+const listStore = (pages: unknown[]) => {
   const getAllQueries = vi.fn();
   getAllQueries.mockReturnValue(pages);
   const getQuery = vi.fn();
-  getQuery.mockReturnValue(home);
   const setQuery = vi.fn();
   return {
     localStore: { getAllQueries, getQuery, setQuery },
@@ -375,7 +370,7 @@ describe("the optimistic updates of the new questions", () => {
 
   it("show a new exam first in the first page of each list the store holds", () => {
     const examIdOf = Schema.decodeUnknownSync(Id("exams"));
-    const draft: typeof HomeDraft.Type = {
+    const draft: Pick<ListedExam, "createdAt" | "id" | "title"> = {
       createdAt: 1,
       id: examIdOf("draft-exam"),
       title: "Draf",
@@ -416,53 +411,6 @@ describe("the optimistic updates of the new questions", () => {
         ],
       })
     );
-  });
-
-  it("show a new exam first among the drafts of the school home the store holds", () => {
-    const examIdOf = Schema.decodeUnknownSync(Id("exams"));
-    const draft: typeof HomeDraft.Type = {
-      createdAt: 1,
-      id: examIdOf("draft-exam"),
-      title: "Draf",
-    };
-    const existing: typeof HomeDraft.Type = {
-      createdAt: 0,
-      id: examIdOf("exam-old"),
-      title: "Lama",
-    };
-    const home = { drafts: [existing], live: [], next: [] };
-    const { localStore, setQuery } = listStore([], Option.some(home));
-
-    insertDraftExam(draft)(localStore, {
-      scope: { kind: "tenant" },
-      slug,
-      title: draft.title,
-    });
-
-    expect(setQuery).toHaveBeenCalledTimes(1);
-    expect(setQuery).toHaveBeenCalledWith(
-      exams.exams.home,
-      { slug },
-      Option.some({ ...home, drafts: [draft, existing] })
-    );
-  });
-
-  it("write nothing to the school home the store does not hold", () => {
-    const examIdOf = Schema.decodeUnknownSync(Id("exams"));
-    const draft: typeof HomeDraft.Type = {
-      createdAt: 1,
-      id: examIdOf("draft-exam"),
-      title: "Draf",
-    };
-    const { localStore, setQuery } = listStore([]);
-
-    insertDraftExam(draft)(localStore, {
-      scope: { kind: "tenant" },
-      slug,
-      title: draft.title,
-    });
-
-    expect(setQuery).not.toHaveBeenCalled();
   });
 });
 

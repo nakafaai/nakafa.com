@@ -14,12 +14,7 @@ type RoomSeed = Pick<ExamSittingsDoc, "examId" | "opensAt" | "state"> &
   Partial<
     Pick<
       ExamSittingsDoc,
-      | "closesAt"
-      | "cohortId"
-      | "resultsReleasedAt"
-      | "room"
-      | "tenantId"
-      | "unitId"
+      "closesAt" | "cohortId" | "room" | "tenantId" | "unitId"
     >
   >;
 
@@ -40,9 +35,6 @@ export const insertRoom = (fixture: SittingFixture, seed: RoomSeed) =>
         tokenIssuedAt: TENANCY_NOW,
         tokenSealed: new ArrayBuffer(0),
         unitId: seed.unitId ?? fixture.units.smp,
-        ...(seed.resultsReleasedAt === undefined
-          ? {}
-          : { resultsReleasedAt: seed.resultsReleasedAt }),
       })
     ).pipe(Effect.orDie)
   );

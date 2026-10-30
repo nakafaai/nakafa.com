@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import {
   DatabaseReader,
-  QueryCtx,
+  DocumentIds,
 } from "@repo/backend/confect/_generated/services";
 import type { Action } from "@repo/backend/confect/access/catalog";
 import { PAGE_LIMIT } from "@repo/backend/confect/integrations/api";
@@ -113,10 +113,7 @@ export const periodFor = Effect.fn("integrations.reads.period")(function* (
   read: ClientRead,
   periodId: string
 ) {
-  const ctx = yield* QueryCtx;
-  const id = Option.fromNullishOr(
-    ctx.db.normalizeId("tenantPeriods", periodId)
-  );
+  const id = yield* (yield* DocumentIds).parse("tenantPeriods", periodId);
   if (Option.isNone(id)) {
     return Option.none();
   }
