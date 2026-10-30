@@ -209,6 +209,8 @@
     "signal-copy": "Copied text",
     "signal-paste": "Pasted text",
     "signal-disconnect": "Lost the connection",
+    "signal-offline-seconds": "Lost the connection for {seconds} s",
+    "signal-offline-minutes": "Lost the connection for {minutes} min {seconds} s",
     "signal-secondTab": "Opened a second tab",
     "reason": "Reason",
     "reason-power-outage": "Power outage",
