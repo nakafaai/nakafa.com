@@ -79,7 +79,7 @@ describe("dependency policy sources", () => {
       );
       assert.include(
         problems,
-        "mermaid has 0 declarations; expected at least 1."
+        "better-auth has 0 declarations; expected at least 1."
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );

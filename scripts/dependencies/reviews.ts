@@ -7,11 +7,6 @@ import { AI_SDK_COHORT } from "#scripts/dependencies/policy";
  */
 export const REGISTRY_REVIEWS = [
   [
-    "mermaid@latest",
-    "12.2.0",
-    "Mermaid 12 requires Safari 17.4 (recorded when this hold was made; not re-measured on 25 October 2026), while Nakafa keeps the Safari 16.4 floor that Vite 8.3.5 builds for by default (its baseline-widely-available target lists safari16.4). The hold holds while both are true.",
-  ],
-  [
     "effect@latest",
     "4.1.0",
     "Effect 4.1.0 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. Every published @nakafa/aksara-contracts (1.0.0, 1.0.1 and 2.0.0) peers effect 4.0.5 exactly, and its dist/hash/digest.js calls Crypto.make from effect when the module loads, so on 4.1 every contracts import fails. nakafa.com therefore moves to 4.1.0 in the change that adopts contracts 3.0.0, the release built on 4.1 (nakafaai/aksara#497), which follows the contracts 2.0 adoption (#1434, #1436); that change is #1524. Checked 30 October 2026.",
