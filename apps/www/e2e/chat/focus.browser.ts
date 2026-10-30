@@ -14,6 +14,12 @@ import {
   titleOf,
 } from "@/e2e/support/rename";
 
+/** The chat history panel's own toggle, at its foot beside the chat from 1280 px. */
+const historyToggle = (page: Page) =>
+  page
+    .locator('[data-side="right"][data-slot="sidebar"]')
+    .getByRole("button", { exact: true, name: "Chat history" });
+
 /**
  * A rename saved with Enter while the server holds its answer. The focus goes
  * back to the control that opened the box at once, and stays there when the
@@ -97,7 +103,7 @@ const keepsFocusTheLearnerChose = Effect.fn("NakafaE2E.renameKeepsFocus")(
 
     yield* Effect.promise(async () => {
       const before = changes.sent;
-      const history = headerControl(page, "Chat history");
+      const history = historyToggle(page);
 
       changes.hold();
       await startRename(page);
@@ -123,7 +129,7 @@ const keepsFocusWhenRefused = Effect.fn(
 
   yield* Effect.promise(async () => {
     const before = changes.sent;
-    const history = headerControl(page, "Chat history");
+    const history = historyToggle(page);
 
     changes.hold();
     changes.failNext(RENAME);
