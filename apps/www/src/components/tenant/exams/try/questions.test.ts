@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Schema } from "effect";
@@ -13,8 +13,15 @@ const documentId = Schema.decodeUnknownSync(Id("editorDocuments"));
 /** One single-answer choice of two options, as the server builds a question's choice. */
 const [choice] = choiceAnswers([textLabel("A"), textLabel("B")]);
 
+/** A short answer, which no digit key picks. */
+const typed = Schema.decodeUnknownSync(InteractionSchema)({
+  id: "typed",
+  kind: "textEntry",
+  label: "Ibu kota",
+});
+
 /** A question of the exam with the given answers. */
-const question = (id: string, answers: readonly Interaction[]): Question => ({
+const question = (id: string, answers: Question["answers"]): Question => ({
   answers,
   explanation: documentId(`explanation-${id}`),
   id: questionId(id),
@@ -29,7 +36,7 @@ const question = (id: string, answers: readonly Interaction[]): Question => ({
 describe("projectTryQuestions", () => {
   it("marks, flags and picks the try's questions as a sitting's navigator and keys do", () => {
     const store = createExamTry();
-    const questions = [question("q1", [choice]), question("q2", [])];
+    const questions = [question("q1", [choice]), question("q2", [typed])];
     const project = () =>
       projectTryQuestions({ questions, try: store.getState() });
 
