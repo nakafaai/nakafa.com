@@ -197,7 +197,7 @@ function SchoolAuditBody() {
     entryColumns.display({
       cell: (info) => <AuditEntryMenu entry={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
   return (
