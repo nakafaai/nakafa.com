@@ -28,6 +28,7 @@ import {
   LocalizedNotFound,
   useRouteFailure,
 } from "@/components/state/localized";
+import { ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/analytics/consent/bootstrap";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
@@ -101,9 +102,10 @@ export const Route = createRootRoute({
  * router renders inside it. Its language and direction follow the not-found page
  * that the server answered, then the locale param of the route on screen, then
  * the language a school page renders in, and the default locale answers a path
- * without one. The pre-paint scripts set the theme, the pricing currency and the
- * signed-in hint before the first frame, so nothing changes after paint, and keep
- * a press that lands before React takes the page over. The theme is mounted here
+ * without one. The pre-paint scripts set the theme, the pricing currency, the
+ * signed-in hint and the usage-data mark before the body parses, so nothing on
+ * the document's root changes once the page is drawn, which would restyle every
+ * element, and keep a press that lands before React takes the page over. The theme is mounted here
  * once, for every route below.
  */
 function RootDocument({ children }: { children: ReactNode }) {
@@ -137,6 +139,12 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: signedInHintScript() }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{
+            __html: ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT,
+          }}
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
