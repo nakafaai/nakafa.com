@@ -31,7 +31,7 @@ export function PlayerMain({
         orientation="horizontal"
       >
         <ResizablePanel
-          className="[&>div]:overflow-visible!"
+          className="overflow-visible!"
           id="questions"
           minSize="55%"
         >
@@ -46,7 +46,7 @@ export function PlayerMain({
               withHandle
             />
             <ResizablePanel
-              className="[&>div]:overflow-visible!"
+              className="overflow-visible!"
               defaultSize="25%"
               id="navigator"
               maxSize="40%"
