@@ -88,9 +88,6 @@ export function SchoolAuditSettings() {
         <ReadBoundary>
           <SchoolAuditBody />
         </ReadBoundary>
-        <p className="mt-auto border-t px-4 py-3 text-muted-foreground text-sm">
-          {t("audit-footer")}
-        </p>
       </SettingsTablePage>
     </TableFiltersProvider>
   );
@@ -126,7 +123,7 @@ function AuditWhoFilter() {
  * Renders the audit log of the school, newest first, in a data table that filters by who
  * made each change and searches the changes, and loads more rows as its end comes into
  * view. The rows hold no policy value and no secret, so the page shows none. The body waits for the first page, and an empty school shows the empty
- * state alone.
+ * state alone. The note of what the trail leaves out closes the empty state, and the table once its last page is in.
  */
 function SchoolAuditBody() {
   const { slug } = useTenant();
@@ -148,11 +145,14 @@ function SchoolAuditBody() {
       return <DataFailure onRetry={reloadPage} />;
     }
     return (
-      <TableEmpty
-        act="reading"
-        description={t("audit-description")}
-        title={t("audit-empty")}
-      />
+      <>
+        <TableEmpty
+          act="reading"
+          description={t("audit-description")}
+          title={t("audit-empty")}
+        />
+        <AuditFooter />
+      </>
     );
   }
 
@@ -188,7 +188,22 @@ function SchoolAuditBody() {
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
+      {PaginatedQueryResult.isExhausted(pagination) ? <AuditFooter /> : null}
     </>
+  );
+}
+
+/**
+ * The note at the foot of the trail: what it leaves out. It arrives with the answer that it closes, so neither the
+ * first page nor a page that loads at the end of the table moves it.
+ */
+function AuditFooter() {
+  const t = useTranslations("SchoolSettings");
+
+  return (
+    <p className="mt-auto border-t px-4 py-3 text-muted-foreground text-sm">
+      {t("audit-footer")}
+    </p>
   );
 }
 
