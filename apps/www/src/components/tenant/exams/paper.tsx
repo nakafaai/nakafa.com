@@ -91,7 +91,8 @@ interface PageRowProps {
 
 /**
  * The row above a page's paper: the grip that moves the page, its number, its type, a mark while it needs a
- * key, and its actions. A page the server has not saved yet, or a page of a locked exam, shows its number and
+ * key, and its actions. The type and the mark follow the edit on screen, so a key the teacher just set clears the
+ * mark at once, before the server answers. A page the server has not saved yet, or a page of a locked exam, shows its number and
  * its type alone, and the type takes a change only once Convex holds the session.
  */
 function PageRow({ editing, index, question, saved }: PageRowProps) {
@@ -117,7 +118,8 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
           onChange={editing.setTemplate}
           template={editing.displayed.template}
         />
-        {question.key === null && needsKey(question.template) ? (
+        {editing.displayed.key === null &&
+        needsKey(editing.displayed.template) ? (
           <span className="flex items-center gap-1 text-muted-foreground text-xs">
             <HugeIcons
               aria-hidden="true"
