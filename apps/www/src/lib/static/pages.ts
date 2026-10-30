@@ -13,6 +13,9 @@ const TRYOUT_SEGMENT = "try-out";
 /** The articles index, which no sitemap page lists as one URL. */
 const ARTICLES_SEGMENT = "articles";
 
+/** The sign-in page, which the sitemap leaves out because it is no content. */
+const SIGN_IN_SEGMENT = "auth";
+
 /**
  * Whether a path is left out of the static build: the search screen, whose answer
  * depends on its query. A path is `/<locale>/<family>/...`. The sitemap lists the
@@ -26,8 +29,9 @@ export function isExcludedPath(path: string): boolean {
 /**
  * Selects the public paths that the build prerenders: the sitemap's URLs without
  * the search screen, try-out tracks, sets and sections included, plus the articles
- * index and the try-out hub of every locale, which no sitemap page lists. The
- * result is unique and sorted, so the build and its verifier compare the same list.
+ * index, the try-out hub and the sign-in page of every locale, which no sitemap
+ * page lists. The result is unique and sorted, so the build and its verifier
+ * compare the same list.
  */
 export function selectStaticPagePaths({
   locales,
@@ -40,6 +44,7 @@ export function selectStaticPagePaths({
   const indexes = Arr.flatMap(locales, (locale) => [
     `/${locale}/${ARTICLES_SEGMENT}`,
     `/${locale}/${TRYOUT_SEGMENT}`,
+    `/${locale}/${SIGN_IN_SEGMENT}`,
   ]);
   return Arr.sort(Arr.dedupe(Arr.appendAll(listed, indexes)), Order.String);
 }

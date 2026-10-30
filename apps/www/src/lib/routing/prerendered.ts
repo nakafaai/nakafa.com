@@ -23,7 +23,9 @@ const LEARNER_PAGE_FOLDER = "/_tryout";
 /**
  * The route templates whose pages the build prerenders as static assets. Their
  * loaders read the answers that the build keeps beside the pages, so a link to one
- * navigates in the browser and no Worker renders it for a visitor.
+ * navigates in the browser and no Worker renders it for a visitor. The sign-in
+ * page is here too: every visitor gets its static page, and the page itself sends
+ * a signed-in visitor on in the browser.
  */
 export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale",
@@ -31,6 +33,7 @@ export const PRERENDERED_ROUTE_TEMPLATES = [
   "/$locale/articles",
   "/$locale/articles/$category",
   "/$locale/articles/$category/$slug",
+  "/$locale/auth",
   "/$locale/contributor",
   "/$locale/curricula",
   "/$locale/curricula/$curriculum/$",

@@ -1,7 +1,8 @@
 import { Effect } from "effect";
 import { HttpClientRequest } from "effect/http";
 import { readSessionCookie } from "@/lib/auth/cookie.server";
-import { requestSessionToken, TOKEN_PATH } from "@/lib/auth/token";
+import { TOKEN_PATH } from "@/lib/auth/session";
+import { requestSessionToken } from "@/lib/auth/token";
 
 /**
  * Builds the headers of one Convex token request. The request forwards no body,
