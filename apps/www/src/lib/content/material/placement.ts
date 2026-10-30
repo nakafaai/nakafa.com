@@ -1,6 +1,6 @@
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import { decodeLocale } from "@repo/internationalization/src/locale";
-import { Effect, Option, Schema } from "effect";
+import { Effect, MutableHashMap, Option, Schema } from "effect";
 import { createStore, type StoreApi } from "zustand";
 import { reportClientException } from "@/lib/analytics/client";
 import type {
@@ -86,3 +86,29 @@ export function keepPlacement(
 ) {
   store.setState(placementState(Option.fromNullishOr(placement)));
 }
+
+/**
+ * The placement reads of this page session, one for each lesson and hint. The
+ * router keys a lesson's match by its path alone, because the static page must
+ * hydrate under any hint, so the loader's read does not always belong to the
+ * address that the reader is on, and the provider then reads it itself. Both go
+ * through the same read, so a lesson and hint cost one Convex query.
+ */
+const placementReads = MutableHashMap.empty<
+  string,
+  Effect.Effect<MaterialPlacement | null>
+>();
+
+/** Reads the placement that one lesson and hint name, once a page session. */
+export const readLessonPlacementOnce = Effect.fn(
+  "www.materials.placement.readOnce"
+)(function* (input: Parameters<typeof readLessonPlacement>[0]) {
+  const key = `${input.locale}/${input.page.route.publicPath}?${input.ctx ?? ""}`;
+  const earlier = MutableHashMap.get(placementReads, key);
+  if (Option.isSome(earlier)) {
+    return yield* earlier.value;
+  }
+  const read = yield* Effect.cached(readLessonPlacement(input));
+  MutableHashMap.set(placementReads, key, read);
+  return yield* read;
+});

@@ -158,3 +158,40 @@ for (const viewport of VIEWPORTS) {
     await context.close();
   });
 }
+
+test("the breadcrumb of a lesson whose match the router already holds paints once under the hint of its curriculum card", async ({
+  browser,
+  baseURL,
+}, testInfo) => {
+  const context = await browser.newContext({
+    baseURL: baseURL ?? "",
+    viewport: { height: 900, width: 1440 },
+  });
+  await context.addInitScript(SAMPLER);
+  const page = await context.newPage();
+  // The lesson loads first without a hint, so the router holds its match, keyed
+  // by the lesson's path alone, with no placement in it.
+  await page.goto(MATERIAL_PATH);
+  await page.waitForFunction(() => window.__TSR_ROUTER__ !== undefined);
+  await page.evaluate(
+    (href) => window.__TSR_ROUTER__?.navigate({ href }),
+    CURRICULUM_PATH
+  );
+  await expect(page).toHaveURL(new RegExp(`${CURRICULUM_PATH}$`));
+  // Only what the lesson paints after the press counts.
+  await page.evaluate(() => {
+    Reflect.get(window, "__placementPaint").samples.length = 0;
+  });
+  const link = page.locator('a[href*="/function-concept?ctx="]').first();
+  await link.scrollIntoViewIfNeeded();
+  await link.click();
+  await expect(page).toHaveURL(new RegExp(MATERIAL_PATH));
+  const { samples } = await settle(page);
+  const texts = paintedTexts(samples);
+  await testInfo.attach("paint-held-match.json", {
+    body: Buffer.from(encodeJsonText({ texts })),
+    contentType: "application/json",
+  });
+  expect(texts).toHaveLength(1);
+  await context.close();
+});

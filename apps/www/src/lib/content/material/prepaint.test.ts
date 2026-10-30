@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
+  holdPlacementPaint,
   PLACEMENT_PENDING_ATTRIBUTE,
   PLACEMENT_PREPAINT_SCRIPT,
   settlePlacementPaint,
@@ -65,11 +66,11 @@ describe("PLACEMENT_PREPAINT_SCRIPT", () => {
 });
 
 describe("settlePlacementPaint", () => {
-  it("shows the breadcrumb path again", () => {
-    document.documentElement.setAttribute(
-      PLACEMENT_PENDING_ATTRIBUTE,
-      "pending"
-    );
+  it("shows the breadcrumb path again after a hold", () => {
+    holdPlacementPaint();
+    expect(
+      document.documentElement.getAttribute(PLACEMENT_PENDING_ATTRIBUTE)
+    ).toBe("pending");
     settlePlacementPaint();
     expect(
       document.documentElement.hasAttribute(PLACEMENT_PENDING_ATTRIBUTE)

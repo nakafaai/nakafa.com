@@ -6,6 +6,7 @@ import {
   createPlacementStore,
   keepPlacement,
   readLessonPlacement,
+  readLessonPlacementOnce,
 } from "@/lib/content/material/placement";
 import {
   previewNextProjection,
@@ -152,4 +153,26 @@ describe("lesson placement in the browser", () => {
     keepPlacement(store, null);
     expect(store.getState().placement).toStrictEqual(Option.none());
   });
+
+  it.effect(
+    "reads one lesson and hint once a page session, and another hint again",
+    () =>
+      Effect.gen(function* () {
+        mocks.read.mockReturnValue(Effect.succeed(placement));
+        const once = { ctx: `${HINT}-once`, locale: "en", page };
+
+        expect(yield* readLessonPlacementOnce(once)).toStrictEqual(placement);
+        expect(yield* readLessonPlacementOnce(once)).toStrictEqual(placement);
+        expect(mocks.read).toHaveBeenCalledOnce();
+
+        mocks.read.mockReturnValue(Effect.succeed(null));
+        expect(
+          yield* readLessonPlacementOnce({ ...once, ctx: `${HINT}-other` })
+        ).toBeNull();
+        expect(
+          yield* readLessonPlacementOnce({ ...once, ctx: undefined })
+        ).toBeNull();
+        expect(mocks.read).toHaveBeenCalledTimes(2);
+      })
+  );
 });

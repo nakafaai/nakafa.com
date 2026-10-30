@@ -44,7 +44,7 @@ import {
   toMaterialHref,
   toMaterialNavigationPage,
 } from "@/lib/content/material/navigation";
-import { readLessonPlacement } from "@/lib/content/material/placement";
+import { readLessonPlacementOnce } from "@/lib/content/material/placement";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
@@ -164,9 +164,10 @@ export const Route = createFileRoute(
 )({
   validateSearch: Schema.toStandardSchemaV1(MaterialSearch),
   // In the browser the loader reads the placement that the address's `ctx` hint
-  // names, once a page: before a client navigation commits, and after a hard load
-  // has hydrated, when the router runs it again. The prerender reads none: the
-  // static page cannot see the query.
+  // names before a client navigation commits, and names the hint it read for, so
+  // the provider can tell whether it belongs to the address (the match is keyed
+  // by the lesson's path alone). The prerender reads none: the static page cannot
+  // see the query.
   loader: async ({ location, params }) => {
     const lesson = Arr.filter(
       (params._splat ?? "").split("/"),
@@ -186,21 +187,23 @@ export const Route = createFileRoute(
         },
       })
     );
-    const placement = import.meta.env.SSR
-      ? null
-      : await Effect.runPromise(
-          readLessonPlacement({
-            ctx: Option.getOrUndefined(
-              Option.flatMapNullishOr(
-                Schema.decodeOption(MaterialSearch)(location.search),
-                (search) => search.ctx
-              )
-            ),
-            locale: params.locale,
-            page: page.navigation,
-          })
-        );
-    return { ...page, placement, placementRead: !import.meta.env.SSR };
+    const ctx = Option.getOrUndefined(
+      Option.flatMapNullishOr(
+        Schema.decodeOption(MaterialSearch)(location.search),
+        (search) => search.ctx
+      )
+    );
+    if (import.meta.env.SSR) {
+      return { ...page, placement: null, placementHint: null };
+    }
+    const placement = await Effect.runPromise(
+      readLessonPlacementOnce({
+        ctx,
+        locale: params.locale,
+        page: page.navigation,
+      })
+    );
+    return { ...page, placement, placementHint: ctx ?? "" };
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
@@ -245,10 +248,12 @@ function MaterialPage() {
   const { metadata, headings, labels, route } = page;
   return (
     <MaterialPlacementProvider
+      hint={ctx}
       key={`${route.publicPath}?${ctx ?? ""}`}
+      locale={page.locale}
       page={page.navigation}
       placement={page.placement}
-      read={page.placementRead}
+      placementHint={page.placementHint}
     >
       <LayoutMaterial>
         <ContentViewTracker

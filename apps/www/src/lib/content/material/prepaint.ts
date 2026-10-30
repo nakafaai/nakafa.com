@@ -17,6 +17,11 @@ export const PLACEMENT_PREPAINT_SCRIPT = `(function () {
   } catch (error) {}
 })();`;
 
+/** Hides the lesson's breadcrumb path in its row until the placement of the address's hint is read. */
+export function holdPlacementPaint() {
+  document.documentElement.setAttribute(PLACEMENT_PENDING_ATTRIBUTE, "pending");
+}
+
 /** Shows the lesson's breadcrumb path: its placement is known, or the lesson has left the page. */
 export function settlePlacementPaint() {
   document.documentElement.removeAttribute(PLACEMENT_PENDING_ATTRIBUTE);
