@@ -98,10 +98,11 @@
 }
 
 /*
- * The header's account slot is chosen by the signed-in hint before the first
- * frame. The inline script sets `data-signed-in` on the root, so both slots are
- * rendered and the one that matches shows, with no account state at first paint.
- * Without the attribute the visitor slot shows.
+ * An account slot is chosen by the signed-in hint before the first frame: the
+ * header's, and the sign-in page's body, which has a visitor slot only. The
+ * inline script sets `data-signed-in` on the root, so both slots are rendered
+ * and the one that matches shows, with no account state at first paint. Without
+ * the attribute the visitor slot shows.
  */
 :root[data-signed-in="yes"] [data-account="visitor"],
 :root:not([data-signed-in="yes"]) [data-account="member"] {

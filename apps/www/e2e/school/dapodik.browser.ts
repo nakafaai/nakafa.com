@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Option, String as Str } from "effect";
 import { readSheet } from "read-excel-file/node";
 import writeXlsxFile from "write-excel-file/node";
+import { chooseDay } from "@/e2e/support/date";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -68,8 +69,8 @@ async function openPeriodWithCohort(
   await addPeriod.click();
   const periodDialog = page.getByRole("dialog");
   await periodDialog.getByLabel("Name").fill("Semester 1");
-  await periodDialog.getByLabel("First day").fill("2027-07-01");
-  await periodDialog.getByLabel("Last day").fill("2027-12-20");
+  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
+  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
   await periodDialog.getByRole("button", { name: "Add period" }).click();
   const periodRow = page.getByRole("row", { name: "Semester 1" });
   await periodRow.getByRole("button", { name: "More actions" }).click();

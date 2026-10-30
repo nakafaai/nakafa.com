@@ -6,12 +6,7 @@ import {
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Schema } from "effect";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
-
-/**
- * The Better Auth route that issues the Convex token, at the helper's default
- * base path.
- */
-export const TOKEN_PATH = "/api/auth/convex/token";
+import { TOKEN_PATH } from "@/lib/auth/session";
 
 /**
  * The token route could not answer for a request that carries a session cookie.
