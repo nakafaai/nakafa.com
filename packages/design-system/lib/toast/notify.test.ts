@@ -161,6 +161,25 @@ describe("toast", () => {
       })
   );
 
+  it.effect(
+    "renders an action's label in the reader's language, from the Common namespace of the dictionary",
+    () =>
+      Effect.gen(function* () {
+        const messages = yield* Effect.promise(() => loadLocaleMessages("de"));
+        const markup = renderToStaticMarkup(
+          createElement(IntlProvider, {
+            // The provider's props type requires its children, so the node goes there.
+            // biome-ignore lint/correctness/noChildrenProp: the provider's props type requires children
+            children: createElement(ToastAction, { label: "undo" }),
+            locale: "de",
+            messages,
+          })
+        );
+
+        expect(markup).toBe("Rückgängig");
+      })
+  );
+
   it("closes the toast with the id it is given, or every toast without one", () => {
     toast.dismiss("shown");
     toast.dismiss();
