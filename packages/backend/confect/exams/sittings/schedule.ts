@@ -9,8 +9,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { freezeExam } from "@repo/backend/confect/exams/freeze";
-import { keyFits } from "@repo/backend/confect/exams/key";
-import { needsKey, questionView } from "@repo/backend/confect/exams/question";
+import { keyMissing, questionView } from "@repo/backend/confect/exams/question";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import {
   KeysMissing,
@@ -82,7 +81,7 @@ const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
 });
 
 /**
- * Refuses a schedule while a question that needs a key (`needsKey`) has no answer key that
+ * Refuses a schedule while a question that needs a key has no answer key that
  * fits it. An essay needs none, since the teacher scores it. The reply names the order
  * number of each such question, counted from one (round 2, decision 10).
  */
@@ -97,10 +96,7 @@ const keysFit = Effect.fn("exams.sittings.schedule.keys")(function* (
       .pipe(Effect.orDie, Effect.flatMap(questionView))
   );
   const unkeyed = Arr.flatMap(views, (view, index) =>
-    !needsKey(view.template) ||
-    (view.key !== null && keyFits(view.answers, view.key))
-      ? []
-      : [index + 1]
+    keyMissing(view) ? [index + 1] : []
   );
   if (unkeyed.length > 0) {
     return yield* new KeysMissing({ questions: unkeyed });
