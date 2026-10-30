@@ -9,6 +9,7 @@ import {
 import { createClient, type Fixture } from "@repo/backend/test/api";
 import { denied, nf } from "@repo/backend/test/classroom";
 import {
+  actedAt,
   journal,
   slugOf,
   TENANCY_NOW,
@@ -41,10 +42,20 @@ const started = Effect.fn("test.devices.started")(function* (fixture: Fixture) {
   return answer;
 });
 
+/**
+ * When a device whose times the test reads starts: after the setup's commits,
+ * since Convex runs each mutation after the commits before it.
+ */
+const STARTED_AT = actedAt();
+
+/** When a device started at `STARTED_AT` stops being valid. */
+const EXPIRED_AT =
+  STARTED_AT + Duration.toMillis(Duration.seconds(DEVICE_SECONDS));
+
 /** Sets the clock to `steps` poll intervals after the start, so a poll at each step is not too fast. */
 const atStep = (steps: number) =>
   vi.setSystemTime(
-    TENANCY_NOW + steps * Duration.toMillis(Duration.seconds(DEVICE_INTERVAL))
+    STARTED_AT + steps * Duration.toMillis(Duration.seconds(DEVICE_INTERVAL))
   );
 
 /** The two halves of a user code, as a device shows it. */
@@ -57,6 +68,7 @@ describe("integrations/devices", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const client = yield* createClient(fixture);
+        vi.setSystemTime(STARTED_AT);
         const device = yield* started(fixture);
         expect(device).toMatchObject({
           expiresIn: DEVICE_SECONDS,
@@ -69,8 +81,10 @@ describe("integrations/devices", () => {
             deviceCode: device.deviceCode,
           });
         expect(yield* poll()).toEqual({ outcome: "pending" });
+        // Every poll moves the device's poll time, so each poll has its own step.
+        atStep(0.5);
         expect(yield* poll()).toEqual({ outcome: "slow_down" });
-        atStep(1);
+        atStep(1.5);
         expect(yield* poll()).toEqual({ outcome: "pending" });
         // An Admin may type the code in small letters, with the dash the device shows.
         const typed = Str.replace(
@@ -128,10 +142,9 @@ describe("integrations/devices", () => {
             deviceCode: refused.deviceCode,
           })
         ).toEqual({ outcome: "denied" });
+        vi.setSystemTime(STARTED_AT);
         const late = yield* started(fixture);
-        vi.setSystemTime(
-          TENANCY_NOW + Duration.toMillis(Duration.seconds(DEVICE_SECONDS))
-        );
+        vi.setSystemTime(EXPIRED_AT);
         expect(
           yield* fixture.internal.mutation(devices.poll, {
             deviceCode: late.deviceCode,
@@ -193,10 +206,9 @@ describe("integrations/devices", () => {
             deviceCode: device.deviceCode,
           })
         ).toEqual({ outcome: "expired" });
+        vi.setSystemTime(STARTED_AT);
         const late = yield* started(fixture);
-        vi.setSystemTime(
-          TENANCY_NOW + Duration.toMillis(Duration.seconds(DEVICE_SECONDS))
-        );
+        vi.setSystemTime(EXPIRED_AT);
         expect(
           yield* Effect.flip(
             fixture
@@ -210,10 +222,9 @@ describe("integrations/devices", () => {
   it.effect("sweeps expired devices and keeps live ones", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
+      vi.setSystemTime(STARTED_AT);
       yield* started(fixture);
-      vi.setSystemTime(
-        TENANCY_NOW + Duration.toMillis(Duration.seconds(DEVICE_SECONDS))
-      );
+      vi.setSystemTime(EXPIRED_AT);
       yield* started(fixture);
       expect(yield* fixture.internal.mutation(devices.sweep, {})).toBeNull();
       const rows = yield* fixture.run(

@@ -7,7 +7,7 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
+import { actedAt, slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { history } = refs.internal.classroom.forum.seed;
@@ -33,6 +33,7 @@ describe("classroom/forum seed history", () => {
         const fixture = yield* keyedFixture;
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "X-1");
+        vi.setSystemTime(actedAt());
         const seeded = yield* fixture.internal.mutation(history, {
           classSlug: "fisika-x-1",
           count: 5,
@@ -51,14 +52,14 @@ describe("classroom/forum seed history", () => {
           "Pesan 1",
         ]);
         expect(Arr.map(listed.page, (message) => message.createdAt)).toEqual(
-          Arr.map([0, 1, 2, 3, 4], (minutes) => TENANCY_NOW - minutes * 60_000)
+          Arr.map([0, 1, 2, 3, 4], (minutes) => actedAt() - minutes * 60_000)
         );
         const mark = yield* fixture.as("teacher").query(reads.get, {
           classId: forum.classId,
           place: { _tag: "channel", channelId: forum.channelId },
           slug: nf,
         });
-        expect(mark).toEqual({ at: TENANCY_NOW - 3 * 60_000 });
+        expect(mark).toEqual({ at: actedAt() - 3 * 60_000 });
         yield* fixture.internal.mutation(history, {
           classSlug: "fisika-x-1",
           count: 1,
