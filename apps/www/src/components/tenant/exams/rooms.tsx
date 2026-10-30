@@ -43,9 +43,11 @@ import { ColumnChoice } from "@/components/shared/table/column";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
+import { matchesSearch } from "@/components/shared/table/search";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
+  TableSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
@@ -197,6 +199,7 @@ function ExamRoomsContent({
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
       >
+        <TableSearch placeholder={t("rooms-search")} />
         {tenant.canOpenExams ? (
           <Link
             className={buttonVariants({ variant: "outline" })}
@@ -240,6 +243,7 @@ function RoomsTable({
     chosenOne(chosen, "group", Schema.is(Schema.String)),
     () => "all"
   );
+  const search = useTableFilters((state) => state.search);
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
@@ -264,6 +268,10 @@ function RoomsTable({
     ? () => pagination.loadMore(ROOM_PAGE_SIZE)
     : null;
   const empty = Arr.isReadonlyArrayEmpty(rooms);
+  // The group and the header's search keep the loaded rooms of one group whose name holds the search.
+  const shown = Arr.filter(roomsOfGroup(rooms, group), (room) =>
+    matchesSearch(room.room, search)
+  );
   if (empty && failed) {
     return <DataFailure onRetry={reloadPage} />;
   }
@@ -328,12 +336,12 @@ function RoomsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Arr.map(roomsOfGroup(rooms, group), (room) => (
+          {Arr.map(shown, (room) => (
             <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
           ))}
         </TableBody>
       </Table>
-      {empty ? (
+      {Arr.isReadonlyArrayEmpty(shown) ? (
         <TableEmpty
           act="searching"
           description={t("rooms-filter-empty-description")}
