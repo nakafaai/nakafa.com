@@ -12,6 +12,7 @@ import {
   Deferred,
   Duration,
   Effect,
+  Fiber,
   MutableHashMap,
   Option,
   Random,
@@ -275,20 +276,22 @@ export const runStudent = Effect.fn("load.student")(function* (
   const questions = yield* Effect.scoped(
     Effect.gen(function* () {
       const tab = yield* openTab(input, deviceId, versions);
-      if (opensSecond) {
-        const halfway = Option.match(
-          Arr.get(steps, Math.floor(steps.length / 2)),
-          { onNone: () => 0, onSome: (step) => step.at }
-        );
-        yield* Effect.forkScoped(
-          Effect.andThen(
-            sleepUntil(entered + halfway),
-            secondTab(input, deviceId, versions)
-          ).pipe(Effect.result)
-        );
-      }
+      const halfway = Option.match(
+        Arr.get(steps, Math.floor(steps.length / 2)),
+        { onNone: () => 0, onSome: (step) => step.at }
+      );
+      const second = yield* Effect.forkScoped(
+        opensSecond
+          ? Effect.andThen(
+              sleepUntil(entered + halfway),
+              secondTab(input, deviceId, versions)
+            ).pipe(Effect.result)
+          : Effect.void
+      );
       yield* takeSteps(input, tab, versions, { at: entered, steps: online });
       if (cut === null) {
+        // The second tab closes once its answer is saved, before the student finishes.
+        yield* Fiber.join(second);
         yield* finishOn(input, tab);
       }
       return tab.questions;

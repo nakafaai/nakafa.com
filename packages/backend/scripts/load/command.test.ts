@@ -8,7 +8,7 @@ import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
 import type { LoadInput } from "@repo/backend/scripts/load/run";
 import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, Fiber, FileSystem, Layer } from "effect";
+import { Array as Arr, Effect, Fiber, FileSystem, Layer } from "effect";
 import { TestClock } from "effect/testing";
 
 const mocks = vi.hoisted(() => ({
@@ -177,16 +177,21 @@ describe("load command", () => {
         mocks.issue.mockReturnValue(
           Effect.fail(new TokenFailed({ status: 503 }))
         );
-        load.connect("session-1");
+        mocks.open.mockReturnValue("the connection");
+        expect(load.connect("session-1")).toBe("the connection");
         const token: Effect.Effect<string | null, never, Recorder> =
           mocks.open.mock.calls[0]?.[1];
         const signedOut = yield* Effect.gen(function* () {
           const fiber = yield* Effect.forkChild(token);
-          yield* TestClock.adjust("10 seconds");
-          return {
-            samples: yield* (yield* Recorder).samples,
-            token: yield* Fiber.join(fiber),
-          };
+          // Each retry sleeps only once the attempt before it failed, so the clock moves one wait at a time.
+          yield* Effect.forEach(
+            Arr.range(1, 6),
+            () =>
+              Effect.andThen(Effect.yieldNow, TestClock.adjust("4 seconds")),
+            { discard: true }
+          );
+          const settled = yield* Fiber.join(fiber);
+          return { samples: yield* (yield* Recorder).samples, token: settled };
         }).pipe(Effect.provide(recorderLayer));
         expect(signedOut.token).toBeNull();
         expect(signedOut.samples).toEqual([
