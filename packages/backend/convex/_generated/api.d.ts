@@ -3808,7 +3808,6 @@ export declare const api: {
             unitId: Id<"tenantUnits">;
           }>;
           drafts: Array<{ createdAt: number; id: Id<"exams">; title: string }>;
-          draftsBounded: boolean;
           live: Array<{
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
@@ -3857,7 +3856,14 @@ export declare const api: {
         {
           continueCursor: string;
           isDone: boolean;
-          page: Array<{ id: Id<"exams">; title: string }>;
+          page: Array<{
+            createdAt: number;
+            id: Id<"exams">;
+            questionCount: number;
+            scope:
+              { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+            title: string;
+          }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }

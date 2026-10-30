@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { readRepeatedIcons } from "@/e2e/support/icons";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import {
   createSchool,
   hostAddress,
   inviteLearner,
   seedSitting,
+  signInClassTeacher,
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
@@ -26,6 +28,19 @@ const QUIET_STUDENT = "Your teacher has not scheduled a sitting yet.";
 
 /** The address of the setup row that invites a teacher: the school path, which the school host shows as the settings page. */
 const SETUP_INVITES_HREF = /\/settings\/invites$/u;
+
+/** The addresses of the home's shortcuts to the exams, the members and the settings. */
+const EXAMS_HREF = /\/exams$/u;
+const MEMBERS_HREF = /\/settings\/members$/u;
+const SETTINGS_HREF = /\/settings\/profile$/u;
+
+/** The shortcuts' accessible names, each the part's name and then its one sentence. */
+const EXAMS_LINK = /^Exams/u;
+const MEMBERS_LINK = /^Members/u;
+const SETTINGS_LINK = /^Settings/u;
+
+/** The address of the class that the acceptance runtime seeds for a class teacher. */
+const CLASS_HREF = /\/classes\/fisika-x-1$/u;
 
 test("the owner's Beranda shows the page's one action, the quiet state, and the setup", async ({
   baseURL,
@@ -97,10 +112,20 @@ test("the owner's Beranda is a plain greeting over separate cards, each titled i
     "16px"
   );
 
-  // A number's card names what it counts in words, with no icon beside the title.
-  const live = cards.filter({ hasText: "Live now" });
-  await expect(live).toHaveCount(1);
-  await expect(live.locator("svg")).toHaveCount(0);
+  // The shortcuts above the cards open the parts of the school the owner may open, each with an icon of its own, and
+  // no card counts rooms in a number.
+  const shortcuts = page.getByRole("navigation", { name: "Shortcuts" });
+  await expect(
+    shortcuts.getByRole("link", { name: EXAMS_LINK })
+  ).toHaveAttribute("href", EXAMS_HREF);
+  await expect(
+    shortcuts.getByRole("link", { name: MEMBERS_LINK })
+  ).toHaveAttribute("href", MEMBERS_HREF);
+  await expect(
+    shortcuts.getByRole("link", { name: SETTINGS_LINK })
+  ).toHaveAttribute("href", SETTINGS_HREF);
+  expect(await readRepeatedIcons(shortcuts, "a")).toEqual([]);
+  await expect(cards.filter({ hasText: "Rooms running" })).toHaveCount(0);
   // The quiet state is the schedule's card, titled as the schedule is.
   await expect(
     cards.filter({ hasText: QUIET_STAFF }).getByRole("heading", {
@@ -126,6 +151,30 @@ test("a teacher's Beranda shows the same one action and no setup", async ({
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
   await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
   await expect(page.getByText("Setup", { exact: true })).toHaveCount(0);
+  await context.close();
+});
+
+test("a class teacher's Beranda lists the teacher's class, and its row opens the class", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+
+  const classes = page
+    .locator('[data-slot="dashboard-cell"]')
+    .filter({ has: page.getByRole("heading", { name: "Classes" }) });
+  await expect(
+    classes.getByRole("link", { name: "Fisika X-1" })
+  ).toHaveAttribute("href", CLASS_HREF);
   await context.close();
 });
 
@@ -166,6 +215,9 @@ test("a student's Beranda shows the student's sittings and no action of the page
     0
   );
   await expect(page.getByText("Live now", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Shortcuts" })).toHaveCount(
+    0
+  );
   await context.close();
 });
 

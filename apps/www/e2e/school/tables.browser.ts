@@ -98,9 +98,10 @@ for (const viewport of [
 
 /**
  * The working tables of an exam (the exam list, its rooms, and a room's results) each fill one card
- * at the page width, give a state its badge, and keep a value that is not there yet in words.
+ * at the page width, give a state its badge, keep a value that is not there yet in words, and hold
+ * a row's actions in its menu.
  */
-test("the exam list, its rooms and a room's results fill the page card, with states as badges and no blank cell", async ({
+test("the exam list, its rooms and a room's results fill the page card, with states as badges, row menus and no blank cell", async ({
   baseURL,
   browser,
 }) => {
@@ -125,13 +126,21 @@ test("the exam list, its rooms and a room's results fill the page card, with sta
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner, 2));
   const page = await context.newPage();
 
-  // The exam list: its rooms one click away in their own column, and no row menu repeating the title.
+  // The exam list: each row says where the exam belongs, how many questions it holds and when it was created, and its
+  // menu opens the editor, the rooms, the student's view and Delete.
   await page.goto(address("/exams"));
   const card = page.locator('[data-slot="table-card"]');
-  await expect(card.getByRole("link", { name: "Rooms" }).first()).toBeVisible();
-  await expect(card.getByRole("button", { name: "More actions" })).toHaveCount(
-    0
-  );
+  for (const column of ["Unit", "Questions", "Created"]) {
+    await expect(
+      card.getByRole("columnheader", { name: column, exact: true })
+    ).toBeVisible();
+  }
+  await card.getByRole("button", { name: "More actions" }).first().click();
+  const menu = page.getByRole("menu");
+  for (const item of ["Edit", "Rooms", "Try as student", "Delete"]) {
+    await expect(menu.getByRole("menuitem", { name: item })).toBeVisible();
+  }
+  await page.keyboard.press("Escape");
   expect((await card.boundingBox())?.width ?? 0).toBeLessThanOrEqual(1280);
 
   // The rooms: an open room's state is a badge with its icon.
