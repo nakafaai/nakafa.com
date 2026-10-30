@@ -1,13 +1,8 @@
-import { useDebouncedValue } from "@mantine/hooks";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import { createContext, use } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useTableFilters } from "@/components/shared/table/toolbar";
-
-/** How long the typing in a results list's search pauses before the server reads the name it holds. */
-const SEARCH_DELAY_MILLISECONDS = 300;
 
 /** The sitting whose results a screen reads, and the school that holds it. */
 const ResultsScope = Schema.Struct({
@@ -69,14 +64,4 @@ export function useResultsPaper() {
  */
 export function useSessionSettled() {
   return useConvexAuth((auth) => !auth.isLoading);
-}
-
-/**
- * The name that a results list asks the server for: the list's search, trimmed, once the typing pauses, so each
- * pause reads one new first page and each key does not. Empty while the list is not searched.
- */
-export function useNameSearch() {
-  const typed = useTableFilters((state) => state.search).trim();
-  const [search] = useDebouncedValue(typed, SEARCH_DELAY_MILLISECONDS);
-  return search;
 }

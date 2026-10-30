@@ -47,7 +47,6 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
-  useNameSearch,
   useResultsPaper,
   useResultsScope,
   useSessionSettled,
@@ -72,6 +71,7 @@ import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
   TableFiltersProvider,
   TableSearch,
+  useServerSearch,
   useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { useKeptRows } from "@/lib/data/kept";
@@ -116,7 +116,7 @@ function QuestionResults({ question }: { readonly question: Question }) {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
-  const search = useNameSearch();
+  const search = useServerSearch();
   const chosen = useTableFilters((state) => state.chosen);
   const verdict = Option.getOrElse(
     chosenOne(chosen, "verdict", Schema.is(VerdictFilter)),

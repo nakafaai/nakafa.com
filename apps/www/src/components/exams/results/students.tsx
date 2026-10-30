@@ -32,7 +32,6 @@ import {
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
-  useNameSearch,
   useResultsPaper,
   useResultsScope,
   useSessionSettled,
@@ -45,7 +44,10 @@ import { ColumnChoice } from "@/components/shared/table/column";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
-import { useTableFilters } from "@/components/shared/table/toolbar";
+import {
+  useServerSearch,
+  useTableFilters,
+} from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useKeptRows } from "@/lib/data/kept";
 
@@ -297,7 +299,7 @@ function StudentTable({
 export function StudentsTable() {
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
-  const search = useNameSearch();
+  const search = useServerSearch();
   const chosen = useTableFilters((state) => state.chosen);
   const status = Option.getOrElse(
     chosenOne(chosen, "status", Schema.is(StatusFilter)),
