@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Effect, Option } from "effect";
+import { clientEnv } from "@/env.public";
 import { hasStaticRelease } from "@/lib/routing/release";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 import { SCHOOL_SHELL_PATH } from "@/lib/routing/school/shell";
@@ -51,7 +52,11 @@ export const readSchoolFile = Effect.fn("www.routing.school.file")(function* (
   return Option.some(yield* answerUnmatchedRequest(request));
 });
 
-/** The release's static shell at the visitor's address, with the given status. */
+/**
+ * The release's static shell at the visitor's address, with the given status. Its
+ * `Link` header opens the connection to Convex while the shell's scripts load, so
+ * the school's first read, which the page makes as soon as it runs, finds it open.
+ */
 const answerSchoolShell = Effect.fn("www.routing.school.shell")(function* (
   request: Request,
   status: 200 | 404
@@ -61,6 +66,10 @@ const answerSchoolShell = Effect.fn("www.routing.school.shell")(function* (
   );
   const headers = new Headers(shell.headers);
   headers.set("Content-Type", "text/html; charset=utf-8");
+  headers.append(
+    "Link",
+    `<${new URL(clientEnv.VITE_CONVEX_URL).origin}>; rel=preconnect; crossorigin`
+  );
   return new Response(request.method === "HEAD" ? null : shell.body, {
     headers,
     status,

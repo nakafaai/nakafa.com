@@ -127,6 +127,9 @@ export const Route = createFileRoute("/school/$slug")({
     params,
     routeId,
   }): Promise<SchoolContext> => {
+    // The router loads a route's code only after its beforeLoad, so the layout's
+    // code starts here, beside the frame read, and the page draws once the frame answers.
+    const code = Route.options.component?.preload?.();
     const { visit } = context;
     const invalid = Arr.some(
       matches,
@@ -140,6 +143,7 @@ export const Route = createFileRoute("/school/$slug")({
     if (frame.school._tag === "Refused") {
       throw notFound();
     }
+    await code;
     return { legal: frame.legal, school: frame.school, slug: params.slug };
   },
   head: ({ match }) => {

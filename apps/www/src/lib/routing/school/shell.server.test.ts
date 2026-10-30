@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
+import { clientEnv } from "@/env.public";
 import {
   answerSchoolPage,
   readSchoolFile,
@@ -59,6 +60,9 @@ describe("answerSchoolPage", () => {
         expect(response.headers.get("etag")).toBe('"shell"');
         expect(response.headers.get("content-type")).toBe(
           "text/html; charset=utf-8"
+        );
+        expect(response.headers.get("link")).toBe(
+          `<${new URL(clientEnv.VITE_CONVEX_URL).origin}>; rel=preconnect; crossorigin`
         );
         expect(yield* Effect.promise(() => response.text())).toBe(
           "<html>shell</html>"
