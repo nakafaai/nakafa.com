@@ -14,14 +14,21 @@ import {
   classSubjectKey,
 } from "@repo/backend/confect/classroom/class";
 import { Array as Arr, Option, Order, Schema } from "effect";
-import { draftText, isFirstPage } from "@/components/tenant/settings/state";
+import {
+  draftText,
+  isFirstPage,
+  withoutItem,
+} from "@/components/tenant/settings/state";
 
 /** One classroom of a period as the classrooms table shows it. */
 export type SchoolClass = PaginatedQueryItem<typeof classroom.classes.list>;
 
+/** One subject teacher of a classroom as its teachers list shows them. */
+type ClassTeacher = PaginatedQueryItem<typeof classroom.teachers.list>;
+
 /**
- * The optimistic changes of the classrooms of a period. Each one shows a mutation's result in every loaded page
- * of classrooms that it touches, and Confect undoes it when the server refuses the change.
+ * The optimistic changes of the classrooms of a period and of their subject teachers. Each one shows a mutation's
+ * result in every loaded page that it touches, and Confect undoes it when the server refuses the change.
  */
 
 /** The classrooms of one page in the order the list shows them: by subject, then by name, each without case. */
@@ -124,4 +131,64 @@ export const restoreClassChange: OptimisticUpdate<
   typeof classroom.classes.restore
 > = (localStore, { classId }) => {
   changeClass(localStore, classId, (row) => ({ ...row, status: "active" }));
+};
+
+/** Changes the page of every loaded list of one classroom's teachers that the match accepts. */
+function changeTeacherLists(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  matches: (args: Ref.Args<typeof classroom.teachers.list>) => boolean,
+  change: (page: readonly ClassTeacher[]) => ClassTeacher[]
+) {
+  for (const query of localStore.getAllQueries(classroom.teachers.list)) {
+    if (Option.isSome(query.value) && matches(query.args)) {
+      localStore.setQuery(
+        classroom.teachers.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: change(query.value.value.page),
+        })
+      );
+    }
+  }
+}
+
+/**
+ * Lists a newly assigned teacher at once, at the end of the first page of the classroom's teachers, named as a
+ * loaded page of the school's people names them, which the dialog's picker reads. A teacher the page already lists
+ * stays listed once, and with no loaded name the teacher waits for the server.
+ */
+export const assignTeacherChange: OptimisticUpdate<
+  typeof classroom.teachers.assign
+> = (localStore, { classId, personId }) => {
+  const person = Arr.findFirst(
+    localStore.getAllQueries(tenancy.people.list),
+    (query) =>
+      Option.flatMap(query.value, (value) =>
+        Arr.findFirst(value.page, (row) => row.id === personId)
+      )
+  );
+  if (Option.isNone(person)) {
+    return;
+  }
+  const teacher: ClassTeacher = { id: personId, name: person.value.name };
+  changeTeacherLists(
+    localStore,
+    (args) => args.classId === classId && isFirstPage(args),
+    (page) =>
+      Arr.some(page, (row) => row.id === personId)
+        ? Arr.copy(page)
+        : Arr.append(page, teacher)
+  );
+};
+
+/** Takes a removed teacher off every loaded page of the classroom's teachers at once. */
+export const removeTeacherChange: OptimisticUpdate<
+  typeof classroom.teachers.remove
+> = (localStore, { classId, personId }) => {
+  changeTeacherLists(
+    localStore,
+    (args) => args.classId === classId,
+    (page) => withoutItem(page, personId)
+  );
 };

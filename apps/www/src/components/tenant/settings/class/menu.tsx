@@ -3,6 +3,7 @@ import {
   Archive02Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
+  UserStar01Icon,
 } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassName } from "@repo/backend/confect/classroom/class";
@@ -32,6 +33,7 @@ import {
   restoreClassChange,
   type SchoolClass,
 } from "@/components/tenant/settings/class/changes";
+import { ClassTeachersDialog } from "@/components/tenant/settings/class/teachers";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { isDraft } from "@/components/tenant/settings/state";
 
@@ -69,9 +71,9 @@ export function SchoolClassRestore({
 }
 
 /**
- * An active classroom's row menu: it renames the classroom in a dialog that saves only a name the classroom does
- * not have yet, or archives it, with an undo in the toast that says so. A classroom the server has not answered
- * yet keeps its menu inert.
+ * An active classroom's row menu: it opens the classroom's subject teachers, renames the classroom in a dialog that
+ * saves only a name the classroom does not have yet, or archives it, with an undo in the toast that says so. A
+ * classroom the server has not answered yet keeps its menu inert.
  */
 export function SchoolClassMenu({
   row,
@@ -92,6 +94,8 @@ export function SchoolClassMenu({
   const rename = useMutation(classroom.classes.rename).withOptimisticUpdate(
     renameClassChange
   );
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTeaching, setIsTeaching] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [name, setName] = useState(row.name);
   const next = name.trim();
@@ -99,7 +103,7 @@ export function SchoolClassMenu({
 
   return (
     <div className="flex justify-end">
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={setIsMenuOpen}>
         <DropdownMenuTrigger
           render={
             <Button
@@ -113,6 +117,10 @@ export function SchoolClassMenu({
           }
         />
         <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={() => setIsTeaching(true)}>
+            <HugeIcons icon={UserStar01Icon} />
+            {t("class-teachers")}
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
               setName(row.name);
@@ -153,6 +161,13 @@ export function SchoolClassMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <ClassTeachersDialog
+        classId={row.id}
+        isRead={isMenuOpen || isTeaching}
+        open={isTeaching}
+        setOpen={setIsTeaching}
+        slug={slug}
+      />
       <ResponsiveDialog
         description={t("class-rename-description")}
         footer={

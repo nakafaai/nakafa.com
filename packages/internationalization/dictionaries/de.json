@@ -684,6 +684,13 @@
     "class-rename-save": "Speichern",
     "class-archive": "Archivieren",
     "class-restore": "Wiederherstellen",
+    "class-teachers": "Lehrkräfte",
+    "class-teachers-description": "Die Lehrkräfte, die das Fach dieser Lerngruppe unterrichten. Jede hat die Rolle Lehrkraft in dieser Einheit.",
+    "class-teacher": "Lehrkraft",
+    "class-teacher-add": "Lehrkraft hinzufügen",
+    "class-teacher-remove": "Entfernen",
+    "class-teacher-remove-label": "{name} entfernen",
+    "class-teachers-empty": "Noch keine Lehrkraft.",
     "cohort-unavailable": "Diese Klasse kann hier nicht geöffnet werden.",
     "cohort-unavailable-description": "Wähle eine Klasse aus der Liste, denn diese gibt es nicht mehr oder sie gehört zu einer anderen Schule.",
     "placement-add": "Schüler hinzufügen",
@@ -2133,7 +2140,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Keine aktive Lehrkraft der Schule.",
-      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein."
+      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein oder eine Lerngruppe unterrichten."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Leitet schon eine andere Klasse.",
@@ -2363,6 +2370,10 @@
     "school-refusal-class-subject-not-allowed": {
       "title": "Grundschulgruppen haben kein Fach.",
       "description": "Lege sie ohne Fach an."
+    },
+    "school-refusal-person-class-limit": {
+      "title": "Diese Lehrkraft unterrichtet schon so viele Lerngruppen, wie eine Periode erlaubt.",
+      "description": "Entferne sie zuerst aus einer anderen Lerngruppe."
     },
     "school-period-archived": {
       "title": "Zeitraum archiviert."

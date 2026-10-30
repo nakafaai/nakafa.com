@@ -684,6 +684,13 @@
     "class-rename-save": "Save",
     "class-archive": "Archive",
     "class-restore": "Restore",
+    "class-teachers": "Teachers",
+    "class-teachers-description": "The teachers who teach this classroom's subject. Each one holds the Teacher role in this unit.",
+    "class-teacher": "Teacher",
+    "class-teacher-add": "Add teacher",
+    "class-teacher-remove": "Remove",
+    "class-teacher-remove-label": "Remove {name}",
+    "class-teachers-empty": "No teacher yet.",
     "cohort-unavailable": "This cohort cannot be opened here.",
     "cohort-unavailable-description": "Choose a cohort from the list, because this one is gone or belongs to another school.",
     "placement-add": "Add student",
@@ -2133,7 +2140,7 @@
     },
     "school-refusal-not-teacher": {
       "title": "Not an active teacher.",
-      "description": "Only an active teacher of this school can lead a cohort."
+      "description": "Only an active teacher of this school can lead a cohort or teach a classroom."
     },
     "school-refusal-teacher-has-homeroom": {
       "title": "Already leads another cohort.",
@@ -2363,6 +2370,10 @@
     "school-refusal-class-subject-not-allowed": {
       "title": "SD classrooms have no subject.",
       "description": "Add it without a subject."
+    },
+    "school-refusal-person-class-limit": {
+      "title": "This teacher teaches the most classrooms a period allows.",
+      "description": "Remove them from another classroom first."
     },
     "school-period-archived": {
       "title": "Period archived."
