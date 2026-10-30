@@ -164,6 +164,24 @@ beforeEach(() => {
 });
 
 describe("decisions before the router", () => {
+  it.effect(
+    "answers a visitor's try-out set with the page the build wrote, before any content read",
+    () =>
+      Effect.gen(function* () {
+        assets.fetch.mockResolvedValue(new Response("<html>set</html>"));
+
+        const { handle, response } = yield* served(
+          "/en/try-out/indonesia/snbt/2027/set-1"
+        );
+
+        expect(yield* Effect.promise(() => response.text())).toBe(
+          "<html>set</html>"
+        );
+        expect(retired.read).not.toHaveBeenCalled();
+        expect(handle).not.toHaveBeenCalled();
+      })
+  );
+
   it.effect("moves a trailing slash before the router", () =>
     Effect.gen(function* () {
       const { handle, response } = yield* served("/en/articles/belajar/");
@@ -449,45 +467,25 @@ describe("locale redirects", () => {
 });
 
 describe("failures", () => {
-  it.effect("fails when a removed address cannot be read", () =>
+  it.effect("fails with the entry's error when a reader fails", () =>
     Effect.gen(function* () {
-      retired.read.mockReturnValue(Effect.fail(new ReaderFailure()));
+      const cases = [
+        { address: "/en/tryout/old", options: {}, reader: retired.read },
+        { address: "/en/user/abc123", options: {}, reader: migration.read },
+        { address: "/en/search", options: {}, reader: source.read },
+        {
+          address: "/en/search",
+          options: { accept: "text/html" },
+          reader: projected.read,
+        },
+      ];
+      for (const { address, options, reader } of cases) {
+        reader.mockReturnValueOnce(Effect.fail(new ReaderFailure()));
 
-      const error = yield* Effect.flip(answer("/en/tryout/old"));
+        const error = yield* Effect.flip(answer(address, options));
 
-      expect(error._tag).toBe("UncaughtRequestError");
-    })
-  );
-
-  it.effect("fails when a migration cannot be read", () =>
-    Effect.gen(function* () {
-      migration.read.mockReturnValue(Effect.fail(new ReaderFailure()));
-
-      const error = yield* Effect.flip(answer("/en/user/abc123"));
-
-      expect(error._tag).toBe("UncaughtRequestError");
-    })
-  );
-
-  it.effect("fails when the source cannot own a route", () =>
-    Effect.gen(function* () {
-      source.read.mockReturnValue(Effect.fail(new ReaderFailure()));
-
-      const error = yield* Effect.flip(answer("/en/search"));
-
-      expect(error._tag).toBe("UncaughtRequestError");
-    })
-  );
-
-  it.effect("fails when the projection cannot be read", () =>
-    Effect.gen(function* () {
-      projected.read.mockReturnValue(Effect.fail(new ReaderFailure()));
-
-      const error = yield* Effect.flip(
-        answer("/en/search", { accept: "text/html" })
-      );
-
-      expect(error._tag).toBe("UncaughtRequestError");
+        expect(error._tag).toBe("UncaughtRequestError");
+      }
     })
   );
 });

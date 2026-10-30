@@ -7,9 +7,17 @@ const SPLAT_SEGMENT = "$";
 /** The first path segment of Start's server functions, which no route template names. */
 const SERVER_FUNCTION_SEGMENT = "_serverFn";
 
+/** An address whose last segment names a file, such as `/assets/old.js`. */
+const FILE_ADDRESS = /\.[^/]*$/;
+
 /** The non-empty segments of a path or of a route template. */
 export function readPathSegments(path: string): readonly string[] {
   return Arr.filter(path.split("/"), (segment) => segment !== "");
+}
+
+/** Whether a path's last segment names a file, such as a chunk or a page's `.md` twin, rather than a page. */
+export function namesFile(pathname: string): boolean {
+  return FILE_ADDRESS.test(pathname);
 }
 
 /**
