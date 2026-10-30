@@ -31,6 +31,7 @@ vi.mock("@/lib/routing/rendered", async () => {
     "/$locale/chat/$id",
     "/$locale/search",
     "/$locale/try-out/$country/$exam/$track",
+    "/$locale/user/$username",
     "/api/weather",
     "/school/$slug/exams",
   ];
@@ -106,19 +107,14 @@ function router() {
 function answer(
   address: string,
   options: {
-    readonly accept?: string;
     readonly headers?: Record<string, string>;
     readonly method?: string;
   } = {},
   handle = router()
 ) {
-  const headers = new Headers(options.headers);
-  if (options.accept !== undefined) {
-    headers.set("accept", options.accept);
-  }
   return answerRequest(
     new Request(`${ORIGIN}${address}`, {
-      headers,
+      headers: new Headers(options.headers),
       method: options.method ?? "GET",
     }),
     handle
@@ -128,10 +124,7 @@ function answer(
 /** Answers one request and returns the answer with the router that received it. */
 function served(
   address: string,
-  options: {
-    readonly accept?: string;
-    readonly headers?: Record<string, string>;
-  } = {}
+  options: { readonly headers?: Record<string, string> } = {}
 ) {
   const handle = router();
   return Effect.map(answer(address, options, handle), (response) => ({
@@ -260,7 +253,7 @@ describe("decisions before the router", () => {
       Effect.gen(function* () {
         projected.read.mockReturnValue(Effect.succeed("en"));
 
-        const { handle } = yield* served("/en/search", { accept: "text/html" });
+        const { handle } = yield* served("/en/search");
 
         expect(Option.isSome(routedNotFound(handle))).toBe(true);
         expect(projected.read).toHaveBeenCalledWith({
@@ -319,9 +312,7 @@ describe("decisions before the router", () => {
 
   it.effect("renders a locale path that a Worker route template names", () =>
     Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/chat", {
-        accept: "text/html",
-      });
+      const { handle, response } = yield* served("/en/chat");
 
       expect(response.status).toBe(200);
       expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/chat`);
@@ -334,10 +325,12 @@ describe("decisions before the router", () => {
     () =>
       Effect.gen(function* () {
         assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
-        for (const address of ["/en/school/harapan", "/en/user/abc123"]) {
-          const { handle, response } = yield* served(address, {
-            accept: "text/html",
-          });
+        for (const address of [
+          "/en/school/harapan",
+          "/en/user/abc123",
+          "/en/user/abc123.md",
+        ]) {
+          const { handle, response } = yield* served(address);
 
           expect(response.status).toBe(404);
           expect(handle).not.toHaveBeenCalled();
@@ -349,7 +342,7 @@ describe("decisions before the router", () => {
     Effect.gen(function* () {
       refusal.read.mockReturnValue(Effect.succeedSome("id"));
 
-      const { handle } = yield* served("/en/search", { accept: "text/html" });
+      const { handle } = yield* served("/en/search");
 
       expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/search`);
       expect(routedNotFound(handle)).toStrictEqual(
@@ -371,7 +364,7 @@ describe("decisions before the router", () => {
 
         const response = yield* answerRequest(
           new Request("https://harapan.nakafa.com/en/user/abc123/chat", {
-            headers: { accept: "text/html", host: "harapan.nakafa.com" },
+            headers: { host: "harapan.nakafa.com" },
           }),
           handle
         );
@@ -398,7 +391,7 @@ describe("decisions before the router", () => {
     Effect.gen(function* () {
       const { handle, response } = yield* served(
         "/en/articles/belajar?ref=app",
-        { accept: "text/html", headers: { host: "www.nakafa.com" } }
+        { headers: { host: "www.nakafa.com" } }
       );
 
       expect(response.status).toBe(307);
@@ -416,7 +409,6 @@ describe("locale redirects", () => {
     () =>
       Effect.gen(function* () {
         const { handle, response } = yield* served("/", {
-          accept: "text/html",
           headers: { "accept-language": "id-ID,id;q=0.9" },
         });
 
@@ -482,11 +474,7 @@ describe("failures", () => {
         { address: "/en/tryout/old", options: {}, reader: retired.read },
         { address: "/en/user/abc123", options: {}, reader: migration.read },
         { address: "/en/search", options: {}, reader: source.read },
-        {
-          address: "/en/search",
-          options: { accept: "text/html" },
-          reader: projected.read,
-        },
+        { address: "/en/search", options: {}, reader: projected.read },
       ];
       for (const { address, options, reader } of cases) {
         reader.mockReturnValueOnce(Effect.fail(new ReaderFailure()));
