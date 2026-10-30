@@ -280,6 +280,40 @@ const bundleCommonJsReactPeers: Plugin = {
   },
 };
 
+/**
+ * `esm-env` answers `BROWSER` with the `browser` export condition, and the Worker
+ * environments resolve with it (`workerd`, `worker`, `module`, `browser`, as
+ * Cloudflare's plugin does). workerd is no browser, so there `esm-env/browser`
+ * is `false`, as esm-env's own fallback (`typeof window !== "undefined"`) finds
+ * at runtime. Otherwise every library that asks renders as it would in a
+ * browser: NumberFlow's server markup came out empty, so a try-out section
+ * showed no numbers until it hydrated. The Worker environments pre-bundle no
+ * `esm-env`, because Vite's dependency optimizer resolves with its alias and
+ * resolve plugins only, never this one.
+ */
+const ESM_ENV_BROWSER = "esm-env/browser";
+const WORKER_ESM_ENV_BROWSER = "\0www:esm-env-browser";
+
+const workerIsNoBrowser: Plugin = {
+  name: "www:worker-is-no-browser",
+  enforce: "pre",
+  applyToEnvironment: (environment) =>
+    WORKER_ENVIRONMENTS.includes(environment.name),
+  configEnvironment: (name, config) => {
+    if (!WORKER_ENVIRONMENTS.includes(name)) {
+      return;
+    }
+    config.optimizeDeps = {
+      ...config.optimizeDeps,
+      exclude: [...(config.optimizeDeps?.exclude ?? []), "esm-env"],
+    };
+  },
+  resolveId: (source) =>
+    source === ESM_ENV_BROWSER ? WORKER_ESM_ENV_BROWSER : undefined,
+  load: (id) =>
+    id === WORKER_ESM_ENV_BROWSER ? "export default false;" : undefined,
+};
+
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/;
 
@@ -420,6 +454,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       react(),
       babel({ presets: [reactCompilerPreset()] }),
       bundleCommonJsReactPeers,
+      workerIsNoBrowser,
       writeHeadersFile,
       readPreviewHeaders,
       writeRobotsFile,
