@@ -37,7 +37,7 @@ import {
  * no section draws the icon of another section, so each entry of the sidebar is told apart by
  * its icon alone.
  */
-const sectionIcons: Record<
+export const settingsSectionIcons: Record<
   SchoolSettingsGroup["sections"][number]["labelKey"],
   ComponentProps<typeof HugeIcons>["icon"]
 > = {
@@ -112,7 +112,7 @@ function SchoolSettingsNavItem({
         render={<TargetLink target={section.target} />}
         tooltip={label}
       >
-        <HugeIcons icon={sectionIcons[section.labelKey]} />
+        <HugeIcons icon={settingsSectionIcons[section.labelKey]} />
         <span className="truncate">{label}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>

@@ -60,7 +60,12 @@
     "draft-created": "Created {age}",
     "schedule-bound": "The schedule draws only the first {count} rooms.",
     "results-bound": "Only the newest {count} results are listed.",
-    "all-exams": "All exams"
+    "all-exams": "All exams",
+    "search": "Search",
+    "search-placeholder": "Search the school...",
+    "search-description": "Open a page, a class or a setting of the school.",
+    "search-empty": "Nothing in the school goes by that name.",
+    "pages": "Pages"
   },
   "SchoolEntry": {
     "username-placeholder": "ayu.lestari",
