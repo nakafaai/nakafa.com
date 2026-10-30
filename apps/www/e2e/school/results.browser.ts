@@ -18,7 +18,7 @@ const LEARNER_NAME = "Acceptance Learner";
  * The seeded sitting holds two choice questions, and the first option of each is the correct answer. The
  * student answers the first question correctly and leaves the second unanswered, so the score is one of two.
  */
-const SCORE = "1 of 2 correct";
+const SCORE = "1 of 2 points";
 
 test("a student finishes a sitting, the proctor closes it and releases its results, and the student sees the score", async ({
   baseURL,

@@ -1,8 +1,8 @@
-import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
 import { useEffect, useRef } from "react";
+import { NinaHeldAttach } from "@/components/ai/attachment";
 import { useChatAdmission } from "@/components/ai/chat/admission";
 import { NinaInput } from "@/components/ai/input";
 import { NinaPromptTurn } from "@/components/marketing/about/nina/composer";
@@ -53,30 +53,8 @@ function LiveNinaAdmission() {
 
   return (
     <NinaInput attachments autoFocus disabled={disabled} onSubmit={submit}>
-      {attach ? <HeldAttachPicker /> : null}
+      {attach ? <NinaHeldAttach /> : null}
       {prompt ? <NinaPromptTurn prompt={prompt} /> : null}
     </NinaInput>
   );
-}
-
-/**
- * Opens the composer's file picker once, for the attach the learner pressed
- * before this composer loaded. A browser opens a picker only within a short time
- * after a press, so this composer opens it as soon as it mounts.
- */
-function HeldAttachPicker() {
-  const openFileDialog = usePromptInputAttachments(
-    (attachments) => attachments.openFileDialog
-  );
-  const opened = useRef(false);
-
-  useEffect(() => {
-    if (opened.current) {
-      return;
-    }
-    opened.current = true;
-    openFileDialog();
-  }, [openFileDialog]);
-
-  return null;
 }

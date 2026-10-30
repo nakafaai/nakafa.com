@@ -6,6 +6,7 @@ import {
 } from "@repo/design-system/components/ui/breadcrumb";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
+import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -13,6 +14,7 @@ import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { contentWidthVariants } from "@/components/shared/content/width";
 import { useTenant } from "@/components/tenant/context";
 import { schoolHomeTarget } from "@/lib/routing/school/target";
 
@@ -25,7 +27,9 @@ import { schoolHomeTarget } from "@/lib/routing/school/target";
  * passes its title, which only assistive technology reads, because the path already shows
  * it; a page whose body draws its own heading, such as the not-found page, passes no title.
  * On a phone the path folds into one menu beside the page's name, so the page's actions
- * have their room. The shell draws no header of its own.
+ * have their room. The bar and its border run the page's full width, and its row keeps the
+ * page width and gutter of the bodies under it, so on a wide screen the path and actions
+ * line up with the body's edges. The shell draws no header of its own.
  */
 export function SchoolHeader({
   children,
@@ -46,33 +50,40 @@ export function SchoolHeader({
 
   return (
     <header
-      className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4"
+      className="sticky top-0 z-10 h-16 shrink-0 border-b bg-background"
       data-slot="page-header"
     >
-      <SidebarTrigger
-        className="-ms-1 shrink-0 lg:hidden"
-        label={tCommon("toggle-sidebar")}
-      />
-      <Separator className="me-1 h-4 lg:hidden" orientation="vertical" />
-      {title === undefined ? null : (
-        <h1 className="sr-only" dir="auto">
-          {title}
-        </h1>
-      )}
-      {heading === undefined ? (
-        <SchoolPath
-          items={Arr.map(items, (item, index) =>
-            index === items.length - 1 ? { ...item, target: undefined } : item
-          )}
+      <div
+        className={cn(
+          contentWidthVariants({ width: "page" }),
+          "flex h-full w-full items-center gap-2 px-4"
+        )}
+      >
+        <SidebarTrigger
+          className="-ms-1 shrink-0 lg:hidden"
+          label={tCommon("toggle-sidebar")}
         />
-      ) : (
-        heading
-      )}
-      {children === undefined ? null : (
-        <div className="ms-auto flex shrink-0 items-center gap-2">
-          {children}
-        </div>
-      )}
+        <Separator className="me-1 h-4 lg:hidden" orientation="vertical" />
+        {title === undefined ? null : (
+          <h1 className="sr-only" dir="auto">
+            {title}
+          </h1>
+        )}
+        {heading === undefined ? (
+          <SchoolPath
+            items={Arr.map(items, (item, index) =>
+              index === items.length - 1 ? { ...item, target: undefined } : item
+            )}
+          />
+        ) : (
+          heading
+        )}
+        {children === undefined ? null : (
+          <div className="ms-auto flex shrink-0 items-center gap-2">
+            {children}
+          </div>
+        )}
+      </div>
     </header>
   );
 }
