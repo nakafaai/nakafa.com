@@ -8,6 +8,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 
+/** The end of an editor's address, which the try's address replaces. */
+const EDIT_SUFFIX = /\/edit$/u;
+
 /** A phone and a desktop window. */
 const WIDTHS = [
   { height: 844, width: 390 },
@@ -113,10 +116,55 @@ for (const viewport of WIDTHS) {
       timeout: readinessTimeoutMilliseconds,
     });
     await expectNoScrollbarRoom(page);
+    // The bar listens once the page is taken over, and shows from then on; the wheel turns over the lesson,
+    // since a wheel over the sidebar scrolls the sidebar.
     const bar = page.locator('[data-slot="page-scrollbar"]');
+    await expect(bar).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await page.mouse.move(viewport.width / 2, viewport.height / 2);
     await page.mouse.wheel(0, 800);
     await expect(bar).toHaveAttribute("data-scrolling", "");
     await expect(bar).toBeVisible();
     await context.close();
   });
 }
+
+test("the player's navigator column sticks right under its toolbar, its scroll area inside it", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  const create = page.getByRole("button", { name: "Create exam" });
+  await waitUntilTakenOver(create);
+  await create.click();
+  const creating = page.getByRole("dialog");
+  await creating.getByRole("textbox", { name: "Exam title" }).fill("Navigasi");
+  await creating.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+  await expect(page.getByRole("button", { name: "Schedule" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  await page.goto(page.url().replace(EDIT_SUFFIX, "/try"));
+  const column = page.locator("[data-player-sidebar]");
+  await expect(column).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  const placed = await column.evaluate((aside) => {
+    const toolbar = document.querySelector("[data-player-toolbar]");
+    return {
+      position: getComputedStyle(aside).position,
+      top: Math.round(aside.getBoundingClientRect().top),
+      under: Math.round(toolbar?.getBoundingClientRect().bottom ?? -1),
+    };
+  });
+  expect(placed.position).toBe("sticky");
+  expect(placed.top).toBe(placed.under);
+  await context.close();
+});

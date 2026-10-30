@@ -23,10 +23,17 @@ const scrollOf = (page: Page) =>
     top: window.scrollY,
   }));
 
-/** Opens a long lesson, with no control holding the focus, so the keys scroll the page itself. */
+/**
+ * Opens a long lesson, with no control holding the focus, so the keys scroll the page itself. The bar listens to
+ * the page once the page is taken over, and shows from then on, since the lesson is longer than the window, so
+ * the page scrolls only after it shows.
+ */
 async function openLesson(page: Page) {
   await page.goto(pinnedRoutes.material.en);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(page.locator('[data-slot="page-scrollbar"]')).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await page.evaluate(() => {
