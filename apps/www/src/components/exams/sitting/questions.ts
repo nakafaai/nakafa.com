@@ -7,22 +7,11 @@ import type {
   PaperQuestion,
   PaperValue,
 } from "@/components/exams/sitting/paper";
-import { choiceOf } from "@/components/exams/sitting/response";
+import { pickedOption } from "@/components/exams/sitting/response";
 import type {
   PlayerCellModel,
   PlayerQuestionModel,
 } from "@/components/player/model";
-
-/**
- * The option that a digit key picks: the option at `index` of a single choice. A question of
- * another shape, or a multiple choice, has no option that a digit key picks.
- */
-const pickedOption = (question: PaperQuestion, index: number) =>
-  Option.flatMap(choiceOf(question.interactions), (choice) =>
-    choice.maxChoices === 1
-      ? Option.map(Arr.get(choice.options, index), (option) => option.id)
-      : Option.none()
-  );
 
 /** A question is answered once the student saved at least one option of it, or text that is not blank. */
 const isQuestionAnswered = (question: PaperQuestion) =>
@@ -58,7 +47,7 @@ export function projectSittingQuestions(input: {
     flagged: question.flagged,
     key: question.id,
     pick: (index) =>
-      Option.match(pickedOption(question, index), {
+      Option.match(pickedOption(question.interactions, index), {
         onNone: () => false,
         onSome: (optionId) => {
           input.choose(question, [optionId]);

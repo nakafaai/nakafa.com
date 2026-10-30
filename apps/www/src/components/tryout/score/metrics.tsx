@@ -1,4 +1,5 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
   TryoutPartStat,
@@ -10,8 +11,17 @@ import {
   TryoutMetricSlash,
 } from "@/components/tryout/section/metrics";
 
-/** Renders strategy-aware score and correctness metrics. */
-export function TryoutScoreMetrics({ score }: { score: TryoutScoreResult }) {
+/**
+ * Renders strategy-aware score and correctness metrics, then the metrics the
+ * caller composed after them, such as a set's time limit.
+ */
+export function TryoutScoreMetrics({
+  children,
+  score,
+}: {
+  children?: ReactNode;
+  score: TryoutScoreResult;
+}) {
   const tTryouts = useTranslations("Tryouts");
   const scoreLabel =
     score.scoringStrategy === "irt"
@@ -31,6 +41,7 @@ export function TryoutScoreMetrics({ score }: { score: TryoutScoreResult }) {
           <TryoutMetricNumber value={score.totalQuestions} />
         </TryoutMetricFraction>
       </TryoutPartStat>
+      {children}
     </TryoutPartStats>
   );
 }

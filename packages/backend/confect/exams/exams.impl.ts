@@ -10,7 +10,7 @@ import {
   examAccess,
   examAuthority,
 } from "@repo/backend/confect/exams/authority";
-import { examSummary } from "@repo/backend/confect/exams/exam";
+import { examListed } from "@repo/backend/confect/exams/exam";
 import spec from "@repo/backend/confect/exams/exams.spec";
 import { readHome } from "@repo/backend/confect/exams/home/read";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
@@ -103,13 +103,13 @@ const list = FunctionImpl.make(
         .allowed(row)
         .pipe(Effect.map((actions) => Arr.contains(actions, "exam.view")))
     );
-    return Struct.assign(page, { page: Arr.map(viewable, examSummary) });
+    return Struct.assign(page, { page: Arr.map(viewable, examListed) });
   })
 );
 
 /**
- * The school home's exam reads: the viewer's own drafts, and the rooms the viewer may watch
- * that run now or open within two weeks. Each read is bounded, and `readHome` decides each row.
+ * The school home's exam reads: the rooms the viewer may watch that run now or open within the
+ * next day. Each read is bounded, and `readHome` decides each row.
  */
 const home = FunctionImpl.make(
   databaseSchema,

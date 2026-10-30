@@ -132,6 +132,7 @@ export function ExamToolbar() {
       </PicturesProvider>
       <PictureAltDialog
         alt=""
+        description={labels.pictures.addDescription}
         labels={labels.pictures}
         onCancel={shiftPicture}
         onConfirm={confirm}

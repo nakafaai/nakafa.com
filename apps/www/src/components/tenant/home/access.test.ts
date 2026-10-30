@@ -123,7 +123,7 @@ describe("showsStudentHome", () => {
     ).toBe(false);
   });
 
-  it("keeps a manager on the staff home with no exam action, so its setup stays", () => {
+  it("keeps a manager on the staff home with no exam action, since the student's sentences are not theirs", () => {
     expect(
       showsStudentHome(
         { canManage: true, role: Option.some("admin") },

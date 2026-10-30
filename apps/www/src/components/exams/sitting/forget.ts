@@ -1,11 +1,8 @@
 import type { GenericId } from "@confect/core";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Array as Arr, Effect } from "effect";
-import {
-  forgetAttempt,
-  submittedKeysOf,
-} from "@/components/exams/sitting/keep";
-import { sittingStorage } from "@/components/exams/sitting/storage";
+import { keptAttempt, submittedKeysOf } from "@/components/exams/sitting/keep";
+import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** Drops what the browser keeps for a submitted attempt. A browser that refuses storage reports it. */
@@ -14,14 +11,16 @@ export function forgetKeptAttempt(
   attemptId: GenericId.GenericId<"examAttempts">
 ) {
   Effect.runSync(
-    forgetAttempt(sittingId, attemptId).pipe(
-      Effect.provide(sittingStorage),
-      Effect.catchTag("KeyValueStoreError", (error) =>
-        reportClientException(error, {
-          source: "components/exams/sitting/kept",
-        })
+    keptAttempt(sittingId, attemptId)
+      .forget()
+      .pipe(
+        Effect.provide(keptStorage),
+        Effect.catchTag("KeyValueStoreError", (error) =>
+          reportClientException(error, {
+            source: "components/exams/sitting/kept",
+          })
+        )
       )
-    )
   );
 }
 

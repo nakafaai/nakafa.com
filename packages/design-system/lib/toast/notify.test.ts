@@ -6,7 +6,10 @@ import {
   expectTypeOf,
   it,
 } from "@effect/vitest";
-import { ToastMessage } from "@repo/design-system/lib/toast/message";
+import {
+  ToastAction,
+  ToastMessage,
+} from "@repo/design-system/lib/toast/message";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
@@ -114,21 +117,19 @@ describe("toast", () => {
     expect(sonner.error).not.toHaveBeenCalled();
   });
 
-  it("passes an action on with its label as a key, so the Toaster shows it as a button", () => {
+  it("passes an action on with its label as a word of Common, so the Toaster shows it as a button", () => {
     const onClick = vi.fn();
 
     toast.error(
       { title: "action-error.title" },
-      { action: { label: "copy-success.title", onClick }, duration: 5000 }
+      { action: { label: "undo", onClick }, duration: 5000 }
     );
 
     expect(sonner.error).toHaveBeenCalledExactlyOnceWith(
       createElement(ToastMessage, { message: "action-error.title" }),
       {
         action: {
-          label: createElement(ToastMessage, {
-            message: "copy-success.title",
-          }),
+          label: createElement(ToastAction, { label: "undo" }),
           onClick,
         },
         description: undefined,
@@ -157,6 +158,25 @@ describe("toast", () => {
 
         // The number keeps its unit on one line with a no-break space.
         expect(markup).toBe("Zusammen höchstens 10 MiB pro Nachricht.");
+      })
+  );
+
+  it.effect(
+    "renders an action's label in the reader's language, from the Common namespace of the dictionary",
+    () =>
+      Effect.gen(function* () {
+        const messages = yield* Effect.promise(() => loadLocaleMessages("de"));
+        const markup = renderToStaticMarkup(
+          createElement(IntlProvider, {
+            // The provider's props type requires its children, so the node goes there.
+            // biome-ignore lint/correctness/noChildrenProp: the provider's props type requires children
+            children: createElement(ToastAction, { label: "undo" }),
+            locale: "de",
+            messages,
+          })
+        );
+
+        expect(markup).toBe("Rückgängig");
       })
   );
 

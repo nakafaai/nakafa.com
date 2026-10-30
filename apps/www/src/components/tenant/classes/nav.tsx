@@ -1,4 +1,4 @@
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult } from "@confect/react";
 import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
@@ -10,9 +10,8 @@ import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/auth/convex";
 import { withMarks } from "@/components/tenant/classes/marks";
-import type { TenantValue } from "@/components/tenant/context";
+import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -46,8 +45,7 @@ export function TenantClassesGroup() {
 
 /** The classes of the viewer as sidebar entries, or nothing while they load or for a viewer with none. */
 function TenantClassesRows() {
-  const { slug } = useTenant();
-  const classes = useClassesQuery(slug);
+  const classes = useMyClasses();
   const t = useTranslations("School");
 
   if (QueryResult.isFailure(classes)) {
@@ -71,15 +69,6 @@ function TenantClassesRows() {
       ))}
     </TenantSidebarGroup>
   );
-}
-
-/**
- * Reads the viewer's classes in the school's active periods once Convex has settled
- * the session, so the query never runs before the viewer is known.
- */
-export function useClassesQuery(slug: TenantValue["slug"]) {
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  return useQuery(classroom.classes.mine, isSettled ? { slug } : "skip");
 }
 
 /**

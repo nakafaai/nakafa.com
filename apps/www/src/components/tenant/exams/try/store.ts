@@ -7,9 +7,11 @@ import { createStore } from "zustand";
 
 /**
  * The responses a teacher gave in one try, by question ID: the options chosen, or the text typed.
- * A question with no answer has no entry, so clearing an answer removes it.
+ * A question with no answer has no entry, so clearing an answer removes it. The flagged questions
+ * are kept the same way, as a sitting's navigator marks them.
  */
 const TryState = Schema.Struct({
+  flags: Schema.Record(Schema.String, Schema.Literal(true)),
   responses: Schema.Record(Schema.String, ExamResponse),
 });
 
@@ -20,6 +22,8 @@ interface TryActions {
    * answers nothing, no option or blank text, clears the question's answer.
    */
   readonly choose: (questionId: string, response: ExamResponse) => void;
+  /** Flags one question to come back to it, or takes its flag off, as a student's flag does. */
+  readonly flag: (questionId: string) => void;
 }
 
 /** The try of one exam, with its actions. */
@@ -37,5 +41,12 @@ export const createExamTry = () =>
           ? Rec.set(state.responses, questionId, response)
           : Rec.remove(state.responses, questionId),
       })),
+    flag: (questionId) =>
+      set((state) => ({
+        flags: Rec.has(state.flags, questionId)
+          ? Rec.remove(state.flags, questionId)
+          : Rec.set(state.flags, questionId, true as const),
+      })),
+    flags: {},
     responses: {},
   }));

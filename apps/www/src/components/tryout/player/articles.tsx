@@ -1,9 +1,11 @@
 import { Array as Arr, Option } from "effect";
 import { use } from "react";
+import { PlayerQuestionFlag } from "@/components/player/flag";
 import { PlayerQuestion } from "@/components/player/question";
 import { PlayerQuestions } from "@/components/player/questions";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
+import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { joinTryoutBodies } from "@/components/tryout/player/model";
 import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
 import { TryoutQuestionHeader } from "@/components/tryout/runtime/question/shell";
@@ -25,6 +27,7 @@ export function TryoutArticles({
   runtime: TryoutSectionRuntime;
 }) {
   const value = use(TryoutContentContext);
+  const flag = useTryoutFlag();
   if (value === null) {
     throw new Error("TryoutArticles must be used within TryoutContentContext");
   }
@@ -52,6 +55,12 @@ export function TryoutArticles({
             labelledBy={ids.title}
             questionKey={question.placementId}
           >
+            <PlayerQuestionFlag
+              flagged={question.flagged}
+              locked={locked}
+              onFlag={() => flag(question, !question.flagged)}
+              questionKey={question.placementId}
+            />
             <TryoutQuestionHeader questionOrder={question.questionOrder} />
             <section className="my-6">{body}</section>
             <section className="my-8">

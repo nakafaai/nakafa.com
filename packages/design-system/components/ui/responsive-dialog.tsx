@@ -23,7 +23,8 @@ import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
   children?: ReactNode;
-  description?: ReactNode;
+  /** The one sentence under the title that says what the dialog does; every dialog has one. */
+  description: ReactNode;
   /**
    * Where focus goes on close: `true` for the default, `false` to leave it to
    * the caller, or the element that a function returns.
@@ -59,9 +60,7 @@ export function ResponsiveDialog({
         <DialogContent finalFocus={finalFocus}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            {!!description && (
-              <DialogDescription>{description}</DialogDescription>
-            )}
+            <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
           {!!children && <DialogPanel>{children}</DialogPanel>}
           {!!footer && <DialogFooter>{footer}</DialogFooter>}
@@ -79,9 +78,7 @@ export function ResponsiveDialog({
       <DrawerPopup finalFocus={finalFocus} showBar>
         <DrawerHeader className={cn("border-b", !children && "border-b-0")}>
           <DrawerTitle>{title}</DrawerTitle>
-          {!!description && (
-            <DrawerDescription>{description}</DrawerDescription>
-          )}
+          <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
         <div className={cn("min-h-0 flex-1", !children && "hidden")}>
           <DrawerPanel>{children}</DrawerPanel>
