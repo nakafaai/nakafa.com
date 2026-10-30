@@ -59,6 +59,19 @@ decides each one, in the same way in both repositories.
 | `preferEffectString` | off | Stays off. The plugin suggests Effect String APIs for native string calls and notes that their semantics have caveats. No source rule asks for those calls |
 | `schemaClassObjectLiteral` | error | Enforced from the start. The plugin warns when an object literal is checked as a Schema class instance without its prototype. The workspace has no such literal, measured by the all-workspace typecheck on 25 October 2026 |
 
+### Compiler rules that `@effect/tsgo` 0.57 to 0.63 add
+
+`@effect/tsgo` 0.63.0 adds five rules to the 0.56.0 set. `packages/typescript-config/base.json`
+decides each one, in the same way in both repositories.
+
+| Rule | Decision | Owner, or the reason it stays off |
+| --- | --- | --- |
+| `flatMapIdentityToFlatten` | error | Fixed at its source: an `Effect.flatMap` whose callback returns its own parameter, or Effect's `identity`, becomes `Effect.flatten` |
+| `mapConstToAs` | error | Fixed at its source: an `Effect.map` callback that ignores its input and returns a constant becomes `Effect.as` |
+| `failCauseToConstructor` | error | Fixed at its source: `Effect.failCause` around one `Cause.fail` or `Cause.die` becomes `Effect.fail` or `Effect.die` |
+| `manualMetricTapToTrack` | error | Fixed at its source: a tap that only updates a metric becomes `Effect.trackSuccesses`, `trackErrors`, or `trackDefects` |
+| `mapMapErrorToMapBoth` | off | Stays off, as upstream ships it. Adjacent `Effect.map` and `Effect.mapError` steps read as two separate decisions, and `matchEffectToMapBoth` already rejects the `matchEffect` spelling that `mapBoth` replaces |
+
 ### Schema error brands
 
 A missing brand lets a structurally equal value pass for a Schema class instance.

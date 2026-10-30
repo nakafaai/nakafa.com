@@ -200,9 +200,15 @@ function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   );
 }
 
+/**
+ * One choice of a radio group in a menu. A radio item picks one value, as a select does, so the menu
+ * closes once a value is chosen, where Base UI keeps it open; a menu that switches values in place
+ * passes `closeOnClick={false}`.
+ */
 function DropdownMenuRadioItem({
   className,
   children,
+  closeOnClick = true,
   inset,
   ...props
 }: MenuPrimitive.RadioItem.Props & {
@@ -214,6 +220,7 @@ function DropdownMenuRadioItem({
         "relative flex cursor-pointer select-none items-center gap-2 whitespace-nowrap rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:pointer-events-none data-inset:pl-8 data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
+      closeOnClick={closeOnClick}
       data-inset={inset}
       data-slot="dropdown-menu-radio-item"
       {...props}

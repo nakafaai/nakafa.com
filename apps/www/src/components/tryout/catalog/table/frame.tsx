@@ -65,10 +65,7 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
             <TableBody>
               <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
               {canLoadMore && (
-                <TableRow
-                  aria-hidden="true"
-                  className="h-px hover:bg-transparent"
-                >
+                <TableRow aria-hidden="true" className="h-px">
                   <TableCell className="p-0" colSpan={5}>
                     <Intersection
                       className="h-px"

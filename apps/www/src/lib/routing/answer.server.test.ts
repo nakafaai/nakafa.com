@@ -31,6 +31,7 @@ vi.mock("@/lib/routing/rendered", async () => {
     "/$locale/chat/$id",
     "/$locale/search",
     "/$locale/try-out/$country/$exam/$track",
+    "/$locale/user/$username",
     "/api/weather",
     "/school/$slug/exams",
   ];
@@ -310,20 +311,15 @@ describe("decisions before the router", () => {
       })
   );
 
-  it.effect(
-    "answers a page that renders only in the browser with the shell, before any read",
-    () =>
-      Effect.gen(function* () {
-        assets.fetch.mockResolvedValue(new Response("<html>shell</html>"));
-        const { handle, response } = yield* served("/en/home");
-
-        expect(response.status).toBe(200);
-        expect(yield* Effect.promise(() => response.text())).toBe(
-          "<html>shell</html>"
-        );
-        expect(handle).not.toHaveBeenCalled();
-        expect(retired.read).not.toHaveBeenCalled();
-      })
+  it.effect("answers a browser-only page with the shell, before any read", () =>
+    Effect.gen(function* () {
+      assets.fetch.mockResolvedValue(new Response("shell"));
+      const { handle, response } = yield* served("/en/home");
+      expect(response.status).toBe(200);
+      expect(yield* Effect.promise(() => response.text())).toBe("shell");
+      expect(handle).not.toHaveBeenCalled();
+      expect(retired.read).not.toHaveBeenCalled();
+    })
   );
 
   it.effect("renders a locale path that a Worker route template names", () =>
@@ -341,7 +337,11 @@ describe("decisions before the router", () => {
     () =>
       Effect.gen(function* () {
         assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
-        for (const address of ["/en/school/harapan", "/en/user/abc123"]) {
+        for (const address of [
+          "/en/school/harapan",
+          "/en/user/abc123",
+          "/en/user/abc123.md",
+        ]) {
           const { handle, response } = yield* served(address);
 
           expect(response.status).toBe(404);
