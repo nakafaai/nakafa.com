@@ -1,10 +1,8 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer } from "effect";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { activateTestRelease } from "@/test/active";
-import { makeMaterialRuntimeSource } from "@/test/content/material";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
@@ -49,6 +47,10 @@ const readTryoutRedirectMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/routing/public/tryout", () => ({
   readTryoutRedirect: readTryoutRedirectMock,
 }));
+const readSubjectSuccessorMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/routing/public/subject.server", () => ({
+  readSubjectSuccessor: readSubjectSuccessorMock,
+}));
 describe("public URL migration redirects", () => {
   beforeEach(() => {
     resetTestRuntimeCache();
@@ -58,6 +60,8 @@ describe("public URL migration redirects", () => {
     articleMocks.readActiveRoute.mockReset();
     readTryoutRedirectMock.mockReset();
     readTryoutRedirectMock.mockReturnValue(Effect.succeed(null));
+    readSubjectSuccessorMock.mockReset();
+    readSubjectSuccessorMock.mockReturnValue(Effect.succeedNone);
   });
   it.effect("redirects a retired try-out section to its live successor", () =>
     Effect.gen(function* () {
@@ -102,122 +106,55 @@ describe("public URL migration redirects", () => {
       expect(readTryoutRedirectMock).not.toHaveBeenCalled();
     })
   );
-  it.effect("redirects a retired URL to its authenticated current route", () =>
-    Effect.gen(function* () {
-      readNakafaRuntimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-test",
-          managed: true,
-          publicPath:
-            "materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling",
-        })
-      );
-      const redirect = yield* readPublicUrlMigrationRedirect({
-        hasAttemptCapability: false,
-        method: "GET",
-        pathname:
-          "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
-      });
-      expect(redirect).toEqual({
-        destination:
-          "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling",
-        status: 308,
-      });
-      expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
-        expect.anything(),
-        {
-          appLocale: "id",
-          contentKey:
-            "material/lesson/mathematics/circle/central-angle-and-inscribed-angle",
-          expectedMaterialKey: "lesson.mathematics.circle",
-          expectedSectionKey: "central-angle-and-inscribed-angle",
-        }
-      );
-    })
-  );
-  it.effect("asks Convex once for a missing successor in each release", () =>
-    Effect.gen(function* () {
-      const request = {
-        hasAttemptCapability: false,
-        method: "GET",
-        pathname:
-          "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
-      };
-      readNakafaRuntimeQueryMock.mockReturnValue(
-        Effect.succeed({
-          activeReleaseId: "release-test",
-          managed: true,
-          publicPath: null,
-        })
-      );
-
-      expect(yield* readPublicUrlMigrationRedirect(request)).toBeNull();
-      expect(yield* readPublicUrlMigrationRedirect(request)).toBeNull();
-      expect(readNakafaRuntimeQueryMock).toHaveBeenCalledTimes(1);
-    })
-  );
   it.effect(
-    "resolves historical material URLs against authenticated snapshot ownership",
+    "redirects a retired subject lesson to its successor in the release's map",
     () =>
       Effect.gen(function* () {
-        const fixture = yield* makeMaterialRuntimeSource();
-        const context = yield* createTestPublication(fixture.source);
-        readNakafaRuntimeQueryMock.mockImplementation(context.query);
-        expect(
-          yield* readPublicUrlMigrationRedirect({
-            hasAttemptCapability: false,
-            method: "GET",
-            pathname:
-              "/id/subject/high-school/11/mathematics/technical-topic/section-1",
-          })
-        ).toEqual({
-          destination: "/id/materi/mathematics/teknis-topic/section-1",
+        readSubjectSuccessorMock.mockReturnValueOnce(
+          Effect.succeedSome(
+            "materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
+          )
+        );
+        const redirect = yield* readPublicUrlMigrationRedirect({
+          hasAttemptCapability: false,
+          method: "GET",
+          pathname:
+            "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+        });
+        expect(redirect).toEqual({
+          destination:
+            "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling",
           status: 308,
         });
-        expect(
-          yield* readPublicUrlMigrationRedirect({
-            hasAttemptCapability: false,
-            method: "GET",
-            pathname:
-              "/id/subject/high-school/11/mathematics/technical-topic/missing-section",
-          })
-        ).toBeNull();
+        expect(readSubjectSuccessorMock).toHaveBeenCalledWith(
+          "id",
+          "material/lesson/mathematics/circle/central-angle-and-inscribed-angle"
+        );
+        expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
       })
   );
   it.effect.each([
     {
-      expectedIdentity: {
-        appLocale: "id",
-        contentKey:
-          "material/lesson/mathematics/statistics-foundations/histogram",
-        expectedMaterialKey: "lesson.mathematics.statistics-foundations",
-        expectedSectionKey: "histogram",
-      },
+      appLocale: "id",
+      contentKey:
+        "material/lesson/mathematics/statistics-foundations/histogram",
       pathname: "/id/subject/high-school/10/mathematics/statistics/histogram",
       publicPath: "materi/matematika/statistika-dasar/histogram",
     },
     {
-      expectedIdentity: {
-        appLocale: "en",
-        contentKey:
-          "material/lesson/mathematics/statistics-regression/scatter-diagram",
-        expectedMaterialKey: "lesson.mathematics.statistics-regression",
-        expectedSectionKey: "scatter-diagram",
-      },
+      appLocale: "en",
+      contentKey:
+        "material/lesson/mathematics/statistics-regression/scatter-diagram",
       pathname:
         "/en/subject/high-school/11/mathematics/statistics/scatter-diagram",
       publicPath: "subjects/mathematics/statistics-regression/scatter-diagram",
     },
   ])(
     "redirects the source-proven statistics topic split for $pathname",
-    ({ expectedIdentity, pathname, publicPath }) =>
+    ({ appLocale, contentKey, pathname, publicPath }) =>
       Effect.gen(function* () {
-        readNakafaRuntimeQueryMock.mockReturnValueOnce(
-          Effect.succeed({
-            activeReleaseId: "release-test",
-            managed: true,
-            publicPath,
-          })
+        readSubjectSuccessorMock.mockReturnValueOnce(
+          Effect.succeedSome(publicPath)
         );
         const redirect = yield* readPublicUrlMigrationRedirect({
           hasAttemptCapability: false,
@@ -225,12 +162,12 @@ describe("public URL migration redirects", () => {
           pathname,
         });
         expect(redirect).toEqual({
-          destination: `/${expectedIdentity.appLocale}/${publicPath}`,
+          destination: `/${appLocale}/${publicPath}`,
           status: 308,
         });
-        expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
-          expect.anything(),
-          expectedIdentity
+        expect(readSubjectSuccessorMock).toHaveBeenCalledWith(
+          appLocale,
+          contentKey
         );
       })
   );
@@ -410,33 +347,19 @@ describe("public URL migration redirects", () => {
       expect(articleMocks.readActiveRoute).toHaveBeenCalledTimes(2);
     })
   );
-  it.effect.each([
-    {
-      activeReleaseId: "release-test",
-      managed: true,
-      publicPath: null,
-    },
-    {
-      activeReleaseId: null,
-      managed: false,
-      publicPath: null,
-    },
-    {
-      activeReleaseId: null,
-      managed: true,
-      publicPath: "subjects/mathematics/circle/section",
-    },
-  ])("does not redirect an absent signed identity", (decision) =>
-    Effect.gen(function* () {
-      readNakafaRuntimeQueryMock.mockReturnValueOnce(Effect.succeed(decision));
-      const redirect = yield* readPublicUrlMigrationRedirect({
-        hasAttemptCapability: false,
-        method: "HEAD",
-        pathname:
-          "/en/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
-      });
-      expect(redirect).toBeNull();
-    })
+  it.effect(
+    "does not redirect a lesson that the release's map does not hold",
+    () =>
+      Effect.gen(function* () {
+        const redirect = yield* readPublicUrlMigrationRedirect({
+          hasAttemptCapability: false,
+          method: "HEAD",
+          pathname:
+            "/en/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+        });
+        expect(redirect).toBeNull();
+        expect(readSubjectSuccessorMock).toHaveBeenCalledOnce();
+      })
   );
   it.effect.each([
     {
@@ -488,7 +411,7 @@ describe("public URL migration redirects", () => {
     Effect.gen(function* () {
       const redirect = yield* readPublicUrlMigrationRedirect(request);
       expect(redirect).toBeNull();
-      expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
+      expect(readSubjectSuccessorMock).not.toHaveBeenCalled();
       expect(articleMocks.hasCategory).not.toHaveBeenCalled();
     })
   );

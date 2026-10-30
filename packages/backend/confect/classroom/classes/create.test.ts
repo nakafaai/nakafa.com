@@ -32,7 +32,12 @@ describe("classroom/classes create", () => {
           .as("admin")
           .query(channels.list, { ...firstPage, classId: made.id, slug: nf });
         expect(listed.page).toEqual([
-          { id: expect.any(String), kind: "general", name: "general" },
+          {
+            id: expect.any(String),
+            kind: "general",
+            name: "general",
+            unread: false,
+          },
         ]);
       })
   );

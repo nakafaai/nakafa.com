@@ -24,9 +24,17 @@ export const prepareTurn = Effect.fn("nina.prepare")(function* (
   const runtime = {
     currentDate: DateTime.formatIso(DateTime.makeUnsafe(turn._creationTime)),
   };
-  const { capabilities, instructions, memories, paused, summary, uncovered } =
-    yield* readInstructions(turn, readNinaLearningPage(turn.page).url);
+  const {
+    calendar,
+    capabilities,
+    instructions,
+    memories,
+    paused,
+    summary,
+    uncovered,
+  } = yield* readInstructions(turn, readNinaLearningPage(turn.page).url);
   const context = createNinaAgentContext({
+    calendar,
     memory: !paused,
     page: turn.page,
     user: turn.user,

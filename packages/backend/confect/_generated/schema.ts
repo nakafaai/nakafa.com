@@ -23,12 +23,21 @@ import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
+import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
+import classroomPosts from "./tables/classroomPosts";
+import classroomReads from "./tables/classroomReads";
+import classroomSubmissions from "./tables/classroomSubmissions";
+import classroomTasks from "./tables/classroomTasks";
+import classroomThreads from "./tables/classroomThreads";
 import commentLikes from "./tables/commentLikes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
+import connectorEvents from "./tables/connectorEvents";
 import connectorKeys from "./tables/connectorKeys";
+import connectorLinks from "./tables/connectorLinks";
 import connectorSecrets from "./tables/connectorSecrets";
+import connectorStates from "./tables/connectorStates";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
@@ -101,6 +110,7 @@ import postLikes from "./tables/postLikes";
 import posts from "./tables/posts";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
+import pushSubscriptions from "./tables/pushSubscriptions";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import reportCards from "./tables/reportCards";
@@ -160,12 +170,21 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classTeachers: typeof classTeachers;
   readonly classes: typeof classes;
   readonly classroomChannels: typeof classroomChannels;
+  readonly classroomLibrary: typeof classroomLibrary;
   readonly classroomMessages: typeof classroomMessages;
+  readonly classroomPosts: typeof classroomPosts;
+  readonly classroomReads: typeof classroomReads;
+  readonly classroomSubmissions: typeof classroomSubmissions;
+  readonly classroomTasks: typeof classroomTasks;
+  readonly classroomThreads: typeof classroomThreads;
   readonly commentLikes: typeof commentLikes;
   readonly comments: typeof comments;
   readonly connectorConnections: typeof connectorConnections;
+  readonly connectorEvents: typeof connectorEvents;
   readonly connectorKeys: typeof connectorKeys;
+  readonly connectorLinks: typeof connectorLinks;
   readonly connectorSecrets: typeof connectorSecrets;
+  readonly connectorStates: typeof connectorStates;
   readonly contentAnalyticsPartitions: typeof contentAnalyticsPartitions;
   readonly contentArtifactFacts: typeof contentArtifactFacts;
   readonly contentArtifacts: typeof contentArtifacts;
@@ -238,6 +257,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly posts: typeof posts;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
+  readonly pushSubscriptions: typeof pushSubscriptions;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
   readonly reportCards: typeof reportCards;
@@ -296,12 +316,21 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classTeachers,
   classes,
   classroomChannels,
+  classroomLibrary,
   classroomMessages,
+  classroomPosts,
+  classroomReads,
+  classroomSubmissions,
+  classroomTasks,
+  classroomThreads,
   commentLikes,
   comments,
   connectorConnections,
+  connectorEvents,
   connectorKeys,
+  connectorLinks,
   connectorSecrets,
+  connectorStates,
   contentAnalyticsPartitions,
   contentArtifactFacts,
   contentArtifacts,
@@ -374,6 +403,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   posts,
   programBuckets,
   programCatalog,
+  pushSubscriptions,
   quranRows,
   quranSearch,
   reportCards,

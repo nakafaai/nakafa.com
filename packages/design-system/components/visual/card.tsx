@@ -30,6 +30,7 @@ import {
   type VisualState,
   type VisualStore,
 } from "@repo/design-system/components/visual/store";
+import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import {
@@ -38,6 +39,7 @@ import {
   type ReactNode,
   use,
   useLayoutEffect,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -157,7 +159,8 @@ const visualBodyVariants = cva(
  *
  * The card element itself fills the screen, so the scene inside never
  * remounts and a WebGL canvas keeps its camera. Its slot in the page keeps
- * the card's place meanwhile, so nothing behind it moves.
+ * the card's place meanwhile, so nothing behind it moves, and the popups of
+ * its parts render inside it.
  */
 function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
   const [store] = useState(createVisualStore);
@@ -169,26 +172,36 @@ function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
       presentation: state.presentation,
     }))
   );
-  const cardRef = useMergedRef(ref, bind);
+  const element = useRef<HTMLDivElement | null>(null);
+  const portal = useRef<HTMLElement | null>(null);
+  const cardRef = useMergedRef(ref, bind, element);
 
   // Activity hides a route and unmounting removes the card; both return it
   // to the page, so the page behind never stays inert.
   useLayoutEffect(() => () => store.getState().exit(), [store]);
 
+  // Across the screen the card holds its own menus and selects: the browser's
+  // full screen draws nothing outside it, and focus that leaves it returns it.
+  useLayoutEffect(() => {
+    portal.current = presentation === "inline" ? null : element.current;
+  }, [presentation]);
+
   return (
     <VisualContext value={store}>
-      <div data-slot="visual-card" style={place}>
-        <Card
-          className={cn(
-            "gap-0 py-0",
-            className,
-            visualCardVariants({ presentation })
-          )}
-          data-fullscreen={presentation === "inline" ? undefined : ""}
-          ref={cardRef}
-          {...props}
-        />
-      </div>
+      <PortalContainer value={portal}>
+        <div data-slot="visual-card" style={place}>
+          <Card
+            className={cn(
+              "gap-0 py-0",
+              className,
+              visualCardVariants({ presentation })
+            )}
+            data-fullscreen={presentation === "inline" ? undefined : ""}
+            ref={cardRef}
+            {...props}
+          />
+        </div>
+      </PortalContainer>
     </VisualContext>
   );
 }

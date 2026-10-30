@@ -6,13 +6,14 @@ import {
 } from "@tanstack/react-router";
 import { IntlProvider } from "use-intl";
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
-import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 
 /**
  * The messages of the signed-in screens that the student shell and the locale
  * route do not carry. They join the shell's messages, so no screen loses one.
  */
 const APP_NAMESPACES = [
+  "Connectors",
   "Editor",
   "Memory",
   "Subject",
@@ -34,8 +35,9 @@ const mainRoute = getRouteApi("/$locale/_main");
  */
 export const Route = createFileRoute("/$locale/_main/_app")({
   loader: ({ params }) =>
-    readRouteMessages({
-      data: { locale: params.locale, namespaces: APP_NAMESPACES },
+    readRenderedRouteMessages({
+      locale: params.locale,
+      namespaces: APP_NAMESPACES,
     }),
   headers: () => ({ "Cache-Control": "private, no-store" }),
   component: AppLayout,

@@ -8,8 +8,9 @@ import { ExamFrozen } from "@repo/backend/confect/exams/errors";
 import { Clock, Effect, Option } from "effect";
 
 /**
- * Refuses a change to the questions of an exam that a sitting has scheduled. The freeze keeps the exam
- * as the sitting was scheduled, so every result scores the questions and keys that the student sat.
+ * Refuses a change to the questions of an exam once a sitting of it has finished. Until then the exam
+ * takes changes while a sitting is scheduled and while it runs, and a student's paper follows them;
+ * after it, every result scores the questions and keys that the students sat (ADR 0031).
  */
 export const requireUnfrozen = Effect.fn("exams.freeze.require")(function* (
   exam: Pick<ExamsDoc, "frozenAt">
@@ -51,8 +52,8 @@ const questionOwning = Effect.fn("exams.freeze.owner")(function* (
 });
 
 /**
- * Refuses an edit of a document a question owns, its prompt, rubric, or explanation, when the exam
- * of that question has been scheduled, so the paper a student sat, its scoring guide, and its
+ * Refuses an edit of a document a question owns, its prompt, rubric, or explanation, once a sitting
+ * of that question's exam has finished, so the paper the students sat, its scoring guide, and its
  * explanation cannot change. A document that no question owns belongs to no exam, and it passes.
  */
 export const requireDocumentUnfrozen = Effect.fn("exams.freeze.document")(
@@ -70,8 +71,8 @@ export const requireDocumentUnfrozen = Effect.fn("exams.freeze.document")(
 );
 
 /**
- * Freezes an exam in the transaction that schedules one of its sittings. The first schedule keeps its
- * time, and a later one leaves the exam as the first schedule froze it (ADR 0031).
+ * Freezes an exam in the transaction that closes one of its sittings. The first close keeps its
+ * time, and a later one leaves the exam as the first close froze it (ADR 0031).
  */
 export const freezeExam = Effect.fn("exams.freeze.exam")(function* (
   exam: Pick<ExamsDoc, "_id" | "frozenAt">

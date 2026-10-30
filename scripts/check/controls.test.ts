@@ -72,6 +72,47 @@ export function Fields({ kind }: { kind: string }) {
       })
   );
 
+  it.effect("rejects a Button that renders an anchor or a link component", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(`
+export function Actions() {
+  return (
+    <>
+      <Button nativeButton={false} render={<a href="/x">Source</a>} />
+      <Button nativeButton={false} render={<PublicPathLink publicPath="/y" />}>
+        Open
+      </Button>
+    </>
+  );
+}`);
+      const message = `${VIEW}: style the link with buttonVariants from @repo/design-system/lib/button instead of rendering it through Button, which gives it the button role.`;
+      assert.deepStrictEqual(violations, [message, message]);
+    })
+  );
+
+  it.effect(
+    "keeps a native Button, a Button that renders another element, and a tab that renders a link",
+    () =>
+      Effect.gen(function* () {
+        const violations = yield* inspect(`
+export function Kept({ link }: { link: ReactElement }) {
+  return (
+    <>
+      <Button render={<Link to="/x" />} />
+      <Button nativeButton={true} render={<a href="/y" />} />
+      <Button nativeButton={false} render={<span />} />
+      <Button nativeButton={false} render={link} />
+      <Button nativeButton={false} render />
+      <Button nativeButton render={<a href="/z" />} />
+      <TabsTab nativeButton={false} render={<Link to="/w" />} />
+      <UI.Button nativeButton={false} render={<a href="/v" />} />
+    </>
+  );
+}`);
+        assert.deepStrictEqual(violations, []);
+      })
+  );
+
   it.effect("reads only TSX modules", () =>
     Effect.gen(function* () {
       const violations = yield* inspect(

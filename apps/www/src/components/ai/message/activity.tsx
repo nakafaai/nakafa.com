@@ -3,6 +3,7 @@ import {
   ArrowDown01Icon,
   BookOpen02Icon,
   BrainIcon,
+  Calendar03Icon,
   Globe02Icon,
   MathIcon,
   Sad02Icon,
@@ -75,6 +76,7 @@ function ActivityTrigger() {
   // No step of an activity draws its activity's icon: the math steps have an
   // icon per operation, the calculator among them, so math has its own.
   const icon = {
+    calendar: Calendar03Icon,
     math: MathIcon,
     memory: AiBrain01Icon,
     nakafa: BookOpen02Icon,

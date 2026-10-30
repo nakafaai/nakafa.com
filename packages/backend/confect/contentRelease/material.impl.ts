@@ -7,7 +7,6 @@ import {
   readLatestMaterials,
   readMaterialBucket,
 } from "@repo/backend/content/material/discovery";
-import { readMaterialIdentity } from "@repo/backend/content/material/identity";
 import { readMaterialNavigation } from "@repo/backend/content/material/navigation";
 import { readMaterialPage } from "@repo/backend/content/material/page";
 import {
@@ -47,16 +46,6 @@ const navigation = FunctionImpl.make(
       materialKey,
       expectedActiveReleaseId
     ).pipe(Effect.provide(materialLayer));
-  })
-);
-const identity = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "identity",
-  Effect.fn("contentRelease.material.identity")(function* (args) {
-    return yield* readMaterialIdentity(args).pipe(
-      Effect.provide(materialLayer)
-    );
   })
 );
 const apiPage = FunctionImpl.make(
@@ -150,7 +139,6 @@ const publications = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(lesson),
   Layer.provide(navigation),
-  Layer.provide(identity),
   Layer.provide(apiPage),
   Layer.provide(bucket),
   Layer.provide(latest),

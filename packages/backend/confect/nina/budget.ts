@@ -23,7 +23,7 @@ const RESERVED = {
    * runtime facts are JSON, which the estimator prices at one token a
    * punctuation mark, so the budget holds the measured count, rounded up.
    */
-  instructions: 12_500,
+  instructions: 13_500,
   /** The signed current page in the system prompt. */
   page: 10_500,
   /** The learner's portrait in the system prompt. */

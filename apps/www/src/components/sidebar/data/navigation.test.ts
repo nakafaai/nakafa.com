@@ -1,15 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option } from "effect";
 import {
-  getForYouNavigationItems,
-  getForYouNavigationTarget,
+  getPrimaryNavigationItems,
+  getPrimaryNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { getTryoutPublicPathTarget } from "@/components/tryout/route/path";
 import { getCurriculumProgramTarget } from "@/lib/curriculum/routes";
 
 describe("sidebar navigation", () => {
   it("returns the shared primary actions in display order", () => {
-    expect(Arr.map(getForYouNavigationItems(), (item) => item.id)).toEqual([
+    expect(Arr.map(getPrimaryNavigationItems(), (item) => item.id)).toEqual([
       "subject",
       "tryOut",
       "askNina",
@@ -17,39 +17,39 @@ describe("sidebar navigation", () => {
   });
 
   it("routes each primary action to its own route, on the locale of the page", () => {
-    const [subject, tryOut, askNina] = getForYouNavigationItems();
+    const [subject, tryOut, askNina] = getPrimaryNavigationItems();
 
-    expect(getForYouNavigationTarget(subject)).toEqual({
+    expect(getPrimaryNavigationTarget(subject)).toEqual({
       from: "/$locale",
       to: "/$locale/curricula",
     });
-    expect(getForYouNavigationTarget(tryOut)).toEqual({
+    expect(getPrimaryNavigationTarget(tryOut)).toEqual({
       from: "/$locale",
       to: "/$locale/try-out",
     });
-    expect(getForYouNavigationTarget(askNina)).toEqual({
+    expect(getPrimaryNavigationTarget(askNina)).toEqual({
       from: "/$locale",
       to: "/$locale/chat",
     });
   });
 
   it("uses a learner's stored target only for the row that it names", () => {
-    const [subject, tryOut, askNina] = getForYouNavigationItems();
+    const [subject, tryOut, askNina] = getPrimaryNavigationItems();
     const curriculumTarget = getCurriculumProgramTarget("amerika-serikat");
     const tryoutTarget = getTryoutPublicPathTarget("try-out/indonesia");
 
     expect(
-      getForYouNavigationTarget(subject, {
+      getPrimaryNavigationTarget(subject, {
         preferredCurriculumTarget: Option.some(curriculumTarget),
       })
     ).toEqual(curriculumTarget);
     expect(
-      getForYouNavigationTarget(tryOut, {
+      getPrimaryNavigationTarget(tryOut, {
         preferredTryoutTarget: tryoutTarget,
       })
     ).toEqual(Option.getOrThrow(tryoutTarget));
     expect(
-      getForYouNavigationTarget(askNina, {
+      getPrimaryNavigationTarget(askNina, {
         preferredCurriculumTarget: Option.some(curriculumTarget),
       })
     ).toEqual({ from: "/$locale", to: "/$locale/chat" });

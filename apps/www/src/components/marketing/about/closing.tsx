@@ -1,6 +1,6 @@
-import { Button } from "@repo/design-system/components/ui/button";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import type { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question";
@@ -28,22 +28,19 @@ export function Closing() {
       <div className="mx-auto grid w-full max-w-4xl justify-items-center gap-10 text-center">
         <ClosingQuestion template={t.raw("closing-ask")} topics={topics} />
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button
-            nativeButton={false}
-            render={<Link to="/$locale/curricula">{t("hero-start")}</Link>}
-            size="lg"
-            variant="secondary"
-          />
-          <Button
-            nativeButton={false}
-            render={
-              <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/try-out">
-                {t("hero-tryout")}
-              </Link>
-            }
-            size="lg"
-            variant="outline"
-          />
+          <Link
+            className={buttonVariants({ size: "lg", variant: "secondary" })}
+            to="/$locale/curricula"
+          >
+            {t("hero-start")}
+          </Link>
+          <Link
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            className={buttonVariants({ size: "lg", variant: "outline" })}
+            to="/$locale/try-out"
+          >
+            {t("hero-tryout")}
+          </Link>
         </div>
         <div className="relative flex items-end justify-center">
           <span className="inline-block" id={NINA_SLOT.closing}>
