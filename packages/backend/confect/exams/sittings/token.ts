@@ -42,7 +42,9 @@ export const drawTokenFrom = (seed: Uint8Array) =>
  * random source is a defect.
  */
 export const drawToken = Effect.fn("exams.sittings.drawToken")(function* () {
-  const seed = yield* (yield* SecureRandom.SecureRandom).randomBytes(SEED_BYTES);
+  const seed = yield* (yield* SecureRandom.SecureRandom).randomBytes(
+    SEED_BYTES
+  );
   return yield* drawTokenFrom(seed);
 }, Effect.provide(SecureRandom.layerWebCrypto));
 

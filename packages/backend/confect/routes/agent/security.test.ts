@@ -60,23 +60,18 @@ it.layer(ConvexConfigProvider.layer)("agent edge security", (it) => {
     })
   );
 
-  it.effect("fails closed when digest computation is unavailable", () =>
+  it.effect("dies when digest computation is unavailable", () =>
     Effect.gen(function* () {
       vi.stubEnv(SECRET_NAME, "current-secret");
-      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
-        new Error("digest unavailable")
-      );
+      const failure = new Error("digest unavailable");
+      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(failure);
 
       expect(
         yield* hasValidEdgeSecret(
           requestWithSecret("current-secret"),
           NAKAFA_API_EDGE_CONTRACT
-        ).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "NakafaAgentDataReadError",
-        cause: "digest unavailable",
-        message: "The public agent edge boundary is unavailable.",
-      });
+        ).pipe(Effect.catchDefect((cause) => Effect.succeed(cause)))
+      ).toBe(failure);
     })
   );
 

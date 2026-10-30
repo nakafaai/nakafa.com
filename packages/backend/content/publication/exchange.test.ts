@@ -153,20 +153,19 @@ describe("stored public exchange", () => {
         }
       })
   );
-  it.effect(
-    "fails closed when the runtime cannot hash the signed projection",
-    () =>
-      Effect.gen(function* () {
-        const row = yield* readFixture();
-        vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(
-          new DOMException(
-            "Cryptographic provider unavailable",
-            "OperationError"
-          )
-        );
-        expect(
-          yield* decodePublicRuntimeRow(row).pipe(Effect.flip)
-        ).toBeInstanceOf(PublicRuntimeReadError);
-      })
+  it.effect("dies when the runtime cannot hash the signed projection", () =>
+    Effect.gen(function* () {
+      const row = yield* readFixture();
+      const failure = new DOMException(
+        "Cryptographic provider unavailable",
+        "OperationError"
+      );
+      vi.spyOn(crypto.subtle, "digest").mockRejectedValueOnce(failure);
+      expect(
+        yield* decodePublicRuntimeRow(row).pipe(
+          Effect.catchDefect((cause) => Effect.succeed(cause))
+        )
+      ).toBe(failure);
+    })
   );
 });

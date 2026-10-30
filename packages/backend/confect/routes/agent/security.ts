@@ -1,5 +1,4 @@
 import type { AgentEdgeContract } from "@repo/backend/agent/edge";
-import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { matchesSecret } from "@repo/utilities/digest";
 import { Array as Arr, Config, Effect } from "effect";
@@ -26,15 +25,7 @@ export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
       return false;
     }
     const comparisons = yield* Effect.forEach(acceptedSecrets, (expected) =>
-      matchesSecret(expected, supplied).pipe(
-        Effect.mapError(
-          (error) =>
-            new NakafaAgentDataReadError({
-              cause: getUnknownErrorMessage(error.reason.cause),
-              message: "The public agent edge boundary is unavailable.",
-            })
-        )
-      )
+      matchesSecret(expected, supplied)
     );
     return Arr.some(comparisons, Boolean);
   }

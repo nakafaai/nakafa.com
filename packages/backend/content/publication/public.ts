@@ -180,7 +180,6 @@ const resolvePublicRouteForActive = Effect.fn(
     yield* readPublicArtifact(head);
   const projection = yield* decodeProjectionJson(projectionJson);
   const projectionHash = yield* hashText(
-    "the published content projection",
     canonicalizeContentProjection(projection)
   );
   if (

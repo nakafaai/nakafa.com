@@ -10,13 +10,7 @@ import {
   gateError,
   type NinaGateError,
 } from "@repo/backend/scripts/nina/error";
-import {
-  Array as Arr,
-  Effect,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
 
 const UUID =

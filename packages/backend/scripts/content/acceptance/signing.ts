@@ -110,9 +110,7 @@ export const createLocalSigningIdentity = Effect.fn(
     new Uint8Array(privateDer)
   );
   const keyId = `acceptance-${Hex.encode(yield* random.randomBytes(16))}`;
-  const publicationToken = Base64Url.encode(
-    yield* random.randomBytes(32)
-  );
+  const publicationToken = Base64Url.encode(yield* random.randomBytes(32));
   const privateKeyPath = `${directory}/signing-private.pem`;
   yield* fs.writeFileString(privateKeyPath, privateKeyPem, {
     mode: 0o600,
@@ -125,7 +123,7 @@ export const createLocalSigningIdentity = Effect.fn(
       "The isolated private key has no filesystem identity."
     );
   }
-  const privateKeyHash = yield* sha256Hex(privateKeyPem).pipe(Effect.orDie);
+  const privateKeyHash = yield* sha256Hex(privateKeyPem);
   const signing = yield* Schema.decodeEffect(LocalSigningIdentitySchema)({
     keyId,
     publicKeyPem: encodePem(PUBLIC_KEY_LABEL, new Uint8Array(publicDer)),
@@ -160,9 +158,7 @@ export const verifyLocalSigningIdentity = Effect.fn(
     );
   }
   const privateKeyPem = yield* fs.readFileString(expectedPath);
-  const privateKeyHash = yield* sha256Hex(privateKeyPem).pipe(
-    Effect.mapError(invalidPrivateKey)
-  );
+  const privateKeyHash = yield* sha256Hex(privateKeyPem);
   const publicKeyPem = yield* derivePublicKeyPem(privateKeyPem);
   if (
     privateKeyHash !== signing.privateKeyHash ||

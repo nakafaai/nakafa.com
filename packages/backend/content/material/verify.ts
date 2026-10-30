@@ -61,7 +61,6 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
       );
     }
     const projectionHash = yield* hashText(
-      "the active material projection",
       canonicalizeMaterialProjection(projection)
     );
     return yield* verifyMaterialMetadata(row, projection, projectionHash);

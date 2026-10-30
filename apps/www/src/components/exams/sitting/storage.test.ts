@@ -10,7 +10,9 @@ function memoryStorage() {
     clear: () => MutableHashMap.clear(values),
     getItem: (key: string) => Option.getOrNull(MutableHashMap.get(values, key)),
     key: (index: number) =>
-      Option.getOrNull(Arr.get(Arr.fromIterable(MutableHashMap.keys(values)), index)),
+      Option.getOrNull(
+        Arr.get(Arr.fromIterable(MutableHashMap.keys(values)), index)
+      ),
     get length() {
       return MutableHashMap.size(values);
     },

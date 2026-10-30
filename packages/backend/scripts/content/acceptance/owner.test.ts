@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
@@ -7,6 +6,7 @@ import {
   ownerMode,
 } from "@repo/backend/scripts/content/acceptance/owner";
 import { ownerAddress } from "@repo/backend/scripts/content/acceptance/school";
+import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
   Effect,
@@ -133,7 +133,7 @@ describe("acceptance owner", () => {
           .readFileString(`${root}/owner.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -158,7 +158,7 @@ describe("acceptance owner", () => {
           .readFileString(`${root}/owner.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -179,7 +179,7 @@ describe("acceptance owner", () => {
           )
         ).toBe(false);
         expect(yield* fs.exists(`${root}/owner.json`)).toBe(false);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("signs no Owner in when no local runtime is running", () =>
@@ -196,7 +196,7 @@ describe("acceptance owner", () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
       expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -212,7 +212,7 @@ describe("acceptance owner", () => {
           .readFileString(`${root}/mode.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -230,6 +230,6 @@ describe("acceptance owner", () => {
         });
         expect(MutableList.toArray(specs)).toEqual([]);
         expect(mocks.read).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 });

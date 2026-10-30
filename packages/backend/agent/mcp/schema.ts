@@ -12,7 +12,7 @@ export type McpObjectContract = Schema.ConstraintCodec<
 /** Exposes one object-rooted Effect contract as an MCP tool input schema. */
 export function toMcpInputSchema(source: McpObjectContract) {
   const document = Schema.toJsonSchemaDocument(source);
-  return Schema.decodeUnknownEffect(McpSchema.ToolJson)({
+  return Schema.decodeEffect(McpSchema.ToolJson)({
     $defs: document.definitions,
     ...document.schema,
     type: "object",
@@ -22,7 +22,7 @@ export function toMcpInputSchema(source: McpObjectContract) {
 /** Exposes one object-rooted Effect contract as an MCP tool output schema. */
 export function toMcpOutputSchema(source: McpObjectContract) {
   const document = Schema.toJsonSchemaDocument(source);
-  return Schema.decodeUnknownEffect(McpSchema.ToolOutputJson)({
+  return Schema.decodeEffect(McpSchema.ToolOutputJson)({
     $defs: document.definitions,
     ...document.schema,
     type: "object",

@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
@@ -8,6 +7,7 @@ import {
   createAcceptanceLearner,
   learnerMode,
 } from "@repo/backend/scripts/content/acceptance/learner";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { makeSignature } from "better-auth/crypto";
 import {
   Array as Arr,
@@ -155,7 +155,7 @@ describe("synthetic acceptance learner", () => {
         expect((yield* fs.stat(`${root}/first.json`)).mode % 0o1000).toBe(
           0o600
         );
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("writes no cookie when the session cannot be signed", () =>
@@ -176,7 +176,7 @@ describe("synthetic acceptance learner", () => {
         message: "The session cookie could not be signed.",
       });
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("requires a prepared and running local runtime", () =>
@@ -193,7 +193,7 @@ describe("synthetic acceptance learner", () => {
         message: expect.stringContaining("acceptance:prepare"),
       });
       expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect("stops before any session when the account was not created", () =>
@@ -209,7 +209,7 @@ describe("synthetic acceptance learner", () => {
       expect(error._tag).toBe("SchemaError");
       expect(specs).toHaveLength(1);
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.live(
@@ -231,7 +231,7 @@ describe("synthetic acceptance learner", () => {
 
         expect(MutableList.toArray(specs)).toHaveLength(4);
         expect(yield* fs.exists(`${root}/cookie.json`)).toBe(true);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("does not create the learner again after any other failure", () =>
@@ -255,7 +255,7 @@ describe("synthetic acceptance learner", () => {
       expect(error._tag).toBe("AcceptanceRuntimeError");
       expect(MutableList.toArray(specs)).toHaveLength(1);
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -271,7 +271,7 @@ describe("synthetic acceptance learner", () => {
           .readFileString(`${root}/mode.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -289,6 +289,6 @@ describe("synthetic acceptance learner", () => {
         });
         expect(MutableList.toArray(specs)).toEqual([]);
         expect(mocks.read).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 });

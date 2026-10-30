@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
@@ -7,6 +6,7 @@ import {
   inviteMode,
   waitForInboxRow,
 } from "@repo/backend/scripts/content/acceptance/invite";
+import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
   Duration,
@@ -171,7 +171,7 @@ describe("acceptance invite", () => {
           .readFileString(`${root}/invite.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -218,7 +218,7 @@ describe("acceptance invite", () => {
           .readFileString(`${root}/invite.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -239,7 +239,7 @@ describe("acceptance invite", () => {
           )
         ).toBe(false);
         expect(yield* fs.exists(`${root}/invite.json`)).toBe(false);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("invites no learner when no local runtime is running", () =>
@@ -256,7 +256,7 @@ describe("acceptance invite", () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
       expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.live("fails when no inbox row belongs to the invited person in time", () =>
@@ -291,7 +291,7 @@ describe("acceptance invite", () => {
           .readFileString(`${root}/mode.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -310,6 +310,6 @@ describe("acceptance invite", () => {
         });
         expect(MutableList.toArray(specs)).toEqual([]);
         expect(mocks.read).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 });

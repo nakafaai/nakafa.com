@@ -5,12 +5,11 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Cause, Clock, Duration, Effect, Option, Schema } from "effect";
 import { makeMemoryStore } from "@/lib/content/store/memory";
 
-/** The digest of a key failed, or a value could not be encoded, so the store cannot answer. */
+/** A value could not be encoded, so the store cannot keep it. */
 class ContentStoreUnavailableError extends Schema.TaggedError<ContentStoreUnavailableError>()(
   "ContentStoreUnavailableError",
   {
     cause: Schema.Unknown,
-    operation: Schema.Literals(["digest", "write"]),
   }
 ) {}
 
@@ -46,14 +45,7 @@ const runtimeCache = makeMemoryStore();
 const makeStoreKey = Effect.fn("www.content.store.key")(function* (
   parts: readonly string[]
 ) {
-  return yield* sha256Hex(
-    encodeJsonText([CONTENT_STORE_VERSION, ...parts])
-  ).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ContentStoreUnavailableError({ cause, operation: "digest" })
-    )
-  );
+  return yield* sha256Hex(encodeJsonText([CONTENT_STORE_VERSION, ...parts]));
 });
 
 /**
@@ -71,11 +63,10 @@ const warnLimit = (error: ContentStoreLimitError) =>
     error.limit
   );
 
-/** Reports a store failure that the caller survives by going to the source. */
+/** Reports a value that the store could not encode, which the caller already holds. */
 const warnUnavailable = (error: ContentStoreUnavailableError) =>
   Effect.logWarning(
-    "The content store is unavailable.",
-    error.operation,
+    "The content store could not encode a value.",
     Cause.fail(error.cause)
   );
 
@@ -102,17 +93,9 @@ export const readStoreEntry = Effect.fn("www.content.store.readEntry")(
     readonly parts: readonly string[];
     readonly schema: Schema.Codec<A, I, never, never>;
   }) {
-    const key = yield* makeStoreKey(input.parts).pipe(
-      Effect.asSome,
-      Effect.catchTag("ContentStoreUnavailableError", (error) =>
-        warnUnavailable(error).pipe(Effect.as(Option.none<string>()))
-      )
-    );
-    if (Option.isNone(key)) {
-      return Option.none<A>();
-    }
+    const key = yield* makeStoreKey(input.parts);
     const now = yield* Clock.currentTimeMillis;
-    const stored = runtimeCache.get(key.value, now);
+    const stored = runtimeCache.get(key, now);
     return Option.flatMap(stored, (value) =>
       Schema.decodeUnknownOption(makeEntryCodec(input.schema))(value)
     ).pipe(Option.map(({ value }) => value));
@@ -137,10 +120,7 @@ export const writeStoreEntry = Effect.fn("www.content.store.writeEntry")(
       const entry = yield* Schema.encodeEffect(makeEntryCodec(input.schema))({
         value: input.value,
       }).pipe(
-        Effect.mapError(
-          (cause) =>
-            new ContentStoreUnavailableError({ cause, operation: "write" })
-        )
+        Effect.mapError((cause) => new ContentStoreUnavailableError({ cause }))
       );
       yield* checkStoreLimit(entry);
       const now = yield* Clock.currentTimeMillis;

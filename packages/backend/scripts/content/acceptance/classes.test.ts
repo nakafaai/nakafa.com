@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   classTeacherAddress,
@@ -7,6 +6,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/classes";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
+import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
   Effect,
@@ -144,7 +144,7 @@ describe("acceptance class teacher", () => {
           .readFileString(`${root}/class-teacher.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("seeds no class Teacher when no local runtime is running", () =>
@@ -161,7 +161,7 @@ describe("acceptance class teacher", () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
       expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -181,7 +181,7 @@ describe("acceptance class teacher", () => {
           .readFileString(`${root}/mode.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -200,6 +200,6 @@ describe("acceptance class teacher", () => {
         });
         expect(MutableList.toArray(specs)).toEqual([]);
         expect(mocks.read).not.toHaveBeenCalled();
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 });

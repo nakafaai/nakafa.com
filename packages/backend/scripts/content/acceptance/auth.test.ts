@@ -1,9 +1,9 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   createLocalJwks,
   LOCAL_AUTH_SECRET,
 } from "@repo/backend/scripts/content/acceptance/auth";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { symmetricDecrypt, symmetricEncrypt } from "better-auth/crypto";
 import { Array as Arr, Effect, Order, Record as Rec, Schema } from "effect";
 
@@ -116,7 +116,7 @@ describe("local session signing key", () => {
         const next = yield* createKey();
         expect(next.id).not.toBe(key.id);
         expect(next.publicKey).not.toBe(key.publicKey);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -147,7 +147,7 @@ describe("local session signing key", () => {
           "q",
           "qi",
         ]);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect("fails typed when the key pair cannot be generated", () =>
@@ -160,7 +160,7 @@ describe("local session signing key", () => {
         _tag: "AcceptanceRuntimeError",
         message: "The local session signing key could not be generated.",
       });
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect("fails typed when the private key cannot be encrypted", () =>
@@ -173,6 +173,6 @@ describe("local session signing key", () => {
         _tag: "AcceptanceRuntimeError",
         message: "The local session signing key could not be encrypted.",
       });
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(nodePlatform))
   );
 });

@@ -7,6 +7,7 @@ import {
   Layer,
   Path,
   PlatformError,
+  Predicate,
   Record as Rec,
   Schema,
   Stream,
@@ -213,7 +214,8 @@ export function stagedSourceTree(tree: string) {
         spawner.spawn(
           ChildProcess.isStandardCommand(command) &&
             command.args[0] === "rev-parse" &&
-            command.args[1]?.endsWith(":repos/effect") === true &&
+            Predicate.isString(command.args[1]) &&
+            command.args[1].endsWith(":repos/effect") &&
             !command.args[1].startsWith("HEAD:")
             ? ChildProcess.make("git", ["rev-parse", tree], command.options)
             : command

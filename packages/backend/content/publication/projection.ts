@@ -168,7 +168,6 @@ const selectPublicProjection = Effect.fn(
     binding
   );
   const projectionHash = yield* hashText(
-    "the public content projection",
     canonicalizeContentProjection(projection)
   );
   if (

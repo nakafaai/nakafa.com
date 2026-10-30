@@ -57,8 +57,8 @@ const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
     const authenticated = yield* matchesHttpSecret(
       bearerToken(request.headers.get("authorization") ?? ""),
       yield* Config.String("AKSARA_PUBLICATION_TOKEN").pipe(Effect.orDie)
-    ).pipe(Effect.result);
-    if (Result.isFailure(authenticated) || !authenticated.success) {
+    );
+    if (!authenticated) {
       return yield* publicationAuthFailure();
     }
     const body = yield* readJsonBody(

@@ -83,7 +83,7 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
           delivery: "public",
           family: "material",
           projectionHash: Sha256HashSchema.make(
-            yield* hashText("test projection", projectionJson)
+            yield* hashText(projectionJson)
           ),
           publicPath: projection.publicPath,
           rendererDomain: "mathematics",

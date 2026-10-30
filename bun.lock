@@ -197,7 +197,6 @@
         "@convex-dev/resend": "^0.2.10",
         "@convex-dev/workflow": "^0.4.10",
         "@convex-dev/workpool": "0.4.14",
-        "@effect/platform-browser": "catalog:",
         "@effect/platform-node": "catalog:",
         "@nakafa/aksara-contracts": "1.0.0",
         "@polar-sh/sdk": "^1.0.2",
@@ -546,7 +545,6 @@
       "name": "@repo/utilities",
       "version": "0.2.0",
       "dependencies": {
-        "@effect/platform-browser": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -605,7 +603,6 @@
     "@confect/core": "10.4.1",
     "@convex-dev/agent": "0.7.8",
     "@convex-dev/ai-sdk-provider": "0.3.0",
-    "@effect/platform-browser": "4.1.0",
     "@effect/platform-bun": "4.1.0",
     "@effect/platform-node": "4.1.0",
     "@effect/vitest": "4.1.0",
@@ -880,8 +877,6 @@
     "@effect/ai-openai-compat": ["@effect/ai-openai-compat@4.1.0", "", { "peerDependencies": { "effect": "^4.1.0" } }, "sha512-PD9z2CD1zdLel8qEQUG4NAw+HHvXhy5yRF2pwSN44YiB5iGohrRe5AOTb1VYflJVUjlqyjFzTU3g5JtvAKyLMQ=="],
 
     "@effect/ai-openrouter": ["@effect/ai-openrouter@4.1.0", "", { "peerDependencies": { "effect": "^4.1.0" } }, "sha512-nukERW2MOXbaEtQIBQPsEHlbEdSiDP8aOhx7IS+jBZiNofTj1sn9rrquW9PANbb1G6fLMN5bt1IQws/T3KjE3g=="],
-
-    "@effect/platform-browser": ["@effect/platform-browser@4.1.0", "", { "peerDependencies": { "effect": "^4.1.0" } }, "sha512-IEyaPzejKozHDupOUSjQIgQYGv2C0I828up8z7/nvQTHzmQHUS2/tGMEwXX/FwAvnrWZ0H9MhlhTl18ZgCHQiQ=="],
 
     "@effect/platform-bun": ["@effect/platform-bun@4.1.0", "", { "dependencies": { "@effect/platform-node-shared": "^4.1.0" }, "peerDependencies": { "effect": "^4.1.0" } }, "sha512-ZgIV+tV2utcbiopbWSoJuGn3FZuyqhLWIYITFCR8vlwnKicO1q0WgP4BBjDUYUTMRPEU/N1+BcZourAgpiDI/w=="],
 

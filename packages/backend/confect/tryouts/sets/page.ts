@@ -59,7 +59,6 @@ export const paginatePublishedSets = Effect.fn(
 const identifyRows = Effect.fn("tryouts.sets.identifyPublishedPage")(
   (rows: readonly PublishedSetRow[]) =>
     hashText(
-      "the signed try-out pagination state",
       encodeJsonText(
         Arr.map(rows, ({ progress, set }) => ({
           attemptStatus: progress?.status ?? null,

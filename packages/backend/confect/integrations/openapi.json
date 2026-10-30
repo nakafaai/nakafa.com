@@ -222,14 +222,7 @@
             "name": "cursor",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           },
@@ -237,14 +230,7 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           }
@@ -361,14 +347,7 @@
             "name": "cursor",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           },
@@ -376,14 +355,7 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           },
@@ -504,14 +476,7 @@
             "name": "cursor",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           },
@@ -519,14 +484,7 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           },
@@ -534,18 +492,11 @@
             "name": "status",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "enum": [
-                    "active",
-                    "suspended",
-                    "removed"
-                  ]
-                },
-                {
-                  "type": "null"
-                }
+              "type": "string",
+              "enum": [
+                "active",
+                "suspended",
+                "removed"
               ]
             },
             "required": false
@@ -659,14 +610,7 @@
             "name": "cursor",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           },
@@ -674,14 +618,7 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
             "required": false
           },

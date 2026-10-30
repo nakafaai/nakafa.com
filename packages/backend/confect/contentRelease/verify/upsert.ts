@@ -58,7 +58,6 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
   const artifact = yield* decodeArtifactHeaderJson(artifactRow.artifactJson);
   const projection = yield* decodeProjectionJson(row.projectionJson);
   const projectionHash = yield* hashText(
-    "the content projection",
     canonicalizeContentProjection(projection)
   );
   const binding =

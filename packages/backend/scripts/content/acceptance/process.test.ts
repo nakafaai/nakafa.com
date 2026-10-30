@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
@@ -13,6 +12,7 @@ import {
   ticking,
   versionServiceError,
 } from "@repo/backend/test/acceptance";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Deferred,
@@ -23,6 +23,7 @@ import {
   Logger,
   MutableList,
   Path,
+  Predicate,
   Sink,
   Stream,
 } from "effect";
@@ -34,7 +35,7 @@ import { TestClock } from "effect/testing";
 const fetcher = vi.fn<typeof fetch>();
 /** Node services with the Fetch client reading that controlled fetch. */
 const services = Layer.mergeAll(
-  nodeServicesLayer,
+  nodePlatform,
   FetchClient,
   Layer.succeed(FetchHttpClient.Fetch, fetcher)
 );
@@ -79,10 +80,12 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
     Effect.gen(function* () {
       const failure = commands.length === 0 ? options.failFirst : undefined;
       MutableList.append(commands, command);
-      const root =
+      const tmpdir =
         command._tag === "StandardCommand"
           ? command.options.env?.TMPDIR
           : undefined;
+      // The runtime passes its temporary root as plain text, never redacted.
+      const root = Predicate.isString(tmpdir) ? tmpdir : undefined;
       if (root !== undefined) {
         MutableList.append(temporaryRoots, root);
       }

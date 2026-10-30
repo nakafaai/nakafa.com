@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import type { AcceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
@@ -11,6 +10,7 @@ import type {
   AcceptanceMode,
   AcceptanceModeError,
 } from "@repo/backend/scripts/content/acceptance/mode";
+import { nodePlatform } from "@repo/backend/test/platform";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
@@ -42,7 +42,7 @@ const MODE_WORDS = [
 ];
 
 /** The services that a mode may use, which the command line's layer provides. */
-const services = Layer.merge(nodeServicesLayer, FetchClient);
+const services = Layer.merge(nodePlatform, FetchClient);
 
 type CommandLine = Effect.Effect<
   void,
@@ -116,7 +116,7 @@ describe("isolated acceptance CLI", () => {
         expect(yield* fs.readFileString(outputPath)).toContain(
           `AcceptanceRuntimeError: ${USAGE}`
         );
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect("answers the usage of every mode for a missing mode", () =>

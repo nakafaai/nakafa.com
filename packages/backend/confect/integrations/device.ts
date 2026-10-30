@@ -46,7 +46,9 @@ const SWEEP_LIMIT = 200;
 
 /** Draws one user code from a CSPRNG, one letter per random byte. */
 const drawUserCode = Effect.fn("integrations.device.userCode")(function* () {
-  const bytes = yield* (yield* SecureRandom.SecureRandom).randomBytes(CODE_LETTERS);
+  const bytes = yield* (yield* SecureRandom.SecureRandom).randomBytes(
+    CODE_LETTERS
+  );
   return Arr.join(
     Arr.map(Arr.fromIterable(bytes), (byte) =>
       ALPHABET.charAt(byte % ALPHABET.length)
@@ -81,7 +83,7 @@ export const startDevice = Effect.fn("integrations.device.start")(function* (
     const unknown: typeof DeviceStart.Type = { outcome: "unknown" };
     return unknown;
   }
-  const { hash, token: deviceCode } = yield* issueToken().pipe(Effect.orDie);
+  const { hash, token: deviceCode } = yield* issueToken();
   const userCode = yield* drawUserCode().pipe(
     Effect.flatMap(Schema.decodeEffect(UserCode)),
     Effect.orDie
@@ -123,7 +125,7 @@ export const pollDevice = Effect.fn("integrations.device.poll")(function* (
   deviceCode: string
 ) {
   const expired: typeof DevicePoll.Type = { outcome: "expired" };
-  const deviceCodeHash = yield* sha256Hex(deviceCode).pipe(Effect.orDie);
+  const deviceCodeHash = yield* sha256Hex(deviceCode);
   const found = yield* (yield* DatabaseReader)
     .table("integrationDevices")
     .index("by_deviceCodeHash", (query) =>

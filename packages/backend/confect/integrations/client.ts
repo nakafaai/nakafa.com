@@ -72,7 +72,7 @@ export const register = Effect.fn("integrations.client.register")(function* (
     scope: GrantScope;
   }
 ) {
-  const { hash, token: secret } = yield* issueToken().pipe(Effect.orDie);
+  const { hash, token: secret } = yield* issueToken();
   const at = yield* Clock.currentTimeMillis;
   const clientId = yield* (yield* DatabaseWriter)
     .table("integrationClients")
@@ -108,7 +108,7 @@ export const rotateSecret = Effect.fn("integrations.client.rotate")(function* (
   actor: typeof TenantActor.Type,
   client: IntegrationClientsDoc
 ) {
-  const { hash, token: secret } = yield* issueToken().pipe(Effect.orDie);
+  const { hash, token: secret } = yield* issueToken();
   const at = yield* Clock.currentTimeMillis;
   yield* (yield* DatabaseWriter)
     .table("integrationClients")

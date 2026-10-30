@@ -1,10 +1,10 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createLearnerAccount,
   openLearnerAccount,
   type RunConvex,
 } from "@repo/backend/scripts/content/acceptance/account";
+import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
   Duration,
@@ -114,7 +114,7 @@ describe("opening a learner account", () => {
           )
         );
         expect((yield* readInput(session)).input?.data?.userId).toBe("user-7");
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -140,7 +140,7 @@ describe("opening a learner account", () => {
           )
         );
         expect((yield* readInput(created)).input?.data?.email).toBe(ADDRESS);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 });
 
@@ -187,7 +187,7 @@ describe("synthetic learner account", () => {
           token,
           userId: "user-1",
         });
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect("gives every call a learner of its own", () =>
@@ -205,7 +205,7 @@ describe("synthetic learner account", () => {
         secondUser?.input?.data?.email
       );
       expect(first.token).not.toBe(second.token);
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect("stops before the session when the account was not created", () =>
@@ -222,7 +222,7 @@ describe("synthetic learner account", () => {
 
       expect(error._tag).toBe("SchemaError");
       expect(MutableList.toArray(calls)).toEqual(["Learner account"]);
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -249,7 +249,7 @@ describe("synthetic learner account", () => {
           "Learner session",
           "Learner account removal",
         ]);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect("removes the account again when the session cannot be opened", () =>
@@ -277,7 +277,7 @@ describe("synthetic learner account", () => {
         model: "user",
         where: [{ field: "_id", operator: "eq", value: "user-1" }],
       });
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -312,7 +312,7 @@ describe("synthetic learner account", () => {
             where: [{ field: "_id", operator: "eq", value: "user-1" }],
           },
         ]);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 
   it.live(
@@ -362,6 +362,6 @@ describe("synthetic learner account", () => {
             message: "Learner account removal failed",
           },
         ]);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 });

@@ -1,4 +1,3 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SchoolFixture } from "@repo/backend/scripts/content/acceptance/fixture";
@@ -6,6 +5,7 @@ import {
   createAcceptanceSchool,
   schoolMode,
 } from "@repo/backend/scripts/content/acceptance/school";
+import { nodePlatform } from "@repo/backend/test/platform";
 import {
   Array as Arr,
   Effect,
@@ -88,7 +88,7 @@ describe("acceptance school", () => {
         expect((yield* fs.stat(`${root}/school.json`)).mode % 0o1000).toBe(
           0o600
         );
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect("opens no school when no local runtime is running", () =>
@@ -105,7 +105,7 @@ describe("acceptance school", () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
       expect(mocks.command).not.toHaveBeenCalled();
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -128,7 +128,7 @@ describe("acceptance school", () => {
           .readFileString(`${root}/mode.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SchoolFixture)));
         expect(school.slug).toMatch(SCHOOL_SLUG);
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodePlatform))
   );
 
   it.effect(
@@ -143,6 +143,6 @@ describe("acceptance school", () => {
         });
         expect(mocks.read).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(nodePlatform))
   );
 });

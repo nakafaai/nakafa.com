@@ -113,7 +113,6 @@ const validateVersion = Effect.fn("contentRelease.validateRollbackVersion")(
     identity: string
   ) {
     const projectionHash = yield* hashText(
-      "the rollback content projection",
       canonicalizeContentProjection(state.projection)
     );
     if (

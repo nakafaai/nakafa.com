@@ -115,7 +115,7 @@ export const storeToken = Effect.fn("integrations.token.store")(function* (
   resource: typeof TokenResource.Type,
   seconds: number
 ) {
-  const { hash, token } = yield* issueToken().pipe(Effect.orDie);
+  const { hash, token } = yield* issueToken();
   const now = yield* Clock.currentTimeMillis;
   yield* (yield* DatabaseWriter)
     .table("integrationTokens")
@@ -171,10 +171,7 @@ export const issueAccessToken = Effect.fn("integrations.token.issue")(
     ).pipe(Effect.orDie);
     if (
       !(
-        quota.ok &&
-        (yield* matchesToken(input.secret, client.value.secretHash).pipe(
-          Effect.orDie
-        ))
+        quota.ok && (yield* matchesToken(input.secret, client.value.secretHash))
       )
     ) {
       return invalidClient;
@@ -217,7 +214,7 @@ export const checkAccessToken = Effect.fn("integrations.token.check")(
   }) {
     const unauthorized: typeof TokenCheck.Type = { outcome: "unauthorized" };
     const reader = yield* DatabaseReader;
-    const tokenHash = yield* sha256Hex(input.token).pipe(Effect.orDie);
+    const tokenHash = yield* sha256Hex(input.token);
     const stored = yield* reader
       .table("integrationTokens")
       .index("by_tokenHash", (query) => query.eq("tokenHash", tokenHash))

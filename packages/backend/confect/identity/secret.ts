@@ -16,13 +16,12 @@ const encoder = new TextEncoder();
  * platform's secure random source. Effect's default `Random` is not secure, so
  * a code never comes from it.
  */
-export const drawCardCode = Effect.fn("identity.code.draw")(
-  function* () {
-    const bytes = yield* (yield* SecureRandom.SecureRandom).randomBytes(CODE_LENGTH);
-    return codeFromBytes(bytes);
-  },
-  Effect.provide(SecureRandom.layerWebCrypto)
-);
+export const drawCardCode = Effect.fn("identity.code.draw")(function* () {
+  const bytes = yield* (yield* SecureRandom.SecureRandom).randomBytes(
+    CODE_LENGTH
+  );
+  return codeFromBytes(bytes);
+}, Effect.provide(SecureRandom.layerWebCrypto));
 
 /**
  * HMAC-SHA-256 of a labelled text under the server secret, in hex. Only such a

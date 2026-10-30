@@ -1,11 +1,5 @@
 import { encodeJsonText } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  Duration,
-  Effect,
-  Redacted,
-  Schema,
-} from "effect";
+import { Array as Arr, Duration, Effect, Redacted, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
 import { Base64Url } from "effect/encoding";
 import { HttpClient, HttpClientRequest } from "effect/http";

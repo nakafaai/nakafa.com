@@ -228,7 +228,9 @@ export const ensureConnectorKeys = Effect.fn("vault.keys.ensureConnector")(
       );
       return yield* deriveKeys(key);
     }
-    const key = yield* (yield* SecureRandom.SecureRandom).randomBytes(KEY_BYTES);
+    const key = yield* (yield* SecureRandom.SecureRandom).randomBytes(
+      KEY_BYTES
+    );
     yield* (yield* DatabaseWriter)
       .table("connectorKeys")
       .insert({
