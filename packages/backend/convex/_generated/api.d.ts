@@ -1113,6 +1113,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1135,6 +1136,7 @@ export declare const api: {
             numItems: number;
           };
           slug: string;
+          standing?: "open" | "handedIn" | "late" | "scored";
         },
         {
           continueCursor: string;
@@ -1147,6 +1149,7 @@ export declare const api: {
             mine: {
               late: boolean;
               score: number | null;
+              text: string;
               updatedAt: number;
             } | null;
             points: number;
@@ -1179,6 +1182,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1204,6 +1208,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1243,6 +1248,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          search?: string;
           slug: string;
           task: string;
         },
@@ -1273,6 +1279,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -5838,8 +5845,10 @@ export declare const api: {
               numItems: number;
             };
             questionId: Id<"examQuestions">;
+            search?: string;
             sittingId: Id<"examSittings">;
             slug: string;
+            verdict?: "correct" | "incorrect" | "partial" | "pending";
           },
           {
             continueCursor: string;
@@ -5871,6 +5880,7 @@ export declare const api: {
               maximumRowsRead?: number;
               numItems: number;
             };
+            search?: string;
             sittingId: Id<"examSittings">;
             slug: string;
             state?: "inProgress" | "locked" | "closing" | "submitted";
@@ -6013,7 +6023,10 @@ export declare const api: {
           page: Array<{
             canCancel: boolean;
             closesAt: number;
-            group: { kind: "cohort" | "unit"; name: string };
+            group:
+              | { kind: "unit"; unitId: Id<"tenantUnits"> }
+              | { cohortId: Id<"tenantCohorts">; kind: "cohort" };
+            groupName: string;
             id: Id<"examSittings">;
             opensAt: number;
             room: string;
