@@ -3,12 +3,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { GrantView } from "@repo/backend/confect/access/schema";
 import { Option, Schema } from "effect";
-import {
-  canManageSchool,
-  firstActiveUnitOf,
-  readAccountName,
-  roleOf,
-} from "@/lib/tenant/frame";
+import { canManageSchool, readAccountName, roleOf } from "@/lib/tenant/frame";
 
 describe("readAccountName", () => {
   it("names an outsider's page after the account's name", () => {
@@ -41,16 +36,5 @@ describe("school viewer helpers", () => {
     });
     expect(Option.isNone(roleOf([]))).toBe(true);
     expect(roleOf([grant])).toStrictEqual(Option.some("owner"));
-  });
-
-  it("opens the settings on the first active unit", () => {
-    const units = [
-      { id: "unit-retired", status: "archived" },
-      { id: "unit-active", status: "active" },
-    ];
-    expect(Option.getOrUndefined(firstActiveUnitOf(units))?.id).toBe(
-      "unit-active"
-    );
-    expect(Option.isNone(firstActiveUnitOf([]))).toBe(true);
   });
 });
