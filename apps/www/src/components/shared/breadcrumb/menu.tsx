@@ -1,5 +1,6 @@
 "use client";
 
+import { File02Icon, Folder02Icon } from "@hugeicons/core-free-icons";
 import {
   BreadcrumbEllipsis,
   BreadcrumbItem,
@@ -12,6 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useState } from "react";
@@ -66,7 +68,11 @@ export function BreadcrumbMenu({
   );
 }
 
-/** Renders one linked or inert collapsed breadcrumb menu item, which closes its menu when chosen. */
+/**
+ * Renders one linked or inert collapsed breadcrumb menu item, which closes its menu when chosen. Each
+ * item carries its icon, as every menu item does: a linked ancestor is a folder of the path, and a
+ * segment without a link is the page itself.
+ */
 function BreadcrumbMenuItem({
   item,
   onChoose,
@@ -77,13 +83,27 @@ function BreadcrumbMenuItem({
   const label = item.menuLabel ?? item.label;
 
   if (item.target === undefined) {
-    return <DropdownMenuItem render={<span>{label}</span>} />;
+    return (
+      <DropdownMenuItem
+        render={
+          <span>
+            <HugeIcons icon={File02Icon} />
+            {label}
+          </span>
+        }
+      />
+    );
   }
 
   return (
     <DropdownMenuItem
       onClick={onChoose}
-      render={<BreadcrumbAnchor target={item.target}>{label}</BreadcrumbAnchor>}
+      render={
+        <BreadcrumbAnchor target={item.target}>
+          <HugeIcons icon={Folder02Icon} />
+          {label}
+        </BreadcrumbAnchor>
+      }
     />
   );
 }
