@@ -87,6 +87,7 @@ export function LoginRenameDialog({
           <Input
             id={`${id}-login`}
             onChange={(event) => setLoginName(event.target.value)}
+            placeholder={t("card-login-name-placeholder")}
             value={loginName}
           />
           <FieldDescription>{t("student-login-rule")}</FieldDescription>
