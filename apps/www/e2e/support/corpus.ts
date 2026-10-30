@@ -18,6 +18,12 @@ export const pinnedRoutes = {
     en: "/en/articles/politics/merah-putih-cabinet-analysis",
     id: "/id/articles/politics/merah-putih-cabinet-analysis",
   },
+  /** A lesson whose highlight holds a link. */
+  derivative: {
+    de: "/de/faecher/mathematik/ableitungen/ableitung-trigonometrischer-funktionen",
+    en: "/en/subjects/mathematics/derivative-function/derivative-of-trigonometric-function",
+    id: "/id/materi/matematika/turunan-fungsi/turunan-fungsi-trigonometri",
+  },
   exponent: {
     de: "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen",
     en: "/en/subjects/mathematics/exponential-logarithm/basic-concept",
