@@ -3,6 +3,7 @@ import { Array as Arr, Option } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
+import { usePaperLocked } from "@/components/exams/sitting/lock";
 import {
   markedWith,
   type TablePart,
@@ -16,7 +17,6 @@ import { TryoutSelectableRadioOption } from "@/components/tryout/runtime/choice/
  */
 export function SittingTable({
   cells,
-  disabled = false,
   labelledBy,
   onMark,
   table,
@@ -26,7 +26,6 @@ export function SittingTable({
     readonly column: string;
     readonly statement: string;
   }[];
-  readonly disabled?: boolean;
   /** The id of the heading that names the question. */
   readonly labelledBy: string;
   /** Saves the cells once the student marks one statement. */
@@ -35,6 +34,7 @@ export function SittingTable({
   ) => void;
   readonly table: TablePart;
 }) {
+  const disabled = usePaperLocked();
   const t = useTranslations("Exams");
   const id = useId();
 

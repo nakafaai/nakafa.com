@@ -53,7 +53,7 @@ export default function PhoneInput({ className, ...props }: PhoneInputProps) {
   );
 }
 
-function Phone({ className, ...props }: React.ComponentProps<"input">) {
+function Phone({ className, ...props }: React.ComponentProps<typeof Input>) {
   return (
     <Input
       className={cn(

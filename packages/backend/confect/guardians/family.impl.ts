@@ -24,7 +24,11 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { gradeView } from "@repo/backend/confect/records/grade";
 import { schemeOf } from "@repo/backend/confect/records/version";
-import { blindNisn, rosterEntryOf } from "@repo/backend/confect/roster/entry";
+import {
+  blindNisn,
+  rosterEntryOf,
+  schoolKeys,
+} from "@repo/backend/confect/roster/entry";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
@@ -94,7 +98,12 @@ const confirm = FunctionImpl.make(
     }
     const blind = yield* Option.match(typed, {
       onNone: () => Effect.succeedNone,
-      onSome: (value) => Effect.asSome(blindNisn(link.tenantId, value)),
+      onSome: (value) =>
+        Effect.asSome(
+          Effect.flatMap(schoolKeys(link.tenantId), (keys) =>
+            blindNisn(keys, value)
+          )
+        ),
     });
     if (!Option.contains(blind, entry.value.blind)) {
       yield* countMismatch(link);

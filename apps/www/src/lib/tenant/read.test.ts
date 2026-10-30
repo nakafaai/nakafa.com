@@ -293,7 +293,7 @@ describe("SchoolReadsLive", () => {
   it.effect("reads the public profile of a school", () =>
     Effect.gen(function* () {
       queryMock.mockReset();
-      queryMock.mockReturnValue(Effect.succeed(PROFILE));
+      queryMock.mockReturnValue(Effect.succeedSome(PROFILE));
       const reads = yield* liveReads().pipe(Effect.provide(SchoolReadsLive));
       expect(yield* reads.profile(SLUG)).toEqual(Option.some(PROFILE));
       expect(queryMock).toHaveBeenCalledWith(tenancy.profile.get, {
@@ -305,7 +305,7 @@ describe("SchoolReadsLive", () => {
   it.effect("answers a school with no profile as none", () =>
     Effect.gen(function* () {
       queryMock.mockReset();
-      queryMock.mockReturnValue(Effect.fail({ _tag: "TenantNotFound" }));
+      queryMock.mockReturnValue(Effect.succeedNone);
       const reads = yield* liveReads().pipe(Effect.provide(SchoolReadsLive));
       expect(yield* reads.profile(SLUG)).toEqual(Option.none());
     })

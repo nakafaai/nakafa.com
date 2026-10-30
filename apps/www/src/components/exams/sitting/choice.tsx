@@ -2,6 +2,7 @@ import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
 import { useId } from "react";
 import { SittingDocument } from "@/components/exams/sitting/document";
+import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { type Choice, toggleOption } from "@/components/exams/sitting/response";
 import {
   TryoutSelectableMultipleChoice,
@@ -15,19 +16,17 @@ import {
  */
 export function SittingChoice({
   choice,
-  disabled = false,
   labelledBy,
   onChoose,
   response,
 }: {
   readonly choice: Choice;
-  /** Whether the options are read-only, because the attempt takes no answers now. */
-  readonly disabled?: boolean;
   /** The id of the heading that names the choice. */
   readonly labelledBy: string;
   readonly onChoose: (response: readonly string[]) => void;
   readonly response: readonly string[];
 }) {
+  const disabled = usePaperLocked();
   const id = useId();
 
   if (choice.maxChoices === 1) {
