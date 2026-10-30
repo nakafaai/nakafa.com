@@ -6,7 +6,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import en from "@repo/internationalization/dictionaries/standalone/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import { NINA_SIZE } from "@/components/state/size";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { expectNoOverflow } from "@/e2e/support/layout";
@@ -54,10 +54,13 @@ const ROUTES = [
 
 /**
  * Makes a route fail the way a visitor meets it, then shows its words and two
- * ways on. Nina's own chunk is aborted too, so this also proves that the page
- * stands without her, and that her place keeps the height she will fill: a
- * figure that arrives late moves nothing. Trying again brings the page back
- * once the chunks can load.
+ * ways on. Every chunk that the first page did not load fails, so the first
+ * press reloads the page once (`state/stale.browser.ts`), and the press after
+ * the reload meets the same chunk still missing, which is the failure the page
+ * shows. Nina's own chunk fails too, so this also proves that the page stands
+ * without her, and that her place keeps the height she will fill: a figure that
+ * arrives late moves nothing. Trying again brings the page back once the chunks
+ * can load.
  */
 const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
   page: Page,
@@ -76,8 +79,19 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
     level: 1,
     name: en.Error.title,
   });
+  const loaded = HashSet.fromIterable(
+    yield* Effect.promise(() =>
+      page.evaluate(() =>
+        performance.getEntriesByType("resource").map((entry) => entry.name)
+      )
+    )
+  );
   yield* Effect.promise(() =>
-    page.route(APP_CHUNK_PATH, (route) => route.abort("failed"))
+    page.route(APP_CHUNK_PATH, (route) =>
+      HashSet.has(loaded, route.request().url())
+        ? route.continue()
+        : route.abort("failed")
+    )
   );
   yield* activateUntilVisible(selector, heading, readinessTimeoutMilliseconds);
 

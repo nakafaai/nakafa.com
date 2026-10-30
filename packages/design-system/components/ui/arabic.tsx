@@ -15,7 +15,7 @@ const MARK_BASE = "◌";
  * An on-screen Arabic keypad: the harakat on top, each drawn on a dotted circle and named for
  * assistive technology, then the letters in hijaiyah order with the hamza and its seats, then the
  * Arabic punctuation and a space. A press types its key through `onKey` and keeps the focus where it
- * was, in the text being written, so the caret never jumps. Every key draws in Amiri.
+ * was, in the text being written, so the caret never jumps. Every key draws in Amiri Quran.
  */
 function ArabicKeypad({ onKey }: { onKey: (text: string) => void }) {
   const t = useTranslations("Common");

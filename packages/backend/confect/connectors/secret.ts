@@ -1,4 +1,5 @@
 import type { GenericId } from "@confect/core";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Space } from "@repo/backend/confect/space";
 import {
   ensureLearnerKeys,
@@ -7,7 +8,7 @@ import {
 } from "@repo/backend/confect/vault/keys";
 import type { VaultField } from "@repo/backend/confect/vault/schema";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /**
  * The stored field that a connection's sealed refresh token belongs to. The row
@@ -56,3 +57,32 @@ export const openRefreshToken = Effect.fn("connectors.secret.open")(function* (
   });
   return yield* openText(keys, refreshTokenField(connectionId), sealed);
 });
+
+/**
+ * The opened refresh token of a stored connection, or none when its token is
+ * gone. A token that does not open is a defect: only `connect` seals one.
+ */
+export const connectionToken = Effect.fn("connectors.secret.token")(
+  function* (connection: {
+    readonly _id: GenericId.GenericId<"connectorConnections">;
+    readonly owner: Space;
+  }) {
+    const secret = yield* (yield* DatabaseReader)
+      .table("connectorSecrets")
+      .index("by_connectionId", (query) =>
+        query.eq("connectionId", connection._id)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(secret)) {
+      return Option.none<string>();
+    }
+    return Option.some(
+      yield* openRefreshToken(
+        connection.owner,
+        connection._id,
+        secret.value.refreshToken
+      ).pipe(Effect.orDie)
+    );
+  }
+);

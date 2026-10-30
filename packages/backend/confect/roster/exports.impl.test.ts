@@ -1,16 +1,21 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import {
+  schoolKeys,
+  writeRosterEntry,
+} from "@repo/backend/confect/roster/entry";
 import { EXPORT_PAGE } from "@repo/backend/confect/roster/exports.impl";
-import { IMPORT_BATCH, Nisn } from "@repo/backend/confect/roster/schema";
+import { Nisn } from "@repo/backend/confect/roster/schema";
 import { cohort, denied, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool } from "@repo/backend/test/guardians";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema, String as Str } from "effect";
+import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 
 const { lines } = refs.public.roster.exports;
-const { apply } = refs.public.roster.imports;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -19,10 +24,8 @@ beforeEach(() => {
 
 /** One more student than a page of the export holds, so the export reads two pages. */
 const STUDENTS = Arr.makeBy(EXPORT_PAGE + 1, (index) => ({
-  cohortName: "VII-A",
   name: `Siswa ${index}`,
   nisn: Schema.decodeSync(Nisn)(Str.padStart(10, "0")(String(index + 1))),
-  underAgeLimit: true,
 }));
 
 describe("roster/exports", () => {
@@ -34,24 +37,6 @@ describe("roster/exports", () => {
         yield* asStaffSchool(fixture);
         const term = yield* period(fixture, fixture.units.smp);
         const x1 = yield* cohort(fixture, term.id, "VII-A");
-        // Two pages of students are more than the free plan admits, so the school pays per student.
-        yield* fixture.run(
-          Effect.flatMap(DatabaseWriter, (writer) =>
-            writer.table("billingGrants").insert({
-              ninaSeats: SCHOOL_FREE_STUDENTS,
-              product: "school",
-              scope: { kind: "tenant" },
-              seats: SCHOOL_FREE_STUDENTS,
-              source: {
-                contractId: "contract-roster-export",
-                kind: "contract",
-              },
-              tenantId: fixture.tenants.nf,
-              validFrom: 0,
-              validTo: Date.UTC(2099, 0, 1),
-            })
-          )
-        );
         // A student placed by hand has no roster row, so the export leaves the NISN empty.
         yield* fixture
           .as("admin")
@@ -60,11 +45,40 @@ describe("roster/exports", () => {
             personId: fixture.people.student.personId,
             slug: nf,
           });
-        for (const rows of Arr.chunksOf(STUDENTS, IMPORT_BATCH)) {
-          yield* fixture
-            .as("admin")
-            .mutation(apply, { periodId: term.id, rows, slug: nf });
-        }
+        // The export reads the placements and roster rows that an import leaves, so the students
+        // are written as an import writes them, in one transaction: the import has its own tests.
+        yield* fixture.run(
+          Effect.flatMap(schoolKeys(fixture.tenants.nf), (keys) =>
+            Effect.forEach(
+              STUDENTS,
+              (student) =>
+                Effect.gen(function* () {
+                  const writer = yield* DatabaseWriter;
+                  const personId = yield* writer.table("tenantPeople").insert({
+                    account: { state: "unclaimed" },
+                    kind: "member",
+                    name: student.name,
+                    status: "active",
+                    tenantId: fixture.tenants.nf,
+                  });
+                  yield* writer.table("tenantCohortMembers").insert({
+                    cohortId: x1.id,
+                    periodId: term.id,
+                    personId,
+                    tenantId: fixture.tenants.nf,
+                  });
+                  const person = yield* (yield* DatabaseReader)
+                    .table("tenantPeople")
+                    .get(personId);
+                  yield* writeRosterEntry(keys, person, {
+                    nisn: Option.some(student.nisn),
+                    underAgeLimit: true,
+                  });
+                }).pipe(Effect.orDie),
+              { discard: true }
+            )
+          )
+        );
         const exported = yield* fixture
           .as("counselor")
           .action(lines, { periodId: term.id, slug: nf });

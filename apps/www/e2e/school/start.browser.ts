@@ -189,12 +189,13 @@ const LOCALES = [
 ] as const;
 
 /**
- * Expects every choice on the page to read in full: its title and its description each on exactly
- * one line, and no line cut off.
+ * Expects every choice on screen to read in full: its title and its description each on exactly
+ * one line, and no line cut off. The other questions stay mounted while hidden, so only the
+ * visible choices are measured.
  */
 async function expectChoicesOnOneLine(page: Page) {
   const lines = await page
-    .locator('[data-slot="questionnaire-choice-label"]')
+    .locator('[data-slot="questionnaire-choice-label"]:visible')
     .evaluateAll((labels) =>
       labels.flatMap((label) =>
         Array.from(label.querySelectorAll("span"))

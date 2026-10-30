@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import { QueryResult } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
@@ -15,12 +15,13 @@ import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
 import {
   type StatusFilter,
-  StudentStatusFilter,
   StudentsTable,
+  useStatusChoices,
 } from "@/components/exams/results/students";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { TablePageBody } from "@/components/shared/table/frame";
 import {
+  TableChoice,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -28,20 +29,12 @@ import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
-import type { readResultsFn } from "@/lib/tenant/exams.functions";
 
-/** The first screen of the results, which the results page's loader read on the server. */
-type ResultsPreload = Partial<
-  Pick<Awaited<ReturnType<typeof readResultsFn>>, "overview" | "students">
->;
-
-/** The exam the page's address names, and the first screen of the results, which the page's loader read on the server. */
+/** The exam the page's address names. */
 const ResultsPageContext = createContext<{
   readonly examId: GenericId.GenericId<"exams"> | undefined;
-  readonly preload: ResultsPreload | undefined;
-}>({ examId: undefined, preload: undefined });
+}>({ examId: undefined });
 
 /**
  * The results of one sitting for its teacher: the students' list as the page's body, and in its one
@@ -52,12 +45,10 @@ const ResultsPageContext = createContext<{
  */
 export function SittingResults({
   examId,
-  preload,
   sittingId,
   slug,
 }: {
   readonly examId: GenericId.GenericId<"exams">;
-  readonly preload: ResultsPreload | undefined;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
@@ -73,7 +64,7 @@ export function SittingResults({
       )}
       read={{ args: scope, ref: exams.results.results.overview }}
     >
-      <ResultsPageContext value={{ examId, preload }}>
+      <ResultsPageContext value={{ examId }}>
         <SittingResultsContent scope={scope} />
       </ResultsPageContext>
     </ReadBoundary>
@@ -89,12 +80,11 @@ function SittingResultsContent({
     readonly slug: TenantSlug;
   };
 }) {
-  const { examId, preload } = use(ResultsPageContext);
+  const { examId } = use(ResultsPageContext);
   const settled = useSessionSettled();
-  const overview = usePreloadedQueryResult(
+  const overview = useQuery(
     exams.results.results.overview,
-    settled ? scope : "skip",
-    preload?.overview
+    settled ? scope : "skip"
   );
   const timeZone = QueryResult.isSuccess(overview)
     ? overview.value.sitting.timeZone
@@ -112,6 +102,7 @@ function SittingResultsContent({
     [canGrade, timeZone, total]
   );
   const [status, setStatus] = useState<StatusFilter>("all");
+  const statusChoices = useStatusChoices();
   const t = useTranslations("Exams");
 
   if (QueryResult.isFailure(overview)) {
@@ -144,7 +135,12 @@ function SittingResultsContent({
               sittingId={scope.sittingId}
             >
               <TableSearch placeholder={t("results-search")} />
-              <StudentStatusFilter onChange={setStatus} value={status} />
+              <TableChoice
+                onChange={setStatus}
+                options={statusChoices}
+                title={t("filter-label")}
+                value={status}
+              />
               <QuestionsAction questions={questions} />
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
@@ -156,7 +152,7 @@ function SittingResultsContent({
                       {t("release-wait")}
                     </p>
                   )}
-                  <StudentsTable first={preload?.students} status={status} />
+                  <StudentsTable status={status} />
                 </TablePageBody>
               </PanesList>
               <StudentAnswersPanel />

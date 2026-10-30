@@ -9,8 +9,10 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 
 const Select = SelectPrimitive.Root;
 
@@ -78,7 +80,7 @@ function SelectContent({
     "align" | "alignOffset" | "alignItemWithTrigger" | "side" | "sideOffset"
   >) {
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal container={use(PortalContainer)}>
       <SelectPrimitive.Positioner
         align={align}
         alignItemWithTrigger={alignItemWithTrigger}

@@ -1,16 +1,14 @@
 import { blindHash, open, seal } from "@repo/backend/confect/vault/cipher";
 import type {
   ensureConnectorKeys,
-  readLearnerKeys,
-  readTenantKeys,
+  LearnerKeys,
+  TenantKeys,
 } from "@repo/backend/confect/vault/keys";
 import type { VaultField } from "@repo/backend/confect/vault/schema";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Predicate } from "effect";
 import { Base64Url } from "effect/encoding";
 
-type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
-type TenantKeys = Effect.Success<ReturnType<typeof readTenantKeys>>;
 /** The keys of the owner of a sealed text: one learner, or one school. */
 type OwnerKeys = LearnerKeys | TenantKeys;
 /** The connector key, which every owner shares. */

@@ -1,10 +1,4 @@
-import {
-  ArrowDown02Icon,
-  ArrowMoveDownLeftIcon,
-  ArrowUp02Icon,
-  FileIcon,
-  InformationCircleIcon,
-} from "@hugeicons/core-free-icons";
+import { FileIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
   Command,
@@ -12,7 +6,6 @@ import {
   CommandDialog,
   CommandDialogPopup,
   CommandEmpty,
-  CommandFooter,
   CommandGroup,
   CommandGroupLabel,
   CommandInput,
@@ -24,13 +17,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useNavigate } from "@tanstack/react-router";
-import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import type { ComponentProps, ReactElement, ReactNode } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { SearchExcerpt } from "@/components/search/excerpt";
+import { CommandKeys } from "@/components/search/keys";
 import { useSearchSectionLabels } from "@/components/search/labels";
 import { useArticleNavigation } from "@/components/search/navigation";
 import { holyMenu } from "@/components/sidebar/data/holy";
@@ -180,7 +173,7 @@ function SearchMain() {
         />
         <SearchList groups={groups} />
       </CommandPanel>
-      <Footer />
+      <CommandKeys />
     </Command>
   );
 }
@@ -403,55 +396,4 @@ function getResultGroups(
 
 function searchCommandItemToString(item: SearchCommandItem) {
   return item.value;
-}
-
-function Footer() {
-  const t = useTranslations("Common");
-
-  return (
-    <CommandFooter>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1">
-            <FooterKbd>
-              <HugeIcons className="size-3" icon={ArrowUp02Icon} />
-            </FooterKbd>
-            <FooterKbd>
-              <HugeIcons className="size-3" icon={ArrowDown02Icon} />
-            </FooterKbd>
-          </div>
-          <span>{t("navigate")}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FooterKbd>
-            <HugeIcons className="size-3" icon={ArrowMoveDownLeftIcon} />
-          </FooterKbd>
-          <span>{t("open")}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-1">
-        <FooterKbd className="w-auto px-1">Esc</FooterKbd>
-        <span>{t("close")}</span>
-      </div>
-    </CommandFooter>
-  );
-}
-
-function FooterKbd({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <kbd
-      className={cn(
-        "pointer-events-none inline-flex h-5 min-w-5 select-none items-center justify-center gap-1 rounded bg-muted px-1 font-sans text-muted-foreground text-xs shadow-xs ring-1 ring-border [&_svg:not([class*='size-'])]:size-3",
-        className
-      )}
-    >
-      {children}
-    </kbd>
-  );
 }

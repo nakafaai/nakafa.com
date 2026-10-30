@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import { Space } from "@repo/backend/confect/space";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
@@ -89,4 +90,114 @@ export const ConnectionView = Schema.Struct({
   nextSyncAt: Schema.NullOr(Schema.Finite),
   scopes: Schema.Array(ConnectorScope),
   status: ConnectionStatus,
+});
+
+/**
+ * One connect that waits for Google's callback: who started it, for which owner
+ * and connector, the callback it named, and its PKCE verifier. The callback brings
+ * the state back, and finishing the connect deletes the row, so a state works
+ * once. A row older than `CONNECT_STATE_LIFETIME` finishes nothing. `personId` is
+ * the school member who started a school connection, whom the journal names.
+ */
+export const connectStateValidator = Schema.Struct({
+  connector: GoogleConnector,
+  createdAt: Schema.Finite,
+  owner: Space,
+  personId: Schema.NullOr(Id("tenantPeople")),
+  redirectUri: Schema.String,
+  returnPath: Schema.String,
+  state: Schema.String,
+  userId: Id("users"),
+  verifier: Schema.String,
+});
+
+/**
+ * A path on the site that a connect returns to, such as `/settings/connections`:
+ * it starts with one slash and names no other host, so the return address stays
+ * on the site of the callback.
+ */
+export const ReturnPath = Schema.String.check(
+  Schema.isPattern(/^\/(?![/\\])[^\s]*$/u),
+  Schema.isMaxLength(200)
+);
+
+/** The ID of a file that Google Drive's Picker gives: letters, digits, `_`, and `-`. */
+export const DriveFileId = Schema.String.check(
+  Schema.isPattern(/^[\w-]{1,200}$/u)
+);
+
+/**
+ * How a connect ended and where its user goes back to: `connected`, `cancelled`
+ * when the user stopped on Google's screen, or `refused` when Google or the
+ * granted scopes did not allow it. The address is built on the server from the
+ * callback's own site, the school's slug, and the path the start named.
+ */
+export const ConnectOutcome = Schema.Struct({
+  location: Schema.String,
+  outcome: Schema.Literals(["connected", "cancelled", "refused"]),
+});
+
+/**
+ * One upcoming event of a Calendar connection, in the mirror that Nina reads
+ * (ADR 0015): when it starts and ends in UTC, whether it is a whole day, and its
+ * title sealed under the account's own key, bound to the connection and the
+ * event. A sync replaces a connection's events, and a disconnect deletes them.
+ */
+export const connectorEventValidator = Schema.Struct({
+  allDay: Schema.Boolean,
+  connectionId: Id("connectorConnections"),
+  end: Schema.Finite,
+  eventId: Schema.NonEmptyString,
+  sealedTitle: Sealed,
+  start: Schema.Finite,
+  userId: Id("users"),
+});
+
+/** One upcoming event as a sync reads it from Google: its title, and when it starts and ends in UTC. */
+export const CalendarEvent = Schema.Struct({
+  allDay: Schema.Boolean,
+  end: Schema.Finite,
+  eventId: Schema.NonEmptyString,
+  start: Schema.Finite,
+  title: Schema.String,
+});
+
+/** One course that a connected teacher teaches in Google Classroom, as an import preview lists it. */
+export const ClassroomCourse = Schema.Struct({
+  courseId: Schema.NonEmptyString,
+  name: Schema.String,
+  section: Schema.NullOr(Schema.String),
+});
+
+/** One piece of published Classroom coursework with a deadline, which an import makes a task. */
+export const ClassroomWork = Schema.Struct({
+  deadline: Schema.Finite,
+  points: Schema.Finite,
+  text: Schema.String,
+  title: Schema.String,
+  workId: Schema.NonEmptyString,
+});
+
+/**
+ * One course of a Classroom import preview: the course, how many students it
+ * has, and the Nakafa class it is linked to, if one is.
+ */
+export const ClassroomPreview = Schema.Struct({
+  ...ClassroomCourse.fields,
+  classId: Schema.NullOr(Id("classes")),
+  students: Schema.Int,
+});
+
+/**
+ * The link of one Google Classroom course to one Nakafa class (ADR 0015): the
+ * school connection that reads it, and the member who linked it, whom the tasks
+ * it imports name as their author. A sync imports the course's coursework into
+ * the class's tasks.
+ */
+export const connectorLinkValidator = Schema.Struct({
+  classId: Id("classes"),
+  connectionId: Id("connectorConnections"),
+  courseId: Schema.NonEmptyString,
+  personId: Id("tenantPeople"),
+  tenantId: Id("tenants"),
 });

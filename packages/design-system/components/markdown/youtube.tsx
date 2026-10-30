@@ -1,6 +1,5 @@
 import { ArrowUpRight01Icon, YoutubeIcon } from "@hugeicons/core-free-icons";
 import { YoutubePlayer } from "@repo/design-system/components/markdown/youtube-player";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
   CardFooter,
@@ -8,6 +7,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
 
 interface Props {
@@ -28,20 +28,15 @@ export function Youtube({ videoId }: Props) {
         <YoutubePlayer label={t("play")} videoId={videoId} />
       </div>
       <CardFooter className="justify-end border-t pb-6">
-        <Button
-          nativeButton={false}
-          render={
-            <a
-              href={`https://www.youtube.com/watch?v=${videoId}`}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              {t("see-on-youtube")}
-              <HugeIcons icon={ArrowUpRight01Icon} />
-            </a>
-          }
-          variant="outline"
-        />
+        <a
+          className={buttonVariants({ variant: "outline" })}
+          href={`https://www.youtube.com/watch?v=${videoId}`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {t("see-on-youtube")}
+          <HugeIcons icon={ArrowUpRight01Icon} />
+        </a>
       </CardFooter>
     </Card>
   );

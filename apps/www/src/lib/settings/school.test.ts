@@ -30,6 +30,7 @@ describe("school settings routes", () => {
       ["/school/$slug/settings/roster", "roster", "people"],
       ["/school/$slug/settings/guardians", "guardians", "people"],
       ["/school/$slug/settings/clients", "clients", "integrations"],
+      ["/school/$slug/settings/connections", "connections", "integrations"],
       ["/school/$slug/settings/policies", "policies", "security"],
       ["/school/$slug/settings/audit", "audit", "security"],
     ]);
@@ -47,7 +48,7 @@ describe("school settings routes", () => {
         "people",
         ["members", "roles", "invites", "students", "roster", "guardians"],
       ],
-      ["integrations", ["clients"]],
+      ["integrations", ["clients", "connections"]],
       ["security", ["policies", "audit"]],
     ]);
   });
@@ -70,6 +71,7 @@ describe("school settings routes", () => {
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
       "/school/$slug/settings/members",
+      "/school/$slug/settings/clients",
       "/school/$slug/settings/clients",
       "/school/$slug/settings/policies",
       "/school/$slug/settings/policies",

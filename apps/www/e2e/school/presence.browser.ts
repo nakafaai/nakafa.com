@@ -57,7 +57,7 @@ test("two teachers in one exam see each other in the editor header, and a teache
 
   // Alone in the exam, the Owner sees no one, and the actions keep their place when the row comes.
   const ownerHeader = editorHeader(owner);
-  const tryAction = ownerHeader.getByRole("button", { name: "Try as student" });
+  const tryAction = ownerHeader.getByRole("link", { name: "Try as student" });
   await expect(tryAction).toBeVisible({ timeout: servedTimeoutMilliseconds });
   const before = await tryAction.boundingBox();
 

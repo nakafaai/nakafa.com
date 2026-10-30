@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -7,7 +6,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
@@ -30,15 +29,10 @@ import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { Link } from "@/lib/routing/link";
-import { EXAM_PAGE_SIZE } from "@/lib/tenant/exams";
 
-/** The first page of the exam list, which its loader read on the server. */
-type ExamListFirstPage = Pick<
-  Ref.Returns<typeof exams.exams.list>,
-  "isDone" | "page"
->;
+/** How many exams the list asks for each time its end comes into view. */
+const EXAM_PAGE_SIZE = 20;
 
 /** The columns of the exams table. */
 const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
@@ -49,27 +43,21 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
  * into view, so the list has no button. The page holds one create action, shown when the viewer
  * can create an exam in at least one place: in the school's one header beside the exams, or in
  * the empty state while the school has no saved exam (K27), so a new teacher meets one step in
- * the middle of the page. An exam that is still saving does not end the empty state, so its
- * create action stays where it was pressed until the editor opens. A failed read of the list
+ * the middle of the page. While the first page loads the page holds no create action, since it
+ * cannot know yet where the action goes. An exam that is still saving does not end the empty
+ * state, so its create action stays where it was pressed until the editor opens. A failed read of the list
  * shows its own sentence and a retry, and a viewer who lost the school's access is sent to the
  * refused page.
  */
-export function ExamList({
-  first,
-  slug,
-}: {
-  first: ExamListFirstPage | undefined;
-  slug: TenantSlug;
-}) {
+export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
   // The list needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     exams.exams.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: EXAM_PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: EXAM_PAGE_SIZE }
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);
@@ -89,12 +77,16 @@ export function ExamList({
   const empty =
     !(loadingFirst || failed) &&
     Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
+  // Until the first page arrives the page cannot know whether search and Create belong in the
+  // header or Create in the empty state, so the header holds neither: a dialog opened from the
+  // header would close, and lose its title, when an empty list moved Create into the page.
+  const listed = !(loadingFirst || empty);
   return (
     <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
         <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-          {empty ? null : <TableSearch placeholder={t("exams-search")} />}
-          {tenant.home.canCreate && !empty ? (
+          {listed ? <TableSearch placeholder={t("exams-search")} /> : null}
+          {tenant.home.canCreate && listed ? (
             <CreateExam choices={tenant.home.choices} slug={slug} />
           ) : null}
         </SchoolHeader>

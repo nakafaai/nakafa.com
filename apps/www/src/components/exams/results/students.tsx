@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   CheckmarkCircle02Icon,
   Clock01Icon,
@@ -33,21 +32,11 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
-import {
-  TableChoice,
-  useTableFilters,
-} from "@/components/shared/table/toolbar";
+import { useTableFilters } from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
-export const STUDENT_PAGE_SIZE = 50;
-
-/** The first page of the students of one sitting, which its loader read on the server. */
-type StudentsFirstPage = Pick<
-  Ref.Returns<typeof exams.results.results.byStudent>,
-  "isDone" | "page"
->;
+const STUDENT_PAGE_SIZE = 50;
 
 /** The copy key of each state of an attempt. */
 const stateKeys = {
@@ -181,33 +170,20 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
 }
 
 /**
- * The students' Filter menu, in the results page's header row: every attempt, or only the attempts in one
- * state, which the server reads. Each value carries the icon of its state.
+ * The values of the students' Filter menu, which the results page draws in its header row: every attempt, or
+ * only the attempts in one state, which the server reads. Each value carries the icon of its state.
  */
-export function StudentStatusFilter({
-  onChange,
-  value,
-}: {
-  readonly onChange: (status: StatusFilter) => void;
-  readonly value: StatusFilter;
-}) {
+export function useStatusChoices() {
   const t = useTranslations("Exams");
 
-  return (
-    <TableChoice
-      onChange={onChange}
-      options={[
-        { icon: UserGroupIcon, label: t("filter-all"), value: "all" },
-        ...Arr.map(AttemptState.literals, (state) => ({
-          icon: STATE_LOOKS[state].icon,
-          label: t(stateKeys[state]),
-          value: state,
-        })),
-      ]}
-      title={t("filter-label")}
-      value={value}
-    />
-  );
+  return [
+    { icon: UserGroupIcon, label: t("filter-all"), value: "all" as const },
+    ...Arr.map(AttemptState.literals, (state) => ({
+      icon: STATE_LOOKS[state].icon,
+      label: t(stateKeys[state]),
+      value: state,
+    })),
+  ];
 }
 
 /** The table of the given students, with its head and one row for each. */
@@ -253,10 +229,8 @@ function StudentTable({
  * search that matches no loaded row keeps reading the next page until one matches or the list ends.
  */
 export function StudentsTable({
-  first,
   status,
 }: {
-  first: StudentsFirstPage | undefined;
   /** The state the header's Filter menu chose, which the server reads. */
   status: StatusFilter;
 }) {
@@ -265,12 +239,10 @@ export function StudentsTable({
   const search = useTableFilters((state) => state.search);
   const scope =
     status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
-  // The loader's first page is the page of every student, so a filtered list waits for its own first page.
-  const students = usePaginatedPreloaded(
+  const students = usePaginatedQuery(
     exams.results.results.byStudent,
     settled ? scope : "skip",
-    { initialNumItems: STUDENT_PAGE_SIZE },
-    status === "all" ? Option.fromUndefinedOr(first) : Option.none()
+    { initialNumItems: STUDENT_PAGE_SIZE }
   );
 
   if (

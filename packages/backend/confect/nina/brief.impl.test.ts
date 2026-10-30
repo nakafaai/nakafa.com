@@ -63,6 +63,31 @@ describe("the brief of a Nina turn", () => {
     expect(Arr.map(read.uncovered, ({ order }) => order)).toEqual([2]);
   });
 
+  it("tells whether the learner connected Google Calendar, from their active connections", async () => {
+    const f = await fixture();
+    expect((await briefOf(f)).calendar).toBe(false);
+    const connect = (
+      connector: "calendar" | "drive",
+      status: "active" | "disconnected"
+    ) =>
+      f.t.mutation(async (ctx) =>
+        ctx.db.insert("connectorConnections", {
+          connector,
+          googleAccountKey: null,
+          lastSyncedAt: null,
+          nextSyncAt: null,
+          owner: { kind: "personal", userId: f.identity.userId },
+          scopes: ["openid"],
+          status,
+        })
+      );
+    await connect("calendar", "disconnected");
+    await connect("drive", "active");
+    expect((await briefOf(f)).calendar).toBe(false);
+    await connect("calendar", "active");
+    expect((await briefOf(f)).calendar).toBe(true);
+  });
+
   it("tells what the turn knows of the learner from the words of its own message", async () => {
     const f = await fixture();
     await f.seed({ text: "Mau ikut SNBT 2027." });
