@@ -1,4 +1,7 @@
-import { markRenderer, markTokenizer } from "@repo/design-system/components/editor/marks";
+import {
+  markRenderer,
+  markTokenizer,
+} from "@repo/design-system/components/editor/marks";
 import {
   type EditorOptions,
   Extension,
