@@ -1,4 +1,11 @@
-import { Effect, MutableList, Predicate, Result } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableList,
+  Predicate,
+  Record,
+  Result,
+} from "effect";
 
 /**
  * The key under which a TanStack Start server component holds the getter of
@@ -113,8 +120,9 @@ export const settleServerComponents = Effect.fn(
       MutableList.append(pending, yield* readLazyNode(next));
       continue;
     }
-    for (const child of Object.values(next)) {
-      MutableList.append(pending, child);
-    }
+    MutableList.appendAll(
+      pending,
+      Arr.isArray(next) ? next : Record.values(next)
+    );
   }
 });
