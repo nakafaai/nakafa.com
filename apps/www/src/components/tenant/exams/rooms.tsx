@@ -281,9 +281,9 @@ function RoomsTable({
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
         <TableHeader>
-          <TableRow>
-            <TableHead>{t("room")}</TableHead>
-            <TableHead>
+          <TableRow className="hover:bg-transparent hover:text-inherit">
+            <TableHead className="px-2 sm:px-4">{t("room")}</TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
               <ColumnChoice
                 column="group"
                 options={[
@@ -297,9 +297,13 @@ function RoomsTable({
                 title={t("rooms-group")}
               />
             </TableHead>
-            <TableHead className="text-end">{t("rooms-opens")}</TableHead>
-            <TableHead className="text-end">{t("rooms-closes")}</TableHead>
-            <TableHead className="text-center">
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-opens")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-closes")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
               <ColumnChoice
                 column="state"
                 options={[
@@ -313,7 +317,7 @@ function RoomsTable({
                 title={t("rooms-state")}
               />
             </TableHead>
-            <TableHead />
+            <TableHead className="px-2 sm:px-4" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -357,8 +361,8 @@ function RoomItem({
   const locale = useLocale();
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">
+    <TableRow className="hover:bg-transparent hover:text-inherit">
+      <TableCell className="px-2 font-medium sm:px-4">
         <Link
           className="underline-offset-4 hover:underline"
           dir="auto"
@@ -368,29 +372,31 @@ function RoomItem({
           {room.room}
         </Link>
       </TableCell>
-      <TableCell dir="auto">{room.groupName}</TableCell>
-      <TableCell className="text-end text-muted-foreground tabular-nums">
+      <TableCell className="px-2 text-center sm:px-4" dir="auto">
+        {room.groupName}
+      </TableCell>
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.opensAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-end text-muted-foreground tabular-nums">
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.closesAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="px-2 text-center sm:px-4">
         <TableStatus
           icon={ROOM_STATE_LOOKS[room.state].icon}
           label={t(`room-state-${room.state}`)}
           tone={ROOM_STATE_LOOKS[room.state].tone}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="px-2 text-end sm:px-4">
         <RoomMenu examId={examId} room={room} slug={slug} />
       </TableCell>
     </TableRow>
