@@ -233,10 +233,15 @@ function useEntryWords() {
   };
 }
 
-/** The row menu of one change of the trail: Details, which opens the change in a sheet. */
+/**
+ * The row menu of one change of the trail: Details, which opens the change in a sheet. The sheet says when it
+ * happened, who made it, what it was, and the name of what it changed when the trail recorded one. The trail holds
+ * no policy value and no secret, so the sheet shows none.
+ */
 function AuditEntryMenu({ entry }: { entry: EntryItem }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
+  const words = useEntryWords();
   const [open, setOpen] = useState(false);
 
   return (
@@ -262,65 +267,47 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      <AuditEntrySheet entry={entry} open={open} setOpen={setOpen} />
+      <Sheet onOpenChange={setOpen} open={open}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{words.change(entry)}</SheetTitle>
+            <SheetDescription>
+              {t("audit-details-description")}
+            </SheetDescription>
+          </SheetHeader>
+          <dl className="grid min-h-0 flex-1 grid-cols-[auto_1fr] content-start gap-x-6 gap-y-3 overflow-y-auto p-4 text-sm">
+            <dt className="text-muted-foreground">{t("audit-when")}</dt>
+            <dd className="tabular-nums">
+              <SchoolDateTime at={entry.at} />
+            </dd>
+            <dt className="text-muted-foreground">{t("audit-who")}</dt>
+            <dd dir="auto">{words.actor(entry)}</dd>
+            <dt className="text-muted-foreground">{t("audit-change")}</dt>
+            <dd>{words.change(entry)}</dd>
+            {Option.match(entry.subjectName, {
+              onNone: () => null,
+              onSome: (name) => (
+                <>
+                  <dt className="text-muted-foreground">
+                    {t("audit-subject")}
+                  </dt>
+                  <dd dir="auto">{name}</dd>
+                </>
+              ),
+            })}
+          </dl>
+          <SheetFooter>
+            <SheetClose
+              render={
+                <Button type="button" variant="outline">
+                  {common("close")}
+                </Button>
+              }
+            />
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
-  );
-}
-
-/**
- * One change of the trail in a sheet: when it happened, who made it, what it was, and the name of what it changed
- * when the trail recorded one. The trail holds no policy value and no secret, so the sheet shows none.
- */
-function AuditEntrySheet({
-  entry,
-  open,
-  setOpen,
-}: {
-  entry: EntryItem;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}) {
-  const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
-  const words = useEntryWords();
-
-  return (
-    <Sheet onOpenChange={setOpen} open={open}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>{words.change(entry)}</SheetTitle>
-          <SheetDescription>{t("audit-details-description")}</SheetDescription>
-        </SheetHeader>
-        <dl className="grid min-h-0 flex-1 grid-cols-[auto_1fr] content-start gap-x-6 gap-y-3 overflow-y-auto p-4 text-sm">
-          <dt className="text-muted-foreground">{t("audit-when")}</dt>
-          <dd className="tabular-nums">
-            <SchoolDateTime at={entry.at} />
-          </dd>
-          <dt className="text-muted-foreground">{t("audit-who")}</dt>
-          <dd dir="auto">{words.actor(entry)}</dd>
-          <dt className="text-muted-foreground">{t("audit-change")}</dt>
-          <dd>{words.change(entry)}</dd>
-          {Option.match(entry.subjectName, {
-            onNone: () => null,
-            onSome: (name) => (
-              <>
-                <dt className="text-muted-foreground">{t("audit-subject")}</dt>
-                <dd dir="auto">{name}</dd>
-              </>
-            ),
-          })}
-        </dl>
-        <SheetFooter>
-          <SheetClose
-            render={
-              <Button type="button" variant="outline">
-                {common("close")}
-              </Button>
-            }
-          />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
   );
 }
 
