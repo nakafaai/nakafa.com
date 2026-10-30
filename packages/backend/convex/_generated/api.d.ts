@@ -10375,6 +10375,40 @@ export declare const api: {
           timeZone: string;
         }
       >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          slug: string;
+          unitId: Id<"tenantUnits">;
+        },
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+        }
+      >;
       list: FunctionReference<
         "query",
         "public",

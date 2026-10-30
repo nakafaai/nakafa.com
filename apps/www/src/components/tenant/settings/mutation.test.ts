@@ -8,6 +8,7 @@ import {
   addUnitChange,
   archiveUnitChange,
   assignGrantChange,
+  editUnitChange,
   inviteChange,
   removeLogoChange,
   revokeClientChange,
@@ -140,6 +141,35 @@ describe("components/tenant/settings/mutation", () => {
       expect(Arr.map(listed, (item) => [item.id, item.timeZone])).toEqual([
         [smp, "Asia/Makassar"],
         [sma, "Asia/Jakarta"],
+      ]);
+    });
+
+    it("shows the new name and level of a unit in the viewer and the list at once", () => {
+      const local = createLocalStore();
+      local.seed(tenancy.viewer.get, { slug }, viewer());
+      local.seed(tenancy.units.list, { slug }, [unit(smp), unit(sma)]);
+      editUnitChange(local.store, {
+        level: "mts",
+        name: "MTs Nurul Fikri",
+        slug,
+        unitId: smp,
+      });
+      const shown = Option.getOrThrow(
+        local.store.getQuery(tenancy.viewer.get, { slug })
+      );
+      const listed = Option.getOrThrow(
+        local.store.getQuery(tenancy.units.list, { slug })
+      );
+      expect(shown.units).toEqual([
+        expect.objectContaining({
+          id: smp,
+          level: "mts",
+          name: "MTs Nurul Fikri",
+        }),
+      ]);
+      expect(Arr.map(listed, (item) => [item.id, item.name])).toEqual([
+        [smp, "MTs Nurul Fikri"],
+        [sma, unit(sma).name],
       ]);
     });
 

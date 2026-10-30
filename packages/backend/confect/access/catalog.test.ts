@@ -149,6 +149,8 @@ describe("access/catalog", () => {
           "unit.created",
           "unit.locale.set",
           "unit.npsn.set",
+          "unit.name.set",
+          "unit.level.set",
           "unit.archived",
           "unit.unarchived",
           "person.created",

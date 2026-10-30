@@ -129,6 +129,47 @@ const setNpsn = FunctionImpl.make(
 );
 
 /**
+ * Sets the name and the level of one school, which its creation chose. The school's Admin may change them
+ * (`tenant.manage`) and the school must allow its changes (`unit.manage`). Each value that changes is recorded on
+ * its own, and values already stored write and record nothing.
+ */
+const edit = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "edit",
+  Effect.fn("tenancy.units.edit")(function* ({ level, name, unitId }) {
+    const { person } = yield* Member;
+    const unit = yield* unitAuthority.authorize("unit.manage", unitId);
+    if (unit.level === level && unit.name === name) {
+      return { level, name };
+    }
+    yield* (yield* DatabaseWriter)
+      .table("tenantUnits")
+      .replace(
+        unit._id,
+        Struct.assign(Struct.omit(unit, ["_creationTime", "_id"]), {
+          level,
+          name,
+        })
+      )
+      .pipe(Effect.orDie);
+    if (unit.name !== name) {
+      yield* unitAuthority.record(personActor(person), unit, {
+        name,
+        type: "unit.name.set",
+      });
+    }
+    if (unit.level !== level) {
+      yield* unitAuthority.record(personActor(person), unit, {
+        level,
+        type: "unit.level.set",
+      });
+    }
+    return { level, name };
+  })
+);
+
+/**
  * Sets the time zone and the page language of one school. The school must
  * be in the member's tenant and not archived (`unit.manage`, ADR 0012), and an
  * Admin may change a school they hold the role for. A value that is already
@@ -223,6 +264,7 @@ const unarchive = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(create),
+  Layer.provide(edit),
   Layer.provide(setNpsn),
   Layer.provide(setLocale),
   Layer.provide(archive),
