@@ -68,14 +68,24 @@ describe("the rooms table's group filter", () => {
 });
 
 describe("exams/rooms client", () => {
-  it("asks for every room of the exam when the filter names every state, with no state argument", () => {
-    const args = roomsArgs(input, "all");
+  it("asks for every room of the exam when the filter names every state and nothing is searched, with neither argument", () => {
+    const args = roomsArgs(input, "all", "");
     expect(args).toEqual(input);
     expect(args).not.toHaveProperty("state");
+    expect(args).not.toHaveProperty("search");
   });
 
   it("asks for the rooms of one state when the filter names it", () => {
-    expect(roomsArgs(input, "open")).toEqual({ ...input, state: "open" });
+    expect(roomsArgs(input, "open", "")).toEqual({ ...input, state: "open" });
+  });
+
+  it("asks for the rooms whose names match the header's search, in a state or in any", () => {
+    expect(roomsArgs(input, "all", "Lab")).toEqual({ ...input, search: "Lab" });
+    expect(roomsArgs(input, "open", "Lab")).toEqual({
+      ...input,
+      search: "Lab",
+      state: "open",
+    });
   });
 
   it("takes a cancelled room off every loaded page of the school's rooms at once", () => {

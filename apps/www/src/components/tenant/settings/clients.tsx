@@ -219,7 +219,6 @@ function SchoolClientTable() {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     clientColumns.display({
       cell: (info) =>

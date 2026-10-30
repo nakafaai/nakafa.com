@@ -19,7 +19,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 const { exam, list } = refs.public.exams.rooms;
 const { create } = refs.public.exams.exams;
@@ -236,6 +236,54 @@ describe("exams/rooms", () => {
         });
         expect(Arr.map(second.page, (row) => row.id)).toEqual([own.id]);
         expect(second.isDone).toBe(true);
+      })
+  );
+
+  it.effect(
+    "reads the rooms whose names match a search as it is typed, in one state or in any",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const opened = yield* openedSitting(fixture, "PTS");
+        const { examId } = yield* sittingRow(fixture, opened.id);
+        const group = { kind: "unit", unitId: fixture.units.smp } as const;
+        const hall = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES,
+          examId,
+          group,
+          opensAt: LATER,
+          room: "Aula Utama",
+        });
+        const lab = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES,
+          examId,
+          group,
+          opensAt: LATER,
+          room: "Lab 3",
+        });
+        const searched = (search: string, state?: "scheduled") =>
+          fixture
+            .as("teacher")
+            .query(list, {
+              examId,
+              paginationOpts: { cursor: null, numItems: 10 },
+              search,
+              slug: nf,
+              ...(state === undefined ? {} : { state }),
+            })
+            .pipe(
+              Effect.map((page) =>
+                Arr.sort(
+                  Arr.map(page.page, (row) => row.id),
+                  Order.String
+                )
+              )
+            );
+        expect(yield* searched("Aul")).toEqual([hall.id]);
+        expect(yield* searched("Lab")).toEqual(
+          Arr.sort([opened.id, lab.id], Order.String)
+        );
+        expect(yield* searched("Lab", "scheduled")).toEqual([lab.id]);
       })
   );
 

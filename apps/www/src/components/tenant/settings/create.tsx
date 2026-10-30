@@ -20,7 +20,14 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, startTransition, use, useId, useState } from "react";
+import {
+  createContext,
+  startTransition,
+  use,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -119,6 +126,8 @@ function SchoolUnitCreateForm({
     addUnitChange
   );
   const [name, setName] = useState("");
+  // Whether the dialog closes because its unit was added, which empties the name once it has closed.
+  const sent = useRef(false);
   const [level, setLevel] = useState<Level>("sma");
   // The choices start as the first school's, so only a pick the teacher makes is kept.
   const [zoneChoice, setZoneChoice] = useState<string | null>(null);
@@ -142,8 +151,8 @@ function SchoolUnitCreateForm({
     if (!valid) {
       return;
     }
+    sent.current = true;
     setOpen(false);
-    setName("");
     startTransition(() =>
       saveSchool(
         () =>
@@ -179,6 +188,13 @@ function SchoolUnitCreateForm({
           </Button>
         </>
       }
+      // An added unit's name is cleared once the dialog has closed, so the closing dialog keeps it.
+      onOpenChangeComplete={(next) => {
+        if (!next && sent.current) {
+          setName("");
+        }
+        sent.current = false;
+      }}
       open={open}
       setOpen={setOpen}
       title={t("unit-add-title")}
