@@ -119,10 +119,12 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
       enableSorting: false,
       header: t("unit-status"),
       id: "status",
+      meta: { align: "center" },
     }),
     unitColumns.display({
       cell: (info) => <UnitMenu unit={info.row.original} />,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 
