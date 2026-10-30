@@ -36,8 +36,12 @@ export function UpdatesSection() {
   const t = useTranslations("School");
   const { slug } = useTenant();
   const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
-  const { empty, failed, rows } = useInbox(Option.none(), slug);
+  const { empty, failed, ready, rows } = useInbox(Option.none(), slug);
 
+  // The section draws once the inbox has answered, so it never shows an empty card first.
+  if (!ready) {
+    return null;
+  }
   return (
     <HomeSection
       action={

@@ -10,6 +10,7 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The exam title and the room that the acceptance runtime seeds for a sitting that is open now. */
 const SEEDED_EXAM = "Ujian Acceptance";
@@ -34,8 +35,11 @@ const UPDATES = "Updates";
 const section = (page: Page, name: string) =>
   page.getByRole("region", { name, exact: true });
 
-/** Waits until the home has drawn its sections, which appear at once. */
-const homeDrawn = (page: Page) => expect(section(page, UPDATES)).toBeVisible();
+/** Waits until the home has drawn, once Convex holds the session and the home's reads answer; the updates come last. */
+const homeDrawn = (page: Page) =>
+  expect(section(page, UPDATES)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
 test("the owner's home is a greeting with no page action, then the setup and the updates under their headings", async ({
   baseURL,
@@ -63,11 +67,9 @@ test("the owner's home is a greeting with no page action, then the setup and the
       name: "Invite a teacher",
     })
   ).toHaveAttribute("href", SETUP_INVITES_HREF);
-  // Nothing happened in the school yet, and the updates say so and link to every update.
-  const updates = section(page, UPDATES);
-  await expect(updates.getByText("Nothing new yet.")).toBeVisible();
+  // The updates link to every update; the owner's first one is the invitation that opened the school.
   await expect(
-    updates.getByRole("link", { name: "All updates" })
+    section(page, UPDATES).getByRole("link", { name: "All updates" })
   ).toHaveAttribute("href", UPDATES_HREF);
   // An owner with no room and no class gets no empty section for them.
   await expect(section(page, "Rooms")).toHaveCount(0);

@@ -3,9 +3,7 @@ import { QueryResult } from "@confect/react";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Array as Arr, Option } from "effect";
-import { useInbox } from "@/components/notifications/inbox";
 import { useMyClasses } from "@/components/tenant/classes/mine";
-import { useTenant } from "@/components/tenant/context";
 import { ClassesSection } from "@/components/tenant/home/classes";
 import { useHomeExams } from "@/components/tenant/home/query";
 import { RoomsSection } from "@/components/tenant/home/rooms";
@@ -14,16 +12,15 @@ import { SetupSection, useSetupShown } from "@/components/tenant/home/setup";
 import { UpdatesSection } from "@/components/tenant/home/updates";
 
 /**
- * The home of a teacher, a principal, an admin or the owner. Until every read the home needs has answered nothing
- * shows under the header, and then every section appears at once, so none moves when another arrives. A failed read of
- * the rooms or the classes shows the home's own sentence and Try again.
+ * The home of a teacher, a principal, an admin or the owner. Until the rooms, the classes and the setup have answered
+ * nothing shows under the header, and then those sections appear at once, so none moves when another arrives. The
+ * updates come last in their column, so they arrive on their own without moving anything. A failed read of the rooms or
+ * the classes shows the home's own sentence and Try again.
  */
 export function StaffHome() {
-  const tenant = useTenant();
   const exams = useHomeExams();
   const classes = useMyClasses();
   const setupShown = useSetupShown();
-  const updates = useInbox(Option.none(), tenant.slug);
 
   if (QueryResult.isFailure(exams)) {
     throw exams.error;
@@ -33,8 +30,7 @@ export function StaffHome() {
   }
   if (
     !(QueryResult.isSuccess(exams) && QueryResult.isSuccess(classes)) ||
-    Option.isNone(setupShown) ||
-    !updates.ready
+    Option.isNone(setupShown)
   ) {
     return null;
   }

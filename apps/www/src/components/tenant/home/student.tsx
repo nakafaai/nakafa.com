@@ -1,8 +1,7 @@
 import { QueryResult } from "@confect/react";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { useEffect } from "react";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
-import { useInbox } from "@/components/notifications/inbox";
 import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { ClassesSection } from "@/components/tenant/home/classes";
@@ -32,12 +31,13 @@ export function StudentHome() {
   );
 }
 
-/** The student's sections, drawn at once from the sittings, the classes and the updates once all three answer. */
+/**
+ * The student's sections, drawn at once from the sittings and the classes once both answer. The updates come last in
+ * their column, so they arrive on their own without moving anything.
+ */
 function StudentSections() {
-  const tenant = useTenant();
   const listed = useStudentSittings();
   const classes = useMyClasses();
-  const updates = useInbox(Option.none(), tenant.slug);
 
   useEffect(() => {
     if (QueryResult.isSuccess(listed)) {
@@ -51,13 +51,7 @@ function StudentSections() {
   if (QueryResult.isFailure(classes)) {
     throw classes.error;
   }
-  if (
-    !(
-      QueryResult.isSuccess(listed) &&
-      QueryResult.isSuccess(classes) &&
-      updates.ready
-    )
-  ) {
+  if (!(QueryResult.isSuccess(listed) && QueryResult.isSuccess(classes))) {
     return null;
   }
   const sittings = orderSittings(listed.value);
