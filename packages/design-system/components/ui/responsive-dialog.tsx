@@ -60,6 +60,9 @@ export function ResponsiveDialog({
   // The body is there whenever the caller gives one, also while what it holds is empty, so a message that
   // appears inside it never adds the panel and its padding at the same time.
   const hasBody = children !== undefined;
+  // A footer holds the dialog's own way out, Close or Cancel, so the corner's close button shows only on a
+  // dialog without one, and no dialog offers two.
+  const cornerClose = !footer;
 
   if (isDesktop) {
     return (
@@ -68,7 +71,11 @@ export function ResponsiveDialog({
         onOpenChangeComplete={onOpenChangeComplete}
         open={open}
       >
-        <DialogContent finalFocus={finalFocus} size={size}>
+        <DialogContent
+          finalFocus={finalFocus}
+          showCloseButton={cornerClose}
+          size={size}
+        >
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
