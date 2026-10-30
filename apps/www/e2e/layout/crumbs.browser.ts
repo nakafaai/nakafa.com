@@ -17,10 +17,10 @@ test("every folded breadcrumb item carries its icon", async ({ page }) => {
 
   const items = page.getByRole("menu").getByRole("menuitem");
   await expect(items.first()).toBeVisible();
-  const count = await items.count();
-  expect(count).toBeGreaterThan(0);
-  for (let index = 0; index < count; index++) {
-    await expect(items.nth(index).locator("svg")).toHaveCount(1);
+  const all = await items.all();
+  expect(all.length).toBeGreaterThan(0);
+  for (const item of all) {
+    await expect(item.locator("svg")).toHaveCount(1);
   }
   await page.getByRole("menu").screenshot({
     path: test.info().outputPath("folded-breadcrumb.png"),
