@@ -1963,6 +1963,8 @@
     "formula-functions": "Functions",
     "formula-symbols": "Symbols",
     "formula-greek": "Greek letters",
+    "formula-chemistry": "Chemistry",
+    "formula-physics": "Physics",
     "formula-left": "Move left",
     "formula-right": "Move right",
     "formula-delete": "Delete",
