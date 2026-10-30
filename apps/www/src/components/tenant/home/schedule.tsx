@@ -116,7 +116,7 @@ function ScheduleRow({ item }: { item: ScheduleItem }) {
   return (
     <Dashboard.Row
       detail={item.room}
-      render={<TargetLink target={item.target} title={item.title} />}
+      render={<TargetLink target={item.target} />}
       title={item.title}
       trailing={item.trailing}
     />
