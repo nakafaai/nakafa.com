@@ -1972,21 +1972,6 @@ export declare const api: {
           }> | null;
         }
       >;
-      identity: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          contentKey: string;
-          expectedMaterialKey: string;
-          expectedSectionKey: string;
-        },
-        {
-          activeReleaseId: string | null;
-          managed: boolean;
-          publicPath: string | null;
-        }
-      >;
       latest: FunctionReference<
         "query",
         "public",
@@ -2130,7 +2115,13 @@ export declare const api: {
         "query",
         "public",
         { appLocale: "en" | "id" | "de"; bucket: Array<string> },
-        null | { routes: Array<{ lastModified: string; publicPath: string }> }
+        null | {
+          routes: Array<{
+            contentKey: string;
+            lastModified: string;
+            publicPath: string;
+          }>;
+        }
       >;
     };
     ownership: {

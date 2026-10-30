@@ -296,10 +296,12 @@ describe("contentRelease/material/sitemap", () => {
       expect(Arr.flatMap(pages, (page) => page?.routes ?? [])).toEqual(
         expect.arrayContaining([
           {
+            contentKey: first.contentKey,
             lastModified: "2026-07-24",
             publicPath: first.publicPath,
           },
           {
+            contentKey: second.contentKey,
             lastModified: "2026-07-24",
             publicPath: second.publicPath,
           },
