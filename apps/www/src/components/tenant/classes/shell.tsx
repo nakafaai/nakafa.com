@@ -38,6 +38,7 @@ import {
   ClassScopeContext,
   useClassScope,
 } from "@/components/tenant/classes/scope";
+import { ClassTabs } from "@/components/tenant/classes/tabs";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
 import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import type { ClassView } from "@/components/tenant/classes/view";
@@ -101,8 +102,9 @@ type Resolved = typeof ClassResolved.Type;
 
 /**
  * The class page: the class is read by its address once Convex has settled the session, and a
- * class the viewer may not read shows the missing state. Until the class arrives the header stands
- * alone, so nothing invented fills the page.
+ * class the viewer may not read shows the missing state. Until the class arrives the header and the
+ * tab row stand from the first paint, the tabs taken from the address, so the body keeps its place
+ * when the class's path, title and Grades tab fill in; nothing invented fills the page.
  */
 function ClassPage({
   classSlug,
@@ -128,7 +130,7 @@ function ClassPage({
     throw resolved.error;
   }
   if (!QueryResult.isSuccess(resolved)) {
-    return <SchoolHeader items={[]} />;
+    return <ClassLoading classSlug={classSlug} />;
   }
   return (
     <ClassScopeContext
@@ -141,6 +143,21 @@ function ClassPage({
     >
       <ResolvedClass klass={resolved.value} />
     </ClassScopeContext>
+  );
+}
+
+/**
+ * The top of a class page while its class is read: the school header and the class's tab row, with the current tab
+ * marked from the address. The Grades tab, which only a viewer who keeps the grades has, joins at the row's end.
+ */
+function ClassLoading({ classSlug }: { classSlug: string }) {
+  const view = useClassView();
+
+  return (
+    <>
+      <SchoolHeader items={[]} />
+      <ClassTabs canGrade={false} classSlug={classSlug} tab={view._tag} />
+    </>
   );
 }
 

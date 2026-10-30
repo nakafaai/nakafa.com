@@ -127,7 +127,10 @@ function useExamsItems(canOpenExams: boolean): readonly BreadcrumbHeaderItem[] {
     : [];
 }
 
-/** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
+/**
+ * The rooms page: its header with the path, Edit and the table from the first paint, and the exam's title in the path
+ * once the exam's summary is in, so the header never changes shape when it arrives.
+ */
 function ExamRoomsContent({
   examId,
   slug,
@@ -179,15 +182,21 @@ function ExamRoomsContent({
       ),
     });
   }
-  if (!QueryResult.isSuccess(summary)) {
-    return null;
-  }
+  const title = QueryResult.isSuccess(summary)
+    ? Option.some(summary.value.title)
+    : Option.none();
 
   return (
     <TableFiltersProvider>
       <SchoolHeader
-        items={[...examsItems, { label: summary.value.title }]}
-        title={summary.value.title}
+        items={Option.match(title, {
+          onNone: () => examsItems,
+          onSome: (label) => [...examsItems, { label }],
+        })}
+        {...Option.match(title, {
+          onNone: () => ({}),
+          onSome: (label) => ({ title: label }),
+        })}
       >
         {tenant.canOpenExams ? (
           <Link

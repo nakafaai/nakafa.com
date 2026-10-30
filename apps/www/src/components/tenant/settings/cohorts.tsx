@@ -134,8 +134,8 @@ function SchoolCohortsContent() {
 
 /**
  * Renders the cohorts of one unit's active period. A unit with no active period shows an empty
- * state, which links to the periods, and no add action, because a cohort belongs to a period.
- * A failed read of the active period shows its own sentence and Try again.
+ * state, which links to the periods, and Add cohort stays disabled, because a cohort belongs to a
+ * period. A failed read of the active period shows its own sentence and Try again.
  */
 function SchoolCohortsOfUnit() {
   const { slug } = useTenant();
@@ -164,7 +164,12 @@ function CohortsUnitChoice() {
   ) : null;
 }
 
-/** The table of the unit's active period, or the state of a unit that has none, once the period is read. */
+/**
+ * The table of the unit's active period, or the state of a unit that has none, once the period is read. The header
+ * keeps the same actions in every state, from the first paint: the unit choice, the search and Add cohort, which waits
+ * disabled until the period is known and stays disabled for a unit with no active period, so the header never grows
+ * when the period answers.
+ */
 function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const { unitId } = useCohortsUnit();
@@ -173,32 +178,35 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
     tenancy.cohorts.activePeriod,
     isSettled ? { slug, unitId } : "skip"
   );
-  if (QueryResult.isFailure(active)) {
-    if (isDenied(active.error)) {
-      return (
-        <SettingsTablePage actions={<CohortsUnitChoice />}>
-          <TableEmpty
-            act="pointing"
-            description={t("cohorts-unavailable-description")}
-            title={t("cohorts-unavailable")}
-          />
-        </SettingsTablePage>
-      );
-    }
+  if (QueryResult.isFailure(active) && !isDenied(active.error)) {
     throw active.error;
   }
   const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
+  const actions = (
+    <>
+      <CohortsUnitChoice />
+      <TableSearch placeholder={t("cohorts-search")} />
+      <SchoolCohortAdd periodId={periodId ?? null} slug={slug} />
+    </>
+  );
 
-  if (periodId === undefined) {
+  if (QueryResult.isFailure(active)) {
     return (
-      <SettingsTablePage actions={<CohortsUnitChoice />}>
-        {null}
+      <SettingsTablePage actions={actions}>
+        <TableEmpty
+          act="pointing"
+          description={t("cohorts-unavailable-description")}
+          title={t("cohorts-unavailable")}
+        />
       </SettingsTablePage>
     );
   }
+  if (periodId === undefined) {
+    return <SettingsTablePage actions={actions}>{null}</SettingsTablePage>;
+  }
   if (periodId === null) {
     return (
-      <SettingsTablePage actions={<CohortsUnitChoice />}>
+      <SettingsTablePage actions={actions}>
         <TableEmpty
           act="pointing"
           action={
@@ -217,15 +225,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
     );
   }
   return (
-    <SettingsTablePage
-      actions={
-        <>
-          <CohortsUnitChoice />
-          <TableSearch placeholder={t("cohorts-search")} />
-          <SchoolCohortAdd periodId={periodId} slug={slug} />
-        </>
-      }
-    >
+    <SettingsTablePage actions={actions}>
       <ReadBoundary
         read={{ args: { periodId, slug }, ref: tenancy.cohorts.list }}
       >
@@ -251,7 +251,8 @@ function SchoolCohortAdd({
   periodId,
   slug,
 }: {
-  periodId: Period["id"];
+  /** The active period the cohort joins, or null while it is not known or the unit has none. */
+  periodId: Period["id"] | null;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
@@ -269,7 +270,11 @@ function SchoolCohortAdd({
   const isComplete = Option.isSome(grade) && Schema.is(CohortName)(next);
 
   const submit = () => {
-    if (Option.isNone(grade) || !Schema.is(CohortName)(next)) {
+    if (
+      periodId === null ||
+      Option.isNone(grade) ||
+      !Schema.is(CohortName)(next)
+    ) {
       return;
     }
     setIsOpen(false);
@@ -293,7 +298,11 @@ function SchoolCohortAdd({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} type="button">
+      <Button
+        disabled={periodId === null}
+        onClick={() => setIsOpen(true)}
+        type="button"
+      >
         {t("cohort-create")}
       </Button>
       <ResponsiveDialog

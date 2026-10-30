@@ -38,7 +38,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {/* Mark all read comes with the rows, so it stands before the filter, which never moves. */}
+        {/* Mark all read stands before the filter from the first paint, disabled until the inbox holds rows. */}
         <MarkAllRead first={Option.none()} slug={scope} />
         <InboxFilter all={all} />
       </SchoolHeader>
