@@ -34,7 +34,7 @@ export function buildUnsupportedMarkdownRouteText({
       `- Localized content index: ${BASE_URL}/llms/${locale}/llms.txt`,
       `- Static site index: ${BASE_URL}/llms/${locale}/site/llms.txt`,
       "",
-      "Markdown is available only for supported content and legal pages advertised from the llms indexes. Those pages use `.md` URLs or `Accept: text/markdown`.",
+      "Markdown is available only for supported content and legal pages advertised from the llms indexes. Those pages use `.md` URLs.",
       "",
     ],
     "\n"
