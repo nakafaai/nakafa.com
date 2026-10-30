@@ -89,17 +89,11 @@ export function StudentPanelActions({
           <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => onOpen("add-minutes")}
-          >
+          <DropdownMenuItem onClick={() => onOpen("add-minutes")}>
             <HugeIcons icon={TimeQuarterPassIcon} />
             {t("add-minutes")}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => onOpen("allow-device")}
-          >
+          <DropdownMenuItem onClick={() => onOpen("allow-device")}>
             <HugeIcons icon={SmartPhone01Icon} />
             {t("allow-device")}
           </DropdownMenuItem>

@@ -167,9 +167,13 @@ function GuardianLinkTable() {
   const statusText = useStatusText();
 
   const columns = linkColumns.columns([
-    linkColumns.accessor((link) => link.student.name, {
+    // The student's name, with the parent's address after it, so the header's search finds a link by either; the
+    // cell shows the name alone, and the name leads the sort.
+    linkColumns.accessor((link) => `${link.student.name} ${link.email}`, {
       cell: (info) => (
-        <PaneOpen id={info.row.original.id}>{info.getValue()}</PaneOpen>
+        <PaneOpen id={info.row.original.id}>
+          {info.row.original.student.name}
+        </PaneOpen>
       ),
       filterFn: "includesString",
       header: t("student"),
@@ -203,12 +207,11 @@ function GuardianLinkTable() {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     linkColumns.display({
       cell: (info) => <GuardianLinkMenu link={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

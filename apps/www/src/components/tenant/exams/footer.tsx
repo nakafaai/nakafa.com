@@ -6,6 +6,7 @@ import {
 import { useReducedMotion } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   Tooltip,
@@ -76,7 +77,7 @@ interface ExamFooterProps {
 
 /**
  * The footer of the editor, a full-width bar under the canvas, as a design tool keeps its navigation
- * there, its row at the page width of the editor's panes: on a phone, the action that opens the teacher's
+ * there, its row as wide as the editor's panes, the screen's width: on a phone, the action that opens the teacher's
  * panel at its start; then at its end the zoom (on
  * a wide screen only, since a phone pinches) as a slider and a percentage menu, a toggle for a strip of the
  * pages, the position of the page in view that jumps to a page, the grid of every page in place of the
@@ -169,23 +170,27 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
     <footer className="flex shrink-0 flex-col border-t bg-background">
       {pagesOpen && !grid ? (
         <div className="border-b">
-          <nav
+          <ScrollArea
             aria-label={t("pages")}
-            className="flex w-full gap-3 overflow-x-auto p-3"
+            className="w-full"
+            render={<nav />}
           >
-            {Arr.map(exam.questions, (question, index) => (
-              <PageThumb
-                key={question.id}
-                number={index + 1}
-                onPick={() => goTo(question)}
-                question={question}
-                selected={selectedId === question.id}
-              />
-            ))}
-          </nav>
+            <div className="flex w-max gap-3 p-3">
+              {Arr.map(exam.questions, (question, index) => (
+                <PageThumb
+                  key={question.id}
+                  number={index + 1}
+                  onPick={() => goTo(question)}
+                  question={question}
+                  selected={selectedId === question.id}
+                />
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       ) : null}
-      <div className="flex min-h-12 w-full items-center gap-2 px-3 py-1.5">
+      {/* On the narrowest phones the controls wrap under the teacher layer's button rather than widen the page. */}
+      <div className="flex min-h-12 w-full flex-wrap items-center gap-2 px-3 py-1.5">
         {grid ? null : <ExamPanelButton />}
         <div className="ms-auto flex items-center gap-1">
           {grid ? null : (

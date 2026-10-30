@@ -4,7 +4,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
-import { lazy, Suspense, useState } from "react";
+import { type ComponentProps, lazy, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
 import {
@@ -39,13 +39,9 @@ const quarterOf = (unit: ViewerUnit, now: DateTime.Utc) =>
  * opening is a dialog of its own, so its fields start fresh.
  */
 export function ScheduleExam() {
-  const t = useTranslations("Exams");
-  const viewer = useViewerQuery();
+  const units = useSchedulingUnits();
   const [openings, setOpenings] = useState(0);
   const [starts, setStarts] = useState("");
-  const units = QueryResult.isSuccess(viewer)
-    ? creatableUnits(viewer.value.units)
-    : [];
 
   /** Opens a new dialog, whose start is computed now from the clock of the first unit. */
   const open = () => {
@@ -62,10 +58,7 @@ export function ScheduleExam() {
   return (
     <>
       {Arr.isReadonlyArrayNonEmpty(units) ? (
-        <Button aria-label={t("schedule")} onClick={open}>
-          <HugeIcons aria-hidden="true" icon={Calendar03Icon} />
-          <span className="max-sm:sr-only">{t("schedule")}</span>
-        </Button>
+        <ScheduleButton onClick={open} />
       ) : null}
       {openings === 0 ? null : (
         <Suspense fallback={null}>
@@ -80,5 +73,36 @@ export function ScheduleExam() {
         </Suspense>
       )}
     </>
+  );
+}
+
+/** Schedule before the exam is read, for a viewer who may schedule it: in its place, disabled. */
+export function ScheduleExamFrame() {
+  const units = useSchedulingUnits();
+
+  return Arr.isReadonlyArrayNonEmpty(units) ? (
+    <ScheduleButton disabled />
+  ) : null;
+}
+
+/** The units in which the viewer may schedule an exam, none while the viewer is read. */
+function useSchedulingUnits() {
+  const viewer = useViewerQuery();
+  return QueryResult.isSuccess(viewer)
+    ? creatableUnits(viewer.value.units)
+    : [];
+}
+
+/** Schedule, its icon and its words, the words for screen readers alone on a phone. */
+function ScheduleButton(
+  props: Pick<ComponentProps<typeof Button>, "disabled" | "onClick">
+) {
+  const t = useTranslations("Exams");
+
+  return (
+    <Button {...props} aria-label={t("schedule")}>
+      <HugeIcons aria-hidden="true" icon={Calendar03Icon} />
+      <span className="max-sm:sr-only">{t("schedule")}</span>
+    </Button>
   );
 }

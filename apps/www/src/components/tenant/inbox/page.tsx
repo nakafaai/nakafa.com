@@ -38,11 +38,11 @@ export function SchoolNotifications({ all }: { all: boolean }) {
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {/* Mark all read comes with the rows, so it stands before the filter, which never moves. */}
+        {/* Mark all read stands before the filter from the first paint, disabled until the inbox holds rows. */}
         <MarkAllRead first={Option.none()} slug={scope} />
         <InboxFilter all={all} />
       </SchoolHeader>
-      <LayoutContent className="flex flex-col py-6">
+      <LayoutContent className="flex w-full flex-col py-6">
         <NotificationsClockContext value={clock}>
           <NotificationsList first={Option.none()} slug={scope} />
         </NotificationsClockContext>
@@ -61,7 +61,7 @@ function InboxFilter({ all }: { all: boolean }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button size="sm" type="button" variant="outline">
+          <Button type="button" variant="outline">
             <HugeIcons icon={FilterHorizontalIcon} />
             <span className="max-sm:sr-only">
               {all ? t("all-schools") : t("this-school")}

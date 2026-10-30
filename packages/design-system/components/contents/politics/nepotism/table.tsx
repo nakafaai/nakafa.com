@@ -27,7 +27,7 @@ interface Props {
 export function StateTable({ caption, labels }: Props) {
   return (
     <div className="grid grid-cols-1">
-      <Table containerClassName="scrollbar-hide">
+      <Table>
         <TableCaption>{caption}</TableCaption>
         <TableHeader className="border-x border-t bg-accent text-accent-foreground">
           <TableRow>
