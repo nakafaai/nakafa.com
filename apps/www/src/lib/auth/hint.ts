@@ -100,3 +100,18 @@ export function signedInHintScript(): string {
     "\n"
   );
 }
+
+/**
+ * Sets the sign-in attribute of the root element from the hint cookie, as the
+ * inline script does before the first paint. Every answer about the session
+ * corrects the cookie, so a page reads it again after each answer.
+ */
+export function followSignedInHint(
+  root: Pick<Element, "setAttribute">,
+  cookie: string
+) {
+  root.setAttribute(
+    SIGNED_IN_ATTRIBUTE,
+    hasSignedInHint(cookie) ? "yes" : "no"
+  );
+}
