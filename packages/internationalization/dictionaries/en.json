@@ -1,6 +1,8 @@
 {
   "DataTable": {
     "filter-by": "Filter by {column}",
+    "sort-ascending": "Ascending",
+    "sort-descending": "Descending",
     "no-results": "No results.",
     "reset": "Reset"
   },
@@ -364,6 +366,7 @@
     "room-state-open": "Open",
     "room-state-closed": "Closed",
     "state-all": "All states",
+    "group-all": "All groups",
     "try-action": "Try as student",
     "exam-actions": "Exam actions",
     "delete-action": "Delete exam",

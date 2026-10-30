@@ -1,6 +1,8 @@
 {
   "DataTable": {
     "filter-by": "Saring menurut {column}",
+    "sort-ascending": "Naik",
+    "sort-descending": "Turun",
     "no-results": "Tidak ada hasil.",
     "reset": "Atur ulang"
   },
@@ -364,6 +366,7 @@
     "room-state-open": "Berlangsung",
     "room-state-closed": "Selesai",
     "state-all": "Semua status",
+    "group-all": "Semua kelompok",
     "try-action": "Coba sebagai siswa",
     "exam-actions": "Aksi ujian",
     "delete-action": "Hapus ujian",

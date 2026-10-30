@@ -182,7 +182,6 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     memberColumns.accessor((member) => member.roles, {
       cell: (info) => (
@@ -209,7 +208,6 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
         />
       ),
       id: "roles",
-      meta: { align: "center" },
     }),
     memberColumns.display({
       cell: (info) => <SchoolMemberMenu member={info.row.original} />,

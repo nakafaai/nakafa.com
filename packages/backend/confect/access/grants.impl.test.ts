@@ -440,6 +440,29 @@ describe("access/grants revoke", () => {
       })
   );
 
+  it.effect(
+    "lets an Admin end their own Admin role, while another person's still needs an Owner",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const admin = fixture.as("admin");
+        expect(
+          yield* admin.mutation(revoke, {
+            grantId: fixture.people.admin.grantId,
+            slug: nf,
+          })
+        ).toBeNull();
+        const grant = yield* fixture.run(
+          Effect.gen(function* () {
+            return yield* (yield* DatabaseReader)
+              .table("tenantGrants")
+              .get(fixture.people.admin.grantId);
+          })
+        );
+        expect(grant.status).toBe("revoked");
+      })
+  );
+
   it.effect("lets a holder see their grant but not end it", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

@@ -1,6 +1,8 @@
 {
   "DataTable": {
     "filter-by": "Nach {column} filtern",
+    "sort-ascending": "Aufsteigend",
+    "sort-descending": "Absteigend",
     "no-results": "Keine Treffer.",
     "reset": "Zurücksetzen"
   },
@@ -364,6 +366,7 @@
     "room-state-open": "Offen",
     "room-state-closed": "Geschlossen",
     "state-all": "Alle Status",
+    "group-all": "Alle Gruppen",
     "try-action": "Als Schüler testen",
     "exam-actions": "Prüfungsaktionen",
     "delete-action": "Prüfung löschen",

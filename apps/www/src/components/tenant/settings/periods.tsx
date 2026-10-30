@@ -210,7 +210,6 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
         ),
       header: t("period-dates"),
       id: "dates",
-      meta: { align: "end" },
       sortFn: "text",
     }),
     periodColumns.accessor((period) => period.status, {
@@ -235,7 +234,6 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     periodColumns.display({
       cell: (info) =>
