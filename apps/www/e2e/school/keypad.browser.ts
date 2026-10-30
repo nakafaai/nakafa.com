@@ -70,51 +70,61 @@ function measureKeypad() {
       top: (top - size * 2) / size,
     };
   };
-  const keys = [];
-  for (const button of keypad.querySelectorAll("button")) {
-    const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
-    const node = walker.nextNode();
-    const host = node?.parentElement;
-    const text = node?.textContent ?? "";
-    if (host == null || !/[؀-ۿ]/.test(text)) {
-      continue;
-    }
-    const style = getComputedStyle(host);
-    const fontSize = Number.parseFloat(style.fontSize);
-    const mark = text.startsWith("ـ");
-    const ink = inkOf(style.fontFamily, text, mark);
-    const range = document.createRange();
-    range.selectNodeContents(host);
-    const run = range.getBoundingClientRect();
-    const key = button.getBoundingClientRect();
-    const border = getComputedStyle(button);
-    const baseline = run.top + ink.ascent * fontSize;
-    const circle = button
-      .querySelector(".rounded-full")
-      ?.getBoundingClientRect();
-    const top = Math.min(
-      baseline + ink.top * fontSize,
-      circle?.top ?? Number.POSITIVE_INFINITY
-    );
-    const bottom = Math.max(
-      baseline + ink.bottom * fontSize,
-      circle?.bottom ?? Number.NEGATIVE_INFINITY
-    );
-    const centre =
-      circle === undefined
-        ? (top + bottom) / 2
-        : (circle.top + circle.bottom) / 2;
-    keys.push({
-      inside:
-        top >= key.top + Number.parseFloat(border.borderTopWidth) &&
-        bottom <= key.bottom - Number.parseFloat(border.borderBottomWidth) &&
-        run.left + ink.left * fontSize >= key.left &&
-        run.left + ink.right * fontSize <= key.right,
-      mark,
-      offset: centre - (key.top + key.bottom) / 2,
-      text: text.trim(),
+  // An Arabic key is one whose first text holds a letter of the Arabic block (U+0600 to U+06FF).
+  const isArabic = (text: string) =>
+    Array.from(text).some((letter) => {
+      const point = letter.codePointAt(0) ?? 0;
+      return point >= 0x6_00 && point <= 0x6_ff;
     });
-  }
+  const keys = Array.from(keypad.querySelectorAll("button")).flatMap(
+    (button) => {
+      const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+      const node = walker.nextNode();
+      const host = node?.parentElement;
+      const text = node?.textContent ?? "";
+      if (!(host instanceof HTMLElement && isArabic(text))) {
+        return [];
+      }
+      const style = getComputedStyle(host);
+      const fontSize = Number.parseFloat(style.fontSize);
+      const mark = text.startsWith("ـ");
+      const ink = inkOf(style.fontFamily, text, mark);
+      const range = document.createRange();
+      range.selectNodeContents(host);
+      const run = range.getBoundingClientRect();
+      const key = button.getBoundingClientRect();
+      const border = getComputedStyle(button);
+      const baseline = run.top + ink.ascent * fontSize;
+      const circle = button
+        .querySelector(".rounded-full")
+        ?.getBoundingClientRect();
+      const top = Math.min(
+        baseline + ink.top * fontSize,
+        circle?.top ?? Number.POSITIVE_INFINITY
+      );
+      const bottom = Math.max(
+        baseline + ink.bottom * fontSize,
+        circle?.bottom ?? Number.NEGATIVE_INFINITY
+      );
+      const centre =
+        circle === undefined
+          ? (top + bottom) / 2
+          : (circle.top + circle.bottom) / 2;
+      return [
+        {
+          inside:
+            top >= key.top + Number.parseFloat(border.borderTopWidth) &&
+            bottom <=
+              key.bottom - Number.parseFloat(border.borderBottomWidth) &&
+            run.left + ink.left * fontSize >= key.left &&
+            run.left + ink.right * fontSize <= key.right,
+          mark,
+          offset: centre - (key.top + key.bottom) / 2,
+          text: text.trim(),
+        },
+      ];
+    }
+  );
   const box = keypad.getBoundingClientRect();
   const popup = keypad
     .closest('[data-slot="popover-content"]')
