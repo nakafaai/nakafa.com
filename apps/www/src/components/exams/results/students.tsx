@@ -47,6 +47,7 @@ import { matchesSearch } from "@/components/shared/table/search";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { useKeptRows } from "@/lib/data/kept";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
 const STUDENT_PAGE_SIZE = 50;
@@ -308,6 +309,11 @@ export function StudentsTable() {
     settled ? scope : "skip",
     { initialNumItems: STUDENT_PAGE_SIZE }
   );
+  // A new status's first page loads behind the rows the table already shows, so the table never blanks.
+  const kept = useKeptRows(
+    PaginatedQueryResult.isLoadingFirstPage(students),
+    students.results
+  );
 
   if (
     PaginatedQueryResult.isFailure(students) &&
@@ -315,7 +321,7 @@ export function StudentsTable() {
   ) {
     throw students.error;
   }
-  if (PaginatedQueryResult.isLoadingFirstPage(students)) {
+  if (Option.isNone(kept)) {
     return null;
   }
   return (
@@ -328,7 +334,7 @@ export function StudentsTable() {
           ? () => students.loadMore(STUDENT_PAGE_SIZE)
           : null
       }
-      rows={students.results}
+      rows={kept.value}
       search={search}
     />
   );
