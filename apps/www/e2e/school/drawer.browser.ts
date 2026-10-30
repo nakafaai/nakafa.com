@@ -17,11 +17,26 @@ function stageScale(stage: Locator) {
   return stage.evaluate((element) => getComputedStyle(element).scale);
 }
 
-/** Whether the page holds Base UI's scroll lock. */
+/**
+ * Whether the page holds Base UI's scroll lock. Where the page's scrollbar takes room, the lock marks
+ * `<html>` with its attribute; where the bar overlays the page and takes none, it hides the overflow of the
+ * element that scrolls the viewport, `<html>` when it sets an overflow of its own and `<body>` otherwise, and
+ * sets no attribute.
+ */
 function scrollLocked(page: Page) {
-  return page.evaluate(() =>
-    document.documentElement.hasAttribute("data-base-ui-scroll-locked")
-  );
+  return page.evaluate(() => {
+    const html = document.documentElement;
+    if (html.hasAttribute("data-base-ui-scroll-locked")) {
+      return true;
+    }
+    const own = getComputedStyle(html);
+    const scroller =
+      own.overflowX === "visible" && own.overflowY === "visible"
+        ? document.body
+        : html;
+    const overflow = getComputedStyle(scroller).overflowY;
+    return overflow === "hidden" || overflow === "clip";
+  });
 }
 
 test("a dialog opens as a drawer on a phone, scales the page back, keeps the focus, and closes on Escape and on a swipe down", async ({
