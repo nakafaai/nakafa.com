@@ -4,6 +4,7 @@ import { MarkdownImage } from "@repo/design-system/components/markdown/image";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
+import { quoteVariants } from "@repo/design-system/lib/prose";
 import { cn } from "cn";
 
 /**
@@ -18,11 +19,7 @@ import { cn } from "cn";
 export const reactTextComponents: ReactMarkdownComponents = {
   a: ({ node: _node, ...props }) => <Anchor data-nakafa="anchor" {...props} />,
   blockquote: ({ node: _node, ...props }) => (
-    <blockquote
-      className="my-4 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic"
-      data-nakafa="quote"
-      {...props}
-    />
+    <blockquote className={quoteVariants()} data-nakafa="quote" {...props} />
   ),
   em: ({ node: _node, ...props }) => <em data-nakafa="italic" {...props} />,
   h1: ({ node: _node, ...props }) => (

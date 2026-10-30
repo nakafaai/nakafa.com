@@ -4,17 +4,16 @@ import {
   LeftToRightListBulletIcon,
   LeftToRightListNumberIcon,
   MinusSignIcon,
-  PlusSignIcon,
   QuoteDownIcon,
 } from "@hugeicons/core-free-icons";
-import { EditorMenu } from "@repo/design-system/components/editor/tools";
+import { EditorTools } from "@repo/design-system/components/editor/tools";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
 
-/** Bulleted, numbered and task lists, in one menu that shows the list the caret sits in. */
+/** Bulleted, numbered and task lists, each its own control, pressed while the caret sits in that list. */
 export function RichEditorLists({
   labels,
 }: {
-  labels: { bullets: string; lists: string; numbers: string; tasks: string };
+  labels: { bullets: string; numbers: string; tasks: string };
 }) {
   const { editor } = useCurrentEditor();
   const state = useEditorState({
@@ -27,9 +26,7 @@ export function RichEditorLists({
   });
 
   return (
-    <EditorMenu
-      icon={LeftToRightListBulletIcon}
-      label={labels.lists}
+    <EditorTools
       tools={[
         {
           active: state?.bullets ?? false,
@@ -57,11 +54,11 @@ export function RichEditorLists({
   );
 }
 
-/** Quotes, code blocks and dividers, in one menu of the blocks a writer inserts. */
+/** A quote and a code block, pressed while the caret sits in them, and a divider, each its own control. */
 export function RichEditorBlocks({
   labels,
 }: {
-  labels: { codeBlock: string; divider: string; insert: string; quote: string };
+  labels: { codeBlock: string; divider: string; quote: string };
 }) {
   const { editor } = useCurrentEditor();
   const state = useEditorState({
@@ -73,9 +70,7 @@ export function RichEditorBlocks({
   });
 
   return (
-    <EditorMenu
-      icon={PlusSignIcon}
-      label={labels.insert}
+    <EditorTools
       tools={[
         {
           active: state?.quote ?? false,
@@ -103,13 +98,13 @@ export function RichEditorBlocks({
 }
 
 /**
- * The lists of an assessment document, bulleted and numbered, in one menu that shows the list
- * the caret sits in. A task list is not a block of the contract, so no control offers it.
+ * The lists of an assessment document, bulleted and numbered, each its own control, pressed while
+ * the caret sits in that list. A task list is not a block of the contract, so no control offers it.
  */
 export function DocumentLists({
   labels,
 }: {
-  labels: { bullets: string; lists: string; numbers: string };
+  labels: { bullets: string; numbers: string };
 }) {
   const { editor } = useCurrentEditor();
   const state = useEditorState({
@@ -121,9 +116,7 @@ export function DocumentLists({
   });
 
   return (
-    <EditorMenu
-      icon={LeftToRightListBulletIcon}
-      label={labels.lists}
+    <EditorTools
       tools={[
         {
           active: state?.bullets ?? false,
