@@ -32,6 +32,7 @@ import {
 import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import {
+  useNameSearch,
   useResultsPaper,
   useResultsScope,
   useSessionSettled,
@@ -43,7 +44,6 @@ import { reloadPage } from "@/components/shared/reload";
 import { ColumnChoice } from "@/components/shared/table/column";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { matchesSearch } from "@/components/shared/table/search";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -289,27 +289,32 @@ function StudentTable({
 
 /**
  * The students of a sitting, one row each, with their score, answered and pending counts, and the time
- * they finished. A status filter reads only the attempts in that state, and a name search filters the rows
- * that are loaded. The list reads one page at a time through an intersection sentinel, not a button, so a
- * search that matches no loaded row keeps reading the next page until one matches or the list ends.
+ * they finished. The server reads the filters: a status reads only the attempts in that state, and a name
+ * search reads the students whose names match it, best match first. The list reads one page at a time
+ * through an intersection sentinel, not a button, so a page of a search that holds no match keeps reading
+ * the next page until one matches or the list ends.
  */
 export function StudentsTable() {
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
-  const search = useTableFilters((state) => state.search);
+  const search = useNameSearch();
   const chosen = useTableFilters((state) => state.chosen);
   const status = Option.getOrElse(
     chosenOne(chosen, "status", Schema.is(StatusFilter)),
     (): StatusFilter => "all"
   );
-  const scope =
-    status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
+  const scope = {
+    sittingId,
+    slug,
+    ...(status === "all" ? {} : { state: status }),
+    ...(search === "" ? {} : { search }),
+  };
   const students = usePaginatedQuery(
     exams.results.results.byStudent,
     settled ? scope : "skip",
     { initialNumItems: STUDENT_PAGE_SIZE }
   );
-  // A new status's first page loads behind the rows the table already shows, so the table never blanks.
+  // A new status's or search's first page loads behind the rows the table already shows, so the table never blanks.
   const kept = useKeptRows(
     PaginatedQueryResult.isLoadingFirstPage(students),
     students.results
@@ -328,30 +333,28 @@ export function StudentsTable() {
     <StudentRowsSection
       exhausted={PaginatedQueryResult.isExhausted(students)}
       failed={PaginatedQueryResult.isFailure(students)}
-      filtering={status !== "all" || search.trim() !== ""}
+      filtering={status !== "all" || search !== ""}
       loadMore={
         PaginatedQueryResult.isCanLoadMore(students)
           ? () => students.loadMore(STUDENT_PAGE_SIZE)
           : null
       }
       rows={kept.value}
-      search={search}
     />
   );
 }
 
 /**
  * The rows of the students' table below its filters: the failure of its read above the rows it holds,
- * the rows that match the search, and the empty state once the list is exhausted with no match, or
- * with no student at all. A list that still loads, or that failed, shows no empty state.
+ * the rows the server read for the filters, and the empty state once the list is exhausted with no
+ * match, or with no student at all. A list that still loads, or that failed, shows no empty state.
  */
 function StudentRowsSection({
   exhausted,
   failed,
   filtering,
   loadMore,
-  rows: students,
-  search,
+  rows,
 }: {
   /** Whether the list has no more pages, so an empty table is the end of the list and not a wait. */
   exhausted: boolean;
@@ -360,17 +363,15 @@ function StudentRowsSection({
   /** Loads the next page of students, or none when the list has no more pages. */
   loadMore: (() => void) | null;
   rows: readonly (typeof StudentRowSchema.Type)[];
-  search: string;
 }) {
   const t = useTranslations("Exams");
-  const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {/* While a filter or a search narrows the list, the table keeps its head, so the status choice stays in reach. */}
       {rows.length > 0 || filtering ? <StudentTable rows={rows} /> : null}
-      {/* A page that holds no match is not the end of the search while later pages still load, so
-          the empty state waits for the last page, and the table shows nothing in the meantime. */}
+      {/* A page of a search can hold no match while later pages still load, so the empty state
+          waits for the last page, and the table shows nothing in the meantime. */}
       {exhausted && rows.length === 0 ? (
         <TableEmpty
           act="reading"
