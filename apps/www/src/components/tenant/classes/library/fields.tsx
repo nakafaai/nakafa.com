@@ -45,7 +45,7 @@ export function LibraryFileField({
           <input
             accept={LIBRARY_ACCEPT}
             aria-label={t("library-file")}
-            className="absolute inset-0 cursor-pointer opacity-0"
+            className="absolute inset-0 opacity-0"
             id={id}
             onChange={(event) => onFile(event.target.files?.item(0) ?? null)}
             onDragEnter={() => setDragging(true)}
