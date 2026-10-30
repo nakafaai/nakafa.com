@@ -190,6 +190,7 @@
     "state-submitted": "Terkumpul",
     "signals": "Kejadian",
     "signals-empty": "Belum ada kejadian yang tercatat.",
+    "signals-offline-note": "Koneksi yang terputus tampil di sini, beserta lamanya, setelah siswa kembali daring.",
     "signal-exit": "Keluar dari ujian",
     "signal-return": "Kembali ke ujian",
     "screen-title": "Layar siswa",

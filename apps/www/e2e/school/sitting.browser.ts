@@ -130,6 +130,12 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
     student.getByRole("heading", { name: "Question 1" })
   ).toBeVisible();
 
+  // The panel says when a lost connection shows: only once the student is back online.
+  await expect(
+    proctor.getByText(
+      "A lost connection shows here, with how long it lasted, once the student is back online."
+    )
+  ).toBeVisible();
   // The student's device loses the network and finds it again. Its disconnect reaches the server once it is back,
   // with the moment it went offline, so the proctor's panel tells how long the student was offline.
   await studentContext.setOffline(true);
