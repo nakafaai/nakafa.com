@@ -1,5 +1,6 @@
 import { KeyboardIcon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
+import { FormulaKeypad } from "@repo/design-system/components/editor/keypad";
 import {
   drawFormula,
   formulaProblem,
@@ -23,7 +24,9 @@ import { cn } from "cn";
 import { Effect, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
 import {
+  type ComponentProps,
   type KeyboardEvent,
+  type RefObject,
   useEffect,
   useMemo,
   useRef,
@@ -45,26 +48,33 @@ const loadMathLive = Effect.tryPromise({
 /**
  * The MathLive field, made once MathLive has loaded, in a box drawn like a text field. The field and
  * the LaTeX text show one formula: a change in either one reaches the other through `value`, and each
- * keystroke of the field reports its LaTeX. MathLive's own menu and keyboard toggle are hidden
- * (`styles/globals.css`); the box's own Keyboard button shows and hides the virtual keyboard, which
- * takes Nakafa's colours, and stays pressed while it shows.
+ * keystroke of the field reports its LaTeX. MathLive's own menu, keyboard toggle and virtual keyboard
+ * never show (`styles/globals.css`); the box's Keyboard button opens Nakafa's keypad under the field,
+ * which types through the element that `field` holds, and stays pressed while the keypad shows.
  */
 function MathField({
+  field,
   keyboard,
+  keypad,
   mathlive,
   onInput,
+  onKeypad,
   value,
 }: {
-  /** The name of the button that shows the virtual keyboard. */
+  /** Receives the MathLive element, which the keypad types into. */
+  field: RefObject<MathLive.MathfieldElement | null>;
+  /** The name of the button that opens the keypad. */
   keyboard: string;
+  /** Whether the keypad shows. */
+  keypad: boolean;
   mathlive: typeof MathLive;
   onInput: (latex: string) => void;
+  /** Opens or closes the keypad. */
+  onKeypad: () => void;
   value: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const field = useRef<MathLive.MathfieldElement | null>(null);
   const input = useCallbackRef(onInput);
-  const [shown, setShown] = useState(false);
 
   useEffect(() => {
     const element = new mathlive.MathfieldElement();
@@ -76,23 +86,18 @@ function MathField({
     element.addEventListener("input", () => input(element.value));
     host.current?.append(element);
     field.current = element;
-    const keys = window.mathVirtualKeyboard;
-    const follow = () => setShown(keys.visible);
-    keys.addEventListener("virtual-keyboard-toggle", follow);
     return () => {
-      keys.removeEventListener("virtual-keyboard-toggle", follow);
-      keys.hide();
       field.current = null;
       element.remove();
     };
-  }, [input, mathlive]);
+  }, [field, input, mathlive]);
 
   useEffect(() => {
     const element = field.current;
     if (element && element.value !== value) {
       element.value = value;
     }
-  }, [value]);
+  }, [field, value]);
 
   return (
     <div
@@ -104,16 +109,11 @@ function MathField({
       <div className="min-w-0 flex-1" ref={host} />
       <Button
         aria-label={keyboard}
-        aria-pressed={shown}
+        aria-pressed={keypad}
         className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
         onClick={() => {
           field.current?.focus();
-          const keys = window.mathVirtualKeyboard;
-          if (keys.visible) {
-            keys.hide();
-            return;
-          }
-          keys.show();
+          onKeypad();
         }}
         // The press keeps the focus in the field, so its caret stays where the writer left it.
         onMouseDown={(event) => event.preventDefault()}
@@ -149,8 +149,10 @@ export function FormulaEdit({
   labels: {
     formula: string;
     invalid: string;
-    /** The button that shows the formula keyboard. */
+    /** The button that opens the formula keypad. */
     keyboard: string;
+    /** The keypad's sets and its keys that move the caret and delete. */
+    keys: ComponentProps<typeof FormulaKeypad>["labels"];
     latex: string;
     open: string;
   };
@@ -163,6 +165,8 @@ export function FormulaEdit({
     Option.none()
   );
   const discarded = useRef(false);
+  const field = useRef<MathLive.MathfieldElement | null>(null);
+  const [keypad, setKeypad] = useState(false);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
   /** Opens the editor on the saved formula, and loads MathLive for its field. */
@@ -223,12 +227,32 @@ export function FormulaEdit({
             {Option.match(mathlive, {
               onNone: () => null,
               onSome: (module) => (
-                <MathField
-                  keyboard={labels.keyboard}
-                  mathlive={module}
-                  onInput={setDraft}
-                  value={draft}
-                />
+                <div className="grid gap-3">
+                  <MathField
+                    field={field}
+                    keyboard={labels.keyboard}
+                    keypad={keypad}
+                    mathlive={module}
+                    onInput={setDraft}
+                    onKeypad={() => setKeypad((shown) => !shown)}
+                    value={draft}
+                  />
+                  {keypad ? (
+                    <FormulaKeypad
+                      labels={labels.keys}
+                      onCommand={(command) =>
+                        field.current?.executeCommand(command)
+                      }
+                      onInsert={(key) =>
+                        field.current?.insert(key, {
+                          focus: true,
+                          insertionMode: "replaceSelection",
+                          selectionMode: "placeholder",
+                        })
+                      }
+                    />
+                  ) : null}
+                </div>
               ),
             })}
           </TabsPanel>
