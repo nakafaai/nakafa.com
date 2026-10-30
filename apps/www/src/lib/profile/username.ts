@@ -26,9 +26,10 @@ const MESSAGES = {
 /**
  * What the username field says about the typed name, and whether Save may run.
  * The check answers the name it was asked, so an answer for older text is not
- * shown: while the typed text and the asked text differ, or the check still
- * runs, the field says nothing and cannot save. The account's own name says
- * nothing and cannot save either, because nothing would change.
+ * the typed name's: while the typed text and the asked text differ, or the
+ * check still runs, the reply is `pending`, says nothing and cannot save. The
+ * account's own name says nothing and cannot save either, because nothing
+ * would change, and needs no check.
  */
 export function usernameReply({
   asked,
@@ -43,10 +44,14 @@ export function usernameReply({
 }) {
   const stored = Option.getOrUndefined(Result.getSuccess(readUsername(typed)));
   if (stored !== undefined && stored === current) {
-    return { canSave: false, message: undefined };
+    return { canSave: false, message: undefined, pending: false };
   }
   if (asked !== typed || check === undefined) {
-    return { canSave: false, message: undefined };
+    return { canSave: false, message: undefined, pending: true };
   }
-  return { canSave: check === "available", message: MESSAGES[check] };
+  return {
+    canSave: check === "available",
+    message: MESSAGES[check],
+    pending: false,
+  };
 }

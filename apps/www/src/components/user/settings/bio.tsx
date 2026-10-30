@@ -5,7 +5,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Result } from "effect";
@@ -22,7 +26,8 @@ import type { CurrentUser } from "@/lib/identity/client";
 
 /**
  * Renders the bio card: a few lines about the account. A bio that is too long
- * says so in words, and Save waits until it fits.
+ * says so on the line kept for it under the field, and Save waits until it
+ * fits. The footer keeps its sentence about Save throughout.
  */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -85,13 +90,12 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               placeholder={t("bio-placeholder")}
               value={typed}
             />
+            <div className="min-h-lh text-sm leading-normal">
+              {fits ? null : <FieldError>{t("bio-too-long")}</FieldError>}
+            </div>
           </Field>
         </CardContent>
-        {/* Only the too-long message is destructive, so only it is announced as it appears. */}
-        <CardSectionFooter
-          hint={fits ? t("bio-footer") : t("bio-too-long")}
-          tone={fits ? "muted" : "destructive"}
-        >
+        <CardSectionFooter hint={t("bio-footer")}>
           <SettingsSave disabled={!canSave} />
         </CardSectionFooter>
       </CardSection>

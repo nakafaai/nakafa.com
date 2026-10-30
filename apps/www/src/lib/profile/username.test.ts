@@ -3,7 +3,7 @@ import type { UsernameCheck } from "@repo/backend/confect/users/username";
 import { usernameReply } from "@/lib/profile/username";
 
 describe("username reply", () => {
-  it("says nothing and cannot save while the check for the typed text still runs", () => {
+  it("is pending, says nothing and cannot save while the check for the typed text still runs", () => {
     expect(
       usernameReply({
         asked: "ari",
@@ -11,10 +11,10 @@ describe("username reply", () => {
         current: "nabil",
         typed: "ari",
       })
-    ).toEqual({ canSave: false, message: undefined });
+    ).toEqual({ canSave: false, message: undefined, pending: true });
   });
 
-  it("does not show an answer that was asked for older text", () => {
+  it("is pending while the answer is for older text", () => {
     expect(
       usernameReply({
         asked: "ar",
@@ -22,7 +22,7 @@ describe("username reply", () => {
         current: "nabil",
         typed: "ari",
       })
-    ).toEqual({ canSave: false, message: undefined });
+    ).toEqual({ canSave: false, message: undefined, pending: true });
   });
 
   it("says the name is available, and lets the account save it", () => {
@@ -33,7 +33,11 @@ describe("username reply", () => {
         current: "nabil",
         typed: "ari",
       })
-    ).toEqual({ canSave: true, message: "username-available" });
+    ).toEqual({
+      canSave: true,
+      message: "username-available",
+      pending: false,
+    });
   });
 
   it("gives the sentence of every refusal, and does not let the account save", () => {
@@ -49,7 +53,7 @@ describe("username reply", () => {
     for (const [check, message] of refusals) {
       expect(
         usernameReply({ asked: "ari", check, current: "nabil", typed: "ari" })
-      ).toEqual({ canSave: false, message });
+      ).toEqual({ canSave: false, message, pending: false });
     }
   });
 
@@ -61,7 +65,7 @@ describe("username reply", () => {
         current: "nabilfatih",
         typed: "NabilFatih",
       })
-    ).toEqual({ canSave: false, message: undefined });
+    ).toEqual({ canSave: false, message: undefined, pending: false });
   });
 
   it("says nothing for the account's own name with spaces around it", () => {
@@ -72,6 +76,6 @@ describe("username reply", () => {
         current: "nabilfatih",
         typed: " nabilfatih ",
       })
-    ).toEqual({ canSave: false, message: undefined });
+    ).toEqual({ canSave: false, message: undefined, pending: false });
   });
 });

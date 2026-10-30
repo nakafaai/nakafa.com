@@ -69,8 +69,17 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
     current,
     typed,
   });
+  // The line under the field keeps the last settled answer while the typed name
+  // waits for its own, so it never empties and refills on every keystroke.
+  const [line, setLine] = useState(reply);
+  if (
+    !reply.pending &&
+    (reply.message !== line.message || reply.canSave !== line.canSave)
+  ) {
+    setLine(reply);
+  }
   const stored = Option.getOrUndefined(Result.getSuccess(readUsername(typed)));
-  const invalid = reply.message !== undefined && !reply.canSave;
+  const invalid = line.message !== undefined && !line.canSave;
 
   const save = (username: string) =>
     Effect.runPromise(
@@ -138,12 +147,14 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
                 value={typed}
               />
             </InputGroup>
-            {reply.message !== undefined && reply.canSave && (
-              <FieldDescription>{t(reply.message)}</FieldDescription>
-            )}
-            {reply.message !== undefined && !reply.canSave && (
-              <FieldError>{t(reply.message)}</FieldError>
-            )}
+            <div aria-live="polite" className="min-h-lh text-sm leading-normal">
+              {line.message !== undefined && line.canSave && (
+                <FieldDescription>{t(line.message)}</FieldDescription>
+              )}
+              {line.message !== undefined && !line.canSave && (
+                <FieldError>{t(line.message)}</FieldError>
+              )}
+            </div>
           </Field>
         </CardContent>
         <CardSectionFooter hint={t("username-footer")}>

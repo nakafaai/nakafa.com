@@ -4,7 +4,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { MAIN_DOMAIN } from "@repo/site/domains";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { animalMarkup, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { appRoutes } from "@/e2e/support/route";
@@ -18,12 +18,40 @@ function usernameField(page: Page) {
   return page.getByRole("textbox", { name: app.Auth.username });
 }
 
+/** What the page recorded while a name was typed: how often the answer emptied, and each height of the form. */
+const AnswerLine = Schema.Struct({
+  emptied: Schema.Finite,
+  heights: Schema.Array(Schema.Finite),
+});
+
+/**
+ * Records, in the page, each time the username field is left without an
+ * answer under it, and each height its form takes.
+ */
+function watchAnswerLine(form: HTMLElement) {
+  const answer =
+    '[data-slot="field"] [data-slot="field-error"], [data-slot="field"] [data-slot="field-description"]';
+  const record = {
+    emptied: 0,
+    heights: [Math.round(form.getBoundingClientRect().height)],
+  };
+  Object.assign(window, { nakafaAnswerLine: record });
+  new MutationObserver(() => {
+    if (form.querySelector(answer) === null) {
+      record.emptied += 1;
+    }
+  }).observe(form, { characterData: true, childList: true, subtree: true });
+  new ResizeObserver(() => {
+    record.heights.push(Math.round(form.getBoundingClientRect().height));
+  }).observe(form);
+}
+
 /** The bio field, which the form labels with the word Bio. */
 function bioField(page: Page) {
   return page.getByRole("textbox", { name: app.Auth.bio });
 }
 
-/** The footer sentence that says why a bio over the limit cannot be saved. */
+/** The sentence under the bio field that says why a bio over the limit cannot be saved. */
 function bioTooLongAlert(page: Page) {
   return page
     .getByRole("alert")
@@ -143,6 +171,43 @@ test("a learner takes a new username in settings: a taken or invalid name says w
   );
 });
 
+test("a learner typing a new username keeps the last answer under the field until the typed name has its own", async ({
+  baseURL,
+  page,
+}) => {
+  await runOnPage(page, baseURL, (origin) =>
+    Effect.gen(function* () {
+      const { learner } = yield* openChatPage(page, origin);
+      const renamed = `pelajar${learner.userId.slice(-12)}`;
+      const form = page.locator("#user-settings-username-form");
+
+      yield* Effect.promise(async () => {
+        await page.goto(appRoutes.settings);
+        await usernameField(page).fill("1abc");
+        await expect(
+          page.getByText(app.Auth["username-letter-first"], { exact: true })
+        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        await form.evaluate(watchAnswerLine);
+
+        // Each keystroke changes the name before the check can answer it, so
+        // the refusal stays until the typed name's own answer replaces it.
+        await usernameField(page).press("ControlOrMeta+a");
+        await usernameField(page).pressSequentially(renamed, { delay: 40 });
+        await expect(
+          page.getByText(app.Auth["username-available"], { exact: true })
+        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      });
+      const line = yield* Effect.promise(() =>
+        page.evaluate(() => Reflect.get(window, "nakafaAnswerLine"))
+      ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(AnswerLine)));
+      yield* Effect.sync(() => {
+        expect(line.emptied).toBe(0);
+        expect(new Set(line.heights).size).toBe(1);
+      });
+    })
+  );
+});
+
 test("a learner writes a bio in settings, the profile shows it, and clearing it removes it", async ({
   baseURL,
   page,
@@ -157,19 +222,22 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);
-        // A bio over the limit says why in an alert in the footer, and cannot
-        // be saved.
+        // A bio over the limit says why in an alert under the field, and
+        // cannot be saved. The footer keeps its sentence about Save.
         await bioField(page).fill("a".repeat(BIO_MAX_LENGTH + 1));
         await expect(bioTooLongAlert(page)).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
+        await expect(
+          form.getByText(app.Auth["bio-footer"], { exact: true })
+        ).toBeVisible();
         await expect(save).toBeDisabled();
 
-        // A bio that fits shows the footer sentence that says what Save does.
+        // A bio that fits takes the alert away.
         await bioField(page).fill(bio);
         await expect(bioTooLongAlert(page)).toHaveCount(0);
         await expect(
-          page.getByText(app.Auth["bio-footer"], { exact: true })
+          form.getByText(app.Auth["bio-footer"], { exact: true })
         ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         await expect(save).toBeEnabled({
           timeout: readinessTimeoutMilliseconds,
