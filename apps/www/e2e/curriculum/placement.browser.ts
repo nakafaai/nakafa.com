@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const MATERIAL_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -82,10 +82,27 @@ async function settle(page: Page) {
 
 /** The distinct breadcrumb texts that the lesson painted once its row showed anything. */
 function paintedTexts(samples: (typeof PaintRecord.Type)["samples"]) {
-  const lesson = samples.filter(
-    (sample) => sample.path === MATERIAL_PATH && sample.text !== ""
+  return Arr.dedupe(
+    Arr.map(
+      Arr.filter(
+        samples,
+        (sample) => sample.path === MATERIAL_PATH && sample.text !== ""
+      ),
+      (sample) => sample.text
+    )
   );
-  return [...new Set(lesson.map((sample) => sample.text))];
+}
+
+/** The distinct tops that the lesson's title took while the breadcrumb settled. */
+function titleTops(samples: (typeof PaintRecord.Type)["samples"]) {
+  return Arr.dedupe(
+    Arr.getSomes(
+      Arr.map(
+        Arr.filter(samples, (sample) => sample.path === MATERIAL_PATH),
+        (sample) => Option.fromNullishOr(sample.top)
+      )
+    )
+  );
 }
 
 for (const viewport of VIEWPORTS) {
@@ -103,15 +120,8 @@ for (const viewport of VIEWPORTS) {
       await page.goto(`${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`);
       const { samples, shifts } = await settle(page);
       const texts = paintedTexts(samples);
-      const tops = [
-        ...new Set(
-          samples
-            .filter((sample) => sample.path === MATERIAL_PATH)
-            .map((sample) => sample.top)
-            .filter((top) => top !== null)
-        ),
-      ];
-      const shift = shifts.reduce((sum, value) => sum + value, 0);
+      const tops = titleTops(samples);
+      const shift = Num.sumAll(shifts);
       await testInfo.attach(`paint-hard-${visit}-${viewport.width}.json`, {
         body: Buffer.from(encodeJsonText({ shift, texts, tops })),
         contentType: "application/json",
