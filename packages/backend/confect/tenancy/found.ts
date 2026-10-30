@@ -19,9 +19,9 @@ import {
   personAuthority,
   tenantAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { accountPersonName } from "@repo/backend/confect/tenancy/create";
 import { FoundingRefused } from "@repo/backend/confect/tenancy/errors";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import {
   countryDefaults,
   type StartRequest,
@@ -30,16 +30,7 @@ import {
 import { createUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { schoolYear } from "@repo/backend/confect/tenancy/year";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
-import {
-  Array as Arr,
-  Clock,
-  DateTime,
-  Effect,
-  Option,
-  Schema,
-  String as Str,
-  Stream,
-} from "effect";
+import { Clock, DateTime, Effect, Option, Stream } from "effect";
 
 /** The schools one account may found and still run as their Owner. */
 const FOUNDED_SCHOOL_LIMIT = 3;
@@ -56,26 +47,6 @@ const openings = new RateLimiter(components.agentRateLimiter, {
     rate: 3,
   },
 });
-
-/** Every run of white space or control characters, which a Person's one-line name cannot hold. */
-const BREAKS = /[\s\p{Cc}]+/gu;
-
-/** A name cut to one line of at most the 120 characters a Person name holds. */
-const oneLine = (text: string) =>
-  text.replace(BREAKS, " ").trim().slice(0, 120).trim();
-
-/**
- * The name the founder's Person takes: the account's name on one line, with every
- * run of white space or control characters one space, cut to 120 characters. An
- * account whose name holds nothing is named by the part of its email before the
- * `@`, made one line the same way.
- */
-const founderName = (user: UsersDoc) => {
-  const name = oneLine(user.name);
-  return Schema.decodeSync(PersonName)(
-    name === "" ? oneLine(Arr.headNonEmpty(Str.split(user.email, "@"))) : name
-  );
-};
 
 /**
  * Whether the account still holds, as an active member, as many schools it
@@ -199,7 +170,7 @@ export const foundSchool = Effect.fn("tenancy.found")(function* (
         userId: user._id,
       },
       kind: "member",
-      name: founderName(user),
+      name: accountPersonName(user),
       status: "active",
       tenantId,
     })

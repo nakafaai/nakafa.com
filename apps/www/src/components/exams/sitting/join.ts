@@ -5,7 +5,7 @@ import type {
 import { Effect, Option } from "effect";
 import { isActive } from "@/components/exams/sitting/attempt";
 import { readSittingDevice } from "@/components/exams/sitting/device";
-import { scannedToken, takeRoomCode } from "@/components/exams/sitting/scan";
+import { roomCodeOf } from "@/components/exams/sitting/scan";
 
 /**
  * The address that a room's QR code opens: the sitting's page on the school host the proctor is
@@ -24,19 +24,19 @@ export function roomJoinAddress(
 
 /**
  * The token that a sitting's page enters with by itself once the sitting has opened. The device this
- * browser keeps owns its attempt, so it enters with no token. Otherwise the page enters with the code the
- * student scanned: the one after the `#` of the address, else the one kept across the sign-in, which is
- * taken either way. None means the student types the token.
+ * browser keeps owns its attempt, so it enters with no token, and a code the student brought is spent.
+ * Otherwise the page enters with the code the student brought (`roomCodeOf`). None means the student
+ * types the token.
  */
 export const roomEntryOf = Effect.fn("exams.sitting.join.entry")(function* (
   sittingId: string,
   hash: string
 ) {
-  const kept = yield* takeRoomCode(sittingId);
+  const code = yield* roomCodeOf(sittingId, hash);
   if (Option.isSome(yield* readSittingDevice(sittingId))) {
     return Option.some("");
   }
-  return Option.orElse(scannedToken(hash), () => kept);
+  return code;
 });
 
 /**

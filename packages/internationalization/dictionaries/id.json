@@ -191,6 +191,13 @@
     "join-description": "Siswa memindai kode QR, atau mengetik token di halaman ujiannya.",
     "join-qr-label": "Kode QR yang membuka ruang ini beserta tokennya",
     "join-show": "Tampilkan kode QR ruang, token {token}",
+    "join-not-admitted": "{school} tidak mengizinkan akun ini bergabung sebagai siswa, jadi tanya admin sekolah atau ganti akun.",
+    "join-member-description": "Ketik token dari pengawasmu untuk membuka ruang ujian.",
+    "join-not-open": "Ruang ini belum dibuka, jadi tunggu pengawas membukanya lalu coba lagi.",
+    "join-room-action": "Masuk ruang",
+    "join-room-description": "Kamu masuk sebagai {account}, jadi ketik token dari pengawasmu untuk bergabung dengan {school} sebagai siswa.",
+    "join-room-title": "Masuk ke ruang ujian ini",
+    "join-seat-limit": "{school} tidak punya kursi siswa lagi, jadi minta admin sekolah untuk menambahnya.",
     "close-sitting": "Tutup sesi",
     "filter-label": "Saring siswa",
     "filter-all": "Semua",
@@ -823,7 +830,8 @@
         "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
         "finish": "Percobaan ujian diselesaikan",
         "close": "Sesi ujian ditutup",
-        "cancel": "Ruang ujian dibatalkan"
+        "cancel": "Ruang ujian dibatalkan",
+        "join": "Siswa bergabung dengan kode ruang"
       },
       "exam": {
         "results": {
