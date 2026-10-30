@@ -116,6 +116,7 @@ export function EditorToggles({ tools }: { tools: readonly EditorTool[] }) {
         Arr.filter(tools, (tool) => tool.active === true),
         (tool) => tool.name
       )}
+      variant="default"
     >
       {Arr.map(tools, (tool) => (
         <ToolHint key={tool.name} label={tool.label}>
