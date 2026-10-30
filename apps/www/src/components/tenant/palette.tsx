@@ -108,7 +108,7 @@ function TenantPaletteCommand({ onOpened }: { onOpened: () => void }) {
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <CommandEmpty className="p-6 text-center text-muted-foreground text-sm">
+        <CommandEmpty className="text-center text-muted-foreground text-sm">
           {t("search-empty")}
         </CommandEmpty>
         <CommandList>
