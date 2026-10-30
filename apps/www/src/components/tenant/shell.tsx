@@ -43,6 +43,7 @@ import {
   useTransition,
 } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { Authenticated } from "@/components/auth/gate";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
 import { TenantAccountItems } from "@/components/tenant/account";
@@ -183,7 +184,9 @@ function TenantSwitcher() {
           {warmed ? (
             <Suspense fallback={null}>
               <ClientOnly fallback={null}>
-                <SidebarSchoolMenuItems canOpenSchool={false} />
+                <Authenticated>
+                  <SidebarSchoolMenuItems canOpenSchool={false} />
+                </Authenticated>
               </ClientOnly>
             </Suspense>
           ) : null}
