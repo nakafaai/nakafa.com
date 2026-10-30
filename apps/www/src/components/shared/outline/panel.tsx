@@ -133,7 +133,7 @@ export function SidebarRightPanel({
         {...props}
       >
         {header}
-        <SidebarContent className="group-data-[collapsible=icon]:hidden">
+        <SidebarContent className="group-data-[collapsible=icon]:*:hidden">
           {children}
         </SidebarContent>
         {footer}

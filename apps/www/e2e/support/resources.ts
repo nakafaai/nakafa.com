@@ -27,6 +27,11 @@ const RESOURCE_IDLE_MILLISECONDS = 1000;
 // Resource settling keeps its own budget, apart from readiness.
 const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const RESOURCE_POLL_MILLISECONDS = 100;
+/**
+ * How many Resource Timing entries a measured page keeps. A browser keeps 250
+ * and drops every later one, and a lesson loads more scripts than that alone.
+ */
+const RESOURCE_TIMING_ENTRIES = 2000;
 
 const createResourceRequestClassifier = (applicationOrigin: string) =>
   function classifyResourceRequest(
@@ -285,6 +290,12 @@ export const measureRouteJavascript = Effect.fn(
             yield* signInLearner(context, baseURL);
           }
           const page = yield* Effect.promise(() => context.newPage());
+          yield* Effect.promise(() =>
+            page.addInitScript(
+              (entries) => performance.setResourceTimingBufferSize(entries),
+              RESOURCE_TIMING_ENTRIES
+            )
+          );
           yield* seedAnalyticsConsent(page, "denied");
           const applicationOrigin = new URL(baseURL).origin;
           const classifyRequest =

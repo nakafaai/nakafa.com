@@ -64,7 +64,7 @@ export function TaskPage({ task: address }: { task: string }) {
       {Arr.contains(can, "task.manage") ? (
         <TaskWorkTable task={task} />
       ) : (
-        <HandIn task={task} />
+        <HandIn key={task.id} task={task} />
       )}
     </div>
   );
@@ -108,24 +108,24 @@ function TaskDetails({ task }: { task: ClassTask }) {
 }
 
 /**
- * The student's hand-in: one field and Hand in, or Hand in again once work is in. The work shows as
- * handed in at once, and a refusal, such as a task that closed at its deadline, brings the text back
- * with the toast every School action uses.
+ * The student's hand-in: one field that holds the work they handed in, and Hand in, which waits disabled until the
+ * field holds new work. The work shows as handed in at once and stays in the field, so the student reads and changes
+ * it there, and the button keeps its words and its place. A refusal, such as a task that closed at its deadline, shows
+ * the toast every School action uses, and the field keeps the text.
  */
 function HandIn({ task }: { task: ClassTask }) {
   const t = useTranslations("Classroom");
   const { classId, slug } = useClassScope();
   const submit = useMutation(classroom.tasks.submit);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(task.mine?.text ?? "");
   const id = useId();
   const body = Str.trim(text);
-  const ready = Schema.is(TaskText)(body);
+  const ready = Schema.is(TaskText)(body) && body !== task.mine?.text;
 
   const handIn = () => {
     if (!ready) {
       return;
     }
-    setText("");
     runForumCall(
       Effect.flatMap(Clock.currentTimeMillis, (at) =>
         forumCall(() =>
@@ -137,10 +137,7 @@ function HandIn({ task }: { task: ClassTask }) {
           })
         )
       ),
-      () => {
-        setText((current) => (current === "" ? body : current));
-        toastForumFailure();
-      }
+      toastForumFailure
     );
   };
 
@@ -159,7 +156,7 @@ function HandIn({ task }: { task: ClassTask }) {
       />
       <div className="flex justify-end">
         <Button disabled={!ready} type="submit">
-          {task.mine === null ? t("task-hand-in") : t("task-hand-in-again")}
+          {t("task-hand-in")}
         </Button>
       </div>
     </form>

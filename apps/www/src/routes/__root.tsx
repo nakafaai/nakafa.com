@@ -1,5 +1,6 @@
 import "@fontsource-variable/inter";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import { PageScrollbar } from "@repo/design-system/components/ui/scrollbar";
 import { DrawerStage } from "@repo/design-system/components/ui/stage";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
@@ -159,6 +160,7 @@ function RootDocument({ children }: { children: ReactNode }) {
               <ContentPageAnchorProvider>{children}</ContentPageAnchorProvider>
             </DrawerStage>
           </MotionConfig>
+          <PageScrollbar />
         </ThemeProvider>
         <Scripts />
       </body>

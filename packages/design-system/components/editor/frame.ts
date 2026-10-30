@@ -43,10 +43,8 @@ export const editorContent = cva("", {
   },
 });
 
-/** The box that scrolls the text. */
-export const editorScroll = cva(
-  "min-h-0 flex-1 overflow-y-auto text-sm/relaxed"
-);
+/** The text inside the scroll area that scrolls it, under an overlay bar that takes no room. */
+export const editorScroll = cva("text-sm/relaxed");
 
 /**
  * The placeholder of an empty editor: Tiptap marks its empty first block and gives
@@ -63,11 +61,14 @@ export const editorPlaceholder = cva(
  * padding and no space between its blocks: the frame around it gives the room, so
  * its first line shares a line box with the letter that names it. An exam's
  * document (`article`) takes the published article's headings, lists, quotations,
- * inline code and room between blocks from `articleProse`, so only a plain text,
- * such as a memory, draws them here.
+ * inline code, tables and room between blocks from `articleProse`, so only a plain
+ * text, such as a memory, draws them here. Everything inside a highlight reads in
+ * the highlight's own text colour, a link too, which keeps its underline as its
+ * cue, so it reads on the amber fill in light and dark; inline code keeps its own
+ * muted pair, as the lesson's does.
  */
 export const editorDocument = cva(
-  "[&_a]:text-primary [&_pre]:bg-muted [&_span[data-link]]:text-primary relative min-h-full [font-feature-settings:'liga'_0] wrap-break-word [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_a]:underline [&_a]:underline-offset-4 [&_hr]:my-3 [&_mark]:rounded-sm [&_mark]:bg-amber-200 [&_mark]:px-0.5 [&_mark]:text-amber-950 [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap [&_span[data-link]]:underline [&_span[data-link]]:underline-offset-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2 [&_th]:text-start [&_th]:font-semibold",
+  "[&_a]:text-primary [&_pre]:bg-muted [&_span[data-link]]:text-primary relative min-h-full [font-feature-settings:'liga'_0] wrap-break-word [white-space:break-spaces] outline-none [font-variant-ligatures:none] [&_a]:underline [&_a]:underline-offset-4 [&_hr]:my-3 [&_mark]:rounded-sm [&_mark]:bg-amber-200 [&_mark]:px-0.5 [&_mark]:text-amber-950 [&_mark_a]:text-inherit [&_mark_span[data-link]]:text-inherit [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:whitespace-pre-wrap [&_span[data-link]]:underline [&_span[data-link]]:underline-offset-4",
   {
     compoundVariants: [{ class: "[&>*+*]:mt-2", size: "page", text: "plain" }],
     variants: {
@@ -78,7 +79,7 @@ export const editorDocument = cva(
       text: {
         article: "",
         plain:
-          "[&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_code]:rounded-sm [&_code]:px-1 [&_code]:font-mono [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_li>p]:m-0 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5",
+          "[&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_code]:text-muted-foreground [&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_code]:rounded-sm [&_code]:px-1 [&_code]:font-mono [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_li>p]:m-0 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2 [&_th]:text-start [&_th]:font-semibold [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5",
       },
     },
     defaultVariants: {

@@ -1113,6 +1113,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1147,6 +1148,7 @@ export declare const api: {
             mine: {
               late: boolean;
               score: number | null;
+              text: string;
               updatedAt: number;
             } | null;
             points: number;
@@ -1179,6 +1181,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1204,6 +1207,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1273,6 +1277,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;

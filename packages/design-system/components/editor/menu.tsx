@@ -16,6 +16,7 @@ import type {
   SlashLabels,
 } from "@repo/design-system/components/editor/slash";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import {
@@ -105,10 +106,11 @@ export function SlashMenu({
   }
 
   return (
-    <div
+    <ScrollArea
       aria-label={label}
-      className="bg-popover text-popover-foreground z-50 max-h-72 w-64 overflow-y-auto rounded-lg border p-1 shadow-md"
+      className="bg-popover text-popover-foreground z-50 max-h-72 w-64 rounded-lg border shadow-md"
       role="listbox"
+      viewportClassName="p-1"
     >
       {Arr.map(items, (key, index) => (
         <button
@@ -130,6 +132,6 @@ export function SlashMenu({
           {labels[key]}
         </button>
       ))}
-    </div>
+    </ScrollArea>
   );
 }
