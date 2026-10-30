@@ -6,20 +6,24 @@ import { Array as Arr } from "effect";
 import { Fragment } from "react";
 import { useTranslations } from "use-intl";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import { readDeadlineParts } from "@/components/tryout/runtime/deadline";
 
-/** Displays an attempt deadline as the first overview card. */
+/** The short label of each unit a deadline reads in. */
+const UNIT_LABELS = {
+  days: "time-days-short",
+  hours: "time-hours-short",
+  minutes: "time-minutes-short",
+  seconds: "time-seconds-short",
+} as const;
+
+/** Displays an attempt deadline as the first overview card, in days while a day or more is left. */
 export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
   const tTryouts = useTranslations("Tryouts");
   const now = useTryoutClock(true);
-  const seconds = Math.max(0, Math.ceil((expiresAt - now) / 1000));
-  const segments = [
-    { label: tTryouts("time-hours-short"), value: Math.floor(seconds / 3600) },
-    {
-      label: tTryouts("time-minutes-short"),
-      value: Math.floor((seconds % 3600) / 60),
-    },
-    { label: tTryouts("time-seconds-short"), value: seconds % 60 },
-  ];
+  const segments = Arr.map(
+    readDeadlineParts(Math.ceil((expiresAt - now) / 1000)),
+    ({ unit, value }) => ({ label: tTryouts(UNIT_LABELS[unit]), value })
+  );
   return (
     <section className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5 shadow-sm [--number-flow-mask-height:0.125em]">
       <NumberFormatGroup>

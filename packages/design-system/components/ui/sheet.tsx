@@ -28,7 +28,7 @@ function SheetClose(props: SheetPrimitive.Close.Props) {
 }
 
 const sheetPopupVariants = cva(
-  "fixed z-50 flex flex-col gap-4 overflow-y-auto bg-popover text-popover-foreground shadow-lg transition-[opacity,translate,width] duration-surface will-change-transform [--sheet-inset:0px] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
+  "fixed z-50 flex flex-col overflow-y-auto bg-popover text-popover-foreground shadow-lg transition-[opacity,translate,width] duration-surface will-change-transform [--sheet-inset:0px] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
   {
     defaultVariants: {
       inset: false,

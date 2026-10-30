@@ -4,10 +4,11 @@ import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { LOCALES } from "@repo/internationalization/src/locale";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Option, Schema } from "effect";
 import { useTransition } from "react";
@@ -18,6 +19,7 @@ import { TryoutPageLink } from "@/components/tryout/route/link";
 import {
   getTryoutPageHref,
   getTryoutPageTarget,
+  getTryoutPublicPathHref,
   type TryoutPageAddress,
   TryoutPageAddressSchema,
 } from "@/components/tryout/route/path";
@@ -256,7 +258,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   return (
     <>
       <Button inert={busy} onClick={onStart}>
-        <HugeIcons icon={Rocket01Icon} />
+        <Spinner icon={Rocket01Icon} isLoading={busy} />
         {buttonLabel}
       </Button>
       <TryoutStartDialog
@@ -286,9 +288,15 @@ function ResumeTryoutLink({
   readonly request: StartTryoutRequest;
 }) {
   const t = useTranslations("Tryouts");
+  const pathname = `/${request.locale}${getTryoutPublicPathHref(request.destination.publicPath)}`;
+  // The section loads on the server before it shows, so the link shows its loader while it does.
+  const navigating = useRouterState({
+    select: (state) =>
+      state.status === "pending" && state.location.pathname === pathname,
+  });
   return (
     <TryoutPageLink className={buttonVariants()} {...request.destination}>
-      <HugeIcons icon={Rocket01Icon} />
+      <Spinner icon={Rocket01Icon} isLoading={navigating} />
       {t("continue-cta")}
     </TryoutPageLink>
   );

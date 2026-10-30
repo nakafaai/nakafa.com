@@ -12,13 +12,24 @@ export class ExamEmpty extends Schema.TaggedError<ExamEmpty>()("ExamEmpty", {
 }) {}
 
 /**
- * A change to the questions of an exam that a sitting has scheduled. The questions, their order, and
- * their keys stay as the sitting was scheduled, so each result scores the exam that the student sat.
+ * A change to the questions of an exam that a sitting has finished. The questions, their order, and
+ * their keys stay as the students sat them, so each result scores the exam that the student sat.
  */
 export class ExamFrozen extends Schema.TaggedError<ExamFrozen>()("ExamFrozen", {
   ...refusal(
     "EXAM_FROZEN",
-    "A sitting of this exam is scheduled, so its questions can no longer change."
+    "A sitting of this exam has finished, so its questions can no longer change."
+  ),
+}) {}
+
+/**
+ * A deletion of an exam that has a sitting, scheduled, running, or finished. The sitting and its
+ * results read the exam, so the exam stays while any sitting of it remains.
+ */
+export class ExamInUse extends Schema.TaggedError<ExamInUse>()("ExamInUse", {
+  ...refusal(
+    "EXAM_IN_USE",
+    "This exam has a sitting, so it cannot be deleted."
   ),
 }) {}
 

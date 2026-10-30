@@ -68,6 +68,7 @@ export const readMaterialSitemap = Effect.fn(
   }
   return {
     routes: Arr.map(partition.materials, ({ projection }) => ({
+      contentKey: projection.contentKey,
       lastModified:
         projection.metadata.dateModified ?? projection.metadata.datePublished,
       publicPath: projection.publicPath,

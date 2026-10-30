@@ -4,6 +4,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
@@ -208,8 +209,9 @@ export const changeToken = Effect.fn("exams.sittings.changeToken")(
 );
 
 /**
- * Close the sitting: each of its jobs that is still pending is cancelled, and a run closes
- * every open attempt at once, one page at a time, with each deadline set to now (ADR 0013).
+ * Close the sitting: each of its jobs that is still pending is cancelled, the exam freezes, since
+ * a finished sitting fixes the paper its students sat (ADR 0031), and a run closes every open
+ * attempt at once, one page at a time, with each deadline set to now (ADR 0013).
  */
 export const close = Effect.fn("exams.sittings.close")(function* () {
   const sitting = yield* Sitting;
@@ -220,6 +222,7 @@ export const close = Effect.fn("exams.sittings.close")(function* () {
     .table("examSittings")
     .patch(sitting._id, { state: "closed" })
     .pipe(Effect.orDie);
+  yield* freezeExam(sitting.exam);
   yield* scheduler.runAfter(
     Duration.zero,
     refs.internal.exams.sittings.timers.closeDue,

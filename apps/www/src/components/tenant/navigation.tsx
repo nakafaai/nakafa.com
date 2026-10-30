@@ -41,11 +41,11 @@ export function TenantNavigation() {
 }
 
 /**
- * The school's own groups: home and notifications for everyone, the exams and the report cards
- * for a viewer who may open them, then the
- * management group, with the settings entry, only for a viewer who may manage the
- * school. The viewer's classes come last, when the viewer has any, so they never
- * move the groups above them.
+ * The school's own groups, as the learner's sidebar has them: first the main pages with no label,
+ * home and notifications for everyone, the exams and the report cards for a viewer who may open
+ * them, then the management group, with the settings entry, only for a viewer who may manage the
+ * school. The viewer's classes come last, when the viewer has any, so they never move the groups
+ * above them.
  */
 function TenantSchoolGroups() {
   const { canManage, canOpenExams, canOpenReports, slug } = useTenant();
@@ -58,7 +58,7 @@ function TenantSchoolGroups() {
 
   return (
     <>
-      <TenantSidebarGroup label={t("for-you")}>
+      <TenantSidebarGroup>
         <SidebarMenuItem>
           <SidebarMenuButton
             isActive={

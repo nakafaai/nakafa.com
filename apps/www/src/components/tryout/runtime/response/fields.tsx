@@ -6,6 +6,7 @@ import {
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface";
+import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 import {
   categoryLabelId,
   optionLabelId,
@@ -151,6 +152,7 @@ function MultipleChoiceFields({
   );
 }
 
+/** A true or false response as a printed exam sets it: one table, a row per statement and a column per category. */
 function CategoryFields({
   value,
 }: {
@@ -169,74 +171,36 @@ function CategoryFields({
       : []
   );
   return (
-    <div className="space-y-6">
-      {Arr.map(responseSpec.statements, (statement) => {
-        const statementId = statementLabelId(id, statement.statementKey);
-        const statementHeadingId = `${statementId}-label`;
-        const assignedCategory = Option.getOrUndefined(
+    <TryoutChoiceTable
+      columns={Arr.map(responseSpec.categories, (category) => ({
+        id: category.categoryKey,
+        label: value.renderLabel({
+          id: categoryLabelId(id, category.categoryKey),
+          label: category.label,
+        }),
+      }))}
+      disabled={locked}
+      onMark={(statementKey, categoryKey) =>
+        onChange(
+          assignCategorySelection(
+            { responseSpec, selection },
+            statementKey,
+            categoryKey
+          )
+        )
+      }
+      statements={Arr.map(responseSpec.statements, (statement) => ({
+        correct: value.revealAnswers ? statement.correctCategoryKey : undefined,
+        id: statement.statementKey,
+        label: value.renderLabel({
+          id: statementLabelId(id, statement.statementKey),
+          label: statement.label,
+        }),
+        marked: Option.getOrUndefined(
           HashMap.get(assigned, statement.statementKey)
-        );
-        return (
-          <section className="space-y-3" key={statement.statementKey}>
-            <div id={statementHeadingId}>
-              {value.renderLabel({
-                id: statementId,
-                label: statement.label,
-              })}
-            </div>
-            <RadioGroup
-              aria-labelledby={statementHeadingId}
-              className="grid grid-cols-1 gap-2 md:grid-cols-2"
-              disabled={locked}
-              onValueChange={(categoryKey) =>
-                onChange(
-                  assignCategorySelection(
-                    { responseSpec, selection },
-                    statement.statementKey,
-                    categoryKey
-                  )
-                )
-              }
-              value={assignedCategory ?? ""}
-            >
-              {Arr.map(responseSpec.categories, (category) => (
-                <TryoutSelectableRadioOption
-                  appearance={previewAppearance(
-                    value.revealAnswers,
-                    statement.correctCategoryKey === undefined
-                      ? undefined
-                      : statement.correctCategoryKey === category.categoryKey
-                  )}
-                  checked={assignedCategory === category.categoryKey}
-                  disabled={locked}
-                  id={categoryLabelId(
-                    id,
-                    statement.statementKey,
-                    category.categoryKey
-                  )}
-                  key={category.categoryKey}
-                  label={value.renderLabel({
-                    correctness: previewCorrectness(
-                      value.revealAnswers,
-                      statement.correctCategoryKey === undefined
-                        ? undefined
-                        : statement.correctCategoryKey === category.categoryKey
-                    ),
-                    id: categoryLabelId(
-                      id,
-                      statement.statementKey,
-                      category.categoryKey
-                    ),
-                    label: category.label,
-                  })}
-                  value={category.categoryKey}
-                />
-              ))}
-            </RadioGroup>
-          </section>
-        );
-      })}
-    </div>
+        ),
+      }))}
+    />
   );
 }
 

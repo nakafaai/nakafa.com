@@ -1972,21 +1972,6 @@ export declare const api: {
           }> | null;
         }
       >;
-      identity: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          contentKey: string;
-          expectedMaterialKey: string;
-          expectedSectionKey: string;
-        },
-        {
-          activeReleaseId: string | null;
-          managed: boolean;
-          publicPath: string | null;
-        }
-      >;
       latest: FunctionReference<
         "query",
         "public",
@@ -2130,7 +2115,13 @@ export declare const api: {
         "query",
         "public",
         { appLocale: "en" | "id" | "de"; bucket: Array<string> },
-        null | { routes: Array<{ lastModified: string; publicPath: string }> }
+        null | {
+          routes: Array<{
+            contentKey: string;
+            lastModified: string;
+            publicPath: string;
+          }>;
+        }
       >;
     };
     ownership: {
@@ -4199,6 +4190,23 @@ export declare const api: {
           left: number;
           placed: Array<{ id: Id<"examQuestions">; number: number | null }>;
         }
+      >;
+    };
+    joins: {
+      join: FunctionReference<
+        "mutation",
+        "public",
+        { sittingId?: Id<"examSittings">; slug: string; token: string },
+        | { outcome: "joined"; sittingId: Id<"examSittings"> }
+        | {
+            outcome: "refused";
+            reason:
+              | "NotAdmitted"
+              | "SeatLimit"
+              | "SittingNotOpen"
+              | "TokenRefused"
+              | "TooManyTries";
+          }
       >;
     };
     presence: {
@@ -7432,7 +7440,13 @@ export declare const api: {
                   type: "person.invited";
                 }
               | {
-                  method: "card" | "code" | "invite" | "operator" | "founder";
+                  method:
+                    | "card"
+                    | "code"
+                    | "invite"
+                    | "operator"
+                    | "founder"
+                    | "room";
                   type: "person.claimed";
                 }
               | { type: "person.released" }
@@ -7550,6 +7564,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {
                     contentLicense: string;

@@ -6,8 +6,8 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, Schema } from "effect";
-import { CHAT_PATH } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { openChatPage } from "@/e2e/support/chat";
+import type { PromptLocale } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -112,17 +112,17 @@ export const pickFiles = Effect.fn("NakafaE2E.pickFiles")(function* (
 });
 
 /**
- * Opens a chat page as a visitor, who can choose files and write without
- * signing in, and returns its composer. The new chat of the English site, read
- * with the English labels, unless another page and its labels are given.
+ * Signs a learner in, opens Nina's new chat in `locale`, read with its
+ * `labels`, and returns its composer. A visitor's composer sends its attach
+ * button to sign-in, so choosing files takes a learner.
  */
 export const openComposer = Effect.fn("NakafaE2E.openComposer")(function* (
   page: Page,
-  path = CHAT_PATH,
+  origin: string,
+  locale: PromptLocale = "en",
   labels = ENGLISH
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
-  yield* Effect.promise(() => page.goto(path));
+  yield* openChatPage(page, origin, locale);
   const composer = page.locator("main");
   yield* Effect.promise(() =>
     expect(composerOf(composer, labels)).toBeVisible()
