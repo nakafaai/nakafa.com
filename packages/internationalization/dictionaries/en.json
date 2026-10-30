@@ -776,7 +776,8 @@
         "opened": "Period opened",
         "archived": "Period archived",
         "rename": "Period renamed",
-        "restored": "Period restored"
+        "restored": "Period restored",
+        "rescheduled": "Period dates changed"
       },
       "person": {
         "claimed": "Account joined",

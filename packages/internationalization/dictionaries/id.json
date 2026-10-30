@@ -776,7 +776,8 @@
         "opened": "Periode dibuka",
         "archived": "Periode diarsipkan",
         "rename": "Periode diganti nama",
-        "restored": "Periode dipulihkan"
+        "restored": "Periode dipulihkan",
+        "rescheduled": "Tanggal periode diubah"
       },
       "person": {
         "claimed": "Akun bergabung",

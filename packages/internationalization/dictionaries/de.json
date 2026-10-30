@@ -776,7 +776,8 @@
         "opened": "Zeitraum geöffnet",
         "archived": "Zeitraum archiviert",
         "rename": "Zeitraum umbenannt",
-        "restored": "Zeitraum wiederhergestellt"
+        "restored": "Zeitraum wiederhergestellt",
+        "rescheduled": "Zeitraumdaten geändert"
       },
       "person": {
         "claimed": "Konto übernommen",
