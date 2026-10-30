@@ -37,14 +37,15 @@ test("the school settings sidebar leads back to the school page the viewer came 
   await expect(sidebar.getByRole("link").first()).toHaveText(
     `Back to ${school.name}`
   );
-  await sidebar.getByRole("button", { name: "People" }).click();
   await sidebar.getByRole("link", { exact: true, name: "Members" }).click();
   await expect(page).toHaveURL(address("/settings/members"));
   await back.click();
   await expect(page).toHaveURL(address("/exams"));
 
   await settings.click();
-  await expect(back).toBeVisible();
+  // The pointer rests on a row of the open sidebar, as a reader's does. A row's
+  // tooltip only names a folded item, so it never takes the Escape.
+  await back.hover();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(address("/exams"));
 

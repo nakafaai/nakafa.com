@@ -124,8 +124,9 @@ export function SettingsBack({
     );
   });
 
+  // A border closes the way back off from the settings below it.
   return (
-    <SidebarGroup>
+    <SidebarGroup className="border-b">
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>

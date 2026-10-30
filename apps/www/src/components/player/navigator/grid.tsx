@@ -26,10 +26,11 @@ export function PlayerGrid({
 }
 
 /**
- * One question number. An unanswered question is outlined, an answered one is
- * filled, a flagged one carries a flag mark on its corner, and the current one
- * carries a ring and `aria-current`, so no state relies on color alone. The
- * mark sits over the corner, so a flag never moves the number.
+ * One question number. An unanswered question is outlined in the destructive
+ * color, an answered one is filled, a flagged one carries a flag mark on its
+ * corner, and the current one carries a ring and `aria-current`, so no state
+ * relies on color alone. The mark sits over the corner, so a flag never moves
+ * the number.
  */
 function PlayerCell({ question }: { question: PlayerCellModel }) {
   const t = useTranslations("Player");
@@ -49,7 +50,7 @@ function PlayerCell({ question }: { question: PlayerCellModel }) {
       className="relative w-full px-0 font-mono tabular-nums aria-[current=step]:ring-2 aria-[current=step]:ring-ring aria-[current=step]:ring-offset-2 aria-[current=step]:ring-offset-background"
       onClick={() => goTo(question.key)}
       type="button"
-      variant={question.answered ? "default" : "outline"}
+      variant={question.answered ? "default" : "destructive-outline"}
     >
       {number}
       {question.flagged ? <PlayerFlagMark placement="corner" /> : null}

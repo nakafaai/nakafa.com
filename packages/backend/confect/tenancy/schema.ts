@@ -82,7 +82,8 @@ export const PersonKind = Schema.Literals(["member", "operator"]);
 export const PersonStatus = Schema.Literals(["active", "suspended", "removed"]);
 /**
  * How an account came to hold a Person: an invite, a login card, a guardian's
- * email code (ADR 0034), operator work, or founding the school itself.
+ * email code (ADR 0034), operator work, founding the school itself, or the code
+ * of an exam room the account joined as a student.
  */
 export const ClaimMethod = Schema.Literals([
   "card",
@@ -90,6 +91,7 @@ export const ClaimMethod = Schema.Literals([
   "invite",
   "operator",
   "founder",
+  "room",
 ]);
 /**
  * Why an operator changed a Person without the school's own action.
