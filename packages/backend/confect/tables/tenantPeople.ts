@@ -1,5 +1,9 @@
 import { Table } from "@confect/core";
 import { tenantPersonValidator } from "@repo/backend/confect/tenancy/schema";
+/**
+ * The people of the schools. A list that a viewer searches by a person's name finds the school's people through
+ * `search_name`, which matches each word of the search whole and its last word as a prefix.
+ */
 export default Table.make(() => tenantPersonValidator)
   .index("by_tenantId_and_account_userId", ["tenantId", "account.userId"])
   .index("by_tenantId_and_kind", ["tenantId", "kind"])
@@ -13,4 +17,8 @@ export default Table.make(() => tenantPersonValidator)
     "account.userId",
     "kind",
     "status",
-  ]);
+  ])
+  .searchIndex("search_name", {
+    searchField: "name",
+    filterFields: ["tenantId"],
+  });

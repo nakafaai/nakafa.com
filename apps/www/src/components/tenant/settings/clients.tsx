@@ -219,7 +219,6 @@ function SchoolClientTable() {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     clientColumns.display({
       cell: (info) =>
@@ -227,7 +226,7 @@ function SchoolClientTable() {
           <SchoolClientMenu client={info.row.original} />
         ) : null,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

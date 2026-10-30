@@ -126,11 +126,14 @@ test("the exam list, its rooms and a room's results fill the page card, with sta
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner, 2));
   const page = await context.newPage();
 
-  // The exam list: each row says where the exam belongs, how many questions it holds and when it was created, and its
-  // menu opens the editor, the rooms, the student's view and Delete.
+  // The exam list: each row says where the exam belongs, which its head filters, how many questions it holds and when it
+  // was created, and its menu opens the editor, the rooms, the student's view and Delete.
   await page.goto(address("/exams"));
   const card = page.locator('[data-slot="table-card"]');
-  for (const column of ["Unit", "Questions", "Created"]) {
+  await expect(
+    card.getByRole("button", { name: "Filter by Unit" })
+  ).toBeVisible();
+  for (const column of ["Questions", "Created"]) {
     await expect(
       card.getByRole("columnheader", { name: column, exact: true })
     ).toBeVisible();

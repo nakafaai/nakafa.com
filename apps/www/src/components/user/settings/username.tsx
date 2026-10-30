@@ -13,7 +13,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -69,17 +68,18 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
     current,
     typed,
   });
-  // The line under the field keeps the last settled answer while the typed name
-  // waits for its own, so it never empties and refills on every keystroke.
-  const [line, setLine] = useState(reply);
-  if (
-    !reply.pending &&
-    (reply.message !== line.message || reply.canSave !== line.canSave)
-  ) {
-    setLine(reply);
-  }
   const stored = Option.getOrUndefined(Result.getSuccess(readUsername(typed)));
-  const invalid = line.message !== undefined && !line.canSave;
+  const invalid = reply.message !== undefined && !reply.canSave;
+  // The line keeps the last answer while the next name is checked, so it never blanks between keys; the
+  // account's own name has nothing to answer, and clears it.
+  const [lastAnswer, setLastAnswer] = useState(reply.message);
+  if (reply.message !== undefined && reply.message !== lastAnswer) {
+    setLastAnswer(reply.message);
+  }
+  const answer =
+    stored !== undefined && stored === current
+      ? undefined
+      : (reply.message ?? lastAnswer);
 
   const save = (username: string) =>
     Effect.runPromise(
@@ -147,14 +147,17 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
                 value={typed}
               />
             </InputGroup>
-            <div aria-live="polite" className="min-h-lh text-sm leading-normal">
-              {line.message !== undefined && line.canSave && (
-                <FieldDescription>{t(line.message)}</FieldDescription>
-              )}
-              {line.message !== undefined && !line.canSave && (
-                <FieldError>{t(line.message)}</FieldError>
-              )}
-            </div>
+            {/* One line always answers the typed name, so the card never grows while the name is checked:
+                a free name reads muted, a refused one in the error colour. */}
+            <FieldError
+              className={
+                answer === "username-available"
+                  ? "text-muted-foreground"
+                  : undefined
+              }
+            >
+              {answer === undefined ? null : t(answer)}
+            </FieldError>
           </Field>
         </CardContent>
         <CardSectionFooter hint={t("username-footer")}>

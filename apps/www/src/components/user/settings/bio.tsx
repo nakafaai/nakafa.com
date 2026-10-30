@@ -26,8 +26,7 @@ import type { CurrentUser } from "@/lib/identity/client";
 
 /**
  * Renders the bio card: a few lines about the account. A bio that is too long
- * says so on the line kept for it under the field, and Save waits until it
- * fits. The footer keeps its sentence about Save throughout.
+ * says so in words, and Save waits until it fits.
  */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -90,12 +89,12 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               placeholder={t("bio-placeholder")}
               value={typed}
             />
-            <div className="min-h-lh text-sm leading-normal">
-              {fits ? null : <FieldError>{t("bio-too-long")}</FieldError>}
-            </div>
+            <FieldError className="max-w-md">
+              {fits ? null : t("bio-too-long")}
+            </FieldError>
           </Field>
         </CardContent>
-        <CardSectionFooter hint={t("bio-footer")}>
+        <CardSectionFooter hint={t("bio-footer")} tone="muted">
           <SettingsSave disabled={!canSave} />
         </CardSectionFooter>
       </CardSection>
