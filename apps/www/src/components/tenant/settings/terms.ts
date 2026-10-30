@@ -5,10 +5,10 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Option, Schema } from "effect";
 import {
   draftText,
+  editPeriod,
   insertPeriod,
   isFirstPage,
   type Period,
-  setPeriodName,
   setPeriodStatus,
 } from "@/components/tenant/settings/state";
 
@@ -93,13 +93,14 @@ export const archivePeriodChange: OptimisticUpdate<
   );
 };
 
-/** Shows a period under its new name at once, in every loaded list of periods. */
-export const renamePeriodChange: OptimisticUpdate<
-  typeof tenancy.periods.rename
-> = (localStore, { name, periodId }) => {
+/** Shows a period with its new name and dates at once, in its place in every loaded list of periods. */
+export const editPeriodChange: OptimisticUpdate<typeof tenancy.periods.edit> = (
+  localStore,
+  { end, name, periodId, start }
+) => {
   changePeriodLists(
     localStore,
     () => true,
-    (page) => setPeriodName(page, periodId, name)
+    (page) => editPeriod(page, periodId, { end, name, start })
   );
 };

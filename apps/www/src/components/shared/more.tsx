@@ -69,7 +69,6 @@ export function MoreMenu({
         />
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem
-            className="cursor-pointer"
             onClick={() => setDeleting(true)}
             variant="destructive"
           >

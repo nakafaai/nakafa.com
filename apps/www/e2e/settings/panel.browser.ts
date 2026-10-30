@@ -210,10 +210,9 @@ test.describe("Memory panel when the window changes", () => {
 });
 
 /**
- * Below 65rem the list cannot keep its room beside the smallest panel once the
- * sidebar and the gutters of a classic scrollbar have taken theirs, so the
- * editor is the sheet it is on a phone. From 65rem it is a panel and the list
- * keeps its card.
+ * Below 65rem the list would keep less than 2rem of slack beside the sidebar and
+ * the smallest panel, so the editor is the sheet it is on a phone. From 65rem it
+ * is a panel and the list keeps its card.
  */
 const verifyBreakpoint = Effect.fn("NakafaE2E.verifyBreakpoint")(function* (
   page: Page,

@@ -1,6 +1,11 @@
 import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
 import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
 import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
+import {
+  MATH_ERROR_COLOR,
+  mathBlockVariants,
+  mathScrollVariants,
+} from "@repo/design-system/lib/prose";
 import { cn } from "cn";
 import katex from "katex";
 import type { HTMLAttributes } from "react";
@@ -24,7 +29,7 @@ type KatexMarkupProps = MathComponentProps & {
 function KatexMarkup({
   children,
   displayMode,
-  errorColor = "var(--color-muted-foreground)",
+  errorColor = MATH_ERROR_COLOR,
   math,
 }: KatexMarkupProps) {
   const html = katex.renderToString(math ?? children, {
@@ -98,17 +103,11 @@ export function BlockMath({
   // Empty string keeps this as a presence marker instead of data-math-block="true".
   return (
     <div
-      className={cn(
-        "overflow-hidden rounded-xl border bg-card text-card-foreground",
-        className
-      )}
+      className={cn(mathBlockVariants(), className)}
       data-markdown-ignore=""
       data-math-block=""
     >
-      <div
-        className="overflow-x-auto overflow-y-hidden px-4"
-        data-slot="math-scroll"
-      >
+      <div className={mathScrollVariants()} data-slot="math-scroll">
         <KatexMarkup displayMode={true} {...props} />
       </div>
     </div>

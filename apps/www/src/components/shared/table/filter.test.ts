@@ -8,6 +8,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import {
   choosesNothing,
   chosenOne,
+  holdsChosen,
   isChosen,
   namedOptions,
 } from "@/components/shared/table/filter";
@@ -27,6 +28,19 @@ describe("a facet filter over cells that hold one value", () => {
     expect(choosesNothing(undefined)).toBe(true);
     expect(choosesNothing([])).toBe(true);
     expect(choosesNothing(["owner"])).toBe(false);
+  });
+});
+
+describe("a facet filter over cells that hold a list", () => {
+  it("keeps a list that holds one of the chosen values and drops one that holds none", () => {
+    expect(holdsChosen(["teacher", "proctor"], ["proctor"])).toBe(true);
+    expect(holdsChosen(["student"], ["owner", "teacher"])).toBe(false);
+    expect(holdsChosen([], ["owner"])).toBe(false);
+  });
+
+  it("keeps nothing for a cell or a choice that is not a list of text", () => {
+    expect(holdsChosen("owner", ["owner"])).toBe(false);
+    expect(holdsChosen(["owner"], "owner")).toBe(false);
   });
 });
 
