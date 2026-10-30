@@ -290,7 +290,6 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
         />
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem
-            className="cursor-pointer"
             onClick={() => setConfirmDelete(true)}
             variant="destructive"
           >

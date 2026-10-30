@@ -67,7 +67,7 @@ function DatePicker({
       <PopoverTrigger
         className={cn(
           fieldBoxVariants(),
-          "data-placeholder:text-muted-foreground cursor-pointer items-center gap-2 text-left",
+          "data-placeholder:text-muted-foreground items-center gap-2 text-left",
           className
         )}
         data-placeholder={Option.isNone(chosen) || undefined}

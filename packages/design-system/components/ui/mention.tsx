@@ -83,7 +83,7 @@ export function MentionOption({
     <div
       aria-selected={active}
       className={cn(
-        "data-[active=true]:bg-accent data-[active=true]:text-accent-foreground cursor-default rounded-sm px-2 py-1.5 text-sm wrap-anywhere",
+        "data-[active=true]:bg-accent data-[active=true]:text-accent-foreground rounded-sm px-2 py-1.5 text-sm wrap-anywhere",
         className
       )}
       data-active={active}

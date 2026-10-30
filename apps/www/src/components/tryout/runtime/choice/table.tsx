@@ -145,7 +145,6 @@ function ChoiceTableRow({
         >
           <Radio
             aria-labelledby={`${table.headerId}-${column.id}`}
-            className="cursor-pointer"
             value={column.id}
           />
           {statement.correct === column.id ? (

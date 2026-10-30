@@ -12,15 +12,19 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
 import { cn } from "cn";
 import { Function as Fn, Option } from "effect";
-import { useState } from "react";
+import { type ComponentProps, type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { contentWidthVariants } from "@/components/shared/content/width";
+import { useTenant } from "@/components/tenant/context";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
-import { ExamMenu } from "@/components/tenant/exams/menu";
+import { ExamMenu, ExamMenuFrame } from "@/components/tenant/exams/menu";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { ExamPresence } from "@/components/tenant/exams/presence";
 import { useExam } from "@/components/tenant/exams/provider";
-import { ScheduleExam } from "@/components/tenant/exams/schedule";
+import {
+  ScheduleExam,
+  ScheduleExamFrame,
+} from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { Link } from "@/lib/routing/link";
@@ -34,9 +38,7 @@ import { Link } from "@/lib/routing/link";
  * in the exam (ExamPresence) and two buttons at most: Try as student with a menu of the rarer actions
  * joined to it (ExamMenu), and Schedule, the main action. The title takes the room left between
  * them, truncated while the field is not focused. On a phone the buttons keep their icons and their
- * names for screen readers, so the title keeps room to read at 375 pixels. The bar and its border run
- * the page's full width, and its row keeps the page width of the editor's panes, so on a wide screen the
- * row lines up with them. An exam of an archived unit says why it is locked in a line under the header
+ * names for screen readers, so the title keeps room to read at 375 pixels. An exam of an archived unit says why it is locked in a line under the header
  * (ExamLockedNote), and a gone exam keeps its title with neither button.
  */
 export function ExamHeader() {
@@ -63,6 +65,51 @@ export function ExamHeader() {
   }
 
   return (
+    <ExamHeaderRow>
+      <BackToExams />
+      <ExamTitleField
+        onBlur={save}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          // While the teacher composes a character, Enter belongs to the keyboard.
+          if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
+            event.currentTarget.blur();
+          }
+        }}
+        placeholder={t("untitled")}
+        readOnly={exam.archived || gone}
+        value={draft ?? exam.title}
+      />
+      <ExamPresence />
+      <ExamMenu />
+      {exam.archived || gone ? null : <ScheduleExam />}
+    </ExamHeaderRow>
+  );
+}
+
+/**
+ * The editor's header before the exam is read, drawn from the first paint so that nothing in it appears late: the
+ * link back to the exams, the title's field empty and read only, since a placeholder would read as the exam's
+ * title, and the two buttons disabled. The buttons stand as an exam that takes changes shows them, so only an
+ * archived unit's exam, which offers neither change, gives up some once it is read.
+ */
+export function ExamHeaderFrame() {
+  return (
+    <ExamHeaderRow>
+      <BackToExams />
+      <ExamTitleField placeholder="" readOnly value="" />
+      <ExamMenuFrame />
+      <ScheduleExamFrame />
+    </ExamHeaderRow>
+  );
+}
+
+/**
+ * The bar of the editor's header and its row. The bar and its border run the page's full width, and the row keeps
+ * the page width of the editor's panes, so on a wide screen the row lines up with them.
+ */
+function ExamHeaderRow({ children }: { children: ReactNode }) {
+  return (
     <header className="h-14 shrink-0 border-b" data-slot="page-header">
       <div
         className={cn(
@@ -70,42 +117,49 @@ export function ExamHeader() {
           "flex h-full w-full items-center gap-2 px-2"
         )}
       >
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Link
-                aria-label={t("title")}
-                className={buttonVariants({ size: "icon", variant: "outline" })}
-                params={{ slug }}
-                to="/school/$slug/exams"
-              />
-            }
-          >
-            <HugeIcons icon={ArrowLeft01Icon} />
-          </TooltipTrigger>
-          <TooltipContent side="bottom">{t("title")}</TooltipContent>
-        </Tooltip>
-        <Input
-          aria-label={t("title-label")}
-          className="min-w-0 flex-1 truncate border-0 text-lg font-semibold shadow-none md:text-lg"
-          dir="auto"
-          onBlur={save}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            // While the teacher composes a character, Enter belongs to the keyboard.
-            if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
-              event.currentTarget.blur();
-            }
-          }}
-          placeholder={t("untitled")}
-          readOnly={exam.archived || gone}
-          value={draft ?? exam.title}
-        />
-        <ExamPresence />
-        <ExamMenu />
-        {exam.archived || gone ? null : <ScheduleExam />}
+        {children}
       </div>
     </header>
+  );
+}
+
+/** The link back to the school's exams, an icon named in its tooltip. */
+function BackToExams() {
+  const t = useTranslations("Exams");
+  const { slug } = useTenant();
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Link
+            aria-label={t("title")}
+            className={buttonVariants({ size: "icon", variant: "outline" })}
+            params={{ slug }}
+            to="/school/$slug/exams"
+          />
+        }
+      >
+        <HugeIcons icon={ArrowLeft01Icon} />
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{t("title")}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** The field of the exam's title, which takes the room the row leaves between the link and the buttons. */
+function ExamTitleField(
+  props: Omit<ComponentProps<typeof Input>, "aria-label" | "className" | "dir">
+) {
+  const t = useTranslations("Exams");
+
+  return (
+    <Input
+      {...props}
+      aria-label={t("title-label")}
+      className="min-w-0 flex-1 truncate border-0 text-lg font-semibold shadow-none md:text-lg"
+      dir="auto"
+    />
   );
 }
 

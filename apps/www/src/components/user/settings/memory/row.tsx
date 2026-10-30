@@ -77,7 +77,7 @@ export const MemoryRow = memo(
         ref={row}
       >
         <button
-          className="flex h-full min-w-0 flex-1 cursor-pointer flex-col justify-center gap-1 ps-(--card-spacing) text-start outline-none after:absolute after:inset-0 disabled:cursor-default"
+          className="flex h-full min-w-0 flex-1 flex-col justify-center gap-1 ps-(--card-spacing) text-start outline-none after:absolute after:inset-0 disabled:cursor-default"
           disabled={waiting}
           id={memoryRowId(memory.id)}
           onClick={() => openEdit(memory)}

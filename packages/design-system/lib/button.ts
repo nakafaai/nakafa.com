@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority";
 
 /** Shared interaction, semantic, and size variants for every Nakafa button. */
 export const buttonVariants = cva(
-  "pressable focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm whitespace-nowrap transition-[scale,color,background-color,border-color,box-shadow,opacity] outline-none select-none focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "pressable focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm whitespace-nowrap transition-[scale,color,background-color,border-color,box-shadow,opacity] outline-none select-none focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {

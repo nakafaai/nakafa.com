@@ -72,7 +72,7 @@ interface TryoutAttemptHistoryItemProps {
 function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
   return (
     <AutocompleteItem
-      className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
+      className="min-h-8 py-1.5 text-sm sm:min-h-8"
       onClick={value.onChoose}
       value={value.attempt}
     >

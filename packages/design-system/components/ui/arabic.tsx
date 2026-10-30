@@ -19,14 +19,17 @@ const MARK_SEAT = "\u0640";
  * An on-screen Arabic keypad: the harakat on top, each drawn over a dotted circle and named for
  * assistive technology, then the letters in hijaiyah order with the hamza and its seats, then the
  * Arabic punctuation and a space. A press types its key through `onKey` and keeps the focus where it
- * was, in the text being written, so the caret never jumps. Every key draws in Amiri Quran.
+ * was, in the text being written, so the caret never jumps. Every key draws in Amiri Quran, its letters in
+ * the keypad's face with balanced metrics (`font-keypad`), so each sits inside its key near the middle. The
+ * keypad is 20rem wide and narrows with its container, and its keys share the width of their row, so it
+ * fits a 320px screen.
  */
 function ArabicKeypad({ onKey }: { onKey: (text: string) => void }) {
   const t = useTranslations("Common");
 
   return (
     <div
-      className="flex flex-col gap-2"
+      className="flex w-80 max-w-full flex-col gap-2"
       data-slot="arabic-keypad"
       dir="rtl"
       lang="ar"
@@ -45,14 +48,14 @@ function ArabicKeypad({ onKey }: { onKey: (text: string) => void }) {
           </ArabicKey>
         ))}
       </div>
-      <div className="flex gap-1">
+      <div className="grid grid-cols-9 gap-1">
         {Arr.map(ARABIC_PUNCTUATION, (mark) => (
           <ArabicKey key={mark} label={mark} onKey={onKey} text={mark}>
             {mark}
           </ArabicKey>
         ))}
         <Button
-          className="flex-1"
+          className="col-span-6"
           onClick={() => onKey(" ")}
           onMouseDown={(event) => event.preventDefault()}
           size="sm"
@@ -72,13 +75,14 @@ function ArabicKeypad({ onKey }: { onKey: (text: string) => void }) {
  * line, so the padding is 0.2em above and 0.8em below, which centres the marks in the 2em box. Measured in Amiri Quran,
  * the marks above end at 23% of the box and the marks below start at 80%, the stroke lies between 60% and 66%, and the
  * unpainted band from 50% to 74% holds it with room for rounding; the circle sits at 52%, halfway between the marks
- * above and the marks below.
+ * above and the marks below. The face keeps Amiri Quran's own metrics, which these places were measured in, and
+ * draws at 0.9em of the key, since the marks reach 1.8em from the highest to the lowest.
  */
 function MarkFace({ mark }: { mark: string }) {
   return (
     <span
       aria-hidden="true"
-      className="relative inline-block [background-image:linear-gradient(to_bottom,currentColor_50%,transparent_50%_74%,currentColor_74%)] bg-clip-text pt-[0.2em] pb-[0.8em] leading-none [-webkit-text-fill-color:transparent]"
+      className="font-quran relative inline-block [background-image:linear-gradient(to_bottom,currentColor_50%,transparent_50%_74%,currentColor_74%)] bg-clip-text pt-[0.2em] pb-[0.8em] text-[0.9em] leading-none [-webkit-text-fill-color:transparent]"
     >
       {`${MARK_SEAT}${mark}`}
       <span className="absolute top-[52%] left-1/2 size-[0.85em] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dotted border-current opacity-50" />
@@ -101,10 +105,10 @@ function ArabicKey({
   return (
     <Button
       aria-label={label}
-      className="font-quran text-lg"
+      className="font-keypad w-full px-0 text-lg"
       onClick={() => onKey(text)}
       onMouseDown={(event) => event.preventDefault()}
-      size="icon-sm"
+      size="default"
       type="button"
       variant="outline"
     >

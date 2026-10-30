@@ -106,11 +106,7 @@ export function QuestionType({
             value={template}
           >
             {Arr.map(QuestionTemplate.literals, (item) => (
-              <DropdownMenuRadioItem
-                className="cursor-pointer"
-                key={item}
-                value={item}
-              >
+              <DropdownMenuRadioItem key={item} value={item}>
                 <HugeIcons icon={TEMPLATE_ICON[item]} />
                 {t(TEMPLATE_NAME[item])}
               </DropdownMenuRadioItem>

@@ -32,14 +32,14 @@ import type { CohortDetail } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/homeroom";
 
-/** The sentence that says what the card's action does, or what stops it. */
+/** The sentence that says what the card's action does, or what stops it. A cohort not read yet reads as one with none. */
 function hintKeyOf(
-  cohort: CohortDetail
+  cohort: CohortDetail | undefined
 ): "homeroom-archived" | "homeroom-footer" | "homeroom-remove-footer" {
-  if (cohort.status === "archived") {
+  if (cohort?.status === "archived") {
     return "homeroom-archived";
   }
-  return cohort.homeroom === null
+  return (cohort?.homeroom ?? null) === null
     ? "homeroom-footer"
     : "homeroom-remove-footer";
 }
@@ -48,13 +48,16 @@ function hintKeyOf(
  * The homeroom teacher of a cohort, as one card of the settings column above the cohort's
  * students. While the cohort has none, the card picks a teacher and saves them; once it has
  * one, the card shows the teacher and removes them. An archived cohort shows its teacher and
- * offers no change.
+ * offers no change. Before the cohort is read, the card is its frame: the title, the field's label, an empty line in
+ * the field's place and Save disabled. The teacher's line and the picker take one height, so nothing below moves
+ * when the cohort answers.
  */
 export function SchoolHomeroomCard({
   cohort,
   slug,
 }: {
-  cohort: CohortDetail;
+  /** The cohort, or undefined while it is read. */
+  cohort: CohortDetail | undefined;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
@@ -66,10 +69,11 @@ export function SchoolHomeroomCard({
     tenancy.assignments.unassign
   ).withOptimisticUpdate(unassignHomeroomChange);
   const [teacherId, setTeacherId] = useState<PersonId | undefined>(undefined);
-  const isArchived = cohort.status === "archived";
+  const isArchived = cohort?.status === "archived";
+  const homeroom = cohort?.homeroom ?? null;
 
   const save = () => {
-    if (teacherId === undefined) {
+    if (cohort === undefined || teacherId === undefined) {
       return;
     }
     startTransition(() =>
@@ -81,10 +85,14 @@ export function SchoolHomeroomCard({
     );
   };
 
-  const remove = () =>
+  const remove = () => {
+    if (cohort === undefined) {
+      return;
+    }
     startTransition(() =>
       saveSchool(() => unassign({ cohortId: cohort.id, slug }), SOURCE)
     );
+  };
 
   return (
     <CardSection>
@@ -97,17 +105,17 @@ export function SchoolHomeroomCard({
             <FieldLabel htmlFor={`${id}-teacher`}>
               {t("homeroom-teacher")}
             </FieldLabel>
-            {cohort.homeroom === null && !isArchived ? (
+            {cohort !== undefined && homeroom === null && !isArchived ? (
               <SchoolPersonPicker
                 id={`${id}-teacher`}
                 onChoose={setTeacherId}
                 personId={teacherId}
               />
             ) : (
-              <p id={`${id}-teacher`}>
-                {cohort.homeroom === null
-                  ? t("homeroom-none")
-                  : cohort.homeroom.name}
+              <p className="flex min-h-9 items-center" id={`${id}-teacher`}>
+                {cohort === undefined
+                  ? null
+                  : (homeroom?.name ?? t("homeroom-none"))}
               </p>
             )}
           </Field>
@@ -116,9 +124,9 @@ export function SchoolHomeroomCard({
       <CardSectionFooter hint={t(hintKeyOf(cohort))}>
         {isArchived ? null : (
           <CardSectionActions>
-            {cohort.homeroom === null ? (
+            {homeroom === null ? (
               <Button
-                disabled={teacherId === undefined}
+                disabled={cohort === undefined || teacherId === undefined}
                 onClick={save}
                 size="sm"
                 type="button"
