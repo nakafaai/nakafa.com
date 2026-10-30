@@ -500,7 +500,6 @@
     "pair-hint": "Setiap jawaban berpasangan dengan satu pernyataan, dan kunci tersimpan setelah semua pernyataan punya jawaban.",
     "pair-statement": "Jawaban untuk pernyataan {number}",
     "template-table": "Tabel benar-salah",
-    "table-columns": "Kolom",
     "column-of": "Soal {number}, kolom {name}",
     "column-placeholder": "Kolom",
     "cell-of": "Kolom untuk pernyataan {name} soal {number}",

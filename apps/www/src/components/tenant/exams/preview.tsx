@@ -38,6 +38,12 @@ import {
   PaperLine,
   PaperOption,
   PaperOptions,
+  PaperTable,
+  PaperTableHead,
+  PaperTableHeader,
+  PaperTableMark,
+  PaperTableNumber,
+  PaperTableStatement,
   QuestionPaper,
 } from "@/components/tenant/exams/sheet";
 import { tableOf } from "@/components/tenant/exams/table";
@@ -249,6 +255,51 @@ function PartSketch({
   );
 }
 
+/**
+ * A true or false table drawn without editors, as its live table draws it: the statements' heading and each
+ * column's header, then each numbered statement with an empty mark under every column.
+ */
+function TableSketch({
+  columns,
+  statements,
+}: {
+  columns: readonly { readonly id: string; readonly label: OptionLabel }[];
+  statements: readonly { readonly id: string; readonly label: OptionLabel }[];
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <PaperTable columns={columns.length}>
+      <PaperTableHead heading={t("match-statements")}>
+        {Arr.map(columns, (column) => (
+          <PaperTableHeader key={column.id}>
+            <OptionSketch label={column.label} />
+          </PaperTableHeader>
+        ))}
+      </PaperTableHead>
+      {Arr.map(statements, (statement, index) => (
+        <div
+          className="col-span-full grid grid-cols-subgrid"
+          key={statement.id}
+        >
+          <PaperTableNumber number={index + 1} />
+          <PaperTableStatement>
+            <OptionSketch label={statement.label} />
+          </PaperTableStatement>
+          {Arr.map(columns, (column) => (
+            <PaperTableMark key={column.id}>
+              <span
+                aria-hidden
+                className="size-4 rounded-full border border-input bg-background shadow-xs"
+              />
+            </PaperTableMark>
+          ))}
+        </div>
+      ))}
+    </PaperTable>
+  );
+}
+
 /** The number that names a statement by its place: 1 for the first, 2 for the second, and so on. */
 const statementNumber = (index: number) => String(index + 1);
 
@@ -316,22 +367,7 @@ export function PaperSketch({
       {Option.match(tableOf(question.answers), {
         onNone: () => null,
         onSome: (table) => (
-          <div className="grid min-w-0 gap-6 md:grid-cols-2">
-            <PartSketch
-              adds
-              heading={t("match-statements")}
-              letterOf={statementNumber}
-              parts={table.statements}
-              withControls={withControls}
-            />
-            <PartSketch
-              adds={false}
-              heading={t("table-columns")}
-              letterOf={optionLetter}
-              parts={table.columns}
-              withControls={withControls}
-            />
-          </div>
+          <TableSketch columns={table.columns} statements={table.statements} />
         ),
       })}
       {Option.isSome(entryOf(question.answers)) ? <PaperLine /> : null}
