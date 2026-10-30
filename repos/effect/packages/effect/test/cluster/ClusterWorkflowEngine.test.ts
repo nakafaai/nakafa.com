@@ -25,6 +25,7 @@ import {
   EntityAddress,
   EntityId,
   EntityType,
+  type Message,
   MessageStorage,
   RunnerHealth,
   Runners,
@@ -44,6 +45,81 @@ import {
 } from "effect/workflow/WorkflowEngine"
 
 describe.concurrent("ClusterWorkflowEngine", () => {
+  for (const complete of [true, false]) {
+    it.effect(`releases all workflow scopes after multiple suspensions on ${complete ? "completion" : "teardown"}`, () =>
+      Effect.gen(function*() {
+        const gates = [
+          DurableDeferred.make("WorkflowScopeCleanup/First"),
+          DurableDeferred.make("WorkflowScopeCleanup/Second")
+        ]
+        const workflow = Workflow.make("WorkflowScopeCleanup", {
+          payload: {},
+          idempotencyKey: () => "one"
+        })
+        const acquired: Array<number> = []
+        const released: Array<number> = []
+        const finalized: Array<number> = []
+        const layer = workflow.toLayer(() =>
+          Effect.gen(function*() {
+            const run = acquired.length + 1
+            yield* Workflow.addFinalizer(() =>
+              Effect.sync(() => {
+                finalized.push(run)
+              })
+            )
+            yield* Effect.acquireRelease(
+              Effect.sync(() => {
+                acquired.push(run)
+                return run
+              }),
+              (run) =>
+                Effect.sync(() => {
+                  released.push(run)
+                })
+            ).pipe(Workflow.provideScope)
+            for (const gate of gates) yield* DurableDeferred.await(gate)
+          })
+        ).pipe(Layer.provideMerge(makeTestWorkflowEngine()))
+
+        yield* Effect.gen(function*() {
+          const executionId = yield* workflow.execute({}, { discard: true })
+          for (const [index, gate] of gates.entries()) {
+            // The previous Suspended reply can remain visible until replay starts.
+            const sharding = yield* Sharding.Sharding
+            for (let i = 0; i < 2000 && acquired.length <= index; i++) {
+              yield* TestClock.adjust(1)
+              yield* sharding.pollStorage
+            }
+            yield* pollUntil(workflow, executionId, "Suspended")
+            // Suspension retains every attempt's resources and durable finalizers.
+            assert.deepStrictEqual(
+              { acquired, released, finalized },
+              { acquired: index === 0 ? [1] : [1, 2], released: [], finalized: [] }
+            )
+            if (!complete && index === 1) return
+            yield* DurableDeferred.succeed(gate, {
+              token: DurableDeferred.tokenFromExecutionId(gate, { workflow, executionId }),
+              value: undefined
+            })
+          }
+          assert.deepStrictEqual(
+            yield* pollUntil(workflow, executionId, "Complete"),
+            new Workflow.Complete({ exit: Exit.void })
+          )
+          assert.deepStrictEqual(
+            { acquired, released: [...released].sort(), finalized: [...finalized].sort() },
+            { acquired: [1, 2, 3], released: [1, 2, 3], finalized: [1, 2, 3] }
+          )
+        }).pipe(Effect.provide(layer))
+        if (!complete) {
+          assert.deepStrictEqual(
+            { acquired, released: [...released].sort(), finalized },
+            { acquired: [1, 2], released: [1, 2], finalized: [] }
+          )
+        }
+      }))
+  }
+
   it.effect("wakes an activity deferred completed before a parallel sibling lets the workflow suspend", () =>
     Effect.gen(function*() {
       const gate = DurableDeferred.make("EarlyActivityWake/Gate", { success: Schema.String })
@@ -143,6 +219,174 @@ describe.concurrent("ClusterWorkflowEngine", () => {
         )
         assert.deepStrictEqual(yield* activityReply(storage, requestId), Exit.succeed(new Workflow.Suspended({})))
       }).pipe(Effect.provide(layer()))
+    }))
+
+  it.effect("shuts down without waiting for a queued activity and replays it after restart", () =>
+    Effect.gen(function*() {
+      const workflow = Workflow.make("QueuedActivityShutdown", {
+        payload: {},
+        idempotencyKey: () => "one"
+      })
+      let executions = 0
+      const step = Activity.make({
+        name: "step",
+        execute: Effect.sync(() => {
+          executions++
+        })
+      })
+      const storage = yield* makeSharedStorage
+      const queued = yield* Latch.make()
+      const isActivity = (message: Message.Incoming<any>) =>
+        message.envelope._tag === "Request" && message.envelope.tag === "activity"
+      // The activity request is persisted, but the runner never reads it back.
+      const queuedStorage = Layer.succeed(MessageStorage.MessageStorage, {
+        ...storage,
+        saveRequest: (message) =>
+          Effect.tap(storage.saveRequest(message), () => message.rpc._tag === "activity" ? queued.open : Effect.void),
+        unprocessedMessages: (shardIds, options) =>
+          Effect.map(
+            storage.unprocessedMessages(shardIds, options),
+            (messages) => messages.filter((m) => !isActivity(m))
+          ),
+        unprocessedMessagesById: (ids) =>
+          Effect.map(storage.unprocessedMessagesById(ids), (messages) => messages.filter((m) => !isActivity(m)))
+      })
+      const layer = (storageLayer: Layer.Layer<MessageStorage.MessageStorage>) =>
+        workflow.toLayer(() => step).pipe(
+          Layer.provideMerge(makeTestWorkflowEngine({
+            storageLayer,
+            config: { entityTerminationTimeout: Duration.minutes(1) }
+          }))
+        )
+
+      const scope = yield* Scope.make()
+      const context = yield* Layer.buildWithScope(layer(queuedStorage), scope)
+      const executionId = yield* workflow.execute({}, { discard: true }).pipe(Effect.provide(context))
+      yield* queued.await
+      const shutdown = yield* Effect.forkChild(Scope.close(scope, Exit.void), { startImmediately: true })
+      for (let i = 0; i < 100 && shutdown.pollUnsafe() === undefined; i++) yield* TestClock.adjust(10)
+      const closedBeforeTimeout = shutdown.pollUnsafe() !== undefined
+      // Let a stalled shutdown finish, so the runner is released before asserting.
+      yield* TestClock.adjust(Duration.minutes(1))
+      yield* Fiber.join(shutdown)
+      assert.isTrue(closedBeforeTimeout, "shutdown must not wait for entityTerminationTimeout")
+      assert.strictEqual(executions, 0)
+
+      yield* Effect.gen(function*() {
+        assert.deepStrictEqual(
+          yield* pollUntil(workflow, executionId, "Complete"),
+          new Workflow.Complete({ exit: Exit.void })
+        )
+        assert.strictEqual(executions, 1)
+      }).pipe(Effect.provide(layer(Layer.succeed(MessageStorage.MessageStorage, storage))))
+    }))
+
+  it.effect("shutdown waits for a running activity before finalizing its workflow", () =>
+    Effect.gen(function*() {
+      const workflow = Workflow.make("RunningActivityShutdown", {
+        payload: {},
+        idempotencyKey: () => "one"
+      })
+      const events: Array<string> = []
+      const started = yield* Latch.make()
+      const release = yield* Latch.make()
+      const step = Activity.make({
+        name: "step",
+        execute: Effect.gen(function*() {
+          events.push("activity:start")
+          yield* started.open
+          yield* release.await
+          events.push("activity:end")
+        })
+      })
+      const layer = workflow.toLayer(() =>
+        Effect.gen(function*() {
+          yield* Effect.addFinalizer(() =>
+            Effect.sync(() => {
+              events.push("finalized")
+            })
+          ).pipe(Workflow.provideScope)
+          yield* step
+        })
+      ).pipe(
+        Layer.provideMerge(makeTestWorkflowEngine({ config: { entityTerminationTimeout: Duration.minutes(1) } }))
+      )
+
+      const scope = yield* Scope.make()
+      const context = yield* Layer.buildWithScope(layer, scope)
+      yield* workflow.execute({}, { discard: true }).pipe(Effect.provide(context))
+      yield* advanceUntil(() => started.isOpen(), "activity must start")
+      const shutdown = yield* Effect.forkChild(Scope.close(scope, Exit.void), { startImmediately: true })
+      for (let i = 0; i < 100; i++) yield* TestClock.adjust(10)
+      const pendingWhileRunning = shutdown.pollUnsafe() === undefined
+      yield* release.open
+      for (let i = 0; i < 100 && shutdown.pollUnsafe() === undefined; i++) yield* TestClock.adjust(10)
+      const closedBeforeTimeout = shutdown.pollUnsafe() !== undefined
+      // Let a stalled shutdown finish, so the runner is released before asserting.
+      yield* TestClock.adjust(Duration.minutes(1))
+      yield* Fiber.join(shutdown)
+      assert.isTrue(pendingWhileRunning, "shutdown must wait for the running activity")
+      assert.isTrue(closedBeforeTimeout, "shutdown must finish once the activity completes")
+      assert.deepStrictEqual(events, ["activity:start", "activity:end", "finalized"])
+    }))
+
+  it.effect("replays a raced activity that starts during shutdown on the next owner", () =>
+    Effect.gen(function*() {
+      const workflow = Workflow.make("ShutdownRacedActivity", {
+        payload: {},
+        success: Schema.String,
+        idempotencyKey: () => "one"
+      })
+      const gate = DurableDeferred.make("ShutdownRacedActivity/Gate")
+      let executions = 0
+      const step = Activity.make({
+        name: "step",
+        success: Schema.String,
+        execute: Effect.sync(() => {
+          executions++
+          return "done"
+        })
+      })
+      const storage = yield* makeSharedStorage
+      const held = yield* Latch.make()
+      const layer = (holdUntilShutdown: boolean) =>
+        workflow.toLayer(() =>
+          Effect.gen(function*() {
+            if (holdUntilShutdown) {
+              // Start the activity only once the runner is shutting down.
+              const sharding = yield* Sharding.Sharding
+              yield* held.open
+              while (!(yield* sharding.isShutdown)) yield* Effect.yieldNow
+            }
+            return yield* DurableDeferred.raceAll({
+              name: "steer",
+              success: Schema.String,
+              error: Schema.Never,
+              effects: [step, Effect.as(DurableDeferred.await(gate), "steered")]
+            })
+          })
+        ).pipe(
+          Layer.provideMerge(makeTestWorkflowEngine({
+            storageLayer: Layer.succeed(MessageStorage.MessageStorage, storage),
+            config: { entityTerminationTimeout: Duration.seconds(2) }
+          }))
+        )
+
+      const scope = yield* Scope.make()
+      const context = yield* Layer.buildWithScope(layer(true), scope)
+      const executionId = yield* workflow.execute({}, { discard: true }).pipe(Effect.provide(context))
+      yield* advanceUntil(() => held.isOpen(), "run must start")
+      const shutdown = yield* Effect.forkChild(Scope.close(scope, Exit.void), { startImmediately: true })
+      yield* advanceUntil(() => shutdown.pollUnsafe() !== undefined, "shutdown must finish", 10)
+      yield* Fiber.join(shutdown)
+
+      yield* Effect.gen(function*() {
+        assert.deepStrictEqual(
+          yield* pollUntil(workflow, executionId, "Complete"),
+          new Workflow.Complete({ exit: Exit.succeed("done") })
+        )
+        assert.strictEqual(executions, 1)
+      }).pipe(Effect.provide(layer(false)))
     }))
 
   it.effect("retries an early activity registered while its Suspended reply is still being persisted", () =>
@@ -821,12 +1065,10 @@ describe.concurrent("ClusterWorkflowEngine", () => {
         to: "bob@example.com"
       }).pipe(Effect.forkChild({ startImmediately: true }))
 
-      // resume after the clock
+      // Do not advance the sleep until its durable wake-up has been persisted.
+      yield* waitForClock(driver, "Some sleep")
       yield* TestClock.adjust("10 seconds")
-      yield* sharding.pollStorage
-      yield* TestClock.adjust(5000)
-      // The storage poll may return before the resumed run finishes unwinding.
-      yield* advanceUntil(() => flags.get("ensuring") === true, "suspended await must run ensuring")
+      yield* pollStorageUntil(() => flags.get("ensuring") === true, "suspended await must run ensuring")
 
       // --- the workflow is suspended at this point
 
@@ -892,7 +1134,7 @@ describe.concurrent("ClusterWorkflowEngine", () => {
         to: "bob@example.com"
       }).pipe(Effect.forkChild)
 
-      yield* TestClock.adjust(1)
+      yield* waitForClock(driver, "Some sleep")
       yield* TestClock.adjust("10 seconds")
       yield* sharding.pollStorage
       yield* TestClock.adjust(1)
@@ -901,7 +1143,7 @@ describe.concurrent("ClusterWorkflowEngine", () => {
       const executionId = envelope.address.entityId
       // Interrupt after the clock-backed activity completes, so the workflow is
       // suspended on EmailTrigger rather than racing the clock's completion.
-      yield* advanceUntil(
+      yield* pollStorageUntil(
         () =>
           Array.from(driver.requests.values()).some(({ envelope, replies }) =>
             envelope._tag === "Request" && envelope.tag === "activity" &&
@@ -912,8 +1154,7 @@ describe.concurrent("ClusterWorkflowEngine", () => {
               (reply.exit.value as Workflow.ResultEncoded<any, any>)._tag === "Complete"
             )
           ),
-        "sleep activity must complete before interruption",
-        10
+        "sleep activity must complete before interruption"
       )
       yield* pollUntil(EmailWorkflow, executionId, "Suspended")
       yield* EmailWorkflow.interrupt(executionId)
@@ -999,9 +1240,16 @@ describe.concurrent("ClusterWorkflowEngine", () => {
 
   it.effect("Activity.raceAll ignores a failure when another activity can succeed", () =>
     Effect.gen(function*() {
+      const sharding = yield* Sharding.Sharding
       const fiber = yield* FailureRaceWorkflow.execute({
         id: "failure-race"
       }).pipe(Effect.forkChild({ startImmediately: true }))
+
+      for (let i = 0; i < 2000 && fiber.pollUnsafe() === undefined; i++) {
+        yield* sharding.pollStorage
+        yield* TestClock.adjust("1 second")
+      }
+      assert(fiber.pollUnsafe() !== undefined, "failure race must complete when another activity can succeed")
 
       yield* pollUntil(FailureRaceWorkflow, yield* FailureRaceWorkflow.executionId({ id: "failure-race" }), "Complete")
 
@@ -1012,16 +1260,19 @@ describe.concurrent("ClusterWorkflowEngine", () => {
     Effect.gen(function*() {
       const flags = yield* Flags
       const sharding = yield* Sharding.Sharding
+      const driver = yield* MessageStorage.MemoryDriver
       yield* TestClock.adjust(1)
 
       const fiber = yield* DurableRaceWorkflow.execute({
         id: "race-2"
       }).pipe(Effect.forkChild)
 
-      yield* TestClock.adjust(1)
+      yield* waitForClock(driver, "Activity3")
       yield* TestClock.adjust(1000)
-      yield* sharding.pollStorage
-      yield* TestClock.adjust(5000)
+      yield* pollStorageUntil(
+        () => typeof flags.get("durable-race-token") === "string",
+        "durable race must reach its continuation"
+      )
 
       const token = flags.get("durable-race-token")
       assert(typeof token === "string")
@@ -1060,13 +1311,16 @@ describe.concurrent("ClusterWorkflowEngine", () => {
     "DurableDeferred.raceAll lets an active branch win while the deferred stays pending",
     () =>
       Effect.gen(function*() {
+        const sharding = yield* Sharding.Sharding
         const fiber = yield* MixedRaceWorkflow.execute({ id: "mixed-race-activity" }).pipe(
           Effect.forkChild({ startImmediately: true })
         )
 
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 2000 && fiber.pollUnsafe() === undefined; i++) {
+          yield* sharding.pollStorage
           yield* TestClock.adjust("1 second")
         }
+        assert(fiber.pollUnsafe() !== undefined, "active race branch must complete while the deferred stays pending")
 
         expect(yield* Fiber.join(fiber)).toEqual("activity")
       }).pipe(Effect.provide(TestWorkflowLayer)),
@@ -1262,6 +1516,9 @@ describe.concurrent("ClusterWorkflowEngine", () => {
       // The run parks on the second gate after reading the first completion
       // directly or replaying once while the completion is committed.
       assert([1, 2].includes(flags.get("two-step-branch-runs") as number))
+      // A completion stored before the await is read directly, so let the run
+      // park on the second gate first.
+      yield* TestClock.adjust("1 second")
 
       const tokenB = DurableDeferred.tokenFromExecutionId(TwoStepGateB, {
         workflow: TwoStepWorkflow,
@@ -1412,6 +1669,63 @@ describe.concurrent("ClusterWorkflowEngine", () => {
       }).pipe(Effect.provide(TestWorkflowLayer)),
     20_000
   )
+
+  it.effect("DurableDeferred.raceAll replays a persisted result its owner has not processed yet", () =>
+    Effect.gen(function*() {
+      const workflow = Workflow.make("UnprocessedRaceResult", {
+        payload: {},
+        success: Schema.String,
+        idempotencyKey: () => "one"
+      })
+      const idle = DurableDeferred.make("UnprocessedRaceResult/Idle", { success: Schema.String })
+      const text = DurableDeferred.make("UnprocessedRaceResult/Text", { success: Schema.String })
+      const result = DurableDeferred.make("raceAll/pick", { success: Schema.String })
+      const storage = yield* makeSharedStorage
+      // The race result is durable, but the runner's mailbox poll has not read it yet.
+      const isResult = (message: Message.Incoming<any>) =>
+        message.envelope._tag === "Request" && message.envelope.tag === "deferred" &&
+        (message.envelope.payload as { name: string }).name === result.name
+      const layer = workflow.toLayer(() =>
+        DurableDeferred.raceAll({
+          name: "pick",
+          success: Schema.String,
+          error: Schema.Never,
+          effects: [DurableDeferred.await(idle), DurableDeferred.await(text)]
+        })
+      ).pipe(Layer.provideMerge(makeTestWorkflowEngine({
+        storageLayer: Layer.succeed(MessageStorage.MessageStorage, {
+          ...storage,
+          unprocessedMessages: (shardIds, options) =>
+            Effect.map(
+              storage.unprocessedMessages(shardIds, options),
+              (messages) => messages.filter((m) => !isResult(m))
+            )
+        })
+      })))
+      const executionId = yield* workflow.executionId({})
+
+      // The previous owner records `idle` as the winner, then stops.
+      yield* Effect.gen(function*() {
+        yield* workflow.execute({}, { discard: true })
+        yield* pollUntil(workflow, executionId, "Suspended")
+        yield* DurableDeferred.succeed(result, {
+          token: DurableDeferred.tokenFromExecutionId(result, { workflow, executionId }),
+          value: "idle"
+        })
+      }).pipe(Effect.provide(layer))
+
+      // A later completion wakes the new owner, whose replay must keep `idle`.
+      yield* Effect.gen(function*() {
+        yield* DurableDeferred.succeed(text, {
+          token: DurableDeferred.tokenFromExecutionId(text, { workflow, executionId }),
+          value: "text"
+        })
+        assert.deepStrictEqual(
+          yield* pollUntil(workflow, executionId, "Complete"),
+          new Workflow.Complete({ exit: Exit.succeed("idle") })
+        )
+      }).pipe(Effect.provide(layer))
+    }))
 
   it.effect("nested workflows", () =>
     Effect.gen(function*() {
@@ -1693,28 +2007,37 @@ describe.concurrent("ClusterWorkflowEngine", () => {
       }))
       const ChildLayer = Child.toLayer(() => DurableDeferred.await(ChildGate))
       yield* Effect.gen(function*() {
-        const sharding = yield* Sharding.Sharding
-        const settle = Effect.gen(function*() {
-          for (let i = 0; i < 20; i++) {
-            yield* TestClock.adjust(1)
-            yield* sharding.pollStorage
-          }
-        })
+        const driver = yield* MessageStorage.MemoryDriver
+        const parentReply = (tag: "run" | "resume") =>
+          Array.from(driver.requests.values()).find(({ envelope }) =>
+            envelope._tag === "Request" && envelope.tag === tag &&
+            envelope.address.entityType === `Workflow/${Parent._tag}`
+          )?.replies.find((reply) => reply._tag === "WithExit")
         yield* TestClock.adjust(1)
         const executionId = yield* Parent.execute({}, { discard: true })
         const childId = yield* Child.executionId({})
         yield* pollUntil(Parent, executionId, "Suspended")
+        const suspended = parentReply("run")
+        assert.isDefined(suspended)
 
         yield* DurableDeferred.succeed(ChildGate, {
           token: DurableDeferred.tokenFromExecutionId(ChildGate, { workflow: Child, executionId: childId }),
           value: void 0
         })
         yield* pollUntil(Child, childId, "Complete")
-        yield* settle
-        assert.strictEqual(failures, 1, "only an explicit resume may replay the failed activity")
+        // The completed child wakes the parent through its resume RPC. Once
+        // that wake has replied, a reset of the failure suspension would
+        // already have replaced the run reply.
+        yield* pollStorageUntil(() => parentReply("resume") !== undefined, "the child must wake its parent")
+        assert.strictEqual(parentReply("run")?.id, suspended.id, "only an explicit resume may reset the suspension")
+        assert.strictEqual(failures, 1)
 
+        // Resume resets the suspended reply, so the next Suspended reply
+        // belongs to the replay. Wait for it rather than a fixed number of
+        // steps: the replay derives the child execution id with
+        // crypto.subtle, which resolves outside of the TestClock.
         yield* Parent.resume(executionId)
-        yield* settle
+        yield* pollUntil(Parent, executionId, "Suspended")
         assert.strictEqual(failures, 2)
       }).pipe(Effect.provide(Layer.mergeAll(ParentLayer, ChildLayer).pipe(Layer.provideMerge(TestWorkflowLayer))))
     }))
@@ -1773,6 +2096,74 @@ describe.concurrent("ClusterWorkflowEngine", () => {
       }).pipe(Effect.provide(Layer.mergeAll(ParentLayer, ChildLayer).pipe(Layer.provideMerge(TestWorkflowLayer))))
     }))
 
+  it.effect("reacquires shards after a forced release abandons a parent waking from its child", () =>
+    Effect.gen(function*() {
+      let storageDown = false
+      let probeRuns = 0
+      const Child = Workflow.make("AbandonedWakeChild", { payload: {}, idempotencyKey: () => "child" })
+      const Parent = Workflow.make("AbandonedWakeParent", { payload: {}, idempotencyKey: () => "parent" })
+      const Probe = Workflow.make("AbandonedWakeProbe", { payload: {}, idempotencyKey: () => "probe" })
+      const runnerStorage = Layer.effect(
+        RunnerStorage.RunnerStorage,
+        Effect.map(RunnerStorage.makeMemory, (storage) => ({
+          ...storage,
+          refresh: (address, shardIds) =>
+            storageDown
+              ? Effect.fail(new ClusterError.PersistenceError({ cause: "runner storage outage" }))
+              : storage.refresh(address, shardIds)
+        }))
+      )
+      const layer = Layer.mergeAll(
+        Child.toLayer(() => Effect.void),
+        // The child completes while the parent's run is still active, so its
+        // wake waits for that run's reply until the forced release retires it.
+        Parent.toLayer(() => Effect.andThen(Child.execute({}, { discard: true }), Effect.never)),
+        Probe.toLayer(() =>
+          Effect.sync(() => {
+            probeRuns++
+          })
+        )
+      ).pipe(Layer.provideMerge(makeTestWorkflowEngine({
+        shardingLayer: Sharding.layer.pipe(Layer.provide(runnerStorage)),
+        config: {
+          shardsPerGroup: 1,
+          shardLockRefreshInterval: 500,
+          shardLockExpiration: 3000,
+          entityTerminationTimeout: 500,
+          entityMessagePollInterval: 20,
+          entityReplyPollInterval: 20,
+          refreshAssignmentsInterval: 100
+        }
+      })))
+
+      // Keep a regressed teardown bounded, so the assertions are reported.
+      const scope = yield* Effect.acquireRelease(Scope.make(), (scope) =>
+        Effect.gen(function*() {
+          const closing = yield* Effect.forkDetach(Scope.close(scope, Exit.void))
+          yield* advanceUntil(() => closing.pollUnsafe() !== undefined, "the runner must shut down", 100, 20)
+        }))
+      const context = yield* Layer.buildWithScope(layer, scope)
+      yield* Effect.gen(function*() {
+        const sharding = yield* Sharding.Sharding
+        const shardId = sharding.getShardId(EntityId.make("parent"), "default")
+        yield* Parent.execute({}, { discard: true })
+        yield* pollUntil(Child, yield* Child.executionId({}), "Complete")
+        yield* TestClock.adjust(1500)
+        assert.isTrue(sharding.hasShardId(shardId))
+
+        storageDown = true
+        yield* advanceUntil(() => !sharding.hasShardId(shardId), "the outage must force the shard release", 100, 14)
+        storageDown = false
+
+        // Release must finish before the shard can be reacquired.
+        yield* TestClock.adjust(4000)
+        assert.isTrue(sharding.hasShardId(shardId), "the shard must be reacquired after recovery")
+        yield* Probe.execute({}, { discard: true })
+        yield* TestClock.adjust(1000)
+        assert.strictEqual(probeRuns, 1, "an independent workflow must run after recovery")
+      }).pipe(Effect.provide(context))
+    }).pipe(Effect.scoped))
+
   it.effect("interrupts a failure-suspended workflow", () =>
     Effect.gen(function*() {
       let attempts = 0
@@ -1800,6 +2191,105 @@ describe.concurrent("ClusterWorkflowEngine", () => {
       }).pipe(Effect.provide(FailingLayer.pipe(Layer.provideMerge(TestWorkflowLayer))))
     }))
 
+  it.effect("interrupts a replay that is still persisting its Suspended reply", () =>
+    Effect.gen(function*() {
+      const First = DurableDeferred.make("SavingSuspendedFirst")
+      const Second = DurableDeferred.make("SavingSuspendedSecond")
+      const workflow = Workflow.make("SavingSuspendedInterrupt", {
+        payload: {},
+        idempotencyKey: () => "one"
+      })
+      const savingReply = yield* Latch.make()
+      const releaseReply = yield* Latch.make()
+      let suspendedReplies = 0
+      const storage = yield* makeSharedStorage
+      // Hold the replay's Suspended reply, after the first run's reply is saved.
+      const storageLayer = Layer.succeed(MessageStorage.MessageStorage, {
+        ...storage,
+        saveReply: (reply) =>
+          reply.rpc._tag === "run" && reply.reply._tag === "WithExit" && reply.reply.exit._tag === "Success" &&
+            Schema.is(Workflow.Suspended)(reply.reply.exit.value) && ++suspendedReplies === 2
+            ? savingReply.open.pipe(
+              Effect.andThen(releaseReply.await),
+              Effect.andThen(storage.saveReply(reply))
+            )
+            : storage.saveReply(reply)
+      })
+      yield* Effect.gen(function*() {
+        const executionId = yield* workflow.execute({}, { discard: true })
+        yield* pollUntil(workflow, executionId, "Suspended")
+        yield* DurableDeferred.succeed(First, {
+          token: DurableDeferred.tokenFromExecutionId(First, { workflow, executionId }),
+          value: undefined
+        })
+        yield* advanceUntil(() => savingReply.isOpen(), "the replay must suspend on the second deferred")
+        yield* workflow.interrupt(executionId)
+        // Let the interrupt signal be handled before the Suspended reply is saved.
+        for (let i = 0; i < 10; i++) yield* TestClock.adjust(1)
+        yield* releaseReply.open
+        const result = yield* pollUntil(workflow, executionId, "Complete")
+        assert(result._tag === "Complete" && Exit.hasInterrupts(result.exit), "the interrupt must not be lost")
+      }).pipe(Effect.provide(
+        workflow.toLayer(() => DurableDeferred.await(First).pipe(Effect.andThen(DurableDeferred.await(Second)))).pipe(
+          Layer.provideMerge(makeTestWorkflowEngine({ storageLayer }))
+        )
+      ))
+    }))
+
+  it.effect("interrupts a failure-suspending run while an activity wake waits for its reply", () =>
+    Effect.gen(function*() {
+      const Wake = DurableDeferred.make("FailureSavingWake")
+      const workflow = Workflow.make("FailureSavingInterrupt", {
+        payload: {},
+        idempotencyKey: () => "one"
+      }).annotate(Workflow.SuspendOnFailure, true)
+      const savingReply = yield* Latch.make()
+      const releaseReply = yield* Latch.make()
+      const awaitingReply = yield* Latch.make()
+      const storage = yield* makeSharedStorage
+      // Hold the failed Suspended reply, and observe a wake waiting for it.
+      const storageLayer = Layer.succeed(MessageStorage.MessageStorage, {
+        ...storage,
+        saveReply: (reply) =>
+          reply.rpc._tag === "run" && reply.reply._tag === "WithExit" && reply.reply.exit._tag === "Success" &&
+            Schema.is(Workflow.Suspended)(reply.reply.exit.value) && reply.reply.exit.value.failed === true
+            ? savingReply.open.pipe(
+              Effect.andThen(releaseReply.await),
+              Effect.andThen(storage.saveReply(reply))
+            )
+            : storage.saveReply(reply),
+        registerReplyHandler: (message) =>
+          Effect.suspend(() =>
+            savingReply.isOpen() && message.envelope.tag === "run"
+              ? awaitingReply.open.pipe(Effect.andThen(storage.registerReplyHandler(message)))
+              : storage.registerReplyHandler(message)
+          )
+      })
+      yield* Effect.gen(function*() {
+        const executionId = yield* workflow.execute({}, { discard: true })
+        yield* pollStorageUntil(() => savingReply.isOpen(), "the run must suspend on its failure")
+        // The parked activity's wake holds the resume gate while it waits for the reply.
+        yield* DurableDeferred.succeed(Wake, {
+          token: DurableDeferred.tokenFromExecutionId(Wake, { workflow, executionId }),
+          value: undefined
+        })
+        yield* advanceUntil(() => awaitingReply.isOpen(), "the activity wake must wait for the run reply")
+        yield* workflow.interrupt(executionId)
+        // Let the interrupt signal be handled before the Suspended reply is saved.
+        for (let i = 0; i < 10; i++) yield* TestClock.adjust(1)
+        yield* releaseReply.open
+        const result = yield* pollUntil(workflow, executionId, "Complete")
+        assert(result._tag === "Complete" && Exit.hasInterrupts(result.exit), "the interrupt must not be lost")
+      }).pipe(Effect.provide(
+        workflow.toLayer(() =>
+          Effect.all([
+            Activity.make({ name: "await-wake", execute: DurableDeferred.await(Wake) }),
+            Activity.make({ name: "fail", execute: Effect.die("boom") })
+          ], { concurrency: "unbounded", discard: true })
+        ).pipe(Layer.provideMerge(makeTestWorkflowEngine({ storageLayer })))
+      ))
+    }))
+
   it.effect("interrupts a workflow parked inside an activity", () =>
     Effect.gen(function*() {
       const Gate = DurableDeferred.make("ActivityParkedGate")
@@ -1822,6 +2312,44 @@ describe.concurrent("ClusterWorkflowEngine", () => {
         const result = yield* pollUntil(Parent, executionId, "Complete")
         assert(result._tag === "Complete" && Exit.hasInterrupts(result.exit))
       }).pipe(Effect.provide(Layer.mergeAll(ParentLayer, ChildLayer).pipe(Layer.provideMerge(TestWorkflowLayer))))
+    }))
+
+  it.effect("interruptUnsafe during a later activity closes the superseded run and compensates once", () =>
+    Effect.gen(function*() {
+      const workflow = Workflow.make("UnsafeInterruptCompensateOnce", {
+        payload: {},
+        idempotencyKey: () => "one"
+      })
+      const started = yield* Latch.make()
+      const release = yield* Latch.make()
+      const compensations: Array<Cause.Cause<unknown>> = []
+      const finalizers: Array<Exit.Exit<unknown, unknown>> = []
+      let attempts = 0
+      const layer = workflow.toLayer(Effect.fnUntraced(function*() {
+        attempts++
+        yield* Workflow.addFinalizer((exit) => Effect.sync(() => finalizers.push(exit)))
+        yield* Activity.make({ name: "first", execute: Effect.void }).pipe(
+          workflow.withCompensation((_, cause) => Effect.sync(() => compensations.push(cause)))
+        )
+        yield* Activity.make({ name: "second", execute: started.open.pipe(Effect.andThen(release.await)) })
+        yield* Activity.make({ name: "third", execute: Effect.void })
+      })).pipe(Layer.provideMerge(makeTestWorkflowEngine()))
+      yield* Effect.gen(function*() {
+        const engine = yield* WorkflowEngine
+        yield* TestClock.adjust(1)
+        const executionId = yield* workflow.execute({}, { discard: true })
+        yield* started.await
+        yield* engine.interruptUnsafe(workflow, executionId)
+        yield* release.open
+        const result = yield* pollUntil(workflow, executionId, "Complete")
+        assert(result._tag === "Complete" && Exit.hasInterrupts(result.exit))
+        assert.strictEqual(compensations.length, 1, "the compensation must run only in the final run")
+        assert.isTrue(Cause.hasInterrupts(compensations[0]))
+        // Every attempt's scope is closed; superseded attempts observe success.
+        assert.strictEqual(finalizers.length, attempts, "every run scope must be closed")
+        assert.strictEqual(finalizers.filter(Exit.hasInterrupts).length, 1, "only the final run observes the interrupt")
+        assert.strictEqual(finalizers.filter(Exit.isSuccess).length, attempts - 1)
+      }).pipe(Effect.provide(layer))
     }))
 
   it.effect("applies a persisted interrupt when a fresh owner replays a failure-suspended workflow", () =>
@@ -2435,29 +2963,28 @@ const unansweredActivityStorage = (storage: MessageStorage.MessageStorage["Servi
     saveReply: (reply) => reply.rpc._tag === "activity" ? Effect.never : storage.saveReply(reply)
   })
 
-const sendUnregisteredActivity = (workflowName: string, executionId: string) =>
-  Effect.gen(function*() {
-    const entity = Entity.make(`Workflow/${workflowName}`, [RecoveryActivityRpc])
-    const client = yield* entity.client
-    yield* client(executionId).activity({ name: "loser", attempt: 1, withTransaction: false }, { discard: true })
-    const sharding = yield* Sharding.Sharding
-    const storage = yield* MessageStorage.MessageStorage
-    const entityId = EntityId.make(executionId)
-    const requestId = yield* storage.requestIdForPrimaryKey({
-      address: EntityAddress.make({
-        entityType: EntityType.make(entity.type),
-        entityId,
-        shardId: sharding.getShardId(entityId, "default")
-      }),
-      tag: "activity",
-      id: "loser/1"
-    })
-    assert(Option.isSome(requestId))
-    return requestId.value
+const sendUnregisteredActivity = Effect.fnUntraced(function*(workflowName: string, executionId: string) {
+  const entity = Entity.make(`Workflow/${workflowName}`, [RecoveryActivityRpc])
+  const client = yield* entity.client
+  yield* client(executionId).activity({ name: "loser", attempt: 1, withTransaction: false }, { discard: true })
+  const sharding = yield* Sharding.Sharding
+  const storage = yield* MessageStorage.MessageStorage
+  const entityId = EntityId.make(executionId)
+  const requestId = yield* storage.requestIdForPrimaryKey({
+    address: EntityAddress.make({
+      entityType: EntityType.make(entity.type),
+      entityId,
+      shardId: sharding.getShardId(entityId, "default")
+    }),
+    tag: "activity",
+    id: "loser/1"
   })
+  assert(Option.isSome(requestId))
+  return requestId.value
+})
 
-const activityReply = (storage: MessageStorage.MessageStorage["Service"], requestId: Snowflake.Snowflake) =>
-  Effect.gen(function*() {
+const activityReply = Effect.fnUntraced(
+  function*(storage: MessageStorage.MessageStorage["Service"], requestId: Snowflake.Snowflake) {
     for (let i = 0; i < 200; i++) {
       const replies = yield* storage.repliesForUnfiltered([requestId])
       const reply = replies[replies.length - 1]
@@ -2467,7 +2994,8 @@ const activityReply = (storage: MessageStorage.MessageStorage["Service"], reques
       yield* TestClock.adjust(1)
     }
     assert.fail("unregistered activity must receive a terminal Suspended reply without waiting for registration")
-  })
+  }
+)
 
 const makeTestWorkflowEngine = <Storage = MessageStorage.MemoryDriver>(options?: {
   readonly config?: Partial<ShardingConfig.ShardingConfig["Service"]> | undefined
@@ -2500,23 +3028,22 @@ const makeTestWorkflowEngine = <Storage = MessageStorage.MemoryDriver>(options?:
     }))
   )
 
-const pollUntil = <A extends Schema.Top, E extends Schema.Top>(
+const pollUntil = Effect.fnUntraced(function*<A extends Schema.Top, E extends Schema.Top>(
   workflow: Workflow.Workflow<any, any, A, E>,
   executionId: string,
   tag: "Suspended" | "Complete"
-) =>
-  Effect.gen(function*() {
-    const sharding = yield* Sharding.Sharding
-    let result = yield* workflow.poll(executionId)
-    for (let i = 0; i < 2000 && !(Option.isSome(result) && result.value._tag === tag); i++) {
-      yield* Effect.yieldNow
-      yield* TestClock.adjust(1)
-      yield* sharding.pollStorage
-      result = yield* workflow.poll(executionId)
-    }
-    assert(Option.isSome(result) && result.value._tag === tag, `workflow must reach ${tag}`)
-    return result.value
-  })
+) {
+  const sharding = yield* Sharding.Sharding
+  let result = yield* workflow.poll(executionId)
+  for (let i = 0; i < 2000 && !(Option.isSome(result) && result.value._tag === tag); i++) {
+    yield* Effect.yieldNow
+    yield* TestClock.adjust(1)
+    yield* sharding.pollStorage
+    result = yield* workflow.poll(executionId)
+  }
+  assert(Option.isSome(result) && result.value._tag === tag, `workflow must reach ${tag}`)
+  return result.value
+})
 
 const nextStepActivity = (runs: Array<string>, label: string) =>
   Activity.make({
@@ -2534,54 +3061,72 @@ const nextStepActivity = (runs: Array<string>, label: string) =>
  * and exactly once. Deferred writes made by `body` are delayed to stand in
  * for a persistence round trip.
  */
-const expectContinuesBesideParkedSibling = (
+const expectContinuesBesideParkedSibling = Effect.fnUntraced(function*(
   name: string,
   body: Effect.Effect<string, never, WorkflowEngine | WorkflowInstance>
-) =>
-  Effect.gen(function*() {
-    const workflow = Workflow.make(name, {
-      payload: {},
-      success: Schema.String,
-      idempotencyKey: () => "one"
-    })
-    const event = DurableDeferred.make(`${name}/Event`)
-    const nextStepRuns: Array<string> = []
-    const context = yield* Layer.build(
-      workflow.toLayer(() =>
-        Effect.gen(function*() {
-          const engine = yield* WorkflowEngine
-          const delayed = Effect.provideService(body, WorkflowEngine, {
-            ...engine,
-            deferredDone: (deferred, done) => Effect.delay(engine.deferredDone(deferred, done), 10)
-          })
-          const [result] = yield* Effect.all([
-            Effect.flatMap(delayed, (value) => nextStepActivity(nextStepRuns, value)),
-            DurableDeferred.await(event)
-          ], { concurrency: "unbounded" })
-          return result
+) {
+  const workflow = Workflow.make(name, {
+    payload: {},
+    success: Schema.String,
+    idempotencyKey: () => "one"
+  })
+  const event = DurableDeferred.make(`${name}/Event`)
+  const nextStepRuns: Array<string> = []
+  const context = yield* Layer.build(
+    workflow.toLayer(() =>
+      Effect.gen(function*() {
+        const engine = yield* WorkflowEngine
+        const delayed = Effect.provideService(body, WorkflowEngine, {
+          ...engine,
+          deferredDone: (deferred, done) => Effect.delay(engine.deferredDone(deferred, done), 10)
         })
-      ).pipe(Layer.provideMerge(makeTestWorkflowEngine()))
-    )
-    yield* Effect.gen(function*() {
-      const executionId = yield* workflow.execute({}, { discard: true })
-      yield* advanceUntil(() => nextStepRuns.length > 0, "next-step must run before the event", 10, 300)
-      yield* DurableDeferred.succeed(event, {
-        token: DurableDeferred.tokenFromExecutionId(event, { workflow, executionId }),
-        value: undefined
+        const [result] = yield* Effect.all([
+          Effect.flatMap(delayed, (value) => nextStepActivity(nextStepRuns, value)),
+          DurableDeferred.await(event)
+        ], { concurrency: "unbounded" })
+        return result
       })
-      assert.deepStrictEqual(
-        yield* pollUntil(workflow, executionId, "Complete"),
-        new Workflow.Complete({ exit: Exit.succeed("timer:next") })
-      )
-      assert.deepStrictEqual(nextStepRuns, ["timer"])
-    }).pipe(Effect.provide(context))
-  })
+    ).pipe(Layer.provideMerge(makeTestWorkflowEngine()))
+  )
+  yield* Effect.gen(function*() {
+    const executionId = yield* workflow.execute({}, { discard: true })
+    yield* advanceUntil(() => nextStepRuns.length > 0, "next-step must run before the event", 10, 300)
+    yield* DurableDeferred.succeed(event, {
+      token: DurableDeferred.tokenFromExecutionId(event, { workflow, executionId }),
+      value: undefined
+    })
+    assert.deepStrictEqual(
+      yield* pollUntil(workflow, executionId, "Complete"),
+      new Workflow.Complete({ exit: Exit.succeed("timer:next") })
+    )
+    assert.deepStrictEqual(nextStepRuns, ["timer"])
+  }).pipe(Effect.provide(context))
+})
 
-const advanceUntil = (ready: () => boolean, message: string, step = 1, rounds = 2000) =>
-  Effect.gen(function*() {
-    for (let i = 0; i < rounds && !ready(); i++) yield* TestClock.adjust(step)
-    assert(ready(), message)
-  })
+const advanceUntil = Effect.fnUntraced(function*(ready: () => boolean, message: string, step = 1, rounds = 2000) {
+  for (let i = 0; i < rounds && !ready(); i++) yield* TestClock.adjust(step)
+  assert(ready(), message)
+})
+
+// pollStorage signals the storage loop; it does not await processing.
+const pollStorageUntil = Effect.fnUntraced(function*(ready: () => boolean, message: string) {
+  const sharding = yield* Sharding.Sharding
+  for (let i = 0; i < 2000 && !ready(); i++) {
+    yield* sharding.pollStorage
+    yield* TestClock.adjust(1)
+  }
+  assert(ready(), message)
+})
+
+const waitForClock = (driver: MessageStorage.MemoryDriver["Service"], name: string) =>
+  pollStorageUntil(
+    () =>
+      Array.from(driver.requests.values()).some(({ envelope }) =>
+        envelope._tag === "Request" && envelope.address.entityType === "Workflow/-/DurableClock" &&
+        (envelope.payload as { name: string }).name === name
+      ),
+    `durable clock ${name} must be persisted before advancing time`
+  )
 
 const TestWorkflowEngine = makeTestWorkflowEngine()
 

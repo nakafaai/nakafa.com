@@ -154,7 +154,7 @@ export class CauseImpl<E> implements Cause.Cause<E> {
   toJSON(): unknown {
     return {
       _id: "Cause",
-      failures: this.reasons.map((f) => f.toJSON())
+      reasons: this.reasons.map((f) => f.toJSON())
     }
   }
   toString() {
@@ -216,6 +216,8 @@ export abstract class ReasonBase<Tag extends string> implements Cause.Cause.Reas
       if (options?.overwrite !== true && newAnnotations.has(key)) return
       newAnnotations.set(key, value)
     })
+    // Keep the reason when nothing was added, so interrupts still match by identity.
+    if (options?.overwrite !== true && newAnnotations.size === this.annotations.size) return this
     const self = Object.assign(Object.create(Object.getPrototypeOf(this)), this)
     self.annotations = newAnnotations
     return self
