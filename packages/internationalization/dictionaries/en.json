@@ -1306,6 +1306,7 @@
     "short-description": "Free lessons for K-12 through university.",
     "very-short-description": "Free learning materials.",
     "keywords": "free lessons, math lessons, physics lessons, chemistry lessons, biology lessons, computer science lessons, AI lessons, data science lessons, practice questions, worked solutions, exam prep, online try out, K-12 materials, university materials, open education, Nakafa",
+    "knows-about": "Mathematics, Physics, Chemistry, Biology, Computer Science, Artificial Intelligence, Data Science, Exam Preparation, K-12 Education, Higher Education",
     "classification": "Education"
   },
   "Common": {

@@ -1306,6 +1306,7 @@
     "short-description": "Kostenlose Lerninhalte von der Grundschule bis zur Universität.",
     "very-short-description": "Kostenlose Lernmaterialien.",
     "keywords": "kostenlose Lerninhalte, Mathematik lernen, Physik lernen, Chemie lernen, Biologie lernen, Informatik lernen, KI lernen, Data Science lernen, Übungsaufgaben, ausführliche Lösungen, Prüfungsvorbereitung, Online-Probetest, Schulmaterialien, Hochschulmaterialien, offene Bildung, Nakafa",
+    "knows-about": "Mathematik, Physik, Chemie, Biologie, Informatik, Künstliche Intelligenz, Data Science, Prüfungsvorbereitung, Schulbildung, Hochschulbildung",
     "classification": "Bildung"
   },
   "Common": {
