@@ -220,22 +220,17 @@ export function FormulaEdit({
 
   return (
     <Popover onOpenChange={openEditor} open={open}>
-      {/* A formula on its own line is the lesson's card, a block, so its trigger is a block with a button's role. */}
+      {/* A formula on its own line is the lesson's card, a block, so its button spans the line. */}
       <PopoverTrigger
-        nativeButton={!block}
         render={
-          block ? (
-            <div
-              aria-label={labels.open}
-              className="block w-full cursor-pointer text-start"
-            />
-          ) : (
-            <button
-              aria-label={labels.open}
-              className="inline cursor-pointer"
-              type="button"
-            />
-          )
+          <button
+            aria-label={labels.open}
+            className={cn(
+              "cursor-pointer",
+              block ? "block w-full text-start" : "inline"
+            )}
+            type="button"
+          />
         }
       >
         <FormulaMarkup block={block} latex={latex} />
