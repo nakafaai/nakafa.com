@@ -236,7 +236,7 @@ function CommandKey({
       onMouseDown={(event) => event.preventDefault()}
       size="sm"
       type="button"
-      variant="secondary"
+      variant="outline"
     >
       <HugeIcons icon={icon} />
     </Button>
