@@ -35,8 +35,11 @@ export function SittingField({
   readonly entry: Written;
   /** The id of the heading that names the question. */
   readonly labelledBy: string;
-  /** Keeps the text in the browser until the server confirms it. */
-  readonly onKeep: (text: string) => void;
+  /**
+   * Keeps the text in the browser until the server confirms it. A teacher's try of the paper sends nothing
+   * to a server, so it keeps nothing.
+   */
+  readonly onKeep?: (text: string) => void;
   /** Sends the text. */
   readonly onType: (text: string) => void;
   /** The text the field opens with: the kept text the server has not confirmed, else the saved text. */
@@ -59,7 +62,7 @@ export function SittingField({
 
   /** Keeps every key at once, and sends the text after a pause. */
   function write(value: string) {
-    onKeep(value);
+    onKeep?.(value);
     save(value);
   }
 
