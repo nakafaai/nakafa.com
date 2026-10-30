@@ -11,7 +11,8 @@ import { Effect, Option } from "effect";
  * weighs on a page's first JavaScript.
  *
  * In the browser every server component in the answer is settled before the
- * loader resolves (`settle.ts`), so the route that shows it commits whole.
+ * loader resolves (`settle.ts`), its math faces loaded, so the route that shows
+ * it commits whole.
  */
 export async function readStaticData<Input, Output>(
   // The server function: its address names it, it takes one input, and it
@@ -36,6 +37,6 @@ export async function readStaticData<Input, Output>(
     onNone: () => fn({ data }),
     onSome: (response) => fn({ data, fetch: () => Promise.resolve(response) }),
   });
-  await Effect.runPromise(settleServerComponents(output));
+  await Effect.runPromise(settleServerComponents(output, document.fonts));
   return output;
 }

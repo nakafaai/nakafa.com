@@ -1,9 +1,22 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
+import { Array as Arr, Effect, Fiber, Order } from "effect";
+import { TestClock } from "effect/testing";
 import { SETTLED_RENDERER, settleServerComponents } from "@/lib/static/settle";
 
 const TREE_GETTER = Symbol.for("tanstack.rsc.getTree");
 const LAZY_NODE = Symbol.for("react.lazy");
+const ELEMENT = Symbol.for("react.transitional.element");
+
+/** A browser font set whose every face loads at once. */
+function fontSet() {
+  return { load: vi.fn((_font: string) => Promise.resolve<FontFace[]>([])) };
+}
+
+/** An element as the Flight client decodes it. */
+function element(type: unknown, props: Record<string, unknown>) {
+  return { $$typeof: ELEMENT, key: null, props, type };
+}
 
 /** A lazy node as the Flight client makes it: React reads its content with `_init`. */
 function lazyNode(init: (payload: unknown) => unknown) {
@@ -24,12 +37,15 @@ describe("lib/static/settle", () => {
         const outer = lazyNode(() => ({ props: { children: [inner] } }));
         const shared = { props: { children: outer } };
 
-        yield* settleServerComponents({
-          page: {
-            body: serverComponent(() => [shared, shared]),
-            title: "A lesson",
+        yield* settleServerComponents(
+          {
+            page: {
+              body: serverComponent(() => [shared, shared]),
+              title: "A lesson",
+            },
           },
-        });
+          fontSet()
+        );
 
         expect(outer._init).toHaveBeenCalledOnce();
         expect(outer._init).toHaveBeenCalledWith("payload");
@@ -48,7 +64,8 @@ describe("lib/static/settle", () => {
         const type = lazyNode(() => component);
 
         yield* settleServerComponents(
-          serverComponent(() => ({ props: {}, type }))
+          serverComponent(() => ({ props: {}, type })),
+          fontSet()
         );
 
         expect(type._init).toHaveBeenCalledOnce();
@@ -71,7 +88,10 @@ describe("lib/static/settle", () => {
           return "arrived";
         });
 
-        yield* settleServerComponents(serverComponent(() => node));
+        yield* settleServerComponents(
+          serverComponent(() => node),
+          fontSet()
+        );
 
         expect(node._init).toHaveBeenCalledTimes(2);
         expect(arrived).toBe(true);
@@ -90,7 +110,10 @@ describe("lib/static/settle", () => {
             : new Error("The node failed");
         });
 
-        yield* settleServerComponents(serverComponent(() => node));
+        yield* settleServerComponents(
+          serverComponent(() => node),
+          fontSet()
+        );
 
         expect(node._init).toHaveBeenCalledTimes(2);
       })
@@ -104,7 +127,10 @@ describe("lib/static/settle", () => {
           throw Promise.resolve();
         });
 
-        yield* settleServerComponents(serverComponent(() => node));
+        yield* settleServerComponents(
+          serverComponent(() => node),
+          fontSet()
+        );
 
         expect(node._init).toHaveBeenCalledTimes(64);
       })
@@ -116,16 +142,110 @@ describe("lib/static/settle", () => {
       Effect.gen(function* () {
         const reader = vi.fn();
 
-        yield* settleServerComponents([
-          serverComponent(() => {
-            throw new Error("A hook can only be called inside a component");
-          }),
-          { $$typeof: LAZY_NODE, _init: "not a reader", _payload: reader },
-          "text",
-          null,
-        ]);
+        yield* settleServerComponents(
+          [
+            serverComponent(() => {
+              throw new Error("A hook can only be called inside a component");
+            }),
+            { $$typeof: LAZY_NODE, _init: "not a reader", _payload: reader },
+            "text",
+            null,
+          ],
+          fontSet()
+        );
 
         expect(reader).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "loads the math faces that the tree's formulas declare, once each, before it resolves",
+    () =>
+      Effect.gen(function* () {
+        const fonts = fontSet();
+        const lazyFormula = element(
+          lazyNode(() => MathFontPreload),
+          { fonts: ["Main-Regular", "Size1-Regular", "Script-Regular"] }
+        );
+        const span = element("span", {
+          children: [lazyFormula],
+          fonts: ["AMS-Regular"],
+        });
+
+        yield* settleServerComponents(
+          serverComponent(() => [
+            element(MathFontPreload, {
+              fonts: ["Main-Regular", "Math-Italic"],
+            }),
+            element(MathFontPreload, {}),
+            element(MathFontPreload, { fonts: "Main-Bold" }),
+            element(
+              { $$typeof: Symbol.for("react.memo"), type: () => null },
+              {}
+            ),
+            span,
+          ]),
+          fonts
+        );
+
+        expect(
+          Arr.sort(
+            Arr.map(fonts.load.mock.calls, ([font]) => font),
+            Order.String
+          )
+        ).toEqual([
+          "1em KaTeX_Main",
+          "1em KaTeX_Size1",
+          "italic 1em KaTeX_Math",
+        ]);
+      })
+  );
+
+  it.effect("resolves when a math face fails to load", () =>
+    Effect.gen(function* () {
+      const fonts = {
+        load: vi.fn((_font: string) =>
+          Promise.reject<FontFace[]>(new Error("The face failed"))
+        ),
+      };
+
+      yield* settleServerComponents(
+        element(MathFontPreload, { fonts: ["Main-Regular"] }),
+        fonts
+      );
+
+      expect(fonts.load).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect(
+    "waits three seconds at most for a math face that keeps loading",
+    () =>
+      Effect.gen(function* () {
+        let settled = false;
+        const fonts = {
+          load: vi.fn(
+            (_font: string) => new Promise<FontFace[]>(() => undefined)
+          ),
+        };
+
+        const settling = yield* Effect.forkChild(
+          settleServerComponents(
+            element(MathFontPreload, { fonts: ["Main-Regular"] }),
+            fonts
+          ).pipe(
+            Effect.tap(() =>
+              Effect.sync(() => {
+                settled = true;
+              })
+            )
+          )
+        );
+        yield* TestClock.adjust("2999 millis");
+        expect(settled).toBe(false);
+        yield* TestClock.adjust("1 milli");
+        yield* Fiber.join(settling);
+        expect(settled).toBe(true);
       })
   );
 });
