@@ -1,11 +1,15 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { DrawnInlineMath } from "@repo/design-system/components/markdown/drawn";
 import {
   type CoordinateFrame,
   createAxisGeometry,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
+import {
+  AXIS_NAMES,
+  type AxisName,
+} from "@repo/design-system/components/three/names";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import { COLORS } from "@repo/design-system/lib/color";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
@@ -46,7 +50,7 @@ function AxisLabel({
   color: string;
   from: Vector3;
   to: Vector3;
-  name: string;
+  name: AxisName;
 }) {
   const group = useRef<Group>(null);
   const label = useRef<HTMLDivElement>(null);
@@ -176,7 +180,7 @@ function AxisLabel({
         }}
       >
         <span aria-hidden="true" data-axis-label={name}>
-          <InlineMath math={name} />
+          <DrawnInlineMath html={AXIS_NAMES[name]} />
         </span>
       </SceneHtml>
     </group>
@@ -206,9 +210,9 @@ export function Axes({
     );
     return Arr.map(
       [
-        { name: "X", color: COLORS.RED, geometry: geometry.x },
-        { name: "Y", color: COLORS.GREEN, geometry: geometry.y },
-        { name: "Z", color: COLORS.BLUE, geometry: geometry.z },
+        { name: "X" as const, color: COLORS.RED, geometry: geometry.x },
+        { name: "Y" as const, color: COLORS.GREEN, geometry: geometry.y },
+        { name: "Z" as const, color: COLORS.BLUE, geometry: geometry.z },
       ],
       ({ geometry: axis, ...identity }) => ({
         ...identity,
