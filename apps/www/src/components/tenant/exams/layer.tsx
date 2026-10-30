@@ -84,7 +84,7 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
   );
   // The number the teacher types or steps to, which stands for the stored points until it is committed.
   const [draft, setDraft] = useState<Option.Option<number | null>>(
-    Option.none()
+    Option.none
   );
 
   const commit = (next: number | null) => {
