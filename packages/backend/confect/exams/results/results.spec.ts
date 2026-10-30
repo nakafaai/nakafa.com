@@ -15,7 +15,10 @@ import {
   ResultNotFound,
   SittingNotClosed,
 } from "@repo/backend/confect/exams/results/errors";
-import { GradePoints } from "@repo/backend/confect/exams/results/schema";
+import {
+  GradePoints,
+  Verdict,
+} from "@repo/backend/confect/exams/results/schema";
 import {
   NotInSitting,
   QuestionNotInExam,
@@ -23,6 +26,7 @@ import {
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -48,6 +52,7 @@ export default GroupSpec.make()
     FunctionSpec.publicPaginatedQuery({
       name: "byStudent",
       args: () => ({
+        search: Schema.optionalKey(PersonName),
         sittingId: Id("examSittings"),
         slug: TenantSlug,
         state: Schema.optionalKey(AttemptState),
@@ -61,8 +66,10 @@ export default GroupSpec.make()
       name: "byQuestion",
       args: () => ({
         questionId: Id("examQuestions"),
+        search: Schema.optionalKey(PersonName),
         sittingId: Id("examSittings"),
         slug: TenantSlug,
+        verdict: Schema.optionalKey(Verdict),
       }),
       item: () => AnswerRow,
       error: () => AccessDenied,

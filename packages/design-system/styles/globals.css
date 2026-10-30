@@ -241,6 +241,9 @@
   /* The app declares Amiri Quran's faces with block display, so Arabic text waits for the face and
    * never shows in another one. */
   --font-quran: "Amiri Quran", ui-serif, serif;
+  /* The Arabic keypad's keys: Amiri Quran with balanced metrics (the app declares the face), so a
+   * letter sits in the middle of its key. Amiri Quran follows for any key outside that face. */
+  --font-keypad: "Amiri Quran Keys", "Amiri Quran", ui-serif, serif;
   /* Geist Mono's variable exists only inside a scope that applies it. Outside
    * every scope, a monospace element falls back to the system stack. Tailwind
    * inlines --default-mono-font-family into preflight's bare code, keyboard keys
@@ -367,6 +370,42 @@
     @apply border-border outline-ring/50;
   }
 
+  /* A pointer says a press does something: every enabled control, link and
+   * clickable item shows it, a disabled one shows not-allowed, and static
+   * content keeps the arrow. Tailwind's preflight gives buttons the arrow, so
+   * the rule lives here once instead of on each component; :where keeps it
+   * weightless, so a component's own cursor class still wins. */
+  :where(
+    button,
+    a[href],
+    summary,
+    label[for],
+    input:is(
+      [type="button"],
+      [type="checkbox"],
+      [type="color"],
+      [type="file"],
+      [type="radio"],
+      [type="reset"],
+      [type="submit"]
+    ),
+    [role="button"],
+    [role="checkbox"],
+    [role="menuitem"],
+    [role="menuitemcheckbox"],
+    [role="menuitemradio"],
+    [role="option"],
+    [role="radio"],
+    [role="switch"],
+    [role="tab"]
+  ) {
+    cursor: pointer;
+
+    &:where(:disabled, [aria-disabled="true"], [data-disabled]) {
+      cursor: not-allowed;
+    }
+  }
+
   html {
     scrollbar-gutter: stable both-edges;
   }
@@ -389,6 +428,50 @@
    * with a fill recolors them with that fill's foreground. */
   mark {
     @apply bg-transparent text-primary;
+  }
+}
+
+/* The page a drawer opens over (`DrawerStage`). On a phone, while any drawer is open, the page scales
+ * back onto a black canvas, as an iPhone sheet does: the visible screen, clipped with rounded corners,
+ * shrinks towards its top. The drawer's popup records where the page was scrolled
+ * (`--drawer-stage-scroll`), since the scroll lock makes the body the scrolling box. A wide screen shows
+ * a dialog, which leaves the page as it is. The selectors hold the state, so the stage wraps the app
+ * without a React value that changes. */
+[data-slot="drawer-stage"] {
+  min-height: 100svh;
+  /* While the stage scales, it holds every fixed element inside it, such as a toast list as wide as the screen past its
+   * offset, so the page would scroll sideways for as long as the scale eases back. Clipping the width keeps the page
+   * the screen's width, and unlike hidden it makes no scroll container, so sticky headers still stick. */
+  overflow-x: clip;
+  background-color: var(--color-background);
+  transform-origin: 50% var(--drawer-stage-scroll, 0px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot="drawer-stage"] {
+    transition-timing-function: var(--ease-out);
+    transition-duration: var(--transition-duration-surface);
+    transition-property: scale, translate;
+  }
+}
+
+@media (width < 48rem) {
+  html:has([data-slot="drawer-popup"][data-open]) {
+    background-color: black;
+  }
+
+  html:has([data-slot="drawer-popup"][data-open]) body {
+    background-color: transparent;
+  }
+
+  html:has([data-slot="drawer-popup"][data-open]) [data-slot="drawer-stage"] {
+    clip-path: inset(
+      var(--drawer-stage-scroll, 0px) 0
+        calc(100% - var(--drawer-stage-scroll, 0px) - 100svh) round
+        var(--radius-xl)
+    );
+    scale: 0.94;
+    translate: 0 calc(env(safe-area-inset-top, 0px) + 0.75rem);
   }
 }
 

@@ -15,6 +15,10 @@ import {
   listItemVariants,
   listVariants,
   quoteVariants,
+  tableCellVariants,
+  tableFrameVariants,
+  tableHeadCellVariants,
+  tableRowVariants,
 } from "@repo/design-system/lib/prose";
 import type {
   BlockquoteProps,
@@ -177,7 +181,7 @@ export function MdxTable({ children, className, ...props }: TableProps) {
   return (
     <Table
       className={cn("has-[tbody]:[&_thead]:border-b", className)}
-      containerClassName="my-4 rounded-xl border"
+      containerClassName={tableFrameVariants()}
       {...props}
     >
       {filterWhitespaceNodes(children)}
@@ -185,19 +189,17 @@ export function MdxTable({ children, className, ...props }: TableProps) {
   );
 }
 
-/** Renders an MDX table header with the shared muted surface. */
+/** Renders an MDX table header; its cells carry the header's surface (`tableHeadCellVariants`). */
 export function MdxTableHeader({ children, ...props }: TableHeaderProps) {
   return (
-    <TableHeader className="bg-muted/80" {...props}>
-      {filterWhitespaceNodes(children)}
-    </TableHeader>
+    <TableHeader {...props}>{filterWhitespaceNodes(children)}</TableHeader>
   );
 }
 
-/** Renders an MDX table body with the shared muted surface. */
+/** Renders an MDX table body; the frame gives it the muted surface (`tableFrameVariants`). */
 export function MdxTableBody({ children, ...props }: TableBodyProps) {
   return (
-    <TableBody className="bg-muted/40" data-nakafa="table-body" {...props}>
+    <TableBody data-nakafa="table-body" {...props}>
       {filterWhitespaceNodes(children)}
     </TableBody>
   );
@@ -206,7 +208,7 @@ export function MdxTableBody({ children, ...props }: TableBodyProps) {
 /** Renders one MDX table row with a terminal-border exception. */
 export function MdxTableRow({ children, ...props }: TableRowProps) {
   return (
-    <TableRow className="border-b last:border-b-0" {...props}>
+    <TableRow className={tableRowVariants()} {...props}>
       {filterWhitespaceNodes(children)}
     </TableRow>
   );
@@ -215,7 +217,7 @@ export function MdxTableRow({ children, ...props }: TableRowProps) {
 /** Renders one MDX table heading cell with column separation. */
 export function MdxTableHead({ children, ...props }: TableHeadProps) {
   return (
-    <TableHead className="border-r font-medium last:border-r-0" {...props}>
+    <TableHead className={tableHeadCellVariants()} {...props}>
       {filterWhitespaceNodes(children)}
     </TableHead>
   );
@@ -224,7 +226,7 @@ export function MdxTableHead({ children, ...props }: TableHeadProps) {
 /** Renders one MDX table data cell with column separation. */
 export function MdxTableCell({ children, ...props }: TableCellProps) {
   return (
-    <TableCell className="border-r last:border-r-0" {...props}>
+    <TableCell className={tableCellVariants()} {...props}>
       {filterWhitespaceNodes(children)}
     </TableCell>
   );
