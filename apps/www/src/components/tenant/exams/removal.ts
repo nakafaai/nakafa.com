@@ -4,8 +4,7 @@ import { Array as Arr, Option } from "effect";
 
 /**
  * Takes a deleted exam out of the store while the server deletes it: out of every page of each
- * open exam list, and out of the drafts of the school home when the home is open. Convex puts it
- * back when the server refuses the deletion.
+ * open exam list. Convex puts it back when the server refuses the deletion.
  */
 export const removeExamUpdate: OptimisticUpdate<typeof exams.exams.remove> = (
   localStore,
@@ -25,19 +24,5 @@ export const removeExamUpdate: OptimisticUpdate<typeof exams.exams.remove> = (
         })
       );
     }
-  }
-  const home = localStore.getQuery(exams.exams.home, { slug: args.slug });
-  if (Option.isSome(home)) {
-    localStore.setQuery(
-      exams.exams.home,
-      { slug: args.slug },
-      Option.some({
-        ...home.value,
-        drafts: Arr.filter(
-          home.value.drafts,
-          (draft) => draft.id !== args.examId
-        ),
-      })
-    );
   }
 };

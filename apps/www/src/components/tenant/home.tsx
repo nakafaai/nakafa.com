@@ -1,128 +1,37 @@
-import { QueryResult } from "@confect/react";
-import { buttonVariants } from "@repo/design-system/lib/button";
-import { Option } from "effect";
-import { type ReactNode, useState } from "react";
-import { useTranslations } from "use-intl";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
-import {
-  CreateExam,
-  ExamDraftsProvider,
-} from "@/components/tenant/exams/dialog";
-import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import { SchoolHeader } from "@/components/tenant/header";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { HomeClock } from "@/components/tenant/home/clock";
-import {
-  homeExamsRead,
-  useStudentSittings,
-} from "@/components/tenant/home/query";
-import { createHomeReleases } from "@/components/tenant/home/release";
-import { HomeReleasesProvider } from "@/components/tenant/home/results";
+import { homeExamsRead } from "@/components/tenant/home/query";
 import { StaffHome } from "@/components/tenant/home/staff";
-import { HomeStart } from "@/components/tenant/home/start";
 import { StudentHome } from "@/components/tenant/home/student";
 import { HomeGreeting } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
-import { TargetLink } from "@/lib/routing/link";
-import { schoolSittingTarget } from "@/lib/routing/school/target";
 
 /**
- * The home of a school, a start page of what the viewer can do next: a header row with the greeting as its heading and
- * the page's one end-goal action at its end, the shortcuts to the parts of the school the viewer may open, and one
- * connected dashboard of the viewer's classes and of what the viewer must act on now. A student sees the student's
- * classes, sittings and results. A viewer who watches rooms sees the rooms that run and open soon, the results to
- * view, and the setup while it is open, and a viewer who may create exams also sees the exams they started. A member
- * with no grant, who may neither create nor watch, sees the student's view with its quiet state, because the staff
- * cells have nothing for them. Staff with a role see the staff home, which holds only the cells their actions allow,
- * since the student's sentence is not theirs. The school's context carries the viewer's access and the greeting, so the
- * action and the greeting draw with the first frame. Each home reads its rows once, and its cells take their rows from
- * that read.
+ * The home of a school: the viewer's own desk, never a report of one feature. Its header is the greeting alone, with no
+ * page action, because an action belongs beside what it acts on. Its body holds at most three sections for the
+ * viewer's role. A student sees the student's exams, classes and the school's updates. Staff see the rooms they watch
+ * now, their classes, the setup while the school is not set up, and the updates. A member with no grant, who may
+ * neither create nor watch, sees the student's home. The school's context carries the viewer's access and the
+ * greeting, so the header draws with the first frame.
  */
 export function TenantHome() {
   const tenant = useTenant();
-  const [drafts] = useState(createExamDrafts);
-  const [releases] = useState(createHomeReleases);
-  const studentView = showsStudentHome(tenant, tenant.home);
+
   return (
-    <ExamDraftsProvider drafts={drafts}>
-      <HomeReleasesProvider releases={releases}>
-        <HomeClock>
-          <HomePage action={<HomeAction studentView={studentView} />}>
-            <HomeStart />
-            {studentView ? (
-              <StudentHome />
-            ) : (
-              <ReadBoundary read={homeExamsRead(tenant.slug)}>
-                <StaffHome />
-              </ReadBoundary>
-            )}
-          </HomePage>
-        </HomeClock>
-      </HomeReleasesProvider>
-    </ExamDraftsProvider>
-  );
-}
-
-/**
- * The one action of the header row: Create exam for a viewer who may create, and Start exam or Continue for a
- * student while a sitting is open. A viewer with neither gets no action.
- */
-function HomeAction({ studentView }: { studentView: boolean }) {
-  const tenant = useTenant();
-
-  if (studentView) {
-    return <StudentAction />;
-  }
-  if (!tenant.home.canCreate) {
-    return null;
-  }
-  return <CreateExam choices={tenant.home.choices} slug={tenant.slug} />;
-}
-
-/**
- * Start exam, which opens the first sitting that the student may still take, and Continue once the student has an
- * attempt in it. It shows only while a sitting is open.
- */
-function StudentAction() {
-  const te = useTranslations("Exams");
-  const tCommon = useTranslations("Common");
-  const { slug } = useTenant();
-  const listed = useStudentSittings();
-  const open = QueryResult.isSuccess(listed)
-    ? enterableSitting(orderSittings(listed.value))
-    : Option.none();
-
-  if (Option.isNone(open)) {
-    return null;
-  }
-  return (
-    <TargetLink
-      className={buttonVariants()}
-      target={schoolSittingTarget(slug, open.value.id)}
-    >
-      {open.value.attempt === null ? te("student-start") : tCommon("continue")}
-    </TargetLink>
-  );
-}
-
-/** The header row of the school home, and its shortcuts and dashboard in the page's one column of content. */
-function HomePage({
-  action,
-  children,
-}: {
-  action: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <>
-      <SchoolHeader heading={<HomeGreeting />} items={[]}>
-        {action}
-      </SchoolHeader>
-      <LayoutContent className="flex w-full flex-col gap-6 py-6" width="page">
-        {children}
+    <HomeClock>
+      <SchoolHeader heading={<HomeGreeting />} items={[]} />
+      <LayoutContent className="w-full py-6" width="page">
+        {showsStudentHome(tenant, tenant.home) ? (
+          <StudentHome />
+        ) : (
+          <ReadBoundary read={homeExamsRead(tenant.slug)}>
+            <StaffHome />
+          </ReadBoundary>
+        )}
       </LayoutContent>
-    </>
+    </HomeClock>
   );
 }

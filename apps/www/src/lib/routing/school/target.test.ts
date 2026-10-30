@@ -16,9 +16,7 @@ import {
   schoolExamsTarget,
   schoolExamTarget,
   schoolHomeTarget,
-  schoolMembersTarget,
-  schoolReportsTarget,
-  schoolSettingsTarget,
+  schoolNotificationsTarget,
   schoolSittingTarget,
 } from "@/lib/routing/school/target";
 
@@ -49,20 +47,11 @@ describe("school targets", () => {
     );
   });
 
-  it("builds the report cards, the members and the settings under the school's slug", () => {
-    expect(schoolReportsTarget(slug)).toEqual(
-      expect.objectContaining({ params: { slug }, to: "/school/$slug/reports" })
-    );
-    expect(schoolMembersTarget(slug)).toEqual(
+  it("builds the school's notifications under the school's slug", () => {
+    expect(schoolNotificationsTarget(slug)).toEqual(
       expect.objectContaining({
         params: { slug },
-        to: "/school/$slug/settings/members",
-      })
-    );
-    expect(schoolSettingsTarget(slug)).toEqual(
-      expect.objectContaining({
-        params: { slug },
-        to: "/school/$slug/settings/profile",
+        to: "/school/$slug/notifications",
       })
     );
   });

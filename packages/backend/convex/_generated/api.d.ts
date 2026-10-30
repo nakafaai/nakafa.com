@@ -3792,22 +3792,6 @@ export declare const api: {
         "public",
         { slug: string },
         {
-          canManageSetup: boolean;
-          closed: Array<{
-            canRelease: boolean;
-            closesAt: number;
-            cohortId: Id<"tenantCohorts"> | null;
-            examId: Id<"exams">;
-            examTitle: string;
-            id: Id<"examSittings">;
-            opensAt: number;
-            resultsReleased: boolean;
-            room: string;
-            state: "scheduled" | "open" | "closed";
-            timeZone: string;
-            unitId: Id<"tenantUnits">;
-          }>;
-          drafts: Array<{ createdAt: number; id: Id<"exams">; title: string }>;
           live: Array<{
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
@@ -3832,11 +3816,6 @@ export declare const api: {
             timeZone: string;
             unitId: Id<"tenantUnits">;
           }>;
-          setup?: {
-            hasPendingInvite: boolean;
-            hasStudent: boolean;
-            hasTeacher: boolean;
-          };
         }
       >;
       list: FunctionReference<

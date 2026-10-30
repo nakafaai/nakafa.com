@@ -1,19 +1,18 @@
 import { QueryResult } from "@confect/react";
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
-import type { CellSpan } from "@/components/tenant/home/cells";
-import { progressPercent } from "@/components/tenant/home/progress";
 import { homeSetupRead, useHomeSetup } from "@/components/tenant/home/query";
 import {
-  missingSteps,
-  SETUP_STEP_COUNT,
-  type SetupStep,
-} from "@/components/tenant/home/steps";
+  HomeCard,
+  HomeRow,
+  HomeRowText,
+  HomeSection,
+} from "@/components/tenant/home/section";
+import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import type { LinkTarget } from "@/lib/routing/link";
 import { TargetLink } from "@/lib/routing/link";
@@ -70,8 +69,8 @@ function stepsOf(
 }
 
 /**
- * Whether the setup cell shows on the staff home. Only the owner and the admin see it, while a step is missing or
- * the setup read has failed, so the failure shows inside the cell with its own Try again.
+ * Whether the setup section shows on the staff home. Only the owner and the admin see it, while a step is missing or
+ * the setup read has failed, so the failure shows inside the section with its own Try again.
  */
 export function useSetupShown() {
   const tenant = useTenant();
@@ -87,78 +86,52 @@ export function useSetupShown() {
 }
 
 /**
- * The setup cell: a bar of the steps the school has done, and the next step as one row that opens the settings page
- * which completes it. A failed read shows its own sentence and Try again inside this cell, which keeps its title.
+ * The setup of a school that is not set up yet: every step it still lacks, in order, each a row that opens the settings
+ * page which completes it. A finished step leaves the list, and the section leaves the home with the last one. A failed
+ * read shows its own sentence and Try again under the section's title.
  */
-export function SetupCell({ span }: { span: CellSpan }) {
+export function SetupSection() {
   const t = useTranslations("School");
   const tenant = useTenant();
 
   return (
-    <ReadBoundary
-      fallback={(failure) => (
-        <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-          <Dashboard.CellHeader title={t("tile-setup")} />
-          {failure}
-        </Dashboard.Cell>
-      )}
-      read={homeSetupRead(tenant.slug)}
-    >
-      <SetupRows span={span} />
-    </ReadBoundary>
+    <HomeSection title={t("home-setup")}>
+      <ReadBoundary read={homeSetupRead(tenant.slug)}>
+        <SetupRows />
+      </ReadBoundary>
+    </HomeSection>
   );
 }
 
-/** The setup cell's rows, read from the setup read and the viewer's units. */
-function SetupRows({ span }: { span: CellSpan }) {
-  const t = useTranslations("School");
+/** The setup's rows, read from the setup read and the viewer's units. */
+function SetupRows() {
   const setup = useHomeSetup();
   const viewer = useViewerQuery();
   if (QueryResult.isFailure(setup)) {
     throw setup.error;
   }
-  const steps = stepsOf(setup, viewer);
-  if (Arr.isReadonlyArrayEmpty(steps)) {
-    return null;
-  }
-  const done = SETUP_STEP_COUNT - steps.length;
-  const progress = t("setup-progress", { done, total: SETUP_STEP_COUNT });
 
   return (
-    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-setup")}>
-        <span className="text-muted-foreground text-sm tabular-nums">
-          {progress}
-        </span>
-      </Dashboard.CellHeader>
-      <div className="px-6">
-        <Dashboard.Meter
-          label={progress}
-          percent={progressPercent(0, SETUP_STEP_COUNT, done)}
-        />
-      </div>
-      <Dashboard.List>
-        {Arr.map(Arr.take(steps, 1), (step) => (
-          <SetupRow key={step} step={step} />
-        ))}
-      </Dashboard.List>
-    </Dashboard.Cell>
+    <HomeCard>
+      {Arr.map(stepsOf(setup, viewer), (step) => (
+        <SetupRow key={step} step={step} />
+      ))}
+    </HomeCard>
   );
 }
 
-/** The next step that the school lacks, as a row that opens the settings page which completes it. */
+/** One step that the school lacks, as a row that opens the settings page which completes it. */
 function SetupRow({ step }: { step: SetupStep }) {
   const tenant = useTenant();
   const t = useTranslations("School");
-  const title = t(`setup-${step}`);
 
   return (
-    <Dashboard.Row
-      render={
-        <TargetLink target={STEP_TARGET[step](tenant.slug)} title={title} />
-      }
-      title={title}
-      trailing={<HugeIcons className="size-4" icon={ArrowRight02Icon} />}
-    />
+    <HomeRow render={<TargetLink target={STEP_TARGET[step](tenant.slug)} />}>
+      <HomeRowText title={t(`setup-${step}`)} />
+      <HugeIcons
+        className="size-4 text-muted-foreground"
+        icon={ArrowRight02Icon}
+      />
+    </HomeRow>
   );
 }

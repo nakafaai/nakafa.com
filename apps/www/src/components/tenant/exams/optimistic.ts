@@ -4,8 +4,6 @@ import type {
   OptimisticUpdate,
 } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { HOME_DRAFT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
-import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Option } from "effect";
@@ -278,11 +276,13 @@ export const copyQuestionUpdate =
 
 /**
  * Shows a new exam while the server saves it: at the top of the first page of each open list, with the one question it
- * is created with, in the scope it is created in, and at the top of the drafts of the school home when the home is open. A list past its
- * first page keeps its pages, as the server's answer shows.
+ * is created with, in the scope it is created in. A list past its first page keeps its pages, as the server's answer
+ * shows.
  */
 export const insertDraftExam =
-  (draft: typeof HomeDraft.Type): OptimisticUpdate<typeof exams.exams.create> =>
+  (
+    draft: Pick<ListedExam, "createdAt" | "id" | "title">
+  ): OptimisticUpdate<typeof exams.exams.create> =>
   (localStore, args) => {
     for (const query of localStore.getAllQueries(exams.exams.list)) {
       if (
@@ -301,16 +301,5 @@ export const insertDraftExam =
           })
         );
       }
-    }
-    const home = localStore.getQuery(exams.exams.home, { slug: args.slug });
-    if (Option.isSome(home)) {
-      localStore.setQuery(
-        exams.exams.home,
-        { slug: args.slug },
-        Option.some({
-          ...home.value,
-          drafts: Arr.take([draft, ...home.value.drafts], HOME_DRAFT_LIMIT),
-        })
-      );
     }
   };

@@ -10,7 +10,7 @@ import { Schema } from "effect";
  * What the school home still needs from the school's setup, for the owner and the admin: whether the
  * school holds an active teacher, an active student, and an invite that waits to be accepted.
  */
-export const HomeSetup = Schema.Struct({
+const HomeSetup = Schema.Struct({
   hasPendingInvite: Schema.Boolean,
   hasStudent: Schema.Boolean,
   hasTeacher: Schema.Boolean,

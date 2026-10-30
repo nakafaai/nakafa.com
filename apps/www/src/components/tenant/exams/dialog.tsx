@@ -73,7 +73,7 @@ export function ExamDraftsProvider({
 }
 
 /** Reads the page's drafts. It throws outside a page that provides them. */
-export function useExamDrafts() {
+function useExamDrafts() {
   const drafts = use(ExamDraftsContext);
   if (drafts === null) {
     throw new Error("useExamDrafts must be used within ExamDraftsProvider");

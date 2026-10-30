@@ -31,6 +31,3 @@ const MISSING: Record<SetupStep, (state: SetupState) => boolean> = {
 /** The steps that the school still lacks, in the order the setup lists them. A complete school has none. */
 export const missingSteps = (state: SetupState) =>
   Arr.filter(SETUP_STEPS, (step) => MISSING[step](state));
-
-/** How many steps a school's setup has in all. */
-export const SETUP_STEP_COUNT = SETUP_STEPS.length;
