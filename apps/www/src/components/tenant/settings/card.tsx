@@ -10,8 +10,8 @@ import { Schema } from "effect";
 import { type ReactNode, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
+import { QrImage } from "@/components/shared/qr/image";
 import { useTenant } from "@/components/tenant/context";
-import { cardQr } from "@/components/tenant/settings/qr";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { schoolOrigin } from "@/lib/routing/school/host";
@@ -178,7 +178,7 @@ function SchoolCardFace({ card }: { card: CardView }) {
             </dd>
           </div>
         </dl>
-        <CardQrCode card={card} label={t("card-qr-label")} />
+        <QrImage label={t("card-qr-label")} size="card" text={card.code} />
       </div>
     </div>
   );
@@ -199,33 +199,5 @@ function CardField({
       <dt className="text-muted-foreground">{label}</dt>
       <dd className={cardValue({ mono })}>{value}</dd>
     </div>
-  );
-}
-
-/**
- * The QR code of the card, drawn in dark modules on a white quiet zone so every
- * reader scans it in any theme.
- */
-function CardQrCode({ card, label }: { card: CardView; label: string }) {
-  const { path, size } = cardQr(card);
-  const quiet = 4;
-
-  return (
-    <svg
-      aria-label={label}
-      className="size-24 shrink-0"
-      role="img"
-      shapeRendering="crispEdges"
-      viewBox={`${-quiet} ${-quiet} ${size + quiet * 2} ${size + quiet * 2}`}
-    >
-      <rect
-        fill="#ffffff"
-        height={size + quiet * 2}
-        width={size + quiet * 2}
-        x={-quiet}
-        y={-quiet}
-      />
-      <path d={path} fill="#000000" />
-    </svg>
   );
 }
