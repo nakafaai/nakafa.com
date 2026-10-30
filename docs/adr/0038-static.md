@@ -49,8 +49,8 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the
   active release from the sitemap readers: every sitemap URL except the search
-  screen and the try-out tracks, sets and sections, plus the articles index and the
-  try-out hub of each locale. The sitemap files drop the same paths
+  screen and the try-out tracks, sets and sections (which Phase B for try-out adds),
+  plus the articles index and the try-out hub of each locale. The sitemap files drop the same paths
   (`apps/www/src/lib/sitemap/files.ts`), so every sitemap URL is a static page.
   `scripts/static/run.mjs pages` writes the list before the client build, and
   `vite.config.ts` gives it to TanStack's prerender with `autoStaticPathsDiscovery`
@@ -101,6 +101,35 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   on that repository. A target whose `NAKAFA_DEPLOY_SURFACE` is `none` (development)
   starts nothing. The cache POST and its receipt are deleted. The Nakafa deploy
   workflow has no repository dispatch trigger.
+
+## Phase B for try-out, slice 1, as implemented
+
+- **Visitor pages.** The page list and the sitemap now include every try-out track, set and section
+  (`apps/www/src/lib/static/pages.ts`, `apps/www/src/lib/sitemap/files.ts`), and their loaders read
+  the build's visitor answer (`readStaticData`) unless the signed-in hint is set or the address binds
+  an attempt.
+- **Written beside their address.** The build writes those pages under `/_tryout`
+  (`staticPagePath` in `apps/www/src/lib/routing/prerendered.ts`, each page's `prerender.outputPath`),
+  so their own addresses have no asset and reach the Worker, as before. Their Markdown twins and social
+  images stay at their own paths and are answered by the assets alone.
+- **Learner pages on the Worker.** A page request that sends a session cookie or binds an attempt
+  renders on the Worker as before (`isLearnerPage` in `apps/www/src/lib/routing/learner.server.ts`),
+  so the learner's attempt, the shell lock, the score card and the player's view are in the first
+  HTML. A visitor's request takes the page under `/_tryout` (`readVisitorAsset`), after the redirect
+  and School decisions and before any content read. A page the release does not hold goes on through
+  the Worker's decisions, which answer the static not-found page without a render.
+- **Not `runWorkerFirst`.** A list of paths in `assets.runWorkerFirst` makes Cloudflare answer every
+  path the list does not name from the assets alone, so the API, server functions, search, chat and
+  School hosts would answer the assets' 404 page (#1337, reverted by #1413). School host paths cannot
+  be listed, so the pages move out of the way instead.
+- **No swap after hydration.** The assets match a path without its query, so a static page at its
+  own address would give a learner's hard load, `?attemptId` included, the visitor's HTML. Their own
+  page would replace it after hydration: the shell lock moving the header, the player replacing the
+  set page, the score card replacing the facts card, and Start turning into Continue.
+- **Cost.** A visitor's view is the same Worker request as before, now one asset read instead of a
+  render, which cost 40 to 333 ms of CPU for a missing set. A learner's view costs what it did. Slice
+  2 moves the attempt into the browser, after which the pages return to their own paths and
+  `isLearnerPage` is deleted.
 
 ## Phase B for School as implemented
 

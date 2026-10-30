@@ -7,17 +7,8 @@ import { getSitemapEntries } from "@/lib/sitemap/entries";
 /** The segments that name the search screen, which the build never renders. */
 const SEARCH_SEGMENT = "search";
 
-/**
- * The try-out family segment, which every locale spells the same way. A track, a
- * set and a section read the learner's attempts, so they stay on the Worker.
- */
+/** The try-out family segment, which every locale spells the same way. */
 const TRYOUT_SEGMENT = "try-out";
-
-/**
- * The segments after the try-out family that name a track (`<exam>/<year>`), which
- * a set (`set-1`) and a section extend.
- */
-const TRYOUT_TRACK_SEGMENTS = 3;
 
 /** The articles index, which no sitemap page lists as one URL. */
 const ARTICLES_SEGMENT = "articles";
@@ -26,21 +17,18 @@ const ARTICLES_SEGMENT = "articles";
 const SIGN_IN_SEGMENT = "auth";
 
 /**
- * Whether a path is left out of the static build: the search screen, and a try-out
- * track, set or section. A path is `/<locale>/<family>/...`. The sitemap lists the
+ * Whether a path is left out of the static build: the search screen, whose answer
+ * depends on its query. A path is `/<locale>/<family>/...`. The sitemap lists the
  * same paths, so it names only the pages that the build writes.
  */
 export function isExcludedPath(path: string): boolean {
-  const [, , family, ...rest] = path.split("/");
-  if (family === SEARCH_SEGMENT) {
-    return true;
-  }
-  return family === TRYOUT_SEGMENT && rest.length >= TRYOUT_TRACK_SEGMENTS;
+  const [, , family] = path.split("/");
+  return family === SEARCH_SEGMENT;
 }
 
 /**
  * Selects the public paths that the build prerenders: the sitemap's URLs without
- * the search screen and the try-out tracks, sets and sections, plus the articles
+ * the search screen, try-out tracks, sets and sections included, plus the articles
  * index, the try-out hub and the sign-in page of every locale, which no sitemap
  * page lists. The result is unique and sorted, so the build and its verifier
  * compare the same list.

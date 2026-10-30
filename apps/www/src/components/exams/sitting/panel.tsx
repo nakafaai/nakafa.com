@@ -3,6 +3,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { awayFor } from "@repo/backend/confect/exams/sittings/away";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { getRouteApi } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -33,6 +34,11 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
+
+/** The proctor's dashboard, whose address holds the seat the proctor selected. */
+const dashboardRoute = getRouteApi(
+  "/school/$slug/exams/$exam/sittings/$sitting/"
+);
 
 /** How many signals one page of the panel's list holds, the first one and each one after it. */
 const SIGNAL_PAGE_SIZE = 20;
@@ -89,32 +95,34 @@ export function SittingPanel() {
   );
 }
 
-/** The panel of the seat that is selected, which holds the seat's panel data as it opens. */
+/** The panel of the seat that the address selects, which holds the seat's panel data as it opens. */
 function SelectedPanel() {
   const t = useTranslations("Exams");
   const { sittingId, slug, value } = useSittingData();
-  const selected = useSittingStore((state) => state.selected);
-  const choose = useSittingStore((state) => state.choose);
+  const { page: cursor, seat } = dashboardRoute.useSearch();
+  const navigate = dashboardRoute.useNavigate();
   // A seat on a later page reads that page, which the seats already subscribe to.
   const later = useQuery(
     exams.sittings.dashboard,
-    selected === null || selected.cursor === null
+    seat === undefined || cursor === undefined
       ? "skip"
-      : dashboardArgs({ sittingId, slug }, selected.cursor)
+      : dashboardArgs({ sittingId, slug }, cursor)
   );
   const laterPage = QueryResult.isSuccess(later)
     ? later.value.attempts.page
     : [];
-  const page = selected?.cursor === null ? value.attempts.page : laterPage;
+  const page = cursor === undefined ? value.attempts.page : laterPage;
   const current = Option.getOrUndefined(
-    Arr.findFirst(page, (row) => row.id === selected?.attemptId)
+    Arr.findFirst(page, (row) => row.id === seat)
   );
 
   return (
     <PanesDetail
       empty={t("panel-empty")}
       label={t("panel-label")}
-      onClose={() => choose(null)}
+      onClose={() =>
+        navigate({ replace: true, resetScroll: false, search: {} })
+      }
       open={current !== undefined}
     >
       {current === undefined ? null : <StudentPanel attempt={current} />}
