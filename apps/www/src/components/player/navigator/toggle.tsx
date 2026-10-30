@@ -1,5 +1,3 @@
-import { File01Icon, ListViewIcon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -53,14 +51,8 @@ export function PlayerModeToggle() {
       value={mode}
       variant="outline"
     >
-      <ToggleGroupItem value="list">
-        <HugeIcons icon={ListViewIcon} />
-        {t("mode-list")}
-      </ToggleGroupItem>
-      <ToggleGroupItem value="single">
-        <HugeIcons icon={File01Icon} />
-        {t("mode-single")}
-      </ToggleGroupItem>
+      <ToggleGroupItem value="list">{t("mode-list")}</ToggleGroupItem>
+      <ToggleGroupItem value="single">{t("mode-single")}</ToggleGroupItem>
     </ToggleGroup>
   );
 }
