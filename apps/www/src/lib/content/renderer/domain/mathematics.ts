@@ -8,7 +8,6 @@ import {
 } from "@/lib/content/renderer/client/mathematics/charts";
 import {
   Inequality,
-  LineEquation,
   QuadraticEquationReadingRoomProblem,
 } from "@/lib/content/renderer/client/mathematics/equation";
 import {
@@ -26,6 +25,7 @@ import {
   FunctionExplorationVirusChart,
 } from "@/lib/content/renderer/client/mathematics/growth";
 import { SequenceConceptTableChairsAnimation } from "@/lib/content/renderer/client/mathematics/sequence";
+import { LineEquationServer } from "@/lib/content/renderer/line.server";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
 export const domainRenderers = [
@@ -71,7 +71,7 @@ export const domainRenderers = [
   },
   {
     name: mathematicsComponentNames.lineEquation,
-    component: LineEquation,
+    component: LineEquationServer,
   },
   {
     name: mathematicsComponentNames.quadraticEquationReadingRoomProblem,
