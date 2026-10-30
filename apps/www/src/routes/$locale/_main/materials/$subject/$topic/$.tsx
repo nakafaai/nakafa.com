@@ -44,6 +44,7 @@ import {
   toMaterialHref,
   toMaterialNavigationPage,
 } from "@/lib/content/material/navigation";
+import { readLessonPlacement } from "@/lib/content/material/placement";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
@@ -162,7 +163,11 @@ export const Route = createFileRoute(
   "/$locale/_main/materials/$subject/$topic/$"
 )({
   validateSearch: Schema.toStandardSchemaV1(MaterialSearch),
-  loader: async ({ params }) => {
+  // A client navigation reads the placement that the address's `ctx` hint names
+  // before the page commits, so the breadcrumb's first frame is its final one. A
+  // prerender and a hard load read none here: the static page cannot see the
+  // query, and the provider reads it once the page has hydrated.
+  loader: async ({ location, params }) => {
     const lesson = Arr.filter(
       (params._splat ?? "").split("/"),
       (segment) => segment !== ""
@@ -173,14 +178,29 @@ export const Route = createFileRoute(
       subject: params.subject,
       topic: params.topic,
     });
-    return Match.value(read).pipe(
+    const page = Match.value(read).pipe(
       Match.tagsExhaustive({
-        Found: ({ page }) => page,
+        Found: ({ page: found }) => found,
         NotFound: () => {
           throw notFound();
         },
       })
     );
+    const placement = import.meta.env.SSR
+      ? null
+      : await Effect.runPromise(
+          readLessonPlacement({
+            ctx: Option.getOrUndefined(
+              Option.flatMapNullishOr(
+                Schema.decodeUnknownOption(MaterialSearch)(location.search),
+                (search) => search.ctx
+              )
+            ),
+            locale: params.locale,
+            page: page.navigation,
+          })
+        );
+    return { ...page, placement };
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
@@ -226,6 +246,8 @@ function MaterialPage() {
   return (
     <MaterialPlacementProvider
       ctx={ctx}
+      initial={page.placement}
+      key={`${route.publicPath}?${ctx ?? ""}`}
       locale={page.locale}
       page={page.navigation}
     >
@@ -241,13 +263,17 @@ function MaterialPage() {
           <LayoutMaterialContent>
             <ContentHeader
               breadcrumb={
-                <BreadcrumbHeaderPath
-                  home={HOME_TARGET}
-                  homeLabel={labels.home}
-                  items={[]}
-                >
-                  <MaterialBreadcrumb title={metadata.title} />
-                </BreadcrumbHeaderPath>
+                // Hidden in its row while the root's prepaint script marks the
+                // placement pending, so the path shows only in its final form.
+                <div className="contents [html[data-placement=pending]_&]:invisible">
+                  <BreadcrumbHeaderPath
+                    home={HOME_TARGET}
+                    homeLabel={labels.home}
+                    items={[]}
+                  >
+                    <MaterialBreadcrumb title={metadata.title} />
+                  </BreadcrumbHeaderPath>
+                </div>
               }
             >
               <OpenContent

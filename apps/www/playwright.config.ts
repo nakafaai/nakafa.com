@@ -70,7 +70,11 @@ const PROJECTS = {
   // suite also runs in WebKit. Its project runs after the navigation checks,
   // so no other browser shares the runner while those checks measure timing.
   webkit: {
-    testMatch: "**/visual/cards.browser.ts",
+    // The visual cards, and the lesson breadcrumb that must paint once in Safari too.
+    testMatch: [
+      "**/visual/cards.browser.ts",
+      "**/curriculum/placement.browser.ts",
+    ],
     use: { browserName: "webkit" },
     workers: 1,
   },

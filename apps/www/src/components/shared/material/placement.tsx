@@ -6,6 +6,7 @@ import { PaginationContent } from "@/components/shared/content/pagination";
 import { SidebarRightHeader } from "@/components/shared/outline/panel";
 import {
   type MaterialNavigationPage,
+  type MaterialPlacement,
   readMaterialNavigation,
 } from "@/lib/content/material/navigation";
 import {
@@ -13,6 +14,7 @@ import {
   type PlacementStore,
   startMaterialPlacement,
 } from "@/lib/content/material/placement";
+import { settlePlacementPaint } from "@/lib/content/material/prepaint";
 import { publicPathTarget } from "@/lib/routing/target";
 
 /** One lesson page's navigation model and the store of its verified placement. */
@@ -23,32 +25,48 @@ const PlacementContext = createContext<{
 
 /**
  * Holds the curriculum placement that the `ctx` hint of the reader's address
- * names. The server renders the lesson without one, and so does the render that
- * hydrates it. Once the page has hydrated the browser verifies the hint, and the
- * breadcrumb, the lesson's own link and its pagination follow it. The context
- * value never changes, so the streamed lesson keeps its HTML.
+ * names. A client navigation's loader reads it before the page commits, so the
+ * first render is the final one. A hard load paints the static lesson, which
+ * cannot see the hint: the root's prepaint script keeps the breadcrumb path
+ * hidden in its row, the browser verifies the hint once the page has hydrated,
+ * and the path shows only once the placement is known, so it never swaps. The
+ * context value never changes, so the streamed lesson keeps its HTML.
  */
 export function MaterialPlacementProvider({
   children,
   ctx,
+  initial,
   locale,
   page,
 }: {
   children: ReactNode;
   ctx: string | undefined;
+  initial: MaterialPlacement | null;
   locale: string;
   page: MaterialNavigationPage;
 }) {
-  const [value] = useState(() => ({ page, store: createPlacementStore() }));
+  const [value] = useState(() => ({
+    page,
+    store: createPlacementStore(initial),
+  }));
 
   useEffect(() => {
+    if (initial !== null) {
+      settlePlacementPaint();
+      return;
+    }
     const reading = Effect.runFork(
-      startMaterialPlacement(value.store, { ctx, locale, page: value.page })
+      startMaterialPlacement(value.store, {
+        ctx,
+        locale,
+        page: value.page,
+      }).pipe(Effect.ensuring(Effect.sync(settlePlacementPaint)))
     );
     return () => {
       Effect.runFork(Fiber.interrupt(reading));
+      settlePlacementPaint();
     };
-  }, [ctx, locale, value]);
+  }, [ctx, initial, locale, value]);
 
   return <PlacementContext value={value}>{children}</PlacementContext>;
 }

@@ -4,6 +4,7 @@ import { Effect, Option } from "effect";
 import { toMaterialNavigationPage } from "@/lib/content/material/navigation";
 import {
   createPlacementStore,
+  readLessonPlacement,
   startMaterialPlacement,
 } from "@/lib/content/material/placement";
 import {
@@ -146,6 +147,29 @@ describe("lesson placement in the browser", () => {
         expect.objectContaining({ _tag: "PlacementReadFailed" }),
         { source: "material-placement" }
       );
+    })
+  );
+
+  it("starts from the placement that a client navigation's loader read", () => {
+    expect(createPlacementStore(placement).getState().placement).toStrictEqual(
+      Option.some(placement)
+    );
+    expect(createPlacementStore().getState().placement).toStrictEqual(
+      Option.none()
+    );
+  });
+
+  it.effect("reads the placement for a loader, and none for no hint", () =>
+    Effect.gen(function* () {
+      mocks.read.mockReturnValue(Effect.succeed(placement));
+
+      expect(
+        yield* readLessonPlacement({ ctx: HINT, locale: "en", page })
+      ).toStrictEqual(placement);
+      expect(
+        yield* readLessonPlacement({ ctx: undefined, locale: "en", page })
+      ).toBeNull();
+      expect(mocks.read).toHaveBeenCalledOnce();
     })
   );
 });

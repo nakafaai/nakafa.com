@@ -95,21 +95,17 @@ test("material sidebar preserves verified curriculum context", async ({
               );
               yield* Effect.sync(() => expect(response?.status()).toBe(200));
 
-              // The full lesson must be readable before its placement arrives.
+              // The full lesson must be readable before its placement arrives,
+              // while the breadcrumb path waits hidden in its row, so it paints
+              // only in its final form.
               const title = page.getByRole("heading", { level: 1 });
               const opening = page.getByRole("heading", { level: 2 }).first();
+              const home = page
+                .getByRole("navigation", { name: "Breadcrumb", exact: true })
+                .getByRole("link", { name: "Home", exact: true });
               yield* Effect.promise(() => expect(title).toBeVisible());
               yield* Effect.promise(() => expect(opening).toBeVisible());
-              yield* Effect.promise(() =>
-                expect(
-                  page
-                    .getByRole("navigation", {
-                      name: "Breadcrumb",
-                      exact: true,
-                    })
-                    .getByRole("link", { name: "Home", exact: true })
-                ).toBeVisible()
-              );
+              yield* Effect.promise(() => expect(home).toBeHidden());
               yield* Effect.promise(() =>
                 page.evaluate(() => document.fonts.ready.then(() => undefined))
               );
@@ -123,6 +119,7 @@ test("material sidebar preserves verified curriculum context", async ({
                 expect.poll(() => reads.length).toBeGreaterThan(0)
               );
               yield* Deferred.succeed(released, undefined);
+              yield* Effect.promise(() => expect(home).toBeVisible());
 
               const canonical = page.locator('link[rel="canonical"]');
               yield* Effect.promise(() => expect(canonical).toHaveCount(1));
