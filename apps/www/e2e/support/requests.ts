@@ -40,6 +40,31 @@ export function recordServerFunctionCalls(page: Page) {
   return calls;
 }
 
+/**
+ * The folder that a prerendered page's loader reads the static answer of a
+ * server function call from, as `/_data/<key>.bin`, before it asks the Worker.
+ */
+export const STATIC_DATA_PATH = "/_data/";
+
+/**
+ * Records the URL of every request for a page's data, in order: each server
+ * function call, and each read of a static answer that the build wrote for
+ * one. A loader between prerendered pages reads only the static answers, so a
+ * step that waits for a page's data counts both.
+ */
+export function recordDataRequests(page: Page) {
+  const requests = MutableList.make<string>();
+  page.on("request", (request) => {
+    if (
+      request.headers()[SERVER_FUNCTION_HEADER] === "true" ||
+      new URL(request.url()).pathname.startsWith(STATIC_DATA_PATH)
+    ) {
+      MutableList.append(requests, request.url());
+    }
+  });
+  return requests;
+}
+
 export type TrackedRequestKind = typeof TrackedRequestKindSchema.Type;
 
 const RequestOutcomeSchema = Schema.Literals([
