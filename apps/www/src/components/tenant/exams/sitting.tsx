@@ -18,6 +18,7 @@ import { DateTimePicker } from "@repo/design-system/components/ui/date";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -158,7 +159,7 @@ export function ScheduleSitting({
     });
 
   /**
-   * The server refused the start. A start that has passed stays in the body. Any other refusal of
+   * The server refused the start. A start that has passed shows under the start. Any other refusal of
    * the start fails on, to the action-error toast.
    */
   const refuseStart = (error: ScheduleInvalid) =>
@@ -231,7 +232,6 @@ export function ScheduleSitting({
                 Arr.get(numbered, number - 1)
               )
             )}
-            pastStart={pastStart}
           />
           <Button onClick={() => setOpen(false)} variant="outline">
             {common("cancel")}
@@ -310,7 +310,10 @@ export function ScheduleSitting({
           <DateTimePicker
             dayPlaceholder={t("starts-day-placeholder")}
             id={`${id}-starts`}
-            onValueChange={onStartsChange}
+            onValueChange={(value) => {
+              setPastStart(false);
+              onStartsChange(value);
+            }}
             timePlaceholder={t("starts-time-placeholder")}
             value={starts}
           />
@@ -320,6 +323,7 @@ export function ScheduleSitting({
               onSome: (unit) => unit.timeZone,
             })}
           </FieldDescription>
+          <FieldError>{pastStart ? t("schedule-past") : null}</FieldError>
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
@@ -354,35 +358,26 @@ export function ScheduleSitting({
 }
 
 /**
- * The sentence at the foot of the dialog that says why the schedule is not made yet, one line in the
- * destructive colour: the first question that still needs its key, in the words of its template, or a
- * start that has passed.
+ * The sentence at the foot of the dialog that names the first question that still needs its key, in the words
+ * of its template, one line in the destructive colour. It comes from the exam itself, so it stays put while the
+ * dialog is open; a start that has passed shows under the start instead.
  */
 function ScheduleNotices({
   missing,
-  pastStart,
 }: {
   readonly missing: Option.Option<{
     readonly number: number;
     readonly template: QuestionTemplate;
   }>;
-  readonly pastStart: boolean;
 }) {
   const t = useTranslations("Exams");
 
-  return (
-    <>
-      {Option.match(missing, {
-        onNone: () => null,
-        onSome: (entry) => (
-          <p className="me-auto text-destructive text-sm">
-            {t(keyNotice(entry.template), { number: entry.number })}
-          </p>
-        ),
-      })}
-      {pastStart ? (
-        <p className="me-auto text-destructive text-sm">{t("schedule-past")}</p>
-      ) : null}
-    </>
-  );
+  return Option.match(missing, {
+    onNone: () => null,
+    onSome: (entry) => (
+      <p className="me-auto text-destructive text-sm">
+        {t(keyNotice(entry.template), { number: entry.number })}
+      </p>
+    ),
+  });
 }
