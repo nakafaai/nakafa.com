@@ -123,7 +123,6 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
       enableSorting: false,
       header: t("status"),
       id: "status",
-      meta: { align: "center" },
     }),
   ]);
 
@@ -134,7 +133,6 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
           columns={columns}
           data={items}
           rowId={(child) => child.linkId}
-          search="child"
         />
       </PanesList>
       <PanesDetail empty={t("child-detail-empty")} label={t("child-detail")}>

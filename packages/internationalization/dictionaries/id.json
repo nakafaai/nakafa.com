@@ -1,6 +1,8 @@
 {
   "DataTable": {
     "filter-by": "Saring menurut {column}",
+    "sort-ascending": "Naik",
+    "sort-descending": "Turun",
     "no-results": "Tidak ada hasil.",
     "reset": "Atur ulang"
   },
