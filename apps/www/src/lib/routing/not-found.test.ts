@@ -1,8 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { isNotFound } from "@tanstack/react-router";
-import { Effect, Option } from "effect";
+import { Option } from "effect";
 import {
   notFoundPageOf,
   notFoundRouteHead,
@@ -83,20 +82,12 @@ describe("withContentLanguage", () => {
 });
 
 describe("the prerendered not-found routes", () => {
-  it.effect(
-    "read their locale, and are missing themselves for a locale the app does not have",
-    () =>
-      Effect.gen(function* () {
-        expect(readNotFoundRouteLocale("de")).toBe("de");
-        const missing = yield* Effect.flip(
-          Effect.try({
-            catch: (error) => error,
-            try: () => readNotFoundRouteLocale("fr"),
-          })
-        );
-        expect(isNotFound(missing)).toBe(true);
-      })
-  );
+  it("read their locale, and are missing themselves for a locale the app does not have", () => {
+    expect(readNotFoundRouteLocale("de")).toBe("de");
+    expect(() => readNotFoundRouteLocale("fr")).toThrow(
+      expect.objectContaining({ isNotFound: true })
+    );
+  });
 
   it("are never indexed, and carry their locale's title once the locale is known", () => {
     expect(notFoundRouteHead("en")).toStrictEqual({
