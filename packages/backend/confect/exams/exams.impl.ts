@@ -108,8 +108,8 @@ const list = FunctionImpl.make(
 );
 
 /**
- * The school home's exam reads: the viewer's own drafts, and the rooms the viewer may watch
- * that run now or open within two weeks. Each read is bounded, and `readHome` decides each row.
+ * The school home's exam reads: the rooms the viewer may watch that run now or open within the
+ * next day. Each read is bounded, and `readHome` decides each row.
  */
 const home = FunctionImpl.make(
   databaseSchema,
