@@ -580,7 +580,6 @@ const spec: Spec.Spec<{
     ["cohorts"]: tenancy_cohorts,
     ["expiry"]: tenancy_expiry,
     ["holders"]: tenancy_holders,
-   
     ["invites"]: tenancy_invites,
     ["logo"]: tenancy_logo,
     ["memberships"]: tenancy_memberships,
