@@ -89,7 +89,7 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
 
   const commit = (next: number | null) => {
     setDraft(Option.none());
-    if (next === null || next === points) {
+    if (next === null || next === points || !Number.isInteger(next)) {
       return;
     }
     runExamAction(
@@ -106,6 +106,7 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
       <NumberField
         className="w-32"
         disabled={!editable}
+        format={{ maximumFractionDigits: 0 }}
         id={id}
         max={QUESTION_POINTS_MAX}
         min={1}
