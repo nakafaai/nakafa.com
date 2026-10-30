@@ -4,10 +4,6 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import {
-  insertPolarAccount,
-  insertProSubscription,
-} from "@repo/backend/test/billing";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import type { FunctionArgs } from "convex/server";
 
@@ -49,17 +45,15 @@ describe("tryouts/queries/access", () => {
     ).toEqual({ kind: "free-attempt" });
   });
 
-  it("shows included subscription access without restricting free starts", async () => {
+  it("shows included access to a Pro learner whose plan comes from a pass, with no subscription", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const seeded = await seedAuthenticatedUser(ctx, {
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, {
         now: TRYOUT_TEST_NOW,
+        plan: "pro",
         suffix: "start-access-included",
-      });
-      const accountId = await insertPolarAccount(ctx, seeded.userId);
-      await insertProSubscription(ctx, accountId, { currentPeriodEnd: null });
-      return seeded;
-    });
+      })
+    );
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
