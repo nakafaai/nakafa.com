@@ -1,12 +1,12 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Array as Arr, Effect, HashSet, Match, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { queryContentStore } from "@/lib/content/store/query";
 import { readProfileRedirect } from "@/lib/routing/public/profile";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
+import { SubjectLocaleSchema } from "@/lib/routing/public/subject";
+import { readSubjectSuccessor } from "@/lib/routing/public/subject.server";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
@@ -196,18 +196,15 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   if (Option.isNone(identity)) {
     return null;
   }
-  // The content store keeps the answer, a missing successor included, for the
-  // release that gave it, so a later release can still add the successor.
-  const redirect = yield* queryContentStore(
-    contentRelease.material.identity,
-    identity.value
+  const successor = yield* readSubjectSuccessor(
+    identity.value.appLocale,
+    identity.value.contentKey
   );
-  if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
-    return null;
-  }
-  return permanentRedirect(
-    `/${identity.value.appLocale}/${redirect.publicPath}`
-  );
+  return Option.match(successor, {
+    onNone: () => null,
+    onSome: (publicPath) =>
+      permanentRedirect(`/${identity.value.appLocale}/${publicPath}`),
+  });
 });
 
 /** Decodes one exact retired subject lesson URL into its stable content key. */
@@ -231,7 +228,7 @@ function readPreviousMaterialIdentity(pathname: string) {
       topic &&
       section &&
       extraSegments.length === 0 &&
-      isPreviousMaterialLocale(locale) &&
+      Schema.is(SubjectLocaleSchema)(locale) &&
       isPreviousMaterialLevel(category, grade)
     )
   ) {
@@ -249,17 +246,7 @@ function readPreviousMaterialIdentity(pathname: string) {
   if (Option.isNone(contentKey)) {
     return Option.none();
   }
-  return Option.some({
-    appLocale: locale,
-    contentKey: contentKey.value,
-    expectedMaterialKey: `lesson.${domain}.${currentTopic}`,
-    expectedSectionKey: section,
-  });
-}
-
-/** Accepts only locales that exposed the retired subject namespace. */
-function isPreviousMaterialLocale(locale: string): locale is "en" | "id" {
-  return locale === "en" || locale === "id";
+  return Option.some({ appLocale: locale, contentKey: contentKey.value });
 }
 
 /** Accepts only curriculum levels that exposed the retired subject routes. */

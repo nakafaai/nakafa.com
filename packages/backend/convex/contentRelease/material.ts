@@ -2,7 +2,6 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/co
 
 export const apiPage = registeredFunctions.apiPage;
 export const bucket = registeredFunctions.bucket;
-export const identity = registeredFunctions.identity;
 export const latest = registeredFunctions.latest;
 export const lesson = registeredFunctions.lesson;
 export const navigation = registeredFunctions.navigation;

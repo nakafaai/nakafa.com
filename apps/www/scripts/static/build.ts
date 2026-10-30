@@ -14,6 +14,10 @@ import {
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 import { readOgCopy } from "@/lib/og/copy.server";
+import {
+  readSubjectMap,
+  SubjectLocaleSchema,
+} from "@/lib/routing/public/subject";
 import { readRssText } from "@/lib/seo/feed";
 import { readManifestText } from "@/lib/seo/manifest";
 import { readSitemapFiles } from "@/lib/sitemap/files";
@@ -125,11 +129,18 @@ function buildLlmsText(twins: readonly string[]) {
   return `${buildRootLlmsIndexText()}\n## Markdown pages\n\n${Arr.join(lines, "\n")}\n`;
 }
 
-/** Renders the feeds and indexes of the release as text artifacts. */
+/**
+ * Renders the feeds and indexes of the release as text artifacts, and the maps
+ * that redirect each locale's retired subject lessons to their successors.
+ */
 const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
   twins: readonly string[]
 ) {
   const sitemap = yield* readSitemapFiles();
+  const subjects = yield* Effect.forEach(
+    SubjectLocaleSchema.literals,
+    readSubjectMap
+  );
   const rss = yield* readRssText();
   const manifest = yield* readManifestText();
   const rest: readonly TextArtifact[] = [
@@ -137,7 +148,7 @@ const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
     { path: "llms.txt", text: buildLlmsText(twins) },
     { path: "manifest.webmanifest", text: manifest },
   ];
-  return [...sitemap, ...rest];
+  return [...sitemap, ...subjects, ...rest];
 });
 
 /** Renders one social image when its route names published content, and reports whether it did. */
