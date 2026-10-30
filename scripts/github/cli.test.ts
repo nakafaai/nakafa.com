@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem } from "effect";
+import { NODE_RUNTIME_VERSION } from "#scripts/dependencies/policy";
 import { validateCliWorkflow, verifyCliWorkflow } from "#scripts/github/cli";
 
 const WORKFLOW_PATH = fileURLToPath(
@@ -277,7 +278,7 @@ describe("CLI workflow policy", () => {
         },
         {
           change: source.replace(
-            "          node-version: 24.22.1",
+            `          node-version: ${NODE_RUNTIME_VERSION}`,
             "          node-version: 24.20.0"
           ),
           problem: "CLI publication must use the repository Node runtime.",

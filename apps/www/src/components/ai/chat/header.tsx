@@ -28,12 +28,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import {
   Activity,
   type PropsWithChildren,
@@ -47,6 +41,7 @@ import { handleTitleKeyDown } from "@/components/ai/chat/rename";
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { useChatRename } from "@/components/ai/chat/title";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 
 /**
  * The header of the chat a viewer reads. Only the owner's header mounts the
@@ -239,23 +234,13 @@ export function ChatHeader({
   return (
     <BreadcrumbHeaderFrame>
       <div className="min-w-0 flex-1">{children}</div>
-      <ButtonGroup aria-label={t("chat-actions")} className="shrink-0">
-        {actions}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <SidebarTrigger
-                className="size-9"
-                icon={MessageMultiple02Icon}
-                label={t("chat-history")}
-                size="icon"
-                variant="outline"
-              />
-            }
-          />
-          <TooltipContent side="bottom">{t("chat-history")}</TooltipContent>
-        </Tooltip>
-      </ButtonGroup>
+      <div className="flex shrink-0 items-center gap-2">
+        <ButtonGroup aria-label={t("chat-actions")}>{actions}</ButtonGroup>
+        <PanelSheetTrigger
+          icon={MessageMultiple02Icon}
+          label={t("chat-history")}
+        />
+      </div>
     </BreadcrumbHeaderFrame>
   );
 }

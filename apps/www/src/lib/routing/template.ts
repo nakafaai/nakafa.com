@@ -83,20 +83,26 @@ export function isBarePath(
 }
 
 /**
- * Reports whether the Worker's router renders a path. A locale path is rendered
- * only when one of the Worker's route templates matches it, and every other
- * locale path names no page that the Worker has to render. Any other path is
- * rendered unless it is bare, because it names a Worker route of its own.
+ * Reports whether the Worker's router renders a path: the root, a server
+ * function, or a path that one of the Worker's route templates matches. A locale
+ * path may match any template. Any other path matches only a template that starts
+ * with its own first segment, such as an API route, the School tree or a discovery
+ * file, because a `$locale` segment would take any first segment. So a probe such
+ * as `/.well-known/assetlinks.json` names no page beside `/.well-known/agent-skills/index.json`.
  */
 export function isRenderedPath(
   pathname: string,
   renderedTemplates: readonly string[]
 ): boolean {
   const [first] = readPathSegments(pathname);
-  if (first === undefined || !Schema.is(LocaleSchema)(first)) {
-    return !isBarePath(pathname, renderedTemplates);
+  if (first === undefined || first === SERVER_FUNCTION_SEGMENT) {
+    return true;
   }
-  return Arr.some(renderedTemplates, (template) =>
-    matchesRouteTemplate(template, pathname)
+  const isLocalePath = Schema.is(LocaleSchema)(first);
+  return Arr.some(
+    renderedTemplates,
+    (template) =>
+      (isLocalePath || readPathSegments(template)[0] === first) &&
+      matchesRouteTemplate(template, pathname)
   );
 }

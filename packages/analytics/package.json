@@ -16,7 +16,7 @@
     "@tanstack/react-start": "1.169.4",
     "effect": "catalog:",
     "posthog-js": "1.438.21",
-    "posthog-node": "^5.57.1"
+    "posthog-node": "5.57.2"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
