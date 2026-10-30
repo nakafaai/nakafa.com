@@ -130,10 +130,7 @@ export function DataTable<TData extends RowData>({
     <Table containerClassName="min-h-0 flex-1 content-start overflow-auto [&_[data-slot=table-cell]]:whitespace-nowrap [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-card">
       <TableHeader>
         {Arr.map(table.getHeaderGroups(), (group) => (
-          <TableRow
-            className="hover:bg-transparent hover:text-inherit"
-            key={group.id}
-          >
+          <TableRow key={group.id}>
             {Arr.map(group.headers, (header, index) => (
               <DataTableHead header={header} index={index} key={header.id}>
                 <table.FlexRender header={header} />
@@ -162,7 +159,7 @@ export function DataTable<TData extends RowData>({
             </DataTableRow>
           ))
         ) : (
-          <TableRow className="hover:bg-transparent hover:text-inherit">
+          <TableRow>
             <TableCell colSpan={columns.length}>
               <Empty className="p-6 md:p-6">
                 <EmptyHeader>
@@ -180,10 +177,7 @@ export function DataTable<TData extends RowData>({
   );
 }
 
-/**
- * One row of the table: a row that opens beside the list on a page with panes, which lights under the pointer as the
- * whole row is pressable, else a plain row that does not, since pressing it opens nothing.
- */
+/** One row of the table: a row that opens beside the list on a page with panes, else a plain row. */
 function DataTableRow({
   children,
   row,
@@ -196,9 +190,7 @@ function DataTableRow({
   return hasPanes ? (
     <PaneTableRow id={row.id}>{children}</PaneTableRow>
   ) : (
-    <TableRow className="h-12 hover:bg-transparent hover:text-inherit">
-      {children}
-    </TableRow>
+    <TableRow className="h-12">{children}</TableRow>
   );
 }
 
