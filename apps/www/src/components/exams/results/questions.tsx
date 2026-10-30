@@ -95,18 +95,6 @@ const VerdictFilter = Schema.Union([Schema.Literal("all"), Verdict]);
 type VerdictFilter = typeof VerdictFilter.Type;
 
 /**
- * One question of the sheet, with its own search and verdict filter, so a question opened next starts
- * with every answer in view.
- */
-function QuestionPanel({ question }: { readonly question: Question }) {
-  return (
-    <TableFiltersProvider>
-      <QuestionResults question={question} />
-    </TableFiltersProvider>
-  );
-}
-
-/**
  * The statistics of one question and its answers, with the chosen options of each student. The
  * statistics read the sitting's answers in one bounded read and say when that read is partial. The
  * server reads the answers' filters: a verdict reads only the answers of that verdict, and a name
@@ -359,8 +347,11 @@ export function QuestionsAction({
           </div>
           {Option.match(current, {
             onNone: () => null,
+            // Each question holds its own search and verdict filter, so a question opened next starts with every answer.
             onSome: (question) => (
-              <QuestionPanel key={question.id} question={question} />
+              <TableFiltersProvider key={question.id}>
+                <QuestionResults question={question} />
+              </TableFiltersProvider>
             ),
           })}
         </div>
