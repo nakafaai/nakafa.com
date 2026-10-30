@@ -53,7 +53,7 @@ export function EditorArabicKeyboard({ label }: { label: string }) {
       </ToolHint>
       <PopoverContent
         align="end"
-        className="w-auto p-2"
+        className="w-auto max-w-(--available-width) p-2"
         finalFocus={false}
         initialFocus={false}
       >
