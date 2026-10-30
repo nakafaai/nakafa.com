@@ -889,6 +889,9 @@
       "roster": {
         "set": "Data siswa diperbarui",
         "imported": "Siswa diimpor dari Dapodik"
+      },
+      "login": {
+        "renamed": "Nama login diubah"
       }
     },
     "role-description": {
@@ -936,6 +939,9 @@
     "person-rename": "Ganti nama",
     "person-rename-description": "Nama baru tampil di setiap daftar sekolah yang memuat orang ini.",
     "person-rename-save": "Simpan",
+    "login-rename": "Ganti nama login",
+    "login-rename-description": "Siswa masuk dengan nama baru dan kata sandi yang sama.",
+    "login-rename-save": "Simpan",
     "invite-action": "Undang",
     "invites-footer": "Undang orang yang belum punya akun.",
     "invite-dialog-title": "Undang orang",

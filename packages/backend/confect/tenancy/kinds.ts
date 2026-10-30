@@ -183,6 +183,7 @@ export const person = Kind.make("person", "tenantPeople", {
       type: Schema.Literal("person.removed"),
     }),
     Schema.Struct({ type: Schema.Literal("person.renamed") }),
+    Schema.Struct({ type: Schema.Literal("login.renamed") }),
     Schema.Struct({
       cohort: Id("tenantCohorts"),
       type: Schema.Literal("person.placed"),

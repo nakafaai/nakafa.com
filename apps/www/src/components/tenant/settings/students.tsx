@@ -5,6 +5,7 @@ import {
   usePaginatedQuery,
 } from "@confect/react";
 import {
+  AtIcon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
   Refresh01Icon,
@@ -52,6 +53,7 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
+import { LoginRenameDialog } from "@/components/tenant/settings/login";
 import { PersonRenameDialog } from "@/components/tenant/settings/rename";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
@@ -192,15 +194,16 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
     <DataTable
       columns={columns}
       data={logins}
-      rowId={(login) => login.loginName}
+      rowId={(login) => login.person.id}
       search="login"
     />
   );
 }
 
 /**
- * A login's row menu: Rename, which renames its person, and Reissue card, which reissues the person's card. The menu
- * waits while the reissue runs, and the new card opens in the card dialog.
+ * A login's row menu: Rename, which renames its person, Change login name, which changes the name the person signs in
+ * with, and Reissue card, which reissues the person's card. The menu waits while the reissue runs, and the new card
+ * opens in the card dialog.
  */
 function SchoolLoginMenu({ login }: { login: LoginItem }) {
   const { slug } = useTenant();
@@ -213,6 +216,8 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
   const [isPending, startTransition] = useTransition();
   const [isRenaming, setIsRenaming] = useState(false);
   const [renaming, setRenaming] = useState(0);
+  const [isChangingLogin, setIsChangingLogin] = useState(false);
+  const [changingLogin, setChangingLogin] = useState(0);
 
   return (
     <div className="flex justify-end">
@@ -240,6 +245,15 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
             {t("person-rename")}
           </DropdownMenuItem>
           <DropdownMenuItem
+            onClick={() => {
+              setChangingLogin((count) => count + 1);
+              setIsChangingLogin(true);
+            }}
+          >
+            <HugeIcons icon={AtIcon} />
+            {t("login-rename")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onClick={() =>
               startTransition(() =>
                 saveSchool(
@@ -260,6 +274,12 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
         open={isRenaming}
         person={login.person}
         setOpen={setIsRenaming}
+      />
+      <LoginRenameDialog
+        key={changingLogin}
+        login={login}
+        open={isChangingLogin}
+        setOpen={setIsChangingLogin}
       />
     </div>
   );

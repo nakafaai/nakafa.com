@@ -9,6 +9,7 @@ import {
   addStudentChange,
   reissueCardChange,
   removeMemberChange,
+  renameLoginChange,
   renamePersonChange,
 } from "@/components/tenant/settings/accounts";
 import { isDraft, type Member } from "@/components/tenant/settings/state";
@@ -313,6 +314,32 @@ describe("components/tenant/settings/accounts", () => {
         ["siswa.baru", 1],
       ]);
       expect(issuedOf(later)).toEqual([["guru.lama", reissuedAt]]);
+    });
+
+    it("shows a login under its new login name at once, and keeps the other logins", () => {
+      const local = createLocalStore();
+      const siswa = login("siswa.baru", 1);
+      local.seed(
+        identity.logins.list,
+        { paginationOpts: paging, slug },
+        pageOf([login("guru.lama", 1), siswa])
+      );
+      renameLoginChange(local.store, {
+        loginName: "siswa.benar",
+        personId: siswa.person.id,
+        slug,
+      });
+      expect(
+        Arr.map(
+          Option.getOrThrow(
+            local.store.getQuery(identity.logins.list, {
+              paginationOpts: paging,
+              slug,
+            })
+          ).page,
+          (item) => item.loginName
+        )
+      ).toEqual(["guru.lama", "siswa.benar"]);
     });
 
     it("leaves the logins of another school as they are", () => {

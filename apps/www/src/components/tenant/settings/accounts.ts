@@ -165,6 +165,16 @@ export const reissueCardChange: OptimisticUpdate<
   }));
 };
 
+/** Shows a login under its new login name at once, on every loaded page of the school's logins. */
+export const renameLoginChange: OptimisticUpdate<
+  typeof identity.logins.rename
+> = (localStore, { loginName, personId, slug }) => {
+  changeLogins(localStore, slug, personId, (login) => ({
+    ...login,
+    loginName,
+  }));
+};
+
 /** Shows a person under their new name at once, on every loaded page of the school's members and of its logins. */
 export const renamePersonChange: OptimisticUpdate<
   typeof tenancy.people.rename
