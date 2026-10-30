@@ -38,11 +38,13 @@ export function useDocumentLabels() {
     return {
       pictures: {
         add: t("image-add"),
+        addDescription: t("image-add-description"),
         alt: t("image-alt"),
         altHint: t("image-alt-hint"),
         cancel: t("image-cancel"),
         delete: t("image-delete"),
         edit: t("image-edit"),
+        editDescription: t("image-edit-description"),
         save: t("image-save"),
       },
       formulaEdit: {
