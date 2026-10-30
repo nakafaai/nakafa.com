@@ -39,7 +39,7 @@ import { workerEnvironment, workerSettings } from "#www/worker";
 const PAGE_LIST_FILE = join(import.meta.dirname, ".cache/static-pages.json");
 
 /** How many prerender requests run at once. Set, so the build machine's core count never changes the output. */
-const PRERENDER_CONCURRENCY = 8;
+const PRERENDER_CONCURRENCY = 16;
 
 /**
  * Reads the public paths that the build prerenders. The static runner writes them

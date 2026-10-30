@@ -97,7 +97,7 @@ function assertPrerenderedPages(
 }
 
 /** How many static answers the build reads from its prerender server at once. */
-const STATIC_ANSWER_CONCURRENCY = 8;
+const STATIC_ANSWER_CONCURRENCY = 24;
 
 /** A serialized server function input as the JSON text of its `payload` query field. */
 const PayloadJson = Schema.fromJsonString(Schema.Unknown);
@@ -199,6 +199,7 @@ export const writeStaticAnswers = (pages: readonly string[]): Plugin => ({
       if (calls.length === 0) {
         return;
       }
+      process.stdout.write(`probe: static answers start ${calls.length} calls ${new Date().toISOString()}\n`);
       const { configFile } = builder.config;
       if (configFile === undefined) {
         throw new Error("The build has no config file to preview.");
@@ -222,6 +223,7 @@ export const writeStaticAnswers = (pages: readonly string[]): Plugin => ({
         );
       } finally {
         await server.close();
+        process.stdout.write(`probe: static answers end ${new Date().toISOString()}\n`);
       }
     },
   },

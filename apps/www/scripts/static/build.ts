@@ -198,12 +198,14 @@ const main = Effect.fn("www.static.build")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const pages = yield* readPagePaths(pageListFile);
+  process.stdout.write(`probe: twins start ${new Date().toISOString()}\n`);
   const twins = yield* Effect.forEach(
     pages,
     (page) => writeMarkdownTwin(outDir, page),
-    { concurrency: 8 }
+    { concurrency: 24 }
   );
   const twinPages = Arr.getSomes(twins);
+  process.stdout.write(`probe: twins end ${new Date().toISOString()}\n`);
   const textArtifacts = yield* readTextArtifacts(twinPages);
   yield* Effect.forEach(
     textArtifacts,
