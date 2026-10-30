@@ -95,6 +95,36 @@ export function useFinish() {
 }
 
 /**
+ * Keeps one response in the browser, numbered one above the saved version, and gives back the device time and
+ * the version it was kept with. A typed answer is kept on every key, before its send waits for a pause, so a
+ * reload or a closed tab loses no key; a later key keeps its text in place of the one kept before.
+ */
+export function keepResponse(input: {
+  readonly attemptId: typeof SentAnswer.Type.attemptId;
+  readonly question: PaperQuestion;
+  readonly response: ExamResponse;
+  readonly sittingId: typeof SentAnswer.Type.sittingId;
+}) {
+  const answeredAt = Effect.runSync(Clock.currentTimeMillis);
+  const version = nextVersionOf(input.question);
+  Effect.runSync(
+    keepAnswer(input.sittingId, input.attemptId, input.question.id, {
+      answeredAt,
+      response: input.response,
+      version,
+    }).pipe(
+      Effect.provide(sittingStorage),
+      Effect.catchTag("KeyValueStoreError", (error) =>
+        reportClientException(error, {
+          source: "components/exams/sitting/answer",
+        })
+      )
+    )
+  );
+  return { answeredAt, version };
+}
+
+/**
  * Chooses one response for a question: it is kept in the browser before it is sent, numbered one above the
  * saved version, so a reload or a closed tab sends it again. The send confirms or drops the kept answer, and
  * a refused send shows its toast.
@@ -110,22 +140,7 @@ export function useChooseAnswer() {
     readonly sittingId: typeof SentAnswer.Type.sittingId;
     readonly slug: TenantSlug;
   }) => {
-    const answeredAt = Effect.runSync(Clock.currentTimeMillis);
-    const version = nextVersionOf(input.question);
-    Effect.runSync(
-      keepAnswer(input.sittingId, input.attemptId, input.question.id, {
-        answeredAt,
-        response: input.response,
-        version,
-      }).pipe(
-        Effect.provide(sittingStorage),
-        Effect.catchTag("KeyValueStoreError", (error) =>
-          reportClientException(error, {
-            source: "components/exams/sitting/answer",
-          })
-        )
-      )
-    );
+    const { answeredAt, version } = keepResponse(input);
     Effect.runPromise(
       send(
         {

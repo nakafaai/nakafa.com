@@ -10,6 +10,7 @@ import {
   keepAnswerIn,
   keptAnswersFor,
   readKept,
+  readKeptResponse,
   settleSent,
   submittedKeysOf,
 } from "@/components/exams/sitting/keep";
@@ -112,6 +113,31 @@ describe("the browser's kept state of an attempt", () => {
         expect((yield* readKept(SITTING, ATTEMPT)).answers).toEqual({});
       })
     )
+  );
+
+  it.effect(
+    "keeps typed text from the keystroke, so a field that unmounts without a flush loses no key",
+    () =>
+      scoped(
+        Effect.gen(function* () {
+          const typed = {
+            answeredAt: 3,
+            response: { text: "Jakar" },
+            version: 2,
+          };
+          yield* keepAnswer(SITTING, ATTEMPT, QUESTION, typed);
+          // No send and no confirm follow: the next page opens the field with the text and sends it again.
+          expect(yield* readKeptResponse(SITTING, ATTEMPT, QUESTION)).toEqual(
+            Option.some({ text: "Jakar" })
+          );
+          expect(
+            keptAnswersFor(yield* readKept(SITTING, ATTEMPT), [QUESTION])
+          ).toEqual([{ answer: typed, questionId: QUESTION }]);
+          expect(
+            yield* readKeptResponse(SITTING, ATTEMPT, "question-b")
+          ).toEqual(Option.none());
+        })
+      )
   );
 
   it.effect("keeps each attempt apart", () =>
