@@ -9,6 +9,7 @@ import {
   addStudentChange,
   reissueCardChange,
   removeMemberChange,
+  renamePersonChange,
 } from "@/components/tenant/settings/accounts";
 import { isDraft, type Member } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
@@ -225,6 +226,53 @@ describe("components/tenant/settings/accounts", () => {
     expect(namesOf(paging, slug)).toEqual(["Baru"]);
     expect(namesOf(later, slug)).toEqual([]);
     expect(namesOf(paging, otherSlug)).toEqual(["Lama"]);
+  });
+
+  it("shows a renamed person under the new name on the school's members and logins, and keeps the others", () => {
+    const local = createLocalStore();
+    const lama = member("p-lama", "Lama");
+    const guru = login("guru.lama", 1);
+    const siswa = login("siswa.baru", 1);
+    local.seed(
+      tenancy.roster.members,
+      { paginationOpts: paging, slug },
+      pageOf([lama, member("p-baru", "Baru")])
+    );
+    local.seed(
+      identity.logins.list,
+      { paginationOpts: paging, slug },
+      pageOf([guru, siswa])
+    );
+    renamePersonChange(local.store, {
+      name: "Lama Sekali",
+      personId: lama.id,
+      slug,
+    });
+    renamePersonChange(local.store, {
+      name: "Guru Baru",
+      personId: guru.person.id,
+      slug,
+    });
+    const members = Option.getOrThrow(
+      local.store.getQuery(tenancy.roster.members, {
+        paginationOpts: paging,
+        slug,
+      })
+    ).page;
+    const logins = Option.getOrThrow(
+      local.store.getQuery(identity.logins.list, {
+        paginationOpts: paging,
+        slug,
+      })
+    ).page;
+    expect(Arr.map(members, (item) => item.name)).toEqual([
+      "Lama Sekali",
+      "Baru",
+    ]);
+    expect(Arr.map(logins, (item) => item.person.name)).toEqual([
+      "Guru Baru",
+      siswa.person.name,
+    ]);
   });
 
   describe("the logins of the school", () => {

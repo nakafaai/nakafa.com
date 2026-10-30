@@ -129,13 +129,13 @@ export const addStudentChange: OptimisticUpdate<
   }
 };
 
-/**
- * Shows a login's card as issued now in every loaded list of the school's logins, while the server
- * reissues it. The list keeps its order, and a refused reissue is undone when the server answers.
- */
-export const reissueCardChange: OptimisticUpdate<
-  typeof identity.cards.reissue
-> = (localStore, { personId, slug }) => {
+/** Changes the login of one person on every loaded page of the school's logins, and keeps the others as they are. */
+function changeLogins(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  slug: TenantSlug,
+  personId: Login["person"]["id"],
+  change: (login: Login) => Login
+) {
   for (const query of localStore.getAllQueries(identity.logins.list)) {
     if (Option.isSome(query.value) && query.args.slug === slug) {
       localStore.setQuery(
@@ -144,15 +144,42 @@ export const reissueCardChange: OptimisticUpdate<
         Option.some({
           ...query.value.value,
           page: Arr.map(query.value.value.page, (login) =>
-            login.person.id === personId
-              ? {
-                  ...login,
-                  issuedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-                }
-              : login
+            login.person.id === personId ? change(login) : login
           ),
         })
       );
     }
   }
+}
+
+/**
+ * Shows a login's card as issued now in every loaded list of the school's logins, while the server
+ * reissues it. The list keeps its order, and a refused reissue is undone when the server answers.
+ */
+export const reissueCardChange: OptimisticUpdate<
+  typeof identity.cards.reissue
+> = (localStore, { personId, slug }) => {
+  changeLogins(localStore, slug, personId, (login) => ({
+    ...login,
+    issuedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+  }));
+};
+
+/** Shows a person under their new name at once, on every loaded page of the school's members and of its logins. */
+export const renamePersonChange: OptimisticUpdate<
+  typeof tenancy.people.rename
+> = (localStore, { name, personId, slug }) => {
+  changeMemberLists(
+    localStore,
+    slug,
+    () => true,
+    (page) =>
+      Arr.map(page, (member) =>
+        member.id === personId ? { ...member, name } : member
+      )
+  );
+  changeLogins(localStore, slug, personId, (login) => ({
+    ...login,
+    person: { ...login.person, name },
+  }));
 };
