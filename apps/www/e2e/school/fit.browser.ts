@@ -27,7 +27,7 @@ function thumbnailAlign(card: Element) {
 
 /**
  * The tops of the first text line of a paper table's column heading and of the statements' heading in
- * its row: equal when the row stands its headings on one line.
+ * its row, equal when the row stands its headings on one line, and the statements' heading itself.
  */
 function headingLines(column: Element) {
   const top = (node: Node) => {
@@ -38,12 +38,13 @@ function headingLines(column: Element) {
   const statements = column.closest(".grid-cols-subgrid")?.children.item(1);
   return {
     column: top(column),
+    heading: statements?.textContent ?? "",
     statements:
       statements === null || statements === undefined ? -1 : top(statements),
   };
 }
 
-test("the teacher's paper shows each matching key's placeholder whole, a true or false table's headings on one line, its thumbnails from the start, and a page's row in two lines on a phone", async ({
+test("the teacher's paper shows each matching key's placeholder whole, a true or false table's headings on one line in the student's words, its thumbnails from the start, and a page's row in two lines on a phone", async ({
   baseURL,
   browser,
 }) => {
@@ -91,6 +92,8 @@ test("the teacher's paper shows each matching key's placeholder whole, a true or
     await expect(heading).toBeVisible();
     const lines = await heading.evaluate(headingLines);
     expect(lines.column).toBe(lines.statements);
+    // The heading reads as the student's paper reads it.
+    expect(lines.heading).toBe("Statement");
   }
 
   // A page's thumbnail in the grid lays its text out as the page does, from the start.

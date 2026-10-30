@@ -273,11 +273,11 @@ function TableSketch({
   columns: readonly { readonly id: string; readonly label: OptionLabel }[];
   statements: readonly { readonly id: string; readonly label: OptionLabel }[];
 }) {
-  const t = useTranslations("Exams");
+  const t = useTranslations("Tryouts");
 
   return (
     <PaperTable columns={columns.length}>
-      <PaperTableHead heading={t("match-statements")}>
+      <PaperTableHead heading={t("statement")}>
         {Arr.map(columns, (column) => (
           <PaperTableHeader key={column.id}>
             <OptionSketch label={column.label} />

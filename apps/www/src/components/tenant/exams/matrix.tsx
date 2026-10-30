@@ -78,6 +78,7 @@ export function TableSheet({
   table,
 }: TableSheetProps) {
   const t = useTranslations("Exams");
+  const tTryouts = useTranslations("Tryouts");
   const id = useId();
   // The marks that do not mark every statement yet, which stand for the key until they do.
   const [draft, setDraft] = useState<readonly Cell[] | null>(null);
@@ -145,7 +146,7 @@ export function TableSheet({
   return (
     <div className="grid min-w-0 gap-3">
       <PaperTable columns={table.columns.length}>
-        <PaperTableHead heading={t("match-statements")}>
+        <PaperTableHead heading={tTryouts("statement")}>
           {Arr.map(table.columns, (column, index) => (
             <PaperTableHeader id={`${id}-${column.id}`} key={column.id}>
               <OptionRow
