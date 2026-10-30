@@ -10,11 +10,9 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
-import { cn } from "cn";
 import { Function as Fn, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { contentWidthVariants } from "@/components/shared/content/width";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { ExamMenu } from "@/components/tenant/exams/menu";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
@@ -64,12 +62,7 @@ export function ExamHeader() {
 
   return (
     <header className="h-14 shrink-0 border-b" data-slot="page-header">
-      <div
-        className={cn(
-          contentWidthVariants({ width: "page" }),
-          "flex h-full w-full items-center gap-2 px-2"
-        )}
-      >
+      <div className="flex h-full w-full items-center gap-2 px-2">
         <Tooltip>
           <TooltipTrigger
             render={
@@ -121,12 +114,7 @@ export function ExamLockedNote() {
   if (gone) {
     return (
       <div className="border-b">
-        <p
-          className={cn(
-            contentWidthVariants({ width: "page" }),
-            "px-4 py-2 text-muted-foreground text-sm"
-          )}
-        >
+        <p className="px-4 py-2 text-muted-foreground text-sm">
           <ExamGone />
         </p>
       </div>
@@ -139,12 +127,7 @@ export function ExamLockedNote() {
 
   return (
     <div className="border-b">
-      <p
-        className={cn(
-          contentWidthVariants({ width: "page" }),
-          "px-4 py-2 text-muted-foreground text-sm"
-        )}
-      >
+      <p className="px-4 py-2 text-muted-foreground text-sm">
         {t("archived-note")}
       </p>
     </div>

@@ -60,8 +60,8 @@ export function ExamEditor({
 }
 
 /**
- * The editor's shell: the header, the toolbar row under it, then two screens side by side on a wide
- * screen, the canvas of the questions and the teacher's panel of the chosen one, which the teacher
+ * The editor's shell, the screen's full width: the header, the toolbar row under it, then two screens side by
+ * side on a wide screen, the canvas of the questions and the teacher's panel of the chosen one, which the teacher
  * resizes by the handle between them, and the footer. A phone shows the canvas alone and opens the
  * teacher's panel in a sheet from the footer. The panel has no default size of the canvas, so the
  * server draws the canvas as wide as the room the panel leaves, and the layout keeps that width once
@@ -82,7 +82,7 @@ function ExamWorkspace() {
         {grid ? (
           <ExamGrid />
         ) : (
-          <Panes fill="parent">
+          <Panes fill="parent" width="full">
             <PanesList>
               <ExamCanvas canvas={canvas} />
             </PanesList>

@@ -44,7 +44,7 @@ function headingLines(column: Element) {
   };
 }
 
-test("the teacher's paper shows each matching key's placeholder whole, a true or false table's headings on one line in the student's words, its thumbnails from the start, and a page's row in two lines on a phone", async ({
+test("the teacher's canvas reaches the screen's edge, and its paper shows each matching key's placeholder whole, a true or false table's headings on one line in the student's words, its thumbnails from the start, and a page's row in two lines on a phone", async ({
   baseURL,
   browser,
 }) => {
@@ -67,6 +67,13 @@ test("the teacher's paper shows each matching key's placeholder whole, a true or
   await expect(
     page.getByRole("textbox", { name: "Question 1 text" })
   ).toBeEditable({ timeout: readinessTimeoutMilliseconds });
+
+  // The canvas is the surface the papers lie on, from the screen's edge to the teacher's panel, with no
+  // margin beside it on a wide screen.
+  const canvasBox = await page
+    .getByRole("region", { name: "Exam pages" })
+    .boundingBox();
+  expect(canvasBox?.x).toBe(0);
 
   // Each statement's key select in the teacher layer shows its placeholder whole, as the student's
   // paper shows its own.

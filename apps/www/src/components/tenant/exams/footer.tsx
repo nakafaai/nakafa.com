@@ -13,11 +13,9 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cva } from "class-variance-authority";
-import { cn } from "cn";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
-import { contentWidthVariants } from "@/components/shared/content/width";
 import { PageCounter } from "@/components/tenant/exams/counter";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { ExamPanelButton } from "@/components/tenant/exams/panel";
@@ -173,10 +171,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
         <div className="border-b">
           <nav
             aria-label={t("pages")}
-            className={cn(
-              contentWidthVariants({ width: "page" }),
-              "flex w-full gap-3 overflow-x-auto p-3"
-            )}
+            className="flex w-full gap-3 overflow-x-auto p-3"
           >
             {Arr.map(exam.questions, (question, index) => (
               <PageThumb
@@ -190,12 +185,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
           </nav>
         </div>
       ) : null}
-      <div
-        className={cn(
-          contentWidthVariants({ width: "page" }),
-          "flex min-h-12 w-full items-center gap-2 px-3 py-1.5"
-        )}
-      >
+      <div className="flex min-h-12 w-full items-center gap-2 px-3 py-1.5">
         {grid ? null : <ExamPanelButton />}
         <div className="ms-auto flex items-center gap-1">
           {grid ? null : (
