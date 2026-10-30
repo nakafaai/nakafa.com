@@ -7,8 +7,10 @@ import { Array as Arr, Option } from "effect";
 import { Fragment, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
+import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
+import { ClassesCell } from "@/components/tenant/home/classes";
 import { useHomeNow } from "@/components/tenant/home/clock";
 import { reachesBound } from "@/components/tenant/home/count";
 import { minutesLeft } from "@/components/tenant/home/left";
@@ -32,10 +34,10 @@ type Sitting = typeof StudentSittingRow.Type;
 
 /**
  * The cells of a student's home on one connected dashboard: the sitting that is open now or the next one, with its
- * countdown and its action, the student's schedule for the next fourteen days with each sitting as a row, and the
- * results of the sittings that closed, with the student's score once it is released. A student with no sitting and no
- * result sees Nina searching and one sentence, with no cell. While the list loads nothing shows below the header, and
- * a failed read shows its own sentence and Try again.
+ * countdown and its action, the student's classes, the student's schedule for the next fourteen days with each sitting
+ * as a row, and the results of the sittings that closed, with the student's score once it is released. A student with
+ * no sitting and no result sees Nina searching and one sentence in place of the sitting cells. While the sittings and
+ * the classes load nothing shows below the header, and a failed read shows its own sentence and Try again.
  */
 export function StudentHome() {
   const tenant = useTenant();
@@ -51,6 +53,7 @@ export function StudentHome() {
 function StudentCells() {
   const tenant = useTenant();
   const listed = useStudentSittings();
+  const classes = useMyClasses();
 
   useEffect(() => {
     if (QueryResult.isSuccess(listed)) {
@@ -61,7 +64,10 @@ function StudentCells() {
   if (QueryResult.isFailure(listed)) {
     throw listed.error;
   }
-  if (!QueryResult.isSuccess(listed)) {
+  if (QueryResult.isFailure(classes)) {
+    throw classes.error;
+  }
+  if (!(QueryResult.isSuccess(listed) && QueryResult.isSuccess(classes))) {
     return null;
   }
   const sittings = orderSittings(listed.value);
@@ -77,6 +83,7 @@ function StudentCells() {
     Arr.findFirst(upcoming, (sitting) => sitting.state === "scheduled")
   );
   const shown = studentShown({
+    classes: classes.value.length,
     finished: finished.length,
     hasNow: Option.isSome(next),
     upcoming: upcoming.length,
@@ -92,6 +99,13 @@ function StudentCells() {
       narrow: 2,
       shown: shown.now,
       wide: 8,
+    },
+    {
+      draw: (span) => <ClassesCell classes={classes.value} span={span} />,
+      key: "classes",
+      narrow: 2,
+      shown: shown.classes,
+      wide: 4,
     },
     {
       draw: (span) => (

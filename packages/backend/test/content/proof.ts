@@ -83,7 +83,7 @@ import { Base64Url } from "effect/encoding";
 
 const keys = generateKeyPairSync("ed25519");
 const digest = Schema.decodeSync(Sha256HashSchema)(TEST_DIGEST);
-type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+type ArtifactLocaleCode = typeof ArtifactLocaleSchema.Encoded;
 export const TEST_KEY_ID = SigningKeyIdSchema.make("test-key");
 export const TEST_PUBLIC_KEY = keys.publicKey
   .export({ format: "pem", type: "spki" })

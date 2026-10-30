@@ -41,9 +41,12 @@ test("a teacher deletes a draft from its editor and lands on the exams without a
   await dialog.getByRole("textbox", { name: "Exam title" }).fill(TITLE);
   await dialog.getByRole("button", { name: "Create exam" }).click();
   await page.waitForURL(EDITOR_PATH);
-  await expect(
-    page.getByRole("button", { name: "More actions" })
-  ).toBeVisible();
+  // The exams list stays on screen until the editor draws, and each of its rows has a More actions of its own,
+  // so the editor's actions are found in their own group.
+  const examActions = page
+    .getByRole("group", { name: "Exam actions" })
+    .getByRole("button", { name: "More actions" });
+  await expect(examActions).toBeVisible();
 
   // Record every text the page shows from the press of Delete until the exams settle, and the draft's
   // title on the exams list, where it must never appear once the editor is left.
@@ -71,7 +74,7 @@ test("a teacher deletes a draft from its editor and lands on the exams without a
     { broken: BROKEN, flashed: FLASHED, title: TITLE }
   );
 
-  await page.getByRole("button", { name: "More actions" }).click();
+  await examActions.click();
   await page.getByRole("menuitem", { name: "Delete exam" }).click();
   const confirm = page.getByRole("dialog");
   await expect(confirm.getByText("Delete this exam?")).toBeVisible();

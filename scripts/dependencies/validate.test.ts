@@ -74,7 +74,7 @@ function validInput(): PolicyInput {
     lock: "",
     manifests,
     rootManifest: {
-      devEngines: { runtime: { version: "24.22.1" } },
+      devEngines: { runtime: { version: "24.22.2" } },
       packageManager: PACKAGE_MANAGER,
     },
     workspace: {
@@ -400,7 +400,7 @@ describe("dependency policy validation", () => {
           devEngines: { runtime: { version: "24.20.0" } },
         },
       }),
-      problem: "The managed Node runtime must be 24.22.1.",
+      problem: "The managed Node runtime must be 24.22.2.",
     },
   ])("reports $name", ({ change, problem }) => {
     assert.deepStrictEqual(validateDependencyPolicy(change(validInput())), [

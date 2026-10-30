@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
+import { local as assetsBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/assets/Assets";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
 import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
 import babel from "@rolldown/plugin-babel";
@@ -280,6 +281,40 @@ const bundleCommonJsReactPeers: Plugin = {
   },
 };
 
+/**
+ * `esm-env` answers `BROWSER` with the `browser` export condition, and the Worker
+ * environments resolve with it (`workerd`, `worker`, `module`, `browser`, as
+ * Cloudflare's plugin does). workerd is no browser, so there `esm-env/browser`
+ * is `false`, as esm-env's own fallback (`typeof window !== "undefined"`) finds
+ * at runtime. Otherwise every library that asks renders as it would in a
+ * browser: NumberFlow's server markup came out empty, so a try-out section
+ * showed no numbers until it hydrated. The Worker environments pre-bundle no
+ * `esm-env`, because Vite's dependency optimizer resolves with its alias and
+ * resolve plugins only, never this one.
+ */
+const ESM_ENV_BROWSER = "esm-env/browser";
+const WORKER_ESM_ENV_BROWSER = "\0www:esm-env-browser";
+
+const workerIsNoBrowser: Plugin = {
+  name: "www:worker-is-no-browser",
+  enforce: "pre",
+  applyToEnvironment: (environment) =>
+    WORKER_ENVIRONMENTS.includes(environment.name),
+  configEnvironment: (name, config) => {
+    if (!WORKER_ENVIRONMENTS.includes(name)) {
+      return;
+    }
+    config.optimizeDeps = {
+      ...config.optimizeDeps,
+      exclude: [...(config.optimizeDeps?.exclude ?? []), "esm-env"],
+    };
+  },
+  resolveId: (source) =>
+    source === ESM_ENV_BROWSER ? WORKER_ESM_ENV_BROWSER : undefined,
+  load: (id) =>
+    id === WORKER_ESM_ENV_BROWSER ? "export default false;" : undefined,
+};
+
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/;
 
@@ -293,9 +328,15 @@ const NODE_BUILTIN_SPECIFIER = /^node:/;
  * sets ALCHEMY_CLOUDFLARE_VITE_INJECTED and adds its plugin, so this copy stands
  * down there. TanStack's prerender preview reloads this file with
  * TSS_PRERENDERING set and no Alchemy plugin, so this copy runs for it.
+ *
+ * `vite preview` of a finished build, the acceptance server's, binds the release's
+ * assets as `ASSETS`, as the deployed Worker does, so its static-first answers
+ * (`hasStaticRelease`) run there too. The prerender and `vite dev` bind none,
+ * because no release exists yet and every route renders.
  */
 function alchemyWorker(
-  nodeEnvironment: "development" | "production"
+  nodeEnvironment: "development" | "production",
+  preview: boolean
 ): PluginOption[] {
   const isAlchemyBuild = process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1";
   const isPrerendering = process.env.TSS_PRERENDERING === "true";
@@ -309,12 +350,15 @@ function alchemyWorker(
       viteEnvironments: workerSettings.viteEnvironments,
       worker: {
         assets: workerAssets,
-        bindings: Object.entries({
-          ...workerEnvironment(),
-          NODE_ENV: nodeEnvironment,
-        }).flatMap(([name, value]) =>
-          value === undefined ? [] : [textBinding(name, value)]
-        ),
+        bindings: [
+          ...Object.entries({
+            ...workerEnvironment(),
+            NODE_ENV: nodeEnvironment,
+          }).flatMap(([name, value]) =>
+            value === undefined ? [] : [textBinding(name, value)]
+          ),
+          ...(preview && !isPrerendering ? [assetsBinding("ASSETS")] : []),
+        ],
         name: workerSettings.name,
       },
     }),
@@ -420,6 +464,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       react(),
       babel({ presets: [reactCompilerPreset()] }),
       bundleCommonJsReactPeers,
+      workerIsNoBrowser,
       writeHeadersFile,
       readPreviewHeaders,
       writeRobotsFile,
@@ -433,7 +478,8 @@ export default defineConfig(async ({ command, isPreview }) => {
       // and `vite preview`, the acceptance server and the prerender included, run
       // it as the deployed Worker does.
       ...alchemyWorker(
-        command === "serve" && !isPreview ? "development" : "production"
+        command === "serve" && !isPreview ? "development" : "production",
+        isPreview === true
       ),
     ],
   };

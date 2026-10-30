@@ -5,10 +5,17 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogPanel,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ImageType } from "@repo/editor/upload";
@@ -25,6 +32,7 @@ import {
   type ReactNode,
   use,
   useEffect,
+  useId,
   useMemo,
   useState,
 } from "react";
@@ -36,6 +44,7 @@ const PictureLabels = Schema.Struct({
   cancel: Schema.String,
   delete: Schema.String,
   edit: Schema.String,
+  editDescription: Schema.String,
   save: Schema.String,
 });
 type PictureLabels = typeof PictureLabels.Type;
@@ -101,6 +110,7 @@ export function useObjectUrl(file: File | null): string | null {
  */
 export function PictureAltDialog({
   alt,
+  description,
   labels,
   onCancel,
   onConfirm,
@@ -110,6 +120,8 @@ export function PictureAltDialog({
 }: {
   /** The alt text the dialog starts with: empty for a new picture. */
   readonly alt: string;
+  /** The one sentence under the title that says what the dialog does. */
+  readonly description: string;
   readonly labels: Pick<PictureLabels, "alt" | "altHint" | "cancel">;
   readonly onCancel: () => void;
   readonly onConfirm: (alt: string) => void;
@@ -133,6 +145,7 @@ export function PictureAltDialog({
   }
 
   const next = altText(text);
+  const field = useId();
 
   return (
     <Dialog
@@ -146,17 +159,11 @@ export function PictureAltDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {preview === null ? null : (
-          <img
-            alt=""
-            className="max-h-64 rounded-md object-contain"
-            height={256}
-            src={preview}
-            width={256}
-          />
-        )}
+        {/* The form is the dialog's column below the header, so its panel scrolls and its footer stays in view. */}
         <form
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(event) => {
             event.preventDefault();
             if (Option.isSome(next)) {
@@ -164,17 +171,30 @@ export function PictureAltDialog({
             }
           }}
         >
-          <div className="flex flex-col gap-1 text-sm">
-            <span>{labels.alt}</span>
-            <Input
-              aria-label={labels.alt}
-              onChange={(event) => setText(event.target.value)}
-              placeholder={labels.altHint}
-              value={text}
-            />
-          </div>
+          <DialogPanel>
+            <FieldGroup>
+              {preview === null ? null : (
+                <img
+                  alt=""
+                  className="max-h-64 rounded-md object-contain"
+                  height={256}
+                  src={preview}
+                  width={256}
+                />
+              )}
+              <Field>
+                <FieldLabel htmlFor={field}>{labels.alt}</FieldLabel>
+                <Input
+                  id={field}
+                  onChange={(event) => setText(event.target.value)}
+                  placeholder={labels.altHint}
+                  value={text}
+                />
+              </Field>
+            </FieldGroup>
+          </DialogPanel>
           <DialogFooter>
-            <Button onClick={onCancel} type="button" variant="ghost">
+            <Button onClick={onCancel} type="button" variant="outline">
               {labels.cancel}
             </Button>
             <Button disabled={Option.isNone(next)} type="submit">
@@ -253,6 +273,7 @@ function PictureNode({
       ) : null}
       <PictureAltDialog
         alt={alt}
+        description={labels.editDescription}
         labels={labels}
         onCancel={() => setEditing(false)}
         onConfirm={(next) => {

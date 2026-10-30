@@ -12,9 +12,8 @@ import {
   testTextHash,
 } from "@repo/backend/test/content/release";
 import { encodeJsonText } from "@repo/utilities/json";
-import type { Schema } from "effect";
 
-type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+type ArtifactLocaleCode = typeof ArtifactLocaleSchema.Encoded;
 
 /** The smallest valid content tree: a fragment with no children. */
 const TEST_CONTENT_TREE: ContentTreeElement = {

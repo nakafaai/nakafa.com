@@ -4,6 +4,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
+  DocumentIds,
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
@@ -30,11 +31,10 @@ const presence = new Presence(components.presence);
  * so a user that names no Person is a defect.
  */
 const editorOf = Effect.fn("exams.presence.editor")(function* (userId: string) {
-  const ctx = yield* QueryCtx;
   const reader = yield* DatabaseReader;
-  const personId = yield* Effect.fromNullishOr(
-    ctx.db.normalizeId("tenantPeople", userId)
-  ).pipe(Effect.orDie);
+  const personId = yield* (yield* DocumentIds)
+    .parse("tenantPeople", userId)
+    .pipe(Effect.flatMap(Effect.fromOption), Effect.orDie);
   const person = yield* reader
     .table("tenantPeople")
     .get(personId)
