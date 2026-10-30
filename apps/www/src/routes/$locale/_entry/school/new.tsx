@@ -5,7 +5,7 @@ import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { SchoolStart } from "@/components/tenant/start/questionnaire";
 import { readSchoolStartPageFn } from "@/lib/entry/page.functions";
-import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -18,11 +18,9 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
   loader: async ({ params }) => {
     const [page, messages] = await Promise.all([
       readSchoolStartPageFn({ data: { locale: params.locale } }),
-      readRouteMessages({
-        data: {
-          locale: params.locale,
-          namespaces: ["Metadata", "SchoolStart"],
-        },
+      readRenderedRouteMessages({
+        locale: params.locale,
+        namespaces: ["Metadata", "SchoolStart"],
       }),
     ]);
     if (page._tag === "Redirect") {
