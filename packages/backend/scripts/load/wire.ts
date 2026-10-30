@@ -39,13 +39,14 @@ export interface Wire {
 
 /**
  * Opens one WebSocket connection to the deployment at `address`, signed in through `token`,
- * which Convex asks again before the token expires. The connection closes with its scope.
+ * which Convex asks again before the token expires. A token of `null` leaves the connection
+ * signed out, as a browser's failed token request does. The connection closes with its scope.
  */
-export const openWire = Effect.fn("load.wire.open")(function* (
+export const openWire = Effect.fn("load.wire.open")(function* <R>(
   address: string,
-  token: Effect.Effect<string>
+  token: Effect.Effect<string | null, never, R>
 ) {
-  const context = yield* Effect.context<never>();
+  const context = yield* Effect.context<R>();
   return yield* Effect.acquireRelease(
     Effect.sync(() => {
       const client = new ConvexClient(address, {

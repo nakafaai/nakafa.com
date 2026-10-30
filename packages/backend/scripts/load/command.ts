@@ -14,7 +14,7 @@ import {
 import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
 import { captureLogs } from "@repo/backend/scripts/load/logs";
 import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
-import { recorderLayer } from "@repo/backend/scripts/load/recorder";
+import { recorderLayer, timed } from "@repo/backend/scripts/load/recorder";
 import { runLoad } from "@repo/backend/scripts/load/run";
 import { issueToken, sessionCookie } from "@repo/backend/scripts/load/token";
 import { openWire } from "@repo/backend/scripts/load/wire";
@@ -37,17 +37,27 @@ const TOKEN_RETRY = {
 /**
  * Opens one browser's connection to the runtime for a seat's session token. Convex asks for
  * its token through the Convex site's token route with the session's signed cookie, as the
- * app's own token request does, and asks again before each token expires.
+ * app's own token request does, and asks again before each token expires. Each request is
+ * recorded, and one that the backend still refuses after its retries leaves the tab signed out,
+ * so the tab's calls fail and the run goes on to record them.
  */
 const connectTo = (runtime: LocalRuntime) => (sessionToken: string) =>
   openWire(
     runtime.query,
     sessionCookie(sessionToken).pipe(
-      Effect.flatMap((cookie) => issueToken(runtime.site, cookie)),
-      Effect.retry(TOKEN_RETRY),
-      Effect.orDie
+      Effect.orDie,
+      Effect.flatMap((cookie) =>
+        timed(
+          "auth:token",
+          issueToken(runtime.site, cookie).pipe(Effect.retry(TOKEN_RETRY))
+        )
+      ),
+      Effect.orElseSucceed(() => null)
     )
   );
+
+/** How many students sit in one room of the blueprint's plan. */
+const ROOM_SIZE = BLUEPRINT_PLAN.students / BLUEPRINT_PLAN.rooms;
 
 /**
  * Opens the school of a load test, as a browser test opens one: a new school, and its Owner
@@ -82,9 +92,12 @@ export const runLoadCommand = Effect.fn("load.command")(function* (
     LoadArguments,
     args
   );
+  // A smaller run keeps the blueprint's rooms of sixty, so each room has its two proctors.
   const plan = yield* Schema.decodeEffect(LoadPlan)({
     ...BLUEPRINT_PLAN,
-    ...(students === undefined ? {} : { students }),
+    ...(students === undefined
+      ? {}
+      : { rooms: Math.ceil(students / ROOM_SIZE), students }),
     ...(minutes === undefined ? {} : { minutes }),
   });
   const reserved = yield* leaseReservedLocalRuntime(root);

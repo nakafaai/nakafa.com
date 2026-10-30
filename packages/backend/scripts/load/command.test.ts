@@ -4,10 +4,12 @@ import type { AcceptanceModeError } from "@repo/backend/scripts/content/acceptan
 import { PRODUCTION_CONCURRENCY } from "@repo/backend/scripts/content/acceptance/process";
 import { runLoadCommand } from "@repo/backend/scripts/load/command";
 import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
+import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
 import type { LoadInput } from "@repo/backend/scripts/load/run";
-import { sessionCookie } from "@repo/backend/scripts/load/token";
+import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, FileSystem, Layer } from "effect";
+import { Effect, Fiber, FileSystem, Layer } from "effect";
+import { TestClock } from "effect/testing";
 
 const mocks = vi.hoisted(() => ({
   backend: vi.fn(),
@@ -124,15 +126,17 @@ describe("load command", () => {
         expect(load.plan).toEqual({
           ...BLUEPRINT_PLAN,
           minutes: 10,
+          rooms: 5,
           students: 300,
         });
         mocks.open.mockReturnValue("the connection");
         mocks.issue.mockReturnValue(Effect.succeed("jwt"));
         expect(load.connect("session-1")).toBe("the connection");
         const address: string = mocks.open.mock.calls[0]?.[0];
-        const token: Effect.Effect<string> = mocks.open.mock.calls[0]?.[1];
+        const token: Effect.Effect<string | null, never, Recorder> =
+          mocks.open.mock.calls[0]?.[1];
         expect(address).toBe(runtime.query);
-        expect(yield* token).toBe("jwt");
+        expect(yield* token.pipe(Effect.provide(recorderLayer))).toBe("jwt");
         expect(mocks.issue).toHaveBeenCalledWith(
           runtime.site,
           yield* sessionCookie("session-1")
@@ -158,6 +162,37 @@ describe("load command", () => {
         );
         yield* load.capture("functions.jsonl");
         expect(mocks.capture).toHaveBeenCalledWith(runtime, "functions.jsonl");
+      }).pipe(Effect.scoped, Effect.provide(services))
+  );
+
+  it.effect(
+    "leaves a tab signed out once the backend still refuses its token after the retries, and records the request",
+    () =>
+      Effect.gen(function* () {
+        mocks.lease.mockReturnValue(Effect.succeedSome(runtime));
+        mocks.run.mockReturnValue(Effect.void);
+        yield* runLoadCommand("/root", ["report.json"]);
+        const load: LoadInput<AcceptanceModeError, never> =
+          mocks.run.mock.calls[0]?.[0];
+        mocks.issue.mockReturnValue(
+          Effect.fail(new TokenFailed({ status: 503 }))
+        );
+        load.connect("session-1");
+        const token: Effect.Effect<string | null, never, Recorder> =
+          mocks.open.mock.calls[0]?.[1];
+        const signedOut = yield* Effect.gen(function* () {
+          const fiber = yield* Effect.forkChild(token);
+          yield* TestClock.adjust("10 seconds");
+          return {
+            samples: yield* (yield* Recorder).samples,
+            token: yield* Fiber.join(fiber),
+          };
+        }).pipe(Effect.provide(recorderLayer));
+        expect(signedOut.token).toBeNull();
+        expect(signedOut.samples).toEqual([
+          expect.objectContaining({ failed: true, name: "auth:token" }),
+        ]);
+        expect(mocks.issue).toHaveBeenCalledTimes(6);
       }).pipe(Effect.scoped, Effect.provide(services))
   );
 

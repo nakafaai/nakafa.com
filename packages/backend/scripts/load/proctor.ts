@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import { timed } from "@repo/backend/scripts/load/recorder";
+import { type Recorder, timed } from "@repo/backend/scripts/load/recorder";
 import type { Seating } from "@repo/backend/scripts/load/student";
 import { type Wire, watch } from "@repo/backend/scripts/load/wire";
 import {
@@ -23,7 +23,7 @@ const PAGE_SIZE = 100;
  */
 interface ProctorInput {
   readonly done: Deferred.Deferred<void>;
-  readonly open: Effect.Effect<Wire, never, Scope.Scope>;
+  readonly open: Effect.Effect<Wire, never, Recorder | Scope.Scope>;
   readonly seating: Omit<typeof Seating.Type, "token">;
 }
 

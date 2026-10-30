@@ -52,7 +52,7 @@ export interface LoadInput<E, R> {
   readonly capture: (path: string) => Effect.Effect<void, E, R | Scope.Scope>;
   readonly connect: (
     sessionToken: string
-  ) => Effect.Effect<Wire, never, Scope.Scope>;
+  ) => Effect.Effect<Wire, never, Recorder | Scope.Scope>;
   readonly output: string;
   readonly plan: LoadPlan;
   readonly run: RunConvex<E, R>;
@@ -83,7 +83,8 @@ export const runLoad = Effect.fn("load.run")(function* <E, R>(
   );
   const roomOf = (index: number) =>
     Effect.fromOption(Arr.get(seeded.rooms, index)).pipe(Effect.orDie);
-  const logPath = `${directory}/functions.jsonl`;
+  // The function log stays beside the report, so a run that fails midway keeps its evidence.
+  const logPath = `${input.output}.functions.jsonl`;
   yield* input.capture(logPath);
   yield* Effect.gen(function* () {
     const before = yield* Clock.currentTimeMillis;

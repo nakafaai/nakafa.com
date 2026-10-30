@@ -45,7 +45,7 @@ type Versions = MutableHashMap.MutableHashMap<string, number>;
  * browser tab's connection for as long as its scope lasts. `start` is when the run began.
  */
 interface StudentInput {
-  readonly open: Effect.Effect<Wire, never, Scope.Scope>;
+  readonly open: Effect.Effect<Wire, never, Recorder | Scope.Scope>;
   readonly script: StudentScript;
   readonly seating: typeof Seating.Type;
   readonly start: number;
