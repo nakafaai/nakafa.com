@@ -400,6 +400,10 @@
  * without a React value that changes. */
 [data-slot="drawer-stage"] {
   min-height: 100svh;
+  /* While the stage scales, it holds every fixed element inside it, such as a toast list as wide as the screen past its
+   * offset, so the page would scroll sideways for as long as the scale eases back. Clipping the width keeps the page
+   * the screen's width, and unlike hidden it makes no scroll container, so sticky headers still stick. */
+  overflow-x: clip;
   background-color: var(--color-background);
   transform-origin: 50% var(--drawer-stage-scroll, 0px);
 }
