@@ -61,6 +61,17 @@ export function Sidebar({
           data-mobile="true"
           data-sidebar="sidebar"
           data-slot="sidebar"
+          onClick={(event) => {
+            // A link pressed in the phone sidebar opens its page in this tab, so the sheet steps
+            // aside for it; a press that opens another tab leaves the sheet where it is.
+            if (
+              event.target instanceof Element &&
+              event.target.closest("a[href]") !== null &&
+              !(event.metaKey || event.ctrlKey || event.shiftKey)
+            ) {
+              setOpenMobile(false);
+            }
+          }}
           side={side}
         >
           <SheetHeader className="sr-only">

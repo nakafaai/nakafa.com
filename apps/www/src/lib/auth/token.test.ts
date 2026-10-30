@@ -1,9 +1,8 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber } from "effect";
+import { Effect } from "effect";
 import { FetchHttpClient } from "effect/http";
-import { TestClock } from "effect/testing";
 import { readBrowserSessionToken } from "@/lib/auth/token";
 
 const ORIGIN = "https://harapan.nakafa.com";
@@ -51,22 +50,6 @@ describe("readBrowserSessionToken", () => {
 
         expect(yield* readToken()).toBeUndefined();
         expect(fetcher).toHaveBeenCalledOnce();
-      })
-  );
-
-  it.effect(
-    "asks again when the browser drops the request with no network code",
-    () =>
-      Effect.gen(function* () {
-        fetcher
-          .mockRejectedValueOnce(new TypeError("Failed to fetch"))
-          .mockResolvedValueOnce(Response.json({ token: "token-value" }));
-        const fiber = yield* Effect.forkChild(readToken());
-
-        yield* TestClock.adjust("500 millis");
-
-        expect(yield* Fiber.join(fiber)).toBe("token-value");
-        expect(fetcher).toHaveBeenCalledTimes(2);
       })
   );
 

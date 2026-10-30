@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import {
   createSchool,
   hostAddress,
+  seedForum,
   signInClassTeacher,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -89,3 +90,91 @@ for (const viewport of [
     await context.close();
   });
 }
+
+test("every class page draws its content in the browser, without an error state or a page error", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInClassTeacher(context, school.slug, address("/"))
+  );
+  const forum = await Effect.runPromise(seedForum(school.slug, 1, 1));
+  const channel = `/classes/fisika-x-1/forum?channel=${forum.channelId}`;
+
+  // A discussion in the general channel, so its page, which shows the channel beside it, is read too.
+  const page = await context.newPage();
+  const errors = MutableList.make<string>();
+  page.on("pageerror", (error) => MutableList.append(errors, String(error)));
+  await page.goto(address(channel));
+  const start = page.getByRole("button", { name: "New discussion" });
+  await waitUntilTakenOver(start);
+  await start.click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Title" }).fill("Gaya gesek");
+  await dialog
+    .getByRole("textbox", { name: "First message" })
+    .fill("Tuliskan contohnya di sini.");
+  await dialog.getByRole("button", { name: "Start" }).click();
+  await expect(page.getByRole("link", { name: "#1 Gaya gesek" })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  // The pages of the class, each with what it draws once it reads its rows: the forum lists the
+  // channels, and a channel or a discussion names the channel in its path. The Worker serves every
+  // School page as the static shell, so each answers 200 and draws in the browser. A list page holds
+  // its rows, or its empty state, in one card that fills the body under the header and the tabs.
+  const pages = [
+    { card: false, path: "/classes/fisika-x-1", shows: "Fisika X-1" },
+    { card: true, path: "/classes/fisika-x-1/forum", shows: "General" },
+    { card: false, path: channel, shows: "General" },
+    { card: false, path: "/classes/fisika-x-1/forum/1", shows: "General" },
+    { card: true, path: "/classes/fisika-x-1/library", shows: "Fisika X-1" },
+    { card: true, path: "/classes/fisika-x-1/tasks", shows: "Fisika X-1" },
+  ];
+  for (const { card, path, shows } of pages) {
+    const served = await page.goto(address(path));
+    expect(served?.status(), path).toBe(200);
+    await waitUntilTakenOver(
+      page
+        .getByRole("navigation", { name: "Class" })
+        .getByRole("link", { name: "Forum" })
+    );
+    await expect(
+      page.getByRole("main").getByText(shows, { exact: true }).first(),
+      path
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await expect(page.getByRole("main").getByRole("alert"), path).toHaveCount(
+      0
+    );
+    if (card) {
+      const table = page.locator('[data-slot="table-card"]');
+      await expect(table, path).toHaveCount(1);
+      const placed = await table.evaluate((element) => ({
+        bottom: element.getBoundingClientRect().bottom,
+        viewport: window.innerHeight,
+      }));
+      // The card reaches the page's 16 px gutter above the screen's bottom.
+      expect(placed.bottom, path).toBeGreaterThanOrEqual(placed.viewport - 17);
+    }
+  }
+  // The channel list's search sits in the header and keeps the channels whose name holds its text.
+  await page.goto(address("/classes/fisika-x-1/forum"));
+  const search = page
+    .locator('[data-slot="page-header"]')
+    .getByRole("textbox", { name: "Search channels" });
+  await waitUntilTakenOver(search);
+  await search.fill("zzz");
+  await expect(
+    page.getByRole("link", { name: "General", exact: true })
+  ).toHaveCount(0);
+  await search.fill("gen");
+  await expect(
+    page.getByRole("link", { name: "General", exact: true })
+  ).toBeVisible();
+  expect(MutableList.toArray(errors)).toEqual([]);
+  await context.close();
+});

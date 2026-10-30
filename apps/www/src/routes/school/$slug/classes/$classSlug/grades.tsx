@@ -28,10 +28,9 @@ function SchoolClassGradesPage(): ReactElement {
   const { classAddress, slug } = Route.useRouteContext();
   return (
     <ClassShell
-      channel={Option.none()}
       classSlug={classAddress}
       slug={slug}
-      tab="grades"
+      view={{ _tag: "grades" }}
     />
   );
 }

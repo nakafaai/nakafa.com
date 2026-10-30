@@ -15,10 +15,12 @@ export type AgentCurriculumPreference =
   typeof AgentCurriculumPreferenceSchema.Type;
 /**
  * Per-turn context shared by Nina and specialist agents after authenticated
- * admission. `memory` is whether the learner's memory is on for the turn, which
- * only Nina's own turn knows: a context without it has no memory capability.
+ * admission. `memory` is whether the learner's memory is on for the turn, and
+ * `calendar` whether the learner connected Google Calendar, which only Nina's own
+ * turn knows: a context without them has no memory or calendar capability.
  */
 const AgentContextSchema = Schema.Struct({
+  calendar: Schema.optional(Schema.Boolean),
   currentDate: Schema.String,
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
   memory: Schema.optional(Schema.Boolean),

@@ -24,11 +24,6 @@ export const Route = createFileRoute("/school/$slug/classes/$classSlug/")({
 function SchoolClassPage(): ReactElement {
   const { classAddress, slug } = Route.useRouteContext();
   return (
-    <ClassShell
-      channel={Option.none()}
-      classSlug={classAddress}
-      slug={slug}
-      tab="home"
-    />
+    <ClassShell classSlug={classAddress} slug={slug} view={{ _tag: "home" }} />
   );
 }

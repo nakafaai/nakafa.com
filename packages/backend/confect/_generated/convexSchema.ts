@@ -24,12 +24,21 @@ import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
+import classroomLibrary from "./tables/classroomLibrary";
 import classroomMessages from "./tables/classroomMessages";
+import classroomPosts from "./tables/classroomPosts";
+import classroomReads from "./tables/classroomReads";
+import classroomSubmissions from "./tables/classroomSubmissions";
+import classroomTasks from "./tables/classroomTasks";
+import classroomThreads from "./tables/classroomThreads";
 import commentLikes from "./tables/commentLikes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
+import connectorEvents from "./tables/connectorEvents";
 import connectorKeys from "./tables/connectorKeys";
+import connectorLinks from "./tables/connectorLinks";
 import connectorSecrets from "./tables/connectorSecrets";
+import connectorStates from "./tables/connectorStates";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
@@ -102,6 +111,7 @@ import postLikes from "./tables/postLikes";
 import posts from "./tables/posts";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
+import pushSubscriptions from "./tables/pushSubscriptions";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import reportCards from "./tables/reportCards";
@@ -161,12 +171,21 @@ export default $defineSchema({
   classTeachers: $Table.tableDefinition(classTeachers),
   classes: $Table.tableDefinition(classes),
   classroomChannels: $Table.tableDefinition(classroomChannels),
+  classroomLibrary: $Table.tableDefinition(classroomLibrary),
   classroomMessages: $Table.tableDefinition(classroomMessages),
+  classroomPosts: $Table.tableDefinition(classroomPosts),
+  classroomReads: $Table.tableDefinition(classroomReads),
+  classroomSubmissions: $Table.tableDefinition(classroomSubmissions),
+  classroomTasks: $Table.tableDefinition(classroomTasks),
+  classroomThreads: $Table.tableDefinition(classroomThreads),
   commentLikes: $Table.tableDefinition(commentLikes),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),
+  connectorEvents: $Table.tableDefinition(connectorEvents),
   connectorKeys: $Table.tableDefinition(connectorKeys),
+  connectorLinks: $Table.tableDefinition(connectorLinks),
   connectorSecrets: $Table.tableDefinition(connectorSecrets),
+  connectorStates: $Table.tableDefinition(connectorStates),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),
   contentArtifactFacts: $Table.tableDefinition(contentArtifactFacts),
   contentArtifacts: $Table.tableDefinition(contentArtifacts),
@@ -239,6 +258,7 @@ export default $defineSchema({
   posts: $Table.tableDefinition(posts),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
+  pushSubscriptions: $Table.tableDefinition(pushSubscriptions),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
   reportCards: $Table.tableDefinition(reportCards),

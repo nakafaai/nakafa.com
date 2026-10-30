@@ -5,6 +5,7 @@ import { Option } from "effect";
 import {
   readClassAddress,
   readCohortId,
+  readDiscussionNumber,
   readExamId,
   readSittingId,
 } from "@/lib/tenant/params";
@@ -18,5 +19,12 @@ describe("school path parameters", () => {
 
   it("names no class for an address that is not a class address", () => {
     expect(readClassAddress("Not A Class!")).toEqual(Option.none());
+  });
+
+  it("reads a discussion's number, and none for an address that is not one", () => {
+    expect(readDiscussionNumber("12")).toEqual(Option.some(12));
+    expect(readDiscussionNumber("012")).toEqual(Option.none());
+    expect(readDiscussionNumber("0")).toEqual(Option.none());
+    expect(readDiscussionNumber("1.5")).toEqual(Option.none());
   });
 });

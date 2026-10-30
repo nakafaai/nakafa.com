@@ -2,61 +2,19 @@ import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import {
-  classOf,
-  cohort,
   denied,
   firstPage,
+  forumClass,
+  keyedFixture,
   nf,
   period,
-  teach,
 } from "@repo/backend/test/classroom";
-import {
-  journal,
-  TENANCY_NOW,
-  tenancyFixture,
-} from "@repo/backend/test/tenancy";
+import { journal, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const { edit, hide, page, send } = refs.public.classroom.forum.messages;
-const channels = refs.public.classroom.forum.channels;
-const placements = refs.public.tenancy.placements;
-
-/** The fixture of one test: a school with its people and the key that seals its messages, as provisioning writes it. */
-const keyedFixture = Effect.tap(tenancyFixture, (fixture) =>
-  fixture.run(createTenantKey(fixture.tenants.nf))
-);
-type Fixture = Effect.Success<typeof keyedFixture>;
-
-/**
- * A class of a new cohort of one period with its teacher teaching it, and the ID of its general
- * channel. The fixture's student is placed in it unless `placed` is false: a student has one
- * cohort a period.
- */
-const forumClass = Effect.fn("test.forum.class")(function* (
-  fixture: Fixture,
-  termId: Effect.Success<ReturnType<typeof period>>["id"],
-  name: string,
-  placed = true
-) {
-  const group = yield* cohort(fixture, termId, name);
-  const made = yield* classOf(fixture, group.id, "Fisika");
-  yield* teach(fixture, made.id, fixture.people.teacher.personId);
-  if (placed) {
-    yield* fixture.as("admin").mutation(placements.place, {
-      cohortId: group.id,
-      personId: fixture.people.student.personId,
-      slug: nf,
-    });
-  }
-  const listed = yield* fixture
-    .as("teacher")
-    .query(channels.list, { ...firstPage, classId: made.id, slug: nf });
-  const general = Option.getOrThrow(Arr.head(listed.page));
-  return { channelId: general.id, classId: made.id };
-});
 
 /** The stored row of a message. */
 const messageRow = (messageId: GenericId.GenericId<"classroomMessages">) =>
@@ -81,6 +39,7 @@ describe("classroom/forum messages", () => {
         const first = yield* student.mutation(send, {
           ...forum,
           clientKey: "first-message",
+          mentions: [],
           slug: nf,
           text: "Kapan tugasnya dikumpulkan?",
         });
@@ -88,12 +47,14 @@ describe("classroom/forum messages", () => {
         const second = yield* fixture.as("teacher").mutation(send, {
           ...forum,
           clientKey: "second-message",
+          mentions: [],
           slug: nf,
           text: "Jumat, sebelum jam 12.",
         });
         const retried = yield* student.mutation(send, {
           ...forum,
           clientKey: "first-message",
+          mentions: [],
           slug: nf,
           text: "Kapan tugasnya dikumpulkan?",
         });
@@ -131,6 +92,7 @@ describe("classroom/forum messages", () => {
         const sent = yield* fixture.as("student").mutation(send, {
           ...forum,
           clientKey: "student-key",
+          mentions: [],
           slug: nf,
           text: "Halo",
         });
@@ -160,6 +122,7 @@ describe("classroom/forum messages", () => {
             .mutation(send, {
               ...forum,
               clientKey: "student-key",
+              mentions: [],
               slug: nf,
               text: "Kunci orang lain",
             })
@@ -183,6 +146,7 @@ describe("classroom/forum messages", () => {
         const sent = yield* student.mutation(send, {
           ...forum,
           clientKey: "hidden-message",
+          mentions: [],
           slug: nf,
           text: "Pesan yang disembunyikan",
         });
@@ -236,6 +200,7 @@ describe("classroom/forum messages", () => {
         yield* fixture.as("student").mutation(send, {
           ...forum,
           clientKey: "student-post",
+          mentions: [],
           slug: nf,
           text: "Selamat pagi",
         });
@@ -252,6 +217,7 @@ describe("classroom/forum messages", () => {
           .mutation(send, {
             ...forum,
             clientKey: "admin-post",
+            mentions: [],
             slug: nf,
             text: "Pengumuman",
           })
@@ -272,6 +238,7 @@ describe("classroom/forum messages", () => {
         const elsewhere = yield* teacher.mutation(send, {
           ...other,
           clientKey: "other-class",
+          mentions: [],
           slug: nf,
           text: "Kelas lain",
         });
@@ -289,6 +256,7 @@ describe("classroom/forum messages", () => {
               channelId: other.channelId,
               classId: own.classId,
               clientKey: "wrong-channel",
+              mentions: [],
               slug: nf,
               text: "Salah kanal",
             })
