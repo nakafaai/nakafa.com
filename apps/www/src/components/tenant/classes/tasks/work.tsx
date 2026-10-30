@@ -91,21 +91,15 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
   if (Option.isNone(kept)) {
     return null;
   }
+  const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
+    ? () => pagination.loadMore(WORK_PAGE_SIZE)
+    : null;
   if (Arr.isReadonlyArrayEmpty(kept.value)) {
-    if (search !== "" && !PaginatedQueryResult.isExhausted(pagination)) {
-      return PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(WORK_PAGE_SIZE)} />
-      ) : null;
-    }
     return (
-      <TableEmpty
-        act="reading"
-        description={t(
-          search === ""
-            ? "task-work-empty-description"
-            : "task-work-no-match-description"
-        )}
-        title={t(search === "" ? "task-work-empty" : "task-work-no-match")}
+      <WorkEmpty
+        exhausted={PaginatedQueryResult.isExhausted(pagination)}
+        loadMore={loadMore}
+        searched={search !== ""}
       />
     );
   }
@@ -128,10 +122,40 @@ export function TaskWorkTable({ task }: { task: ClassTask }) {
           </TableBody>
         </Table>
       </TableFrame>
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(WORK_PAGE_SIZE)} />
-      ) : null}
+      {loadMore === null ? null : <Intersection onIntersect={loadMore} />}
     </>
+  );
+}
+
+/**
+ * The work table without a row: while a search's later pages may still hold a match, only the sentinel that reads
+ * the next one; then the empty state, of a task with no work yet or of a search that matches none.
+ */
+function WorkEmpty({
+  exhausted,
+  loadMore,
+  searched,
+}: {
+  /** Whether the list has no more pages, so an empty list is its end and not a wait. */
+  readonly exhausted: boolean;
+  /** Loads the next page, or `null` while one loads or once the list ends. */
+  readonly loadMore: (() => void) | null;
+  readonly searched: boolean;
+}) {
+  const t = useTranslations("Classroom");
+  if (searched && !exhausted) {
+    return loadMore === null ? null : <Intersection onIntersect={loadMore} />;
+  }
+  return (
+    <TableEmpty
+      act="reading"
+      description={t(
+        searched
+          ? "task-work-no-match-description"
+          : "task-work-empty-description"
+      )}
+      title={t(searched ? "task-work-no-match" : "task-work-empty")}
+    />
   );
 }
 
