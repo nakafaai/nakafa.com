@@ -1,5 +1,6 @@
 import { type ReactNode, Suspense } from "react";
 import type { PlayerMode } from "@/components/player/mode";
+import { PlayerDigits } from "@/components/player/timer";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
@@ -10,7 +11,10 @@ import {
 import { TryoutAttemptResults } from "@/components/tryout/score/history";
 import { TryoutSummaryAction } from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
-import { TryoutSectionSummary } from "@/components/tryout/section/summary";
+import {
+  TryoutSectionSummary,
+  TryoutTimeLimitStat,
+} from "@/components/tryout/section/summary";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type {
   LoadedRuntime,
@@ -68,11 +72,11 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
 }
 
 /**
- * Renders the one card of a direct-entry set: the attempt's score once it has
- * one, and the catalog's facts (the number of questions and the time) before
- * that. The score already says how many questions there were, so the facts
- * never sit in a second card beside it. The server renders whichever applies,
- * so the card never swaps after the first paint.
+ * Renders the one card of a direct-entry set: the attempt's score beside the
+ * time limit once it has one, and the catalog's facts (the number of questions
+ * and the time) before that. The score already says how many questions there
+ * were, so the facts never sit in a second card beside it. The server renders
+ * whichever applies, so the card never swaps after the first paint.
  */
 function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
   const attempt = value.actionAttempt;
@@ -107,7 +111,14 @@ function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
           trackKey: value.page.set.trackKey,
         },
       }}
-    />
+    >
+      <TryoutTimeLimitStat>
+        <PlayerDigits
+          seconds={value.entrySection.timeLimitSeconds}
+          size="metric"
+        />
+      </TryoutTimeLimitStat>
+    </TryoutAttemptResults>
   );
 }
 

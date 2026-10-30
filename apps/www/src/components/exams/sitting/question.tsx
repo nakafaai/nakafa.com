@@ -24,6 +24,8 @@ import {
 } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { useKeptText } from "@/components/exams/sitting/kept";
+import { usePaperLocked } from "@/components/exams/sitting/lock";
+import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
@@ -37,6 +39,7 @@ import {
   writtenOf,
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
+import { PlayerQuestionFlag } from "@/components/player/flag";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
@@ -69,6 +72,8 @@ export function SittingQuestion({
     slug,
   });
   const choose = useChooseAnswer();
+  const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
+  const locked = usePaperLocked();
   const keptText = useKeptText({ attemptId, question, sittingId });
   const choice = useMemo(
     () => choiceOf(question.interactions),
@@ -151,6 +156,12 @@ export function SittingQuestion({
       labelledBy={titleId}
       questionKey={question.id}
     >
+      <PlayerQuestionFlag
+        flagged={question.flagged}
+        locked={locked}
+        onFlag={() => flagQuestion(question)}
+        questionKey={question.id}
+      />
       <div className="grid gap-6">
         <h2 className="font-medium" id={titleId}>
           {t("question", { number: question.number })}
@@ -202,7 +213,6 @@ export function SittingQuestion({
           {Option.isSome(table) ? (
             <SittingTable
               cells={markedCells(question.response ?? NO_RESPONSE)}
-              labelledBy={titleId}
               onMark={(cells) => onChoose({ cells })}
               table={table.value}
             />

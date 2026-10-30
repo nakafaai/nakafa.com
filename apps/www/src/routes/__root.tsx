@@ -30,6 +30,7 @@ import {
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
+import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import {
   NotFoundPageData,
@@ -101,8 +102,9 @@ export const Route = createRootRoute({
  * that the server answered, then the locale param of the route on screen, then
  * the language a school page renders in, and the default locale answers a path
  * without one. The pre-paint scripts set the theme, the pricing currency and the
- * signed-in hint before the first frame, so nothing changes after paint. The
- * theme is mounted here once, for every route below.
+ * signed-in hint before the first frame, so nothing changes after paint, and keep
+ * a press that lands before React takes the page over. The theme is mounted here
+ * once, for every route below.
  */
 function RootDocument({ children }: { children: ReactNode }) {
   const params: Readonly<Record<string, string | undefined>> = useParams({
@@ -135,6 +137,10 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: signedInHintScript() }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: EARLY_PRESS_SCRIPT }}
         />
         <HeadContent />
       </head>

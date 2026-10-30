@@ -1,5 +1,6 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerDigits } from "@/components/player/timer";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
@@ -109,12 +110,23 @@ function TryoutSectionMetrics({
         <TryoutMetricNumber value={section.questionCount} />
       </TryoutPartStat>
 
-      <TryoutPartStat label={tTryouts("part-time-label")}>
-        <PlayerDigits
-          className="font-light text-5xl"
-          seconds={section.timeLimitSeconds}
-        />
-      </TryoutPartStat>
+      <TryoutTimeLimitStat>
+        <PlayerDigits seconds={section.timeLimitSeconds} size="metric" />
+      </TryoutTimeLimitStat>
     </TryoutPartStats>
+  );
+}
+
+/**
+ * Renders a section's time limit as one summary metric, before a start and
+ * beside a score, with the digits the caller composed.
+ */
+export function TryoutTimeLimitStat({ children }: { children: ReactNode }) {
+  const tTryouts = useTranslations("Tryouts");
+
+  return (
+    <TryoutPartStat label={tTryouts("part-time-label")}>
+      {children}
+    </TryoutPartStat>
   );
 }

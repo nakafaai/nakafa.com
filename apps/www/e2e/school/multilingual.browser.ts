@@ -33,7 +33,7 @@ const PARAGRAPHS = [
   { direction: "ltr", text: "Read the passage and answer the question below." },
 ] as const;
 
-/** A sample of Arabic that only the Amiri face draws, which the check below asks the browser about. */
+/** A sample of Arabic that only the Amiri Quran face draws, which the check below asks the browser about. */
 const ARABIC_SAMPLE = "مرحبا";
 
 /**
@@ -56,13 +56,14 @@ async function expectParagraphsInTheirDirection(prompt: Locator) {
   }
 }
 
-/** Whether the browser holds a loaded Amiri face that draws the Arabic sample. */
+/** Whether the browser holds a loaded Amiri Quran face that draws the Arabic sample. */
 function amiriDrawsArabic(page: Page) {
   return page.evaluate(
     (sample) =>
-      document.fonts.check(`16px "Amiri"`, sample) &&
+      document.fonts.check(`16px "Amiri Quran"`, sample) &&
       Array.from(document.fonts).some(
-        (face) => face.family.includes("Amiri") && face.status === "loaded"
+        (face) =>
+          face.family.includes("Amiri Quran") && face.status === "loaded"
       ),
     ARABIC_SAMPLE
   );
@@ -156,7 +157,7 @@ async function expectMixedQuestionAt(
     path: testInfo.outputPath(`multilingual-student-${viewport.name}.png`),
   });
 
-  // A page that shows no Arabic loads no Amiri face: the school's home has only Latin text.
+  // A page that shows no Arabic loads no Amiri Quran face: the school's home has only Latin text.
   const home = await ownerContext.newPage();
   await home.setViewportSize(viewport);
   await home.goto(address("/"));
@@ -166,7 +167,8 @@ async function expectMixedQuestionAt(
   const amiriLoaded = await home.evaluate(
     () =>
       Array.from(document.fonts).filter(
-        (face) => face.family.includes("Amiri") && face.status === "loaded"
+        (face) =>
+          face.family.includes("Amiri Quran") && face.status === "loaded"
       ).length
   );
   expect(amiriLoaded).toBe(0);

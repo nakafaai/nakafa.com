@@ -36,7 +36,7 @@ export function NinaPrompt({
   files?: readonly FileUIPart[];
 }) {
   return (
-    <MessageContent className="max-w-3xl">
+    <MessageContent>
       {files.length > 0 ? (
         <AttachmentGroup className="max-w-full">
           {Arr.map(files, (file) => (

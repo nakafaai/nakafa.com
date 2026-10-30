@@ -101,6 +101,11 @@ export const screen = Effect.fn("exams.sittings.screen")(function* (args: {
   if (Option.isNone(stored)) {
     return null;
   }
+  // The exam takes changes while it runs (ADR 0031), so the question the student was on may be gone:
+  // the screen shows nothing until the student reaches another one.
+  if (!Arr.contains(sitting.exam.questions, stored.value.question)) {
+    return null;
+  }
   const reader = yield* DatabaseReader;
   const question = yield* reader
     .table("examQuestions")
@@ -116,7 +121,7 @@ export const screen = Effect.fn("exams.sittings.screen")(function* (args: {
   return {
     at: stored.value.at,
     interactions: yield* questionAnswers(question.answers),
-    // The questions before it in the exam's order; a frozen exam keeps the question in that order.
+    // The questions before it in the exam's order, as the exam holds them now.
     number:
       Arr.takeWhile(sitting.exam.questions, (id) => id !== question._id)
         .length + 1,

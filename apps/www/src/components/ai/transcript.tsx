@@ -53,7 +53,7 @@ export function NinaTranscript() {
         <MessageScrollerViewport aria-label={t("messages")}>
           <MessageScrollerContent
             aria-busy={busy}
-            className="mx-auto w-full max-w-7xl px-4 py-6"
+            className="mx-auto w-full max-w-3xl p-6"
           >
             {Arr.map(messages, (message, index) => (
               <TranscriptRow

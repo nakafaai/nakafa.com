@@ -10,6 +10,7 @@ import {
 } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { keyFits } from "@repo/backend/confect/exams/key";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 
 /**
@@ -157,6 +158,17 @@ export const templateLabels = (template: QuestionTemplate) =>
  * the teacher with its rubric, so it needs none, and every other template is scored by its key.
  */
 export const needsKey = (template: QuestionTemplate) => !takesRubric(template);
+
+/**
+ * Whether a question keeps its exam from being scheduled: its template needs a key (`needsKey`), and it
+ * has none, or one that does not fit its interactions (`keyFits`). The schedule refuses such a question,
+ * and the schedule dialog names it before the teacher asks.
+ */
+export const keyMissing = (
+  question: Pick<QuestionView, "answers" | "key" | "template">
+) =>
+  needsKey(question.template) &&
+  (question.key === null || !keyFits(question.answers, question.key));
 
 /** The most characters of one fixed option's label, as the editor writes it for the template. */
 const OPTION_LABEL_MAX = 200;
