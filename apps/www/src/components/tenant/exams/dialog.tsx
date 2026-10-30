@@ -125,14 +125,6 @@ export function CreateExam({
   const titleTooLong = name !== "" && !Schema.is(ExamTitle)(name);
   const ready = Option.isSome(choice) && Schema.is(ExamTitle)(name);
 
-  /** Opens or closes the dialog. A closed dialog forgets its file, so the next exam starts without one. */
-  const show = (next: boolean) => {
-    setOpen(next);
-    if (!next) {
-      setFile(null);
-    }
-  };
-
   /**
    * Creates the exam, shows it at once, and goes to its editor once the server saves it. The
    * dialog closes at once, and the create button stays inert until the save settles, so a second
@@ -143,7 +135,7 @@ export function CreateExam({
       return;
     }
     const { scope } = choice.value;
-    show(false);
+    setOpen(false);
     startTransition(() =>
       runExamAction(
         placeholderExamId.pipe(
@@ -186,7 +178,7 @@ export function CreateExam({
         description={t("create-description")}
         footer={
           <>
-            <Button onClick={() => show(false)} variant="outline">
+            <Button onClick={() => setOpen(false)} variant="outline">
               {common("cancel")}
             </Button>
             <Button
@@ -198,8 +190,15 @@ export function CreateExam({
             </Button>
           </>
         }
+        // The dialog forgets its file once it has closed, so the next exam starts without one and the
+        // closing dialog keeps showing the file it sent.
+        onOpenChangeComplete={(next) => {
+          if (!next) {
+            setFile(null);
+          }
+        }}
         open={open}
-        setOpen={show}
+        setOpen={setOpen}
         title={t("create")}
       >
         <FieldGroup>

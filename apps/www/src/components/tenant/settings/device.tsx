@@ -54,10 +54,7 @@ export function SchoolDeviceDialog({
   const [code, setCode] = useState("");
   const isComplete = code.trim().length > 0;
 
-  const close = () => {
-    setOpen(false);
-    setCode("");
-  };
+  const close = () => setOpen(false);
 
   return (
     <ResponsiveDialog
@@ -130,6 +127,12 @@ export function SchoolDeviceDialog({
           </ButtonGroup>
         </>
       }
+      // The typed code is forgotten once the dialog has closed, so the closing dialog keeps it.
+      onOpenChangeComplete={(next) => {
+        if (!next) {
+          setCode("");
+        }
+      }}
       open={open}
       setOpen={setOpen}
       title={t("device-title")}

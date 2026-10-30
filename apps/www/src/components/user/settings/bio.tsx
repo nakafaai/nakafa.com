@@ -5,7 +5,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Result } from "effect";
@@ -85,13 +89,12 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               placeholder={t("bio-placeholder")}
               value={typed}
             />
+            <FieldError className="max-w-md">
+              {fits ? null : t("bio-too-long")}
+            </FieldError>
           </Field>
         </CardContent>
-        {/* Only the too-long message is destructive, so only it is announced as it appears. */}
-        <CardSectionFooter
-          hint={fits ? t("bio-footer") : t("bio-too-long")}
-          tone={fits ? "muted" : "destructive"}
-        >
+        <CardSectionFooter hint={t("bio-footer")} tone="muted">
           <SettingsSave disabled={!canSave} />
         </CardSectionFooter>
       </CardSection>

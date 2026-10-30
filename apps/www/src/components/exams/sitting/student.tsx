@@ -10,7 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Effect, Option } from "effect";
@@ -185,12 +189,10 @@ export function StudentSitting({
                   placeholder={t("student-token-placeholder")}
                   value={tokenText}
                 />
+                <FieldError>{message === null ? null : t(message)}</FieldError>
               </Field>
             </CardContent>
-            <CardSectionFooter
-              hint={message === null ? t("student-enter-footer") : t(message)}
-              tone={message === null ? null : "destructive"}
-            >
+            <CardSectionFooter hint={t("student-enter-footer")}>
               <CardSectionActions>
                 <Button disabled={!isSettled || entering} type="submit">
                   {t("student-enter")}

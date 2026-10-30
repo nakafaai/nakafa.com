@@ -211,16 +211,24 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
         <Field data-invalid={refused}>
           <FieldLabel htmlFor={`${id}-nisn`}>{t("nisn-label")}</FieldLabel>
           <Input
+            aria-describedby={refused ? `${id}-refused` : `${id}-hint`}
             aria-invalid={refused}
             id={`${id}-nisn`}
             inputMode="numeric"
             maxLength={10}
-            onChange={(event) => setNisn(event.target.value)}
+            onChange={(event) => {
+              setNisn(event.target.value);
+              setRefused(false);
+            }}
             placeholder="0012345678"
             value={nisn}
           />
-          <FieldDescription>{t("nisn-hint")}</FieldDescription>
-          <FieldError>{refused ? t("nisn-refused") : null}</FieldError>
+          <FieldDescription id={`${id}-hint`}>
+            {t("nisn-hint")}
+          </FieldDescription>
+          <FieldError id={`${id}-refused`}>
+            {refused ? t("nisn-refused") : null}
+          </FieldError>
         </Field>
       </PaneBody>
       <PaneFooter>

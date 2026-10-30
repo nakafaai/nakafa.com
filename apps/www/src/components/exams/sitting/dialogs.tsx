@@ -197,12 +197,11 @@ export function LockDialog({
   const lock = useLockAttempt();
   const [reason, setReason] = useState<Reason | null>(null);
 
-  /** Closes the dialog and forgets the reason, so the next lock starts empty. */
-  function changeOpen(next: boolean) {
+  /** Forgets the reason once the dialog has closed, so the next lock starts empty and the closing dialog keeps it. */
+  function forget(next: boolean) {
     if (!next) {
       setReason(null);
     }
-    onOpenChange(next);
   }
 
   return (
@@ -213,18 +212,19 @@ export function LockDialog({
           confirm={t("confirm-lock-action")}
           destructive
           disabled={reason === null}
-          onCancel={() => changeOpen(false)}
+          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             if (reason === null) {
               return;
             }
-            changeOpen(false);
+            onOpenChange(false);
             runSittingCall(() => lock({ attemptId, reason, sittingId, slug }));
           }}
         />
       }
+      onOpenChangeComplete={forget}
       open={open}
-      setOpen={changeOpen}
+      setOpen={onOpenChange}
       title={t("confirm-lock-title", { name })}
     >
       <ReasonSelect onValueChange={setReason} value={reason} />
@@ -244,12 +244,11 @@ export function UnlockDialog({
   const unlock = useUnlockAttempt();
   const [reason, setReason] = useState<Reason | null>(null);
 
-  /** Closes the dialog and forgets the reason, so the next unlock starts empty. */
-  function changeOpen(next: boolean) {
+  /** Forgets the reason once the dialog has closed, so the next unlock starts empty and the closing dialog keeps it. */
+  function forget(next: boolean) {
     if (!next) {
       setReason(null);
     }
-    onOpenChange(next);
   }
 
   return (
@@ -259,20 +258,21 @@ export function UnlockDialog({
         <ConfirmActions
           confirm={t("confirm-unlock-action")}
           disabled={reason === null}
-          onCancel={() => changeOpen(false)}
+          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             if (reason === null) {
               return;
             }
-            changeOpen(false);
+            onOpenChange(false);
             runSittingCall(() =>
               unlock({ attemptId, reason, sittingId, slug })
             );
           }}
         />
       }
+      onOpenChangeComplete={forget}
       open={open}
-      setOpen={changeOpen}
+      setOpen={onOpenChange}
       title={t("confirm-unlock-title", { name })}
     >
       <ReasonSelect onValueChange={setReason} value={reason} />
@@ -297,13 +297,12 @@ export function AddMinutesDialog({
   const minutes = parseMinutes(minutesText);
   const invalid = minutesText !== "" && Option.isNone(minutes);
 
-  /** Closes the dialog and forgets the entry, so the next time starts empty. */
-  function changeOpen(next: boolean) {
+  /** Forgets the entry once the dialog has closed, so the next time starts empty and the closing dialog keeps it. */
+  function forget(next: boolean) {
     if (!next) {
       setMinutesText("");
       setReason(null);
     }
-    onOpenChange(next);
   }
 
   return (
@@ -313,12 +312,12 @@ export function AddMinutesDialog({
         <ConfirmActions
           confirm={t("confirm-add-minutes-action")}
           disabled={reason === null || Option.isNone(minutes)}
-          onCancel={() => changeOpen(false)}
+          onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             if (reason === null || Option.isNone(minutes)) {
               return;
             }
-            changeOpen(false);
+            onOpenChange(false);
             runSittingCall(() =>
               addMinutes({
                 attemptId,
@@ -331,8 +330,9 @@ export function AddMinutesDialog({
           }}
         />
       }
+      onOpenChangeComplete={forget}
       open={open}
-      setOpen={changeOpen}
+      setOpen={onOpenChange}
       title={t("confirm-add-minutes-title", { name })}
     >
       <FieldGroup>

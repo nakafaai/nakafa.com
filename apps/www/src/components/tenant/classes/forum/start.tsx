@@ -15,7 +15,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Option, Schema, String as Str } from "effect";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   runForumCall,
@@ -45,6 +45,8 @@ export function StartDiscussion({
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [refusal, setRefusal] = useState<Option.Option<string>>(Option.none);
+  // Whether the dialog closes because its discussion was sent, which empties it once it has closed.
+  const sent = useRef(false);
   const id = useId();
   const heading = Str.trim(title);
   const body = Str.trim(text);
@@ -67,10 +69,8 @@ export function StartDiscussion({
       return;
     }
     const { person } = viewer.value;
+    sent.current = true;
     setShown(false);
-    setTitle("");
-    setText("");
-    setRefusal(Option.none());
     runForumCall(
       Effect.flatMap(randomUuid, (clientKey) =>
         openDiscussion(
@@ -113,6 +113,16 @@ export function StartDiscussion({
             </Button>
           </>
         }
+        // A sent discussion's dialog empties once it has closed, so it keeps what was sent while it closes; a
+        // refusal that comes back after that puts the text back.
+        onOpenChangeComplete={(next) => {
+          if (!next && sent.current) {
+            setTitle("");
+            setText("");
+            setRefusal(Option.none());
+          }
+          sent.current = false;
+        }}
         open={shown}
         setOpen={setShown}
         title={t("discussion-new")}

@@ -17,7 +17,7 @@ import { IMPORT_ACCEPT } from "@/components/tenant/exams/import/file";
 /**
  * The file field of an import, as Google Docs takes an upload: one area that a teacher drops a
  * Word or PDF file on, or presses to choose one. Once a file is chosen, the area names it with a
- * way to remove it. The file input covers the area without being seen, so it takes the press and
+ * way to remove it, at the same height, so the hint under it never moves. The file input covers the area without being seen, so it takes the press and
  * the dropped file itself, a keyboard reaches it, a screen reader reads its label, and the area
  * shows its focus.
  */
@@ -39,7 +39,7 @@ export function ImportFileField({
       <FieldLabel htmlFor={id}>{t("import-label")}</FieldLabel>
       {file === null ? (
         <div
-          className="relative flex flex-col items-center gap-2 rounded-lg border bg-muted/40 px-4 py-6 text-center text-muted-foreground text-sm transition-colors hover:bg-muted has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-muted"
+          className="relative flex h-24 flex-col items-center justify-center gap-2 rounded-lg border bg-muted/40 px-4 text-center text-muted-foreground text-sm transition-colors hover:bg-muted has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-muted"
           data-dragging={dragging}
         >
           <HugeIcons aria-hidden="true" icon={FileUploadIcon} />
@@ -57,7 +57,7 @@ export function ImportFileField({
           />
         </div>
       ) : (
-        <div className="flex min-w-0 items-center gap-2 rounded-lg border py-1 pr-1 pl-3 text-sm">
+        <div className="flex min-h-24 min-w-0 items-center gap-2 rounded-lg border py-1 pr-1 pl-3 text-sm">
           <HugeIcons aria-hidden="true" icon={FileAttachmentIcon} />
           <span className="min-w-0 flex-1 truncate" dir="auto">
             {file.name}
