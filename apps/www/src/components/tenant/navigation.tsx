@@ -1,6 +1,7 @@
 import {
   Certificate01Icon,
   Home01Icon,
+  Notification01Icon,
   Settings01Icon,
   TaskEdit01Icon,
 } from "@hugeicons/core-free-icons";
@@ -41,15 +42,17 @@ export function TenantNavigation() {
 
 /**
  * The school's own groups, as the learner's sidebar has them: first the main pages with no label,
- * home and the exams and the report cards for a viewer who may open them, then the management
- * group, with the settings entry, only for a viewer who may manage the school. The viewer's
- * classes come last, when the viewer has any, so they never move the groups above them.
+ * home and notifications for everyone, the exams and the report cards for a viewer who may open
+ * them, then the management group, with the settings entry, only for a viewer who may manage the
+ * school. The viewer's classes come last, when the viewer has any, so they never move the groups
+ * above them.
  */
 function TenantSchoolGroups() {
   const { canManage, canOpenExams, canOpenReports, slug } = useTenant();
   const matchRoute = useMatchRoute();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
+  const tNotifications = useTranslations("Notifications");
   const tReports = useTranslations("SchoolReports");
   const tSettings = useTranslations("SchoolSettings");
 
@@ -72,6 +75,21 @@ function TenantSchoolGroups() {
           >
             <HugeIcons icon={Home01Icon} />
             <span className="truncate">{t("home")}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={
+              matchRoute({
+                params: { slug },
+                to: "/school/$slug/notifications",
+              }) !== false
+            }
+            render={<Link params={{ slug }} to="/school/$slug/notifications" />}
+            tooltip={tNotifications("title")}
+          >
+            <HugeIcons icon={Notification01Icon} />
+            <span className="truncate">{tNotifications("title")}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         {canOpenExams ? (

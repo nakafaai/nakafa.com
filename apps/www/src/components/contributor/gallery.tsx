@@ -6,7 +6,6 @@ import {
 import { useMounted } from "@mantine/hooks";
 import type { Contributor } from "@repo/contents/contributor";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   Drawer,
   DrawerCreateHandle,
@@ -23,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cast, forSeed } from "@repo/mascot/seed";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
@@ -153,58 +153,40 @@ function ContributorDrawer({ contributor, mascot }: Entry) {
         {contributor.social && (
           <div className="flex flex-wrap items-center justify-center gap-2">
             {contributor.social.twitter && (
-              <Button
-                nativeButton={false}
-                render={
-                  <a
-                    href={contributor.social.twitter}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    title="Twitter"
-                  >
-                    <HugeIcons className="size-4" icon={NewTwitterIcon} />
-                    <span className="sr-only">Twitter</span>
-                  </a>
-                }
-                size="icon"
-                variant="outline"
-              />
+              <a
+                className={buttonVariants({ size: "icon", variant: "outline" })}
+                href={contributor.social.twitter}
+                rel="noopener noreferrer"
+                target="_blank"
+                title="Twitter"
+              >
+                <HugeIcons className="size-4" icon={NewTwitterIcon} />
+                <span className="sr-only">Twitter</span>
+              </a>
             )}
             {contributor.social.github && (
-              <Button
-                nativeButton={false}
-                render={
-                  <a
-                    href={contributor.social.github}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    title="GitHub"
-                  >
-                    <HugeIcons className="size-4" icon={GithubIcon} />
-                    <span className="sr-only">GitHub</span>
-                  </a>
-                }
-                size="icon"
-                variant="outline"
-              />
+              <a
+                className={buttonVariants({ size: "icon", variant: "outline" })}
+                href={contributor.social.github}
+                rel="noopener noreferrer"
+                target="_blank"
+                title="GitHub"
+              >
+                <HugeIcons className="size-4" icon={GithubIcon} />
+                <span className="sr-only">GitHub</span>
+              </a>
             )}
             {contributor.social.linkedin && (
-              <Button
-                nativeButton={false}
-                render={
-                  <a
-                    href={contributor.social.linkedin}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    title="LinkedIn"
-                  >
-                    <HugeIcons className="size-4" icon={Linkedin02Icon} />
-                    <span className="sr-only">LinkedIn</span>
-                  </a>
-                }
-                size="icon"
-                variant="outline"
-              />
+              <a
+                className={buttonVariants({ size: "icon", variant: "outline" })}
+                href={contributor.social.linkedin}
+                rel="noopener noreferrer"
+                target="_blank"
+                title="LinkedIn"
+              >
+                <HugeIcons className="size-4" icon={Linkedin02Icon} />
+                <span className="sr-only">LinkedIn</span>
+              </a>
             )}
           </div>
         )}

@@ -12,6 +12,7 @@ import {
   getPostAuthSignInHref,
   getPostAuthSignInHrefForLocation,
   getPostAuthSignInTarget,
+  getSignedInHref,
   isPostAuthProviderError,
   PostAuthIntentSchema,
   resolvePostAuthIntent,
@@ -386,5 +387,18 @@ describe("post-auth admission", () => {
       false
     );
     expect(startsSchool(resolvePostAuthIntent(undefined, "id"))).toBe(false);
+  });
+});
+
+describe("signed-in sign-in page", () => {
+  it("leaves for the page the intent names, in the intent's locale", () => {
+    expect(getSignedInHref("/de/chat/chat-id?x=1#end", "en")).toBe(
+      "/de/chat/chat-id?x=1#end"
+    );
+  });
+
+  it("leaves for the page's home when the intent is absent or unsafe", () => {
+    expect(getSignedInHref(undefined, "id")).toBe("/id/home");
+    expect(getSignedInHref("https://evil.example/home", "id")).toBe("/id/home");
   });
 });

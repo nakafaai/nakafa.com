@@ -55,7 +55,9 @@ export function TryoutExamPageClient({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
             <CatalogCard
-              action={<TryoutPageLink publicPath={track.publicPath} />}
+              action={(anchor) => (
+                <TryoutPageLink {...anchor} publicPath={track.publicPath} />
+              )}
               key={track.trackKey}
               title={track.title}
             >
