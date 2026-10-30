@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { ExamEditor } from "@/components/tenant/exams/editor";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readExamEditorFn } from "@/lib/tenant/exams.functions";
 import { readExamId } from "@/lib/tenant/params";
 
 /**
@@ -23,20 +22,11 @@ export const Route = createFileRoute("/school/$slug/exams/$exam/edit")({
     }
     return { examId: examId.value };
   },
-  loader: ({ context }) => {
-    if (context.school._tag !== "Member") {
-      return;
-    }
-    return readExamEditorFn({
-      data: { examId: context.examId, slug: context.slug },
-    });
-  },
   component: SchoolExamEditPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolExamEditPage(): ReactElement | null {
   const { examId, slug } = Route.useRouteContext();
-  const preload = Route.useLoaderData();
-  return <ExamEditor examId={examId} preload={preload} slug={slug} />;
+  return <ExamEditor examId={examId} slug={slug} />;
 }

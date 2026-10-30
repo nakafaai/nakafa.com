@@ -30,11 +30,10 @@ export type TenantValue = Pick<
 
 /**
  * The school of the shell. Its value is fixed for one render of the school
- * layout, so it never changes after hydration and streamed content keeps its
- * context. The layout computes the viewer's access and greeting on the server, so
- * a card, a row or the greeting that depends on them is in the first HTML and never
- * inserts after hydration. A school's name and logo change in its settings, so
- * `useTenant` reads them from the viewer's live query.
+ * layout. The layout's gate computes the viewer's access and greeting before the
+ * page commits, so a card, a row or the greeting that depends on them draws with
+ * the first frame and never inserts after it. A school's name and logo change in
+ * its settings, so `useTenant` reads them from the viewer's live query.
  */
 export const TenantContext = createContext<TenantValue | null>(null);
 
@@ -56,8 +55,8 @@ export function useTenant(): TenantValue {
 }
 
 /**
- * The viewer's view of the school that the layout read on the server, which the shell provides. The live
- * read replaces it once the session settles, so the first draw never asks for the viewer signed out.
+ * The viewer's view of the school that the layout's gate read, which the shell provides. The live read
+ * replaces it once the session settles, so the first draw never asks for the viewer signed out.
  */
 export const ViewerPreloadContext = createContext<SchoolViewer | undefined>(
   undefined

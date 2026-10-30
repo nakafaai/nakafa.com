@@ -362,3 +362,15 @@ export function getPostAuthDestination(
     locale: resolution.locale,
   };
 }
+
+/**
+ * The address that a visitor who is already signed in leaves the sign-in page
+ * for: the page the intent names, or home, as one localized path.
+ */
+export function getSignedInHref(rawIntent: unknown, locale: string): string {
+  const destination = getPostAuthDestination(
+    resolvePostAuthIntent(rawIntent, locale),
+    locale
+  );
+  return `/${destination.locale}${destination.href}`;
+}

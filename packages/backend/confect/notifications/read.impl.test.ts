@@ -11,13 +11,14 @@ import {
   insertRows,
   inviteAt,
   NOW,
+  nf,
   type PersonId,
   storedRows,
 } from "@repo/backend/test/inbox";
 import { scheduledJobs, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Schema } from "effect";
 
-const { readAll } = refs.public.notifications.inbox;
+const { list, readAll } = refs.public.notifications.inbox;
 const readRun = refs.internal.notifications.read.run;
 const READ_RUN = "notifications/read:run";
 
@@ -97,6 +98,51 @@ describe("notifications/inbox readAll", () => {
         yield* ana.client.mutation(readAll, {});
         yield* runReadRuns(fixture);
         expect(yield* readAtsOf(anaNf)).toEqual([NOW + 4000]);
+      })
+  );
+
+  it.effect(
+    "lists and marks only the rows of the school a slug names, from that school's own inbox page",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const ana = yield* fixture.account(
+          "ana",
+          "ana@harapan.example.test",
+          true
+        );
+        const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
+        const anaOther = yield* addPerson(
+          fixture,
+          fixture.tenants.other,
+          "Ana"
+        );
+        yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
+        yield* inviteAt(fixture, "other", anaOther, "ana@harapan.example.test");
+        yield* consumeSchool(fixture, fixture.tenants.nf);
+        yield* consumeSchool(fixture, fixture.tenants.other);
+        yield* claim(fixture, anaNf, ana.userId);
+        yield* claim(fixture, anaOther, ana.userId);
+        // The school's own inbox page lists that school's rows alone.
+        const own = yield* ana.client.query(list, {
+          paginationOpts: { cursor: null, numItems: 10 },
+          slug: nf,
+        });
+        expect(Arr.map(own.page, (item) => item.subject)).toEqual([
+          { id: anaNf, kind: "person" },
+        ]);
+        vi.setSystemTime(NOW + 4000);
+        yield* ana.client.mutation(readAll, { slug: nf });
+        yield* runReadRuns(fixture);
+        const rows = yield* storedRows(fixture);
+        expect(
+          Arr.map(rows, (row) => [row.recipientPersonId, row.readAt])
+        ).toEqual(
+          expect.arrayContaining([
+            [anaNf, NOW + 4000],
+            [anaOther, undefined],
+          ])
+        );
       })
   );
 

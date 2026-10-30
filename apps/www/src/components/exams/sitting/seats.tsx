@@ -8,6 +8,7 @@ import {
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { getRouteApi } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { type ReactNode, useState } from "react";
@@ -30,6 +31,12 @@ import {
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { Link } from "@/lib/routing/link";
+
+/** The proctor's dashboard, whose address holds the seat the proctor selected. */
+const dashboardRoute = getRouteApi(
+  "/school/$slug/exams/$exam/sittings/$sitting/"
+);
 
 /** The frame of one seat: its colour by state, dashed while the student is disconnected, and a ring when selected. */
 const seatStyles = cva(
@@ -176,7 +183,7 @@ function SeatPage({
     Arr.filter(attempts, (attempt) => matchesFilter(filter, attempt)),
     (attempt) => (
       <li key={attempt.id}>
-        <SeatButton attempt={attempt} cursor={cursor} />
+        <SeatLink attempt={attempt} cursor={cursor} />
       </li>
     )
   );
@@ -244,10 +251,13 @@ function NextSeatsReady({ cursor }: { readonly cursor: string }) {
 }
 
 /**
- * One student's seat. It opens the student's panel when the proctor selects it. The seat reads its own
- * latest answer, so an answer re-runs this seat's query and not the page that holds it.
+ * One student's seat, a link to the dashboard with the seat in its address, so a press opens the
+ * student's panel even before the page's script runs: the browser loads the address, and the page
+ * opens with the panel. Once the page runs, the router changes the address in place. Only the
+ * selected seat matches the address, so it is the current link. The seat reads its own latest
+ * answer, so an answer re-runs this seat's query and not the page that holds it.
  */
-function SeatButton({
+function SeatLink({
   attempt,
   cursor,
 }: {
@@ -257,32 +267,35 @@ function SeatButton({
   const t = useTranslations("Exams");
   const locale = useLocale();
   const { sittingId, slug, value } = useSittingData();
+  const params = dashboardRoute.useParams();
   const answered = useQuery(exams.sittings.lastAnswer, {
     attemptId: attempt.id,
     sittingId,
     slug,
   });
-  const selected = useSittingStore(
-    (state) => state.selected?.attemptId === attempt.id
-  );
-  const choose = useSittingStore((state) => state.choose);
+  const selected = dashboardRoute.useSearch({
+    select: (search) => search.seat === attempt.id,
+  });
   const warm = useSittingStore((state) => state.warm);
   const onWarm = () => warm({ attemptId: attempt.id, cursor });
 
   return (
-    <button
-      aria-pressed={selected}
+    <Link
+      activeOptions={{ exact: true, includeSearch: true }}
       className={seatStyles({
         dashed: isDisconnected(attempt),
         frame: seatFrame(attempt),
         selected,
       })}
       data-frame={seatFrame(attempt)}
-      onClick={() => choose({ attemptId: attempt.id, cursor })}
       onFocus={onWarm}
       onPointerDown={onWarm}
       onPointerEnter={onWarm}
-      type="button"
+      params={params}
+      replace
+      resetScroll={false}
+      search={{ page: cursor ?? undefined, seat: attempt.id }}
+      to="/school/$slug/exams/$exam/sittings/$sitting"
     >
       <PersonAvatar className="size-6" mascot={attempt.mascot ?? undefined} />
       <span className="grid min-w-0 gap-0.5">
@@ -301,6 +314,6 @@ function SeatButton({
           })}
         </span>
       </span>
-    </button>
+    </Link>
   );
 }
