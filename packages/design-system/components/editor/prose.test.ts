@@ -12,6 +12,9 @@ import {
   headingVariants,
   listItemVariants,
   listVariants,
+  mathBlockVariants,
+  mathInlineVariants,
+  mathScrollVariants,
   paragraphVariants,
   quoteVariants,
   tableCellVariants,
@@ -171,5 +174,28 @@ describe("drawArticleProse", () => {
       ["TR", tableRowVariants()],
       ["TD", tableCellVariants()],
     ]);
+  });
+  it("draws the formulas that the schema leaves empty as the lesson draws them, inline and in a card", () => {
+    const root = document.createElement("div");
+    root.innerHTML =
+      '<p>Luas <span data-type="math-inline" data-latex="x^2"></span></p><div data-type="math-block" data-latex="\\frac{1}{2}"></div><span data-type="math-inline"></span><div data-type="math-block"></div>';
+    drawArticleProse(root);
+
+    const [inline, empty] = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-type="math-inline"]')
+    );
+    expect(inline?.className).toBe(mathInlineVariants());
+    expect(inline?.querySelector(".katex")).not.toBeNull();
+    expect(empty?.querySelector(".katex")).not.toBeNull();
+
+    const [block, blank] = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-type="math-block"]')
+    );
+    expect(blank?.querySelector(".katex-display")).not.toBeNull();
+    expect(block?.className).toBe(blockGapVariants());
+    const card = block?.firstElementChild;
+    expect(card?.className).toBe(mathBlockVariants());
+    expect(card?.firstElementChild?.className).toBe(mathScrollVariants());
+    expect(card?.querySelector(".katex-display")).not.toBeNull();
   });
 });
