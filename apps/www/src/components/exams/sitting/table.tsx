@@ -15,7 +15,6 @@ import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
  */
 export function SittingTable({
   cells,
-  labelledBy,
   onMark,
   table,
 }: {
@@ -24,8 +23,6 @@ export function SittingTable({
     readonly column: string;
     readonly statement: string;
   }[];
-  /** The id of the heading that names the question. */
-  readonly labelledBy: string;
   /** Saves the cells once the student marks one statement. */
   readonly onMark: (
     cells: readonly { readonly column: string; readonly statement: string }[]
@@ -48,7 +45,7 @@ export function SittingTable({
         ),
       }))}
       disabled={disabled}
-      labelledBy={labelledBy}
+      label={table.label}
       onMark={(statement, column) =>
         onMark(markedWith(table.statements, cells, { column, statement }))
       }

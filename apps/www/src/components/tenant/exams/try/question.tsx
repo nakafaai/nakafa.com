@@ -92,7 +92,6 @@ export function ExamTryQuestion({
       {Option.isSome(table) ? (
         <SittingTable
           cells={markedCells(response ?? NO_RESPONSE)}
-          labelledBy={titleId}
           onMark={(cells) => choose(question.id, { cells })}
           table={table.value}
         />
