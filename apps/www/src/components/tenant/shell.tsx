@@ -45,6 +45,7 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
+import { SidebarToggle } from "@/components/sidebar/toggle";
 import { TenantAccountItems } from "@/components/tenant/account";
 import {
   type ClassesPreload,
@@ -242,7 +243,7 @@ function TenantFrame({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar label={tCommon("sidebar")} side={side}>
+      <Sidebar collapsible="icon" label={tCommon("sidebar")} side={side}>
         <SidebarHeader className="border-b">
           <SidebarMenu>
             <TenantSwitcher />
@@ -251,6 +252,7 @@ function TenantFrame({ children }: { children: ReactNode }) {
         <SidebarContent>
           <TenantNavigation />
         </SidebarContent>
+        <SidebarToggle />
         <TenantAccount />
       </Sidebar>
       <SidebarInset>{children}</SidebarInset>
