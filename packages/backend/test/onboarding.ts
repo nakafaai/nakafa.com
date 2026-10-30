@@ -39,6 +39,7 @@ export const createOnboardingTest = Effect.fn("test.onboarding.create")(
         })
       )
     );
+    yield* Effect.sync(() => vi.setSystemTime(now));
     return {
       authenticated: test.withIdentity({
         sessionId: identity.sessionId,
@@ -47,9 +48,7 @@ export const createOnboardingTest = Effect.fn("test.onboarding.create")(
       identity,
       test,
     };
-  },
-  (created, now) =>
-    Effect.tap(created, () => Effect.sync(() => vi.setSystemTime(now)))
+  }
 );
 
 /** Activates every curriculum key used by onboarding defaults. */

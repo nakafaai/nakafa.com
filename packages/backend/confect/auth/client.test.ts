@@ -335,8 +335,7 @@ describe("auth/client", () => {
         "Expected the Better Auth lifecycle to create an app user."
       );
     }
-    // The account is deleted a minute after it signed in: Convex runs each
-    // mutation after the commits before it, so the deletion gets its own instant.
+    // The deletion has its own instant, a minute after the sign-in's commits.
     const deletedAt = NOW + 60_000;
     vi.setSystemTime(deletedAt);
     await test.mutation(async (ctx) => {
@@ -394,13 +393,10 @@ describe("auth/client", () => {
     expect(claims).toEqual([
       expect.objectContaining({
         args: [{ cursor: null, userId: user._id }],
+        // Due at once: at the moment of the transaction that scheduled it.
+        scheduledTime: Math.floor(claims[0]?._creationTime ?? 0),
       }),
     ]);
-    // The claim is due at once: at the millisecond of the sign-in transaction
-    // that scheduled it, which convex-test runs after the sign-in's other commits.
-    expect(claims[0]?.scheduledTime).toBe(
-      Math.floor(claims[0]?._creationTime ?? 0)
-    );
     await test.mutation(claimRun, { cursor: null, userId: user._id });
     await expect(
       test.query((ctx) => ctx.db.get("tenantPeople", personId))

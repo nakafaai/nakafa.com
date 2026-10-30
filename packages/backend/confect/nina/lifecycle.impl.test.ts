@@ -23,12 +23,10 @@ vi.mock("@repo/backend/confect/nina/settlement", async (load) => {
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
-/**
- * When a learner stops a turn after the claim and the stream: Convex runs each
- * mutation after the commits before it, so a stop that a test times comes at a
- * moment of its own.
- */
+/** A stop after the claim's commits, at a moment of its own. */
 const STOPPED_AT = NOW + 1000;
+/** The state of a turn the learner stopped at that moment. */
+const CANCELLED = { status: "cancelled", finishedAt: STOPPED_AT } as const;
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
@@ -253,10 +251,7 @@ describe("native Nina settlement", () => {
     await f.t.mutation(recover, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.user?.credits).toBe(10);
-    expect(state.turn?.state).toEqual({
-      status: "cancelled",
-      finishedAt: STOPPED_AT,
-    });
+    expect(state.turn?.state).toEqual(CANCELLED);
     expect(
       Option.getOrUndefined(
         Arr.findFirst(
@@ -320,10 +315,7 @@ describe("native Nina settlement", () => {
     // The run exits once its stream has stopped, and only then does it settle.
     await f.t.mutation(recover, { turnId: f.turnId, failure: "interrupted" });
     const settled = await f.inspect();
-    expect(settled.turn?.state).toEqual({
-      status: "cancelled",
-      finishedAt: STOPPED_AT,
-    });
+    expect(settled.turn?.state).toEqual(CANCELLED);
     expect(settled.turn).not.toHaveProperty("cancelRequestedAt");
     expect(settled.user?.credits).toBe(10);
     expect(settled.chat?.activeTurnId).toBeUndefined();
@@ -341,10 +333,7 @@ describe("native Nina settlement", () => {
     // changes nothing.
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     const later = await f.inspect();
-    expect(later.turn?.state).toEqual({
-      status: "cancelled",
-      finishedAt: STOPPED_AT,
-    });
+    expect(later.turn?.state).toEqual(CANCELLED);
     expect(later.user?.credits).toBe(10);
     expect(
       Arr.filter(later.ledger, (row) => row.type === "refund")
@@ -376,10 +365,7 @@ describe("native Nina settlement", () => {
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     const state = await f.inspect();
     // The turn finished when the learner stopped it, not when the grace settled it.
-    expect(state.turn?.state).toEqual({
-      status: "cancelled",
-      finishedAt: STOPPED_AT,
-    });
+    expect(state.turn?.state).toEqual(CANCELLED);
     expect(state.user?.credits).toBe(10);
     expect(state.chat?.activeTurnId).toBeUndefined();
     expect(

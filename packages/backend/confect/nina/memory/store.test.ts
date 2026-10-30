@@ -479,7 +479,11 @@ describe("Nina memory expiry", () => {
         validUntil: NOW - 1,
       });
     }
-    await f.seed({ kind: "situation", text: "Later", validUntil: NOW + 1 });
+    await f.seed({
+      kind: "situation",
+      text: "Later",
+      validUntil: NOW + 60_000,
+    });
     expect(await f.t.mutation(expire, {})).toBe(MEMORY_BATCH);
     // 26 ended situations and one that goes on: one ended situation is left.
     expect(await f.stored()).toHaveLength(2);

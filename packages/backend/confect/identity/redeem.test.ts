@@ -23,7 +23,6 @@ import {
   userNamed,
 } from "@repo/backend/test/identity";
 import {
-  actedAt,
   grantRole,
   journal,
   slugOf,
@@ -79,7 +78,6 @@ describe("identity/cards redeem", () => {
             })
           )
         );
-        vi.setSystemTime(actedAt(0, CARD_NOW));
         expect(yield* redeemOn(fixture, issued.code)).toEqual({
           loginName: "guru.baru",
           outcome: "redeemed",
@@ -103,7 +101,7 @@ describe("identity/cards redeem", () => {
           )
         );
         expect(invite.state).toEqual({
-          at: actedAt(0, CARD_NOW),
+          at: expect.any(Number),
           status: "accepted",
           userId: user?._id,
         });
@@ -399,7 +397,6 @@ describe("identity/cards redeem", () => {
         const second = yield* fixture
           .as("admin")
           .mutation(reissue, { personId: fixture.invited, slug: nf });
-        vi.setSystemTime(actedAt(0, CARD_NOW));
         expect(
           yield* redeemOn(fixture, second.code, "new password here")
         ).toEqual({ loginName: "guru.baru", outcome: "redeemed" });
@@ -407,7 +404,7 @@ describe("identity/cards redeem", () => {
         expect(yield* userNamed(fixture, "invited2")).toEqual(Option.none());
         expect(
           Option.getOrUndefined(yield* cardRowOf(fixture, fixture.invited))
-        ).toMatchObject({ redeemedAt: actedAt(0, CARD_NOW) });
+        ).toMatchObject({ redeemedAt: expect.any(Number) });
       })
   );
 

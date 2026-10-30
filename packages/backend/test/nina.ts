@@ -255,7 +255,7 @@ async function queueTurn(
  * `inspect` reads back what the turn left in storage: its user, turn, chat,
  * credit ledger, and messages. It is seeded in one mutation: convex-test runs
  * each mutation after the commits before it, as Convex does, so under a frozen
- * clock the first two writes of a test keep its moment.
+ * clock the first write of a test keeps its moment.
  */
 export async function createNinaTest({
   history = 0,
@@ -320,10 +320,8 @@ export async function createNinaTest({
 }
 
 /**
- * Fires the scheduled jobs that are due and none that wait, for
- * `finishAllScheduledFunctions` under a frozen clock. convex-test runs each
- * transaction at or after the commits before it, so a job scheduled to run at
- * once can fall due a millisecond after the frozen clock.
+ * Fires the jobs that are due and none that wait: a job scheduled at once is due
+ * a millisecond past a frozen clock once convex-test pins a commit after it.
  */
 export const fireDueJobs = () => vi.advanceTimersByTime(1);
 
