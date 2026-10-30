@@ -12,6 +12,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { TableHeadButton } from "@/components/shared/table/head";
 import { useTableFilters } from "@/components/shared/table/toolbar";
