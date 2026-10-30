@@ -20,7 +20,7 @@ export const TRYOUT_SECTION_KEY = "penalaran-matematika";
 export const TRYOUT_SECTION_PATH = `${TRYOUT_SET_PATH}/${TRYOUT_SECTION_KEY}`;
 type TryoutSetFixtureOptions = Partial<
   Pick<
-    Schema.Codec.Encoded<typeof TryoutSetSchema>,
+    typeof TryoutSetSchema.Encoded,
     | "examKey"
     | "internalEntrySectionKey"
     | "order"
@@ -35,7 +35,7 @@ type TryoutSetFixtureOptions = Partial<
 >;
 type TryoutSectionFixtureOptions = Partial<
   Pick<
-    Schema.Codec.Encoded<typeof TryoutSectionSchema>,
+    typeof TryoutSectionSchema.Encoded,
     | "examKey"
     | "order"
     | "publicPath"

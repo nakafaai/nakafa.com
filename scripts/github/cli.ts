@@ -50,7 +50,7 @@ type WorkflowJob = typeof WorkflowJobSchema.Type;
 const WorkflowJobJson = Schema.fromJsonString(WorkflowJobSchema);
 
 const SETUP_NODE_ACTION =
-  "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020";
+  "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1";
 const UPLOAD_ACTION =
   "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9";
 /** Digest of the decoded publish job after a complete OIDC boundary review, at Node 24.22.1; the reviewed job at 24.21.0 differs only in that version. */
@@ -73,7 +73,7 @@ const REQUIRED_BUILD_SOURCE = [
   "provenance.mjs",
 ] as const;
 const REQUIRED_PUBLISH_SOURCE = [
-  "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+  "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
   SETUP_NODE_ACTION,
   "cli-package",
   "EXPECTED_SHA256",
@@ -92,7 +92,7 @@ const REQUIRED_PUBLISH_SOURCE = [
   "--provenance",
 ] as const;
 const REQUIRED_VERIFY_SOURCE = [
-  "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+  "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
   SETUP_NODE_ACTION,
   "cli-package",
   "cli-verifier",

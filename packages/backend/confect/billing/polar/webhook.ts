@@ -1,6 +1,6 @@
 import {
   DatabaseReader,
-  MutationCtx,
+  DocumentIds,
 } from "@repo/backend/confect/_generated/services";
 import { findAccountByProviderCustomer } from "@repo/backend/confect/billing/accounts";
 import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
@@ -58,18 +58,19 @@ const applySchoolState = Effect.fn("billing.polar.applySchool")(function* (
   school: { readonly offer: BillingOfferKey; readonly tenantId: string },
   subscription: PolarSubscriptionSource
 ) {
-  const ctx = yield* MutationCtx;
-  const tenantId = ctx.db.normalizeId("tenants", school.tenantId);
-  const tenant =
-    tenantId === null
-      ? null
-      : yield* (yield* DatabaseReader)
-          .table("tenants")
-          .get(tenantId)
-          .pipe(
-            Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-            Effect.orDie
-          );
+  const tenantId = yield* (yield* DocumentIds).parse(
+    "tenants",
+    school.tenantId
+  );
+  const tenant = Option.isNone(tenantId)
+    ? null
+    : yield* (yield* DatabaseReader)
+        .table("tenants")
+        .get(tenantId.value)
+        .pipe(
+          Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+          Effect.orDie
+        );
   if (tenant === null || schoolRail(tenant.country) !== "polar") {
     yield* Effect.logError("Polar School subscription names no Polar school", {
       subscriptionId: subscription.id,

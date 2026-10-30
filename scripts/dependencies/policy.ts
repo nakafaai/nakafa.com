@@ -25,7 +25,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
  * not check out the repository cannot read the manifest, so it names the same
  * release and the workflow checks compare it with this value.
  */
-export const NODE_RUNTIME_VERSION = "24.22.1";
+export const NODE_RUNTIME_VERSION = "24.22.2";
 const CONTRACT_PACKAGE_VERSION = "1.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.5";
@@ -60,7 +60,7 @@ export const AI_SDK_COHORT = {
  * manifest that pins the cohort: the policy test reports each declaration that still
  * holds the old version, so none is missed.
  */
-const TIPTAP_COHORT_VERSION = "3.32.0";
+const TIPTAP_COHORT_VERSION = "3.32.1";
 /**
  * The Tiptap packages each manifest declares. The editor package holds the schema of
  * an assessment document, the design system holds the Memory editor, and the web app
@@ -130,8 +130,9 @@ const TIPTAP_PACKAGES = Arr.dedupe(
 
 /**
  * Two transitive overrides in the root `package.json` hold a version for a reason
- * that no manifest states. `convex-helpers` 0.1.129, the latest release on 25 October
- * 2026, keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
+ * that no manifest states. `convex-helpers` 0.1.131, the latest release that the
+ * release-age gate admits on 30 October 2026, keeps one copy for every Convex
+ * component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
  * needs ^0.1.94, so one copy satisfies every range. `ip-address` 10.7.4 keeps the
  * socks path of sigstore, a root devDependency, on a patched release: GHSA-j6r3-76f7-8jcv
@@ -175,7 +176,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.56.0",
+    approved: "0.63.0",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -203,7 +204,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "0.12.5",
+    approved: "0.12.6",
     dependency: "@convex-dev/better-auth",
     minimumDeclarations: 1,
   },
@@ -250,7 +251,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
-  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.32.0 does not
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.32.1 does not
   // ship it. It is MIT, depends on prosemirror-state alone, and its last
   // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
   // design system installs its extension, and the sync loop of the web app
@@ -264,7 +265,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-collab",
   },
   // The model and the transform that the server folds stored steps with (ADR
-  // 0028). They are the versions that `@tiptap/pm` 3.32.0 resolves in
+  // 0028). They are the versions that `@tiptap/pm` 3.32.1 resolves in
   // `bun.lock`, so the server applies a step with the code the editors run.
   {
     approved: "1.25.12",
@@ -272,7 +273,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-model",
   },
   {
-    approved: "1.12.2",
+    approved: "1.12.4",
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-transform",
   },
@@ -324,43 +325,43 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "effect@latest",
-    "4.0.6",
-    "Effect 4.0.6 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). @nakafa/aksara-contracts 0.51.0 and 1.0.0 both peer effect exactly 4.0.5, and @effect/platform-* 4.0.6 peers effect ^4.0.6, so the cohort cannot move until a contracts release peers the Effect release that nakafa.com adopts. docs/adr/compiler.md in Aksara orders nakafa.com first, so this order needs one owner decision.",
+    "4.1.0",
+    "Effect 4.1.0 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. Every published @nakafa/aksara-contracts (1.0.0, 1.0.1 and 2.0.0) peers effect 4.0.5 exactly, and its dist/hash/digest.js calls Crypto.make from effect when the module loads, so on 4.1 every contracts import fails. nakafa.com therefore moves to 4.1.0 in the change that adopts a contracts release built on 4.1, which follows the contracts 2.0 adoption (#1434, #1436). Checked 30 October 2026.",
   ],
   [
     "@effect/platform-browser@latest",
-    "4.0.6",
-    "@effect/platform-browser follows the Effect cohort. Its 4.0.6 release peers effect ^4.0.6, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.0",
+    "@effect/platform-browser follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/platform-node@latest",
-    "4.0.6",
-    "@effect/platform-node follows the Effect cohort. Its 4.0.6 release peers effect ^4.0.6, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.0",
+    "@effect/platform-node follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/platform-node-shared@latest",
-    "4.0.6",
-    "@effect/platform-node-shared follows the Effect cohort. Its 4.0.6 release peers effect ^4.0.6, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.0",
+    "@effect/platform-node-shared follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/vitest@latest",
-    "4.0.6",
-    "@effect/vitest follows the Effect cohort. Its 4.0.6 release peers effect ^4.0.6, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.0",
+    "@effect/vitest follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/ai-openai-compat@latest",
-    "4.0.6",
-    "@effect/ai-openai-compat follows the Effect cohort. Its 4.0.6 release peers effect ^4.0.6, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.0",
+    "@effect/ai-openai-compat follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/ai-openrouter@latest",
-    "4.0.6",
-    "@effect/ai-openrouter follows the Effect cohort. Its 4.0.6 release peers effect ^4.0.6, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "4.1.0",
+    "@effect/ai-openrouter follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
   ],
   [
     "@effect/tsgo@latest",
-    "0.56.1",
-    "Compiler patching moves with TypeScript and Effect. 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), 0.51 adds declaration locations to it, 0.52 adds schemaClassMissingBrand (default severity suggestion; base.json keeps it off until every Schema error class carries a brand, see docs/adr/0021-rules.md), effectSleepZeroToYieldNow and flatMapToTap (default severity suggestion; base.json sets error), and the opt-in preferEffectArray, preferEffectRecord, and preferSchemaTaggedError (default off). 0.53 adds errorPayloadShadowsName (default severity suggestion; base.json sets error) and the opt-in preferBarrelImport and preferNamespaceImport (default off). 0.53.3 makes effect-tsgo diagnostics report related locations. 0.53.4 only moves the TypeScript next tag, which Nakafa does not use, and Aksara's one-day release age admits it on 18 October 2026, so both repositories stay on 0.53.3 until then. Every rule is decided in packages/typescript-config/base.json. 0.56.0 adds preferEffectString (default off; base.json keeps it off, and docs/adr/0021-rules.md records why) and schemaClassObjectLiteral (default warning; base.json sets it to error, and the workspace typechecks with no violation). The rule schema changes nothing else. 0.56.1 is the latest release and becomes one day old at 2026-10-25 08:10 UTC, so the repository stays on 0.56.0 until then.",
+    "0.63.0",
+    "Compiler patching moves with TypeScript and Effect. Every rule is decided in packages/typescript-config/base.json, and docs/adr/0021-rules.md records each decision. 0.57 adds the experimental tsrs build and 0.59 adds the effect-tsgo tsc, tsrs and oxlint proxy commands, which this repository does not use: it patches the installed compiler. 0.61 adds flatMapIdentityToFlatten, 0.62 mapConstToAs, and 0.63 failCauseToConstructor and manualMetricTapToTrack, each a style suggestion by default that base.json sets to error, and the opt-in mapMapErrorToMapBoth, which base.json keeps off as upstream does. 0.63 also names the catch variant in two messages and builds quick-fix references from the file's imports. 0.63.0 is the latest release and supports TypeScript 7.0.2.",
   ],
   ["vitest@latest", "5.0.5", "The Effect 4 test adapter requires Vitest 5."],
   [
@@ -375,8 +376,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "1.0.0",
-    "1.0.0 peers effect 4.0.5 exactly, as 0.51.0 does. The application code imports its ./tree subpath, which only 1.0.0 exports, so bunfig.toml excludes this release from the release-age gate until it is one day old (2026-10-25 20:13 UTC).",
+    "2.0.0",
+    "2.0.0 replaces the question and try-out contracts with the assessment snapshot, and nakafa.com adopts it in the try-out engine train (#1434, #1436), so this repository stays on 1.0.0 until that train lands. 2.0.0 still peers effect 4.0.5 exactly, as 1.0.0 does.",
   ],
   [
     "convex-test@latest",
@@ -401,31 +402,31 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "better-auth@latest",
-    "1.7.12",
-    "@convex-dev/better-auth@0.12.5 declares the peer range >=1.6.11 <1.7.0, so runtime stays on the latest 1.6 patch (1.6.33) until the adapter opens 1.7. Its optional Vitest peer stops at 4, but only unused test-utils import Vitest; Nakafa auth runtime tests pass on 5. Re-checked on 25 October 2026: @convex-dev/better-auth 0.12.5 is still the latest adapter and still declares >=1.6.11 <1.7.0.",
+    "1.7.14",
+    "@convex-dev/better-auth 0.12.6, the latest adapter, still declares the peer range >=1.6.11 <1.7.0 (checked 30 October 2026), so runtime stays on the latest 1.6 patch (1.6.33) until the adapter opens 1.7. Its optional Vitest peer stops at 4, but only unused test-utils import Vitest; Nakafa auth runtime tests pass on 5.",
   ],
   [
     "@convex-dev/better-auth@latest",
-    "0.12.5",
-    "The adapter defines the accepted Better Auth peer range.",
+    "0.12.6",
+    "The adapter defines the accepted Better Auth peer range. 0.12.6 keeps >=1.6.11 <1.7.0 and convex-helpers ^0.1.128.",
   ],
   [
     "posthog-node@latest",
-    "5.57.1",
-    "posthog-node 5.56 and 5.57 import @opentelemetry/api, an optional peer that is not installed, in a dynamic import that Convex's bundler cannot resolve (5.57.1 dist/extensions/error-tracking/trace-context.js). The PostHog Convex component therefore stays on 5.55.1 through the override for @posthog/convex 2.1.8 in package.json, and the analytics package takes 5.57.1. Review this again when a posthog-node or @posthog/convex release bundles for Convex without the import.",
+    "5.60.1",
+    "posthog-node 5.57.2 and later read the OpenTelemetry API from its global symbol instead of importing @opentelemetry/api, and 5.59 moves the OpenTelemetry integration to the separate posthog-node/otel entrypoint, so the Convex bundle of @posthog/convex resolves without the optional peer. The override that held the component on 5.55.1 is gone, and the component and the analytics package share one release. 5.60.1 is the latest release and becomes one day old at 2026-10-30 17:51 UTC; the release-age gate resolves 5.57.2 until then.",
   ],
   [
     "@biomejs/biome@latest",
-    "2.6.3",
-    "Formatting is reviewed as one cohort with Ultracite. Biome stays on 2.5.15: Ultracite 8.0.2 still configures useSortedClasses, which Biome 2.6 no longer knows, so Biome 2.6.x fails the lint configuration with an unknown key (measured by the Aksara lane on 24 October 2026). The hold lifts when Ultracite's configuration supports the 2.6 line.",
+    "2.6.4",
+    "Formatting is reviewed as one cohort with Ultracite. Biome stays on 2.5.15. Ultracite 8.1.0 peers Biome ^2.6.2 and renames useSortedClasses to useTailwindSortedClasses, so the 2.6 line loads now, but the cohort also sorts classes in Tailwind CSS v4 order and turns on the rules that Biome 2.6 made stable. Measured on 30 October 2026 with Biome 2.6.4 and Ultracite 8.1.0: 1,620 findings in about 550 files, among them 733 class lists to re-sort in 290 files, 410 regular expressions without the unicode flag, 177 unnamed capture groups, 101 hook factory components (noComponentHookFactories) and 83 imports after code. That change touches most of the files that the open pull requests touch, so it lands in its own change when the merge trains allow it.",
   ],
   [
     "ultracite@latest",
-    "8.0.2",
-    "Ultracite 8 keeps the Biome presets. Its Biome core turns noForIn, noUndeclaredDependencies and three JSX rules into errors, and the repository passes them without code changes. Its ESLint, Oxlint and Zed changes do not apply to this Biome setup.",
+    "8.1.0",
+    "Ultracite 8.1 moves with Biome 2.6, as the Biome entry describes: it renames the class sort rule, sorts the class lists of cva variants, turns on the newly stable Biome rules that match its Oxlint presets, and formats YAML and SCSS. Its ESLint, Oxlint, Oxfmt and Zed changes do not apply to this Biome setup.",
   ],
   ["@types/node@24", "24.19.2", "Declarations remain on the Node 24 line."],
-  ["node@24", "24.22.1", "The repository supports the Node 24 runtime line."],
+  ["node@24", "24.22.2", "The repository supports the Node 24 runtime line."],
   [
     "react-doctor@latest",
     "0.9.18",
