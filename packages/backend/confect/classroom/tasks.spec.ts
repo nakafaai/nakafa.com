@@ -12,6 +12,7 @@ import {
   SubmissionView,
   TaskAddress,
   TaskPoints,
+  TaskStanding,
   TaskText,
   TaskTitle,
   TaskView,
@@ -38,7 +39,10 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
-      args: () => classArgs,
+      args: () => ({
+        ...classArgs,
+        standing: Schema.optionalKey(TaskStanding),
+      }),
       item: () => TaskView,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "forum.read", arg: "classId" })

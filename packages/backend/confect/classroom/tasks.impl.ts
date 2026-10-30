@@ -16,7 +16,10 @@ import {
   TaskClosed,
 } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import { submissionField } from "@repo/backend/confect/classroom/tasks/task";
+import {
+  standingOf,
+  submissionField,
+} from "@repo/backend/confect/classroom/tasks/task";
 import {
   classTask,
   ownSubmission,
@@ -32,20 +35,27 @@ import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
-/** One page of the class's tasks by deadline, the soonest first. */
+/**
+ * One page of the class's tasks by deadline, the soonest first. A `standing` keeps the tasks where the reader's own
+ * work stands so (`standingOf`), so a page can hold fewer tasks than it read.
+ */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("classroom.tasks.list")(function* ({ paginationOpts }) {
+  Effect.fn("classroom.tasks.list")(function* ({ paginationOpts, standing }) {
     const row = yield* Class;
     const found = yield* (yield* DatabaseReader)
       .table("classroomTasks")
       .index("by_classId_and_deadline", (query) => query.eq("classId", row._id))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
+    const views = yield* Effect.forEach(found.page, taskView);
     return Struct.assign(found, {
-      page: yield* Effect.forEach(found.page, taskView),
+      page:
+        standing === undefined
+          ? views
+          : Arr.filter(views, (view) => standingOf(view.mine) === standing),
     });
   })
 );

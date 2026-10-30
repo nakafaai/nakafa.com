@@ -140,6 +140,21 @@ describe("classroom/tasks", () => {
           text: "Ringkasan pertama.",
         });
         expect(handed).toMatchObject({ handedIn: 1, mine: { late: false } });
+        const standingSlugs = (
+          standing: "handedIn" | "late" | "open" | "scored"
+        ) =>
+          student
+            .query(tasks.list, {
+              ...firstPage,
+              classId: forum.classId,
+              slug: nf,
+              standing,
+            })
+            .pipe(
+              Effect.map((found) => Arr.map(found.page, (task) => task.slug))
+            );
+        expect(yield* standingSlugs("handedIn")).toEqual(["ringkasan"]);
+        expect(yield* standingSlugs("open")).toEqual(["tertutup"]);
         vi.setSystemTime(TENANCY_NOW + 2 * DAY);
         const again = yield* student.mutation(tasks.submit, {
           classId: forum.classId,
@@ -148,6 +163,7 @@ describe("classroom/tasks", () => {
           text: "Ringkasan kedua.",
         });
         expect(again).toMatchObject({ handedIn: 1, mine: { late: true } });
+        expect(yield* standingSlugs("late")).toEqual(["ringkasan"]);
         const closed = yield* student
           .mutation(tasks.submit, {
             classId: forum.classId,
@@ -191,6 +207,7 @@ describe("classroom/tasks", () => {
           submissionId,
         });
         expect(scored.score).toBe(45);
+        expect(yield* standingSlugs("scored")).toEqual(["ringkasan"]);
         const tooMany = yield* teacher
           .mutation(tasks.score, {
             classId: forum.classId,
