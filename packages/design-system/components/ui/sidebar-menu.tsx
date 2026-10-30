@@ -148,15 +148,12 @@ export function SidebarMenuButton({
   const tooltipProps =
     typeof tooltip === "string" ? { children: tooltip } : tooltip;
 
+  // The tooltip names a folded item. While the sidebar is open it stays disabled, not merely
+  // hidden: an open tooltip, shown or not, takes the Escape a page listens for.
   return (
-    <Tooltip>
+    <Tooltip disabled={state !== "collapsed" || isMobile}>
       <TooltipTrigger render={button} />
-      <TooltipContent
-        align="center"
-        hidden={state !== "collapsed" || isMobile}
-        side="right"
-        {...tooltipProps}
-      />
+      <TooltipContent align="center" side="right" {...tooltipProps} />
     </Tooltip>
   );
 }
