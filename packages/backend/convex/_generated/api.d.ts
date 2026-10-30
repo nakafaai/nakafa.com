@@ -4192,6 +4192,23 @@ export declare const api: {
         }
       >;
     };
+    joins: {
+      join: FunctionReference<
+        "mutation",
+        "public",
+        { sittingId?: Id<"examSittings">; slug: string; token: string },
+        | { outcome: "joined"; sittingId: Id<"examSittings"> }
+        | {
+            outcome: "refused";
+            reason:
+              | "NotAdmitted"
+              | "SeatLimit"
+              | "SittingNotOpen"
+              | "TokenRefused"
+              | "TooManyTries";
+          }
+      >;
+    };
     presence: {
       join: FunctionReference<
         "mutation",
@@ -7423,7 +7440,13 @@ export declare const api: {
                   type: "person.invited";
                 }
               | {
-                  method: "card" | "code" | "invite" | "operator" | "founder";
+                  method:
+                    | "card"
+                    | "code"
+                    | "invite"
+                    | "operator"
+                    | "founder"
+                    | "room";
                   type: "person.claimed";
                 }
               | { type: "person.released" }
@@ -7541,6 +7564,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {
                     contentLicense: string;
