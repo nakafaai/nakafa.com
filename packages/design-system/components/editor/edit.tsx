@@ -20,8 +20,9 @@ import {
 } from "@repo/design-system/components/ui/tabs";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { fieldBoxVariants } from "@repo/design-system/lib/input";
+import { NEW_FORMULA } from "@repo/editor/math";
 import { cn } from "cn";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Fiber, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
 import {
   type ComponentProps,
@@ -50,7 +51,9 @@ const loadMathLive = Effect.tryPromise({
  * the LaTeX text show one formula: a change in either one reaches the other through `value`, and each
  * keystroke of the field reports its LaTeX. MathLive's own menu, keyboard toggle and virtual keyboard
  * never show (`styles/globals.css`); the box's Keyboard button opens Nakafa's keypad under the field,
- * which types through the element that `field` holds, and stays pressed while the keypad shows.
+ * which types through the element that `field` holds, and stays pressed while the keypad shows. The
+ * field takes the focus once it has mounted, with a new formula's placeholder selected, so the first
+ * keystroke replaces it.
  */
 function MathField({
   field,
@@ -82,6 +85,10 @@ function MathField({
     // The menu takes its items once the field has mounted; an empty menu leaves no context menu of MathLive's own.
     element.addEventListener("mount", () => {
       element.menuItems = [];
+      element.focus();
+      if (element.value === NEW_FORMULA) {
+        element.executeCommand("selectAll");
+      }
     });
     element.addEventListener("input", () => input(element.value));
     host.current?.append(element);
@@ -128,9 +135,10 @@ function MathField({
 }
 
 /**
- * The editor of one formula, opened by a press on the drawn formula. The popover holds two tabs:
- * the MathLive field, which a phone keyboard types into, and the LaTeX text. MathLive is loaded
- * when the popover opens, so no page's first JavaScript holds it. Closing the popover saves the
+ * The editor of one formula, opened by a press on the drawn formula, or at once for the formula the
+ * writer just inserted (`opening`). The popover holds two tabs: the MathLive field with Nakafa's
+ * keypad, and the LaTeX text. MathLive is loaded while the popover is open, so no page's first
+ * JavaScript holds it. Closing the popover saves the
  * formula, unless the writer pressed Escape, which keeps the formula as it was. A blank formula
  * is never saved, and a formula that KaTeX does not parse is saved and drawn as its error, with
  * KaTeX's reason in one sentence.
@@ -140,6 +148,7 @@ export function FormulaEdit({
   labels,
   latex,
   onSave,
+  opening,
 }: {
   block: boolean;
   /**
@@ -158,8 +167,10 @@ export function FormulaEdit({
   };
   latex: string;
   onSave: (latex: string) => void;
+  /** Whether the editor opens as the formula first draws, as it does for the formula the writer just inserted. */
+  opening: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(opening);
   const [draft, setDraft] = useState(latex);
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
     Option.none()
@@ -169,7 +180,23 @@ export function FormulaEdit({
   const [keypad, setKeypad] = useState(false);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
-  /** Opens the editor on the saved formula, and loads MathLive for its field. */
+  // MathLive loads the first time the popover shows, which may be as the formula first draws.
+  useEffect(() => {
+    if (!open || Option.isSome(mathlive)) {
+      return;
+    }
+    const loading = Effect.runFork(
+      loadMathLive.pipe(
+        Effect.option,
+        Effect.map((loaded) => setMathlive(loaded))
+      )
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(loading));
+    };
+  }, [mathlive, open]);
+
+  /** Opens the editor on the saved formula. */
   function openEditor(next: boolean) {
     if (!next) {
       setOpen(false);
@@ -181,12 +208,6 @@ export function FormulaEdit({
     discarded.current = false;
     setDraft(latex);
     setOpen(true);
-    Effect.runFork(
-      loadMathLive.pipe(
-        Effect.option,
-        Effect.map((loaded) => setMathlive(loaded))
-      )
-    );
   }
 
   /** Escape keeps the formula as it was saved, so the popover closes without a save. */

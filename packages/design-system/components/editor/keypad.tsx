@@ -156,7 +156,6 @@ export function FormulaKeypad({
         }
         size="sm"
         value={set}
-        variant="outline"
       >
         {Arr.map(Rec.keys(KEY_SETS), (name) => (
           <ToggleGroupItem
