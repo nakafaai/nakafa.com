@@ -91,11 +91,12 @@ test("an admin opens the profile and the periods of a school", async ({
   );
   expect(csv).toContain("When,Who,Change\r\n");
   expect(csv).toContain(",School opened\r\n");
+  // The path's first link opens the school's root, which lands the Owner on the exams.
   await page
     .getByRole("navigation", { name: "breadcrumb" })
     .getByRole("link", { name: "Home" })
     .click();
-  await expect(page).toHaveURL(address("/"));
+  await expect(page).toHaveURL(address("/exams"));
   await context.close();
 });
 

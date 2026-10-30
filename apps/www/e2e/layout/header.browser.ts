@@ -56,9 +56,8 @@ const EXAM_PAGE = /\/en\/try-out\/indonesia\/snbt$/;
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];
 
-/** The pages of a school host that an Owner sees without an exam: the home, the exams, and every setting. */
+/** The pages of a school host that an Owner sees without an exam: the exams and every setting. */
 const schoolPaths = [
-  "/",
   "/exams",
   "/settings/profile",
   "/settings/units",

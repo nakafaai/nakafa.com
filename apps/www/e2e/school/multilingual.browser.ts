@@ -80,7 +80,7 @@ function fitsTheViewport(page: Page) {
 
 /**
  * One school with an exam whose second question mixes three languages, read in the editor and in the
- * student's sitting at one viewport, plus the school's home, which shows no Arabic.
+ * student's sitting at one viewport, plus the school's root, which opens the owner's exams and shows no Arabic.
  */
 async function expectMixedQuestionAt(
   browser: Browser,
