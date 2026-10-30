@@ -7,18 +7,16 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Clock, Effect, Option, Schema } from "effect";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { finishInStore } from "@/components/exams/sitting/attempt";
-import {
-  confirmAnswer,
-  keepAnswer,
-  settleSent,
-} from "@/components/exams/sitting/keep";
+import { isFinalRefusal } from "@/components/exams/sitting/entry";
+import { keptAttempt } from "@/components/exams/sitting/keep";
 import {
   changePaper,
   nextVersionOf,
   type PaperQuestion,
   setPaperResponse,
 } from "@/components/exams/sitting/paper";
-import { sittingStorage } from "@/components/exams/sitting/storage";
+import { settleSent } from "@/components/player/keep";
+import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** Saves one response at once: the screen shows the chosen option or the typed text, and a refused answer rolls back. */
@@ -66,25 +64,23 @@ export function useSendAnswer() {
           version: input.version,
         })
       ).pipe(Effect.flatMap(Effect.fromResult)),
-      confirmKept(input, answeredAt)
+      confirmKept(input, answeredAt),
+      isFinalRefusal
     );
 }
 
 /** Drops the kept answer of one question, and reports a browser that refuses to keep it. */
 function confirmKept(input: SentAnswer, answeredAt: number) {
-  return confirmAnswer(
-    input.sittingId,
-    input.attemptId,
-    input.questionId,
-    answeredAt
-  ).pipe(
-    Effect.provide(sittingStorage),
-    Effect.catchTag("KeyValueStoreError", (error) =>
-      reportClientException(error, {
-        source: "components/exams/sitting/answer",
-      })
-    )
-  );
+  return keptAttempt(input.sittingId, input.attemptId)
+    .confirm(input.questionId, answeredAt)
+    .pipe(
+      Effect.provide(keptStorage),
+      Effect.catchTag("KeyValueStoreError", (error) =>
+        reportClientException(error, {
+          source: "components/exams/sitting/answer",
+        })
+      )
+    );
 }
 
 /** Finishes the student's attempt at once: the answers close, and a refused finish rolls back. */
@@ -108,18 +104,20 @@ export function keepResponse(input: {
   const answeredAt = Effect.runSync(Clock.currentTimeMillis);
   const version = nextVersionOf(input.question);
   Effect.runSync(
-    keepAnswer(input.sittingId, input.attemptId, input.question.id, {
-      answeredAt,
-      response: input.response,
-      version,
-    }).pipe(
-      Effect.provide(sittingStorage),
-      Effect.catchTag("KeyValueStoreError", (error) =>
-        reportClientException(error, {
-          source: "components/exams/sitting/answer",
-        })
+    keptAttempt(input.sittingId, input.attemptId)
+      .keep(input.question.id, {
+        answeredAt,
+        response: input.response,
+        version,
+      })
+      .pipe(
+        Effect.provide(keptStorage),
+        Effect.catchTag("KeyValueStoreError", (error) =>
+          reportClientException(error, {
+            source: "components/exams/sitting/answer",
+          })
+        )
       )
-    )
   );
   return { answeredAt, version };
 }
