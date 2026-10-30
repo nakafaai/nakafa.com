@@ -44,7 +44,7 @@ export function recordServerFunctionCalls(page: Page) {
  * The folder that a prerendered page's loader reads the static answer of a
  * server function call from, as `/_data/<key>.bin`, before it asks the Worker.
  */
-export const STATIC_DATA_PATH = "/_data/";
+const STATIC_DATA_PATH = "/_data/";
 
 /**
  * Records the URL of every request for a page's data, in order: each server
