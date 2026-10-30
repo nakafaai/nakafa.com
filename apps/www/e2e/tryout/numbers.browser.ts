@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readSectionHref, settledSection } from "@/e2e/support/tryout";
+import { readSectionHref, setHref, settledSection } from "@/e2e/support/tryout";
 
 /** Every script the page would load, which the reader's page never runs. */
 const SCRIPT = /\.m?js(\?|$)/;
@@ -24,6 +24,7 @@ test("a try-out section shows its numbers before its scripts run", async ({
       page,
       Effect.gen(function* () {
         yield* seedAnalyticsConsent(page, "denied");
+        yield* Effect.promise(() => page.goto(setHref));
         const href = yield* readSectionHref(yield* settledSection(page));
 
         const reader = yield* Effect.promise(() => browser.newPage());
