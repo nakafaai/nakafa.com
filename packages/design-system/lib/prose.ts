@@ -76,6 +76,9 @@ export const quoteVariants = cva(
   "my-4 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic"
 );
 
+/** A link in a text: in the link colour, underlined, at the weight of the words around it. */
+export const linkVariants = cva("text-primary underline underline-offset-4");
+
 /** Code inside a line of text. */
 export const codeVariants = cva(
   "inline whitespace-pre-wrap break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
