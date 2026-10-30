@@ -14,18 +14,10 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DatePicker } from "@repo/design-system/components/ui/date";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option } from "effect";
-import { useId, useState, useTransition } from "react";
+import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -42,6 +34,7 @@ import {
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
+  PeriodDialog,
   SchoolPeriodMenu,
   SchoolPeriodRestore,
 } from "@/components/tenant/settings/period";
@@ -267,10 +260,13 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
   );
 }
 
+/** Where the add dialog starts: no name and no days. */
+const NEW_PERIOD = { end: "", name: "", start: "" };
+
 /**
- * Renders the dialog that adds a planned period to the unit: its name, and its first and
- * last days. The dialog closes as the add is sent, and its values clear once the server
- * accepts the period.
+ * Renders the dialog that adds a planned period to the unit: its name, and its first and last days. The dialog closes
+ * as the add is sent, and it starts empty again once the server accepts the period, while a refused add keeps what was
+ * typed.
  */
 function SchoolPeriodAddDialog({
   open,
@@ -283,100 +279,29 @@ function SchoolPeriodAddDialog({
 }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
-  const id = useId();
   const create = useMutation(tenancy.periods.create).withOptimisticUpdate(
     createPeriodChange
   );
-  const [name, setName] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [isPending, startSaving] = useTransition();
-  const isComplete = name.trim() !== "" && start !== "" && end !== "";
-
-  // The dialog closes as the add is sent, and the add stays inert until the save settles,
-  // so a second press cannot add the same period twice.
-  const submit = () => {
-    setOpen(false);
-    startSaving(() =>
-      saveSchool(
-        () =>
-          create({
-            end,
-            name: name.trim(),
-            slug,
-            start,
-            unitId,
-          }),
-        SOURCE,
-        () => {
-          setName("");
-          setStart("");
-          setEnd("");
-        }
-      )
-    );
-  };
+  const [round, setRound] = useState(0);
 
   return (
-    <ResponsiveDialog
+    <PeriodDialog
       description={t("period-add-footer")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button
-            disabled={!isComplete || isPending}
-            inert={isPending}
-            onClick={submit}
-            type="button"
-          >
-            {t("period-add")}
-          </Button>
-        </>
+      fields={NEW_PERIOD}
+      key={round}
+      onSave={(fields) =>
+        startTransition(() =>
+          saveSchool(
+            () => create({ ...fields, slug, unitId }),
+            SOURCE,
+            () => setRound((count) => count + 1)
+          )
+        )
       }
       open={open}
+      saveLabel={t("period-add")}
       setOpen={setOpen}
       title={t("period-add")}
-    >
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor={`${id}-name`}>{t("period-name")}</FieldLabel>
-          <Input
-            id={`${id}-name`}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={t("period-name-placeholder")}
-            value={name}
-          />
-        </Field>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-4">
-          <Field>
-            <FieldLabel htmlFor={`${id}-start`}>{t("period-start")}</FieldLabel>
-            <DatePicker
-              id={`${id}-start`}
-              max={end === "" ? undefined : end}
-              onValueChange={setStart}
-              placeholder={t("period-start-placeholder")}
-              value={start}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-end`}>{t("period-end")}</FieldLabel>
-            <DatePicker
-              id={`${id}-end`}
-              min={start === "" ? undefined : start}
-              onValueChange={setEnd}
-              placeholder={t("period-end-placeholder")}
-              value={end}
-            />
-          </Field>
-        </div>
-      </FieldGroup>
-    </ResponsiveDialog>
+    />
   );
 }

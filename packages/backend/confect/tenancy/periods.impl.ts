@@ -1,4 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type {
+  TenantPeriodsDoc,
+  TenantUnitsDoc,
+} from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -52,6 +56,44 @@ const list = FunctionImpl.make(
 );
 
 /**
+ * Checks two dates for a period of one school: both are calendar dates of the school's clock, the start is before the
+ * end, and the span shares no day with another period of the school. `except` leaves out the period being edited, so
+ * its own old dates never count against it.
+ */
+const checkPeriodDates = Effect.fn("tenancy.periods.checkDates")(function* (
+  unit: TenantUnitsDoc,
+  start: string,
+  end: string,
+  except: Option.Option<TenantPeriodsDoc["_id"]>
+) {
+  if (
+    Option.isNone(parseCivilDate(start, unit.timeZone)) ||
+    Option.isNone(parseCivilDate(end, unit.timeZone)) ||
+    start >= end
+  ) {
+    return yield* new PeriodDatesInvalid();
+  }
+  // The two periods that start last on or before `end` hold the only one that can overlap, once the edited period
+  // is left out: periods of one school never overlap, so an earlier one ends before this one starts.
+  const before = yield* (yield* DatabaseReader)
+    .table("tenantPeriods")
+    .index(
+      "by_unitId_and_start",
+      (query) => query.eq("unitId", unit._id).lte("start", end),
+      "desc"
+    )
+    .take(2)
+    .pipe(Effect.orDie);
+  const other = Arr.findFirst(
+    before,
+    (found) => !Option.contains(except, found._id)
+  );
+  if (Option.exists(other, (found) => found.end >= start)) {
+    return yield* new PeriodOverlaps();
+  }
+});
+
+/**
  * Creates a planned period in one school. Both dates are calendar dates of the
  * school's clock, the start is before the end, and the period shares no day with
  * another period of the school.
@@ -63,29 +105,8 @@ const create = FunctionImpl.make(
   Effect.fn("tenancy.periods.create")(function* ({ end, name, start, unitId }) {
     const { person } = yield* Member;
     const unit = yield* unitAuthority.authorize("period.manage", unitId);
-    if (
-      Option.isNone(parseCivilDate(start, unit.timeZone)) ||
-      Option.isNone(parseCivilDate(end, unit.timeZone)) ||
-      start >= end
-    ) {
-      return yield* new PeriodDatesInvalid();
-    }
+    yield* checkPeriodDates(unit, start, end, Option.none());
     const reader = yield* DatabaseReader;
-    const before = yield* reader
-      .table("tenantPeriods")
-      .index(
-        "by_unitId_and_start",
-        (query) => query.eq("unitId", unit._id).lte("start", end),
-        "desc"
-      )
-      .first()
-      .pipe(Effect.orDie);
-    // The period that starts last on or before `end` is the only one that can
-    // overlap: periods of one school never overlap, so an earlier one ends before
-    // this one starts.
-    if (Option.exists(before, (found) => found.end >= start)) {
-      return yield* new PeriodOverlaps();
-    }
     const periodId = yield* (yield* DatabaseWriter)
       .table("tenantPeriods")
       .insert({
@@ -149,31 +170,46 @@ const open = FunctionImpl.make(
 );
 
 /**
- * Renames one period in place. A name that the period already has writes and
- * records nothing, so a screen that sends it twice is done the first time. An
- * archived period refuses the rename, as it refuses every other write.
+ * Edits one period in place: its name and its two dates, which follow the same rules as a new period's. An edit
+ * journals what it changed, a new name as `period.rename` and new dates as `period.rescheduled`, and an edit that
+ * changes nothing writes and journals nothing, so a screen that sends it twice is done the first time. An archived
+ * period refuses the edit, as it refuses every other write.
  */
-const rename = FunctionImpl.make(
+const edit = FunctionImpl.make(
   databaseSchema,
   spec,
-  "rename",
-  Effect.fn("tenancy.periods.rename")(function* ({ name }) {
+  "edit",
+  Effect.fn("tenancy.periods.edit")(function* ({ end, name, start }) {
     const { person } = yield* Member;
     const period = yield* Period;
-    if (period.name === name) {
+    const renamed = period.name !== name;
+    const rescheduled = period.start !== start || period.end !== end;
+    if (rescheduled) {
+      const unit = yield* (yield* DatabaseReader)
+        .table("tenantUnits")
+        .get(period.unitId)
+        .pipe(Effect.orDie);
+      yield* checkPeriodDates(unit, start, end, Option.some(period._id));
+    }
+    if (!(renamed || rescheduled)) {
       return periodView(period);
     }
+    const edited = Struct.assign(period, { end, name, start });
     yield* (yield* DatabaseWriter)
       .table("tenantPeriods")
-      .replace(
-        period._id,
-        Struct.assign(Struct.omit(period, ["_creationTime", "_id"]), { name })
-      )
+      .replace(period._id, Struct.omit(edited, ["_creationTime", "_id"]))
       .pipe(Effect.orDie);
-    yield* periodAuthority.record(personActor(person), period, {
-      type: "period.rename",
-    });
-    return periodView(Struct.assign(period, { name }));
+    if (renamed) {
+      yield* periodAuthority.record(personActor(person), period, {
+        type: "period.rename",
+      });
+    }
+    if (rescheduled) {
+      yield* periodAuthority.record(personActor(person), period, {
+        type: "period.rescheduled",
+      });
+    }
+    return periodView(edited);
   })
 );
 
@@ -195,7 +231,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
   Layer.provide(archive),
   Layer.provide(restore),
-  Layer.provide(rename),
+  Layer.provide(edit),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(tenantAccess),

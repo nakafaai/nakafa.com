@@ -12,7 +12,7 @@ import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
 const other = slugOf("other");
-const { archive, create, list, open, rename } = refs.public.tenancy.periods;
+const { archive, create, edit, list, open } = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -301,23 +301,35 @@ describe("tenancy/periods open and archive", () => {
   );
 });
 
-describe("tenancy/periods rename", () => {
+/** The term after SMA_TERMS in the same school. */
+const SMA_NEXT = {
+  end: "2027-06-19",
+  name: "Genap 2026/2027",
+  start: "2027-01-04",
+};
+
+/** The journal entries of one change type. */
+const changesOf = (
+  entries: Effect.Success<typeof journal>,
+  type: "period.rename" | "period.rescheduled"
+) => Arr.filter(entries, (entry) => entry.change.type === type);
+
+describe("tenancy/periods edit", () => {
   it.effect(
-    "renames a period in place, answers the new name, and journals the rename",
+    "renames a period in place, answers the new name, and journals the rename alone",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* admin(fixture, SMA_TERMS);
-        const renamed = yield* fixture.as("admin").mutation(rename, {
-          name: "Genap 2026/2027",
+        const renamed = yield* fixture.as("admin").mutation(edit, {
+          ...SMA_TERMS,
+          name: "Ganjil 2026",
           periodId: period.id,
           slug: nf,
         });
         const entries = yield* fixture.run(journal);
-        expect(renamed).toEqual({ ...period, name: "Genap 2026/2027" });
-        expect(
-          Arr.filter(entries, (entry) => entry.change.type === "period.rename")
-        ).toMatchObject([
+        expect(renamed).toEqual({ ...period, name: "Ganjil 2026" });
+        expect(changesOf(entries, "period.rename")).toMatchObject([
           {
             actor: { id: fixture.people.admin.personId, kind: "person" },
             change: { type: "period.rename" },
@@ -325,23 +337,109 @@ describe("tenancy/periods rename", () => {
             subject: { id: period.id, kind: "period" },
           },
         ]);
+        expect(changesOf(entries, "period.rescheduled")).toEqual([]);
       })
   );
 
   it.effect(
-    "writes and records nothing for the name a period already has",
+    "moves a period's dates, answers them, and journals the reschedule alone",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* admin(fixture, SMA_TERMS);
+        const moved = yield* fixture.as("admin").mutation(edit, {
+          end: "2026-12-23",
+          name: SMA_TERMS.name,
+          periodId: period.id,
+          slug: nf,
+          start: "2026-07-06",
+        });
+        const entries = yield* fixture.run(journal);
+        expect(moved).toEqual({
+          ...period,
+          end: "2026-12-23",
+          start: "2026-07-06",
+        });
+        expect(changesOf(entries, "period.rescheduled")).toMatchObject([
+          {
+            change: { type: "period.rescheduled" },
+            subject: { id: period.id, kind: "period" },
+          },
+        ]);
+        expect(changesOf(entries, "period.rename")).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "writes and journals nothing for the name and dates a period already has",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const period = yield* admin(fixture, SMA_TERMS);
         const before = yield* fixture.run(journal);
-        const same = yield* fixture.as("admin").mutation(rename, {
-          name: period.name,
+        const same = yield* fixture.as("admin").mutation(edit, {
+          ...SMA_TERMS,
           periodId: period.id,
           slug: nf,
         });
         expect(same).toEqual(period);
         expect(yield* fixture.run(journal)).toEqual(before);
+      })
+  );
+
+  it.effect(
+    "refuses dates that are not calendar dates or end before they start",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* admin(fixture, SMA_TERMS);
+        const refusals = yield* Effect.forEach(
+          [
+            { end: "2026-12-19", start: "2026-13-01" },
+            { end: "2026-07-01", start: "2026-07-13" },
+          ],
+          (dates) =>
+            fixture
+              .as("admin")
+              .mutation(edit, {
+                ...dates,
+                name: SMA_TERMS.name,
+                periodId: period.id,
+                slug: nf,
+              })
+              .pipe(Effect.flip)
+        );
+        expect(refusals).toMatchObject([
+          { _tag: "PeriodDatesInvalid" },
+          { _tag: "PeriodDatesInvalid" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "refuses dates that share a day with another period, and never counts the period's own old dates",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const first = yield* admin(fixture, SMA_TERMS);
+        const second = yield* admin(fixture, SMA_NEXT);
+        const overlap = yield* fixture
+          .as("admin")
+          .mutation(edit, {
+            ...SMA_NEXT,
+            periodId: second.id,
+            slug: nf,
+            start: SMA_TERMS.end,
+          })
+          .pipe(Effect.flip);
+        const longer = yield* fixture.as("admin").mutation(edit, {
+          ...SMA_TERMS,
+          end: "2026-12-31",
+          periodId: first.id,
+          slug: nf,
+        });
+        expect(overlap).toMatchObject({ _tag: "PeriodOverlaps" });
+        expect(longer).toEqual({ ...first, end: "2026-12-31" });
       })
   );
 
@@ -351,13 +449,13 @@ describe("tenancy/periods rename", () => {
       const period = yield* admin(fixture, SMA_TERMS);
       const denial = yield* fixture
         .as("teacher")
-        .mutation(rename, { name: "Lain", periodId: period.id, slug: nf })
+        .mutation(edit, { ...SMA_TERMS, periodId: period.id, slug: nf })
         .pipe(Effect.flip);
       expect(denial).toMatchObject(denied("role"));
     })
   );
 
-  it.effect("refuses to rename an archived period", () =>
+  it.effect("refuses to edit an archived period", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const period = yield* admin(fixture, SMA_TERMS);
@@ -369,7 +467,12 @@ describe("tenancy/periods rename", () => {
         .mutation(archive, { periodId: period.id, slug: nf });
       const denial = yield* fixture
         .as("admin")
-        .mutation(rename, { name: "Lain", periodId: period.id, slug: nf })
+        .mutation(edit, {
+          ...SMA_TERMS,
+          name: "Lain",
+          periodId: period.id,
+          slug: nf,
+        })
         .pipe(Effect.flip);
       expect(denial).toMatchObject(denied("condition"));
     })
