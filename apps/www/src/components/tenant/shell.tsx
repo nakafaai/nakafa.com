@@ -57,6 +57,7 @@ import type { HomeAccess } from "@/components/tenant/home/access";
 import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
+import { TenantSearch } from "@/components/tenant/search";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
 import { Link, useRouteMatched } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
@@ -246,6 +247,7 @@ function TenantFrame({ children }: { children: ReactNode }) {
           <SidebarMenu>
             <TenantSwitcher />
           </SidebarMenu>
+          <TenantSearch />
         </SidebarHeader>
         <SidebarContent>
           <TenantNavigation />

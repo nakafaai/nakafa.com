@@ -77,7 +77,7 @@ function TenantClassesRows() {
  * Reads the viewer's classes in the school's active periods once Convex has settled
  * the session, so the query never runs before the viewer is known.
  */
-function useClassesQuery(slug: TenantValue["slug"]) {
+export function useClassesQuery(slug: TenantValue["slug"]) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   return useQuery(classroom.classes.mine, isSettled ? { slug } : "skip");
 }

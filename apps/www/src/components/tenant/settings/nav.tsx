@@ -1,63 +1,20 @@
-import {
-  Building03Icon,
-  Calendar03Icon,
-  ConnectIcon,
-  CreditCardIcon,
-  DocumentValidationIcon,
-  FileSpreadsheetIcon,
-  InformationCircleIcon,
-  Mail01Icon,
-  Plug01Icon,
-  SecurityCheckIcon,
-  StudentIcon,
-  UserListIcon,
-  UserLove01Icon,
-  UserMultiple02Icon,
-  UserSettings01Icon,
-} from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Array as Arr } from "effect";
-import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { SettingsBack } from "@/components/shared/settings/return";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
+import { settingsSectionIcons } from "@/components/tenant/settings/icons";
 import { TargetLink, useLeafRoutePath } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 import {
   type SchoolSettingsGroup,
   schoolSettingsGroups,
 } from "@/lib/settings/school";
-
-/**
- * The icon of each section, beside its name. A section added without one does not compile, and
- * no section draws the icon of another section, so each entry of the sidebar is told apart by
- * its icon alone.
- */
-const sectionIcons: Record<
-  SchoolSettingsGroup["sections"][number]["labelKey"],
-  ComponentProps<typeof HugeIcons>["icon"]
-> = {
-  audit: DocumentValidationIcon,
-  billing: CreditCardIcon,
-  clients: Plug01Icon,
-  cohorts: UserMultiple02Icon,
-  connections: ConnectIcon,
-  guardians: UserLove01Icon,
-  invites: Mail01Icon,
-  members: UserListIcon,
-  periods: Calendar03Icon,
-  policies: SecurityCheckIcon,
-  profile: InformationCircleIcon,
-  roles: UserSettings01Icon,
-  roster: FileSpreadsheetIcon,
-  students: StudentIcon,
-  units: Building03Icon,
-};
 
 /**
  * Renders the school settings as the sidebar body for settings routes, replacing the
@@ -114,7 +71,7 @@ function SchoolSettingsNavItem({
         render={<TargetLink target={section.target} />}
         tooltip={label}
       >
-        <HugeIcons icon={sectionIcons[section.labelKey]} />
+        <HugeIcons icon={settingsSectionIcons[section.labelKey]} />
         <span className="truncate">{label}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
