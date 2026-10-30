@@ -1,4 +1,5 @@
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Effect, Option, Schema } from "effect";
 import { createStore, type StoreApi } from "zustand";
 import { reportClientException } from "@/lib/analytics/client";
@@ -6,7 +7,6 @@ import type {
   MaterialNavigationPage,
   MaterialPlacement,
 } from "@/lib/content/material/navigation";
-import { readMaterialPlacement } from "@/lib/content/material/placement.functions";
 
 /**
  * The curriculum placement of one lesson page, as its links read it: none, as
@@ -35,10 +35,10 @@ export class PlacementReadFailed extends Schema.TaggedError<PlacementReadFailed>
 /**
  * Reads the placement that the `ctx` hint of the reader's address names, after
  * the page has hydrated, and keeps it in the store. No build writes the answer of
- * a reader's hint, so the browser asks the server function at once instead of
- * looking for a static answer first. An address without a valid hint asks nothing
- * and keeps no placement. A failed read is reported and keeps the lesson's own
- * links, which stay correct without a placement.
+ * a reader's hint, so the browser asks Convex itself, with the read loaded on
+ * this first use, and the Worker answers nothing for it. An address without a
+ * valid hint asks nothing and keeps no placement. A failed read is reported and
+ * keeps the lesson's own links, which stay correct without a placement.
  */
 export const startMaterialPlacement = Effect.fn(
   "www.materials.placement.start"
@@ -54,24 +54,21 @@ export const startMaterialPlacement = Effect.fn(
     readonly page: MaterialNavigationPage;
   }
 ) {
-  if (ctx === undefined || readMaterialContextHint(ctx) === undefined) {
+  const context = ctx === undefined ? undefined : readMaterialContextHint(ctx);
+  const appLocale = decodeLocale(locale);
+  if (context === undefined || Option.isNone(appLocale)) {
     store.setState(initialPlacementState());
     return;
   }
   const placement = yield* Effect.tryPromise({
-    try: () =>
-      readMaterialPlacement({
-        data: {
-          contentKey: page.route.contentKey,
-          ctx,
-          locale,
-          materialKey: page.route.materialKey,
-          parentPath: page.route.parentPath,
-          publicPath: page.route.publicPath,
-        },
-      }),
+    try: () => import("@/lib/content/material/context"),
     catch: (cause) => new PlacementReadFailed({ cause }),
   }).pipe(
+    Effect.flatMap(({ readPublishedMaterialPlacement }) =>
+      readPublishedMaterialPlacement(appLocale.value, page.route, context).pipe(
+        Effect.mapError((cause) => new PlacementReadFailed({ cause }))
+      )
+    ),
     Effect.catchTag("PlacementReadFailed", (error) =>
       reportClientException(error, { source: "material-placement" }).pipe(
         Effect.as(null)

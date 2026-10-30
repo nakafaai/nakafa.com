@@ -3,26 +3,34 @@ import { Deferred, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { SERVER_FUNCTION_HEADER } from "@/e2e/support/requests";
 
 const MATERIAL_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
-const MATERIAL_CONTEXT =
-  "merdeka~class-11-mathematics-function-composition-inverse-function";
+const MATERIAL_NODE =
+  "class-11-mathematics-function-composition-inverse-function";
+const MATERIAL_CONTEXT = `merdeka~${MATERIAL_NODE}`;
 const CONTEXTUAL_MATERIAL_HREF = `${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`;
 const MATERIAL_TITLE_PATTERN = /^Function Concept\b/;
 
-/** Whether a request is the lesson's read of the placement that its address names. */
-const isPlacementRead = (request: Request) =>
-  request.headers()[SERVER_FUNCTION_HEADER] === "true" &&
-  decodeURIComponent(request.url()).includes(MATERIAL_CONTEXT);
+/** The path of the Convex query that verifies a lesson's placement. */
+const PLACEMENT_QUERY = "contentRelease/program:context";
+
+/** Whether a request is the lesson's Convex query of the placement that its address names. */
+const isPlacementRead = (request: Request) => {
+  const body = request.postData() ?? "";
+  return (
+    request.method() === "POST" &&
+    body.includes(`"${PLACEMENT_QUERY}"`) &&
+    body.includes(MATERIAL_NODE)
+  );
+};
 
 /**
  * Proves the lesson keeps its verified curriculum placement without polluting
  * SEO. The static lesson is readable before the placement arrives, the browser
- * asks the server for it once, without first missing a static answer that no
- * build writes, and the lesson's own link then carries it while the title and
- * the first section stay where they were.
+ * asks Convex for it once, with no server function and without first missing a
+ * static answer that no build writes, and the lesson's own link then carries it
+ * while the title and the first section stay where they were.
  */
 test("material sidebar preserves verified curriculum context", async ({
   baseURL,
@@ -42,6 +50,12 @@ test("material sidebar preserves verified curriculum context", async ({
           const page = yield* Effect.promise(() => context.newPage());
           const reads = MutableList.make<string>();
           const missedAnswers = MutableList.make<string>();
+          const serverFunctions = MutableList.make<string>();
+          page.on("request", (request) => {
+            if (new URL(request.url()).pathname.startsWith("/_serverFn/")) {
+              MutableList.append(serverFunctions, request.url());
+            }
+          });
           page.on("response", (response) => {
             if (
               response.url().includes("/_data/") &&
@@ -56,7 +70,7 @@ test("material sidebar preserves verified curriculum context", async ({
           // a slow connection, so nothing it changes can move the lesson first.
           yield* Effect.promise(() =>
             page.route(
-              (url) => url.pathname.startsWith("/_serverFn/"),
+              (url) => url.pathname === "/api/query",
               (route) => {
                 if (!isPlacementRead(route.request())) {
                   return route.continue();
@@ -138,6 +152,7 @@ test("material sidebar preserves verified curriculum context", async ({
               yield* Effect.sync(() => {
                 expect(reads.length).toBe(1);
                 expect(MutableList.toArray(missedAnswers)).toEqual([]);
+                expect(MutableList.toArray(serverFunctions)).toEqual([]);
               });
               const titleAfter = yield* Effect.promise(() =>
                 title.boundingBox()
