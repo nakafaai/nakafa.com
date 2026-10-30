@@ -148,17 +148,21 @@ export function TableSheet({
         <PaperTableHead heading={t("match-statements")}>
           {Arr.map(table.columns, (column, index) => (
             <PaperTableHeader id={`${id}-${column.id}`} key={column.id}>
-              <PartEditor
-                frozen={frozen}
+              <OptionRow
                 label={labelOf(column, saved("columns"))}
-                name={t("column-of", { name: optionLetter(index), number })}
+                locked={frozen}
                 onRemove={null}
-                onSave={(label, unstored) =>
+                onSave={(label: OptionLabel, unstored: () => void) =>
                   saveLabel(column.id, label, unstored)
                 }
-                placeholder={t("column-placeholder")}
                 removeName=""
-              />
+              >
+                <ExamDocument
+                  label={t("column-of", { name: optionLetter(index), number })}
+                  placeholder={t("column-placeholder")}
+                  size="line"
+                />
+              </OptionRow>
             </PaperTableHeader>
           ))}
         </PaperTableHead>
@@ -179,24 +183,28 @@ export function TableSheet({
           >
             <PaperTableNumber number={index + 1} />
             <PaperTableStatement>
-              <PartEditor
-                frozen={frozen}
+              <OptionRow
                 label={labelOf(statement, saved("statements"))}
-                name={t("statement-of", { name: index + 1, number })}
+                locked={frozen}
                 onRemove={
                   table.statements.length > CHOICE_OPTIONS_MIN
                     ? () => removeStatement(statement.id)
                     : null
                 }
-                onSave={(label, unstored) =>
+                onSave={(label: OptionLabel, unstored: () => void) =>
                   saveLabel(statement.id, label, unstored)
                 }
-                placeholder={t("statement-placeholder")}
                 removeName={t("statement-remove-of", {
                   name: index + 1,
                   number,
                 })}
-              />
+              >
+                <ExamDocument
+                  label={t("statement-of", { name: index + 1, number })}
+                  placeholder={t("statement-placeholder")}
+                  size="line"
+                />
+              </OptionRow>
             </PaperTableStatement>
             {Arr.map(table.columns, (column) => (
               <PaperTableMark key={column.id}>
@@ -225,37 +233,6 @@ export function TableSheet({
       )}
       <FieldDescription>{t("cell-hint")}</FieldDescription>
     </div>
-  );
-}
-
-/** The editor of one statement or column header: its rich text on one line, and the control that removes it. */
-function PartEditor({
-  frozen,
-  label,
-  name,
-  onRemove,
-  onSave,
-  placeholder,
-  removeName,
-}: {
-  readonly frozen: boolean;
-  readonly label: OptionLabel;
-  readonly name: string;
-  readonly onRemove: (() => void) | null;
-  readonly onSave: (label: OptionLabel, unstored: () => void) => void;
-  readonly placeholder: string;
-  readonly removeName: string;
-}) {
-  return (
-    <OptionRow
-      label={label}
-      locked={frozen}
-      onRemove={onRemove}
-      onSave={onSave}
-      removeName={removeName}
-    >
-      <ExamDocument label={name} placeholder={placeholder} size="line" />
-    </OptionRow>
   );
 }
 
