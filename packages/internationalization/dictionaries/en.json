@@ -748,7 +748,10 @@
         "created": "Cohort added",
         "renamed": "Cohort renamed",
         "archived": "Cohort archived",
-        "restored": "Cohort restored"
+        "restored": "Cohort restored",
+        "grade": {
+          "set": "Cohort grade changed"
+        }
       },
       "connection": {
         "connected": "Connection added",

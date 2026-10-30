@@ -7323,6 +7323,7 @@ export declare const api: {
                 }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
+              | { grade: number; type: "cohort.grade.set" }
               | { type: "cohort.archived" }
               | { type: "cohort.restored" }
               | {

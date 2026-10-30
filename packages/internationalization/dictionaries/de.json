@@ -748,7 +748,10 @@
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert",
-        "restored": "Klasse wiederhergestellt"
+        "restored": "Klasse wiederhergestellt",
+        "grade": {
+          "set": "Klassenstufe geändert"
+        }
       },
       "connection": {
         "connected": "Verbindung hinzugefügt",

@@ -748,7 +748,10 @@
         "created": "Rombel ditambahkan",
         "renamed": "Rombel diganti nama",
         "archived": "Rombel diarsipkan",
-        "restored": "Rombel dipulihkan"
+        "restored": "Rombel dipulihkan",
+        "grade": {
+          "set": "Tingkat rombel diubah"
+        }
       },
       "connection": {
         "connected": "Koneksi ditambahkan",
