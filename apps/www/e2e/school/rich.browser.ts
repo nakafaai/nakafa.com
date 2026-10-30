@@ -114,12 +114,11 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(prompt.locator("tr")).toHaveCount(2);
   await expect(prompt.locator("th")).toHaveCount(2);
 
-  // A formula comes from the slash menu, and its editor opens from the drawn formula. The LaTeX
+  // A formula comes from the slash menu, and its editor opens at once, ready to type in. The LaTeX
   // tab takes x^2, and a press outside the popover closes it and saves the formula.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
   await menu.getByRole("option", { name: "Formula" }).click();
-  await prompt.getByRole("button", { name: "Edit formula" }).click();
   await page.getByRole("tab", { name: "LaTeX" }).click();
   await page.getByRole("textbox", { name: "LaTeX" }).fill("x^2");
   await prompt.click();

@@ -48,6 +48,16 @@ export function useDocumentLabels() {
       formulaEdit: {
         formula,
         invalid: t("formula-invalid"),
+        keyboard: t("formula-keyboard"),
+        keys: {
+          delete: t("formula-delete"),
+          functions: t("formula-functions"),
+          greek: t("formula-greek"),
+          left: t("formula-left"),
+          numbers: t("formula-numbers"),
+          right: t("formula-right"),
+          symbols: t("formula-symbols"),
+        },
         latex: t("latex"),
         open: t("formula-edit"),
       },
