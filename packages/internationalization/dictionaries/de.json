@@ -94,7 +94,7 @@
     "child-ended-hint": "Wende dich an die Schule, um neu zu verknüpfen.",
     "nisn-label": "NISN des Kindes",
     "nisn-hint": "Gib die NISN deines Kindes ein, um die Verknüpfung zu bestätigen.",
-    "nisn-refused": "Die Angaben stimmen nicht, prüfe sie oder wende dich an die Schule.",
+    "nisn-refused": "Diese NISN passt nicht zu den Schuldaten.",
     "nisn-submit": "Prüfen",
     "withdraw": "Einwilligung widerrufen",
     "withdraw-hint": "Du kannst die Einwilligung jederzeit widerrufen.",
@@ -1799,7 +1799,6 @@
   "Auth": {
     "back-to-nakafa": "Zurück zu Nakafa",
     "continue-with-google": "Mit Google fortfahren",
-    "opening-google": "Google wird geöffnet...",
     "sign-in-title": "Bei Nakafa anmelden",
     "sign-in-description": "Damit dein Fortschritt gespeichert bleibt.",
     "logout": "Abmelden",

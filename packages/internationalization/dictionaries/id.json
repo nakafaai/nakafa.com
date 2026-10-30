@@ -94,7 +94,7 @@
     "child-ended-hint": "Hubungi sekolah untuk menautkan lagi.",
     "nisn-label": "NISN anak",
     "nisn-hint": "Masukkan NISN anak untuk memastikan tautan ini.",
-    "nisn-refused": "Data tidak cocok, periksa lagi atau hubungi sekolah.",
+    "nisn-refused": "NISN tidak cocok dengan data sekolah.",
     "nisn-submit": "Periksa",
     "withdraw": "Tarik persetujuan",
     "withdraw-hint": "Anda dapat menarik persetujuan kapan saja.",
@@ -1799,7 +1799,6 @@
   "Auth": {
     "back-to-nakafa": "Kembali ke Nakafa",
     "continue-with-google": "Masuk dengan Google",
-    "opening-google": "Membuka Google...",
     "sign-in-title": "Masuk ke Nakafa",
     "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
