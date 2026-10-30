@@ -197,7 +197,7 @@ function ExamListRows({
           <ExamRowMenu exam={info.row.original} />
         ),
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 
