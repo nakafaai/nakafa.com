@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/relay";
 
 const GET_URL = "https://nakafa.com/api/auth/get-session";
+const TOKEN_URL = "https://nakafa.com/api/auth/convex/token";
 const POST_URL = "https://nakafa.com/api/auth/sign-in/email";
 const SESSION_COOKIE = { cookie: "better-auth.session_token=signed-token" };
 const SECURE_SESSION_COOKIE = {
@@ -315,28 +316,44 @@ describe("createAuthProxy", () => {
     })
   );
 
-  it.effect(
-    "answers the session read of a visitor without a session cookie with null, and never reaches Convex",
-    () =>
+  it.effect.each([GET_URL, TOKEN_URL])(
+    "answers the read %s of a visitor without a session cookie itself, and never reaches Convex",
+    (url) =>
       Effect.gen(function* () {
         const proxy = createAuthProxy(handler);
 
         const read = yield* Effect.promise(() =>
           proxy.GET(
-            new Request(GET_URL, { headers: { cookie: "NAKAFA_LOCALE=id" } })
+            new Request(url, { headers: { cookie: "NAKAFA_LOCALE=id" } })
           )
         );
 
         expect(read.status).toBe(200);
-        expect(read.headers.get("content-type")).toContain("application/json");
         expect(read.headers.get("cache-control")).toBe("no-store");
-        expect(read.headers.get("pragma")).toBe("no-cache");
+        expect(handler.GET).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "gives the token read of a session that has ended no token in place of Better Auth's 401",
+    () =>
+      Effect.gen(function* () {
+        const proxy = createAuthProxy(handler);
+        handler.GET.mockResolvedValueOnce(
+          Response.json({ code: "UNAUTHORIZED" }, { status: 401 })
+        );
+
+        const read = yield* Effect.promise(() =>
+          proxy.GET(new Request(TOKEN_URL, { headers: SESSION_COOKIE }))
+        );
+
+        expect(read.status).toBe(200);
         expect(
           yield* Effect.promise(() => read.text()).pipe(
             Effect.map((text) => Schema.decodeSync(JsonTextSchema)(text))
           )
-        ).toBeNull();
-        expect(handler.GET).not.toHaveBeenCalled();
+        ).toStrictEqual({ token: null });
+        expect(handler.GET).toHaveBeenCalledOnce();
       })
   );
 
@@ -359,7 +376,6 @@ describe("createAuthProxy", () => {
   );
 
   it.effect.each([
-    "https://nakafa.com/api/auth/convex/token",
     "https://nakafa.com/api/auth/callback/google?code=code&state=state",
   ])("forwards the read %s even without a session cookie", (url) =>
     Effect.gen(function* () {

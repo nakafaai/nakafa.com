@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
@@ -14,7 +13,7 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { useParams } from "@tanstack/react-router";
-import { Array as Arr, type Option } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { DataFailure } from "@/components/shared/failure";
@@ -24,17 +23,10 @@ import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useTenant } from "@/components/tenant/context";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { Link } from "@/lib/routing/link";
 
 /** How many channels the list asks for each time its end comes into view. */
 export const CHANNEL_PAGE_SIZE = 20;
-
-/** The first page of a class's channels, which its forum loader read on the server. */
-type ChannelsFirstPage = Pick<
-  Ref.Returns<typeof classroom.forum.channels.list>,
-  "isDone" | "page"
->;
 
 /** One channel of a class, as the list shows it. */
 type Channel = typeof ChannelView.Type;
@@ -50,19 +42,16 @@ type Channel = typeof ChannelView.Type;
 export function ChannelList({
   classId,
   drafts,
-  first,
   slug,
 }: {
   classId: Id<"classes">;
   drafts: StoreApi<ChannelDrafts>;
-  first: Option.Option<ChannelsFirstPage>;
   slug: TenantSlug;
 }) {
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     classroom.forum.channels.list,
     { classId, slug },
-    { initialNumItems: CHANNEL_PAGE_SIZE },
-    first
+    { initialNumItems: CHANNEL_PAGE_SIZE }
   );
   const saving = useStore(drafts, (state) => state.names);
   if (

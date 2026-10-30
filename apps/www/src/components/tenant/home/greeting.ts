@@ -70,8 +70,8 @@ export type Greeting = typeof GreetingSchema.Type;
 
 /**
  * The greeting of the school home for one viewer at an instant: the viewer's first name, and the part of the
- * day on the clock of the school's first unit. The school layout computes it on the server, so the first HTML
- * names the viewer and Nina's act.
+ * day on the clock of the school's first unit. The school layout's gate computes it, so the first frame names
+ * the viewer and Nina's act.
  */
 export const greetingOf = (
   viewer: {

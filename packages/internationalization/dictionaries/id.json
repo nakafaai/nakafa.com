@@ -2109,10 +2109,6 @@
     "admitted-elsewhere": {
       "title": "Nina sedang menjawab di chat baru"
     },
-    "school-language-error": {
-      "title": "Kamu belum bisa mengubah bahasa.",
-      "description": "Silakan coba lagi."
-    },
     "sign-out-error": {
       "title": "Kamu belum bisa keluar.",
       "description": "Periksa koneksimu, lalu coba lagi."

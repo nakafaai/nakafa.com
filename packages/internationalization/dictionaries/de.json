@@ -2109,10 +2109,6 @@
     "admitted-elsewhere": {
       "title": "Nina antwortet in einem neuen Chat"
     },
-    "school-language-error": {
-      "title": "Sprache nicht geändert.",
-      "description": "Bitte versuche es erneut."
-    },
     "sign-out-error": {
       "title": "Abmelden ist fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
