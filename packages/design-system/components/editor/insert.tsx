@@ -3,20 +3,19 @@ import {
   FunctionIcon,
   FunctionSquareIcon,
   ImageUploadIcon,
-  PlusSignIcon,
   QuoteDownIcon,
 } from "@hugeicons/core-free-icons";
 import { usePictures } from "@repo/design-system/components/editor/picture";
 import { NEW_FORMULA } from "@repo/design-system/components/editor/slash";
-import { EditorMenu } from "@repo/design-system/components/editor/tools";
+import { EditorTools } from "@repo/design-system/components/editor/tools";
 import { ImageType } from "@repo/editor/upload";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 
 /**
- * The blocks an assessment document takes besides its text, in one menu: a quote and a code
- * block, which show their check while the caret sits in them, a formula, inline or on a line of
+ * The blocks an assessment document takes besides its text, each its own control: a quote and a code
+ * block, pressed while the caret sits in them, a formula, inline or on a line of
  * its own, and an image, which the teacher picks from the device. A formula inserts a
  * placeholder that its editor changes, and a picked image starts its alt-text dialog.
  */
@@ -28,7 +27,6 @@ export function DocumentInsert({
     equation: string;
     formula: string;
     image: string;
-    insert: string;
     quote: string;
   };
 }) {
@@ -45,9 +43,7 @@ export function DocumentInsert({
 
   return (
     <>
-      <EditorMenu
-        icon={PlusSignIcon}
-        label={labels.insert}
+      <EditorTools
         tools={[
           {
             active: state?.quote ?? false,
