@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Deferred, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -164,57 +164,73 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
         page.getByRole("button", { name: "Copy Content", exact: true })
       ).toHaveCount(0)
     );
-    const outline = header.getByRole("button", {
-      name: "On this page",
-      exact: true,
-    });
-    yield* Effect.promise(() => expect(outline).toBeVisible());
     // Base UI 1.8 keeps tooltips visual and labels their triggers with aria-label.
     // https://base-ui.com/react/components/tooltip#usage-guidelines
     const tooltip = page.locator('[data-slot="tooltip-content"]');
-    for (const [trigger, label] of [
-      [more, "More actions"],
-      [outline, "On this page"],
-    ] as const) {
+    const showsTooltip = Effect.fn("NakafaE2E.showsReadingTooltip")(function* (
+      trigger: Locator,
+      label: string
+    ) {
       yield* Effect.promise(() => trigger.hover());
       yield* Effect.promise(() => expect(tooltip).toHaveText(label));
       yield* Effect.promise(() => expect(tooltip).toBeVisible());
       yield* Effect.promise(() => page.keyboard.press("Escape"));
       yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
-    }
-    const bounds = yield* Effect.promise(() =>
-      Promise.all([more.boundingBox(), outline.boundingBox()])
-    );
-    yield* Effect.sync(() => {
-      expect(bounds[0]?.y).toBe(bounds[1]?.y);
-      expect(bounds[0]?.x).toBeLessThan(bounds[1]?.x ?? 0);
+    });
+    yield* showsTooltip(more, "More actions");
+    const headerOutline = header.getByRole("button", {
+      name: "On this page",
+      exact: true,
     });
     if (width < 1280) {
-      yield* Effect.promise(() =>
-        expect(outline).toHaveAttribute("aria-expanded", "false")
+      // Below 1280 px the outline is a sheet that the header opens, beside its actions.
+      yield* Effect.promise(() => expect(headerOutline).toBeVisible());
+      yield* showsTooltip(headerOutline, "On this page");
+      const bounds = yield* Effect.promise(() =>
+        Promise.all([more.boundingBox(), headerOutline.boundingBox()])
       );
-      yield* Effect.promise(() => outline.click());
+      yield* Effect.sync(() => {
+        expect(bounds[0]?.y).toBe(bounds[1]?.y);
+        expect(bounds[0]?.x).toBeLessThan(bounds[1]?.x ?? 0);
+      });
+      yield* Effect.promise(() =>
+        expect(headerOutline).toHaveAttribute("aria-expanded", "false")
+      );
+      yield* Effect.promise(() => headerOutline.click());
       const sidebar = page.locator('[role="dialog"][data-sidebar="sidebar"]');
       yield* Effect.promise(() => expect(sidebar).toBeVisible());
       yield* Effect.promise(() => page.keyboard.press("Escape"));
       yield* Effect.promise(() => expect(sidebar).toHaveCount(0));
-      yield* Effect.promise(() => expect(outline).toBeFocused());
+      yield* Effect.promise(() => expect(headerOutline).toBeFocused());
     } else {
+      // From 1280 px the outline stands beside the page, and the header holds no
+      // toggle: the panel's own toggle at its foot folds it into a rail and opens
+      // it again.
+      yield* Effect.promise(() => expect(headerOutline).toHaveCount(0));
       const sidebar = page.locator('[data-side="right"][data-slot="sidebar"]');
-      const panel = sidebar.locator('[data-slot="sidebar-container"]');
+      const toggle = sidebar.getByRole("button", {
+        name: "On this page",
+        exact: true,
+      });
+      const outline = sidebar.locator('[data-slot="sidebar-content"]');
       yield* Effect.promise(() =>
-        expect(outline).toHaveAttribute("aria-expanded", "true")
+        expect(toggle).toHaveAttribute("aria-expanded", "true")
       );
-      yield* Effect.promise(() => outline.click());
+      yield* Effect.promise(() => expect(outline).toBeVisible());
+      yield* Effect.promise(() => toggle.click());
       yield* Effect.promise(() =>
-        expect(outline).toHaveAttribute("aria-expanded", "false")
+        expect(toggle).toHaveAttribute("aria-expanded", "false")
       );
-      yield* Effect.promise(() => expect(panel).not.toBeInViewport());
-      yield* Effect.promise(() => outline.click());
       yield* Effect.promise(() =>
-        expect(outline).toHaveAttribute("aria-expanded", "true")
+        expect(sidebar).toHaveAttribute("data-collapsible", "icon")
       );
-      yield* Effect.promise(() => expect(panel).toBeInViewport());
+      yield* Effect.promise(() => expect(outline).toBeHidden());
+      yield* Effect.promise(() => expect(toggle).toBeInViewport());
+      yield* Effect.promise(() => toggle.click());
+      yield* Effect.promise(() =>
+        expect(toggle).toHaveAttribute("aria-expanded", "true")
+      );
+      yield* Effect.promise(() => expect(outline).toBeVisible());
     }
     yield* Effect.promise(() => more.focus());
     yield* Effect.promise(() => page.keyboard.press("Enter"));

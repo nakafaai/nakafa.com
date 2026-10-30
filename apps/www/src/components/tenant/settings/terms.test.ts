@@ -5,8 +5,8 @@ import { isDraft, type Unit } from "@/components/tenant/settings/state";
 import {
   archivePeriodChange,
   createPeriodChange,
+  editPeriodChange,
   openPeriodChange,
-  renamePeriodChange,
   restorePeriodChange,
 } from "@/components/tenant/settings/terms";
 import { createLocalStore } from "@/test/optimistic";
@@ -133,7 +133,7 @@ describe("components/tenant/settings/terms", () => {
     ]);
   });
 
-  it("shows a period under its new name at once, in every loaded list of it", () => {
+  it("shows a period with its new name and dates at once, in every loaded list of it", () => {
     const local = createLocalStore();
     const june = period("june", "2027-06-01", "planned");
     local.seed(
@@ -141,13 +141,19 @@ describe("components/tenant/settings/terms", () => {
       { paginationOpts: paging, slug, unitId: smp },
       pageOf([june])
     );
-    renamePeriodChange(local.store, {
+    editPeriodChange(local.store, {
+      end: "2027-12-20",
       name: "Genap 2027",
       periodId: june.id,
       slug,
+      start: "2027-07-01",
     });
-    expect(Arr.map(periodsOf(local, smp), (item) => item.name)).toEqual([
-      "Genap 2027",
-    ]);
+    expect(
+      Arr.map(periodsOf(local, smp), (item) => [
+        item.name,
+        item.start,
+        item.end,
+      ])
+    ).toEqual([["Genap 2027", "2027-07-01", "2027-12-20"]]);
   });
 });

@@ -1,17 +1,9 @@
-import type { GenericId } from "@confect/core";
 import type {
   ExamSittingsDoc,
   TenantUnitsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { requireAuth } from "@repo/backend/confect/auth/session";
-import { examAuthority } from "@repo/backend/confect/exams/authority";
-import { examSummary } from "@repo/backend/confect/exams/exam";
-import {
-  HOME_DRAFT_LIMIT,
-  HOME_ROOM_LIMIT,
-} from "@repo/backend/confect/exams/home/bounds";
-import { closedResults } from "@repo/backend/confect/exams/home/results";
+import { HOME_ROOM_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import {
   sittingAuthority,
   withExam,
@@ -19,21 +11,11 @@ import {
 import { TENANT_UNIT_LIMIT } from "@repo/backend/confect/exams/sittings/mine";
 import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import {
-  tenantAuthority,
-  unitAuthority,
-} from "@repo/backend/confect/tenancy/authority";
-import { readSetup } from "@repo/backend/confect/tenancy/setup";
+import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Clock, Duration, Effect, Order } from "effect";
 
-/**
- * The most exams of the viewer that the drafts read examines, newest created first. A draft older than
- * these is not listed, so the read stays bounded when the viewer's newer exams are locked.
- */
-const HOME_DRAFT_SCAN = 16;
-
-/** How far ahead the school home looks for a scheduled sitting, in milliseconds. */
-const UPCOMING_WINDOW_MS = Duration.toMillis(Duration.days(14));
+/** How far ahead the school home looks for a scheduled sitting, in milliseconds: the next day. */
+const UPCOMING_WINDOW_MS = Duration.toMillis(Duration.days(1));
 
 /** The unit action that opens the rooms of an exam. The viewers of rooms are the viewers of sittings. */
 const ROOMS_ACTION = "exam.rooms";
@@ -71,7 +53,7 @@ const openRows = Effect.fn("exams.home.openRows")(function* (
 
 /**
  * The rooms of one unit that open within the window from now, in their opening order. The window
- * includes its two ends, so a room that opens exactly fourteen days from now is listed.
+ * includes its two ends, so a room that opens exactly one day from now is listed.
  */
 const upcomingRows = Effect.fn("exams.home.upcomingRows")(function* (
   unitId: ExamSittingsDoc["unitId"],
@@ -113,44 +95,13 @@ const firstViewable = Effect.fn("exams.home.firstViewable")(function* (
 });
 
 /**
- * The exams of one school that the author created and may still edit, newest created first. The author
- * is the account that `exams.create` records, so a draft is the author's own exam. The index reads the
- * author's newest `HOME_DRAFT_SCAN` exams and keeps the ones the author may edit. Convex allows one
- * paginated read per function, so the scan is one bounded read.
- */
-const draftsOf = Effect.fn("exams.home.drafts")(function* (
-  tenantId: GenericId.GenericId<"tenants">,
-  author: GenericId.GenericId<"users">
-) {
-  const rows = yield* (yield* DatabaseReader)
-    .table("exams")
-    .index(
-      "by_tenantId_and_createdBy",
-      (query) => query.eq("tenantId", tenantId).eq("createdBy", author),
-      "desc"
-    )
-    .take(HOME_DRAFT_SCAN)
-    .pipe(Effect.orDie);
-  const editable = yield* Effect.filter(rows, (row) =>
-    examAuthority
-      .allowed(row)
-      .pipe(Effect.map((actions) => Arr.contains(actions, "exam.edit")))
-  );
-  return Arr.map(Arr.take(editable, HOME_DRAFT_LIMIT), (row) => ({
-    ...examSummary(row),
-    createdAt: row.createdAt,
-  }));
-});
-
-/**
- * The school home's exam reads for the caller, in one bounded call. Every read is an index read
- * with a small limit over the school's active units, and each room, result, and draft is decided by
- * its own authority before it is returned. A caller who holds no room, result, or exam action gets
- * four empty lists. A caller who manages the school gets the school's setup in the same call.
+ * The school home's exam reads for the caller, in one bounded call: the rooms that run now and the rooms
+ * that open within the next day. Every read is an index read with a small limit over the school's active
+ * units, and each room is decided by its own authority before it is returned. A caller who watches no
+ * room gets two empty lists.
  */
 export const readHome = Effect.fn("exams.home.read")(function* () {
   const member = yield* Member;
-  const { appUser } = yield* requireAuth().pipe(Effect.orDie);
   const reader = yield* DatabaseReader;
   const now = yield* Clock.currentTimeMillis;
   const units = yield* reader
@@ -171,16 +122,8 @@ export const readHome = Effect.fn("exams.home.read")(function* () {
     Arr.filter(running, (row) => row.closesAt > now)
   );
   const next = yield* firstViewable(upcoming);
-  const can = yield* tenantAuthority.allowed(member.tenant);
-  const home = {
-    canManageSetup: Arr.contains(can, "tenant.manage"),
-    closed: yield* closedResults(watched),
-    drafts: yield* draftsOf(member.tenant._id, appUser._id),
+  return {
     live: yield* sittingViews(live),
     next: yield* sittingViews(next),
   };
-  if (!home.canManageSetup) {
-    return home;
-  }
-  return { ...home, setup: yield* readSetup(member.tenant._id) };
 });

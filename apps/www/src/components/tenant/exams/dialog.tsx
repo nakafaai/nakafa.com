@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -73,7 +74,7 @@ export function ExamDraftsProvider({
 }
 
 /** Reads the page's drafts. It throws outside a page that provides them. */
-export function useExamDrafts() {
+function useExamDrafts() {
   const drafts = use(ExamDraftsContext);
   if (drafts === null) {
     throw new Error("useExamDrafts must be used within ExamDraftsProvider");
@@ -90,9 +91,12 @@ export function useExamDrafts() {
  */
 export function CreateExam({
   choices,
+  disabled = false,
   slug,
 }: {
   choices: readonly ScopeChoice[];
+  /** Whether the action waits, such as while the list it adds to is first read. */
+  disabled?: boolean;
   slug: TenantSlug;
 }) {
   const drafts = useExamDrafts();
@@ -124,14 +128,6 @@ export function CreateExam({
   const titleTooLong = name !== "" && !Schema.is(ExamTitle)(name);
   const ready = Option.isSome(choice) && Schema.is(ExamTitle)(name);
 
-  /** Opens or closes the dialog. A closed dialog forgets its file, so the next exam starts without one. */
-  const show = (next: boolean) => {
-    setOpen(next);
-    if (!next) {
-      setFile(null);
-    }
-  };
-
   /**
    * Creates the exam, shows it at once, and goes to its editor once the server saves it. The
    * dialog closes at once, and the create button stays inert until the save settles, so a second
@@ -142,7 +138,7 @@ export function CreateExam({
       return;
     }
     const { scope } = choice.value;
-    show(false);
+    setOpen(false);
     startTransition(() =>
       runExamAction(
         placeholderExamId.pipe(
@@ -180,12 +176,14 @@ export function CreateExam({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{t("create")}</Button>
+      <Button disabled={disabled} onClick={() => setOpen(true)}>
+        {t("create")}
+      </Button>
       <ResponsiveDialog
         description={t("create-description")}
         footer={
           <>
-            <Button onClick={() => show(false)} variant="outline">
+            <Button onClick={() => setOpen(false)} variant="outline">
               {common("cancel")}
             </Button>
             <Button
@@ -197,28 +195,34 @@ export function CreateExam({
             </Button>
           </>
         }
+        // The dialog forgets its file once it has closed, so the next exam starts without one and the
+        // closing dialog keeps showing the file it sent.
+        onOpenChangeComplete={(next) => {
+          if (!next) {
+            setFile(null);
+          }
+        }}
         open={open}
-        setOpen={show}
+        setOpen={setOpen}
         title={t("create")}
       >
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor={`${id}-title`}>{t("title-label")}</FieldLabel>
             <Input
+              aria-invalid={titleTooLong}
               dir="auto"
               id={`${id}-title`}
               onChange={(event) => setTitle(event.target.value)}
               placeholder={t("untitled")}
               value={title}
             />
-            {name === "" ? (
-              <FieldDescription>{t("title-needed")}</FieldDescription>
-            ) : null}
-            {titleTooLong ? (
-              <FieldDescription>
-                {t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })}
-              </FieldDescription>
-            ) : null}
+            <FieldDescription>{t("title-needed")}</FieldDescription>
+            <FieldError>
+              {titleTooLong
+                ? t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })
+                : null}
+            </FieldError>
           </Field>
           <ImportFileField
             description={t("import-description")}
