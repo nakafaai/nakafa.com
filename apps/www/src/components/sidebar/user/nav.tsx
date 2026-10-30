@@ -70,7 +70,8 @@ function KnownAccount() {
  * The learner's footer, read on the page's Convex island. It keeps the row the
  * browser kept while the account settles, then shows the plan and menu of a
  * signed-in account, and the guest card when Convex reports no account for the
- * session.
+ * session. The account's menu loads on its own, and the kept row holds the
+ * footer, pricing included, until it arrives, so the footer keeps its height.
  */
 function NavUserMember() {
   const isPending = useViewer((state) => state.isPending);
@@ -83,11 +84,9 @@ function NavUserMember() {
     return <NavUserGuest />;
   }
   return (
-    <>
+    <Suspense fallback={<KnownAccount />}>
       <AccountPricing plan={user.appUser.plan} />
-      <Suspense fallback={null}>
-        <NavUserAccount user={user} />
-      </Suspense>
-    </>
+      <NavUserAccount user={user} />
+    </Suspense>
   );
 }
