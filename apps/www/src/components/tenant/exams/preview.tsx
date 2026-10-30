@@ -412,7 +412,7 @@ export function QuestionPreview({
     <div className="absolute inset-0 overflow-hidden" ref={ref}>
       <div
         aria-hidden
-        className="pointer-events-none w-4/1 origin-top-left scale-25 p-4"
+        className="pointer-events-none w-4/1 origin-top-left scale-25 p-4 text-start"
         inert
       >
         <QuestionPaper>

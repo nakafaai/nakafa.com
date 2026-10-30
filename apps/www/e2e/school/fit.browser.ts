@@ -14,6 +14,15 @@ function fitsWhole(element: Element) {
 }
 
 /**
+ * The alignment a thumbnail's paper gives text that sets none of its own, such as a heading or a list
+ * item: the start, as on the page, and not the centre of the button that holds the thumbnail.
+ */
+function thumbnailAlign(card: Element) {
+  const paper = card.querySelector("[inert]");
+  return paper === null ? "" : getComputedStyle(paper).textAlign;
+}
+
+/**
  * The tops of the first text line of a paper table's column heading and of the statements' heading in
  * its row: equal when the row stands its headings on one line.
  */
@@ -31,7 +40,7 @@ function headingLines(column: Element) {
   };
 }
 
-test("the teacher's paper shows each matching key's placeholder whole, and a true or false table's headings on one line", async ({
+test("the teacher's paper shows each matching key's placeholder whole, a true or false table's headings on one line, and its thumbnails from the start", async ({
   baseURL,
   browser,
 }) => {
@@ -80,5 +89,11 @@ test("the teacher's paper shows each matching key's placeholder whole, and a tru
     const lines = await heading.evaluate(headingLines);
     expect(lines.column).toBe(lines.statements);
   }
+
+  // A page's thumbnail in the grid lays its text out as the page does, from the start.
+  await page.getByRole("button", { name: "Grid view" }).click();
+  const card = page.getByRole("button", { name: /^Open question 1\b/ });
+  await expect(card).toBeVisible();
+  expect(await card.evaluate(thumbnailAlign)).toBe("start");
   await context.close();
 });
