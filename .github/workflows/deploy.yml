@@ -63,16 +63,19 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install
 
+      # Every step that prepares the Cloudflare stack runs before Convex deploys. From
+      # the Convex deploy until the new Worker is live, the old Worker serves against
+      # the new functions, so nothing else may run in between.
+      - name: Set up uv for the CAS engine
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.13.5"
+
       - name: Deploy Convex
         working-directory: packages/backend
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: bun run codegen && bunx --no-install convex deploy --yes
-
-      - name: Set up uv for the CAS engine
-        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
-        with:
-          version: "0.13.5"
 
       # Each value is named, so this step receives only what the build and the
       # Worker bindings read. `VITE_` values are variables, every other one a secret.
