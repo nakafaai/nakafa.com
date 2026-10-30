@@ -145,7 +145,6 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       sortFn: "text",
     }),
     inviteColumns.accessor((invite) => invite.email, {
-      filterFn: "includesString",
       header: t("invite-email"),
       id: "email",
       sortFn: "text",

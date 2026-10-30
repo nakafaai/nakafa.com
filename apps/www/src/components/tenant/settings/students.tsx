@@ -166,7 +166,6 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
       sortFn: "text",
     }),
     loginColumns.accessor((login) => login.person.name, {
-      filterFn: "includesString",
       header: t("login-person"),
       id: "person",
       sortFn: "text",

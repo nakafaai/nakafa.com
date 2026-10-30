@@ -102,8 +102,8 @@ export function DataTable<TData extends RowData>({
   columns: readonly ColumnDef<typeof dataTableFeatures, TData>[];
   data: readonly TData[];
   rowId: (row: TData) => string;
-  /** The column that the header's search box filters by its text. */
-  search: string;
+  /** The column that the header's search box filters by its text, when the page has one. */
+  search?: string;
 }) {
   const t = useTranslations("DataTable");
   const text = useTableFilters((state) => state.search);
@@ -115,7 +115,9 @@ export function DataTable<TData extends RowData>({
     getRowId: rowId,
     state: {
       columnFilters: [
-        ...(text === "" ? [] : [{ id: search, value: text }]),
+        ...(text === "" || search === undefined
+          ? []
+          : [{ id: search, value: text }]),
         ...Arr.map(
           Arr.filter(Rec.toEntries(chosen), ([, values]) =>
             Arr.isReadonlyArrayNonEmpty(values)
