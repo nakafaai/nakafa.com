@@ -14,6 +14,8 @@ import {
   Clock01Icon,
   DashboardSquare01Icon,
   PlayIcon,
+  SchoolIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -50,7 +52,9 @@ import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
   RoomStateFilter,
+  roomGroups,
   roomsArgs,
+  roomsOfGroup,
 } from "@/components/tenant/exams/filter";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -232,6 +236,10 @@ function RoomsTable({
     chosenOne(chosen, "state", Schema.is(RoomStateFilter)),
     (): StateFilter => "all"
   );
+  const group = Option.getOrElse(
+    chosenOne(chosen, "group", Schema.is(Schema.String)),
+    () => "all"
+  );
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
@@ -274,11 +282,28 @@ function RoomsTable({
       <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
         <TableHeader>
           <TableRow>
-            <TableHead>{t("room")}</TableHead>
-            <TableHead>{t("rooms-group")}</TableHead>
-            <TableHead className="text-end">{t("rooms-opens")}</TableHead>
-            <TableHead className="text-end">{t("rooms-closes")}</TableHead>
-            <TableHead className="text-center">
+            <TableHead className="px-2 sm:px-4">{t("room")}</TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              <ColumnChoice
+                column="group"
+                options={[
+                  { icon: UserGroupIcon, label: t("group-all"), value: "all" },
+                  ...Arr.map(roomGroups(pagination.results), (option) => ({
+                    icon: option.kind === "cohort" ? UserGroupIcon : SchoolIcon,
+                    label: option.name,
+                    value: option.key,
+                  })),
+                ]}
+                title={t("rooms-group")}
+              />
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-opens")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-closes")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
               <ColumnChoice
                 column="state"
                 options={[
@@ -292,11 +317,11 @@ function RoomsTable({
                 title={t("rooms-state")}
               />
             </TableHead>
-            <TableHead />
+            <TableHead className="px-2 sm:px-4" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Arr.map(pagination.results, (room) => (
+          {Arr.map(roomsOfGroup(pagination.results, group), (room) => (
             <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
           ))}
         </TableBody>
@@ -337,7 +362,7 @@ function RoomItem({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
+      <TableCell className="px-2 font-medium sm:px-4">
         <Link
           className="underline-offset-4 hover:underline"
           dir="auto"
@@ -347,29 +372,31 @@ function RoomItem({
           {room.room}
         </Link>
       </TableCell>
-      <TableCell dir="auto">{room.group.name}</TableCell>
-      <TableCell className="text-end text-muted-foreground tabular-nums">
+      <TableCell className="px-2 text-center sm:px-4" dir="auto">
+        {room.groupName}
+      </TableCell>
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.opensAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-end text-muted-foreground tabular-nums">
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.closesAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="px-2 text-center sm:px-4">
         <TableStatus
           icon={ROOM_STATE_LOOKS[room.state].icon}
           label={t(`room-state-${room.state}`)}
           tone={ROOM_STATE_LOOKS[room.state].tone}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="px-2 text-end sm:px-4">
         <RoomMenu examId={examId} room={room} slug={slug} />
       </TableCell>
     </TableRow>
