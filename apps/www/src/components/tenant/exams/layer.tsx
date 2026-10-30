@@ -228,7 +228,7 @@ interface TeacherLayerProps {
 /**
  * The teacher's layer of a question, in the editor's panel beside the canvas, in three parts a rule
  * divides: the points, the answer key in the editor of its type (the marked options, the accepted
- * answers of a short answer, the pairs of a match, the marks of a table), and the notes, the rubric
+ * answers of a short answer, the pairs of a match; a table marks its key in its rows), and the notes, the rubric
  * when the question's template takes one (`takesRubric`) and the explanation. The paper on the canvas is what the student reads, so the
  * layer stands on its own screen and never on the canvas. Each rich text keeps its height in both
  * states: while its editor is not mounted it is drawn from its document, as the editor draws it. A
@@ -257,6 +257,8 @@ export function TeacherLayer({
         letter: optionLetter(index),
       })),
   });
+  // A table's key is marked in its rows on the canvas, so the panel holds no key part for it.
+  const keyed = needsKey(shown.template) && shown.template !== "table";
 
   return (
     <FieldGroup>
@@ -286,10 +288,7 @@ export function TeacherLayer({
           />
         ),
       })}
-      {needsKey(shown.template) &&
-      shown.template !== "short" &&
-      shown.template !== "match" &&
-      shown.template !== "table" ? (
+      {keyed && shown.template !== "short" && shown.template !== "match" ? (
         <AnswerKey
           editable={editable}
           marked={markedOptions(shown.key)}
@@ -299,7 +298,7 @@ export function TeacherLayer({
           options={options}
         />
       ) : null}
-      {needsKey(shown.template) ? <FieldSeparator /> : null}
+      {keyed ? <FieldSeparator /> : null}
       {takesRubric(shown.template) ? (
         <NoteField title={t("rubric")}>
           {live ? (
