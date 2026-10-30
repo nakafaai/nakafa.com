@@ -392,6 +392,46 @@
   }
 }
 
+/* The page a drawer opens over (`DrawerStage`). On a phone, while any drawer is open, the page scales
+ * back onto a black canvas, as an iPhone sheet does: the visible screen, clipped with rounded corners,
+ * shrinks towards its top. The drawer's popup records where the page was scrolled
+ * (`--drawer-stage-scroll`), since the scroll lock makes the body the scrolling box. A wide screen shows
+ * a dialog, which leaves the page as it is. The selectors hold the state, so the stage wraps the app
+ * without a React value that changes. */
+[data-slot="drawer-stage"] {
+  min-height: 100svh;
+  background-color: var(--color-background);
+  transform-origin: 50% var(--drawer-stage-scroll, 0px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot="drawer-stage"] {
+    transition-timing-function: var(--ease-out);
+    transition-duration: var(--transition-duration-surface);
+    transition-property: scale, translate;
+  }
+}
+
+@media (width < 48rem) {
+  html:has([data-slot="drawer-popup"][data-open]) {
+    background-color: black;
+  }
+
+  html:has([data-slot="drawer-popup"][data-open]) body {
+    background-color: transparent;
+  }
+
+  html:has([data-slot="drawer-popup"][data-open]) [data-slot="drawer-stage"] {
+    clip-path: inset(
+      var(--drawer-stage-scroll, 0px) 0
+        calc(100% - var(--drawer-stage-scroll, 0px) - 100svh) round
+        var(--radius-xl)
+    );
+    scale: 0.94;
+    translate: 0 calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
+}
+
 /* A control that can be pressed answers the press by shrinking to 0.96 for
  * press, and its transition names scale. Reduced motion keeps the colour and
  * shadow answers and drops the scale. Three things stay still. A disabled

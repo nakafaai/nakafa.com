@@ -258,6 +258,22 @@ function DrawerViewport({
   );
 }
 
+/**
+ * Records where the page was scrolled as a drawer opens, so the page behind it scales back from the top of
+ * the visible screen (`DrawerStage`). The scroll lock then moves the scroll from the root to the body, so the
+ * larger of the two is the page's. The value stays after the drawer closes, while the page scales back up.
+ */
+function recordStageScroll(node: HTMLDivElement | null) {
+  if (node === null) {
+    return;
+  }
+  const root = document.documentElement;
+  root.style.setProperty(
+    "--drawer-stage-scroll",
+    `${Math.max(root.scrollTop, document.body.scrollTop)}px`
+  );
+}
+
 /** Renders drawer popup chrome, backdrop, viewport, and optional affordances. */
 function DrawerPopup({
   children,
@@ -267,7 +283,7 @@ function DrawerPopup({
   showCloseButton = false,
   variant,
   ...props
-}: DrawerPrimitive.Popup.Props &
+}: Omit<DrawerPrimitive.Popup.Props, "ref"> &
   Omit<VariantProps<typeof drawerPopupVariants>, "position"> & {
     portalProps?: DrawerPrimitive.Portal.Props;
     showBar?: boolean;
@@ -283,6 +299,7 @@ function DrawerPopup({
           className={cn(drawerPopupVariants({ position, variant }), className)}
           data-slot="drawer-popup"
           {...props}
+          ref={recordStageScroll}
         >
           {children}
           {!!showCloseButton && (
