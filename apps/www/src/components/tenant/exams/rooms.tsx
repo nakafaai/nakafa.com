@@ -9,13 +9,17 @@ import {
 import {
   Calendar03Icon,
   Cancel01Icon,
+  ChartBarLineIcon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  DashboardSquare01Icon,
   PlayIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -272,8 +276,8 @@ function RoomsTable({
           <TableRow>
             <TableHead>{t("room")}</TableHead>
             <TableHead>{t("rooms-group")}</TableHead>
-            <TableHead>{t("rooms-opens")}</TableHead>
-            <TableHead>{t("rooms-closes")}</TableHead>
+            <TableHead className="text-end">{t("rooms-opens")}</TableHead>
+            <TableHead className="text-end">{t("rooms-closes")}</TableHead>
             <TableHead className="text-center">
               <ColumnChoice
                 column="state"
@@ -344,14 +348,14 @@ function RoomItem({
         </Link>
       </TableCell>
       <TableCell dir="auto">{room.group.name}</TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="text-end text-muted-foreground tabular-nums">
         {schoolDateTimeText({
           at: room.opensAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="text-end text-muted-foreground tabular-nums">
         {schoolDateTimeText({
           at: room.closesAt,
           locale,
@@ -366,18 +370,28 @@ function RoomItem({
         />
       </TableCell>
       <TableCell>
-        {room.canCancel ? <RoomMenu room={room} slug={slug} /> : null}
+        <RoomMenu examId={examId} room={room} slug={slug} />
       </TableCell>
     </TableRow>
   );
 }
 
 /**
- * The row menu of a room that the viewer may cancel, which cancels it behind a confirmation. A
- * room that has opened, or closed, or that another Person scheduled, has no menu.
+ * The row menu of a room: Open, its proctor's dashboard, Results, and Cancel, which cancels it behind a confirmation.
+ * A room that has opened, or closed, or that another Person scheduled, keeps Cancel disabled.
  */
-function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
+function RoomMenu({
+  examId,
+  room,
+  slug,
+}: {
+  examId: GenericId.GenericId<"exams">;
+  room: Room;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const params = { exam: examId, sitting: room.id, slug };
   const cancel = useMutation(exams.sittings.cancel).withOptimisticUpdate(
     cancelRoomChange
   );
@@ -387,6 +401,7 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
       action={t("room-cancel")}
       confirm={t("room-cancel-confirm")}
       description={t("room-cancel-description")}
+      disabled={!room.canCancel}
       icon={Cancel01Icon}
       onConfirm={() =>
         startTransition(() =>
@@ -394,6 +409,29 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
         )
       }
       title={t("room-cancel-title")}
-    />
+    >
+      <DropdownMenuItem
+        render={
+          <Link
+            params={params}
+            to="/school/$slug/exams/$exam/sittings/$sitting"
+          >
+            <HugeIcons icon={DashboardSquare01Icon} />
+            {common("open")}
+          </Link>
+        }
+      />
+      <DropdownMenuItem
+        render={
+          <Link
+            params={params}
+            to="/school/$slug/exams/$exam/sittings/$sitting/results"
+          >
+            <HugeIcons icon={ChartBarLineIcon} />
+            {t("results-title")}
+          </Link>
+        }
+      />
+    </ConfirmRowMenu>
   );
 }
