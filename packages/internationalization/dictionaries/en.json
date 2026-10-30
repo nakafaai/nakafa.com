@@ -1,6 +1,6 @@
 {
   "DataTable": {
-    "filter": "Filter",
+    "filter-by": "Filter by {column}",
     "no-results": "No results.",
     "reset": "Reset"
   },

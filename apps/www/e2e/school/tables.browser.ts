@@ -64,18 +64,33 @@ for (const viewport of [
         placed.viewport - GUTTER - 1
       );
 
-      // Each value of the Filter menu draws an icon of its own, and each status cell is a toned badge.
-      await page
-        .locator("header")
-        .getByRole("button", { name: "Filter" })
-        .click();
+      // The status filter sits in its column's head, not in the header, and each of its values draws an icon of its
+      // own; each status cell is a toned badge in the middle of its column, under its head, and every row has a menu.
+      await expect(
+        page.locator("header").getByRole("button", { name: "Filter" })
+      ).toHaveCount(0);
+      const head = card.getByRole("button", { name: "Filter by Status" });
+      await head.click();
       const menu = page.getByRole("menu");
       await expect(menu.getByRole("menuitemcheckbox")).not.toHaveCount(0);
       expect(await readRepeatedIcons(menu, "[role=menuitemcheckbox]")).toEqual(
         []
       );
       await page.keyboard.press("Escape");
-      await expect(card.locator('[data-slot="badge"]').first()).toBeVisible();
+      const badge = card.locator('[data-slot="badge"]').first();
+      await expect(badge).toBeVisible();
+      const [badgeBox, headBox] = await Promise.all([
+        badge.boundingBox(),
+        head.boundingBox(),
+      ]);
+      const middle = (box: typeof badgeBox) =>
+        (box?.x ?? 0) + (box?.width ?? 0) / 2;
+      expect(Math.abs(middle(badgeBox) - middle(headBox))).toBeLessThanOrEqual(
+        24
+      );
+      await expect(
+        card.getByRole("button", { name: "More actions" }).first()
+      ).toBeVisible();
       await context.close();
     });
   });

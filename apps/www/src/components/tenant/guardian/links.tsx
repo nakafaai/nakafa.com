@@ -27,12 +27,12 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -84,19 +84,6 @@ export function GuardianLinksSettings() {
           actions={
             <>
               <TableSearch placeholder={t("links-search")} />
-              <TableFilter
-                facets={[
-                  {
-                    column: "status",
-                    options: Arr.map(LinkStatus.literals, (status) => ({
-                      icon: LINK_STATUS_LOOKS[status].icon,
-                      label: t(`status-${status}`),
-                      value: status,
-                    })),
-                    title: t("status"),
-                  },
-                ]}
-              />
               <Button onClick={() => setIsStarting(true)} type="button">
                 <HugeIcons icon={Link01Icon} />
                 {t("link-add")}
@@ -204,12 +191,24 @@ function GuardianLinkTable() {
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("status"),
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(LinkStatus.literals, (status) => ({
+            icon: LINK_STATUS_LOOKS[status].icon,
+            label: t(`status-${status}`),
+            value: status,
+          }))}
+          title={t("status")}
+        />
+      ),
       id: "status",
+      meta: { align: "center" },
     }),
     linkColumns.display({
       cell: (info) => <GuardianLinkMenu link={info.row.original} />,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

@@ -4,9 +4,10 @@ import {
   Building02Icon,
   Building03Icon,
 } from "@hugeicons/core-free-icons";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   choosesNothing,
+  chosenOne,
   isChosen,
   namedOptions,
 } from "@/components/shared/table/filter";
@@ -26,6 +27,24 @@ describe("a facet filter over cells that hold one value", () => {
     expect(choosesNothing(undefined)).toBe(true);
     expect(choosesNothing([])).toBe(true);
     expect(choosesNothing(["owner"])).toBe(false);
+  });
+});
+
+describe("the one value a column's choice keeps", () => {
+  const isState = Schema.is(Schema.Literals(["open", "closed"]));
+
+  it("reads the first value chosen for the column", () => {
+    expect(chosenOne({ state: ["closed"] }, "state", isState)).toEqual(
+      Option.some("closed")
+    );
+  });
+
+  it("keeps every row while the column chose nothing, or a value it does not know", () => {
+    expect(chosenOne({}, "state", isState)).toEqual(Option.none());
+    expect(chosenOne({ state: [] }, "state", isState)).toEqual(Option.none());
+    expect(chosenOne({ state: ["gone"] }, "state", isState)).toEqual(
+      Option.none()
+    );
   });
 });
 
