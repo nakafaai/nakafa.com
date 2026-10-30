@@ -14,9 +14,11 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cva } from "class-variance-authority";
+import { cn } from "cn";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { type RefObject, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
+import { contentWidthVariants } from "@/components/shared/content/width";
 import { PageCounter } from "@/components/tenant/exams/counter";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { ExamPanelButton } from "@/components/tenant/exams/panel";
@@ -77,7 +79,8 @@ interface ExamFooterProps {
 
 /**
  * The footer of the editor, a full-width bar under the canvas, as a design tool keeps its navigation
- * there: on a phone, the action that opens the teacher's panel at its start; then at its end the zoom (on
+ * there, its row at the page width of the editor's panes: on a phone, the action that opens the teacher's
+ * panel at its start; then at its end the zoom (on
  * a wide screen only, since a phone pinches) as a slider and a percentage menu, a toggle for a strip of the
  * pages, the position of the page in view that jumps to a page, the grid of every page in place of the
  * canvas, and fullscreen where the browser allows it. In the grid the footer keeps only the grid and
@@ -168,25 +171,32 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   return (
     <footer className="flex shrink-0 flex-col border-t bg-background">
       {pagesOpen && !grid ? (
-        <ScrollArea
-          aria-label={t("pages")}
-          className="border-b"
-          render={<nav />}
-        >
-          <div className="flex w-max gap-3 p-3">
-            {Arr.map(exam.questions, (question, index) => (
-              <PageThumb
-                key={question.id}
-                number={index + 1}
-                onPick={() => goTo(question)}
-                question={question}
-                selected={selectedId === question.id}
-              />
-            ))}
-          </div>
-        </ScrollArea>
+        <div className="border-b">
+          <ScrollArea
+            aria-label={t("pages")}
+            className={cn(contentWidthVariants({ width: "page" }), "w-full")}
+            render={<nav />}
+          >
+            <div className="flex w-max gap-3 p-3">
+              {Arr.map(exam.questions, (question, index) => (
+                <PageThumb
+                  key={question.id}
+                  number={index + 1}
+                  onPick={() => goTo(question)}
+                  question={question}
+                  selected={selectedId === question.id}
+                />
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
       ) : null}
-      <div className="flex min-h-12 items-center gap-2 px-3 py-1.5">
+      <div
+        className={cn(
+          contentWidthVariants({ width: "page" }),
+          "flex min-h-12 w-full items-center gap-2 px-3 py-1.5"
+        )}
+      >
         {grid ? null : <ExamPanelButton />}
         <div className="ms-auto flex items-center gap-1">
           {grid ? null : (
