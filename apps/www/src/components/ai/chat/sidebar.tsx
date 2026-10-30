@@ -40,6 +40,7 @@ import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
+import { SidebarToggle } from "@/components/sidebar/toggle";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { useViewer } from "@/lib/identity/client";
 import { Link, useCurrentLocale } from "@/lib/routing/link";
@@ -64,6 +65,11 @@ function useChatSearch() {
   return search;
 }
 
+/**
+ * The chat history beside the conversation. Beside the page it folds into a rail
+ * with its own toggle at its foot, which opens it again, so the chat's header
+ * holds no toggle there.
+ */
 export function AiChatSidebar({
   first,
   ...props
@@ -75,12 +81,13 @@ export function AiChatSidebar({
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
   return (
     <Sidebar
+      collapsible="icon"
       containerClassName="lg:hidden xl:block"
       label={t("chat-history")}
       side="right"
       {...props}
     >
-      <SidebarHeader className="border-b">
+      <SidebarHeader className="border-b group-data-[collapsible=icon]:hidden">
         <SidebarMenu>
           <SidebarMenuItem>
             <Link
@@ -119,7 +126,7 @@ export function AiChatSidebar({
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="group-data-[collapsible=icon]:hidden">
         <ChatFirstPageContext value={first}>
           <ChatSearchContext value={debouncedQ}>
             <ConvexIsland fallback={<AiChatSidebarFallback />}>
@@ -128,6 +135,7 @@ export function AiChatSidebar({
           </ChatSearchContext>
         </ChatFirstPageContext>
       </SidebarContent>
+      <SidebarToggle label={t("chat-history")} side="right" />
     </Sidebar>
   );
 }

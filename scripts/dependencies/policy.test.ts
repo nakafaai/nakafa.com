@@ -19,9 +19,10 @@ describe("dependency policy", () => {
   );
 
   // Convex bundles every component for the browser on push and codegen, and
-  // fails the whole command on an unresolved import. posthog-node 5.56 and 5.57 import
-  // @opentelemetry/api, an optional peer that is not installed, so the component
-  // must keep the release pinned in package.json.
+  // fails the whole command on an unresolved import. posthog-node 5.56 to 5.57.1
+  // imported @opentelemetry/api, an optional peer that is not installed; 5.57.2 and
+  // later read its global symbol instead, so the component resolves the release that
+  // the analytics package uses.
   it.effect("bundles the PostHog Convex component for the browser", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
