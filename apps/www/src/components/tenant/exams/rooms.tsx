@@ -281,7 +281,7 @@ function RoomsTable({
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
         <TableHeader>
-          <TableRow className="hover:bg-transparent hover:text-inherit">
+          <TableRow>
             <TableHead className="px-2 sm:px-4">{t("room")}</TableHead>
             <TableHead className="px-2 text-center sm:px-4">
               <ColumnChoice
@@ -361,7 +361,7 @@ function RoomItem({
   const locale = useLocale();
 
   return (
-    <TableRow className="hover:bg-transparent hover:text-inherit">
+    <TableRow>
       <TableCell className="px-2 font-medium sm:px-4">
         <Link
           className="underline-offset-4 hover:underline"
