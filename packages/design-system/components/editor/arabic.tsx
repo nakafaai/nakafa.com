@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { useCurrentEditor } from "@tiptap/react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * The toolbar control that opens the Arabic keypad under the toolbar. A key types into the text at
@@ -57,9 +57,11 @@ export function EditorArabicKeyboard({ label }: { label: string }) {
         finalFocus={false}
         initialFocus={false}
       >
-        <ArabicKeypad
-          onKey={(text) => editor?.chain().focus().insertContent(text).run()}
-        />
+        <Suspense fallback={null}>
+          <ArabicKeypad
+            onKey={(text) => editor?.chain().focus().insertContent(text).run()}
+          />
+        </Suspense>
       </PopoverContent>
     </Popover>
   );

@@ -41,6 +41,10 @@ test("a teacher writes an Arabic word with its harakat into an Indonesian questi
   await keyboard.click();
   const keypad = page.locator('[data-slot="arabic-keypad"]');
   await expect(keypad).toBeVisible();
+  // The keys draw in Amiri from their first paint: the face holds the tatweel each mark sits on and the marks.
+  expect(
+    await page.evaluate(() => document.fonts.check("1em Amiri", "\u0640\u064e"))
+  ).toBe(true);
   await expect(keyboard).toHaveAttribute("aria-pressed", "true");
 
   // Each key types at the caret, and the text keeps the focus.
