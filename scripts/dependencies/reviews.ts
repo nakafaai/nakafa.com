@@ -34,7 +34,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.0",
-    "Effect 4.1.0 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. Every published @nakafa/aksara-contracts (1.0.0, 1.0.1 and 2.0.0) peers effect 4.0.5 exactly, and its dist/hash/digest.js calls Crypto.make from effect when the module loads, so on 4.1 every contracts import fails. nakafa.com therefore moves to 4.1.0 in the change that adopts a contracts release built on 4.1, which follows the contracts 2.0 adoption (#1434, #1436). Checked 30 October 2026.",
+    "Effect 4.1.0 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. Every published @nakafa/aksara-contracts (1.0.0, 1.0.1 and 2.0.0) peers effect 4.0.5 exactly, and its dist/hash/digest.js calls Crypto.make from effect when the module loads, so on 4.1 every contracts import fails. nakafa.com therefore moves to 4.1.0 in the change that adopts contracts 3.0.0, the release built on 4.1 (nakafaai/aksara#497), which follows the contracts 2.0 adoption (#1434, #1436); that change is #1524. Checked 30 October 2026.",
   ],
   [
     "@effect/platform-browser@latest",
@@ -106,12 +106,12 @@ export const REGISTRY_REVIEWS = [
   [
     "@convex-dev/agent@latest",
     "0.7.9",
-    'The Agent component stays on 0.7.8 while convex-test stays on 0.0.62. 0.7.9 lists the component\'s files, threads, streams and users with one native ctx.db paginate() per query instead of the convex-helpers paginator. Convex runs one paginate() per component query, and convex-test supports it from 0.0.64 (get-convex/convex-test#163), but 0.0.62 refuses it ("paginate() is only supported in the app"): measured on 30 October 2026, 42 backend tests in 14 files fail on 0.7.9 with 0.0.62, among them the Agent file sweep, chat deletion, Nina sealing and privacy erasure. The component moves with the convex-test upgrade.',
+    'The Agent component stays on 0.7.8 while convex-test stays on 0.0.62. 0.7.9 lists the component\'s files, threads, streams and users with one native ctx.db paginate() per query instead of the convex-helpers paginator. Convex runs one paginate() per component query, and convex-test supports it from 0.0.64 (get-convex/convex-test#163), but 0.0.62 refuses it ("paginate() is only supported in the app"): measured on 30 October 2026, 42 backend tests in 14 files fail on 0.7.9 with 0.0.62, among them the Agent file sweep, chat deletion, Nina sealing and privacy erasure. It lifts in the change that moves the backend to convex-test 0.0.64 or later, which first traces the 0.0.65 failures that the convex-test entry records.',
   ],
   [
     "@convex-dev/workpool@latest",
     "0.4.15",
-    "The Workpool component stays on 0.4.14 for the reason of the Agent entry: 0.4.15 reads its stats report (component/stats.js, run by the main loop) with a native paginate() inside the component, which convex-test 0.0.62 refuses, so 11 backend tests in 3 files that drive the Workflow component fail (privacy recovery, account deletion cleanup, content release proof). It moves with the convex-test upgrade.",
+    "The Workpool component stays on 0.4.14 for the reason of the Agent entry: 0.4.15 reads its stats report (component/stats.js, run by the main loop) with a native paginate() inside the component, which convex-test 0.0.62 refuses, so 11 backend tests in 3 files that drive the Workflow component fail (privacy recovery, account deletion cleanup, content release proof). It lifts in the same change as the Agent hold.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -136,7 +136,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@biomejs/biome@latest",
     "2.6.4",
-    "Formatting is reviewed as one cohort with Ultracite. Biome stays on 2.5.15. Ultracite 8.1.0 peers Biome ^2.6.2 and renames useSortedClasses to useTailwindSortedClasses, so the 2.6 line loads now, but the cohort also sorts classes in Tailwind CSS v4 order and turns on the rules that Biome 2.6 made stable. Measured on 30 October 2026 with Biome 2.6.4 and Ultracite 8.1.0: 1,620 findings in about 550 files, among them 733 class lists to re-sort in 290 files, 410 regular expressions without the unicode flag, 177 unnamed capture groups, 101 hook factory components (noComponentHookFactories) and 83 imports after code. That change touches most of the files that the open pull requests touch, so it lands in its own change when the merge trains allow it.",
+    "Formatting is reviewed as one cohort with Ultracite. Biome stays on 2.5.15. Ultracite 8.1.0 peers Biome ^2.6.2 and renames useSortedClasses to useTailwindSortedClasses, so the 2.6 line loads now, but the cohort also sorts classes in Tailwind CSS v4 order and turns on the rules that Biome 2.6 made stable. Measured on 30 October 2026 with Biome 2.6.4 and Ultracite 8.1.0: 1,620 findings in about 550 files, among them 733 class lists to re-sort in 290 files, 410 regular expressions without the unicode flag, 177 unnamed capture groups, 101 hook factory components (noComponentHookFactories) and 83 imports after code. That change touches most of the files that the open pull requests touch, so the hold lifts in its own change: one that applies Ultracite's fixes, clears the remaining findings by hand, and lands right after a merge train, when the fewest pull requests are open.",
   ],
   [
     "ultracite@latest",
