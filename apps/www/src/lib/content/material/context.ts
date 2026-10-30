@@ -1,10 +1,10 @@
 import { HttpClient } from "@confect/js";
-import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { Effect } from "effect";
 import type { Locale } from "use-intl";
+import { toMaterialPlacement } from "@/lib/content/material/navigation";
 import {
   decodePublishedMaterialContext,
   type PublishedMaterialIdentity,
@@ -44,4 +44,24 @@ export const readPublishedMaterialContext = Effect.fn(
     context,
     result
   );
+});
+
+/**
+ * Reads the part of one verified curriculum placement that a lesson's links
+ * read, or none when the release places the lesson under no such context. The
+ * release decides the placement, so a forged hint finds nothing to verify.
+ */
+export const readPublishedMaterialPlacement = Effect.fn(
+  "NakafaMaterial.readPublishedPlacement"
+)(function* (
+  locale: Locale,
+  material: PublishedMaterialIdentity,
+  context: MaterialContextIdentity
+) {
+  const published = yield* readPublishedMaterialContext(
+    locale,
+    material,
+    context
+  );
+  return published === null ? null : toMaterialPlacement(published);
 });
