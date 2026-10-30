@@ -6,7 +6,6 @@ import {
   Menu01Icon,
 } from "@hugeicons/core-free-icons";
 import { setFilterValidator } from "@repo/backend/confect/tryouts/sets/spec";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +23,7 @@ import {
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "use-intl";
+import { TableHeadButton } from "@/components/shared/table/head";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
 import type { TryoutSetStatusFilter } from "@/components/tryout/catalog/table/types";
 import {
@@ -90,18 +90,13 @@ function TryoutSortHeading({ field }: { field: keyof typeof headings }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button
+            <TableHeadButton
+              align={field === "title" ? "start" : "center"}
               aria-label={t("set-sort-label", { column: t(copy.label) })}
-              className={cn(
-                "min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
-                field === "title" ? "-ml-2 sm:-ml-3" : "-mx-2 sm:-mx-3"
-              )}
-              size="sm"
-              variant="ghost"
+              icon={selected.icon}
             >
-              <span className="min-w-0 truncate">{t(copy.label)}</span>
-              <HugeIcons data-icon="inline-end" icon={selected.icon} />
-            </Button>
+              {t(copy.label)}
+            </TableHeadButton>
           }
         />
         <DropdownMenuContent
@@ -142,21 +137,15 @@ function TryoutStatusHeading() {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button
+            <TableHeadButton
+              active={filter !== "all"}
               aria-label={t("set-filter-label", {
                 column: t("set-column-status"),
               })}
-              className={cn(
-                "-mx-2 min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:-mx-3 sm:max-w-[calc(100%+1.75rem)]",
-                filter !== "all" && "bg-muted text-foreground"
-              )}
-              size="sm"
-              type="button"
-              variant="ghost"
+              icon={FilterIcon}
             >
-              <span className="min-w-0 truncate">{t("set-column-status")}</span>
-              <HugeIcons data-icon="inline-end" icon={FilterIcon} />
-            </Button>
+              {t("set-column-status")}
+            </TableHeadButton>
           }
         />
         <DropdownMenuContent

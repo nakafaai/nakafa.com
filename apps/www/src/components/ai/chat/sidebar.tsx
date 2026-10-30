@@ -126,7 +126,7 @@ export function AiChatSidebar({
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="group-data-[collapsible=icon]:hidden">
+      <SidebarContent className="group-data-[collapsible=icon]:*:hidden">
         <ChatFirstPageContext value={first}>
           <ChatSearchContext value={debouncedQ}>
             <ConvexIsland fallback={<AiChatSidebarFallback />}>

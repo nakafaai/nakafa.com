@@ -73,7 +73,6 @@ export function TenantOutsiderActions({
           </Tooltip>
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuItem
-              className="cursor-pointer"
               onClick={() => startChecking(() => router.invalidate())}
             >
               <HugeIcons icon={Refresh01Icon} />

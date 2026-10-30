@@ -15,11 +15,13 @@ import { markAllReadInLists } from "@/components/notifications/mutation";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * The inbox's one action, while it has rows: it marks every loaded row read at
- * once, or only the rows of the school that `slug` names. Its icon and its words
- * show, or on a phone its icon alone, named for assistive technology, so a header
- * stays one row. It stays inert until the live inbox takes a change, and a refusal
- * by the server rolls the change back and shows the shared error toast.
+ * The inbox's one action: it marks every loaded row read at once, or only the rows
+ * of the school that `slug` names. It is in the header from the first paint and
+ * waits disabled while the inbox holds no row, so the header never changes shape.
+ * Its icon and its words show, or on a phone its icon alone, named for assistive
+ * technology, so a header stays one row. It stays inert until the live inbox takes
+ * a change, and a refusal by the server rolls the change back and shows the shared
+ * error toast.
  */
 export function MarkAllRead({
   first,
@@ -35,12 +37,9 @@ export function MarkAllRead({
     markAllReadInLists
   );
 
-  if (rows.length === 0) {
-    return null;
-  }
-
   return (
     <Button
+      disabled={rows.length === 0}
       inert={!ready}
       onClick={() =>
         Effect.runPromise(
@@ -65,7 +64,6 @@ export function MarkAllRead({
           )
         )
       }
-      size="sm"
       variant="ghost"
     >
       <HugeIcons icon={CheckmarkCircle02Icon} />
