@@ -65,9 +65,10 @@ test("a signed-in learner answers each onboarding question on one laptop screen,
   await answer(page, "Student");
 
   // The six regions stand in one compact list, and the longest question still fits beside the
-  // artwork.
+  // artwork: a laptop screen is too short for Nina above it, so she steps aside.
   await expectQuestion(page, 2);
   expect(await choiceColumns(page)).toBe(1);
+  await expect(page.locator('main svg[width="88"]')).toBeHidden();
   await answer(page, "Indonesia");
 
   // Back keeps the answer chosen on the earlier question.
