@@ -150,7 +150,7 @@ export function PaneTableRow({
 
   return (
     <TableRow
-      className="h-12 cursor-pointer"
+      className="h-12"
       data-state={isOpen ? "selected" : undefined}
       onClick={(event) => {
         if (
