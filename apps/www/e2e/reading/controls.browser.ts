@@ -128,11 +128,17 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       expect(subheadingInk.ink).toBe(subheadingInk.primary)
     );
     const titleText = yield* Effect.promise(() => title.innerText());
-    const more = page.getByRole("button", {
+    // A lesson's visual cards carry menus of the same name, so the header's
+    // button is found inside its group of content actions.
+    const actions = page.getByRole("group", {
+      name: "Content actions",
+      exact: true,
+    });
+    const more = actions.getByRole("button", {
       name: "More actions",
       exact: true,
     });
-    const header = page.locator("header").filter({ has: more });
+    const header = page.locator("header").filter({ has: actions });
     yield* Effect.promise(() => expect(header).toBeVisible());
     if (href === routes[0]) {
       yield* Effect.promise(() =>

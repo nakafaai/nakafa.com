@@ -1,8 +1,9 @@
 import type { GenericId } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import { slugOf, type tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { createTenantKey } from "@repo/backend/confect/vault/keys";
+import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** The school's address in every call of the classroom tests. */
 export const nf = slugOf("nf");
@@ -21,6 +22,8 @@ export const denied = (reason: "resource" | "role" | "condition") => ({
 export const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 
 const periods = refs.public.tenancy.periods;
+const placements = refs.public.tenancy.placements;
+const channels = refs.public.classroom.forum.channels;
 const cohorts = refs.public.tenancy.cohorts;
 const classes = refs.public.classroom.classes;
 const teachers = refs.public.classroom.teachers;
@@ -158,4 +161,37 @@ export const writeClass = Effect.fn("test.classroom.writeClass")(function* (
       });
     })
   );
+});
+
+/** The fixture of a forum test: a school with its people and the key that seals its forum, as provisioning writes it. */
+export const keyedFixture = Effect.tap(tenancyFixture, (fixture) =>
+  fixture.run(createTenantKey(fixture.tenants.nf))
+);
+
+/**
+ * A class of a new cohort of one period with the fixture's teacher teaching it,
+ * and the ID of its general channel. The fixture's student is placed in it unless
+ * `placed` is false: a student has one cohort a period.
+ */
+export const forumClass = Effect.fn("test.classroom.forumClass")(function* (
+  fixture: Fixture,
+  periodId: GenericId.GenericId<"tenantPeriods">,
+  name: string,
+  placed = true
+) {
+  const group = yield* cohort(fixture, periodId, name);
+  const made = yield* classOf(fixture, group.id, "Fisika");
+  yield* teach(fixture, made.id, fixture.people.teacher.personId);
+  if (placed) {
+    yield* fixture.as("admin").mutation(placements.place, {
+      cohortId: group.id,
+      personId: fixture.people.student.personId,
+      slug: nf,
+    });
+  }
+  const listed = yield* fixture
+    .as("teacher")
+    .query(channels.list, { ...firstPage, classId: made.id, slug: nf });
+  const general = Option.getOrThrow(Arr.head(listed.page));
+  return { channelId: general.id, classId: made.id };
 });

@@ -1,6 +1,6 @@
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
-import { useLocation } from "@tanstack/react-router";
+import { ClientOnly, useLocation } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { type ComponentProps, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -79,15 +79,20 @@ export function AuthGoogle({ returnPath, variant }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {hasProviderError ? (
-        <div
-          className="max-w-sm text-center text-destructive text-sm"
-          role="alert"
-        >
-          <p className="font-medium">{tToast("provider-error.title")}</p>
-          <p>{tToast("provider-error.description")}</p>
-        </div>
-      ) : null}
+      {/* The sign-in page is static and prerendered without a query, so the
+          provider's failure, which the query carries, shows once the page has
+          hydrated. */}
+      <ClientOnly fallback={null}>
+        {hasProviderError ? (
+          <div
+            className="max-w-sm text-center text-destructive text-sm"
+            role="alert"
+          >
+            <p className="font-medium">{tToast("provider-error.title")}</p>
+            <p>{tToast("provider-error.description")}</p>
+          </div>
+        ) : null}
+      </ClientOnly>
       <Button
         aria-busy={isPending || undefined}
         disabled={isPending}

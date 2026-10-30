@@ -14,6 +14,7 @@ const messageNamespaceFlags = {
   Common: true,
   ComingSoon: true,
   Comments: true,
+  Connectors: true,
   Contributor: true,
   DataTable: true,
   Editor: true,

@@ -1,5 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { detailOf } from "@repo/backend/confect/notifications/detail";
 import { NotificationCursorInvalid } from "@repo/backend/confect/notifications/errors";
 import {
   HELD_SCHOOL_LIMIT,
@@ -75,7 +76,9 @@ const streamOf = Effect.fn("notifications.feed.stream")(function* (
     .take(readAhead)
     .pipe(
       Effect.orDie,
-      Effect.map((rows) => Arr.map(rows, (row) => ({ row, school: profile })))
+      Effect.map((rows) =>
+        Arr.map(rows, (row) => ({ held: school, row, school: profile }))
+      )
     );
 });
 
@@ -93,7 +96,8 @@ const isShown = (cursor: FeedCursor | null, row: Candidate["row"]) =>
  * merged into one order by creation time, newest first. Rows that share a creation
  * time keep the order of the index, which breaks ties by the newest insert, so every
  * page size shows the same order. Rows that tie on both keep the order of their
- * school. The cursor keeps the rows at its time that it has shown, so no row is
+ * school. Each class row carries the detail its source gives its recipient now.
+ * The cursor keeps the rows at its time that it has shown, so no row is
  * shown twice or skipped, even when several rows share one creation time. Each
  * school is read with at most `numItems + 1 + HELD_SCHOOL_LIMIT` rows, because a
  * decoded cursor names at most `HELD_SCHOOL_LIMIT` rows.
@@ -144,8 +148,11 @@ export const feedPage = Effect.fn("notifications.feed.page")(function* (
   return {
     continueCursor,
     isDone: ahead.length <= numItems,
-    page: Arr.map(rows, (candidate) =>
-      notificationView(candidate.row, candidate.school)
+    page: yield* Effect.forEach(rows, (candidate) =>
+      Effect.map(
+        detailOf(candidate.row, candidate.held.person, candidate.held.tenant),
+        (detail) => notificationView(candidate.row, candidate.school, detail)
+      )
     ),
   };
 });

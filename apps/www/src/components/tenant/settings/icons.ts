@@ -1,6 +1,7 @@
 import {
   Building03Icon,
   Calendar03Icon,
+  ConnectIcon,
   CreditCardIcon,
   DocumentValidationIcon,
   FileSpreadsheetIcon,
@@ -30,6 +31,7 @@ export const settingsSectionIcons: Record<
   billing: CreditCardIcon,
   clients: Plug01Icon,
   cohorts: UserMultiple02Icon,
+  connections: ConnectIcon,
   guardians: UserLove01Icon,
   invites: Mail01Icon,
   members: UserListIcon,

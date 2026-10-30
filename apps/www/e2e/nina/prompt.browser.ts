@@ -9,9 +9,11 @@ import {
   pictureOf,
   runPage,
 } from "@/e2e/support/attachment";
+import { runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
+import { signInLearner } from "@/e2e/support/learner";
 import { SHEET_POPUP } from "@/e2e/support/selector";
 import { openSheet } from "@/e2e/support/sheet";
 
@@ -45,12 +47,12 @@ const ENGLISH_QUESTION = "What is a derivative in mathematics?";
 
 test.describe("The composer takes the direction of the text typed in it", () => {
   test("reads Arabic from the right and English from the left", async ({
+    baseURL,
     page,
   }) => {
-    await runPage(
-      page,
+    await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        const composer = yield* openComposer(page);
+        const composer = yield* openComposer(page, origin);
         const input = composerOf(composer);
 
         yield* Effect.promise(async () => {
@@ -69,12 +71,12 @@ for (const width of [320, 1440]) {
     test.use({ viewport: { height: 900, width } });
 
     test("keeps the composer and its buttons inside the page", async ({
+      baseURL,
       page,
     }) => {
-      await runPage(
-        page,
+      await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
-          const composer = yield* openComposer(page);
+          const composer = yield* openComposer(page, origin);
           const input = composer.getByRole("textbox", { name: PLACEHOLDER });
 
           yield* Effect.promise(async () => {
@@ -130,12 +132,14 @@ for (const screen of SHORT_SCREENS) {
     test.use({ viewport: { height: screen.height, width: screen.width } });
 
     test("keeps the send and attach buttons in reach with a photo and a long prompt", async ({
+      baseURL,
       page,
     }) => {
-      await runPage(
-        page,
+      await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
+          // A visitor's attach button asks for sign-in, so a learner picks the photo.
           yield* seedAnalyticsConsent(page, "denied");
+          yield* signInLearner(page.context(), origin);
           yield* openSheet(page);
           const sheet = page.locator(SHEET_POPUP);
           yield* waitForSlide(sheet);

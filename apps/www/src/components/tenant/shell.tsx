@@ -43,13 +43,10 @@ import {
   useTransition,
 } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { Authenticated } from "@/components/auth/gate";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
 import { TenantAccountItems } from "@/components/tenant/account";
-import {
-  type ClassesPreload,
-  ClassesPreloadContext,
-} from "@/components/tenant/classes/preload";
 import {
   TenantContext,
   type TenantValue,
@@ -111,8 +108,8 @@ function useViewerAccount() {
 /**
  * The account button at the foot of the school's sidebar: the viewer's round
  * avatar, the viewer's name in the school, and the role, with the account menu.
- * The school layout reads the account on the server, so the footer has no pending
- * state of its own. A sign-out makes the account inert until it settles, so a
+ * The school layout's gate reads the account before the page commits, so the footer
+ * has no pending state of its own. A sign-out makes the account inert until it settles, so a
  * second press signs out once. The role line is left out for a viewer with no grant.
  */
 function TenantAccount() {
@@ -188,7 +185,9 @@ function TenantSwitcher() {
           {warmed ? (
             <Suspense fallback={null}>
               <ClientOnly fallback={null}>
-                <SidebarSchoolMenuItems canOpenSchool={false} />
+                <Authenticated>
+                  <SidebarSchoolMenuItems canOpenSchool={false} />
+                </Authenticated>
               </ClientOnly>
             </Suspense>
           ) : null}
@@ -272,7 +271,6 @@ export function TenantShell({
   canOpenExams,
   canOpenReports,
   children,
-  classes,
   greeting,
   home,
   personName,
@@ -285,7 +283,6 @@ export function TenantShell({
   canOpenExams: boolean;
   canOpenReports: boolean;
   children: ReactNode;
-  classes: ClassesPreload;
   greeting: Greeting;
   home: HomeAccess;
   personName: string;
@@ -295,26 +292,24 @@ export function TenantShell({
 }) {
   return (
     <ViewerPreloadContext value={viewer}>
-      <ClassesPreloadContext value={classes}>
-        <TenantContext
-          value={{
-            canManage,
-            canOpenExams,
-            canOpenReports,
-            greeting,
-            logo: profile.logo,
-            mascot: profile.mascot,
-            home,
-            name: profile.name,
-            role,
-            slug: profile.slug,
-          }}
-        >
-          <ViewerAccountContext value={{ account, name: personName }}>
-            <TenantFrame>{children}</TenantFrame>
-          </ViewerAccountContext>
-        </TenantContext>
-      </ClassesPreloadContext>
+      <TenantContext
+        value={{
+          canManage,
+          canOpenExams,
+          canOpenReports,
+          greeting,
+          logo: profile.logo,
+          mascot: profile.mascot,
+          home,
+          name: profile.name,
+          role,
+          slug: profile.slug,
+        }}
+      >
+        <ViewerAccountContext value={{ account, name: personName }}>
+          <TenantFrame>{children}</TenantFrame>
+        </ViewerAccountContext>
+      </TenantContext>
     </ViewerPreloadContext>
   );
 }

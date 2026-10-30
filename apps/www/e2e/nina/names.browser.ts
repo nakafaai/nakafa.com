@@ -8,7 +8,6 @@ import {
   fileOf,
   openComposer,
   pickFiles,
-  runPage,
   write,
 } from "@/e2e/support/attachment";
 import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
@@ -76,12 +75,12 @@ for (const width of [320, 1440]) {
 
     for (const { label, name } of LONG_NAMES) {
       test(`keep the start and the end of ${label} in view`, async ({
+        baseURL,
         page,
       }) => {
-        await runPage(
-          page,
+        await runOnPage(page, baseURL, (origin) =>
           Effect.gen(function* () {
-            const composer = yield* openComposer(page);
+            const composer = yield* openComposer(page, origin);
             yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
             const chip = chipsIn(composer).first();
             yield* Effect.promise(() => expect(chip).toBeVisible());
@@ -96,11 +95,13 @@ for (const width of [320, 1440]) {
     }
 
     for (const { label, name } of WIDE_NAMES) {
-      test(`that end in ${label} stay inside their chip`, async ({ page }) => {
-        await runPage(
-          page,
+      test(`that end in ${label} stay inside their chip`, async ({
+        baseURL,
+        page,
+      }) => {
+        await runOnPage(page, baseURL, (origin) =>
           Effect.gen(function* () {
-            const composer = yield* openComposer(page);
+            const composer = yield* openComposer(page, origin);
             yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
             const chip = chipsIn(composer).first();
             yield* Effect.promise(() => expect(chip).toBeVisible());
@@ -118,11 +119,10 @@ for (const width of [320, 1440]) {
       });
     }
 
-    test("show an ordinary name whole", async ({ page }) => {
-      await runPage(
-        page,
+    test("show an ordinary name whole", async ({ baseURL, page }) => {
+      await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
-          const composer = yield* openComposer(page);
+          const composer = yield* openComposer(page, origin);
           yield* pickFiles(composer, [fileOf(ORDINARY_NAME, "text/plain", 8)]);
           const chip = chipsIn(composer).first();
           yield* Effect.promise(() => expect(chip).toBeVisible());
@@ -170,11 +170,13 @@ for (const width of [300, 200]) {
     test.use({ viewport: { height: 900, width } });
 
     for (const { label, name } of LONG_NAMES) {
-      test(`keep ${label} inside the end of the row`, async ({ page }) => {
-        await runPage(
-          page,
+      test(`keep ${label} inside the end of the row`, async ({
+        baseURL,
+        page,
+      }) => {
+        await runOnPage(page, baseURL, (origin) =>
           Effect.gen(function* () {
-            const composer = yield* openComposer(page);
+            const composer = yield* openComposer(page, origin);
             yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
             const chip = chipsIn(composer).first();
             yield* Effect.promise(() => expect(chip).toBeVisible());

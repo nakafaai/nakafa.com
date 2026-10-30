@@ -30,8 +30,9 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
-import { useSidebar } from "@repo/design-system/lib/sidebar/context";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useParams } from "@tanstack/react-router";
+import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -70,7 +71,6 @@ export function AiChatSidebar({
   first: Option.Option<ChatFirstPage>;
 }) {
   const t = useTranslations("Ai");
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const [q, setQ] = useState("");
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
   return (
@@ -83,22 +83,21 @@ export function AiChatSidebar({
       <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>
-            <Button
-              className="w-full border border-sidebar-border shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50"
-              nativeButton={false}
-              render={
-                <Link
-                  activeOptions={EXACT_ACTIVE_OPTIONS}
-                  onClick={() => setOpenMobile(false)}
-                  title={t("new-chat")}
-                  to="/$locale/chat"
-                >
-                  {t("new-chat")}
-                </Link>
-              }
-              size="sm"
-              variant="secondary"
-            />
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              className={cn(
+                buttonVariants({
+                  className:
+                    "w-full border border-sidebar-border shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50",
+                  size: "sm",
+                  variant: "secondary",
+                })
+              )}
+              title={t("new-chat")}
+              to="/$locale/chat"
+            >
+              {t("new-chat")}
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
 
@@ -201,7 +200,6 @@ function SidebarChatRows({
   const t = useTranslations("Ai");
   const locale = useCurrentLocale();
   const drafts = useAi((state) => state.chatDrafts);
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
   });
@@ -227,7 +225,6 @@ function SidebarChatRows({
                 render={
                   <Link
                     activeOptions={EXACT_ACTIVE_OPTIONS}
-                    onClick={() => setOpenMobile(false)}
                     params={{ id: chat._id, locale }}
                     title={chat.title}
                     to="/$locale/chat/$id"

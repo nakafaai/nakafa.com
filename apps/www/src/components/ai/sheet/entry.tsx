@@ -6,13 +6,16 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
+import { useEarlyPress } from "@/lib/press/replay";
 
 const FIRST_INTERACTION = ["keydown", "pointerdown", "scroll"] as const;
 
 /**
  * Renders the sticky Nina entry button for the current page. It is part of
  * the page's HTML, and the sheet behind it is warmed before the press: once
- * the reader first interacts with the page, and again on intent.
+ * the reader first interacts with the page, and again on intent. A press
+ * before React takes the page over opens the sheet once React mounts the
+ * button (`useEarlyPress`).
  */
 export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
   const open = useAi((state) => state.open);
@@ -51,6 +54,8 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
     setOpen(!open);
   }
 
+  const press = useEarlyPress<HTMLButtonElement>(handleOpen);
+
   return (
     <aside
       className="sticky right-0 bottom-0 left-0 z-50 px-6 pb-6 transition-[opacity,translate] duration-300 ease-out data-open:pointer-events-none data-open:translate-y-50 data-open:opacity-0 motion-reduce:transition-none"
@@ -59,8 +64,8 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
     >
       <div className="mx-auto sm:max-w-xs">
         <Button
+          {...press}
           className="w-full justify-between transition-transform duration-200 hover:scale-105"
-          onClick={handleOpen}
           onFocus={warm}
           onMouseEnter={warm}
           onPointerDown={warm}

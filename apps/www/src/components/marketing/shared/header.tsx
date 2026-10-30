@@ -1,5 +1,5 @@
-import { Button } from "@repo/design-system/components/ui/button";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
@@ -34,47 +34,35 @@ export function Header() {
           <LogoCta />
 
           <nav className="hidden items-center gap-0.5 lg:flex">
-            <Button
-              nativeButton={false}
-              render={
-                <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale">
-                  {t("about")}
-                </Link>
-              }
-              variant="ghost"
-            />
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              className={buttonVariants({ variant: "ghost" })}
+              to="/$locale"
+            >
+              {t("about")}
+            </Link>
             {/* On the home page the lesson section is already on screen, so the link scrolls to it itself; from another page the router scrolls to it. */}
-            <Button
-              nativeButton={false}
-              render={
-                <Link
-                  activeOptions={EXACT_ACTIVE_OPTIONS}
-                  hash={LESSON_SECTION_ID}
-                  onClick={() => {
-                    if (onHome) {
-                      scrollToLessonSection();
-                    }
-                  }}
-                  resetScroll={!onHome}
-                  to="/$locale"
-                >
-                  {t("features")}
-                </Link>
-              }
-              variant="ghost"
-            />
-            <Button
-              nativeButton={false}
-              render={
-                <Link
-                  activeOptions={EXACT_ACTIVE_OPTIONS}
-                  to="/$locale/pricing"
-                >
-                  {t("pricing")}
-                </Link>
-              }
-              variant="ghost"
-            />
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              className={buttonVariants({ variant: "ghost" })}
+              hash={LESSON_SECTION_ID}
+              onClick={() => {
+                if (onHome) {
+                  scrollToLessonSection();
+                }
+              }}
+              resetScroll={!onHome}
+              to="/$locale"
+            >
+              {t("features")}
+            </Link>
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              className={buttonVariants({ variant: "ghost" })}
+              to="/$locale/pricing"
+            >
+              {t("pricing")}
+            </Link>
           </nav>
         </div>
 

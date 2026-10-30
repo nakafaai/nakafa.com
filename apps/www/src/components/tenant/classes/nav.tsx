@@ -1,4 +1,4 @@
-import { QueryResult } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
 import { UserMultiple02Icon } from "@hugeicons/core-free-icons";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
@@ -9,16 +9,13 @@ import {
 import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { withMarks } from "@/components/tenant/classes/marks";
-import { ClassesPreloadContext } from "@/components/tenant/classes/preload";
 import type { TenantValue } from "@/components/tenant/context";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -82,12 +79,7 @@ function TenantClassesRows() {
  */
 export function useClassesQuery(slug: TenantValue["slug"]) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const classes = use(ClassesPreloadContext);
-  return usePreloadedQueryResult(
-    classroom.classes.mine,
-    isSettled ? { slug } : "skip",
-    classes
-  );
+  return useQuery(classroom.classes.mine, isSettled ? { slug } : "skip");
 }
 
 /**
