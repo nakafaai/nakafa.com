@@ -275,16 +275,21 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
   ).toBeVisible();
 
   // The page is header and body: the header row holds the search box before the page's
-  // actions, and the table fills the body from edge to edge.
+  // actions, and the table's body keeps that row's page width and gutter. The header's bar
+  // may run the window's width; its row and the body share one page width.
   const search = header.getByRole("textbox", { name: "Find a person" });
   await expect(search).toBeVisible();
-  const table = page.locator('[data-slot="table-container"]');
-  const [headerBox, tableBox] = await Promise.all([
-    header.boundingBox(),
-    table.boundingBox(),
+  const row = header.locator(":scope > div");
+  const body = page.locator('[data-slot="table-page-body"]');
+  const [rowBox, bodyBox] = await Promise.all([
+    row.boundingBox(),
+    body.boundingBox(),
   ]);
+  expect(Math.abs((rowBox?.x ?? 0) - (bodyBox?.x ?? -2))).toBeLessThanOrEqual(
+    1
+  );
   expect(
-    Math.abs((headerBox?.width ?? 0) - (tableBox?.width ?? 0))
+    Math.abs((rowBox?.width ?? 0) - (bodyBox?.width ?? -2))
   ).toBeLessThanOrEqual(1);
   await expect(
     ownerGrant.getByRole("button", { name: "More actions" })
