@@ -9,6 +9,7 @@ import { nf } from "@repo/backend/test/editor";
 import { archiveUnit, examRows } from "@repo/backend/test/exams";
 import { keyedSchool, sittingRow } from "@repo/backend/test/sittings";
 import {
+  actedAt,
   defectOf,
   slugOf,
   TENANCY_NOW,
@@ -199,6 +200,7 @@ describe("exams seed sitting", () => {
               .pipe(Effect.orDie)
           )
         );
+        vi.setSystemTime(actedAt());
         const made = yield* fixture.internal.mutation(seed, {
           email: addressOf(user.email),
           slug: nf,
@@ -216,8 +218,8 @@ describe("exams seed sitting", () => {
           )
         );
         expect(sittings).toMatchObject([
-          { opensAt: TENANCY_NOW, room: "Lab 2" },
-          { opensAt: TENANCY_NOW + 24 * 60 * 60 * 1000, room: "Lab 3" },
+          { opensAt: actedAt(), room: "Lab 2" },
+          { opensAt: actedAt() + 24 * 60 * 60 * 1000, room: "Lab 3" },
         ]);
       })
   );

@@ -10,10 +10,15 @@ import { teacherExam } from "@repo/backend/test/exams";
 import {
   deviceOf,
   enterOk,
+  OPENS_AT,
   openedSitting,
   type SittingFixture,
 } from "@repo/backend/test/sittings";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  actedAt,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 const { look, screen } = refs.public.exams.screens;
@@ -187,13 +192,14 @@ describe("exams/sittings screen", () => {
               .pipe(Effect.orDie);
           })
         );
+        vi.setSystemTime(actedAt(0, OPENS_AT));
         yield* fixture.as("student").mutation(look, {
           attemptId: entered.attemptId,
           deviceId: deviceOf(1),
           questionId: entered.questionId,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + 3000);
+        vi.setSystemTime(actedAt(3, OPENS_AT));
         yield* fixture.as("student").mutation(look, {
           attemptId: entered.attemptId,
           deviceId: deviceOf(1),
@@ -201,7 +207,7 @@ describe("exams/sittings screen", () => {
           slug: nf,
         });
         expect(yield* screenRows(fixture)).toMatchObject([
-          { at: TENANCY_NOW + 3000, question: second },
+          { at: actedAt(3, OPENS_AT), question: second },
         ]);
         const device = yield* fixture
           .as("student")

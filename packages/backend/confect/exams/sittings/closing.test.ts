@@ -18,6 +18,7 @@ import {
   sittingRow,
 } from "@repo/backend/test/sittings";
 import {
+  actedAt,
   journal,
   scheduledJobs,
   TENANCY_NOW,
@@ -64,6 +65,7 @@ describe("exams/sittings closing", () => {
             token: made.token,
           })
           .pipe(Effect.flatMap(admittedOf));
+        vi.setSystemTime(actedAt(0, OPENS_AT));
         yield* fixture
           .as("teacher")
           .mutation(refs.public.exams.sittings.close, {
@@ -90,7 +92,7 @@ describe("exams/sittings closing", () => {
             reader.table("exams").get(closed.examId).pipe(Effect.orDie)
           )
         );
-        expect(exam.frozenAt).toBe(OPENS_AT);
+        expect(exam.frozenAt).toBe(actedAt(0, OPENS_AT));
         yield* fixture.internal.mutation(timers.closeDue, {
           atDeadline: "now",
           sittingId: made.id,

@@ -6,7 +6,11 @@ import { nf } from "@repo/backend/test/editor";
 import { archiveUnit, teacherExam } from "@repo/backend/test/exams";
 import { homeOf, insertRoom, roomsOf } from "@repo/backend/test/home";
 import { OPENS_AT, seedPlacement } from "@repo/backend/test/sittings";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  actedAt,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { create } = refs.public.exams.exams;
@@ -211,31 +215,33 @@ describe("exams home", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const exam = yield* teacherExam(fixture, "PTS");
+        const readAt = actedAt();
         yield* insertRoom(fixture, {
           examId: exam.id,
-          opensAt: TENANCY_NOW + 14 * DAY,
+          opensAt: readAt + 14 * DAY,
           room: "Day 14",
           state: "scheduled",
         });
         yield* insertRoom(fixture, {
           examId: exam.id,
-          opensAt: TENANCY_NOW + DAY,
+          opensAt: readAt + DAY,
           room: "Day 1",
           state: "scheduled",
         });
         yield* insertRoom(fixture, {
           examId: exam.id,
-          opensAt: TENANCY_NOW + 14 * DAY + 1,
+          opensAt: readAt + 14 * DAY + 1,
           room: "Day 14 and a millisecond",
           state: "scheduled",
         });
         yield* insertRoom(fixture, {
           examId: exam.id,
-          opensAt: TENANCY_NOW - 1,
+          opensAt: readAt - 1,
           room: "Yesterday",
           state: "scheduled",
         });
 
+        vi.setSystemTime(readAt);
         const read = yield* homeOf(fixture, "teacher");
 
         expect(roomsOf(read.next)).toEqual(["Day 1", "Day 14"]);

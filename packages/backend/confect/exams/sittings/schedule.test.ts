@@ -13,6 +13,7 @@ import {
   sittingRow,
 } from "@repo/backend/test/sittings";
 import {
+  actedAt,
   journal,
   scheduledJobs,
   TENANCY_NOW,
@@ -93,11 +94,12 @@ describe("exams/sittings schedule", () => {
         const fixture = yield* tenancyFixture;
         yield* keyedSchool(fixture);
         const examId = yield* keyedExam(fixture, "PTS");
+        vi.setSystemTime(actedAt());
         const late = yield* scheduleSitting(fixture, {
           closesAt: CLOSES_AT,
           examId,
           group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: TENANCY_NOW - 60_001,
+          opensAt: actedAt() - 60_001,
         }).pipe(Effect.flip);
         expect(late).toMatchObject({
           _tag: "ScheduleInvalid",
@@ -107,7 +109,7 @@ describe("exams/sittings schedule", () => {
           closesAt: CLOSES_AT,
           examId,
           group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: TENANCY_NOW - 60_000,
+          opensAt: actedAt() - 60_000,
         });
         expect(edge.token).toMatch(TOKEN);
       })
