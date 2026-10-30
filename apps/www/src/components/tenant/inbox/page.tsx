@@ -42,7 +42,7 @@ export function SchoolNotifications({ all }: { all: boolean }) {
         <MarkAllRead first={Option.none()} slug={scope} />
         <InboxFilter all={all} />
       </SchoolHeader>
-      <LayoutContent className="flex flex-col py-6">
+      <LayoutContent className="flex w-full flex-col py-6">
         <NotificationsClockContext value={clock}>
           <NotificationsList first={Option.none()} slug={scope} />
         </NotificationsClockContext>
