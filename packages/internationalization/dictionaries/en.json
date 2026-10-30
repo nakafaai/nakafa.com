@@ -1214,6 +1214,7 @@
     "classification": "Education"
   },
   "Common": {
+    "undo": "Undo",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -2108,9 +2109,6 @@
     "admitted-elsewhere": {
       "title": "Nina is answering in a new chat"
     },
-    "open-chat": {
-      "title": "Open"
-    },
     "school-language-error": {
       "title": "We could not change the language.",
       "description": "Please try again."
@@ -2138,9 +2136,6 @@
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
-    },
-    "undo": {
-      "title": "Undo"
     },
     "school-cohort-archived": {
       "title": "Class archived."

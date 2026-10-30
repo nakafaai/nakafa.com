@@ -154,7 +154,7 @@ export function SchoolPeriodMenu({
                         { title: "school-period-archived.title" },
                         {
                           action: {
-                            label: "undo.title",
+                            label: "undo",
                             onClick: () =>
                               startTransition(() =>
                                 saveSchool(

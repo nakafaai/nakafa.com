@@ -6,7 +6,10 @@ import {
   expectTypeOf,
   it,
 } from "@effect/vitest";
-import { ToastMessage } from "@repo/design-system/lib/toast/message";
+import {
+  ToastAction,
+  ToastMessage,
+} from "@repo/design-system/lib/toast/message";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
@@ -114,21 +117,19 @@ describe("toast", () => {
     expect(sonner.error).not.toHaveBeenCalled();
   });
 
-  it("passes an action on with its label as a key, so the Toaster shows it as a button", () => {
+  it("passes an action on with its label as a word of Common, so the Toaster shows it as a button", () => {
     const onClick = vi.fn();
 
     toast.error(
       { title: "action-error.title" },
-      { action: { label: "copy-success.title", onClick }, duration: 5000 }
+      { action: { label: "undo", onClick }, duration: 5000 }
     );
 
     expect(sonner.error).toHaveBeenCalledExactlyOnceWith(
       createElement(ToastMessage, { message: "action-error.title" }),
       {
         action: {
-          label: createElement(ToastMessage, {
-            message: "copy-success.title",
-          }),
+          label: createElement(ToastAction, { label: "undo" }),
           onClick,
         },
         description: undefined,
