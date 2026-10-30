@@ -97,7 +97,6 @@ function SchoolPeriodsContent() {
   const t = useTranslations("SchoolSettings");
   const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
-  const [isAdding, setIsAdding] = useState(false);
 
   if (QueryResult.isFailure(viewer)) {
     throw viewer.error;
@@ -127,9 +126,7 @@ function SchoolPeriodsContent() {
               />
             ) : null}
             <TableSearch placeholder={t("periods-search")} />
-            <Button onClick={() => setIsAdding(true)} type="button">
-              {t("period-add")}
-            </Button>
+            <SchoolPeriodAdd unitId={unit.id} />
           </>
         )
       }
@@ -137,16 +134,9 @@ function SchoolPeriodsContent() {
       {unit === undefined ? (
         <NoActiveUnit />
       ) : (
-        <>
-          <ReadBoundary>
-            <SchoolPeriodTable unitId={unit.id} />
-          </ReadBoundary>
-          <SchoolPeriodAddDialog
-            open={isAdding}
-            setOpen={setIsAdding}
-            unitId={unit.id}
-          />
-        </>
+        <ReadBoundary>
+          <SchoolPeriodTable unitId={unit.id} />
+        </ReadBoundary>
       )}
     </SettingsTablePage>
   );
@@ -264,44 +254,42 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
 const NEW_PERIOD = { end: "", name: "", start: "" };
 
 /**
- * Renders the dialog that adds a planned period to the unit: its name, and its first and last days. The dialog closes
- * as the add is sent, and it starts empty again once the server accepts the period, while a refused add keeps what was
- * typed.
+ * The page's main action: Add period and the dialog it opens, for a planned period's name and its first and last days.
+ * The dialog closes as the add is sent, and it starts empty again once the server accepts the period, while a refused
+ * add keeps what was typed.
  */
-function SchoolPeriodAddDialog({
-  open,
-  setOpen,
-  unitId,
-}: {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  unitId: UnitId;
-}) {
+function SchoolPeriodAdd({ unitId }: { unitId: UnitId }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const create = useMutation(tenancy.periods.create).withOptimisticUpdate(
     createPeriodChange
   );
   const [round, setRound] = useState(0);
+  const [open, setOpen] = useState(false);
 
   return (
-    <PeriodDialog
-      description={t("period-add-footer")}
-      fields={NEW_PERIOD}
-      key={round}
-      onSave={(fields) =>
-        startTransition(() =>
-          saveSchool(
-            () => create({ ...fields, slug, unitId }),
-            SOURCE,
-            () => setRound((count) => count + 1)
+    <>
+      <Button onClick={() => setOpen(true)} type="button">
+        {t("period-add")}
+      </Button>
+      <PeriodDialog
+        description={t("period-add-footer")}
+        fields={NEW_PERIOD}
+        key={round}
+        onSave={(fields) =>
+          startTransition(() =>
+            saveSchool(
+              () => create({ ...fields, slug, unitId }),
+              SOURCE,
+              () => setRound((count) => count + 1)
+            )
           )
-        )
-      }
-      open={open}
-      saveLabel={t("period-add")}
-      setOpen={setOpen}
-      title={t("period-add")}
-    />
+        }
+        open={open}
+        saveLabel={t("period-add")}
+        setOpen={setOpen}
+        title={t("period-add")}
+      />
+    </>
   );
 }
