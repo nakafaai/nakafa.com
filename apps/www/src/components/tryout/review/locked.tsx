@@ -56,6 +56,7 @@ const loadPreview = Effect.fn("TryoutReview.loadPreview")(
     });
   },
   Effect.catchTags({
+    ContentRuntimeMissingError: () => Effect.succeed([]),
     ContentRuntimeVerificationError: () => Effect.succeed([]),
     TryoutReviewProjectionError: () => Effect.succeed([]),
   })
