@@ -1,7 +1,7 @@
 import { Table } from "@confect/core";
 import { tenantPersonValidator } from "@repo/backend/confect/tenancy/schema";
 /**
- * The people of the schools. A results list that a viewer searches by name finds the school's people through
+ * The people of the schools. A list that a viewer searches by a person's name finds the school's people through
  * `search_name`, which matches each word of the search whole and its last word as a prefix.
  */
 export default Table.make(() => tenantPersonValidator)

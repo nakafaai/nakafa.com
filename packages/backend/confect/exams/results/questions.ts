@@ -7,7 +7,6 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { questionView } from "@repo/backend/confect/exams/question";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
-import { namedPeople } from "@repo/backend/confect/exams/results/named";
 import {
   personResult,
   questionResults,
@@ -18,6 +17,7 @@ import {
   tallyAnswers,
 } from "@repo/backend/confect/exams/results/stats";
 import { QuestionNotInExam } from "@repo/backend/confect/exams/sittings/errors";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, Number as Num, Option, Struct } from "effect";
 
