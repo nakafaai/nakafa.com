@@ -18,6 +18,12 @@ export const pinnedRoutes = {
     en: "/en/articles/politics/merah-putih-cabinet-analysis",
     id: "/id/articles/politics/merah-putih-cabinet-analysis",
   },
+  /** A lesson made of code blocks, whose stand-in heights a check measures. */
+  code: {
+    de: "/de/faecher/ki-und-data-science/ki-programmierung/rechenoperatoren",
+    en: "/en/subjects/ai-ds/ai-programming/arithmetic-operator",
+    id: "/id/materi/ai-ds/pemrograman-ai/operator-aritmatika",
+  },
   exponent: {
     de: "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen",
     en: "/en/subjects/mathematics/exponential-logarithm/basic-concept",
