@@ -1,12 +1,20 @@
 import type { GenericId } from "@confect/core";
+import {
+  type ExamResponse,
+  NO_RESPONSE,
+  typedText,
+} from "@repo/backend/confect/exams/sittings/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Effect } from "effect";
-import { useEffect, useRef } from "react";
+import { Array as Arr, Effect, Option } from "effect";
+import { useEffect, useRef, useState } from "react";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { useSendAnswer } from "@/components/exams/sitting/answer";
-import { keptAnswersFor, readKept } from "@/components/exams/sitting/keep";
-import type { PaperValue } from "@/components/exams/sitting/paper";
-import { sittingStorage } from "@/components/exams/sitting/storage";
+import { keptAttempt } from "@/components/exams/sitting/keep";
+import type {
+  PaperQuestion,
+  PaperValue,
+} from "@/components/exams/sitting/paper";
+import { keptStorage } from "@/components/player/storage";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
@@ -40,15 +48,12 @@ export function useResendKeptAnswers({
     }
     resumed.current = true;
     Effect.runPromise(
-      readKept(sittingId, attemptId).pipe(
-        Effect.provide(sittingStorage),
-        Effect.flatMap((kept) =>
-          Effect.forEach(
-            keptAnswersFor(
-              kept,
-              Arr.map(paper.questions, (question) => question.id)
-            ),
-            ({ answer, questionId }) =>
+      keptAttempt(sittingId, attemptId)
+        .answersFor(Arr.map(paper.questions, (question) => question.id))
+        .pipe(
+          Effect.provide(keptStorage),
+          Effect.flatMap((kept) =>
+            Effect.forEach(kept, ({ answer, questionId }) =>
               send(
                 {
                   attemptId,
@@ -61,17 +66,54 @@ export function useResendKeptAnswers({
                 },
                 answer.answeredAt
               )
+            )
+          ),
+          Effect.flatMap((failures) =>
+            sittingCallFailures(Arr.getSomes(failures))
+          ),
+          Effect.catchTag("KeyValueStoreError", (error) =>
+            reportClientException(error, {
+              source: "components/exams/sitting/resend",
+            })
           )
-        ),
-        Effect.flatMap((failures) =>
-          sittingCallFailures(Arr.getSomes(failures))
-        ),
-        Effect.catchTag("KeyValueStoreError", (error) =>
-          reportClientException(error, {
-            source: "components/exams/sitting/resend",
-          })
         )
-      )
     );
   }, [attemptId, deviceId, locked, paper, send, sittingId, slug]);
+}
+
+/**
+ * The text that a typed answer opens with: the text that the browser kept for the question and the server has
+ * not confirmed, else the saved text. The field takes its text once, so it is read once, when the question
+ * shows; the paper shows the saved text until the kept answer is sent again. A school renders only in the
+ * browser, so its storage is there to read.
+ */
+export function useKeptText({
+  attemptId,
+  question,
+  sittingId,
+}: {
+  readonly attemptId: GenericId.GenericId<"examAttempts">;
+  readonly question: PaperQuestion;
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+}) {
+  const [text] = useState(() =>
+    Effect.runSync(
+      keptAttempt(sittingId, attemptId)
+        .responseOf(question.id)
+        .pipe(
+          Effect.provide(keptStorage),
+          Effect.catchTag("KeyValueStoreError", (error) =>
+            reportClientException(error, {
+              source: "components/exams/sitting/kept",
+            }).pipe(Effect.as(Option.none<ExamResponse>()))
+          ),
+          Effect.map((kept) =>
+            typedText(
+              Option.getOrElse(kept, () => question.response ?? NO_RESPONSE)
+            )
+          )
+        )
+    )
+  );
+  return text;
 }
