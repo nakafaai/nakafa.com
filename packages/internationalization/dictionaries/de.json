@@ -1744,6 +1744,7 @@
     "shortcut-pick": "Option wählen",
     "shortcut-navigator": "Aufgabenübersicht",
     "flag": "Markieren",
+    "flag-question": "Frage {number} markieren",
     "review": "Prüfen",
     "legend-answered": "Beantwortet",
     "legend-flagged": "Markiert",

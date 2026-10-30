@@ -1744,6 +1744,7 @@
     "shortcut-pick": "Pilih opsi",
     "shortcut-navigator": "Navigasi soal",
     "flag": "Tandai",
+    "flag-question": "Tandai soal {number}",
     "review": "Tinjau",
     "legend-answered": "Terjawab",
     "legend-flagged": "Ditandai",
