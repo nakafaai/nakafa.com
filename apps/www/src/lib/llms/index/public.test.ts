@@ -21,6 +21,12 @@ describe("public llms discovery indexes", () => {
     expect(text).not.toContain("/page/");
     expect(text).toContain("https://mcp.nakafa.com/mcp");
     expect(text).toContain(`${BASE_URL}/skill.md`);
+    expect(text).toContain(
+      "\n## Use\n\n- Nakafa content is licensed under https://github.com/nakafaai/aksara/blob/main/CONTENT_LICENSE.md\n"
+    );
+    expect(text).toContain(
+      "- Model training is reserved: https://nakafa.com/.well-known/tdmrep.json\n"
+    );
   });
 
   it("derives localized nested indexes from canonical route surfaces", () => {

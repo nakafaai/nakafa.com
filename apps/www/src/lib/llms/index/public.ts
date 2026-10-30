@@ -13,6 +13,7 @@ import {
 } from "@/lib/llms/constants";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import { renderLlmsIndexText } from "@/lib/llms/index/render";
+import { CONTENT_USE_POLICY } from "@/lib/seo/license";
 
 type LlmsContentSection = Exclude<LlmsSection, "site">;
 
@@ -44,6 +45,10 @@ export function buildRootLlmsIndexText() {
       "## Indexes",
       "",
       ...Arr.map(LOCALES, formatLocaleIndexLine),
+      "",
+      "## Use",
+      "",
+      ...Arr.map(CONTENT_USE_POLICY, (line) => `- ${line}`),
       "",
       "## References",
       "",
