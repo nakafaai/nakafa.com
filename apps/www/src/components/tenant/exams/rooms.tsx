@@ -9,13 +9,19 @@ import {
 import {
   Calendar03Icon,
   Cancel01Icon,
+  ChartBarLineIcon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  DashboardSquare01Icon,
   PlayIcon,
+  SchoolIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -46,7 +52,9 @@ import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
   RoomStateFilter,
+  roomGroups,
   roomsArgs,
+  roomsOfGroup,
 } from "@/components/tenant/exams/filter";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -54,7 +62,7 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { useLastValue } from "@/lib/data/kept";
+import { useKeptRows, useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
 
@@ -228,11 +236,18 @@ function RoomsTable({
     chosenOne(chosen, "state", Schema.is(RoomStateFilter)),
     (): StateFilter => "all"
   );
+  const group = Option.getOrElse(
+    chosenOne(chosen, "group", Schema.is(Schema.String)),
+    () => "all"
+  );
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
     { initialNumItems: ROOM_PAGE_SIZE }
   );
+  // A new filter's first page loads behind the rooms the table already shows, so the table never blanks.
+  const loading = pagination._tag === "LoadingFirstPage";
+  const kept = useKeptRows(loading, pagination.results);
 
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -240,14 +255,15 @@ function RoomsTable({
   ) {
     throw pagination.error;
   }
-  if (pagination._tag === "LoadingFirstPage") {
+  if (Option.isNone(kept)) {
     return null;
   }
+  const rooms = kept.value;
   const failed = PaginatedQueryResult.isFailure(pagination);
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? () => pagination.loadMore(ROOM_PAGE_SIZE)
     : null;
-  const empty = Arr.isReadonlyArrayEmpty(pagination.results);
+  const empty = Arr.isReadonlyArrayEmpty(rooms);
   if (empty && failed) {
     return <DataFailure onRetry={reloadPage} />;
   }
@@ -267,14 +283,34 @@ function RoomsTable({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
+      <Table
+        aria-busy={loading}
+        containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap"
+      >
         <TableHeader>
           <TableRow>
-            <TableHead>{t("room")}</TableHead>
-            <TableHead>{t("rooms-group")}</TableHead>
-            <TableHead>{t("rooms-opens")}</TableHead>
-            <TableHead>{t("rooms-closes")}</TableHead>
-            <TableHead className="text-center">
+            <TableHead className="px-2 sm:px-4">{t("room")}</TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              <ColumnChoice
+                column="group"
+                options={[
+                  { icon: UserGroupIcon, label: t("group-all"), value: "all" },
+                  ...Arr.map(roomGroups(rooms), (option) => ({
+                    icon: option.kind === "cohort" ? UserGroupIcon : SchoolIcon,
+                    label: option.name,
+                    value: option.key,
+                  })),
+                ]}
+                title={t("rooms-group")}
+              />
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-opens")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
+              {t("rooms-closes")}
+            </TableHead>
+            <TableHead className="px-2 text-center sm:px-4">
               <ColumnChoice
                 column="state"
                 options={[
@@ -288,11 +324,11 @@ function RoomsTable({
                 title={t("rooms-state")}
               />
             </TableHead>
-            <TableHead />
+            <TableHead className="px-2 sm:px-4" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Arr.map(pagination.results, (room) => (
+          {Arr.map(roomsOfGroup(rooms, group), (room) => (
             <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
           ))}
         </TableBody>
@@ -333,7 +369,7 @@ function RoomItem({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
+      <TableCell className="px-2 font-medium sm:px-4">
         <Link
           className="underline-offset-4 hover:underline"
           dir="auto"
@@ -343,41 +379,53 @@ function RoomItem({
           {room.room}
         </Link>
       </TableCell>
-      <TableCell dir="auto">{room.group.name}</TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="px-2 text-center sm:px-4" dir="auto">
+        {room.groupName}
+      </TableCell>
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.opensAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="px-2 text-center text-muted-foreground tabular-nums sm:px-4">
         {schoolDateTimeText({
           at: room.closesAt,
           locale,
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="px-2 text-center sm:px-4">
         <TableStatus
           icon={ROOM_STATE_LOOKS[room.state].icon}
           label={t(`room-state-${room.state}`)}
           tone={ROOM_STATE_LOOKS[room.state].tone}
         />
       </TableCell>
-      <TableCell>
-        {room.canCancel ? <RoomMenu room={room} slug={slug} /> : null}
+      <TableCell className="px-2 text-end sm:px-4">
+        <RoomMenu examId={examId} room={room} slug={slug} />
       </TableCell>
     </TableRow>
   );
 }
 
 /**
- * The row menu of a room that the viewer may cancel, which cancels it behind a confirmation. A
- * room that has opened, or closed, or that another Person scheduled, has no menu.
+ * The row menu of a room: Open, its proctor's dashboard, Results, and Cancel, which cancels it behind a confirmation.
+ * A room that has opened, or closed, or that another Person scheduled, keeps Cancel disabled.
  */
-function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
+function RoomMenu({
+  examId,
+  room,
+  slug,
+}: {
+  examId: GenericId.GenericId<"exams">;
+  room: Room;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const params = { exam: examId, sitting: room.id, slug };
   const cancel = useMutation(exams.sittings.cancel).withOptimisticUpdate(
     cancelRoomChange
   );
@@ -387,6 +435,7 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
       action={t("room-cancel")}
       confirm={t("room-cancel-confirm")}
       description={t("room-cancel-description")}
+      disabled={!room.canCancel}
       icon={Cancel01Icon}
       onConfirm={() =>
         startTransition(() =>
@@ -394,6 +443,29 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
         )
       }
       title={t("room-cancel-title")}
-    />
+    >
+      <DropdownMenuItem
+        render={
+          <Link
+            params={params}
+            to="/school/$slug/exams/$exam/sittings/$sitting"
+          >
+            <HugeIcons icon={DashboardSquare01Icon} />
+            {common("open")}
+          </Link>
+        }
+      />
+      <DropdownMenuItem
+        render={
+          <Link
+            params={params}
+            to="/school/$slug/exams/$exam/sittings/$sitting/results"
+          >
+            <HugeIcons icon={ChartBarLineIcon} />
+            {t("results-title")}
+          </Link>
+        }
+      />
+    </ConfirmRowMenu>
   );
 }
