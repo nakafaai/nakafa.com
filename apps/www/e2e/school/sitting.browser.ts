@@ -332,7 +332,10 @@ test("a proctor sees the seat filters in a row under the header and switches the
   const filters = page.getByRole("group", { name: "Filter students" });
   const all = filters.getByRole("button", { name: "All" });
   const attention = filters.getByRole("button", { name: "Needs attention" });
-  await expect(all).toHaveAttribute("aria-pressed", "true");
+  // The dashboard draws once Convex holds the session and its first read answers.
+  await expect(all).toHaveAttribute("aria-pressed", "true", {
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(attention).toBeVisible();
   await expect(filters.getByRole("button", { name: "Finished" })).toBeVisible();
   await attention.click();
