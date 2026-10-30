@@ -174,3 +174,52 @@ test("a provider failure in the address shows on the static page without a hydra
     )
   ).toEqual([]);
 });
+
+/** Better Auth's start of a Google sign-in, which a test holds back. */
+const GOOGLE_START = "**/api/auth/sign-in/social*";
+
+/**
+ * The Google button keeps its place and its words: a provider failure shows
+ * under it once the page hydrates, and while Google opens the button keeps its
+ * label and width, with a spinner in place of the logo.
+ */
+test("the Google button never moves or changes its words for a failure or while Google opens", async ({
+  page,
+}) => {
+  await page.addInitScript((label) => {
+    document.addEventListener("DOMContentLoaded", () => {
+      const button = Array.from(document.querySelectorAll("button")).find(
+        (candidate) => candidate.textContent?.trim() === label
+      );
+      Reflect.set(
+        window,
+        "nakafaGoogleTop",
+        button === undefined ? null : button.getBoundingClientRect().top
+      );
+    });
+  }, app.Auth["continue-with-google"]);
+  await page.route(GOOGLE_START, () => undefined);
+  await page.goto(`${SIGN_IN}?${new URLSearchParams({ error: "oauth" })}`);
+
+  const google = page.getByRole("button", {
+    name: app.Auth["continue-with-google"],
+  });
+  const alert = page
+    .getByRole("alert")
+    .filter({ hasText: app.Toast["provider-error"].title });
+  await expect(alert).toBeVisible();
+  const [first, button, failure] = await Promise.all([
+    page.evaluate(() => Reflect.get(window, "nakafaGoogleTop")),
+    google.boundingBox(),
+    alert.boundingBox(),
+  ]);
+  expect(button?.y).toBe(first);
+  expect(failure?.y ?? 0).toBeGreaterThan(
+    (button?.y ?? 0) + (button?.height ?? 0)
+  );
+
+  await google.click();
+  await expect(google).toBeDisabled();
+  await expect(google).toHaveAccessibleName(app.Auth["continue-with-google"]);
+  expect((await google.boundingBox())?.width).toBe(button?.width);
+});
