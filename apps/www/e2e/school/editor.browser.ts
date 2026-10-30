@@ -28,7 +28,8 @@ const OPTIONS = [
 ];
 
 /** The schedule dialog's message for the two added questions, which have no correct answer yet: numbers 2 and 3. */
-const MISSING_KEYS_MESSAGE = "Mark the correct answer of questions 2, 3 first.";
+/** The footer names the first question that still needs its key, in the words of its type. */
+const MISSING_KEYS_MESSAGE = "Mark the correct answer of question 2.";
 
 test("a teacher creates an exam, adds questions, writes one, and finds it all when the editor opens again, with the dot on a question without a key", async ({
   browser,
