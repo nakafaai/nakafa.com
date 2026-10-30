@@ -152,8 +152,9 @@ for each, which is a workaround and not a better design.
     at that rate, and 6.8% and 42% at the rate of 29 to 30 October. The caps in
     `apps/www/deploy/stage.ts` stop a runaway invocation before it bills: 2,000 ms
     for the web Worker, whose p99.9 was 660 ms and maximum 1,420 ms; 500 ms for the
-    API, MCP, and CAS front relays, which used at most 29 ms; and 10,000 ms for the
-    CAS engine, whose solves reached p99.9 2,736 ms on its probe stage. A budget
+    API, MCP, and CAS front relays, which used at most 29 ms; and 20,000 ms for the
+    CAS engine, the front's call deadline, whose solves reached p99.9 2,736 ms on
+    its probe stage. A budget
     alert at $1 warns before any charge beyond the plan; it lives in the dashboard,
     because the Cloudflare alerting API, and so Alchemy, has no budget alert type
     (`billing_usage_alert` counts a product's usage, not money). Static first

@@ -50,11 +50,13 @@ export function workerName(service: string, stage: string) {
  * - web: 101,560 invocations, p99.9 660 ms, and the maximum 1,420 ms on 30 October;
  * - the relays (api, mcp, the CAS front): at most 29 ms over 430 invocations;
  * - the CAS engine: at most 608 ms over 20 solves in production, and p99.9
- *   2,736 ms over 1,400 solves on its probe stage, where a symbolic solve is the work.
+ *   2,736 ms over 1,400 solves on its probe stage. Its cap is the front's 20-second
+ *   call deadline (`apps/cas/front/forward.ts`), so the cap never stops a solve
+ *   that the front still waits for.
  */
 export const WEB_LIMITS: WorkerLimits = { cpuMs: 2000 };
 export const RELAY_LIMITS: WorkerLimits = { cpuMs: 500 };
-export const CAS_ENGINE_LIMITS: WorkerLimits = { cpuMs: 10_000 };
+export const CAS_ENGINE_LIMITS: WorkerLimits = { cpuMs: 20_000 };
 
 /** Workers Logs record every invocation, and nothing is sampled away. */
 export const WORKER_OBSERVABILITY: WorkerObservability = {
