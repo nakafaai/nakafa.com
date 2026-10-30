@@ -178,7 +178,6 @@ function AutocompleteList({
   return (
     <ScrollArea
       className={cn("min-h-0 flex-1", scrollAreaClassName)}
-      scrollbarGutter
       scrollFade
     >
       <AutocompleteItems {...props} />
