@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
+import { cva } from "class-variance-authority";
 import { Effect, Option } from "effect";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import {
@@ -37,6 +38,16 @@ const OPTION_EXTENSIONS = [
   documentSizeGuard(MAX_DOCUMENT_BYTES),
 ];
 
+/** The grid of one option row: the text, then the room of its control unless the part is never removed. */
+const optionRowVariants = cva("group/option grid items-center gap-2", {
+  variants: {
+    control: {
+      none: "grid-cols-1",
+      room: "grid-cols-[minmax(0,1fr)_auto]",
+    },
+  },
+});
+
 /** The props of one option row: the option it shows, and the teacher's controls beside it. */
 interface OptionRowProps {
   /**
@@ -48,8 +59,12 @@ interface OptionRowProps {
   readonly label: OptionLabel;
   /** Whether the option is locked, so its text and its controls take no change. */
   readonly locked: boolean;
-  /** Removes the option, or none while the question holds the fewest options it may take. */
-  readonly onRemove: (() => void) | null;
+  /**
+   * Removes the option, or none while the question holds the fewest options it may take, which keeps the room of
+   * the control so the option keeps its width. `"never"` is a part no teacher removes, a column of a true or false
+   * table, which takes no room, so its text centres over its column.
+   */
+  readonly onRemove: (() => void) | null | "never";
   /**
    * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
    */
@@ -117,7 +132,7 @@ export function OptionRow({
   // Removing the option drops the quiet save of its label first. The removal makes that save stale,
   // since it would send the answers of a revision the server has already moved past.
   const remove = () => {
-    if (onRemove === null) {
+    if (typeof onRemove !== "function") {
       return;
     }
     Effect.runFork(saver.cancel);
@@ -166,7 +181,11 @@ export function OptionRow({
   }, [saver]);
 
   return (
-    <div className="group/option grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+    <div
+      className={optionRowVariants({
+        control: onRemove === "never" ? "none" : "room",
+      })}
+    >
       <ExamDocumentWiringProvider
         extensions={OPTION_EXTENSIONS}
         onChange={(transaction) => {
@@ -194,23 +213,25 @@ export function OptionRow({
       >
         <Fragment key={editorRound}>{children}</Fragment>
       </ExamDocumentWiringProvider>
-      <div className="flex items-center gap-1">
-        {onRemove === null ? (
-          <ControlRoom />
-        ) : (
-          <Button
-            aria-label={removeName}
-            className="opacity-0 pointer-coarse:opacity-100 group-focus-within/option:opacity-100 group-hover/option:opacity-100"
-            disabled={locked}
-            onClick={remove}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-          </Button>
-        )}
-      </div>
+      {onRemove === "never" ? null : (
+        <div className="flex items-center gap-1">
+          {onRemove === null ? (
+            <ControlRoom />
+          ) : (
+            <Button
+              aria-label={removeName}
+              className="opacity-0 pointer-coarse:opacity-100 group-focus-within/option:opacity-100 group-hover/option:opacity-100"
+              disabled={locked}
+              onClick={remove}
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
