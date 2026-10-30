@@ -68,6 +68,7 @@ import {
   Path,
   Predicate,
   Record,
+  Result,
   Schema,
 } from "effect";
 
@@ -340,19 +341,33 @@ export default spec;
   );
 
   it.live(
-    "holds no function of the other visibility, and no module for a domain without a function of its own",
+    "holds no leaf without a function of the module's visibility unless a leaf of it sits deeper, and no module for a domain without one",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* backendRoot;
+        const leaves = Record.toEntries(
+          Arr.groupBy(allFunctions, (fn) => Arr.join(fn.path, "/"))
+        );
         for (const [visibility, modules] of Record.toEntries(modulesOf)) {
-          for (const fn of allFunctions) {
-            if (fn.visibility !== visibility) {
-              const reached = Option.flatMap(
-                Record.get(modules, fn.path[0]),
-                (module) => valueAt(module, [...Arr.drop(fn.path, 1), fn.name])
-              );
+          const holders = Arr.filterMap(leaves, ([key, functionsOfLeaf]) =>
+            Arr.some(functionsOfLeaf, (fn) => fn.visibility === visibility)
+              ? Result.succeed(key)
+              : Result.failVoid
+          );
+          for (const [key, functionsOfLeaf] of leaves) {
+            const [leaf] = functionsOfLeaf;
+            // Refs reach a group that a deeper leaf of the visibility sits in, as Confect nests them.
+            const needed = Arr.some(
+              holders,
+              (holder) => holder === key || holder.startsWith(`${key}/`)
+            );
+            const reached = Option.flatMap(
+              Record.get(modules, leaf.path[0]),
+              (module) => valueAt(module, Arr.drop(leaf.path, 1))
+            );
+            if (!needed) {
               expect(Option.isNone(reached)).toBe(true);
             }
           }
