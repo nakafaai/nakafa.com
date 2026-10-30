@@ -73,7 +73,9 @@ function measureHighlight() {
     text: contrast(getComputedStyle(highlight).color, fill),
     underline: getComputedStyle(link).textDecorationLine.includes("underline"),
   };
-  placed?.remove();
+  if (placed instanceof HTMLElement) {
+    placed.remove();
+  }
   return result;
 }
 
