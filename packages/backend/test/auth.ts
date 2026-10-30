@@ -5,12 +5,20 @@ import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/dele
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { User } from "better-auth";
+import type { FunctionReturnType } from "convex/server";
 import { Array as Arr, DateTime, Effect, pipe } from "effect";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const BASE64_PADDING_PATTERN = /[=]+$/u;
 /** How many account rows `storedAccounts` reads in one query. */
 const STORED_ACCOUNT_PAGE_SIZE = 100;
+/**
+ * One page of `account` rows. Its type is named because the cursor of the next page
+ * comes from this one, which TypeScript cannot infer around the loop.
+ */
+type AccountPage = FunctionReturnType<
+  typeof components.betterAuth.adapter.findMany
+>;
 
 /**
  * The one stand-in for Google in a test file. Each sign-in stubs the global
@@ -188,8 +196,8 @@ export async function storedAccounts(
   let accounts: readonly Doc<"account">[] = [];
   let cursor: string | null = null;
   do {
-    const page: string | null = cursor;
-    const result = await test.query((ctx) =>
+    const page = cursor;
+    const result: AccountPage = await test.query((ctx) =>
       ctx.runQuery(components.betterAuth.adapter.findMany, {
         model: "account",
         paginationOpts: { cursor: page, numItems: STORED_ACCOUNT_PAGE_SIZE },
