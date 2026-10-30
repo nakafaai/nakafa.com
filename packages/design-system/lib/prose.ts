@@ -74,6 +74,31 @@ export const codeVariants = cva(
 );
 
 /**
+ * A table's frame: rounded and bordered, scrolling sideways when the table is wider, its words in the small
+ * size, its table as wide as the frame (`*:w-full`), and its body on the muted surface. The lesson draws the
+ * frame as the table's container, the exam editor as its table's wrapper, so both select the body alike.
+ */
+export const tableFrameVariants = cva(
+  "relative my-4 grid w-full grid-cols-1 overflow-x-auto rounded-xl border text-sm *:w-full first:mt-0 last:mb-0 [&_tbody]:bg-muted/40"
+);
+
+/** A row of a table, with a rule under every row but the last. */
+export const tableRowVariants = cva("border-b last:border-b-0");
+
+/**
+ * A heading cell of a table, on the header's stronger muted surface, its words aligned to the start of the
+ * cell's direction, so an Arabic heading sits on the right.
+ */
+export const tableHeadCellVariants = cva(
+  "h-10 whitespace-nowrap border-r bg-muted/80 px-4 text-start align-middle font-medium last:border-r-0"
+);
+
+/** A data cell of a table, with a rule between it and the next column. */
+export const tableCellVariants = cva(
+  "wrap-anywhere border-r px-4 py-2 align-middle last:border-r-0"
+);
+
+/**
  * A block that draws its own frame, such as a code block, a table, a picture or a formula on its own
  * line: the room an article leaves around it.
  */

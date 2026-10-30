@@ -14,15 +14,19 @@ import {
   listVariants,
   paragraphVariants,
   quoteVariants,
+  tableCellVariants,
+  tableFrameVariants,
+  tableHeadCellVariants,
+  tableRowVariants,
 } from "@repo/design-system/lib/prose";
 import { documentExtensions } from "@repo/editor/document";
 import { Editor } from "@tiptap/core";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 
-/** A document with each block an article draws: a heading, a paragraph with code, lists, a quotation, a code block and a formula. */
+/** A document with each block an article draws: a heading, a paragraph with code, lists, a quotation, a code block, a formula, a picture and a table with a header row. */
 const DOCUMENT =
-  '<h2>Judul</h2><p>Hitung <code>x</code> saja</p><ul><li><p>satu</p></li></ul><ol><li><p>dua</p></li></ol><blockquote><p>kutipan</p></blockquote><pre><code>a = 1</code></pre><div data-type="math-block" data-latex="a+b"></div><div data-type="image"></div><table><tbody><tr><td><p>sel</p></td></tr></tbody></table>';
+  '<h2>Judul</h2><p>Hitung <code>x</code> saja</p><ul><li><p>satu</p></li></ul><ol><li><p>dua</p></li></ol><blockquote><p>kutipan</p></blockquote><pre><code>a = 1</code></pre><div data-type="math-block" data-latex="a+b"></div><div data-type="image"></div><table><tbody><tr><th><p>kepala</p></th></tr><tr><td><p>sel</p></td></tr></tbody></table>';
 
 /**
  * An editor of the assessment document, mounted on a detached element so the drawn DOM is readable,
@@ -80,11 +84,20 @@ describe("articleProse", () => {
     ).toEqual([
       ["DIV", blockGapVariants()],
       ["DIV", blockGapVariants()],
-      ["DIV", `tableWrapper ${blockGapVariants()}`],
+      ["DIV", `tableWrapper ${tableFrameVariants()}`],
     ]);
-    expect(Arr.map(classesOf(root, "p"), ([, classes]) => classes)).toEqual(
-      Arr.replicate(paragraphVariants(), 5)
-    );
+    expect(classesOf(root, "tr, th, td")).toEqual([
+      ["TR", tableRowVariants()],
+      ["TH", tableHeadCellVariants()],
+      ["TR", tableRowVariants()],
+      ["TD", tableCellVariants()],
+    ]);
+    // A cell's paragraph reads as the cell's words, as the lesson's cell holds them.
+    expect(Arr.map(classesOf(root, "p"), ([, classes]) => classes)).toEqual([
+      ...Arr.replicate(paragraphVariants(), 4),
+      "",
+      "",
+    ]);
     editor.destroy();
   });
 
@@ -93,7 +106,7 @@ describe("articleProse", () => {
 
     expect(
       Arr.map(classesOf(editor.view.dom, "p"), ([, classes]) => classes)
-    ).toEqual(Arr.replicate("", 5));
+    ).toEqual(Arr.replicate("", 6));
     editor.destroy();
   });
 
@@ -115,7 +128,9 @@ describe("drawArticleProse", () => {
   it("gives the elements of a document drawn without an editor the classes the editor gives them", () => {
     const root = document.createElement("div");
     root.innerHTML =
-      '<h1>a</h1><h3>b</h3><p>Hitung <code>x</code></p><ul><li>c</li></ul><ol><li>d</li></ol><blockquote>e</blockquote><pre><code>f</code></pre><table></table><div data-type="image"></div>';
+      '<h1>a</h1><h3>b</h3><p>Hitung <code>x</code></p><ul><li>c</li></ul><ol><li>d</li></ol><blockquote>e</blockquote><pre><code>f</code></pre><table><tbody><tr><th>g</th></tr><tr><td>h</td></tr></tbody></table><div data-type="image"></div>';
+    drawArticleProse(root);
+    // A second drawing keeps the table in the one frame it has.
     drawArticleProse(root);
 
     expect(classesOf(root, "h1, h3")).toEqual([
@@ -140,10 +155,21 @@ describe("drawArticleProse", () => {
       ["LI", listItemVariants()],
       ["BLOCKQUOTE", quoteVariants()],
     ]);
-    expect(classesOf(root, 'pre, table, [data-type="image"]')).toEqual([
+    expect(classesOf(root, 'pre, [data-type="image"]')).toEqual([
       ["PRE", blockGapVariants()],
-      ["TABLE", blockGapVariants()],
       ["DIV", blockGapVariants()],
+    ]);
+    expect(classesOf(root, '[data-slot="table-frame"]')).toEqual([
+      ["DIV", tableFrameVariants()],
+    ]);
+    expect(root.querySelector("table")?.parentElement?.dataset.slot).toBe(
+      "table-frame"
+    );
+    expect(classesOf(root, "tr, th, td")).toEqual([
+      ["TR", tableRowVariants()],
+      ["TH", tableHeadCellVariants()],
+      ["TR", tableRowVariants()],
+      ["TD", tableCellVariants()],
     ]);
   });
 });

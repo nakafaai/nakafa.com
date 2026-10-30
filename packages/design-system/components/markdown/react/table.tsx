@@ -8,11 +8,17 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
+import {
+  tableCellVariants,
+  tableFrameVariants,
+  tableHeadCellVariants,
+  tableRowVariants,
+} from "@repo/design-system/lib/prose";
 
 export const reactTableComponents: ReactMarkdownComponents = {
   table: ({ children, node: _node, ...props }) => (
     <Table
-      containerClassName="my-4 rounded-xl border"
+      containerClassName={tableFrameVariants()}
       data-nakafa="table"
       {...props}
     >
@@ -20,24 +26,22 @@ export const reactTableComponents: ReactMarkdownComponents = {
     </Table>
   ),
   tbody: ({ children, node: _node, ...props }) => (
-    <TableBody className="bg-muted/40" data-nakafa="table-body" {...props}>
+    <TableBody data-nakafa="table-body" {...props}>
       {filterWhitespaceNodes(children)}
     </TableBody>
   ),
   td: ({ children, node: _node, ...props }) => (
     <TableCell
-      className="border-r last:border-r-0"
+      className={tableCellVariants()}
       data-nakafa="table-cell"
       {...props}
     >
       {filterWhitespaceNodes(children)}
     </TableCell>
   ),
-  // `text-start` follows the cell's direction, where the table head's own
-  // `text-left` would keep an Arabic heading on the left.
   th: ({ children, node: _node, ...props }) => (
     <TableHead
-      className="border-r text-start font-medium last:border-r-0"
+      className={tableHeadCellVariants()}
       data-nakafa="table-head"
       {...props}
     >
@@ -45,20 +49,12 @@ export const reactTableComponents: ReactMarkdownComponents = {
     </TableHead>
   ),
   thead: ({ children, node: _node, ...props }) => (
-    <TableHeader
-      className="border-b bg-muted/80"
-      data-nakafa="table-header"
-      {...props}
-    >
+    <TableHeader className="border-b" data-nakafa="table-header" {...props}>
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),
   tr: ({ children, node: _node, ...props }) => (
-    <TableRow
-      className="border-b last:border-b-0"
-      data-nakafa="table-row"
-      {...props}
-    >
+    <TableRow className={tableRowVariants()} data-nakafa="table-row" {...props}>
       {filterWhitespaceNodes(children)}
     </TableRow>
   ),

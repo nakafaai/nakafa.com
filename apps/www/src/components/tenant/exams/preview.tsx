@@ -166,7 +166,8 @@ export function PreviewProse({
       markBlockDirections(element);
       drawArticleProse(element);
       Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
-        if (article) {
+        // A cell's paragraph reads as the cell's words, as the lesson and the editor draw it.
+        if (article && p.closest("td, th") === null) {
           p.className = paragraphVariants();
         }
         if (p.childNodes.length === 0) {
