@@ -89,3 +89,15 @@ export const takeRoomCode = Effect.fn("exams.sitting.join.take")(function* (
     scannedToken(value)
   );
 });
+
+/**
+ * The code a student brings to a room's page: the one after the `#` of the address, else the one
+ * kept across the sign-in, which is taken either way, so a later visit never brings it again.
+ */
+export const roomCodeOf = Effect.fn("exams.sitting.join.code")(function* (
+  sittingId: string,
+  hash: string
+) {
+  const kept = yield* takeRoomCode(sittingId);
+  return Option.orElse(scannedToken(hash), () => kept);
+});

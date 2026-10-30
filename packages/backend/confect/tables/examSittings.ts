@@ -17,4 +17,6 @@ export default Table.make(() => examSittingValidator)
   // The unit and its cohorts in one read, for the school home, which lists the sittings a unit runs.
   .index("by_unitId_and_state_and_opensAt", ["unitId", "state", "opensAt"])
   .index("by_cohortId_and_state_and_opensAt", ["cohortId", "state", "opensAt"])
+  // The open rooms of one school, which a code typed without its room is checked against.
+  .index("by_tenantId_and_state_and_opensAt", ["tenantId", "state", "opensAt"])
   .index("by_examId_and_opensAt", ["examId", "opensAt"]);
