@@ -51,7 +51,7 @@ export const VITEST_COHORT_VERSION = "5.0.5";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.140",
+  ai: "7.0.157",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so

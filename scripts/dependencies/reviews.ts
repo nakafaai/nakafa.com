@@ -65,8 +65,8 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "ai@latest",
-    "7.0.153",
-    "AI SDK packages move as one reviewed cohort. 7.0.140 stays: 7.0.141, 7.0.142, 7.0.147 and 7.0.152 each fail the backend typecheck with TS2590 in confect/nina (21 errors each, measured on 25 October 2026 with @convex-dev/agent 0.7.8), and 7.0.140 passes. 7.0.153 is the latest release and becomes eligible at 2026-10-25 17:57 UTC; re-test it then. Its release notes change the streamed input of OpenAI custom tools and the workflow telemetry context, and Nakafa uses neither.",
+    "7.0.158",
+    "AI SDK packages move as one reviewed cohort. 7.0.157 is the newest release past the one-day release age: @convex-dev/agent 0.7.9 carries the TS2590 fixes for 7.0.141 and later (convex/agent#414 and #424). 7.0.158 was published on 2026-10-30 at 15:38 UTC and becomes eligible a day later; its notes repair partial JSON and extend the experimental sandbox session, which Nakafa does not use.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
