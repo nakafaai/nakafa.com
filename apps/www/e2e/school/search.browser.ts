@@ -10,6 +10,10 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The palette, named by its title. */
 const PALETTE = { name: "Search" } as const;
+/** The rows of the palette that the owner's test reads, each named first by its place. */
+const HOME_ROW = /^Home/;
+const AUDIT_ROW = /^Audit trail/;
+const MEMBERS_ROW = /^Members/;
 
 test("the owner's search finds a setting by its name and opens it", async ({
   browser,
@@ -31,13 +35,11 @@ test("the owner's search finds a setting by its name and opens it", async ({
   const palette = page.getByRole("dialog", PALETTE);
   await expect(palette).toBeVisible();
   // Before a query every place the owner may open is listed, the settings included.
-  await expect(palette.getByRole("option", { name: /^Home/ })).toBeVisible();
-  await expect(
-    palette.getByRole("option", { name: /^Audit trail/ })
-  ).toHaveCount(1);
+  await expect(palette.getByRole("option", { name: HOME_ROW })).toBeVisible();
+  await expect(palette.getByRole("option", { name: AUDIT_ROW })).toHaveCount(1);
 
   await palette.getByRole("combobox").fill("memb");
-  const members = palette.getByRole("option", { name: /^Members/ });
+  const members = palette.getByRole("option", { name: MEMBERS_ROW });
   // A section of the settings names the group it lives in.
   await expect(members).toContainText("People");
   await page.keyboard.press("Enter");
