@@ -1,7 +1,7 @@
 import { useMutation } from "@confect/react";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Effect, Match, Option } from "effect";
+import { DateTime, Effect, Match, Option } from "effect";
 import { type MouseEvent, use } from "react";
 import { useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
@@ -37,7 +37,7 @@ export function useNotificationAction(notification: ListNotification) {
   const readOne = useMutation(notifications.inbox.read).withOptimisticUpdate(
     markReadInLists
   );
-  const { detail, readAt } = notification;
+  const { detail, exam, readAt } = notification;
   const href = Option.getOrUndefined(
     Option.map(pageOf(notification), (url) => url.href)
   );
@@ -65,6 +65,25 @@ export function useNotificationAction(notification: ListNotification) {
         : t("announcement-posted", {
             actor: detail.actor,
             className: detail.className,
+          })
+    ),
+    Match.when("exam.starting", () =>
+      exam === null
+        ? t("exam-gone")
+        : t("exam-starting", {
+            examTitle: exam.examTitle,
+            opensAt: DateTime.toDateUtc(DateTime.makeUnsafe(exam.opensAt)),
+            room: exam.room,
+          })
+    ),
+    Match.when("exam.reminder", () =>
+      exam === null
+        ? t("exam-gone")
+        : t("exam-reminder", {
+            examTitle: exam.examTitle,
+            opensAt: DateTime.toDateUtc(DateTime.makeUnsafe(exam.opensAt)),
+            room: exam.room,
+            student: exam.student ?? "",
           })
     ),
     Match.exhaustive
