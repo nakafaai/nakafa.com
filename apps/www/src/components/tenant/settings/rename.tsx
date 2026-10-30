@@ -86,6 +86,7 @@ export function PersonRenameDialog({
             id={`${id}-name`}
             maxLength={120}
             onChange={(event) => setName(event.target.value)}
+            placeholder={t("invite-name-placeholder")}
             value={name}
           />
         </Field>
