@@ -10,9 +10,10 @@ import { appRoutes } from "@/e2e/support/route";
 const HOMEPAGE_MAX_ENCODED_BYTES = 1_112_000;
 const HOMEPAGE_MAX_DECODED_BYTES = 3_278_000;
 
-// The pricing page loads no toys before its comparison comes on screen, so its
-// no-scroll graph is its own: measured before the Start migration at 929,111
-// encoded / 2,755,522 decoded bytes. The Start build is not measured yet.
+// The pricing page's no-scroll graph is its own: measured before the Start
+// migration, while its toys still waited for a scroll, at 929,111 encoded /
+// 2,755,522 decoded bytes. Both pages now load their toys once React takes the
+// page over. The Start build is not measured yet.
 // Limits keep the ~6% margin.
 const PRICING_MAX_ENCODED_BYTES = 985_000;
 const PRICING_MAX_DECODED_BYTES = 2_921_000;

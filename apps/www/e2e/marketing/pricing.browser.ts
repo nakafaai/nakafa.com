@@ -183,40 +183,10 @@ const verifyGermanPricingComparisons = Effect.fn(
   );
 });
 
-/**
- * The toys of the pricing page wait for their part, and then come on screen
- * while the reader stays where they scrolled: loading the toys must not hide
- * the page and drop the reader back at the top.
- */
-const verifyPricingToysWaitForTheirPart = Effect.fn(
-  "NakafaE2E.verifyPricingToysWaitForTheirPart"
-)(function* (page: Page) {
-  yield* loadMarketingPage(page, "/en/pricing");
-  const toys = page.locator('[class*="group/toy"]');
-  yield* Effect.promise(() => expect(toys).toHaveCount(0));
-  yield* Effect.promise(() =>
-    page.locator("#comparison").scrollIntoViewIfNeeded()
-  );
-  const scrolled = yield* Effect.promise(() =>
-    page.evaluate(() => window.scrollY)
-  );
-  yield* Effect.promise(() => expect(toys.first()).toBeVisible());
-  yield* Effect.promise(() =>
-    expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scrolled)
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toBeInViewport()
-  );
-});
-
 const verifyPricingReducedMotion = Effect.fn(
   "NakafaE2E.verifyPricingReducedMotion"
 )(function* (page: Page) {
   yield* loadMarketingPage(page, "/en/pricing");
-  // The toys load when the comparison comes on screen, so the page reaches it first.
-  yield* Effect.promise(() =>
-    page.locator("#comparison").scrollIntoViewIfNeeded()
-  );
   // A thing moves only through a motion that is on for people who allow it.
   const thing = page.locator('[class*="animate-thing-"]').first();
   yield* Effect.promise(() =>
@@ -251,23 +221,6 @@ test.describe("dedicated pricing page", () => {
   test("compares the dollar price in German", async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyGermanPricingComparisons(page))
-    );
-  });
-});
-
-test.describe("dedicated pricing page with the comparison below the screen", () => {
-  test.use({
-    viewport: {
-      height: 600,
-      width: desktopViewport.width,
-    },
-  });
-
-  test("loads the toys only when their part comes on screen", async ({
-    page,
-  }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyPricingToysWaitForTheirPart(page))
     );
   });
 });
