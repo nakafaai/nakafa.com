@@ -79,7 +79,7 @@ test("an admin links a parent, who signs in with the email code, opens the child
   const typed = await field.boundingBox();
   await child.getByRole("button", { name: "Check" }).click();
   await expect(child.getByRole("alert")).toHaveText(
-    "The details do not match, check them or contact the school."
+    "This NISN does not match the school's record."
   );
   // The hint stays, and the refusal takes the line under it that the field kept from the start.
   await expect(

@@ -114,7 +114,7 @@
     "child-ended-hint": "Contact the school to link again.",
     "nisn-label": "Child's NISN",
     "nisn-hint": "Enter your child's NISN to confirm this link.",
-    "nisn-refused": "The details do not match, check them or contact the school.",
+    "nisn-refused": "This NISN does not match the school's record.",
     "nisn-submit": "Check",
     "withdraw": "Withdraw consent",
     "withdraw-hint": "You can withdraw consent at any time.",
