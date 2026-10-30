@@ -4,11 +4,12 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import {
   getRouteApi,
+  lazyRouteComponent,
   useLocation,
   useMatchRoute,
 } from "@tanstack/react-router";
 import { Effect } from "effect";
-import { lazy, Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
 import { keepRoomCode } from "@/components/exams/sitting/scan";
@@ -19,24 +20,45 @@ import { Link } from "@/lib/routing/link";
 const schoolRoute = getRouteApi("/school/$slug");
 
 /**
- * The school username form. It loads when the visitor opens it, so the card code it needs stays
- * out of the entry's first JavaScript.
+ * The school username form. Its code stays out of the entry's first JavaScript, and loads before the
+ * entry commits at the address that opens it (`loadEntryForm`).
  */
-const TenantLogin = lazy(() =>
-  import("@/components/tenant/login").then((module) => ({
-    default: module.TenantLogin,
-  }))
+const TenantLogin = lazyRouteComponent(
+  () => import("@/components/tenant/login"),
+  "TenantLogin"
 );
 
 /**
- * A parent's email code form (ADR 0034). It loads when a visitor opens the parent address,
- * so it stays out of the entry's first JavaScript.
+ * A parent's email code form (ADR 0034). Its code stays out of the entry's first JavaScript, and loads
+ * before the entry commits at the parent address (`loadEntryForm`).
  */
-const TenantGuardianSignIn = lazy(() =>
-  import("@/components/tenant/guardian/signin").then((module) => ({
-    default: module.TenantGuardianSignIn,
-  }))
+const TenantGuardianSignIn = lazyRouteComponent(
+  () => import("@/components/tenant/guardian/signin"),
+  "TenantGuardianSignIn"
 );
+
+/**
+ * Loads the code of the form that a visitor's entry address opens: the parent's code form at the
+ * parent address, the username form at `?sign-in=username`. The school layout awaits it before the
+ * entry commits, so the entry paints with its form in place, and a form that arrived later would move
+ * the centred title and legal notice. A press on the username link waits for it with the Google
+ * buttons still in place.
+ */
+export async function loadEntryForm({
+  guardian,
+  signIn,
+}: {
+  guardian: boolean;
+  signIn: "username" | undefined;
+}) {
+  if (guardian) {
+    await TenantGuardianSignIn.preload?.();
+    return;
+  }
+  if (signIn === "username") {
+    await TenantLogin.preload?.();
+  }
+}
 
 /** Whether the visitor is on the parent address, `/parents`, whose sign-in is the email code. */
 function useGuardianAddress() {
@@ -47,9 +69,8 @@ function useGuardianAddress() {
 /**
  * The sign-in of a school host, one way at a time: Google with the links to the school username
  * form and to a parent's email code, the username form alone at the address `?sign-in=username`,
- * or the code form alone at the parent address `/parents`. The server renders each address
- * with its form open, so a press on a link before the page hydrates still opens it, and a
- * visitor who signs out to sign in with a card lands on it. Google and the username form open
+ * or the code form alone at the parent address `/parents`. Each address opens with its form in
+ * place, so a visitor who signs out to sign in with a card lands on it. Google and the username form open
  * over the page the visitor is on and return to it, and the code of an exam room that a
  * student scanned waits in the tab while they sign in, so they land in the room.
  */
@@ -74,19 +95,11 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   }, []);
 
   if (guardian) {
-    return (
-      <Suspense fallback={null}>
-        <TenantGuardianSignIn />
-      </Suspense>
-    );
+    return <TenantGuardianSignIn />;
   }
 
   if (signIn === "username") {
-    return (
-      <Suspense fallback={null}>
-        <TenantLogin />
-      </Suspense>
-    );
+    return <TenantLogin />;
   }
 
   return (

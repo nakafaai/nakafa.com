@@ -23,6 +23,7 @@ import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
+import { loadEntryForm } from "@/components/tenant/username";
 import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
@@ -126,6 +127,7 @@ export const Route = createFileRoute("/school/$slug")({
     matches,
     params,
     routeId,
+    search,
   }): Promise<SchoolContext> => {
     const { visit } = context;
     const invalid = Arr.some(
@@ -139,6 +141,15 @@ export const Route = createFileRoute("/school/$slug")({
     visit.frame = frame;
     if (frame.school._tag === "Refused") {
       throw notFound();
+    }
+    if (frame.school._tag === "Visitor") {
+      await loadEntryForm({
+        guardian: Arr.some(
+          matches,
+          (match) => match.routeId === "/school/$slug/parents"
+        ),
+        signIn: search["sign-in"],
+      });
     }
     return { legal: frame.legal, school: frame.school, slug: params.slug };
   },
