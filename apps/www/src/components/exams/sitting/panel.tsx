@@ -165,6 +165,10 @@ function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
           <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
           <div className="grid gap-2">
             <p className="text-muted-foreground text-sm">{t("signals")}</p>
+            {/* The device sends a lost connection once it is back, so its time never shows while the student is offline. */}
+            <p className="text-muted-foreground text-xs">
+              {t("signals-offline-note")}
+            </p>
             <SignalList
               attemptId={attempt.id}
               away={awaySince(attempt)}

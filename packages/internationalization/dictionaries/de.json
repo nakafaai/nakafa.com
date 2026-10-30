@@ -192,6 +192,7 @@
     "state-submitted": "Abgegeben",
     "signals": "Ereignisse",
     "signals-empty": "Bisher ist kein Ereignis erfasst.",
+    "signals-offline-note": "Eine verlorene Verbindung erscheint hier mit ihrer Dauer, sobald der Schüler wieder online ist.",
     "signal-exit": "Hat die Prüfung verlassen",
     "signal-return": "Ist zur Prüfung zurückgekehrt",
     "screen-title": "Bildschirm der Person",

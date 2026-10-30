@@ -192,6 +192,7 @@
     "state-submitted": "Submitted",
     "signals": "Signals",
     "signals-empty": "No signal has been recorded.",
+    "signals-offline-note": "A lost connection shows here, with how long it lasted, once the student is back online.",
     "signal-exit": "Left the exam",
     "signal-return": "Came back to the exam",
     "screen-title": "Student screen",
