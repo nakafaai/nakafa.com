@@ -107,7 +107,7 @@ export function TenantEntryBack({ slug }: { slug: TenantSlug }) {
     <Button
       nativeButton={false}
       render={<Link params={{ slug }} to="/school/$slug" />}
-      variant="ghost"
+      variant="outline"
     >
       <HugeIcons icon={ArrowLeft01Icon} />
       {t("back")}
