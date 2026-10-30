@@ -4,7 +4,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate, press, visibleLink } from "@/e2e/support/input";
 import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { recordServerFunctionCalls } from "@/e2e/support/requests";
+import { recordDataRequests } from "@/e2e/support/requests";
 import {
   expectStillShell,
   observeShell,
@@ -128,7 +128,7 @@ const verifyPrefetchedHeadings = Effect.fn(
   yield* seedAnalyticsConsent(page, "denied");
   // Each press reads the frames that the recorder keeps, so it starts with the page.
   yield* observeShell(page);
-  const requested = recordServerFunctionCalls(page);
+  const requested = recordDataRequests(page);
   yield* openHub(page);
   yield* openTrack(page, hasTouch);
 
