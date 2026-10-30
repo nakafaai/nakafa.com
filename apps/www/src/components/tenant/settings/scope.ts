@@ -12,8 +12,8 @@ import { Array as Arr, Option } from "effect";
 import { namedOptions } from "@/components/shared/table/filter";
 import type { Unit } from "@/components/tenant/settings/state";
 
-/** The icons of the units in a scope's filter: buildings, the school itself keeping its own. */
-const UNIT_ICONS = [
+/** The icons of the units in a filter, such as a scope's or a level's: buildings, the school itself keeping its own. */
+export const UNIT_ICONS = [
   Building01Icon,
   Building02Icon,
   Building03Icon,

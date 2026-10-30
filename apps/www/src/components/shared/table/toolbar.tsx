@@ -1,4 +1,5 @@
 import { Search01Icon } from "@hugeicons/core-free-icons";
+import { useDebouncedValue } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -21,6 +22,9 @@ const FiltersState = Schema.Struct({
   chosen: Schema.Record(Schema.String, FacetValues),
   search: Schema.String,
 });
+
+/** How long the typing in a paged list's search pauses before the server reads the text it holds. */
+const SEARCH_DELAY_MILLISECONDS = 300;
 
 /** The actions of the header's search box and the columns' filters. */
 interface FiltersActions {
@@ -64,6 +68,16 @@ export function useTableFilters<T>(selector: (state: TableFilters) => T) {
   }
 
   return useStore(store, selector);
+}
+
+/**
+ * The search that a paged list asks the server for: the page's search, trimmed, once the typing pauses, so each pause
+ * reads one new first page and each key does not. Empty while the page is not searched.
+ */
+export function useServerSearch() {
+  const typed = useTableFilters((state) => state.search).trim();
+  const [search] = useDebouncedValue(typed, SEARCH_DELAY_MILLISECONDS);
+  return search;
 }
 
 /**
