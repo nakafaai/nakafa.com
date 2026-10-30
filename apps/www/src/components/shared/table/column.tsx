@@ -44,9 +44,10 @@ export function ColumnFilter({
   title: string;
 }) {
   const t = useTranslations("DataTable");
-  const chosen = useTableFilters((state) =>
-    Option.getOrElse(Rec.get(state.chosen, column), () => [])
-  );
+  // The store's own record is the selection, so the snapshot stays the same object between renders; a list made in
+  // the selector would be new on every read, and React would render the head without end.
+  const all = useTableFilters((state) => state.chosen);
+  const chosen = Option.getOrElse(Rec.get(all, column), () => []);
   const choose = useTableFilters((state) => state.choose);
   const filtered = Arr.isReadonlyArrayNonEmpty(chosen);
 
@@ -117,9 +118,8 @@ export function ColumnChoice({
   title: string;
 }) {
   const t = useTranslations("DataTable");
-  const chosen = useTableFilters((state) =>
-    Option.getOrElse(Rec.get(state.chosen, column), () => [])
-  );
+  const all = useTableFilters((state) => state.chosen);
+  const chosen = Option.getOrElse(Rec.get(all, column), () => []);
   const choose = useTableFilters((state) => state.choose);
   const first = Option.map(Arr.head(options), (option) => option.value);
   const value = Option.getOrElse(
