@@ -63,15 +63,18 @@ test("a dialog opens as a drawer on a phone, scales the page back, keeps the foc
   await expect.poll(() => scrollLocked(page)).toBe(true);
   await expect.poll(() => stageScale(stage)).toBe("0.94");
 
-  // The focus stays in the drawer however far the writer tabs. Past the last control a Tab lands on the trap's
-  // guard, which hands the focus back to the first control on the next frame, so each press waits for it.
-  for (let press = 0; press < 8; press += 1) {
-    await page.keyboard.press("Tab");
-    await expect
-      .poll(() =>
-        drawer.evaluate((element) => element.contains(document.activeElement))
-      )
-      .toBe(true);
+  // The focus stays in the drawer however far the writer tabs, forward and back. Past the last control, or
+  // before the first, a press lands on the trap's guard, which hands the focus to the control at the other end
+  // on the next frame, so each press waits for it.
+  for (const key of ["Tab", "Shift+Tab"]) {
+    for (let press = 0; press < 8; press += 1) {
+      await page.keyboard.press(key);
+      await expect
+        .poll(() =>
+          drawer.evaluate((element) => element.contains(document.activeElement))
+        )
+        .toBe(true);
+    }
   }
 
   // Escape closes it, and the page takes its size back and scrolls again.
