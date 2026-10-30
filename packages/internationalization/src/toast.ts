@@ -16,6 +16,16 @@ export type ToastTitleKey = {
     : never;
 }[keyof ToastMessages];
 
+/**
+ * The key of a toast's action: a plain message of the `Common` namespace, which owns the app's verbs such as Open
+ * and Undo, so no toast's own copy repeats one.
+ */
+export type ToastActionKey = {
+  [Name in keyof typeof en.Common]: (typeof en.Common)[Name] extends string
+    ? Name
+    : never;
+}[keyof typeof en.Common];
+
 /** A key of a toast description, such as `action-error.description`, for each entry that has one. */
 export type ToastDescriptionKey = {
   [Name in keyof ToastMessages]: ToastMessages[Name] extends {

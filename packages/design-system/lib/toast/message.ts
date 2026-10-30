@@ -1,4 +1,5 @@
 import type {
+  ToastActionKey,
   ToastDescriptionKey,
   ToastTitleKey,
   ToastValues,
@@ -20,4 +21,13 @@ export function ToastMessage({
 }) {
   const t = useTranslations("Toast");
   return t(message, values);
+}
+
+/**
+ * The label of a toast's action: one word of the `Common` namespace in the reader's language, which Sonner renders
+ * as the toast's button inside the Toaster.
+ */
+export function ToastAction({ label }: { label: ToastActionKey }) {
+  const t = useTranslations("Common");
+  return t(label);
 }

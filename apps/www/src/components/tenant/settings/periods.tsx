@@ -354,7 +354,7 @@ function SchoolPeriodAddDialog({
             value={name}
           />
         </Field>
-        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-4">
           <Field>
             <FieldLabel htmlFor={`${id}-start`}>{t("period-start")}</FieldLabel>
             <DatePicker

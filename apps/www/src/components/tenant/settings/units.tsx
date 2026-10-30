@@ -224,7 +224,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       </CardHeader>
       <CardContent>
         <FieldGroup>
-          <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-4">
             <Field>
               <FieldLabel htmlFor={`unit-time-zone-${unit.id}`}>
                 {t("unit-time-zone")}
