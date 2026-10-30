@@ -5,6 +5,7 @@ import {
   FormulaInvalid,
   formulaProblem,
 } from "@repo/design-system/components/editor/render";
+import { MATH_ERROR_COLOR } from "@repo/design-system/lib/prose";
 import { Effect, Option } from "effect";
 
 describe("drawFormula", () => {
@@ -13,10 +14,10 @@ describe("drawFormula", () => {
     expect(drawFormula("x^2", true)).toContain("katex-display");
   });
 
-  it("draws a formula that does not parse as KaTeX's error, in the destructive colour", () => {
+  it("draws a formula that does not parse as KaTeX's error, in the lesson's error colour", () => {
     const markup = drawFormula("\\frac{", false);
     expect(markup).toContain("katex-error");
-    expect(markup).toContain("var(--destructive)");
+    expect(markup).toContain(MATH_ERROR_COLOR);
   });
 
   it("draws chemistry with the mhchem macros, which parse without an error", () => {

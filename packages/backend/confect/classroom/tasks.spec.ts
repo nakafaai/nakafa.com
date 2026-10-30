@@ -12,12 +12,14 @@ import {
   SubmissionView,
   TaskAddress,
   TaskPoints,
+  TaskStanding,
   TaskText,
   TaskTitle,
   TaskView,
 } from "@repo/backend/confect/classroom/tasks/task";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -37,7 +39,10 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
-      args: () => classArgs,
+      args: () => ({
+        ...classArgs,
+        standing: Schema.optionalKey(TaskStanding),
+      }),
       item: () => TaskView,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "forum.read", arg: "classId" })
@@ -89,7 +94,11 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "submissions",
-      args: () => ({ ...classArgs, task: TaskAddress }),
+      args: () => ({
+        ...classArgs,
+        search: Schema.optionalKey(PersonName),
+        task: TaskAddress,
+      }),
       item: () => SubmissionView,
       error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })

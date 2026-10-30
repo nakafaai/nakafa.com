@@ -51,10 +51,7 @@ export function ExamMenu() {
           <SplitMenuTrigger />
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setDialog("import")}
-              >
+              <DropdownMenuItem onClick={() => setDialog("import")}>
                 <HugeIcons icon={FileImportIcon} />
                 {t("import-action")}
               </DropdownMenuItem>
@@ -62,7 +59,6 @@ export function ExamMenu() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
-                className="cursor-pointer"
                 onClick={() => setDialog("delete")}
                 variant="destructive"
               >

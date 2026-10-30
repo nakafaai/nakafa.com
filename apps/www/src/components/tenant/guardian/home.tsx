@@ -5,6 +5,7 @@ import {
   UserRemove01Icon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
+import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -40,6 +41,7 @@ import {
   PanesProvider,
   usePanes,
 } from "@/components/shared/panes";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
@@ -121,9 +123,19 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
         />
       ),
       enableSorting: false,
-      header: t("status"),
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(LinkStatus.literals, (status) => ({
+            icon: LINK_STATUS_LOOKS[status].icon,
+            label: t(`status-${status}`),
+            value: status,
+          }))}
+          title={t("status")}
+        />
+      ),
       id: "status",
-      meta: { align: "center" },
     }),
   ]);
 
@@ -134,7 +146,6 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
           columns={columns}
           data={items}
           rowId={(child) => child.linkId}
-          search="child"
         />
       </PanesList>
       <PanesDetail empty={t("child-detail-empty")} label={t("child-detail")}>
@@ -211,19 +222,24 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
         <Field data-invalid={refused}>
           <FieldLabel htmlFor={`${id}-nisn`}>{t("nisn-label")}</FieldLabel>
           <Input
+            aria-describedby={refused ? `${id}-refused` : `${id}-hint`}
             aria-invalid={refused}
             id={`${id}-nisn`}
             inputMode="numeric"
             maxLength={10}
-            onChange={(event) => setNisn(event.target.value)}
+            onChange={(event) => {
+              setNisn(event.target.value);
+              setRefused(false);
+            }}
             placeholder="0012345678"
             value={nisn}
           />
-          {refused ? (
-            <FieldError>{t("nisn-refused")}</FieldError>
-          ) : (
-            <FieldDescription>{t("nisn-hint")}</FieldDescription>
-          )}
+          <FieldDescription id={`${id}-hint`}>
+            {t("nisn-hint")}
+          </FieldDescription>
+          <FieldError id={`${id}-refused`}>
+            {refused ? t("nisn-refused") : null}
+          </FieldError>
         </Field>
       </PaneBody>
       <PaneFooter>

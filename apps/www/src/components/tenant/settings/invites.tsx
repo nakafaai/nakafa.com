@@ -145,7 +145,6 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       sortFn: "text",
     }),
     inviteColumns.accessor((invite) => invite.email, {
-      filterFn: "includesString",
       header: t("invite-email"),
       id: "email",
       sortFn: "text",
@@ -160,7 +159,6 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       ),
       header: t("invite-role"),
       id: "role",
-      meta: { align: "center" },
     }),
     inviteColumns.accessor((invite) => invite.expiresAt, {
       cell: (info) =>
@@ -180,7 +178,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     inviteColumns.display({
       cell: (info) => <SchoolInviteMenu invite={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

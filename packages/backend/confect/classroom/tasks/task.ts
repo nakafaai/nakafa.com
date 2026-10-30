@@ -97,6 +97,30 @@ export const TaskView = Schema.Struct({
   title: TaskTitle,
 });
 
+/**
+ * Where a task stands for the student who reads it: no work handed in yet, work handed in on time or late, or work
+ * that has its points.
+ */
+export const TaskStanding = Schema.Literals([
+  "open",
+  "handedIn",
+  "late",
+  "scored",
+]);
+
+/** Where a task stands for its reader, from the reader's own work. */
+export const standingOf = (
+  mine: (typeof TaskView.Type)["mine"]
+): typeof TaskStanding.Type => {
+  if (mine === null) {
+    return "open";
+  }
+  if (mine.score !== null) {
+    return "scored";
+  }
+  return mine.late ? "late" : "handedIn";
+};
+
 /** One student's work as the teacher reads it. */
 export const SubmissionView = Schema.Struct({
   id: Id("classroomSubmissions"),
