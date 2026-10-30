@@ -1,3 +1,4 @@
+import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Option } from "effect";
 import type { Memory } from "@/components/user/settings/memory/list";
 
@@ -53,9 +54,7 @@ export function memoryNeighbour(
  */
 function focusIsInEditor() {
   return (
-    document
-      .getElementById(MEMORY_EDITOR_ID)
-      ?.contains(document.activeElement) === true
+    elementById(MEMORY_EDITOR_ID)?.contains(document.activeElement) === true
   );
 }
 
@@ -66,7 +65,7 @@ function focusIsInEditor() {
 function neighbourRow(neighbour: Option.Option<Memory["id"]>) {
   return Option.filter(
     Option.flatMap(neighbour, (id) =>
-      Option.fromNullishOr(document.getElementById(memoryRowId(id)))
+      Option.fromNullishOr(elementById(memoryRowId(id)))
     ),
     (row) => !row.matches(":disabled")
   );
@@ -83,7 +82,7 @@ export function focusAfterDelete(neighbour: Option.Option<Memory["id"]>) {
   }
 
   return Option.getOrElse(neighbourRow(neighbour), () =>
-    document.getElementById(MEMORY_ADD_ID)
+    elementById(MEMORY_ADD_ID)
   );
 }
 

@@ -25,7 +25,7 @@ import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 const LEARNER_NAME = "Acceptance Learner";
 
 /** The sign-in page, where the sidebar's sign-out goes. */
-const AUTH_PAGE = /\/auth(\?|$)/u;
+const AUTH_PAGE = /\/auth(?:\?|$)/u;
 
 /** The session the browser last had in the cases that seed one. */
 const KNOWN_SESSION = "session-known";

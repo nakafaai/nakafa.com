@@ -55,9 +55,9 @@ function getHighlighter() {
   return highlighter;
 }
 
-const PRE_TAG_PATTERN = /<pre(\s|>)/u;
+const PRE_TAG_PATTERN = /<pre(?<after>\s|>)/u;
 const PRE_BACKGROUND_STYLE_PATTERN =
-  /(<pre[^>]*?)\s+style="[^"]*background[^"]*"([^>]*>)/gu;
+  /(?<open><pre[^>]*?)\s+style="[^"]*background[^"]*"(?<rest>[^>]*>)/gu;
 
 const CodeHighlightInputSchema = Schema.Struct({
   code: Schema.String,

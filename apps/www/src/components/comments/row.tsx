@@ -9,6 +9,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { elementById } from "@repo/design-system/lib/element";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
@@ -278,7 +279,7 @@ function scrollToComment(
   commentId: Id<"comments">
 ) {
   event.preventDefault();
-  document.getElementById(commentId)?.scrollIntoView({
+  elementById(commentId)?.scrollIntoView({
     behavior: "smooth",
     block: "center",
   });

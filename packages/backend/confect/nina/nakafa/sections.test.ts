@@ -9,7 +9,7 @@ import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr } from "effect";
 
 const MORE_SECTIONS = /- \d+ more sections$/u;
-const FOLLOWING_SECTION = /\(section: ([^)]+)\)/u;
+const FOLLOWING_SECTION = /\(section: (?<slug>[^)]+)\)/u;
 const DIGITS = /^\d+$/u;
 const SUMMARY_PART = /\n\n(?:Kalimat|tanpa|jeda) /u;
 const subjectRoute =

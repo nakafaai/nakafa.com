@@ -21,7 +21,7 @@ export function getHeadings(content: string): ParsedHeading[] {
     .replace(/```[\s\S]*?```/gu, "")
     .replace(/~~~[\s\S]*?~~~/gu, "");
 
-  const markdownHeadingRegex = /^\s*(#{1,6})(?:\s+(.*))?$/gmu;
+  const markdownHeadingRegex = /^\s*(?<marks>#{1,6})(?:\s+(?<text>.*))?$/gmu;
   const entries = Arr.map(
     Arr.fromIterable(cleanedContent.matchAll(markdownHeadingRegex)),
     (match) => {

@@ -11,11 +11,11 @@ import {
 import { Array as Arr, Effect, FileSystem, Option } from "effect";
 import katex from "katex";
 
-const FONT_FAMILY = /font-family:\s*KaTeX_([A-Za-z0-9]+)/u;
+const FONT_FAMILY = /font-family:\s*KaTeX_(?<family>[A-Za-z0-9]+)/u;
 const BOLD = /font-weight:\s*bold/u;
 const ITALIC = /font-style:\s*italic/u;
 const COMMENT = /\/\*[\s\S]*?\*\//gu;
-const RULE = /([^{}]+)\{([^{}]*)\}/gu;
+const RULE = /(?<selectors>[^{}]+)\{(?<declarations>[^{}]*)\}/gu;
 const CHILD_SPAN = /\s*>\s*span\s*$/u;
 const WHITESPACE = /\s+/u;
 

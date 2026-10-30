@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { elementById } from "@repo/design-system/lib/element";
 import { Option, Schema } from "effect";
 import {
   focusAfterDelete,
@@ -27,9 +28,9 @@ describe("memory focus", () => {
 
     focusFirst([
       null,
-      document.getElementById("off"),
-      document.getElementById("first"),
-      document.getElementById("second"),
+      elementById("off"),
+      elementById("first"),
+      elementById("second"),
     ]);
 
     expect(document.activeElement?.id).toBe("first");
@@ -38,9 +39,9 @@ describe("memory focus", () => {
   it("leaves the focus where it is when no candidate takes it", () => {
     document.body.innerHTML =
       '<button id="kept" type="button"></button><button disabled id="off" type="button"></button>';
-    document.getElementById("kept")?.focus();
+    elementById("kept")?.focus();
 
-    focusFirst([null, document.getElementById("off")]);
+    focusFirst([null, elementById("off")]);
 
     expect(document.activeElement?.id).toBe("kept");
   });
@@ -92,7 +93,7 @@ describe("focus after a delete", () => {
     document.body.innerHTML = `<button id="${memoryRowId(memoryId("second"))}" type="button"></button><button id="${MEMORY_ADD_ID}" type="button"></button>`;
 
     expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(
-      document.getElementById(memoryRowId(memoryId("second")))
+      elementById(memoryRowId(memoryId("second")))
     );
   });
 
@@ -100,29 +101,27 @@ describe("focus after a delete", () => {
     document.body.innerHTML = `<button id="${MEMORY_ADD_ID}" type="button"></button>`;
 
     expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(
-      document.getElementById(MEMORY_ADD_ID)
+      elementById(MEMORY_ADD_ID)
     );
   });
 
   it("gives the focus to the Add memory button when no memory is left", () => {
     document.body.innerHTML = `<button id="${MEMORY_ADD_ID}" type="button"></button>`;
 
-    expect(focusAfterDelete(Option.none())).toBe(
-      document.getElementById(MEMORY_ADD_ID)
-    );
+    expect(focusAfterDelete(Option.none())).toBe(elementById(MEMORY_ADD_ID));
   });
 
   it("gives the focus to the Add memory button while the neighbour's row is still waiting to be stored", () => {
     document.body.innerHTML = `<button disabled id="${memoryRowId(memoryId("second"))}" type="button"></button><button id="${MEMORY_ADD_ID}" type="button"></button>`;
 
     expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(
-      document.getElementById(MEMORY_ADD_ID)
+      elementById(MEMORY_ADD_ID)
     );
   });
 
   it("leaves the focus in the editor when the editor already holds it, as a refused delete reopens it", () => {
     document.body.innerHTML = `<div id="${MEMORY_EDITOR_ID}"><button id="editing" type="button"></button></div><button id="${memoryRowId(memoryId("second"))}" type="button"></button>`;
-    document.getElementById("editing")?.focus();
+    elementById("editing")?.focus();
 
     expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(false);
   });

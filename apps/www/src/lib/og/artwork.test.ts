@@ -10,7 +10,7 @@ import {
   resolveStaticArtwork,
 } from "@/lib/og/artwork";
 
-const ARTWORK_FILENAME_PATTERN = /^(de|en|id)-[a-z0-9-]+\.png$/u;
+const ARTWORK_FILENAME_PATTERN = /^(?:de|en|id)-[a-z0-9-]+\.png$/u;
 
 describe("public artwork", () => {
   it("prefers an exact locale and then the reviewed English default", () => {

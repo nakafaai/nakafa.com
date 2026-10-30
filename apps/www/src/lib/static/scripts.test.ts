@@ -21,7 +21,7 @@ const PRERENDERED = Arr.join(
 );
 
 /** The data that the loader at the end of the body is called with. */
-const LOADER_DATA = /\}\)\((\{.*\})\);<\/script><\/body>/u;
+const LOADER_DATA = /\}\)\((?<data>\{.*\})\);<\/script><\/body>/u;
 
 const LoaderData = Schema.fromJsonString(
   Schema.Struct({

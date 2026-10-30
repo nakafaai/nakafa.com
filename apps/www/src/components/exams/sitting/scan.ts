@@ -26,7 +26,7 @@ function roomCodeKey(sittingId: string) {
 }
 
 /** The sitting a room address names: `/sittings/<id>` on the school host, and no deeper page. */
-const SITTING_PATH = /^\/sittings\/([^/]+)\/?$/u;
+const SITTING_PATH = /^\/sittings\/(?<sitting>[^/]+)\/?$/u;
 
 const storageOf = Effect.fn("exams.sitting.join.storage")(function* (
   storage?: RoomCodeStorage

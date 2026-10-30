@@ -37,7 +37,7 @@ const BASE = COMPANY_IDENTITY.url;
 /** Lists the item titles of a feed document in document order, without CDATA. */
 function titles(xml: string) {
   return Arr.map(
-    [...xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>/gu)],
+    [...xml.matchAll(/<item>[\s\S]*?<title>(?<title>.*?)<\/title>/gu)],
     (match) => match[1].replace(/^<!\[CDATA\[|\]\]>$/gu, "")
   );
 }

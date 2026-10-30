@@ -110,7 +110,7 @@ export function click(target: EventTarget) {
 }
 
 const POSE =
-  /translate3d\((-?[0-9.]+)px,(-?[0-9.]+)px,0\) rotate\((-?[0-9.]+)deg\)/u;
+  /translate3d\((?<x>-?[0-9.]+)px,(?<y>-?[0-9.]+)px,0\) rotate\((?<angle>-?[0-9.]+)deg\)/u;
 
 /** Where the toy is, as the browser was told to draw it: its offset from the place it lies at. */
 export function offsetOf(toy: HTMLElement) {

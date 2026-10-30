@@ -3,31 +3,33 @@ import { Array as Arr } from "effect";
 // Hoisted regex patterns to top-level scope for performance
 const TRIPLE_BACKTICKS = /```/gu;
 // Detects math expressions in backticks with dollar signs: `$x^2$`
-const DOLLAR_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$([^$][\s\S]*?[^$]|\S)\$\s*`/gu;
+const DOLLAR_MATH_IN_BACKTICKS_GLOBAL =
+  /`\s*\$(?<math>[^$][\s\S]*?[^$]|\S)\$\s*`/gu;
 // Detects math expressions in backticks with double dollar signs: `$$x^2$$`
 const DOUBLE_DOLLAR_MATH_IN_BACKTICKS_GLOBAL =
-  /`\s*\$\$([^$][\s\S]*?[^$]|\S)\$\$\s*`/gu;
+  /`\s*\$\$(?<math>[^$][\s\S]*?[^$]|\S)\$\$\s*`/gu;
 // Detects math expressions in backticks with LaTeX parentheses: `\(x^2\)`
-const PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\(([\s\S]*?)\\\)\s*`/gu;
+const PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\((?<math>[\s\S]*?)\\\)\s*`/gu;
 // Detects LaTeX display math with square brackets: \[x^2 + y^2 = z^2\]
-const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/gu;
+const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[(?<math>[\s\S]*?)\\\]/gu;
 // Detects LaTeX inline math with parentheses: \(x^2\)
-const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/gu;
+const INLINE_PAREN_MATH_GLOBAL = /\\\((?<math>[\s\S]*?)\\\)/gu;
 // Detects malformed fenced math blocks: ```math x^2```
-const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/gu;
+const FENCED_MATH_PATTERN = /```math(?<math>[\s\S]*?)```/gu;
 // Detects HTML math tags: <math>x^2</math>
-const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/gu;
+const MATH_TAG_PATTERN = /<math>(?<math>[\s\S]*?)<\/math>/gu;
 // Detects MDX InlineMath components: <InlineMath math="x^2" />
 const INLINE_MATH_COMPONENT_PATTERN =
-  /<InlineMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/InlineMath>)?/gu;
+  /<InlineMath\s+math=["'](?<math>[^"']*?)["']\s*\/?>(?:<\/InlineMath>)?/gu;
 // Detects MDX BlockMath components: <BlockMath math="x^2" />
 const BLOCK_MATH_COMPONENT_PATTERN =
-  /<BlockMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/BlockMath>)?/gu;
+  /<BlockMath\s+math=["'](?<math>[^"']*?)["']\s*\/?>(?:<\/BlockMath>)?/gu;
 // Detects code blocks containing dollar math: ```\n$x^2$\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
-  /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/gu;
+  /```(?:\s*\n)?\s*\$\s*(?<math>[\s\S]*?)\s*\$\s*(?:\n\s*)?```/gu;
 // Detects plain single-dollar spans outside code fences: $x^2$
-const SINGLE_DOLLAR_SPAN_PATTERN = /(^|[^$\\])\$([^$\n]+)\$(?!\$)/gu;
+const SINGLE_DOLLAR_SPAN_PATTERN =
+  /(?<prefix>^|[^$\\])\$(?<math>[^$\n]+)\$(?!\$)/gu;
 const LATEX_SIGNAL_PATTERN = /\\[a-zA-Z]+|\\[,;! ]/u;
 const MATH_SYMBOL_PATTERN = /[=^_{}<>≤≥√∞±×÷∑∫]/u;
 const MATH_OPERATOR_PATTERN = /(?:\d|\p{L})\s*(?:[+\-*/=<>])\s*(?:\d|\p{L})/u;
@@ -38,10 +40,10 @@ const FUNCTION_NOTATION_PATTERN =
 const QUOTIENT_NOTATION_PATTERN =
   /^[\p{L}\\][\p{L}\p{N}\\_{}]*(?:\([^()\n]*\))?\/[\p{L}\\][\p{L}\p{N}\\_{}]*(?:\([^()\n]*\))?$/u;
 const TRIPLE_BACKTICK_LENGTH = 3;
-const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/u;
-const BULLET_LIST_PATTERN = /^(\s*)[-*+]\s+/u;
+const NUMBERED_LIST_PATTERN = /^\s*\d+\.\s+/u;
+const BULLET_LIST_PATTERN = /^\s*[-*+]\s+/u;
 const NON_WHITESPACE_START_PATTERN = /^\S/u;
-const BLOCKQUOTE_PREFIX_PATTERN = /^(\s*(?:>\s*)+)\s*$/u;
+const BLOCKQUOTE_PREFIX_PATTERN = /^(?<prefix>\s*(?:>\s*)+)\s*$/u;
 
 /**
  * Applies a transform only to segments that are OUTSIDE of fenced code blocks (``` ... ```)

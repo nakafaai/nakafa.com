@@ -6,7 +6,7 @@ const MARKDOWN_EXTENSION = ".md";
 const ABSOLUTE_URL_PATTERN =
   /^[a-z][a-z\d+.-]*:\/\/[^\s/?#]+(?:[/?#][^\s]*)?$/iu;
 const NAKAFA_CONTENT_URL_PATTERN =
-  /^https:\/\/(?:www\.)?nakafa\.com(\/[^\s?#]*)?(?:[?#][^\s]*)?$/u;
+  /^https:\/\/(?:www\.)?nakafa\.com(?<path>\/[^\s?#]*)?(?:[?#][^\s]*)?$/u;
 const UrlStringSchema = Schema.String.pipe(
   Schema.check(
     Schema.makeFilter((value) => ABSOLUTE_URL_PATTERN.test(value), {

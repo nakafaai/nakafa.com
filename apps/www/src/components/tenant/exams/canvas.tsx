@@ -3,6 +3,7 @@ import { useCallbackRef, useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
@@ -73,7 +74,7 @@ function useReveal(canvas: RefObject<HTMLElement | null>) {
     if (reveal === null || root === null) {
       return;
     }
-    const page = document.getElementById(`question-${reveal}`);
+    const page = elementById(`question-${reveal}`);
     if (page !== null) {
       root.scrollTo({
         top:

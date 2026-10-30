@@ -12,6 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { elementById } from "@repo/design-system/lib/element";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr, Data, Effect, Option } from "effect";
@@ -122,7 +123,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
    */
   const goTo = (question: Question) => {
     const root = canvas.current;
-    const page = document.getElementById(`question-${question.id}`);
+    const page = elementById(`question-${question.id}`);
     if (root !== null && page !== null) {
       root.scrollTo({
         behavior: reduce ? "auto" : "smooth",

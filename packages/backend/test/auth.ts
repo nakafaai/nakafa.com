@@ -188,7 +188,7 @@ export async function storedAccounts(
   let accounts: readonly Doc<"account">[] = [];
   let cursor: string | null = null;
   do {
-    const page = cursor;
+    const page: string | null = cursor;
     const result = await test.query((ctx) =>
       ctx.runQuery(components.betterAuth.adapter.findMany, {
         model: "account",

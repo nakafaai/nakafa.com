@@ -1,5 +1,6 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Toy } from "@repo/design-system/components/ui/toy";
+import { elementById } from "@repo/design-system/lib/element";
 import type { ActSchema } from "@repo/mascot/nina/act";
 import { useEffect, useRef, useState } from "react";
 import { within } from "@/components/marketing/about/toys/place";
@@ -27,7 +28,7 @@ export function NinaToy({
   // The layer shows a toy by taking away its `hidden` once it is placed: the
   // still Nina under it hides at that moment, and shows again when this one goes.
   useEffect(() => {
-    const still = document.getElementById(slot);
+    const still = elementById(slot);
     const element = toy.current;
     if (still === null || element === null) {
       return;

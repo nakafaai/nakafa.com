@@ -30,7 +30,7 @@ test.use({ viewport: viewportSize(desktopViewport) });
 
 /** The account menu items that open a page of the account, and the address each one opens. */
 const destinations = [
-  { item: "Profile", path: /\/en\/(user\/|@)/u },
+  { item: "Profile", path: /\/en\/(?:user\/|@)/u },
   { item: "Notifications", path: /\/en\/notifications$/u },
   { item: "Settings", path: /\/en\/user\/settings$/u },
 ] as const;

@@ -15,7 +15,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const WEB_ADDRESS = /^https?:\/\//u;
 
 /** The hash at the end of a check page's address. */
-const CHECK_HASH = /\/verify\/([0-9a-f]{64})$/u;
+const CHECK_HASH = /\/verify\/(?<hash>[0-9a-f]{64})$/u;
 
 /** Opens the row menu of one student on a report list and chooses one item. */
 async function chooseFromRow(page: Page, student: string, item: string) {

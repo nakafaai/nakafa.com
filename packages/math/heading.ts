@@ -8,10 +8,10 @@ export function createHeadingId(text: string) {
 /** Removes MDX markup while retaining readable heading text. */
 export function createHeadingLabel(text: string) {
   return text
-    .replace(/<InlineMath[^>]*math="([^"]*)"[^>]*\/>/gu, "$1")
-    .replace(/<BlockMath[^>]*math="([^"]*)"[^>]*\/>/gu, "$1")
+    .replace(/<InlineMath[^>]*math="(?<math>[^"]*)"[^>]*\/>/gu, "$1")
+    .replace(/<BlockMath[^>]*math="(?<math>[^"]*)"[^>]*\/>/gu, "$1")
     .replace(/<CodeBlock[^>]*\/>/gu, "[Code]")
     .replace(/<[^>]*>/gu, "")
-    .replace(/\\([a-zA-Z]+)/gu, "$1")
+    .replace(/\\(?<command>[a-zA-Z]+)/gu, "$1")
     .trim();
 }

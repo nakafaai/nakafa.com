@@ -26,7 +26,7 @@ import { SchoolError } from "#cli/error";
 
 /** A school host as the CLI takes it: one host name, such as `harapan.nakafa.com`. */
 export const SchoolHost = Schema.String.check(
-  Schema.isPattern(/^[a-z0-9-]+(\.[a-z0-9-]+)+$/u)
+  Schema.isPattern(/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/u)
 );
 
 /** The seconds RFC 8628 adds to the polling interval at each `slow_down`. */

@@ -27,7 +27,7 @@ import { HttpApiBuilder } from "effect/http-api";
 const BEARER = "Bearer";
 
 /** The two halves of a user code, which a device shows as `XXXX-XXXX`. */
-const USER_CODE_HALVES = /^(.{4})(.{4})$/u;
+const USER_CODE_HALVES = /^(?<first>.{4})(?<second>.{4})$/u;
 
 /** The client credentials grant (RFC 6749 section 4.4). */
 const CLIENT_CREDENTIALS = "client_credentials";

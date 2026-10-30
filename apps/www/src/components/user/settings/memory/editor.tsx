@@ -6,6 +6,7 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { elementById } from "@repo/design-system/lib/element";
 import { cn } from "cn";
 import { Function as Fn } from "effect";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
@@ -51,7 +52,7 @@ function subscribeToPanel() {
 }
 
 function readPanel() {
-  return document.getElementById(SETTINGS_PANEL_ID);
+  return elementById(SETTINGS_PANEL_ID);
 }
 
 function readNoPanel() {
@@ -60,7 +61,7 @@ function readNoPanel() {
 
 /** The row of the settings layout that holds the page and the place for a panel. */
 function readRow() {
-  return document.getElementById(SETTINGS_PANEL_ID)?.parentElement;
+  return elementById(SETTINGS_PANEL_ID)?.parentElement;
 }
 
 /** Tells when the row changes its width. */
@@ -268,14 +269,14 @@ function MemoryEditorSheet({
             return false;
           }
           if (opener === null) {
-            return document.getElementById(MEMORY_ADD_ID);
+            return elementById(MEMORY_ADD_ID);
           }
           // A deleted memory has no row, and its delete question has placed the
           // focus already, so the sheet leaves it where the question put it.
-          return document.getElementById(memoryRowId(opener)) ?? false;
+          return elementById(memoryRowId(opener)) ?? false;
         }}
         id={SHEET_ID}
-        initialFocus={() => document.getElementById(SHEET_ID)}
+        initialFocus={() => elementById(SHEET_ID)}
         ref={place}
         showCloseButton={false}
       >

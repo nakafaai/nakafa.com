@@ -10,7 +10,7 @@ const examHref = `${countryHref}/snbt`;
 export const trackHref = `${examHref}/2027`;
 export const setHref = `${trackHref}/set-1`;
 const SECTION_HREF_PATTERN =
-  /^\/en\/try-out\/indonesia\/snbt\/2027\/set-1\/[^/?]+(\?attemptId=[^&]+)?$/u;
+  /^\/en\/try-out\/indonesia\/snbt\/2027\/set-1\/[^/?]+(?:\?attemptId=[^&]+)?$/u;
 
 /** The shell's lock attribute, which the lock store sets once a page hydrates. */
 export const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";

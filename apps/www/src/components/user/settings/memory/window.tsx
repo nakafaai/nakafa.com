@@ -1,4 +1,5 @@
 import { useCallbackRef, useMergedRef } from "@mantine/hooks";
+import { elementById } from "@repo/design-system/lib/element";
 import { cn } from "cn";
 import { Array as Arr, type Option } from "effect";
 import { type CSSProperties, useLayoutEffect, useRef, useState } from "react";
@@ -138,7 +139,7 @@ function MemoryItems({
   useLayoutEffect(
     () => () => {
       if (list.current?.contains(document.activeElement)) {
-        focusFirst([document.getElementById(MEMORY_SEARCH_ID)]);
+        focusFirst([elementById(MEMORY_SEARCH_ID)]);
       }
     },
     []

@@ -34,7 +34,8 @@ const FENCED_MATH_BLOCK_PATTERN = /```math[\s\S]*?```/gu;
 const INLINE_MATH_COMPONENT_PATTERN =
   /<InlineMath\s+math=(?:"[^"]*"|'[^']*'|\{[^}]*\})\s*\/?>/gu;
 const INLINE_MATH_MARKDOWN_PATTERN = /\$\$[\s\S]*?\$\$/gu;
-const JSX_SPACING_EXPRESSION_PATTERN = /\{\s*["'`]([^"'`}]*)["'`]\s*\}/gu;
+const JSX_SPACING_EXPRESSION_PATTERN =
+  /\{\s*["'`](?<text>[^"'`}]*)["'`]\s*\}/gu;
 const MdxPositionSchema = Schema.Struct({
   start: Schema.Struct({
     offset: Schema.Finite,

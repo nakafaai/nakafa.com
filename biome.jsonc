@@ -14,9 +14,31 @@
   },
   "overrides": [
     {
-      // Playwright assertions read what a learner sees, which `innerText` gives
-      // and `textContent` does not: it includes hidden text.
-      "includes": ["apps/www/e2e/**"],
+      // Proven false positives, one file each. The first six call Playwright's
+      // `Locator.innerText()`, a method of the test runner, not a DOM node. The
+      // other ten read the rendered text of the page, as a learner sees it, where
+      // `textContent` would also read hidden elements and the inline `<script>`
+      // payloads: the loader data of a page holds the very text that shown.ts and
+      // signout.browser.ts wait to see rendered, and serve.ts waits for a row that
+      // `content-visibility` leaves undrawn, which empties only its `innerText`.
+      "includes": [
+        "apps/www/e2e/nina/activity.browser.ts",
+        "apps/www/e2e/reading/controls.browser.ts",
+        "apps/www/e2e/chat/share.browser.ts",
+        "apps/www/e2e/school/calendar.browser.ts",
+        "apps/www/e2e/support/navigation/prefetch.ts",
+        "apps/www/e2e/tryout/shell.browser.ts",
+        "apps/www/e2e/account/signout.browser.ts",
+        "apps/www/e2e/auth/recovery.browser.ts",
+        "apps/www/e2e/chat/bubble.browser.ts",
+        "apps/www/e2e/chat/prompt.browser.ts",
+        "apps/www/e2e/chat/words.browser.ts",
+        "apps/www/e2e/school/delete.browser.ts",
+        "apps/www/e2e/state/stale.browser.ts",
+        "apps/www/e2e/support/consent.ts",
+        "apps/www/e2e/support/serve.ts",
+        "apps/www/e2e/support/shown.ts"
+      ],
       "linter": {
         "rules": {
           "performance": {
@@ -26,10 +48,6 @@
       }
     },
     {
-      // The global styles use progressive enhancements (`content-visibility`,
-      // `contain-intrinsic-size`, the scrollbar properties, `@property`) that a
-      // browser without them ignores. Tailwind's `@utility` and `@layer` blocks
-      // each scope their own selectors, which the duplicate check reads as one.
       "includes": [
         "apps/www/src/styles/globals.css",
         "packages/design-system/styles/globals.css"
@@ -37,8 +55,29 @@
       "linter": {
         "rules": {
           "suspicious": {
+            // Proven false positives: the two `&::-webkit-scrollbar` rules sit in
+            // separate `@utility` blocks, and the two `*` rules in separate cascade
+            // layers, so merging either would change which rule wins.
             "noDuplicateSelectors": "off",
-            "useBaseline": "off"
+            "useBaseline": {
+              "level": "error",
+              "options": {
+                // The app shell's sidebar offset is a registered length so it can
+                // slide with the sidebar; an unregistered property cannot animate.
+                "allowAtRules": ["property"],
+                "allowProperties": [
+                  // Long lessons skip the layout of blocks off screen, and the
+                  // measured fallback heights keep the scroll position steady.
+                  "contain-intrinsic-size",
+                  "content-visibility",
+                  // The thin themed scrollbar outside WebKit, and a reserved
+                  // gutter so a page does not shift when its scrollbar appears.
+                  "scrollbar-color",
+                  "scrollbar-gutter",
+                  "scrollbar-width"
+                ]
+              }
+            }
           }
         }
       }
@@ -127,15 +166,6 @@
       ],
       "javascript": {
         "globals": ["vi"]
-      },
-      "linter": {
-        "rules": {
-          "style": {
-            // A test double stands in for a class that the code under test
-            // constructs, so its methods keep the class shape without state.
-            "useThisInClassMethods": "off"
-          }
-        }
       }
     },
     {
@@ -243,9 +273,15 @@
   "linter": {
     "rules": {
       "correctness": {
-        // Effect handler records such as `catchTags({ NotFound: ... })` name each
-        // handler after its error tag, which this rule reads as a component made
-        // inside a function. noNestedComponentDefinitions and the policy check
+        // Proven false positives, 101 in all on 30 October 2026: the rule reads any
+        // capitalized key holding a function inside a function as a component. Each
+        // key is a name another API sets: 54 are error tags in `Effect.catchTags`,
+        // 34 are tags in `Match.tags`, `Match.tagsExhaustive`, `Match.valueTags` and
+        // `Match.discriminators`, 9 are the cases of a `Data.TaggedEnum` `match`,
+        // 2 are the `GET` and `POST` handlers of a TanStack Start route, and 2 are
+        // the `Intl.DateTimeFormat` of a test double of `Intl`. The one component
+        // factory it found, the evilcharts brush preview, is now a module-level
+        // component. noNestedComponentDefinitions and the policy check
         // (scripts/check/tests.ts) still reject every nested component.
         "noComponentHookFactories": "off"
       },
@@ -258,14 +294,7 @@
         "noAwaitInLoops": "off"
       },
       "style": {
-        "useDestructuring": "off",
-        // `getElementById` takes the ids React's `useId` makes as they are, where a
-        // selector would need `CSS.escape` around each one.
-        "useDomQuerySelector": "off",
-        // The parsers read their groups by position (`match[1]`, `"$1"`, replace
-        // callbacks), so naming every group would rewrite each consumer with no
-        // change in what any pattern matches.
-        "useNamedCaptureGroup": "off"
+        "useDestructuring": "off"
       }
     }
   },

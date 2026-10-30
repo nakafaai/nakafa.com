@@ -31,7 +31,7 @@ import { desktopViewport, tryoutViewports } from "@/e2e/support/viewport";
 const SHORT_WINDOW_HEIGHT = 400;
 
 /** An address whose `view` parameter names one question at a time. */
-const SINGLE_VIEW_ADDRESS = /[?&]view=single(&|$)/u;
+const SINGLE_VIEW_ADDRESS = /[?&]view=single(?:&|$)/u;
 
 /** What the learner is told when the server cannot save the view. */
 const VIEW_ERROR = "We couldn't save your view.";

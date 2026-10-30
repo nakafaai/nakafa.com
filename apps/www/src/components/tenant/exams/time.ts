@@ -10,7 +10,8 @@ const MINUTE_MS = 60 * 1000;
  * A `datetime-local` value: a calendar date, then a time of day to the minute, with no zone.
  * The groups are the year, the month, the day, the hour, and the minute.
  */
-const LOCAL_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/u;
+const LOCAL_TIME =
+  /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})T(?<hour>\d{2}):(?<minute>\d{2})$/u;
 
 /** A number written with at least `width` digits, padded with zeros on the left. */
 const pad = (value: number, width: number) =>

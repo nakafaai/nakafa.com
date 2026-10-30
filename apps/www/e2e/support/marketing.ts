@@ -97,7 +97,8 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
           missingFragmentReferences: [
             ...new Set(
               fragmentReferences.filter(
-                (fragmentId) => !document.getElementById(fragmentId)
+                (fragmentId) =>
+                  !document.querySelector(`#${CSS.escape(fragmentId)}`)
               )
             ),
           ],

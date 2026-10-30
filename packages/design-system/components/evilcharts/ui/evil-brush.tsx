@@ -1,4 +1,3 @@
-import { EvilBrushPreview } from "@repo/design-system/components/evilcharts/ui/brush-preview";
 import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
@@ -7,6 +6,7 @@ import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/
 import { cn } from "cn";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 import {
+  lazy,
   Suspense,
   useDeferredValue,
   useId,
@@ -14,6 +14,13 @@ import {
   useRef,
   useState,
 } from "react";
+
+/** The preview behind the brush, loaded with its Recharts charts on first render. */
+const EvilBrushPreview = lazy(() =>
+  import("@repo/design-system/components/evilcharts/ui/brush-preview").then(
+    (preview) => ({ default: preview.EvilBrushPreview })
+  )
+);
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

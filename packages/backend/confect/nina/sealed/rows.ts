@@ -63,7 +63,7 @@ export const readTurnRows = Effect.fn("nina.sealed.turn.rows")(function* (
   let cursor: string | null = null;
   let reached = false;
   while (!reached) {
-    const from = cursor;
+    const from: string | null = cursor;
     const page = yield* Effect.promise(() =>
       ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
         order: "desc",

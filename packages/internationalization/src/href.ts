@@ -8,7 +8,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import type { Locale } from "use-intl/core";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//u;
-const NOT_INTERNAL_REGEX = /^(#|mailto:|tel:|\/\/)/u;
+const NOT_INTERNAL_REGEX = /^(?:#|mailto:|tel:|\/\/)/u;
 
 /**
  * Whether an href leads inside the app. A hash, mail or telephone link, a

@@ -48,7 +48,7 @@ const atStep = (steps: number) =>
   );
 
 /** The two halves of a user code, as a device shows it. */
-const HALVES = /^(.{4})(.{4})$/u;
+const HALVES = /^(?<first>.{4})(?<second>.{4})$/u;
 
 describe("integrations/devices", () => {
   it.effect(

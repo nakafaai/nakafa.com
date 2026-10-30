@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/lib/markdown/inline";
 import { Array as Arr, Schema } from "effect";
 
-const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})[^`]*$/u;
+const FENCE_OPEN = /^ {0,3}(?<marker>`{3,}|~{3,})[^`]*$/u;
 /** Fences whose renderer needs the complete source. */
 const COMPLETE_SOURCE_FENCE =
   /^ {0,3}(?:`{3,}|~{3,})\s*(?:math|mermaid)(?:\s|$)/iu;
@@ -18,7 +18,7 @@ const BLOCK_START = /^ {0,3}(?:[-*+]\s|\d{1,9}[.)]\s|#{1,6}\s|>|\|)/u;
 /** An escaped character, which never separates table cells. */
 const ESCAPED = /\\./gu;
 /** A fence line with at most three spaces of indentation. */
-const FENCE_MARKER = /^ {0,3}(`+|~+)[ \t]*$/u;
+const FENCE_MARKER = /^ {0,3}(?<marker>`+|~+)[ \t]*$/u;
 const TABLE_DELIMITER = /^ {0,3}\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/u;
 const PARTIAL_TABLE_DELIMITER = /^ {0,3}\|?[\s:|-]*$/u;
 

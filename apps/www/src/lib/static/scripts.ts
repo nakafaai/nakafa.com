@@ -5,10 +5,10 @@ export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;
 
 /** The module script that starts the app, as TanStack's `<Scripts>` renders it. */
 const ENTRY_SCRIPT =
-  /<script type="module" async="" src="([^"]+)"><\/script>/gu;
+  /<script type="module" async="" src="(?<src>[^"]+)"><\/script>/gu;
 
-const PRELOAD_HREF = /\bhref="([^"]*)"/u;
-const PRELOAD_PRIORITY = /\bfetchPriority="([^"]*)"/u;
+const PRELOAD_HREF = /\bhref="(?<href>[^"]*)"/u;
+const PRELOAD_PRIORITY = /\bfetchPriority="(?<priority>[^"]*)"/u;
 const BODY_END = "</body>";
 
 /** The address of one built script: the only address a static page preloads or starts. */

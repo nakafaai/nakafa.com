@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { elementById } from "@repo/design-system/lib/element";
 import { Option } from "effect";
 import {
   pickOption,
@@ -116,7 +117,7 @@ describe("readKeyTarget", () => {
       <div contenteditable="false"><span id="plain">text</span></div>
       <div role="radiogroup"><span id="radio" role="radio"></span></div>
       <button id="button"></button>`;
-    const find = (id: string) => document.getElementById(id);
+    const find = (id: string) => elementById(id);
 
     expect(readKeyTarget(find("field"))).toEqual({
       composite: false,

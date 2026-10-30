@@ -58,7 +58,7 @@ const MATH_FONT_CLASSES: readonly (readonly [MathFont, readonly string[]])[] = [
   ["Size4-Regular", ["delim-size4"]],
 ];
 
-const CLASS_ATTRIBUTE = /class="([^"]*)"/gu;
+const CLASS_ATTRIBUTE = /class="(?<classes>[^"]*)"/gu;
 
 /** The faces nearly every formula draws with, as CSS font shorthands. */
 const CORE_MATH_FONTS = ["1em KaTeX_Main", "italic 1em KaTeX_Math"] as const;
