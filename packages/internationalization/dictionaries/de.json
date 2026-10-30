@@ -207,6 +207,8 @@
     "signal-copy": "Text kopiert",
     "signal-paste": "Text eingefügt",
     "signal-disconnect": "Verbindung verloren",
+    "signal-offline-seconds": "War {seconds} s ohne Verbindung",
+    "signal-offline-minutes": "War {minutes} min {seconds} s ohne Verbindung",
     "signal-secondTab": "Zweiten Tab geöffnet",
     "reason": "Grund",
     "reason-power-outage": "Stromausfall",
