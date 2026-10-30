@@ -485,7 +485,6 @@
     "pair-hint": "Jede Antwort gehört zu einer Aussage, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
     "pair-statement": "Antwort für Aussage {number}",
     "template-table": "Richtig-oder-falsch-Tabelle",
-    "table-columns": "Spalten",
     "column-of": "Frage {number}, Spalte {name}",
     "column-placeholder": "Spalte",
     "cell-of": "Spalte für Aussage {name} von Frage {number}",
