@@ -118,7 +118,7 @@ function NotYet() {
 
 /**
  * One student's row: the name, which opens the student's answers beside the list, the state, and the
- * scores of a submitted attempt, with the time it was submitted. Counts and scores sit to the right
+ * scores of a submitted attempt, with the time it was submitted. Counts and scores stand in the middle
  * in figures of one width, so the eye runs down each column, and a value not there yet says so.
  */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
@@ -132,8 +132,11 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const close = usePanes((state) => state.close);
 
   return (
-    <TableRow data-state={chosen ? "selected" : undefined}>
-      <TableCell>
+    <TableRow
+      className="hover:bg-transparent hover:text-inherit"
+      data-state={chosen ? "selected" : undefined}
+    >
+      <TableCell className="px-2 sm:px-4">
         <Button
           aria-pressed={chosen}
           className="h-auto px-0"
@@ -144,26 +147,26 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           {row.name}
         </Button>
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="px-2 text-center sm:px-4">
         <TableStatus
           icon={STATE_LOOKS[row.state].icon}
           label={t(stateKeys[row.state])}
           tone={STATE_LOOKS[row.state].tone}
         />
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.points === null ? <NotYet /> : `${row.points} / ${total}`}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.answered ?? <NotYet />}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.pending ?? <NotYet />}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.submittedAt === null ? (
           <NotYet />
         ) : (
@@ -177,7 +180,7 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           )
         )}
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="px-2 text-end sm:px-4">
         <StudentRowMenu attemptId={row.attemptId} />
       </TableCell>
     </TableRow>
@@ -248,29 +251,31 @@ function StudentTable({
   return (
     <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
       <TableHeader>
-        <TableRow>
-          <TableHead>{t("results-name")}</TableHead>
-          <TableHead className="w-40 text-center">
+        <TableRow className="hover:bg-transparent hover:text-inherit">
+          <TableHead className="px-2 sm:px-4">{t("results-name")}</TableHead>
+          <TableHead className="w-40 px-2 text-center sm:px-4">
             <ColumnChoice
               column="status"
               options={statusChoices}
               title={t("results-status")}
             />
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-score")}
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-answered")}
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-pending")}
           </TableHead>
-          <TableHead className="w-36 text-right">{t("results-away")}</TableHead>
-          <TableHead className="w-44 text-right">
+          <TableHead className="w-36 px-2 text-center sm:px-4">
+            {t("results-away")}
+          </TableHead>
+          <TableHead className="w-44 px-2 text-center sm:px-4">
             {t("results-finished")}
           </TableHead>
-          <TableHead className="w-12" />
+          <TableHead className="w-12 px-2 sm:px-4" />
         </TableRow>
       </TableHeader>
       <TableBody>
