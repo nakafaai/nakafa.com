@@ -30,9 +30,9 @@ const OnboardingSearch = Schema.Struct({
  * the questionnaire to someone who must leave it.
  */
 export const Route = createFileRoute("/$locale/_entry/onboarding")({
-  ssr: false,
   validateSearch: Schema.toStandardSchemaV1(OnboardingSearch),
   loaderDeps: ({ search }) => ({ intent: search.intent }),
+  ssr: false,
   loader: async ({ deps, params }) => {
     const [page, messages, legal] = await Promise.all([
       readOnboardingPageFn({
