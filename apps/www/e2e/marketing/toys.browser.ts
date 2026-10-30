@@ -8,6 +8,18 @@ import { desktopViewport } from "@/e2e/support/viewport";
 /** A toy of a marketing page, as the toy layer draws it. */
 const TOY = '[class*="group/toy"]';
 
+/** How many of the toys stand on the first screen, shown and placed. */
+const countOnScreen = (toys: Element[]) =>
+  toys.filter((toy) => {
+    const box = toy.getBoundingClientRect();
+    return (
+      box.width > 0 &&
+      box.bottom > 0 &&
+      box.top < window.innerHeight &&
+      getComputedStyle(toy).visibility === "visible"
+    );
+  }).length;
+
 test.use({
   viewport: { height: desktopViewport.height, width: desktopViewport.width },
 });
@@ -26,10 +38,13 @@ for (const path of ["/en", "/en/pricing"]) {
         page,
         Effect.gen(function* () {
           yield* loadMarketingPage(page, path);
+          // A toy further down may come first in the page, so any toy on the first screen counts.
           yield* Effect.promise(() =>
-            expect(page.locator(TOY).first()).toBeInViewport({
-              timeout: readinessTimeoutMilliseconds,
-            })
+            expect
+              .poll(() => page.locator(TOY).evaluateAll(countOnScreen), {
+                timeout: readinessTimeoutMilliseconds,
+              })
+              .toBeGreaterThan(0)
           );
           yield* Effect.promise(() =>
             expect(page.evaluate(() => window.scrollY)).resolves.toBe(0)
