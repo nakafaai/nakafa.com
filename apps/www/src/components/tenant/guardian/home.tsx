@@ -5,6 +5,7 @@ import {
   UserRemove01Icon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
+import { LinkStatus } from "@repo/backend/confect/guardians/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -40,6 +41,7 @@ import {
   PanesProvider,
   usePanes,
 } from "@/components/shared/panes";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
@@ -121,7 +123,18 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
         />
       ),
       enableSorting: false,
-      header: t("status"),
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(LinkStatus.literals, (status) => ({
+            icon: LINK_STATUS_LOOKS[status].icon,
+            label: t(`status-${status}`),
+            value: status,
+          }))}
+          title={t("status")}
+        />
+      ),
       id: "status",
     }),
   ]);
