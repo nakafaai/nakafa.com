@@ -25,6 +25,7 @@ import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestion } from "@/components/player/question";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
+import { useLastValue } from "@/lib/data/kept";
 
 /** The session name the try reads prompts under. It never writes, so the server records nothing. */
 const TRY_CLIENT = "try";
@@ -111,7 +112,8 @@ export function ExamTryQuestion({
 /**
  * The prompt of one question. It keeps a prompt's height from the first draw until its reader is
  * ready, as a sitting's prompt does, so the options below it do not move while the document opens
- * and the reader loads. A prompt that does not open leaves no space.
+ * and the reader loads. A prompt that does not open leaves no space, and one whose exam goes while
+ * it is tried keeps the text it showed, as the paper keeps the exam's title and questions.
  */
 function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
   const slug = useTrySlug();
@@ -120,17 +122,15 @@ function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
     documentId,
     slug,
   });
+  const opened = useLastValue(reply);
 
-  if (QueryResult.isFailure(reply)) {
-    return null;
-  }
-  if (!QueryResult.isSuccess(reply)) {
-    return <PromptReserve />;
+  if (Option.isNone(opened)) {
+    return QueryResult.isFailure(reply) ? null : <PromptReserve />;
   }
   return (
     <Suspense fallback={<PromptReserve />}>
       <ClientOnly fallback={<PromptReserve />}>
-        <TryPrompt key={documentId} opened={reply.value} />
+        <TryPrompt key={documentId} opened={opened.value} />
       </ClientOnly>
     </Suspense>
   );
