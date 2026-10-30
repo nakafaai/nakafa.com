@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { documentRows, nf } from "@repo/backend/test/editor";
 import {
   examImage,
@@ -12,6 +9,13 @@ import {
   teacherExam,
 } from "@repo/backend/test/exams";
 import { storageUrl } from "@repo/backend/test/logo";
+import {
+  CLOSES_AT,
+  keyedExam,
+  keyedSchool,
+  OPENS_AT,
+  scheduleSitting,
+} from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
@@ -64,34 +68,32 @@ describe("exams/remove", () => {
   );
 
   it.effect(
-    "refuses a student and a scheduled exam, and keeps the exam with its questions",
+    "refuses a student and an exam that has a sitting, and keeps the exam with its questions",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const exam = yield* teacherExam(fixture, "Terjadwal");
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Terjadwal");
         const student = yield* fixture
           .as("student")
-          .mutation(remove, { examId: exam.id, slug: nf })
+          .mutation(remove, { examId, slug: nf })
           .pipe(Effect.flip);
         expect(student).toMatchObject({ _tag: "AccessDenied" });
-        yield* fixture.run(
-          Effect.flatMap(DatabaseWriter, (writer) =>
-            writer
-              .table("exams")
-              .patch(exam.id, { frozenAt: TENANCY_NOW })
-              .pipe(Effect.orDie)
-          )
-        );
-        const frozen = yield* fixture
+        yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        const scheduled = yield* fixture
           .as("teacher")
-          .mutation(remove, { examId: exam.id, slug: nf })
+          .mutation(remove, { examId, slug: nf })
           .pipe(Effect.flip);
-        expect(frozen).toMatchObject({
-          _tag: "ExamFrozen",
-          code: "EXAM_FROZEN",
+        expect(scheduled).toMatchObject({
+          _tag: "ExamInUse",
+          code: "EXAM_IN_USE",
         });
         expect(yield* fixture.run(examRows)).toHaveLength(1);
-        expect(yield* fixture.run(questionRows)).toHaveLength(1);
       })
   );
 });

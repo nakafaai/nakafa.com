@@ -46,6 +46,8 @@ describe("classroom/classes resolve", () => {
           expect.arrayContaining(["class.view", "forum.read"])
         );
         expect(student.can).not.toContain("forum.manage");
+        // The leader writes nothing in the forum, and the school keeps discussions to teachers.
+        expect([leader.opens, student.opens]).toEqual([false, false]);
       })
   );
 

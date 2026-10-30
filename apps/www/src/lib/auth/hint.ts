@@ -7,7 +7,7 @@ import type { ClientSession } from "@/lib/auth/visitor";
  * the layout only: a forged value shows a placeholder, and the session read says
  * the truth.
  */
-const SIGNED_IN_HINT_COOKIE = "nakafa-signed-in";
+export const SIGNED_IN_HINT_COOKIE = "nakafa-signed-in";
 
 /** The attribute of the root element that the inline script sets from the hint. */
 export const SIGNED_IN_ATTRIBUTE = "data-signed-in";
@@ -98,5 +98,20 @@ export function signedInHintScript(): string {
       "})();",
     ],
     "\n"
+  );
+}
+
+/**
+ * Sets the sign-in attribute of the root element from the hint cookie, as the
+ * inline script does before the first paint. Every answer about the session
+ * corrects the cookie, so a page reads it again after each answer.
+ */
+export function followSignedInHint(
+  root: Pick<Element, "setAttribute">,
+  cookie: string
+) {
+  root.setAttribute(
+    SIGNED_IN_ATTRIBUTE,
+    hasSignedInHint(cookie) ? "yes" : "no"
   );
 }

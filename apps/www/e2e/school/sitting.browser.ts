@@ -76,7 +76,9 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   // The learner entered after the crowd, so the learner's seat is on the second page, which
   // loads once the end of the seats comes into view.
   const seats = proctor.getByRole("list", { name: "Student seats" });
-  const seat = proctor.getByRole("button", { name: LEARNER_NAME });
+  // The seat in its list: once it opens the learner's panel, the panel's More actions button names
+  // the learner too.
+  const seat = seats.getByRole("link", { name: LEARNER_NAME });
   await expect(async () => {
     await seats.getByRole("listitem").last().scrollIntoViewIfNeeded();
     await expect(seat).toBeVisible({ timeout: 1000 });

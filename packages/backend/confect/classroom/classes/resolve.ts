@@ -11,6 +11,7 @@ import { classView } from "@repo/backend/confect/classroom/class";
 import { holdersOf } from "@repo/backend/confect/classroom/classes/address";
 import spec from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
+import { opensDiscussions } from "@repo/backend/confect/classroom/forum/policy";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Array as Arr, Effect, Option } from "effect";
 
@@ -60,15 +61,16 @@ const namedBy = Effect.fnUntraced(function* (holders: readonly ClassesDoc[]) {
  * rule decides the read. A class of a period not yet open is not named until the
  * period opens. An address that names two or more classes is refused as
  * ambiguous before the access decision, and names no class. An address that no
- * class holds is refused the way a missing object is.
+ * class holds is refused the way a missing object is. The caller may open a
+ * discussion when it writes in the forum and the school's policy lets it.
  */
 export const resolve = FunctionImpl.make(
   databaseSchema,
   spec,
   "resolve",
   Effect.fn("classroom.classes.resolve")(function* ({ classSlug }) {
-    const { tenant } = yield* Member;
-    const holders = yield* holdersOf(tenant._id, classSlug);
+    const principal = yield* Member;
+    const holders = yield* holdersOf(principal.tenant._id, classSlug);
     const found = yield* namedBy(holders);
     if (Option.isNone(found)) {
       return yield* new AccessDenied({
@@ -77,9 +79,13 @@ export const resolve = FunctionImpl.make(
       });
     }
     yield* classAuthority.check("class.view", found.value);
+    const can = yield* classAuthority.allowed(found.value);
     return {
       ...classView(found.value),
-      can: yield* classAuthority.allowed(found.value),
+      can,
+      opens:
+        Arr.contains(can, "forum.post") &&
+        (yield* opensDiscussions(found.value, principal)),
     };
   })
 );

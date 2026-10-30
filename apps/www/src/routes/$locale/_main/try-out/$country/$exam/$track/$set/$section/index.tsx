@@ -6,29 +6,33 @@ import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
+import { readStaticData } from "@/lib/static/data";
 
 /**
- * One section of a set. Its catalog view is shared, and the learner's attempt
- * through it is personal, so the page is never cached. A URL bound to an
- * attempt answers for that attempt alone.
+ * One section of a set. Its catalog view is shared, so the build prerenders it and
+ * keeps its answer. The learner's attempt through it is personal: a signed-in
+ * learner and a URL bound to an attempt read their own answer from the server,
+ * which renders their page for their request (`isLearnerPage`), and a URL bound to
+ * an attempt answers for that attempt alone.
  */
 export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$track/$set/$section/"
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
   loaderDeps: ({ search }) => search,
-  loader: async ({ params, deps }) => {
-    const route = await readTryoutSectionFn({
-      data: {
-        country: params.country,
-        exam: params.exam,
-        locale: params.locale,
-        search: deps,
-        section: params.section,
-        set: params.set,
-        track: params.track,
-      },
-    });
+  loader: async ({ context, deps, params }) => {
+    const input = {
+      country: params.country,
+      exam: params.exam,
+      locale: params.locale,
+      search: deps,
+      section: params.section,
+      set: params.set,
+      track: params.track,
+    };
+    const route = await (context.signedIn || deps.attemptId !== undefined
+      ? readTryoutSectionFn({ data: input })
+      : readStaticData(readTryoutSectionFn, input));
     if (route.kind === "notFound") {
       throw notFound();
     }

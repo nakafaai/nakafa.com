@@ -2,6 +2,8 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
+  usePaginatedQuery,
+  useQuery,
 } from "@confect/react";
 import {
   Download01Icon,
@@ -23,8 +25,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Effect, Option } from "effect";
-import { createContext, use, useTransition } from "react";
+import { Array as Arr, Effect } from "effect";
+import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -42,9 +44,6 @@ import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readAuditFn } from "@/lib/tenant/settings.functions";
 
 /** The icons of the people in the trail's Filter menu, one of a person for each. */
 const PERSON_ICONS = [
@@ -61,43 +60,19 @@ const PERSON_ICONS = [
 ] as const;
 
 /** How many entries one page of the journal loads, and each page after it. */
-export const PAGE_SIZE = 25;
+const PAGE_SIZE = 25;
 
 /** One journal entry as the audit list shows it. */
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 
-/** The audit's first screen as its loader reads it on the server. */
-type AuditFirstScreen = Awaited<ReturnType<typeof readAuditFn>>;
-
-/**
- * An audit entry as the loader sends it to the page: the subject's name is a string, or none, because an
- * Option does not cross the server boundary. The page restores the Option before it reads the entry.
- */
-type EntryWire = NonNullable<AuditFirstScreen["entries"]>["page"][number];
-
-/** The first screen of the audit: the first page of its entries, and the people who appear in them. */
-type AuditPreload = Pick<AuditFirstScreen, "entries" | "people">;
-
-/** The loader's entry with its subject name as the page reads it. */
-function restoreEntry(entry: EntryWire): EntryItem {
-  return { ...entry, subjectName: Option.fromNullishOr(entry.subjectName) };
-}
-
 /** The columns of the audit table. */
 const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
-
-/** The audit's first screen, which the page's loader read on the server. */
-const AuditPreloadContext = createContext<AuditPreload | undefined>(undefined);
 
 /**
  * The audit trail as the page's table. The header row searches the changes, filters them by
  * who made them and exports the whole trail, and shows while the body loads.
  */
-export function SchoolAuditSettings({
-  preload,
-}: {
-  preload: AuditPreload | undefined;
-}) {
+export function SchoolAuditSettings() {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -106,15 +81,13 @@ export function SchoolAuditSettings({
         actions={
           <>
             <TableSearch placeholder={t("audit-search")} />
-            <AuditFilter people={preload?.people} />
+            <AuditFilter />
             <AuditExport />
           </>
         }
       >
         <ReadBoundary>
-          <AuditPreloadContext value={preload}>
-            <SchoolAuditBody />
-          </AuditPreloadContext>
+          <SchoolAuditBody />
         </ReadBoundary>
         <p className="mt-auto border-t px-4 py-3 text-muted-foreground text-sm">
           {t("audit-footer")}
@@ -129,18 +102,10 @@ export function SchoolAuditSettings({
  * school, so an actor on a later page is offered before that page loads, beside the staff
  * and the system that the journal also records.
  */
-function AuditFilter({
-  people: preloaded,
-}: {
-  people: AuditPreload["people"] | undefined;
-}) {
+function AuditFilter() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const people = usePreloadedQueryResult(
-    journal.audit.actors,
-    { slug },
-    preloaded
-  );
+  const people = useQuery(journal.audit.actors, { slug });
   const actors = Arr.dedupe([
     ...(QueryResult.isSuccess(people)
       ? Arr.map(people.value, (person) => person.name)
@@ -170,22 +135,13 @@ function AuditFilter({
  */
 function SchoolAuditBody() {
   const { slug } = useTenant();
-  const preload = use(AuditPreloadContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const words = useEntryWords();
-  const first =
-    preload?.entries === undefined
-      ? undefined
-      : {
-          isDone: preload.entries.isDone,
-          page: Arr.map(preload.entries.page, restoreEntry),
-        };
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     journal.audit.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

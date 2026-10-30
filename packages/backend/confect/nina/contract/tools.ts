@@ -159,6 +159,33 @@ const MemoryToolInputSchema = Schema.Struct({
       `,
     }),
   });
+/** The most days ahead the calendar tool reads, the window its sync keeps. */
+const CALENDAR_DAYS_LIMIT = 14;
+
+/**
+ * Input schema for the calendar LearningCapability tool: how many days ahead,
+ * from today, Nina reads the learner's Google Calendar.
+ */
+const CalendarToolInputSchema = Schema.Struct({
+  days: Schema.Int.check(
+    Schema.isBetween({ maximum: CALENDAR_DAYS_LIMIT, minimum: 1 })
+  ).annotate({
+    description: createPrompt({
+      taskContext: `
+        How many days ahead, from today, to read: 7 for "this week", 1 for "today".
+        At most ${CALENDAR_DAYS_LIMIT}.
+      `,
+    }),
+  }),
+})
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
+    description: createPrompt({
+      taskContext: `
+        Read of the learner's coming events in their Google Calendar.
+      `,
+    }),
+  });
 type NakafaToolInput = typeof NakafaToolInputSchema.Type;
 type ResearchToolInput = typeof ResearchToolInputSchema.Type;
 type MathToolInput = typeof MathToolInputSchema.Type;
@@ -255,4 +282,7 @@ export const researchToolInputSchema = createEffectSchema(
 );
 export const mathToolInputSchema = createEffectSchema(MathToolInputSchema);
 export const memoryToolInputSchema = createEffectSchema(MemoryToolInputSchema);
+export const calendarToolInputSchema = createEffectSchema(
+  CalendarToolInputSchema
+);
 export const textOutputSchema = createEffectSchema(Schema.String);

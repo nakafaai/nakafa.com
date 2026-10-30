@@ -124,7 +124,11 @@ function TryoutChoiceFrame({
   );
 }
 
-/** The label of one choice, which its control names by id. */
+/**
+ * The label of one choice, which its control names by id. Its direction
+ * follows its own text, so a choice written in Arabic reads right to left in
+ * an Indonesian question, and a Latin one keeps reading left to right.
+ */
 function TryoutChoiceLabel({
   children,
   id,
@@ -133,7 +137,7 @@ function TryoutChoiceLabel({
   id: string;
 }) {
   return (
-    <div className="min-w-0 flex-1" id={`${id}-label`}>
+    <div className="min-w-0 flex-1" dir="auto" id={`${id}-label`}>
       {children}
     </div>
   );

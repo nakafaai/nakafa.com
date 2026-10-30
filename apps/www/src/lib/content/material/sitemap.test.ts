@@ -63,6 +63,7 @@ describe("published material sitemap", () => {
               : {
                   routes: [
                     {
+                      contentKey: "mathematics-functions",
                       lastModified: "2026-07-25",
                       publicPath: "subjects/mathematics/functions",
                     },
@@ -134,6 +135,7 @@ describe("published material sitemap", () => {
           Effect.succeed({
             routes: [
               {
+                contentKey: "mathematics-function-concept",
                 lastModified: "2025-04-27",
                 publicPath:
                   "subjects/mathematics/function-composition-inverse-function/function-concept",

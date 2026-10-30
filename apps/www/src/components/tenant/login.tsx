@@ -14,6 +14,7 @@ import { Effect } from "effect";
 import { type FormEvent, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { ConvexProvider } from "@/components/providers/convex";
+import { signInReturn } from "@/components/tenant/resume";
 import {
   pageDeviceIdOf,
   RedeemUnanswered,
@@ -57,7 +58,7 @@ function TenantLoginForm() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | undefined>(undefined);
 
-  /** Submits the form. `submitLogin` decides the answer, and a signed-in student goes to the school root. */
+  /** Submits the form. `submitLogin` decides the answer, and a signed-in student returns to the page they were on. */
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     startTransition(async () => {
@@ -83,9 +84,9 @@ function TenantLoginForm() {
         )
       );
       if (step === "signed-in") {
-        // The session changed, so the school loads again and its client starts
-        // with the session that this sign-in set.
-        window.location.assign("/");
+        // The session changed, so the page the student signed in over loads again,
+        // and its client starts with the session that this sign-in set.
+        window.location.assign(signInReturn(window.location.href));
         return;
       }
       setMessage(t(step));

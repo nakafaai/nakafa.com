@@ -2,12 +2,14 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
+  usePaginatedQuery,
+  useQuery,
 } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -17,18 +19,9 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolPlacementMove } from "@/components/tenant/settings/placement";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readCohortFn } from "@/lib/tenant/settings.functions";
-
-/** The cohorts and first members that the page loader read on the server. */
-type MembersPreload = Pick<
-  Awaited<ReturnType<typeof readCohortFn>>,
-  "cohorts" | "members"
->;
 
 /** How many students one page of the members table loads, and each page after it. */
-export const PAGE_SIZE = 25;
+const PAGE_SIZE = 25;
 
 /** One student as the members table shows them. */
 type MemberItem = PaginatedQueryItem<typeof tenancy.cohorts.members>;
@@ -47,31 +40,25 @@ const memberColumns = createColumnHelper<
  */
 export function SchoolCohortMembers({
   cohortId,
-  cohorts: preloadedCohorts,
-  first,
   isArchived,
   periodId,
   slug,
 }: {
   cohortId: Cohort["id"];
-  cohorts: MembersPreload["cohorts"];
-  first: MembersPreload["members"] | undefined;
   isArchived: boolean;
   periodId: Period["id"];
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     tenancy.cohorts.members,
     isSettled ? { cohortId, slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
-  const cohorts = usePreloadedQueryResult(
+  const cohorts = useQuery(
     tenancy.cohorts.list,
-    isSettled ? { periodId, slug } : "skip",
-    preloadedCohorts
+    isSettled ? { periodId, slug } : "skip"
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

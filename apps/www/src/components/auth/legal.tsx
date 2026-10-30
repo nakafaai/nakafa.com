@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
+import type { AuthLegalLinks } from "@/lib/auth/legal";
 
 /**
  * Shows the privacy and terms sentence of the sign-in pages, with links to the
