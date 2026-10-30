@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -7,7 +6,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
@@ -30,15 +29,10 @@ import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { Link } from "@/lib/routing/link";
-import { EXAM_PAGE_SIZE } from "@/lib/tenant/exams";
 
-/** The first page of the exam list, which its loader read on the server. */
-type ExamListFirstPage = Pick<
-  Ref.Returns<typeof exams.exams.list>,
-  "isDone" | "page"
->;
+/** How many exams the list asks for each time its end comes into view. */
+const EXAM_PAGE_SIZE = 20;
 
 /** The columns of the exams table. */
 const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
@@ -54,22 +48,15 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
  * shows its own sentence and a retry, and a viewer who lost the school's access is sent to the
  * refused page.
  */
-export function ExamList({
-  first,
-  slug,
-}: {
-  first: ExamListFirstPage | undefined;
-  slug: TenantSlug;
-}) {
+export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
   // The list needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     exams.exams.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: EXAM_PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: EXAM_PAGE_SIZE }
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);

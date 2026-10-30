@@ -18,6 +18,7 @@ import {
   writeNotFoundPages,
   writeStaticAnswers,
 } from "#www/prerender.config";
+import { SCHOOL_SHELL_PATH } from "#www/src/lib/routing/school/shell";
 import {
   createWwwHeaders,
   readWwwHeaderOrigins,
@@ -375,6 +376,18 @@ export default defineConfig(async ({ command, isPreview }) => {
           prerenderedPages.length === 0
             ? []
             : [...prerenderedPages.map((path) => ({ path })), ...notFoundPages],
+        // A school renders only in the browser (ADR 0038 D2). The build prerenders
+        // the root document once as the school shell, at `/_school`, and the
+        // Worker answers every school page with it. The root path redirects to a
+        // locale, and the shell renders the root route alone at that address.
+        spa:
+          prerenderedPages.length === 0
+            ? undefined
+            : {
+                enabled: true,
+                maskPath: "/",
+                prerender: { outputPath: SCHOOL_SHELL_PATH },
+              },
         // Server Components: content bodies render on the server, and only "use
         // client" islands ship JavaScript. An island's heavy module loads on
         // intent, never in the first load of the route.

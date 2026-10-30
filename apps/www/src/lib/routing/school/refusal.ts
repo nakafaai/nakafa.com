@@ -6,7 +6,7 @@ import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Data, Effect, Option } from "effect";
 import { clientEnv } from "@/env.public";
-import { readSessionToken } from "@/lib/auth/token";
+import { readSessionToken } from "@/lib/auth/token.server";
 import { httpSingleAttemptLayer } from "@/lib/convex/http";
 import { readSchoolSlug } from "@/lib/routing/school/host";
 
