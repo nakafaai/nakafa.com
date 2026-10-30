@@ -3,7 +3,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
-import { createContext, type ReactNode, use, useMemo, useState } from "react";
+import { createContext, type ReactNode, use, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
@@ -13,15 +13,10 @@ import {
 } from "@/components/exams/results/context";
 import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
-import {
-  type StatusFilter,
-  StudentsTable,
-  useStatusChoices,
-} from "@/components/exams/results/students";
+import { StudentsTable } from "@/components/exams/results/students";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { TablePageBody } from "@/components/shared/table/frame";
 import {
-  TableChoice,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -101,8 +96,6 @@ function SittingResultsContent({
     () => ({ canGrade, timeZone, total }),
     [canGrade, timeZone, total]
   );
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const statusChoices = useStatusChoices();
   const t = useTranslations("Exams");
 
   if (QueryResult.isFailure(overview)) {
@@ -135,12 +128,6 @@ function SittingResultsContent({
               sittingId={scope.sittingId}
             >
               <TableSearch placeholder={t("results-search")} />
-              <TableChoice
-                onChange={setStatus}
-                options={statusChoices}
-                title={t("filter-label")}
-                value={status}
-              />
               <QuestionsAction questions={questions} />
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
@@ -152,7 +139,7 @@ function SittingResultsContent({
                       {t("release-wait")}
                     </p>
                   )}
-                  <StudentsTable status={status} />
+                  <StudentsTable />
                 </TablePageBody>
               </PanesList>
               <StudentAnswersPanel />

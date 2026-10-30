@@ -1,6 +1,6 @@
 {
   "DataTable": {
-    "filter": "Saring",
+    "filter-by": "Saring menurut {column}",
     "no-results": "Tidak ada hasil.",
     "reset": "Atur ulang"
   },
