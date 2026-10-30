@@ -97,7 +97,7 @@ export function ExamHeaderFrame() {
   return (
     <ExamHeaderRow>
       <BackToExams />
-      <ExamTitleField readOnly value="" />
+      <ExamTitleField placeholder="" readOnly value="" />
       <ExamMenuFrame />
       <ScheduleExamFrame />
     </ExamHeaderRow>
