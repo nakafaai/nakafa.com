@@ -52,6 +52,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableSearch } from "@/components/shared/table/toolbar";
 import {
@@ -59,6 +60,7 @@ import {
   releaseChange,
   type SheetLine,
 } from "@/components/tenant/grades/change";
+import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/grades/sheet";
@@ -102,7 +104,7 @@ function useGradebook() {
   return value;
 }
 
-/** The gradebook's search by student, in the class page's header; the state column filters the lines by state. */
+/** The gradebook's search by student, in the class page's header; the note and state columns filter the lines. */
 export function GradebookSearch() {
   const t = useTranslations("SchoolGrades");
 
@@ -154,6 +156,27 @@ export function ClassGradebook({
     );
   }
 
+  // The note of a line: the band its value reaches, or whether it reaches the KKTP, and none before a grade.
+  const noteOf = (line: SheetLine) =>
+    line.grade === null
+      ? ""
+      : (line.grade.band ?? t(`kktp-${line.grade.kktp}`));
+  // The notes the Note head offers, each a loaded line holds: the scheme's bands and the KKTP in the scheme's order,
+  // then any band of an earlier scheme version that a grade keeps.
+  const held = Arr.filter(
+    Arr.map(pagination.results, noteOf),
+    (note) => note !== ""
+  );
+  const notes = Arr.filter(
+    Arr.dedupe([
+      ...Arr.map(scheme.value.bands, (band) => band.label),
+      t("kktp-reached"),
+      t("kktp-notReached"),
+      ...held,
+    ]),
+    (note) => Arr.contains(held, note)
+  );
+
   const columns = lineColumns.columns([
     lineColumns.accessor((line) => line.student.name, {
       cell: (info) => (
@@ -169,13 +192,18 @@ export function ClassGradebook({
       header: t("value"),
       id: "value",
     }),
-    lineColumns.accessor(
-      (line) =>
-        line.grade === null
-          ? ""
-          : (line.grade.band ?? t(`kktp-${line.grade.kktp}`)),
-      { enableSorting: false, header: t("note"), id: "note" }
-    ),
+    lineColumns.accessor(noteOf, {
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="note"
+          options={namedOptions(notes, GRADE_ICONS)}
+          title={t("note")}
+        />
+      ),
+      id: "note",
+    }),
     lineColumns.accessor(stateOf, {
       cell: (info) => (
         <span className="flex items-center gap-2">
@@ -201,7 +229,7 @@ export function ClassGradebook({
     lineColumns.display({
       cell: (info) => <GradeLineMenu line={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

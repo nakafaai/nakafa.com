@@ -8,7 +8,6 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { TableRow } from "@repo/design-system/components/ui/table";
-import { cva } from "class-variance-authority";
 import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -67,20 +66,15 @@ export function PaneHeader({
   );
 }
 
-/** The spacing of a detail's body: the pane's own padding, or the sheet's, under its header. */
-const paneBody = cva("", {
-  variants: {
-    place: { aside: "p-4", sheet: "px-4 pb-4" },
-  },
-});
-
-/** A detail's body, which scrolls on its own under an overlay bar that takes no room. */
+/**
+ * A detail's body, which scrolls on its own under an overlay bar that takes no room. It keeps the same padding in
+ * the pane and in the phone's sheet: both headers end on a rule, so the body's first field needs the room above it,
+ * and its focus ring stays inside the scrolling box.
+ */
 export function PaneBody({ children }: { children: ReactNode }) {
-  const { place } = usePaneMode();
-
   return (
     <ScrollArea className="flex-1">
-      <div className={paneBody({ place })}>{children}</div>
+      <div className="p-4">{children}</div>
     </ScrollArea>
   );
 }

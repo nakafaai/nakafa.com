@@ -10,6 +10,7 @@ import {
   OPENS_AT,
   openedSitting,
   scheduleSitting,
+  seedAttempt,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
@@ -158,6 +159,53 @@ describe("exams/results students", () => {
         });
         const refused = yield* read(other.id).pipe(Effect.flip);
         expect(refused).toMatchObject({ _tag: "AccessDenied" });
+      })
+  );
+
+  it.effect(
+    "finds a sitting's students by the start of a name, keeps the state filter, and never reaches another school's people",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        yield* enterOk(fixture, {
+          deviceId: DEVICE,
+          sittingId: made.id,
+          token: made.token,
+        });
+        yield* seedAttempt(fixture, {
+          deadline: CLOSES_AT,
+          deviceId: null,
+          person: fixture.people.otherOwner.personId,
+          sittingId: made.id,
+          state: "inProgress",
+        });
+        const read = (search: string, state?: "inProgress" | "submitted") =>
+          fixture.as("teacher").query(results.byStudent, {
+            paginationOpts: { cursor: null, numItems: 10 },
+            search,
+            sittingId: made.id,
+            slug: nf,
+            ...(state === undefined ? {} : { state }),
+          });
+        expect((yield* read("stu")).page).toMatchObject([
+          { name: "Student", state: "inProgress" },
+        ]);
+        expect((yield* read("Student", "inProgress")).page).toMatchObject([
+          { name: "Student" },
+        ]);
+        expect((yield* read("Student", "submitted")).page).toStrictEqual([]);
+        expect((yield* read("Teacher")).page).toStrictEqual([]);
+        const inProgress = yield* fixture
+          .as("teacher")
+          .query(results.byStudent, {
+            paginationOpts: { cursor: null, numItems: 10 },
+            sittingId: made.id,
+            slug: nf,
+            state: "inProgress",
+          });
+        expect(inProgress.page).toHaveLength(2);
+        expect((yield* read("Owner")).page).toStrictEqual([]);
       })
   );
 });

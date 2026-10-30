@@ -79,7 +79,7 @@ function AutocompleteInput({
       {!!showTrigger && (
         <AutocompleteTrigger
           aria-label={triggerLabel}
-          className="absolute inset-e-0.5 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-transparent text-muted-foreground opacity-80 outline-none transition-colors pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring sm:size-7"
+          className="absolute inset-e-0.5 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md border border-transparent text-muted-foreground opacity-80 outline-none transition-colors pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring sm:size-7"
           {...triggerProps}
         >
           <AutocompletePrimitive.Icon data-slot="autocomplete-icon">
@@ -90,7 +90,7 @@ function AutocompleteInput({
       {!!showClear && (
         <AutocompleteClear
           aria-label={clearLabel}
-          className="not-data-visible:pointer-events-none absolute inset-e-0.5 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-transparent text-muted-foreground not-data-visible:opacity-0 opacity-80 outline-none transition-[scale,color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:transition-none data-ending-style:opacity-0 data-starting-style:opacity-0 sm:size-7"
+          className="not-data-visible:pointer-events-none absolute inset-e-0.5 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md border border-transparent text-muted-foreground not-data-visible:opacity-0 opacity-80 outline-none transition-[scale,color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:transition-none data-ending-style:opacity-0 data-starting-style:opacity-0 sm:size-7"
           keepMounted
           {...clearProps}
         />
@@ -192,7 +192,7 @@ function AutocompleteItem({
   return (
     <AutocompletePrimitive.Item
       className={cn(
-        "relative flex min-h-8 cursor-default select-none items-center gap-2 rounded-sm px-2 py-1 text-base outline-none data-disabled:pointer-events-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-64 sm:min-h-7 sm:text-sm [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground data-highlighted:[&_svg:not([class*='text-'])]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "relative flex min-h-8 select-none items-center gap-2 rounded-sm px-2 py-1 text-base outline-none data-disabled:pointer-events-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:opacity-64 sm:min-h-7 sm:text-sm [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground data-highlighted:[&_svg:not([class*='text-'])]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       data-slot="autocomplete-item"
@@ -275,7 +275,7 @@ function AutocompleteClear({
   return (
     <AutocompletePrimitive.Clear
       className={cn(
-        "pressable not-data-visible:pointer-events-none inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-transparent not-data-visible:opacity-0 opacity-80 outline-none transition-[scale,color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:transition-none sm:size-7 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0",
+        "pressable not-data-visible:pointer-events-none inline-flex size-8 items-center justify-center rounded-md border border-transparent not-data-visible:opacity-0 opacity-80 outline-none transition-[scale,color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:transition-none sm:size-7 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0",
         className
       )}
       data-slot="autocomplete-clear"
