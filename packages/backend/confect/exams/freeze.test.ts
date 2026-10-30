@@ -26,6 +26,24 @@ import { Array as Arr, Effect } from "effect";
 const { open } = refs.public.exams.exams;
 const { add, answer, copy, move, points, remove } = refs.public.exams.questions;
 const { submit } = refs.public.editor.steps;
+const { closeDue } = refs.internal.exams.sittings.timers;
+
+/** Schedules a unit sitting of the exam and closes it, as the scheduler does at its closing time, which finishes it. */
+const finishSitting = Effect.fn("test.freeze.finish")(function* (
+  fixture: Parameters<typeof scheduleSitting>[0],
+  examId: Parameters<typeof scheduleSitting>[1]["examId"]
+) {
+  const made = yield* scheduleSitting(fixture, {
+    closesAt: CLOSES_AT,
+    examId,
+    group: { kind: "unit", unitId: fixture.units.smp },
+    opensAt: OPENS_AT,
+  });
+  yield* fixture.internal.mutation(closeDue, {
+    atDeadline: "now",
+    sittingId: made.id,
+  });
+});
 
 describe("exams/freeze", () => {
   beforeEach(() => {
@@ -50,7 +68,7 @@ describe("exams/freeze", () => {
   );
 
   it.effect(
-    "freezes an exam at the time of its first schedule, and keeps that time",
+    "freezes an exam at the time of its first close, and keeps that time",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -72,18 +90,52 @@ describe("exams/freeze", () => {
   );
 
   it.effect(
-    "refuses every change to the questions of an exam once a sitting of it is scheduled, and changes nothing",
+    "takes a change to the questions while a sitting is scheduled and while it runs",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* keyedSchool(fixture);
         const examId = yield* keyedExam(fixture, "Ujian");
-        yield* scheduleSitting(fixture, {
+        const made = yield* scheduleSitting(fixture, {
           closesAt: CLOSES_AT,
           examId,
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS_AT,
         });
+        const teacher = fixture.as("teacher");
+        const [first] = (yield* teacher.query(open, { examId, slug: nf }))
+          .questions;
+        yield* teacher.mutation(points, {
+          examId,
+          points: 2,
+          questionId: first.id,
+          slug: nf,
+        });
+        vi.setSystemTime(OPENS_AT);
+        yield* fixture.internal.mutation(
+          refs.internal.exams.sittings.timers.open,
+          { sittingId: made.id }
+        );
+        yield* teacher.mutation(points, {
+          examId,
+          points: 3,
+          questionId: first.id,
+          slug: nf,
+        });
+        const running = yield* teacher.query(open, { examId, slug: nf });
+        expect(running.frozenAt).toBeUndefined();
+        expect(running.questions[0]?.points).toBe(3);
+      })
+  );
+
+  it.effect(
+    "refuses every change to the questions of an exam once a sitting of it has finished, and changes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Ujian");
+        yield* finishSitting(fixture, examId);
         const teacher = fixture.as("teacher");
         const before = yield* teacher.query(open, { examId, slug: nf });
         const [first] = before.questions;
@@ -141,7 +193,7 @@ describe("exams/freeze", () => {
   );
 
   it.effect(
-    "refuses an edit of the rubric and the explanation of a question once a sitting of its exam is scheduled",
+    "refuses an edit of the rubric and the explanation of a question once a sitting of its exam has finished",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -150,12 +202,7 @@ describe("exams/freeze", () => {
         const teacher = fixture.as("teacher");
         const [first] = (yield* teacher.query(open, { examId, slug: nf }))
           .questions;
-        yield* scheduleSitting(fixture, {
-          closesAt: CLOSES_AT,
-          examId,
-          group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: OPENS_AT,
-        });
+        yield* finishSitting(fixture, examId);
         const refused = yield* Effect.forEach(
           [first.rubric, first.explanation],
           (documentId) =>
@@ -174,28 +221,32 @@ describe("exams/freeze", () => {
   );
 
   it.effect(
-    "returns the time an exam froze, once a sitting of it is scheduled",
+    "leaves a scheduled exam unfrozen, and returns the time it froze once its sitting closes",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         yield* keyedSchool(fixture);
         const examId = yield* keyedExam(fixture, "Ujian");
-        const before = yield* teacher.query(open, { examId, slug: nf });
-        expect(before.frozenAt).toBeUndefined();
-        yield* scheduleSitting(fixture, {
+        const made = yield* scheduleSitting(fixture, {
           closesAt: CLOSES_AT,
           examId,
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS_AT,
         });
-        const after = yield* teacher.query(open, { examId, slug: nf });
-        expect(after.frozenAt).toBe(TENANCY_NOW);
+        const scheduled = yield* teacher.query(open, { examId, slug: nf });
+        expect(scheduled.frozenAt).toBeUndefined();
+        yield* fixture.internal.mutation(closeDue, {
+          atDeadline: "now",
+          sittingId: made.id,
+        });
+        const finished = yield* teacher.query(open, { examId, slug: nf });
+        expect(finished.frozenAt).toBe(TENANCY_NOW);
       })
   );
 
   it.effect(
-    "lets a step push to the prompt of an exam that no sitting has scheduled",
+    "lets a step push to the prompt of an exam that no sitting has finished",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -220,12 +271,7 @@ describe("exams/freeze", () => {
         const examId = yield* keyedExam(fixture, "Ujian");
         const opened = yield* teacher.query(open, { examId, slug: nf });
         const [first] = opened.questions;
-        yield* scheduleSitting(fixture, {
-          closesAt: CLOSES_AT,
-          examId,
-          group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: OPENS_AT,
-        });
+        yield* finishSitting(fixture, examId);
         expect(
           yield* teacher
             .mutation(submit, {
@@ -259,12 +305,7 @@ describe("exams/freeze", () => {
           documentId: first.prompt,
           slug: nf,
         });
-        yield* scheduleSitting(fixture, {
-          closesAt: CLOSES_AT,
-          examId,
-          group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: OPENS_AT,
-        });
+        yield* finishSitting(fixture, examId);
         expect(
           yield* teacher.mutation(submit, {
             batch: text,
@@ -287,12 +328,7 @@ describe("exams/freeze", () => {
         const teacher = fixture.as("teacher");
         yield* keyedSchool(fixture);
         const examId = yield* keyedExam(fixture, "Ujian");
-        yield* scheduleSitting(fixture, {
-          closesAt: CLOSES_AT,
-          examId,
-          group: { kind: "unit", unitId: fixture.units.smp },
-          opensAt: OPENS_AT,
-        });
+        yield* finishSitting(fixture, examId);
         const documentId = yield* newDocument(fixture);
         yield* teacher.mutation(submit, {
           batch: yield* batchText(0, "rina", 2),
