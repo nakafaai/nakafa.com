@@ -3,9 +3,9 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import {
+  actedAt,
   scheduledJobs,
   slugOf,
-  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

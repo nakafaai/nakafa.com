@@ -9,9 +9,9 @@ import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { operatorAccount } from "@repo/backend/test/operators";
 import {
+  actedAt,
   journal,
   slugOf,
-  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

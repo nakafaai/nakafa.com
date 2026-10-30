@@ -15,9 +15,9 @@ import {
   teach,
 } from "@repo/backend/test/classroom";
 import {
+  actedAt,
   grantRole,
   journal,
-  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

@@ -8,8 +8,8 @@ import {
 import { connect } from "@repo/backend/confect/connectors/connection";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import {
-  journal,
   actedAt,
+  journal,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

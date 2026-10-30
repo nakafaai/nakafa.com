@@ -7,8 +7,8 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { loginAddress } from "@repo/backend/confect/identity/address";
 import {
-  slugOf,
   actedAt,
+  slugOf,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

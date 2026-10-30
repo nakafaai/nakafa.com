@@ -11,10 +11,7 @@ describe("emails/retention", () => {
     // component is registered, as convex-test requires of a called component.
     const test = convexTest(schema, convexModules);
     resendTest.register(test);
-    await test.mutation(
-      internal.emails.retention.cleanupRetainedEmailData,
-      {}
-    );
+    await test.mutation(internal.emails.retention.cleanupRetainedEmailData, {});
     const scheduledJobs = await test.run((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );

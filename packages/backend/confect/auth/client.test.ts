@@ -398,7 +398,9 @@ describe("auth/client", () => {
     ]);
     // The claim is due at once: at the millisecond of the sign-in transaction
     // that scheduled it, which convex-test runs after the sign-in's other commits.
-    expect(claims[0]?.scheduledTime).toBe(Math.floor(claims[0]?._creationTime ?? 0));
+    expect(claims[0]?.scheduledTime).toBe(
+      Math.floor(claims[0]?._creationTime ?? 0)
+    );
     await test.mutation(claimRun, { cursor: null, userId: user._id });
     await expect(
       test.query((ctx) => ctx.db.get("tenantPeople", personId))

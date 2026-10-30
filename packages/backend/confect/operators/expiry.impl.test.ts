@@ -3,9 +3,9 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { operatorAccount } from "@repo/backend/test/operators";
 import {
+  actedAt,
   journal,
   slugOf,
-  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

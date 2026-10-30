@@ -3,8 +3,8 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { operatorAccount } from "@repo/backend/test/operators";
 import {
-  slugOf,
   actedAt,
+  slugOf,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

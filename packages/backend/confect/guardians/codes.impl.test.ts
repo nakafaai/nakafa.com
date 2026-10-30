@@ -18,10 +18,10 @@ import {
   startLink,
 } from "@repo/backend/test/guardians";
 import {
+  actedAt,
   journal,
   slugOf,
   suspend,
-  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";

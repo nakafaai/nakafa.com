@@ -7,10 +7,10 @@ import {
   personOf,
 } from "@repo/backend/test/operators";
 import {
+  actedAt,
   journal,
   slugOf,
   suspend,
-  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
