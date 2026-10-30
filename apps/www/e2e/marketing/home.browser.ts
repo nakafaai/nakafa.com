@@ -276,3 +276,40 @@ test("home page carries every part in Indonesian, English and German", async ({
     )
   );
 });
+
+/**
+ * Runs in the page: the words a radio's label gives its accessible name, as axe reads them. Text inside
+ * MathML or inside a drawing hidden from assistive technology names nothing.
+ */
+function readableName(radio: Element) {
+  const label = document.getElementById(
+    radio.getAttribute("aria-labelledby") ?? ""
+  );
+  const readable = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent ?? "";
+    }
+    if (
+      !(node instanceof Element) ||
+      node.getAttribute("aria-hidden") === "true" ||
+      node.localName === "math"
+    ) {
+      return "";
+    }
+    return Array.from(node.childNodes, readable).join("");
+  };
+  return label === null ? "" : readable(label).trim();
+}
+
+test("every choice of the home's practice question is named by its own words", async ({
+  page,
+}) => {
+  await page.goto("/id");
+  const choices = page.locator("#tryout").getByRole("radio");
+  await expect(choices.first()).toBeAttached();
+  const all = await choices.all();
+  expect(all.length).toBeGreaterThan(0);
+  for (const choice of all) {
+    expect(await choice.evaluate(readableName)).not.toBe("");
+  }
+});
