@@ -627,9 +627,9 @@
     "period-start-placeholder": "Pilih hari pertama",
     "period-end-placeholder": "Pilih hari terakhir",
     "period-add-footer": "Periode baru dimulai sebagai direncanakan.",
-    "period-rename": "Ganti nama",
-    "period-rename-description": "Kelas dan tanggal di periode ini tetap sama.",
-    "period-rename-save": "Simpan",
+    "period-edit": "Ubah",
+    "period-edit-description": "Kelas di periode ini tetap sama.",
+    "period-edit-save": "Simpan",
     "periods-empty": "Belum ada periode.",
     "periods-search": "Cari periode",
     "cohorts": "Rombel",
@@ -669,7 +669,6 @@
     "homeroom-teacher": "Guru",
     "homeroom-none": "Belum ada.",
     "homeroom-footer": "Pilih guru yang memimpin rombel ini.",
-    "homeroom-remove-footer": "Tanpa wali kelas, rombel ini belum punya penanggung jawab.",
     "homeroom-archived": "Rombel yang diarsipkan menyimpan wali kelasnya seperti semula.",
     "homeroom-save": "Simpan",
     "homeroom-remove": "Hapus",
@@ -782,7 +781,8 @@
         "opened": "Periode dibuka",
         "archived": "Periode diarsipkan",
         "rename": "Periode diganti nama",
-        "restored": "Periode dipulihkan"
+        "restored": "Periode dipulihkan",
+        "rescheduled": "Tanggal periode diubah"
       },
       "person": {
         "claimed": "Akun bergabung",
@@ -1127,7 +1127,6 @@
     "task-work": "Pekerjaanmu",
     "task-student": "Siswa",
     "task-hand-in": "Kumpulkan",
-    "task-hand-in-again": "Kumpulkan lagi",
     "task-work-empty": "Belum ada pekerjaan",
     "task-work-empty-description": "Pekerjaan yang dikumpulkan siswa tampil di sini.",
     "task-work-search": "Cari siswa",

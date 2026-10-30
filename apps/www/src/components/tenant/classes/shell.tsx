@@ -9,6 +9,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ClassResolved } from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
@@ -38,6 +39,7 @@ import {
   ClassScopeContext,
   useClassScope,
 } from "@/components/tenant/classes/scope";
+import { ClassTabs } from "@/components/tenant/classes/tabs";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
 import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import { TaskWorkSearch } from "@/components/tenant/classes/tasks/work";
@@ -102,8 +104,9 @@ type Resolved = typeof ClassResolved.Type;
 
 /**
  * The class page: the class is read by its address once Convex has settled the session, and a
- * class the viewer may not read shows the missing state. Until the class arrives the header stands
- * alone, so nothing invented fills the page.
+ * class the viewer may not read shows the missing state. Until the class arrives the header and the
+ * tab row stand from the first paint, the tabs taken from the address, so the body keeps its place
+ * when the class's path, title and Grades tab fill in; nothing invented fills the page.
  */
 function ClassPage({
   classSlug,
@@ -112,6 +115,7 @@ function ClassPage({
   classSlug: string;
   slug: TenantSlug;
 }) {
+  const view = useClassView();
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const resolved = useQuery(
@@ -129,7 +133,14 @@ function ClassPage({
     throw resolved.error;
   }
   if (!QueryResult.isSuccess(resolved)) {
-    return <SchoolHeader items={[]} />;
+    // While the class is read: the school header and the class's tab row, with the current tab marked from the
+    // address. The Grades tab, which only a viewer who keeps the grades has, joins at the row's end.
+    return (
+      <>
+        <SchoolHeader items={[]} />
+        <ClassTabs canGrade={false} classSlug={classSlug} tab={view._tag} />
+      </>
+    );
   }
   return (
     <ClassScopeContext
@@ -347,11 +358,11 @@ function ClassBody({
  */
 function ClassScroll({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+    <ScrollArea className="flex-1" viewportClassName="flex flex-col">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6">
         {children}
       </div>
-    </div>
+    </ScrollArea>
   );
 }
 
