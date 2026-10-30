@@ -347,9 +347,9 @@ export function AddMinutesDialog({
             placeholder={t("minutes-placeholder")}
             value={minutesText}
           />
-          {invalid ? (
-            <FieldError id={errorId}>{t("minutes-invalid")}</FieldError>
-          ) : null}
+          <FieldError id={errorId}>
+            {invalid ? t("minutes-invalid") : null}
+          </FieldError>
         </Field>
         <ReasonSelect onValueChange={setReason} value={reason} />
       </FieldGroup>

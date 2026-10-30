@@ -2,7 +2,6 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
@@ -180,77 +179,19 @@ function FieldSeparator({
   );
 }
 
-/** Renders the shared field error container. */
-function FieldErrorRoot({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * The line under a field that holds its error. It is always there and one line tall, so a field keeps its
+ * description and never grows or jumps when an error shows or goes: pass the message as children while there is
+ * one, and nothing otherwise. It stays a live region the whole time, so a message that appears is announced.
+ */
+function FieldError({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("font-normal text-destructive text-sm", className)}
+      className={cn("min-h-5 font-normal text-destructive text-sm", className)}
       data-slot="field-error"
       role="alert"
       {...props}
     />
-  );
-}
-
-/** Renders multiple field validation messages in their original order. */
-function FieldErrorList({
-  errors,
-}: {
-  errors: Array<{ message?: string } | undefined>;
-}) {
-  return (
-    <ul className="ml-4 flex list-disc flex-col gap-1">
-      {Arr.map(
-        errors,
-        (error) =>
-          !!error?.message && <li key={error.message}>{error.message}</li>
-      )}
-    </ul>
-  );
-}
-
-function FieldError({
-  className,
-  children,
-  errors,
-  ...props
-}: React.ComponentProps<"div"> & {
-  errors?: Array<{ message?: string } | undefined>;
-}) {
-  if (children) {
-    return (
-      <FieldErrorRoot className={className} {...props}>
-        {children}
-      </FieldErrorRoot>
-    );
-  }
-
-  if (!errors?.length) {
-    return null;
-  }
-
-  const uniqueErrors = Arr.dedupeWith(
-    errors,
-    (first, second) => first?.message === second?.message
-  );
-
-  if (uniqueErrors.length === 1) {
-    const message = uniqueErrors[0]?.message;
-    if (!message) {
-      return null;
-    }
-
-    return (
-      <FieldErrorRoot className={className} {...props}>
-        {message}
-      </FieldErrorRoot>
-    );
-  }
-
-  return (
-    <FieldErrorRoot className={className} {...props}>
-      <FieldErrorList errors={uniqueErrors} />
-    </FieldErrorRoot>
   );
 }
 

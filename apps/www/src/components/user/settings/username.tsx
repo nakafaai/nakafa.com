@@ -13,7 +13,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -138,12 +137,13 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
                 value={typed}
               />
             </InputGroup>
-            {reply.message !== undefined && reply.canSave && (
-              <FieldDescription>{t(reply.message)}</FieldDescription>
-            )}
-            {reply.message !== undefined && !reply.canSave && (
-              <FieldError>{t(reply.message)}</FieldError>
-            )}
+            {/* One line always answers the typed name, so the card never grows while the name is checked:
+                a free name reads muted, a refused one in the error colour. */}
+            <FieldError
+              className={reply.canSave ? "text-muted-foreground" : undefined}
+            >
+              {reply.message === undefined ? null : t(reply.message)}
+            </FieldError>
           </Field>
         </CardContent>
         <CardSectionFooter hint={t("username-footer")}>

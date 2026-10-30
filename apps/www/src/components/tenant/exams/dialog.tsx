@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -205,20 +206,19 @@ export function CreateExam({
           <Field>
             <FieldLabel htmlFor={`${id}-title`}>{t("title-label")}</FieldLabel>
             <Input
+              aria-invalid={titleTooLong}
               dir="auto"
               id={`${id}-title`}
               onChange={(event) => setTitle(event.target.value)}
               placeholder={t("untitled")}
               value={title}
             />
-            {name === "" ? (
-              <FieldDescription>{t("title-needed")}</FieldDescription>
-            ) : null}
-            {titleTooLong ? (
-              <FieldDescription>
-                {t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })}
-              </FieldDescription>
-            ) : null}
+            <FieldDescription>{t("title-needed")}</FieldDescription>
+            <FieldError>
+              {titleTooLong
+                ? t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })
+                : null}
+            </FieldError>
           </Field>
           <ImportFileField
             description={t("import-description")}

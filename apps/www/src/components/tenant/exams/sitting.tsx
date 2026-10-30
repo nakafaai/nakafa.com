@@ -314,11 +314,12 @@ export function ScheduleSitting({
             timePlaceholder={t("starts-time-placeholder")}
             value={starts}
           />
-          {Option.isSome(choice) && Option.isSome(times) ? (
-            <FieldDescription>{choice.value.timeZone}</FieldDescription>
-          ) : (
-            <FieldDescription>{t("starts-needed")}</FieldDescription>
-          )}
+          <FieldDescription>
+            {Option.match(choice, {
+              onNone: () => t("starts-needed"),
+              onSome: (unit) => unit.timeZone,
+            })}
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>

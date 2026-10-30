@@ -219,11 +219,8 @@ function GuardianConfirm({ child }: { child: ChildItem }) {
             placeholder="0012345678"
             value={nisn}
           />
-          {refused ? (
-            <FieldError>{t("nisn-refused")}</FieldError>
-          ) : (
-            <FieldDescription>{t("nisn-hint")}</FieldDescription>
-          )}
+          <FieldDescription>{t("nisn-hint")}</FieldDescription>
+          <FieldError>{refused ? t("nisn-refused") : null}</FieldError>
         </Field>
       </PaneBody>
       <PaneFooter>

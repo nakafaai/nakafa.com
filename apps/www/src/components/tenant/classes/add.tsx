@@ -57,6 +57,7 @@ export function AddChannel({
   const name = Str.trim(title);
   // A name the schema refuses is either empty or too long: the input is one line, and it is trimmed.
   const nameTooLong = name !== "" && !Schema.is(ChannelName)(name);
+  const invalid = Option.isSome(refusal) || nameTooLong;
   const ready = Schema.is(ChannelName)(name) && !isPending;
 
   /** Reopens the dialog with the reason the server refused the channel. */
@@ -139,11 +140,11 @@ export function AddChannel({
         title={t("add-channel-title")}
       >
         <FieldGroup>
-          <Field data-invalid={Option.isSome(refusal)}>
+          <Field data-invalid={invalid}>
             <FieldLabel htmlFor={`${id}-name`}>{t("channel-name")}</FieldLabel>
             <Input
-              aria-describedby={Option.isSome(refusal) ? errorId : undefined}
-              aria-invalid={Option.isSome(refusal)}
+              aria-describedby={invalid ? errorId : undefined}
+              aria-invalid={invalid}
               id={`${id}-name`}
               onChange={(event) => {
                 setTitle(event.target.value);
@@ -152,19 +153,18 @@ export function AddChannel({
               placeholder={t("channel-name-placeholder")}
               value={title}
             />
-            {Option.isSome(refusal) ? (
-              <FieldError id={errorId}>{refusal.value}</FieldError>
-            ) : null}
-            {name === "" ? (
-              <FieldDescription>{t("channel-name-needed")}</FieldDescription>
-            ) : null}
-            {nameTooLong ? (
-              <FieldDescription>
-                {t("channel-name-too-long", {
-                  count: CHANNEL_NAME_MAX_LENGTH,
-                })}
-              </FieldDescription>
-            ) : null}
+            <FieldDescription>{t("channel-name-needed")}</FieldDescription>
+            <FieldError id={errorId}>
+              {Option.match(refusal, {
+                onNone: () =>
+                  nameTooLong
+                    ? t("channel-name-too-long", {
+                        count: CHANNEL_NAME_MAX_LENGTH,
+                      })
+                    : null,
+                onSome: (message) => message,
+              })}
+            </FieldError>
           </Field>
         </FieldGroup>
       </ResponsiveDialog>

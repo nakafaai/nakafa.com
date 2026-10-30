@@ -4,6 +4,7 @@ import identity from "@repo/backend/confect/_generated/refs/identity";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -140,11 +141,7 @@ function TenantLoginForm() {
           />
         </Field>
       </FieldGroup>
-      {message === undefined ? null : (
-        <p className="text-destructive text-sm" role="alert">
-          {message}
-        </p>
-      )}
+      <FieldError>{message}</FieldError>
       <Button
         aria-busy={isPending || undefined}
         className="w-full"

@@ -61,11 +61,8 @@ export function LibraryFileField({
           onClear={() => onFile(null)}
         />
       )}
-      {oversize ? (
-        <FieldError>{t("library-file-oversize")}</FieldError>
-      ) : (
-        <FieldDescription>{t("library-file-limit")}</FieldDescription>
-      )}
+      <FieldDescription>{t("library-file-limit")}</FieldDescription>
+      <FieldError>{oversize ? t("library-file-oversize") : null}</FieldError>
     </Field>
   );
 }
@@ -134,23 +131,24 @@ export function LibraryDriveField({
           {t("library-drive-choose")}
         </Button>
       )}
-      {missing ? (
-        <FieldDescription>
-          {t("library-drive-missing")}{" "}
-          <a
-            className="font-medium text-foreground underline underline-offset-4"
-            href={
-              new URL(`/${locale}/user/settings/connectors`, SITE_ORIGIN).href
-            }
-            rel="noopener"
-            target="_blank"
-          >
-            {t("library-drive-connect")}
-          </a>
-        </FieldDescription>
-      ) : (
-        <FieldDescription>{t("library-file-limit")}</FieldDescription>
-      )}
+      <FieldDescription>{t("library-file-limit")}</FieldDescription>
+      <FieldError>
+        {missing ? (
+          <>
+            {t("library-drive-missing")}{" "}
+            <a
+              className="font-medium text-foreground underline underline-offset-4"
+              href={
+                new URL(`/${locale}/user/settings/connectors`, SITE_ORIGIN).href
+              }
+              rel="noopener"
+              target="_blank"
+            >
+              {t("library-drive-connect")}
+            </a>
+          </>
+        ) : null}
+      </FieldError>
     </Field>
   );
 }

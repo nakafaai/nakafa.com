@@ -132,9 +132,7 @@ export function StartDiscussion({
               placeholder={t("discussion-title-placeholder")}
               value={title}
             />
-            {Option.isSome(refusal) ? (
-              <FieldError>{refusal.value}</FieldError>
-            ) : null}
+            <FieldError>{Option.getOrNull(refusal)}</FieldError>
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-text`}>
