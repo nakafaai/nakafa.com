@@ -166,7 +166,6 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
       sortFn: "text",
     }),
     loginColumns.accessor((login) => login.person.name, {
-      filterFn: "includesString",
       header: t("login-person"),
       id: "person",
       sortFn: "text",
@@ -175,7 +174,6 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
       cell: (info) => <SchoolDateTime at={info.getValue()} />,
       header: t("login-issued"),
       id: "issued",
-      meta: { align: "end" },
       sortFn: "basic",
     }),
     loginColumns.display({

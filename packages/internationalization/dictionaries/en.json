@@ -1,6 +1,8 @@
 {
   "DataTable": {
     "filter-by": "Filter by {column}",
+    "sort-ascending": "Ascending",
+    "sort-descending": "Descending",
     "no-results": "No results.",
     "reset": "Reset"
   },
