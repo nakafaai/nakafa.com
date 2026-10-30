@@ -20,7 +20,7 @@ Measured on origin/main 2359c75ad0, before origin/main e4776b377e. The research 
 - The sitemap lists 1,920 URLs. The client build holds 3,519 files (256.6 MiB), and 1,923 OG PNGs make up 220.2 MB of it.
 - Home HTML is 555,731 bytes. A lesson measured 293,240 bytes in one run and 791 KB in another. Re-measure before relying on either.
 - A content render costs 23.3 ms of CPU in Node (research measurement). The 698 ms per lesson figure is an orchestrator number that was not reproduced.
-- Workers Free: 100,000 Worker requests per day (Error 1027 beyond), 10 ms CPU per request (Error 1102 on sustained overrun), 20,000 static files per version, 25 MiB per file, 100 Workers and 1,000 routes per zone, 100 _headers rules of at most 2,000 characters per line, 2,000 static plus 100 dynamic _redirects.
+- Workers limits: Error 1102 ends an invocation that keeps running past its CPU limit, which each Worker declares as its cap in `apps/www/deploy/stage.ts` (ADR 0037 decision 10). 100,000 static files per version, 25 MiB per file, 100 Workers and 1,000 routes per zone, 100 _headers rules of at most 2,000 characters per line, 2,000 static plus 100 dynamic _redirects. A cold isolate evaluates a server function's lazy module graph in 60 to 95 ms of CPU, and a warm call costs about 10 ms (Workers Logs, 30 Oct 2026).
 - Cloudflare documents that requests to static assets are free and unlimited, that storing assets has no charge, that Workers Caching bills static requests when enabled, that the CDN does not cache HTML by default, and that _headers and _redirects do not apply to Worker responses.
 - Alchemy 2.0.0-beta.84 caps one Worker at 20,000 assets (node_modules/.pnpm/@alchemy.run+cloudflare@2.0.0-beta.84_*/node_modules/@alchemy.run/cloudflare/src/Workers/Assets.ts:17-18) and takes one assets directory per Worker.
 - TanStack prerender rethrows a failed page inside a queued task whose promise nobody awaits (start-plugin-core prerender.ts:136 and 228-240, queue.ts:68-77). A failed page therefore does not fail the build by itself.
@@ -31,7 +31,7 @@ D1. Public pages are prerendered HTML in assets-only Workers. A Node renderer ru
 
 D2. Signed-in and School surfaces render only in the browser. School hosts (*.nakafa.com) get a static single-page-application shell. Its school gate and refusal run in the browser against Convex. Signed-in apex screens are client routes of a static shell that owns their route prefixes. No server function runs for them. (Amended 26 Oct 2026 for School, see "Phase B for School as implemented": the web Worker answers the shell from its own assets instead of a second, assets-only Worker.)
 
-D3. One small dynamic Worker, with its own bundle and no TanStack or SSR code, serves nakafa.com/api/*. It answers the Better Auth relay, weather from request.cf coordinates, the pricing currency from CF-IPCountry, and the Aksara renderer manifest. Its target is under 10 ms CPU per request, measured in Workers Logs. The Convex token is fetched per document load and held in memory only.
+D3. One small dynamic Worker, with its own bundle and no TanStack or SSR code, serves nakafa.com/api/*. It answers the Better Auth relay, weather from request.cf coordinates, the pricing currency from CF-IPCountry, and the Aksara renderer manifest. Its CPU per request is measured in Workers Logs; on 30 Oct 2026 the auth relay and the session read reached 61 to 63 ms on a cold isolate. The Convex token is fetched per document load and held in memory only.
 
 D4. A page with an Aksara source has a static .md twin beside its HTML. The HTML head links it with a rel alternate of type text/markdown, and llms.txt lists it. Accept negotiation and its Worker are removed, so a request that asks for Markdown receives HTML.
 
@@ -180,7 +180,7 @@ verified on the probe, which has no School or www host and no zone rule:
 
 ## Alternatives rejected
 
-- Edge cache of Worker renders. Workers Caching has no API to pre-populate the cache, collapses concurrent misses per data center, bills hits, and bypasses responses that set cookies. Every miss still runs the Worker under the 10 ms budget.
+- Edge cache of Worker renders. Workers Caching has no API to pre-populate the cache, collapses concurrent misses per data center, bills hits, and bypasses responses that set cookies. Every miss still runs the Worker and pays its CPU.
 - R2 as the content tier. A public bucket needs no Worker, but storage above 10 GB is metered and route precedence against the apex is untested. R2 stays an archive only if a spike finds a cap.
 - TanStack prerender as the only renderer. A failed page does not fail the build, and a shard cannot reuse prior output. The Node renderer reads the release once and awaits every page. Spike S2 compares both on 100 pages, and TanStack prerender with filter remains the fallback if S2 finds the Node output differs.
 - Workers Paid now. The $5 monthly minimum buys nothing under the measured limits. Paid is the first step only after a measured limit binds.
@@ -197,7 +197,7 @@ Negative: the pricing currency of a static page is the default currency until th
 
 ## Gates
 
-S1: route precedence, 404 behavior and zero Worker invocations for content URLs on a scratch zone that is not nakafa.com, and on the probe: zero Worker invocations for content URLs and a scanner CPU p90 under 10 ms (`ops/cpuroutes.mjs`). The Worker answers a scanner's locale path with the static page, so a scanner costs no render. S2: Node render cost and HTML parity against the current Worker on 100 URLs. S3: relay CPU under 10 ms at p99. S5: the Single Redirect field for Accept-Language and its Free quota. S7: upload and deploy time for an 18,000-file shard. S8: the shell build. S9: bulk read cost against the Convex plan and the spending limit. S6: a stable loader prototype before 20,000 URLs.
+S1: route precedence, 404 behavior and zero Worker invocations for content URLs on a scratch zone that is not nakafa.com, and on the probe: zero Worker invocations for content URLs and a scanner CPU p90 measured by `ops/cpuroutes.mjs`. The Worker answers a scanner's locale path with the static page, so a scanner costs no render. S2: Node render cost and HTML parity against the current Worker on 100 URLs. S3: relay CPU at p99, measured in Workers Logs. S5: the Single Redirect field for Accept-Language and the zone plan's rule quota (10 on the Free website plan). S7: upload and deploy time for an 18,000-file shard. S8: the shell build. S9: bulk read cost against the Convex plan and the spending limit. S6: a stable loader prototype before 20,000 URLs.
 
 ## Corrections to earlier documents
 
