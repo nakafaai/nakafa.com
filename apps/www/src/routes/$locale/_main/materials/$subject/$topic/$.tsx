@@ -163,10 +163,10 @@ export const Route = createFileRoute(
   "/$locale/_main/materials/$subject/$topic/$"
 )({
   validateSearch: Schema.toStandardSchemaV1(MaterialSearch),
-  // A client navigation reads the placement that the address's `ctx` hint names
-  // before the page commits, so the breadcrumb's first frame is its final one. A
-  // prerender and a hard load read none here: the static page cannot see the
-  // query, and the provider reads it once the page has hydrated.
+  // In the browser the loader reads the placement that the address's `ctx` hint
+  // names, once a page: before a client navigation commits, and after a hard load
+  // has hydrated, when the router runs it again. The prerender reads none: the
+  // static page cannot see the query.
   loader: async ({ location, params }) => {
     const lesson = Arr.filter(
       (params._splat ?? "").split("/"),
@@ -200,7 +200,7 @@ export const Route = createFileRoute(
             page: page.navigation,
           })
         );
-    return { ...page, placement };
+    return { ...page, placement, placementRead: !import.meta.env.SSR };
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
@@ -245,11 +245,10 @@ function MaterialPage() {
   const { metadata, headings, labels, route } = page;
   return (
     <MaterialPlacementProvider
-      ctx={ctx}
-      initial={page.placement}
       key={`${route.publicPath}?${ctx ?? ""}`}
-      locale={page.locale}
       page={page.navigation}
+      placement={page.placement}
+      read={page.placementRead}
     >
       <LayoutMaterial>
         <ContentViewTracker

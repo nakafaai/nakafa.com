@@ -167,12 +167,17 @@ export function MdxCode(props: CodeProps) {
   return <code className={codeVariants()} {...props} />;
 }
 
-/** Renders an MDX table and removes compiler-only whitespace nodes. */
+/**
+ * Renders an MDX table and removes compiler-only whitespace nodes. A table is
+ * always laid out, never skipped with `content-visibility`: no fixed estimate
+ * fits every table, and a table in the first screen painted at its estimate
+ * first, then at its own height, which moved the lesson under it.
+ */
 export function MdxTable({ children, className, ...props }: TableProps) {
   return (
     <Table
       className={cn("has-[tbody]:[&_thead]:border-b", className)}
-      containerClassName="content-auto-table my-4 rounded-xl border"
+      containerClassName="my-4 rounded-xl border"
       {...props}
     >
       {filterWhitespaceNodes(children)}

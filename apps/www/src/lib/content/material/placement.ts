@@ -19,7 +19,7 @@ export type PlacementStore = StoreApi<PlacementState>;
 
 /**
  * Creates one lesson page's placement: none, as the server renders the page, or
- * the placement that a client navigation's loader read before the page commits.
+ * the placement that the loader read in the browser before the page committed.
  */
 export function createPlacementStore(
   initial: MaterialPlacement | null = null
@@ -79,17 +79,10 @@ export const readLessonPlacement = Effect.fn("www.materials.placement.read")(
   }
 );
 
-/**
- * Reads the placement after a hard load has hydrated, where the static page
- * could not see the hint, and keeps it in the store.
- */
-export const startMaterialPlacement = Effect.fn(
-  "www.materials.placement.start"
-)(function* (
+/** Keeps the placement that the page's loader read in the browser, or none. */
+export function keepPlacement(
   store: PlacementStore,
-  input: Parameters<typeof readLessonPlacement>[0]
+  placement: MaterialPlacement | null
 ) {
-  store.setState(
-    placementState(Option.fromNullishOr(yield* readLessonPlacement(input)))
-  );
-});
+  store.setState(placementState(Option.fromNullishOr(placement)));
+}
