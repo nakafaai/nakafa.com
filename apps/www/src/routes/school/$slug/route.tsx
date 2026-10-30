@@ -7,7 +7,6 @@ import {
   notFound,
   Outlet,
 } from "@tanstack/react-router";
-import { createIsomorphicFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { ReactElement } from "react";
@@ -24,27 +23,20 @@ import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
-import { readAuthLegalFn } from "@/lib/auth/legal.functions";
-import { readShellClassesFn } from "@/lib/tenant/classes.functions";
+import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
+import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
+import { readStaticData } from "@/lib/static/data";
 import {
   canManageSchool,
   outsiderOf,
   roleOf,
+  type SchoolFrame,
   type SchoolRead,
 } from "@/lib/tenant/frame";
-import { readSchoolFrameFn } from "@/lib/tenant/frame.functions";
 import { schoolHead } from "@/lib/tenant/head";
-import { reusesVisitFrame } from "@/lib/tenant/visit";
-
-/**
- * Every school document is private: it is never cached, it is not indexed, and
- * its answer depends on the visitor's cookie and language.
- */
-const SCHOOL_HEADERS = {
-  "cache-control": "private, no-store",
-  "x-robots-tag": "noindex",
-  vary: "Accept-Language, Cookie",
-};
+import { SchoolReadsLive } from "@/lib/tenant/read";
+import { readSchoolLocale } from "@/lib/tenant/root";
+import { readBrowserSchoolFrame, reusesVisitFrame } from "@/lib/tenant/visit";
 
 /**
  * The search params of the school entry. `masuk=username` opens the username form
@@ -64,29 +56,47 @@ function readSlug(slug: string): TenantSlug {
   return school.value;
 }
 
-/** The legal notice of the sign-in sentence, as its server function answers it. */
-type LegalRead = Awaited<ReturnType<typeof readAuthLegalFn>>;
+/** The frame of one school visit and the legal notice of its sign-in sentence. */
+type VisitFrame = Record<"legal", AuthLegalLinks | null> &
+  Record<"school", SchoolRead>;
 
-/** The frame and the legal notice that one school visit has read so far. */
-type SchoolVisit = Partial<
-  Record<"legal", LegalRead> & Record<"school", SchoolRead>
->;
+/** The frame that one school visit has read so far. */
+type SchoolVisit = Partial<Record<"frame", VisitFrame>>;
 
 /**
- * Whether a run of the school's loaders draws the first HTML. On the server the Worker draws
- * it, and each page reads its first screen through its server function, so its rows are in
- * the HTML. In the browser a click reads nothing before it commits: the page commits at once
- * and reads its rows live from Convex, so no click waits on a Worker request (ADR 0038 D2).
+ * What the layout gives every page of the school: the visit's frame, which a refused
+ * school never reaches, and the school's address. The layout's `beforeLoad` names it, because the router's types are built
+ * from every route's context, so a context inferred from a body that reads the router's
+ * matches would depend on itself.
  */
-const drawsFirstHtml = createIsomorphicFn()
-  .server(() => true)
-  .client(() => false);
+type SchoolContext = Record<"legal", AuthLegalLinks | null> &
+  Record<"school", SchoolFrame> &
+  Record<"slug", TenantSlug>;
+
+/**
+ * Reads the frame of a school in the browser. A visitor's entry page names the
+ * privacy and terms pages, so only a visitor reads the locale's legal pages, from
+ * the static answer that the build writes for every locale.
+ */
+async function readVisitFrame(slug: TenantSlug): Promise<VisitFrame> {
+  const locale = readSchoolLocale();
+  const school = await Effect.runPromise(
+    readBrowserSchoolFrame(slug, locale).pipe(Effect.provide(SchoolReadsLive))
+  );
+  if (school._tag !== "Visitor") {
+    return { legal: null, school };
+  }
+  const shell = await readStaticData(readMarketingShellFn, { locale });
+  return {
+    legal: Option.getOrNull(authLegalLinks(locale, shell.pageNavigation)),
+    school,
+  };
+}
 
 /**
  * Starts the memo of one school visit. TanStack keeps the layout's context object
  * for every navigation that keeps its match, so a child navigation reuses the
- * visit's frame. Hydration after a hard load starts a fresh memo, so the first child
- * navigation after it reads the frame once more.
+ * visit's frame.
  */
 function startVisit() {
   const visit: SchoolVisit = {};
@@ -94,12 +104,13 @@ function startVisit() {
 }
 
 /**
- * The school layout. The gate decides the page before it streams: a school that
- * does not exist, and a viewer whom the school denies, answer not found. A visitor
- * sees the entry surface, and an account that is not a member sees the outsider
- * page. A member gets the shell, and every page of the school renders inside it.
- * The layout's beforeLoad runs on every navigation into the school. A child
- * navigation reuses the visit's frame, and a refresh reads it again.
+ * The school layout, which renders only in the browser. The gate decides the page
+ * before it commits: a school that does not exist, and a viewer whom the school
+ * denies, answer not found. A visitor sees the entry surface, and an account that
+ * is not a member sees the outsider page. A member gets the shell, and every page
+ * of the school renders inside it. The layout's beforeLoad runs on every
+ * navigation into the school. A child navigation reuses the visit's frame, so a
+ * click reads nothing before it commits, and a refresh reads it again.
  */
 export const Route = createFileRoute("/school/$slug")({
   // Leaving the school drops its memo at once, so a return to it reads the frame again.
@@ -109,42 +120,32 @@ export const Route = createFileRoute("/school/$slug")({
   },
   validateSearch: Schema.toStandardSchemaV1(SchoolSearch),
   context: startVisit,
-  beforeLoad: async ({ cause, context, matches, params, routeId }) => {
+  beforeLoad: async ({
+    cause,
+    context,
+    matches,
+    params,
+    routeId,
+  }): Promise<SchoolContext> => {
     const { visit } = context;
     const invalid = Arr.some(
       matches,
       (match) => match.routeId === routeId && match.invalid
     );
-    const reuse = reusesVisitFrame({ cause, invalid });
-    visit.school =
-      reuse && visit.school !== undefined
-        ? visit.school
-        : await readSchoolFrameFn({ data: { slug: params.slug } });
-    visit.legal =
-      reuse && visit.legal !== undefined
-        ? visit.legal
-        : await readAuthLegalFn({ data: {} });
-    if (visit.school._tag === "Refused") {
+    const frame =
+      reusesVisitFrame({ cause, invalid }) && visit.frame !== undefined
+        ? visit.frame
+        : await readVisitFrame(params.slug);
+    visit.frame = frame;
+    if (frame.school._tag === "Refused") {
       throw notFound();
     }
-    return {
-      firstHtml: drawsFirstHtml(),
-      legal: visit.legal,
-      school: visit.school,
-      slug: params.slug,
-    };
+    return { legal: frame.legal, school: frame.school, slug: params.slug };
   },
-  // The sidebar's classes are read for the first HTML only; after that the shell reads them live.
-  staleTime: Number.POSITIVE_INFINITY,
-  loader: ({ context }) =>
-    context.firstHtml && context.school._tag === "Member"
-      ? readShellClassesFn({ data: { slug: context.slug } })
-      : undefined,
   head: ({ match }) => {
     const school = match.context.school;
     return school === undefined ? {} : schoolHead(school.profile.name);
   },
-  headers: () => SCHOOL_HEADERS,
   component: SchoolLayout,
   errorComponent: SchoolError,
   notFoundComponent: SchoolRefused,
@@ -152,7 +153,6 @@ export const Route = createFileRoute("/school/$slug")({
 
 function SchoolLayout(): ReactElement {
   const { school } = Route.useRouteContext();
-  const classes = Route.useLoaderData();
   if (school._tag === "Visitor") {
     return <TenantEntry title={school.title} />;
   }
@@ -169,7 +169,6 @@ function SchoolLayout(): ReactElement {
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
         canOpenReports={canOpenReports(viewer)}
-        classes={classes}
         greeting={school.greeting}
         home={school.home}
         personName={viewer.person.name}

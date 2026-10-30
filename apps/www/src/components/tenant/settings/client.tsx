@@ -1,5 +1,4 @@
 import { QueryResult, useMutation } from "@confect/react";
-import { Id } from "@repo/backend/confect/_generated/id";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { IntegrationName } from "@repo/backend/confect/integrations/schema";
@@ -66,25 +65,38 @@ export function SchoolClientCreateDialog({
   const units = QueryResult.isSuccess(viewer)
     ? Arr.filter(viewer.value.units, (unit) => unit.status === "active")
     : [];
+  // Each choice carries the scope it sends, so the whole school never travels as a unit ID.
   const scopeItems = [
-    { label: t("grant-scope-school"), value: "school" },
-    ...Arr.map(units, (unit) => ({ label: unit.name, value: unit.id })),
+    {
+      label: t("grant-scope-school"),
+      scope: { kind: "tenant" } satisfies GrantScope,
+      value: "school",
+    },
+    ...Arr.map(units, (unit) => ({
+      label: unit.name,
+      scope: { kind: "unit", unitId: unit.id } satisfies GrantScope,
+      value: unit.id,
+    })),
   ];
   const clientName = Schema.decodeOption(IntegrationName)(name.trim());
 
   const submit = () => {
     const held = [...actions];
-    if (Option.isNone(clientName) || !Arr.isArrayNonEmpty(held)) {
+    const covered = Arr.findFirst(scopeItems, (item) => item.value === scope);
+    if (
+      Option.isNone(clientName) ||
+      Option.isNone(covered) ||
+      !Arr.isArrayNonEmpty(held)
+    ) {
       return;
     }
-    const covered = scopeOf(scope);
     startTransition(() =>
       saveSchool(
         () =>
           create({
             actions: held,
             name: clientName.value,
-            scope: covered,
+            scope: covered.value.scope,
             slug,
           }),
         SOURCE,
@@ -186,12 +198,4 @@ export function SchoolClientCreateDialog({
       </FieldGroup>
     </ResponsiveDialog>
   );
-}
-
-/** The part of the school a client covers: the whole school, or the unit the choice names. */
-function scopeOf(choice: string): GrantScope {
-  return Option.match(Schema.decodeUnknownOption(Id("tenantUnits"))(choice), {
-    onNone: (): GrantScope => ({ kind: "tenant" }),
-    onSome: (unitId): GrantScope => ({ kind: "unit", unitId }),
-  });
 }

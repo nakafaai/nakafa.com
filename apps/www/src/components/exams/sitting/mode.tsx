@@ -4,8 +4,8 @@ import type { PlayerMode } from "@/components/player/mode";
 const ModeContext = createContext<PlayerMode | null>(null);
 
 /**
- * Gives the student's running paper the view the server resolved from the address and the saved view. The
- * view is fixed for the page, so the context never changes after hydration.
+ * Gives the student's running paper the view the page resolved from the address and the saved view. The
+ * view is fixed for the page, so the context never changes while the page shows.
  */
 export function SittingModeProvider({
   children,

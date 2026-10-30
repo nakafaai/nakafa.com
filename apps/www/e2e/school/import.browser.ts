@@ -112,7 +112,7 @@ test("the editor imports a Word file into the open exam from its header menu, as
   const header = page.locator("header").filter({
     has: page.getByRole("button", { name: "More actions" }),
   });
-  const tryAction = header.getByRole("button", { name: "Try as student" });
+  const tryAction = header.getByRole("link", { name: "Try as student" });
   const moreActions = header.getByRole("button", { name: "More actions" });
   await expect(tryAction).toBeVisible();
   await expect(tryAction).toHaveCSS("border-top-right-radius", "0px");

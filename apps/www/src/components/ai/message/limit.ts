@@ -16,6 +16,7 @@ const limitCopy = {
   deepResearch: SOURCE_LIMIT,
   math: null,
   memory: null,
+  calendar: null,
 } satisfies Record<LearningCapabilityName, typeof SOURCE_LIMIT | null>;
 
 /**

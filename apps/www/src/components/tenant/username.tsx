@@ -1,7 +1,7 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { getRouteApi, useMatchRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
@@ -69,26 +69,21 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <AuthGoogle returnPath="/" />
-      <Button
-        nativeButton={false}
-        render={
-          <Link
-            params={{ slug }}
-            search={{ masuk: "username" }}
-            to="/school/$slug"
-          />
-        }
-        variant="outline"
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        params={{ slug }}
+        search={{ masuk: "username" }}
+        to="/school/$slug"
       >
         {t("username-action")}
-      </Button>
-      <Button
-        nativeButton={false}
-        render={<Link params={{ slug }} to="/school/$slug/orang-tua" />}
-        variant="ghost"
+      </Link>
+      <Link
+        className={buttonVariants({ variant: "ghost" })}
+        params={{ slug }}
+        to="/school/$slug/orang-tua"
       >
         {tGuardian("sign-in-action")}
-      </Button>
+      </Link>
     </div>
   );
 }
@@ -104,13 +99,13 @@ export function TenantEntryBack({ slug }: { slug: TenantSlug }) {
   }
 
   return (
-    <Button
-      nativeButton={false}
-      render={<Link params={{ slug }} to="/school/$slug" />}
-      variant="ghost"
+    <Link
+      className={buttonVariants({ variant: "ghost" })}
+      params={{ slug }}
+      to="/school/$slug"
     >
       <HugeIcons icon={ArrowLeft01Icon} />
       {t("back")}
-    </Button>
+    </Link>
   );
 }

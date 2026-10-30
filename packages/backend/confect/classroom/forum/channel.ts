@@ -47,16 +47,21 @@ export const channelValidator = Schema.Struct({
   tenantId: Id("tenants"),
 });
 
-/** One channel as the wire shows it. */
+/**
+ * One channel as the wire shows it, and whether a message came to it after the
+ * viewer last read it.
+ */
 export const ChannelView = Schema.Struct({
   id: Id("classroomChannels"),
   kind: ChannelKind,
   name: ChannelName,
+  unread: Schema.Boolean,
 });
 
-/** One channel of a class as the wire shows it. */
-export const channelView = (row: ClassroomChannelsDoc) => ({
+/** One channel of a class as the wire shows it, unread or not for the viewer. */
+export const channelView = (row: ClassroomChannelsDoc, unread: boolean) => ({
   id: row._id,
   kind: row.kind,
   name: row.name,
+  unread,
 });

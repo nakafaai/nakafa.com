@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { cn } from "cn";
 import { useId } from "react";
@@ -44,20 +45,16 @@ export function RefContent({ githubUrl, className }: Props) {
       </h2>
 
       <ButtonGroup>
-        <Button
-          nativeButton={false}
-          render={
-            <a
-              href={githubUrl ?? "https://github.com/nakafaai/nakafa.com"}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <HugeIcons icon={GithubIcon} />
-              {t("source-code")}
-            </a>
-          }
-          variant="outline"
-        />
+        <a
+          className={buttonVariants({ variant: "outline" })}
+          data-slot="button"
+          href={githubUrl ?? "https://github.com/nakafaai/nakafa.com"}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <HugeIcons icon={GithubIcon} />
+          {t("source-code")}
+        </a>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={<Button size="icon" variant="outline" />}

@@ -40,10 +40,10 @@ export const markReadInLists: OptimisticUpdate<
   changeLists(localStore, (page) => markRowRead(page, notificationId, readAt));
 };
 
-/** The change that shows every loaded row as read at once, in every loaded list. */
+/** The change that shows every loaded row as read at once, or those of the school it names, in every loaded list. */
 export const markAllReadInLists: OptimisticUpdate<
   typeof notifications.inbox.readAll
-> = (localStore) => {
+> = (localStore, { slug }) => {
   const readAt = readTime();
-  changeLists(localStore, (page) => markPageRead(page, readAt));
+  changeLists(localStore, (page) => markPageRead(page, readAt, slug));
 };

@@ -114,7 +114,7 @@ test.describe("at 1440", () => {
   }) => {
     await examOfThree(page, baseURL);
     await page.getByRole("button", { name: ANY_OF_THREE }).click();
-    const field = page.getByRole("spinbutton", {
+    const field = page.getByRole("textbox", {
       name: "Go to question, 1 to 3",
     });
     await expect(field).toBeFocused();
