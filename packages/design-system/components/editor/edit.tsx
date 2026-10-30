@@ -1,10 +1,11 @@
 import { KeyboardIcon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import { FormulaKeypad } from "@repo/design-system/components/editor/keypad";
+import { formulaProblem } from "@repo/design-system/components/editor/render";
 import {
-  drawFormula,
-  formulaProblem,
-} from "@repo/design-system/components/editor/render";
+  BlockMath,
+  InlineMath,
+} from "@repo/design-system/components/markdown/math";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -219,17 +220,22 @@ export function FormulaEdit({
 
   return (
     <Popover onOpenChange={openEditor} open={open}>
+      {/* A formula on its own line is the lesson's card, a block, so its trigger is a block with a button's role. */}
       <PopoverTrigger
+        nativeButton={!block}
         render={
-          <button
-            aria-label={labels.open}
-            className={
-              block
-                ? "block w-full cursor-pointer overflow-x-auto text-start"
-                : "inline cursor-pointer"
-            }
-            type="button"
-          />
+          block ? (
+            <div
+              aria-label={labels.open}
+              className="block w-full cursor-pointer text-start"
+            />
+          ) : (
+            <button
+              aria-label={labels.open}
+              className="inline cursor-pointer"
+              type="button"
+            />
+          )
         }
       >
         <FormulaMarkup block={block} latex={latex} />
@@ -302,8 +308,10 @@ export function FormulaEdit({
 }
 
 /**
- * The drawn formula, which KaTeX draws from its LaTeX and never from any other source. The server and
- * the browser draw it alike, so the first HTML already shows the formula, chemistry included.
+ * The drawn formula, as the lesson page draws it: a formula on its own line in the lesson's card, and an
+ * inline formula with the lesson's inline pieces, both drawn by KaTeX from the LaTeX alone. The server and
+ * the browser draw it alike, so the first HTML already shows the formula, chemistry included (`render.ts`
+ * registers it on KaTeX).
  */
 export function FormulaMarkup({
   block,
@@ -312,10 +320,5 @@ export function FormulaMarkup({
   block: boolean;
   latex: string;
 }) {
-  return (
-    <span
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-      dangerouslySetInnerHTML={{ __html: drawFormula(latex, block) }}
-    />
-  );
+  return block ? <BlockMath math={latex} /> : <InlineMath math={latex} />;
 }

@@ -1,3 +1,4 @@
+import { drawFormula } from "@repo/design-system/components/editor/render";
 import {
   blockGapVariants,
   codeVariants,
@@ -5,6 +6,9 @@ import {
   headingVariants,
   listItemVariants,
   listVariants,
+  mathBlockVariants,
+  mathInlineVariants,
+  mathScrollVariants,
   paragraphVariants,
   quoteVariants,
 } from "@repo/design-system/lib/prose";
@@ -131,7 +135,38 @@ const ELEMENT_CLASSES = [
   ],
 ] as const;
 
-/** Gives the elements of a document that the schema drew into `root` the classes of the published article. */
+/**
+ * Draws the formulas that the schema left as empty elements with their LaTeX, as the lesson draws them: an
+ * inline formula with the lesson's inline pieces, and a formula on its own line in the lesson's card, which
+ * scrolls sideways when it is wider. The editor draws the same formulas through its node view.
+ */
+function drawFormulas(root: HTMLElement) {
+  Arr.forEach(
+    Arr.fromIterable(
+      root.querySelectorAll<HTMLElement>('[data-type="math-inline"]')
+    ),
+    (element) => {
+      element.className = mathInlineVariants();
+      element.innerHTML = drawFormula(element.dataset.latex ?? "", false);
+    }
+  );
+  Arr.forEach(
+    Arr.fromIterable(
+      root.querySelectorAll<HTMLElement>('[data-type="math-block"]')
+    ),
+    (element) => {
+      const card = document.createElement("div");
+      card.className = mathBlockVariants();
+      const row = document.createElement("div");
+      row.className = mathScrollVariants();
+      row.innerHTML = drawFormula(element.dataset.latex ?? "", true);
+      card.append(row);
+      element.replaceChildren(card);
+    }
+  );
+}
+
+/** Gives the elements of a document that the schema drew into `root` the classes and the formulas of the published article. */
 export function drawArticleProse(root: HTMLElement) {
   Arr.forEach(ELEMENT_CLASSES, ([selector, classes]) =>
     Arr.forEach(
@@ -141,4 +176,5 @@ export function drawArticleProse(root: HTMLElement) {
       }
     )
   );
+  drawFormulas(root);
 }
