@@ -82,14 +82,20 @@ export function setPeriodStatus(
   );
 }
 
-/** Sets the name of one period on a page, and keeps every other period as it is. */
-export function setPeriodName(
+/**
+ * Sets the name and the dates of one period on a page, keeps every other period as it is, and puts the page back in the
+ * order the list shows it, since a new start can move the period.
+ */
+export function editPeriod(
   page: readonly Period[],
   periodId: Period["id"],
-  name: Period["name"]
+  edited: Pick<Period, "end" | "name" | "start">
 ) {
-  return Arr.map(page, (period) =>
-    period.id === periodId ? { ...period, name } : period
+  return Arr.sort(
+    Arr.map(page, (period) =>
+      period.id === periodId ? { ...period, ...edited } : period
+    ),
+    byNewestStart
   );
 }
 

@@ -1113,6 +1113,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1147,6 +1148,7 @@ export declare const api: {
             mine: {
               late: boolean;
               score: number | null;
+              text: string;
               updatedAt: number;
             } | null;
             points: number;
@@ -1179,6 +1181,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1204,6 +1207,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -1273,6 +1277,7 @@ export declare const api: {
           mine: {
             late: boolean;
             score: number | null;
+            text: string;
             updatedAt: number;
           } | null;
           points: number;
@@ -7412,6 +7417,7 @@ export declare const api: {
               | { type: "period.archived" }
               | { type: "period.restored" }
               | { type: "period.rename" }
+              | { type: "period.rescheduled" }
               | {
                   added: number;
                   changed: number;
@@ -9446,6 +9452,24 @@ export declare const api: {
           status: "planned" | "active" | "archived";
         }
       >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          end: string;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          start: string;
+        },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
       list: FunctionReference<
         "query",
         "public",
@@ -9479,18 +9503,6 @@ export declare const api: {
         "mutation",
         "public",
         { periodId: Id<"tenantPeriods">; slug: string },
-        {
-          end: string;
-          id: Id<"tenantPeriods">;
-          name: string;
-          start: string;
-          status: "planned" | "active" | "archived";
-        }
-      >;
-      rename: FunctionReference<
-        "mutation",
-        "public",
-        { name: string; periodId: Id<"tenantPeriods">; slug: string },
         {
           end: string;
           id: Id<"tenantPeriods">;

@@ -166,7 +166,6 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
       sortFn: "text",
     }),
     loginColumns.accessor((login) => login.person.name, {
-      filterFn: "includesString",
       header: t("login-person"),
       id: "person",
       sortFn: "text",
@@ -180,6 +179,7 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
     loginColumns.display({
       cell: (info) => <SchoolLoginMenu login={info.row.original} />,
       id: "actions",
+      meta: { align: "menu" },
     }),
   ]);
 

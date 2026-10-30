@@ -23,7 +23,7 @@ import {
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
-import { useId, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
   forumCall,
@@ -100,6 +100,8 @@ export function AddToLibrary() {
   const pickerToken = useAction(connectors.drive.pickerToken);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<typeof AddMode.Type>("file");
+  // Whether the dialog closes because its item was sent; Drive's picker closes it too, and keeps it as it was.
+  const sent = useRef(false);
   const [title, setTitle] = useState("");
   const [address, setAddress] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -121,7 +123,7 @@ export function AddToLibrary() {
       link: Schema.is(LinkAddress)(link),
     }[mode];
 
-  /** Clears what the dialog holds after its item was sent, so it opens again on a device file. */
+  /** Clears what the dialog holds once a sent item's dialog has closed, so it opens again on a device file. */
   const reset = () => {
     setMode("file");
     setTitle("");
@@ -252,8 +254,8 @@ export function AddToLibrary() {
       return;
     }
     const author = viewer.value.person.name;
+    sent.current = true;
     setOpen(false);
-    reset();
     if (mode === "link") {
       sendLink(author);
       return;
@@ -282,6 +284,13 @@ export function AddToLibrary() {
             </Button>
           </>
         }
+        // A sent item's dialog empties once it has closed, so it keeps what was sent while it closes.
+        onOpenChangeComplete={(next) => {
+          if (!next && sent.current) {
+            reset();
+          }
+          sent.current = false;
+        }}
         open={open}
         setOpen={setOpen}
         title={t("library-add")}
