@@ -1,6 +1,6 @@
 import { LLMS_TEXT_PATH } from "@repo/site/discovery";
 import { Array as Arr } from "effect";
-import { BASE_URL } from "@/lib/llms/constants";
+import { BASE_URL, llmsRouteUrl } from "@/lib/llms/constants";
 
 const ROOT_ROUTE_PATTERN = /^\/$/;
 
@@ -31,8 +31,8 @@ export function buildUnsupportedMarkdownRouteText({
       "",
       `- HTML page: ${BASE_URL}${htmlPath}`,
       `- Agent index: ${BASE_URL}${LLMS_TEXT_PATH}`,
-      `- Localized content index: ${BASE_URL}/llms/${locale}/llms.txt`,
-      `- Static site index: ${BASE_URL}/llms/${locale}/site/llms.txt`,
+      `- Localized content index: ${llmsRouteUrl(`/${locale}/llms.txt`)}`,
+      `- Static site index: ${llmsRouteUrl(`/${locale}/site/llms.txt`)}`,
       "",
       "Markdown is available only for supported content and legal pages advertised from the llms indexes. Those pages use `.md` URLs or `Accept: text/markdown`.",
       "",
