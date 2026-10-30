@@ -62,7 +62,7 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { useLastValue } from "@/lib/data/kept";
+import { useKeptRows, useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
 import { schoolExamsTarget } from "@/lib/routing/school/target";
 
@@ -245,6 +245,9 @@ function RoomsTable({
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
     { initialNumItems: ROOM_PAGE_SIZE }
   );
+  // A new filter's first page loads behind the rooms the table already shows, so the table never blanks.
+  const loading = pagination._tag === "LoadingFirstPage";
+  const kept = useKeptRows(loading, pagination.results);
 
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -252,14 +255,15 @@ function RoomsTable({
   ) {
     throw pagination.error;
   }
-  if (pagination._tag === "LoadingFirstPage") {
+  if (Option.isNone(kept)) {
     return null;
   }
+  const rooms = kept.value;
   const failed = PaginatedQueryResult.isFailure(pagination);
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? () => pagination.loadMore(ROOM_PAGE_SIZE)
     : null;
-  const empty = Arr.isReadonlyArrayEmpty(pagination.results);
+  const empty = Arr.isReadonlyArrayEmpty(rooms);
   if (empty && failed) {
     return <DataFailure onRetry={reloadPage} />;
   }
@@ -279,7 +283,10 @@ function RoomsTable({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
+      <Table
+        aria-busy={loading}
+        containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap"
+      >
         <TableHeader>
           <TableRow>
             <TableHead className="px-2 sm:px-4">{t("room")}</TableHead>
@@ -288,7 +295,7 @@ function RoomsTable({
                 column="group"
                 options={[
                   { icon: UserGroupIcon, label: t("group-all"), value: "all" },
-                  ...Arr.map(roomGroups(pagination.results), (option) => ({
+                  ...Arr.map(roomGroups(rooms), (option) => ({
                     icon: option.kind === "cohort" ? UserGroupIcon : SchoolIcon,
                     label: option.name,
                     value: option.key,
@@ -321,7 +328,7 @@ function RoomsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Arr.map(roomsOfGroup(pagination.results, group), (room) => (
+          {Arr.map(roomsOfGroup(rooms, group), (room) => (
             <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
           ))}
         </TableBody>

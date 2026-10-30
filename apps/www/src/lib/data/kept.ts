@@ -28,3 +28,32 @@ export function useLastValue<A, E>(
   }
   return shown;
 }
+
+/**
+ * The rows a paged list shows: the rows it loaded, or, while the first page of a new scope loads, the rows it showed
+ * before, so changing a filter never blanks the list. None until the list first answers.
+ */
+export const keptRows = <A>(
+  loading: boolean,
+  rows: readonly A[],
+  kept: Option.Option<readonly A[]>
+): Option.Option<readonly A[]> => (loading ? kept : Option.some(rows));
+
+/**
+ * The rows a paged list shows across its scopes (`keptRows`): each new answer is kept, and stands while the next
+ * scope's first page loads.
+ */
+export function useKeptRows<A>(
+  loading: boolean,
+  rows: readonly A[]
+): Option.Option<readonly A[]> {
+  const [kept, setKept] = useState<Option.Option<readonly A[]>>(Option.none);
+  const shown = keptRows(loading, rows, kept);
+  if (
+    Option.isSome(shown) &&
+    !Option.exists(kept, (value) => value === shown.value)
+  ) {
+    setKept(shown);
+  }
+  return shown;
+}
