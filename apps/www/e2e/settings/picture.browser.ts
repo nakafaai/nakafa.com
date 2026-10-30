@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
+import { Effect, Predicate } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -15,15 +15,11 @@ const PHOTO =
 
 /** The learner's account as the server answers it, with a Google photo chosen as the picture. */
 function withPhoto(value: unknown) {
-  const user = Object(value);
-  return {
-    ...user,
-    appUser: {
-      ...Object(Reflect.get(user, "appUser")),
-      image: PHOTO,
-      picture: "photo",
-    },
-  };
+  if (!Predicate.isObject(value)) {
+    return value;
+  }
+  const appUser = Predicate.isObject(value.appUser) ? value.appUser : {};
+  return { ...value, appUser: { ...appUser, image: PHOTO, picture: "photo" } };
 }
 
 /**
