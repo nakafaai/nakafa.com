@@ -238,7 +238,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                         {Arr.map(arrangement.tables, (table) => (
                           <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
-                            className="absolute rounded-md bg-teal-300 shadow-sm transition-colors hover:bg-teal-400 dark:bg-teal-500"
+                            className="absolute rounded-md bg-teal-300 shadow-sm dark:bg-teal-500"
                             exit={{ opacity: 0, scale: 0.95 }}
                             initial={{ opacity: 0, scale: 0.95 }}
                             key={`table-${table.id}`}
@@ -265,7 +265,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                         {Arr.map(arrangement.chairs, (chair) => (
                           <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
-                            className="absolute rounded-full bg-cyan-300 shadow-sm transition-colors hover:bg-cyan-400 dark:bg-cyan-500"
+                            className="absolute rounded-full bg-cyan-300 shadow-sm dark:bg-cyan-500"
                             exit={{ opacity: 0, scale: 0.95 }}
                             initial={{ opacity: 0, scale: 0.95 }}
                             key={`chair-${chair.id}`}

@@ -79,7 +79,10 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   );
   await closeSitting(teacher);
   await teacher.getByRole("link", { name: "Results", exact: true }).click();
-  await teacher
+  // The results list each question's answers in the Questions sheet of the header.
+  await teacher.getByRole("button", { name: "Questions", exact: true }).click();
+  const questions = teacher.getByRole("dialog", { name: "Questions" });
+  await questions
     .getByRole("button", { name: "Question 3", exact: true })
     .click();
   const answers = teacher.getByRole("table").filter({
@@ -96,6 +99,8 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   await points.fill("3");
   await points.press("Enter");
   await expect(row).toContainText("Partly correct");
+  await teacher.keyboard.press("Escape");
+  await expect(questions).toBeHidden();
 
   // The release shows the student the grade beside the essay.
   await teacher
