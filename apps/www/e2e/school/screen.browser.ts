@@ -71,7 +71,12 @@ test("a proctor sees the question on a student's screen with the student's answe
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor.getByRole("button", { name: LEARNER_NAME }).click();
+  // The seat is pressed as soon as it shows, as a proctor does: it is a link, so it opens the panel
+  // whether or not the page's script has run.
+  await proctor
+    .getByRole("list", { name: "Student seats" })
+    .getByRole("link", { name: LEARNER_NAME })
+    .click();
   const screen = proctor.locator("section", { hasText: "Student screen" });
   await expect(screen).toContainText("Question 1", {
     timeout: readinessTimeoutMilliseconds,
