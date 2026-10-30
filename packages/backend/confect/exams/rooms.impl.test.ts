@@ -77,7 +77,7 @@ describe("exams/rooms", () => {
         expect(page.isDone).toBe(true);
         expect(page.page).toEqual([
           {
-            canCancel: true,
+            canChange: true,
             closesAt: CLOSES,
             group: { kind: "unit", name: "SMP Nakafa" },
             id: early.id,
@@ -87,7 +87,7 @@ describe("exams/rooms", () => {
             timeZone: "Asia/Jakarta",
           },
           {
-            canCancel: true,
+            canChange: true,
             closesAt: CLOSES,
             group: { kind: "unit", name: "SMP Nakafa" },
             id: late.id,
@@ -125,12 +125,12 @@ describe("exams/rooms", () => {
         const asTeacher = yield* roomsOf(fixture, "teacher", examId);
         const asAdmin = yield* roomsOf(fixture, "admin", examId);
         expect(
-          Arr.map(asTeacher.page, (row) => [row.id, row.canCancel])
+          Arr.map(asTeacher.page, (row) => [row.id, row.canChange])
         ).toEqual([
           [byTeacher.id, true],
           [byAdmin.id, false],
         ]);
-        expect(Arr.map(asAdmin.page, (row) => [row.id, row.canCancel])).toEqual(
+        expect(Arr.map(asAdmin.page, (row) => [row.id, row.canChange])).toEqual(
           [
             [byTeacher.id, true],
             [byAdmin.id, true],

@@ -55,3 +55,26 @@ export const cancelRoomChange: OptimisticUpdate<
     }
   }
 };
+
+/**
+ * Shows a moved room at its new times and name on every loaded page of the exam rooms of the school, at once. Its
+ * place in the order comes with the server's answer, and a refused move is undone by Confect.
+ */
+export const rescheduleRoomChange: OptimisticUpdate<
+  typeof exams.sittings.reschedule
+> = (localStore, { closesAt, opensAt, room, sittingId, slug }) => {
+  for (const query of localStore.getAllQueries(exams.rooms.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        exams.rooms.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.map(query.value.value.page, (row) =>
+            row.id === sittingId ? { ...row, closesAt, opensAt, room } : row
+          ),
+        })
+      );
+    }
+  }
+};

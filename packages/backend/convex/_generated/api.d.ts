@@ -6011,7 +6011,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            canCancel: boolean;
+            canChange: boolean;
             closesAt: number;
             group: { kind: "cohort" | "unit"; name: string };
             id: Id<"examSittings">;
@@ -6688,6 +6688,18 @@ export declare const api: {
           slug: string;
         },
         { prompt: string }
+      >;
+      reschedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          closesAt: number;
+          opensAt: number;
+          room: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
       >;
       signal: FunctionReference<
         "mutation",
@@ -7549,6 +7561,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { type: "sitting.reschedule" }
               | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {

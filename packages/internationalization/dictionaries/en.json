@@ -480,7 +480,10 @@
     "column-of": "Question {number}, column {name}",
     "column-placeholder": "Column",
     "cell-of": "Column for statement {name} of question {number}",
-    "cell-hint": "Each statement takes one column, and the key saves once every statement has one."
+    "cell-hint": "Each statement takes one column, and the key saves once every statement has one.",
+    "room-move": "Reschedule",
+    "room-move-description": "Its students and its token stay. Its notices go out again for the new time.",
+    "room-move-save": "Save"
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -813,7 +816,8 @@
         "finish": "Exam attempt finished",
         "close": "Exam sitting closed",
         "cancel": "Exam room cancelled",
-        "join": "Student joined by the room's code"
+        "join": "Student joined by the room's code",
+        "reschedule": "Exam room moved to a new time"
       },
       "exam": {
         "results": {
@@ -2529,6 +2533,14 @@
     },
     "school-own-role-ended": {
       "title": "Your role has ended."
+    },
+    "school-refusal-room-opened": {
+      "title": "This room has opened.",
+      "description": "An opened room keeps its time and its name."
+    },
+    "school-refusal-schedule-invalid": {
+      "title": "This time cannot be used.",
+      "description": "Choose a start that has not passed, and an end after it."
     }
   },
   "Ai": {

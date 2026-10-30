@@ -480,7 +480,10 @@
     "column-of": "Frage {number}, Spalte {name}",
     "column-placeholder": "Spalte",
     "cell-of": "Spalte für Aussage {name} von Frage {number}",
-    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat."
+    "cell-hint": "Jede Aussage nimmt eine Spalte, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
+    "room-move": "Neu planen",
+    "room-move-description": "Schüler und Token bleiben. Die Hinweise gehen zur neuen Zeit erneut hinaus.",
+    "room-move-save": "Speichern"
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -813,7 +816,8 @@
         "finish": "Prüfungsversuch abgegeben",
         "close": "Prüfungstermin geschlossen",
         "cancel": "Prüfungsraum abgesagt",
-        "join": "Schüler über den Raumcode beigetreten"
+        "join": "Schüler über den Raumcode beigetreten",
+        "reschedule": "Prüfungsraum auf eine neue Zeit verlegt"
       },
       "exam": {
         "results": {
@@ -2529,6 +2533,14 @@
     },
     "school-own-role-ended": {
       "title": "Deine Rolle ist beendet."
+    },
+    "school-refusal-room-opened": {
+      "title": "Dieser Raum ist schon geöffnet.",
+      "description": "Ein geöffneter Raum behält Zeit und Namen."
+    },
+    "school-refusal-schedule-invalid": {
+      "title": "Diese Zeit geht nicht.",
+      "description": "Wähle einen Beginn, der noch nicht vorbei ist, und ein Ende danach."
     }
   },
   "Ai": {

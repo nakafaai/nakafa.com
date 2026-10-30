@@ -18,11 +18,11 @@ const RoomGroup = Schema.Struct({
 
 /**
  * One room of an exam as the rooms list shows it: the room and its group, its opening and its
- * closing in the time zone of its unit, its state, and whether the caller may cancel it. A room
- * holds no token (ADR 0013).
+ * closing in the time zone of its unit, its state, and whether the caller may change it before it
+ * opens: move it to another time or room, or cancel it. A room holds no token (ADR 0013).
  */
 export const RoomRow = Schema.Struct({
-  canCancel: Schema.Boolean,
+  canChange: Schema.Boolean,
   closesAt: Schema.Finite,
   group: RoomGroup,
   id: Id("examSittings"),
@@ -34,16 +34,16 @@ export const RoomRow = Schema.Struct({
 
 /**
  * The row of one stored sitting. The caller reads the group's name, the unit's time zone, and
- * whether the caller may cancel the room, and passes them in, so this function reads nothing and
+ * whether the caller may change the room, and passes them in, so this function reads nothing and
  * only shapes the row.
  */
 export const roomRow = (
   row: ExamSittingsDoc,
   group: typeof RoomGroup.Type,
   timeZone: typeof TimeZone.Type,
-  canCancel: boolean
+  canChange: boolean
 ): typeof RoomRow.Type => ({
-  canCancel,
+  canChange,
   closesAt: row.closesAt,
   group,
   id: row._id,

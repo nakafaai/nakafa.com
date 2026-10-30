@@ -26,6 +26,7 @@ import {
   ResponseDoesNotFit,
   RetiredDevicesFull,
   RoomOpened,
+  ScheduleInvalid,
   StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
 import { SITTING_REFUSALS } from "@repo/backend/confect/exams/sittings/refusal";
@@ -34,6 +35,7 @@ import {
   DeviceId,
   Minutes,
   ReasonCode,
+  RoomName,
   SignalKind,
 } from "@repo/backend/confect/exams/sittings/schema";
 import { ProctorActionRefused } from "@repo/backend/confect/exams/sittings/state";
@@ -208,6 +210,23 @@ export default GroupSpec.make()
       args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
       returns: () => Schema.Null,
       error: () => Schema.Union([AccessDenied, RoomOpened]),
+    }).middleware(SittingAccess, {
+      action: "sitting.proctor",
+      arg: "sittingId",
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "reschedule",
+      args: () => ({
+        closesAt: Schema.Finite,
+        opensAt: Schema.Finite,
+        room: RoomName,
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, RoomOpened, ScheduleInvalid]),
     }).middleware(SittingAccess, {
       action: "sitting.proctor",
       arg: "sittingId",

@@ -4,7 +4,11 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
-import { cancelRoomChange, roomsArgs } from "@/components/tenant/exams/filter";
+import {
+  cancelRoomChange,
+  rescheduleRoomChange,
+  roomsArgs,
+} from "@/components/tenant/exams/filter";
 import { createLocalStore } from "@/test/optimistic";
 
 const input = {
@@ -14,7 +18,7 @@ const input = {
 
 /** One scheduled room of the exam, as the rooms list shows it. */
 const room = (id: string, name: string): typeof RoomRow.Type => ({
-  canCancel: false,
+  canChange: false,
   closesAt: 1_800_000_000_000,
   group: { kind: "unit", name: "SMP Nakafa" },
   id: Schema.decodeUnknownSync(Id("examSittings"))(id),
@@ -63,5 +67,46 @@ describe("exams/rooms client", () => {
       local.store.getQuery(exams.rooms.list, other)
     );
     expect(untouched.page).toHaveLength(2);
+  });
+
+  it("shows a moved room at its new times and name on every loaded page of the school's rooms at once", () => {
+    const pages = {
+      continueCursor: "next",
+      isDone: false,
+      page: [room("room-a", "Lab 1"), room("room-b", "Lab 2")],
+    };
+    const args = { ...input, paginationOpts: { cursor: null, numItems: 20 } };
+    const other = { ...args, slug: Schema.decodeSync(TenantSlug)("other") };
+    const local = createLocalStore();
+    local.seed(exams.rooms.list, args, pages);
+    local.seed(exams.rooms.list, other, pages);
+    local.seed(
+      exams.rooms.list,
+      { ...args, slug: Schema.decodeSync(TenantSlug)("lain") },
+      undefined
+    );
+    rescheduleRoomChange(local.store, {
+      closesAt: 1_800_090_000_000,
+      opensAt: 1_800_086_400_000,
+      room: "Aula",
+      sittingId: Schema.decodeUnknownSync(Id("examSittings"))("room-a"),
+      slug: input.slug,
+    });
+    const shown = Option.getOrThrow(
+      local.store.getQuery(exams.rooms.list, args)
+    );
+    expect(
+      Arr.map(shown.page, (item) => [item.room, item.opensAt, item.closesAt])
+    ).toEqual([
+      ["Aula", 1_800_086_400_000, 1_800_090_000_000],
+      ["Lab 2", 1_799_996_400_000, 1_800_000_000_000],
+    ]);
+    const untouched = Option.getOrThrow(
+      local.store.getQuery(exams.rooms.list, other)
+    );
+    expect(Arr.map(untouched.page, (item) => item.room)).toEqual([
+      "Lab 1",
+      "Lab 2",
+    ]);
   });
 });

@@ -227,6 +227,7 @@ describe("access/catalog", () => {
           "sitting.finish",
           "sitting.join",
           "sitting.cancel",
+          "sitting.reschedule",
           "sitting.close",
           "exam.results.released",
           "exam.results.graded",

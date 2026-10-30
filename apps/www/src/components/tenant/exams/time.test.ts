@@ -1,6 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Option } from "effect";
-import { nextQuarter, sittingTimes } from "@/components/tenant/exams/time";
+import {
+  lengthsWith,
+  nextQuarter,
+  sittingTimes,
+  wallClockOf,
+} from "@/components/tenant/exams/time";
 
 const jakarta = DateTime.zoneMakeNamedUnsafe("Asia/Jakarta");
 const berlin = DateTime.zoneMakeNamedUnsafe("Europe/Berlin");
@@ -34,6 +39,26 @@ describe("nextQuarter", () => {
     expect(nextQuarter(instant("2026-03-29T00:50:00Z"), berlin)).toBe(
       "2026-03-29T03:00"
     );
+  });
+});
+
+describe("wallClockOf", () => {
+  it("reads a room's stored opening back on its unit's clock, as the time it was scheduled for", () => {
+    const local = wallClockOf(millis("2026-10-19T01:30:00Z"), jakarta);
+    expect(local).toBe("2026-10-19T08:30");
+    expect(sittingTimes(local, 60, jakarta)).toEqual(
+      Option.some({
+        closesAt: millis("2026-10-19T02:30:00Z"),
+        opensAt: millis("2026-10-19T01:30:00Z"),
+      })
+    );
+  });
+});
+
+describe("lengthsWith", () => {
+  it("offers the schedule's lengths, with a room's own length in its place when it is another", () => {
+    expect(lengthsWith(60)).toEqual([30, 45, 60, 90, 120]);
+    expect(lengthsWith(75)).toEqual([30, 45, 60, 75, 90, 120]);
   });
 });
 

@@ -23,7 +23,7 @@ const ROOM_PAGE_LIMIT = 50;
  */
 const roomOf = Effect.fn("exams.rooms.room")(function* (
   row: ExamSittingsDoc,
-  canCancel: boolean
+  canChange: boolean
 ) {
   const reader = yield* DatabaseReader;
   const unit = yield* reader
@@ -35,7 +35,7 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (
       row,
       { kind: "unit", name: unit.name },
       unit.timeZone,
-      canCancel
+      canChange
     );
   }
   const cohort = yield* reader
@@ -46,7 +46,7 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (
     row,
     { kind: "cohort", name: cohort.name },
     unit.timeZone,
-    canCancel
+    canChange
   );
 });
 
@@ -55,8 +55,9 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (
  * earliest. The index reads the exam's rooms in that order, and an optional state narrows
  * the page in the same read. Each room is kept only if the caller's sitting view allows it,
  * so a Principal or a Deputy sees the rooms of the school and a Teacher sees the rooms of their
- * units. A room the caller may cancel is one that is scheduled, that the caller may proctor, and
- * that the caller scheduled or may cancel as an Admin, which is the check `cancel` makes. A page
+ * units. A room the caller may change is one that is scheduled, that the caller may proctor, and
+ * that the caller scheduled or may change as an Admin, which is the check `cancel` and
+ * `reschedule` make. A page
  * asks for at most `ROOM_PAGE_LIMIT` rooms, and a larger request is clamped.
  */
 const list = FunctionImpl.make(
