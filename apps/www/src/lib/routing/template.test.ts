@@ -55,7 +55,13 @@ describe("bare paths", () => {
 });
 
 describe("rendered paths", () => {
-  const rendered = ["/$locale/chat/$id", "/$locale/search", "/school/$slug"];
+  const rendered = [
+    "/$locale/chat/$id",
+    "/$locale/search",
+    "/.well-known/agent-skills/index.json",
+    "/api/auth/$",
+    "/school/$slug/$",
+  ];
 
   it("renders the root and the paths of the router's own routes", () => {
     expect(isRenderedPath("/", rendered)).toBe(true);
@@ -66,6 +72,18 @@ describe("rendered paths", () => {
   it("leaves a bare path to the static not-found page", () => {
     expect(isRenderedPath("/@nabil", rendered)).toBe(false);
     expect(isRenderedPath("/.env", rendered)).toBe(false);
+  });
+
+  it("renders a path beside a Worker route only when a template of that route matches it", () => {
+    expect(
+      isRenderedPath("/.well-known/agent-skills/index.json", rendered)
+    ).toBe(true);
+    expect(isRenderedPath("/api/auth/get-session", rendered)).toBe(true);
+    expect(isRenderedPath("/.well-known/assetlinks.json", rendered)).toBe(
+      false
+    );
+    expect(isRenderedPath("/.well-known/traffic-advice", rendered)).toBe(false);
+    expect(isRenderedPath("/api/graphql", rendered)).toBe(false);
   });
 
   it("renders a locale path only when a rendered template names it", () => {

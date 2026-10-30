@@ -5,6 +5,7 @@ import type { IntegrationClientsDoc } from "@repo/backend/confect/_generated/doc
 import {
   DatabaseReader,
   DatabaseWriter,
+  DocumentIds,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import {
@@ -146,10 +147,14 @@ export const issueAccessToken = Effect.fn("integrations.token.issue")(
       outcome: "refused",
     };
     const ctx = yield* MutationCtx;
-    const clientId = ctx.db.normalizeId("integrationClients", input.clientId);
-    if (clientId === null) {
+    const parsed = yield* (yield* DocumentIds).parse(
+      "integrationClients",
+      input.clientId
+    );
+    if (Option.isNone(parsed)) {
       return invalidClient;
     }
+    const clientId = parsed.value;
     const client = yield* (yield* DatabaseReader)
       .table("integrationClients")
       .get(clientId)
