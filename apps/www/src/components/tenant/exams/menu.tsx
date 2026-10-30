@@ -3,6 +3,7 @@ import {
   FileImportIcon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
@@ -85,6 +86,25 @@ export function ExamMenu() {
 }
 
 /**
+ * The editor's actions before the exam is read: Try as student and the menu joined to it, as an exam that takes
+ * changes shows them, disabled.
+ */
+export function ExamMenuFrame() {
+  const t = useTranslations("Exams");
+
+  return (
+    <ButtonGroup aria-label={t("exam-actions")}>
+      <Button aria-label={t("try-action")} disabled variant="outline">
+        <TryAsStudentLabel />
+      </Button>
+      <DropdownMenu disabled>
+        <SplitMenuTrigger />
+      </DropdownMenu>
+    </ButtonGroup>
+  );
+}
+
+/**
  * Opens the exam as a student sees it. The link carries the button slot that ButtonGroup joins on:
  * without it the link kept its own corners and border, and the pair read as two buttons.
  */
@@ -100,8 +120,19 @@ function TryAsStudent() {
       params={{ exam: exam.id, slug }}
       to="/school/$slug/exams/$exam/try"
     >
+      <TryAsStudentLabel />
+    </Link>
+  );
+}
+
+/** The icon and the words of Try as student, the words for screen readers alone on a phone. */
+function TryAsStudentLabel() {
+  const t = useTranslations("Exams");
+
+  return (
+    <>
       <HugeIcons aria-hidden="true" icon={ViewIcon} />
       <span className="max-sm:sr-only">{t("try-action")}</span>
-    </Link>
+    </>
   );
 }

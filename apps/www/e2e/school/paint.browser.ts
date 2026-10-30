@@ -95,7 +95,7 @@ async function expectSteadyHeader(page: Page, address: string, drawn: Locator) {
   expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
 }
 
-test("the cohorts, exams, notifications and rooms pages keep their header's controls from the first paint", async ({
+test("the cohorts, exams, notifications, rooms, exam editor, periods, profile and policies pages keep their header's controls from the first paint", async ({
   baseURL,
   browser,
 }) => {
@@ -152,6 +152,45 @@ test("the cohorts, exams, notifications and rooms pages keep their header's cont
     rooms.getByRole("row", { name: OPEN_ROOM_ROW })
   );
   await rooms.close();
+
+  // The editor draws its header with the title's field empty and its buttons disabled, then fills the title in.
+  const editor = await context.newPage();
+  await expectSteadyHeader(
+    editor,
+    address(`/exams/${sitting.examId}/edit`),
+    editor.locator("main footer")
+  );
+  await expect(editor.getByRole("textbox", { name: "Exam title" })).toHaveValue(
+    "Ujian Acceptance"
+  );
+  await editor.close();
+
+  // The settings pages that read only the school itself draw from the viewer the page loads with.
+  const periods = await context.newPage();
+  await expectSteadyHeader(
+    periods,
+    address("/settings/periods"),
+    periods
+      .getByText("No period yet.")
+      .or(periods.locator('[data-slot="table-card"] tbody tr').first())
+  );
+  await periods.close();
+
+  const profile = await context.newPage();
+  await expectSteadyHeader(
+    profile,
+    address("/settings/profile"),
+    profile.getByText("School logo")
+  );
+  await profile.close();
+
+  const policies = await context.newPage();
+  await expectSteadyHeader(
+    policies,
+    address("/settings/policies"),
+    policies.getByRole("combobox", { name: "Nina credits a day" })
+  );
+  await policies.close();
   await context.close();
 });
 
