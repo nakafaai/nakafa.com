@@ -1,4 +1,4 @@
-import { markTokenizer } from "@repo/design-system/components/editor/marks";
+import { markRenderer, markTokenizer } from "@repo/design-system/components/editor/marks";
 import {
   type EditorOptions,
   Extension,
@@ -149,8 +149,14 @@ export function richOptions({
         underline: false,
       }),
       NumberedList,
-      Underline.extend({ markdownTokenizer: markTokenizer("underline") }),
-      Highlight.extend({ markdownTokenizer: markTokenizer("highlight") }),
+      Underline.extend({
+        markdownTokenizer: markTokenizer("underline"),
+        renderMarkdown: markRenderer("underline"),
+      }),
+      Highlight.extend({
+        markdownTokenizer: markTokenizer("highlight"),
+        renderMarkdown: markRenderer("highlight"),
+      }),
       TaskList,
       TaskItem.extend({ addNodeView: () => taskView }).configure({
         nested: true,

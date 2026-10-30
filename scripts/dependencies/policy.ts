@@ -129,8 +129,11 @@ const TIPTAP_PACKAGES = Arr.dedupe(
 );
 
 /**
- * Two transitive overrides in the root `package.json` hold a version for a reason
- * that no manifest states. `convex-helpers` 0.1.131, the latest release that the
+ * Three transitive overrides in the root `package.json` hold a version for a reason
+ * that no manifest states. `prosemirror-transform` 1.12.4 is the one copy that the
+ * ProseMirror packages of `@tiptap/pm` and the backend's step folding share: Bun
+ * kept the packages' nested 1.12.2 copies when the backend moved to 1.12.4, and a
+ * step made by one copy fails `instanceof` checks against the other. `convex-helpers` 0.1.131, the latest release that the
  * release-age gate admits on 30 October 2026, keeps one copy for every Convex
  * component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
@@ -187,6 +190,16 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "1.48.0", dependency: "convex", minimumDeclarations: 1 },
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
+  {
+    approved: "catalog:",
+    dependency: "@convex-dev/agent",
+    minimumDeclarations: 1,
+  },
+  {
+    approved: "0.4.14",
+    declarationPaths: ["packages/backend/package.json"],
+    dependency: "@convex-dev/workpool",
+  },
   {
     approved: "catalog:",
     dependency: "@convex-dev/ai-sdk-provider",
@@ -266,7 +279,8 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   // The model and the transform that the server folds stored steps with (ADR
   // 0028). They are the versions that `@tiptap/pm` 3.32.1 resolves in
-  // `bun.lock`, so the server applies a step with the code the editors run.
+  // `bun.lock` (the transform through its root override), so the server applies
+  // a step with the code the editors run.
   {
     approved: "1.25.12",
     declarationPaths: ["packages/backend/package.json"],
@@ -381,8 +395,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "convex-test@latest",
-    "0.0.65",
-    "convex-test 0.0.65 fails 115 backend tests in 52 files that pass on 0.0.62 (measured 25 October 2026 with the backend test suite on the merged tree). The backend stays on the 0.0.62 range until that behaviour change is understood and the tests are adjusted.",
+    "0.0.66",
+    "convex-test 0.0.65 fails 115 backend tests in 52 files that pass on 0.0.62 (measured 25 October 2026 with the backend test suite on the merged tree). 0.0.63 to 0.0.66 pin a transaction's clock at or after its snapshot, enforce search candidate limits in paginated queries, fail fast on an unregistered component, allow one paginate() per component query, and support ctx.auth.signJwt in mutations; which of them the failures follow is not traced yet. The backend stays on the 0.0.62 range until it is, and the Agent and Workpool releases that paginate inside their components wait for it (re-checked 30 October 2026).",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
@@ -394,6 +408,16 @@ export const REGISTRY_REVIEWS = [
     "ai@latest",
     "7.0.153",
     "AI SDK packages move as one reviewed cohort. 7.0.140 stays: 7.0.141, 7.0.142, 7.0.147 and 7.0.152 each fail the backend typecheck with TS2590 in confect/nina (21 errors each, measured on 25 October 2026 with @convex-dev/agent 0.7.8), and 7.0.140 passes. 7.0.153 is the latest release and becomes eligible at 2026-10-25 17:57 UTC; re-test it then. Its release notes change the streamed input of OpenAI custom tools and the workflow telemetry context, and Nakafa uses neither.",
+  ],
+  [
+    "@convex-dev/agent@latest",
+    "0.7.9",
+    "The Agent component stays on 0.7.8 while convex-test stays on 0.0.62. 0.7.9 lists the component's files, threads, streams and users with one native ctx.db paginate() per query instead of the convex-helpers paginator. Convex runs one paginate() per component query, and convex-test supports it from 0.0.64 (get-convex/convex-test#163), but 0.0.62 refuses it (\"paginate() is only supported in the app\"): measured on 30 October 2026, 42 backend tests in 14 files fail on 0.7.9 with 0.0.62, among them the Agent file sweep, chat deletion, Nina sealing and privacy erasure. The component moves with the convex-test upgrade.",
+  ],
+  [
+    "@convex-dev/workpool@latest",
+    "0.4.15",
+    "The Workpool component stays on 0.4.14 for the reason of the Agent entry: 0.4.15 reads its stats report (component/stats.js, run by the main loop) with a native paginate() inside the component, which convex-test 0.0.62 refuses, so 11 backend tests in 3 files that drive the Workflow component fail (privacy recovery, account deletion cleanup, content release proof). It moves with the convex-test upgrade.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
