@@ -157,6 +157,7 @@ export function PaneTableRow({
   return (
     <TableRow
       className="h-12 cursor-pointer"
+      data-pressable=""
       data-state={isOpen ? "selected" : undefined}
       onClick={(event) => {
         if (

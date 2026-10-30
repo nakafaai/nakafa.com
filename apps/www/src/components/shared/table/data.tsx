@@ -1,9 +1,16 @@
 import {
-  ArrowDown01Icon,
-  ArrowUp01Icon,
+  ArrowDown02Icon,
+  ArrowUp02Icon,
   ArrowUpDownIcon,
 } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Empty,
   EmptyHeader,
@@ -31,37 +38,48 @@ import { useTranslations } from "use-intl";
 import { PaneTableRow } from "@/components/shared/pane";
 import { useHasPanes } from "@/components/shared/panes";
 import { dataTableFeatures } from "@/components/shared/table/features";
+import { TableHeadButton } from "@/components/shared/table/head";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { EmptyNina } from "@/components/state/empty";
 
-/** The arrow of a column sorted each way. */
-const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };
+/** The arrow of a column's head while it sorts the rows each way, and while it sorts none. */
+const sortIcons = {
+  asc: ArrowUp02Icon,
+  desc: ArrowDown02Icon,
+  none: ArrowUpDownIcon,
+};
+
+/** How a column's head names the way it sorts the rows, for assistive technology. */
+const sortNames = {
+  asc: "ascending",
+  desc: "descending",
+  none: "none",
+} as const;
 
 /**
- * Where a column's head and cells stand, as its meta says: at the start, in the middle for badges, or at the end, where
- * numbers and dates take digits of one width so they line up from row to row. The row's menu stays at the table's end
- * edge on the row's own background while a table wider than the phone scrolls under it, so every row's actions stay in
- * reach.
+ * Where a column's head and cells stand, as the try-out tables place them: the first column, which names the row, at
+ * the start, and every other column in the middle, its figures in digits of one width. The row's menu stands at the
+ * end and stays at the table's end edge on the row's background while a table wider than the phone scrolls under it,
+ * so every row's actions stay in reach.
  */
-const columnAlign = cva("", {
-  defaultVariants: { align: "start" },
+const columnAlign = cva("px-2 sm:px-4", {
+  defaultVariants: { align: "center" },
   variants: {
     align: {
-      center: "text-center",
-      end: "text-end tabular-nums",
-      menu: "sticky end-0 bg-card in-[tr:hover]:bg-accent in-aria-selected:bg-accent text-end",
+      center: "text-center tabular-nums",
+      menu: "sticky end-0 bg-card in-[tr[data-pressable]:hover]:bg-accent in-aria-selected:bg-accent text-end",
       start: "",
     },
   },
 });
 
-/** The sort button of a column's head, pulled to the column's edge so its name lines up with the cells below. */
-const sortButton = cva("", {
-  defaultVariants: { align: "start" },
-  variants: {
-    align: { center: "", end: "-me-3", menu: "-me-3", start: "-ms-3" },
-  },
-});
+/** The place of a column in its table: the first names the row, the menu acts on it, and the rest stand between. */
+const placeOf = (index: number, menu: boolean) => {
+  if (menu) {
+    return "menu";
+  }
+  return index === 0 ? "start" : "center";
+};
 
 /**
  * A data table as the whole body of its page, as shadcn builds the table on TanStack Table: every row at full width,
@@ -112,20 +130,14 @@ export function DataTable<TData extends RowData>({
     <Table containerClassName="min-h-0 flex-1 content-start overflow-auto [&_[data-slot=table-cell]]:whitespace-nowrap [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-card">
       <TableHeader>
         {Arr.map(table.getHeaderGroups(), (group) => (
-          <TableRow key={group.id}>
-            {Arr.map(group.headers, (header) => (
-              <TableHead
-                className={columnAlign({
-                  align: header.column.columnDef.meta?.align,
-                })}
-                key={header.id}
-              >
-                {header.isPlaceholder ? null : (
-                  <DataTableHead header={header}>
-                    <table.FlexRender header={header} />
-                  </DataTableHead>
-                )}
-              </TableHead>
+          <TableRow
+            className="hover:bg-transparent hover:text-inherit"
+            key={group.id}
+          >
+            {Arr.map(group.headers, (header, index) => (
+              <DataTableHead header={header} index={index} key={header.id}>
+                <table.FlexRender header={header} />
+              </DataTableHead>
             ))}
           </TableRow>
         ))}
@@ -134,10 +146,13 @@ export function DataTable<TData extends RowData>({
         {Arr.isReadonlyArrayNonEmpty(rows) ? (
           Arr.map(rows, (row) => (
             <DataTableRow key={row.id} row={row}>
-              {Arr.map(row.getAllCells(), (cell) => (
+              {Arr.map(row.getAllCells(), (cell, index) => (
                 <TableCell
                   className={columnAlign({
-                    align: cell.column.columnDef.meta?.align,
+                    align: placeOf(
+                      index,
+                      cell.column.columnDef.meta?.align === "menu"
+                    ),
                   })}
                   key={cell.id}
                 >
@@ -147,7 +162,7 @@ export function DataTable<TData extends RowData>({
             </DataTableRow>
           ))
         ) : (
-          <TableRow>
+          <TableRow className="hover:bg-transparent hover:text-inherit">
             <TableCell colSpan={columns.length}>
               <Empty className="p-6 md:p-6">
                 <EmptyHeader>
@@ -165,7 +180,10 @@ export function DataTable<TData extends RowData>({
   );
 }
 
-/** One row of the table: a row that opens beside the list on a page with panes, else a plain row. */
+/**
+ * One row of the table: a row that opens beside the list on a page with panes, which lights under the pointer as the
+ * whole row is pressable, else a plain row that does not, since pressing it opens nothing.
+ */
 function DataTableRow({
   children,
   row,
@@ -178,36 +196,81 @@ function DataTableRow({
   return hasPanes ? (
     <PaneTableRow id={row.id}>{children}</PaneTableRow>
   ) : (
-    <TableRow className="h-12">{children}</TableRow>
+    <TableRow className="h-12 hover:bg-transparent hover:text-inherit">
+      {children}
+    </TableRow>
   );
 }
 
-/** A column's head: a button that sorts by the column when the column sorts, else its name. */
+/**
+ * A column's head, in its place in the line: the column's name, or, when the column sorts the rows, the head's button
+ * whose menu sorts them each way, as the try-out tables' heads do. A column that filters draws its own button in its
+ * head (`ColumnFilter`).
+ */
 function DataTableHead<TData extends RowData>({
   children,
   header,
+  index,
 }: {
   children: ReactNode;
   header: Header<typeof dataTableFeatures, TData>;
+  index: number;
 }) {
+  const t = useTranslations("DataTable");
   const column = header.column;
-  if (!column.getCanSort()) {
-    return children;
-  }
-  const sorted = column.getIsSorted();
+  const place = placeOf(index, column.columnDef.meta?.align === "menu");
+  const sorted = column.getIsSorted() || "none";
 
+  if (header.isPlaceholder) {
+    return <TableHead className={columnAlign({ align: place })} />;
+  }
+  if (!column.getCanSort()) {
+    return (
+      <TableHead className={columnAlign({ align: place })} scope="col">
+        {children}
+      </TableHead>
+    );
+  }
   return (
-    <Button
-      className={sortButton({ align: column.columnDef.meta?.align })}
-      onClick={column.getToggleSortingHandler()}
-      size="sm"
-      type="button"
-      variant="ghost"
+    <TableHead
+      aria-sort={sortNames[sorted]}
+      className={columnAlign({ align: place })}
+      scope="col"
     >
-      {children}
-      <HugeIcons
-        icon={sorted === false ? ArrowUpDownIcon : sortIcons[sorted]}
-      />
-    </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <TableHeadButton
+              active={sorted !== "none"}
+              align={place === "start" ? "start" : "center"}
+              icon={sortIcons[sorted]}
+            >
+              {children}
+            </TableHeadButton>
+          }
+        />
+        <DropdownMenuContent align="start" className="w-max">
+          <DropdownMenuGroup>
+            <DropdownMenuRadioGroup
+              onValueChange={(next) => {
+                if (next === "asc" || next === "desc") {
+                  column.toggleSorting(next === "desc");
+                }
+              }}
+              value={sorted === "none" ? "" : sorted}
+            >
+              <DropdownMenuRadioItem value="asc">
+                <HugeIcons icon={ArrowUp02Icon} />
+                {t("sort-ascending")}
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="desc">
+                <HugeIcons icon={ArrowDown02Icon} />
+                {t("sort-descending")}
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TableHead>
   );
 }

@@ -123,7 +123,6 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
       enableSorting: false,
       header: t("status"),
       id: "status",
-      meta: { align: "center" },
     }),
   ]);
 

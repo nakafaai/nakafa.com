@@ -446,7 +446,6 @@ function usePreviewColumns() {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
   ]);
 }

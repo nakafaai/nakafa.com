@@ -149,7 +149,6 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     unitColumns.display({
       cell: (info) => <UnitMenu unit={info.row.original} />,

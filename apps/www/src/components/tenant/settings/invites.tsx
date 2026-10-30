@@ -160,7 +160,6 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       ),
       header: t("invite-role"),
       id: "role",
-      meta: { align: "center" },
     }),
     inviteColumns.accessor((invite) => invite.expiresAt, {
       cell: (info) =>

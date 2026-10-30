@@ -1,5 +1,4 @@
-import { Cancel01Icon, FilterHorizontalIcon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
+import { Cancel01Icon, FilterIcon } from "@hugeicons/core-free-icons";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -13,8 +12,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import { TableHeadButton } from "@/components/shared/table/head";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
 /**
@@ -55,12 +54,13 @@ export function ColumnFilter({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <ColumnTrigger
-            filtered={filtered}
-            label={t("filter-by", { column: title })}
+          <TableHeadButton
+            active={filtered}
+            aria-label={t("filter-by", { column: title })}
+            icon={FilterIcon}
           >
             {title}
-          </ColumnTrigger>
+          </TableHeadButton>
         }
       />
       <DropdownMenuContent align="start" className="min-w-48">
@@ -131,12 +131,13 @@ export function ColumnChoice({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <ColumnTrigger
-            filtered={Arr.isReadonlyArrayNonEmpty(chosen)}
-            label={t("filter-by", { column: title })}
+          <TableHeadButton
+            active={Arr.isReadonlyArrayNonEmpty(chosen)}
+            aria-label={t("filter-by", { column: title })}
+            icon={FilterIcon}
           >
             {title}
-          </ColumnTrigger>
+          </TableHeadButton>
         }
       />
       <DropdownMenuContent align="start" className="min-w-48">
@@ -162,30 +163,5 @@ export function ColumnChoice({
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-/**
- * The button in a column's head that opens its filter: the column's name and the filter's icon, lit while the column
- * keeps only some rows. It sits in the head's line, so it takes the head's alignment.
- */
-function ColumnTrigger({
-  children,
-  filtered,
-  label,
-  ...props
-}: ComponentProps<typeof Button> & { filtered: boolean; label: string }) {
-  return (
-    <Button
-      {...props}
-      aria-label={label}
-      className="-mx-3"
-      size="sm"
-      type="button"
-      variant={filtered ? "secondary" : "ghost"}
-    >
-      {children}
-      <HugeIcons icon={FilterHorizontalIcon} />
-    </Button>
   );
 }

@@ -175,7 +175,6 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
       cell: (info) => <SchoolDateTime at={info.getValue()} />,
       header: t("login-issued"),
       id: "issued",
-      meta: { align: "end" },
       sortFn: "basic",
     }),
     loginColumns.display({
