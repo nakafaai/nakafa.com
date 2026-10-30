@@ -14,6 +14,8 @@ import {
   Clock01Icon,
   DashboardSquare01Icon,
   PlayIcon,
+  SchoolIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -50,7 +52,9 @@ import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
   RoomStateFilter,
+  roomGroups,
   roomsArgs,
+  roomsOfGroup,
 } from "@/components/tenant/exams/filter";
 import { ExamGone } from "@/components/tenant/exams/unavailable";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -232,6 +236,10 @@ function RoomsTable({
     chosenOne(chosen, "state", Schema.is(RoomStateFilter)),
     (): StateFilter => "all"
   );
+  const group = Option.getOrElse(
+    chosenOne(chosen, "group", Schema.is(Schema.String)),
+    () => "all"
+  );
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
@@ -275,7 +283,20 @@ function RoomsTable({
         <TableHeader>
           <TableRow>
             <TableHead>{t("room")}</TableHead>
-            <TableHead>{t("rooms-group")}</TableHead>
+            <TableHead>
+              <ColumnChoice
+                column="group"
+                options={[
+                  { icon: UserGroupIcon, label: t("group-all"), value: "all" },
+                  ...Arr.map(roomGroups(pagination.results), (option) => ({
+                    icon: option.kind === "cohort" ? UserGroupIcon : SchoolIcon,
+                    label: option.name,
+                    value: option.key,
+                  })),
+                ]}
+                title={t("rooms-group")}
+              />
+            </TableHead>
             <TableHead className="text-end">{t("rooms-opens")}</TableHead>
             <TableHead className="text-end">{t("rooms-closes")}</TableHead>
             <TableHead className="text-center">
@@ -296,7 +317,7 @@ function RoomsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Arr.map(pagination.results, (room) => (
+          {Arr.map(roomsOfGroup(pagination.results, group), (room) => (
             <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
           ))}
         </TableBody>
@@ -347,7 +368,7 @@ function RoomItem({
           {room.room}
         </Link>
       </TableCell>
-      <TableCell dir="auto">{room.group.name}</TableCell>
+      <TableCell dir="auto">{room.groupName}</TableCell>
       <TableCell className="text-end text-muted-foreground tabular-nums">
         {schoolDateTimeText({
           at: room.opensAt,
