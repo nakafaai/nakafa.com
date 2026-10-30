@@ -89,7 +89,7 @@ export async function TryoutReviewLocked({
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 select-none space-y-12 px-6 pt-1"
+        className="pointer-events-none absolute inset-x-0 top-0 space-y-12 px-6 pt-1 select-none"
         inert
       >
         {Arr.map(preview, (question) => (
@@ -123,7 +123,7 @@ export async function TryoutReviewLocked({
        */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-linear-to-t from-5% from-background via-35% via-background/75 to-80% to-background/0 backdrop-blur-[2px]"
+        className="from-background via-background/75 to-background/0 pointer-events-none absolute inset-0 bg-linear-to-t from-5% via-35% to-80% backdrop-blur-[2px]"
       />
 
       {/*
@@ -133,7 +133,7 @@ export async function TryoutReviewLocked({
        * both. It rises as a bottom sheet on phones and sits centered from the
        * medium breakpoint up.
        */}
-      <Card className="relative w-full shadow-lg/5 ring-2 ring-primary max-md:rounded-t-2xl max-md:rounded-b-none md:max-w-md">
+      <Card className="ring-primary relative w-full shadow-lg/5 ring-2 max-md:rounded-t-2xl max-md:rounded-b-none md:max-w-md">
         <CardHeader>
           <CardTitle>
             <h2 id="tryout-review-offer">
@@ -159,7 +159,7 @@ export async function TryoutReviewLocked({
             </Link>
             <TryoutReviewCheckout />
           </div>
-          <p className="text-center text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-center text-sm">
             {t("paywall-footer")}
           </p>
         </CardFooter>

@@ -34,7 +34,7 @@ export function HeaderContent({
           {!!link && (
             <PublicPathLink
               aria-label={link.label}
-              className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
+              className="text-primary w-fit text-sm font-medium underline-offset-4 hover:underline"
               hash={link.hash}
               publicPath={link.publicPath}
               title={link.label}
@@ -49,7 +49,7 @@ export function HeaderContent({
                 icon={Icon}
               />
             )}
-            <h1 className="font-medium text-3xl leading-tight tracking-tight">
+            <h1 className="text-3xl leading-tight font-medium tracking-tight">
               {title}
             </h1>
           </div>

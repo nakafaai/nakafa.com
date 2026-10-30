@@ -27,7 +27,7 @@ export function CodeFence({
       data-language={language}
     >
       <div
-        className="flex items-center justify-between bg-muted/80 p-1 text-muted-foreground text-sm"
+        className="bg-muted/80 text-muted-foreground flex items-center justify-between p-1 text-sm"
         data-code-block-header
         data-language={language}
       >

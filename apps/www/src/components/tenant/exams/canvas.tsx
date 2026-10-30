@@ -211,7 +211,7 @@ export function ExamCanvas({
   return (
     <section
       aria-label={t("pages-label")}
-      className="relative min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/40"
+      className="bg-muted/40 relative min-h-0 min-w-0 flex-1 overflow-y-auto"
       onScroll={syncPage}
       ref={canvas}
     >

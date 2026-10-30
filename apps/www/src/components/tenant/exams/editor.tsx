@@ -75,7 +75,7 @@ function ExamWorkspace() {
 
   return (
     <PanesProvider wideFrom="lg">
-      <main className="flex h-svh flex-col bg-background">
+      <main className="bg-background flex h-svh flex-col">
         <ExamHeader />
         <ExamToolbar />
         <ExamLockedNote />

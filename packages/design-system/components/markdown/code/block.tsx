@@ -21,7 +21,7 @@ import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
   return (
     <CodeBlock
-      className="my-4 content-auto-code"
+      className="content-auto-code my-4"
       data={data}
       defaultValue={data[0].language}
     >

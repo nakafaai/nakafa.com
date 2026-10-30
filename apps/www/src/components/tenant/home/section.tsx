@@ -60,7 +60,7 @@ export function HomeSection({
     <section aria-labelledby={id} className="flex min-w-0 flex-col gap-3">
       <div className="flex min-h-8 items-center justify-between gap-3">
         <h2
-          className="text-balance font-medium text-muted-foreground text-sm"
+          className="text-muted-foreground text-sm font-medium text-balance"
           id={id}
         >
           {title}
@@ -120,11 +120,11 @@ export function HomeRowText({
   return (
     <>
       <ItemContent className={rowTextVariants({ timed: when !== undefined })}>
-        <ItemTitle className="wrap-anywhere line-clamp-none" dir="auto">
+        <ItemTitle className="line-clamp-none wrap-anywhere" dir="auto">
           {title}
         </ItemTitle>
         {detail === undefined ? null : (
-          <ItemDescription className="wrap-anywhere line-clamp-none" dir="auto">
+          <ItemDescription className="line-clamp-none wrap-anywhere" dir="auto">
             {detail}
           </ItemDescription>
         )}

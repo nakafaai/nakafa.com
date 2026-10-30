@@ -9,7 +9,7 @@ import {
 
 /** The implicit section before a document's first heading. */
 export const READ_START_SECTION = "top";
-const HEADING = /^(#{2,3})\s+(.+?)\s*#*$/;
+const HEADING = /^(#{2,3})\s+(.+?)\s*#*$/u;
 const SECTION_LEVEL = 2;
 
 /**

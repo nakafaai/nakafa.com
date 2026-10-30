@@ -14,7 +14,7 @@ import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Option, Schema } from "effect";
 
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
-const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
+const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/u;
 /** The host of Nakafa's production site, from the one origin every package builds URLs from. */
 const SITE_HOSTNAME = new URL(SITE_ORIGIN).hostname;
 

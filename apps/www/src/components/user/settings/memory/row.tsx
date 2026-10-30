@@ -72,7 +72,7 @@ export const MemoryRow = memo(
     // buttons sit above it and take their own press.
     return (
       <div
-        className="group/row relative flex h-full items-center gap-1 pe-4 transition-colors ease-out focus-within:bg-muted/50 hover:bg-muted/50 data-selected:bg-muted/50"
+        className="group/row focus-within:bg-muted/50 hover:bg-muted/50 data-selected:bg-muted/50 relative flex h-full items-center gap-1 pe-4 transition-colors ease-out"
         data-selected={selected ? "" : undefined}
         ref={row}
       >
@@ -93,7 +93,7 @@ export const MemoryRow = memo(
           </span>
           {/* A row says one fact: when a situation ends, the one fact a learner
               must not lose, and otherwise who wrote the memory. */}
-          <span className="truncate text-muted-foreground text-xs">
+          <span className="text-muted-foreground truncate text-xs">
             {memory.validUntil === undefined ? (
               <MemoryOrigin memory={memory} />
             ) : (
@@ -101,7 +101,7 @@ export const MemoryRow = memo(
             )}
           </span>
         </button>
-        <div className="flex shrink-0 items-center opacity-0 pointer-coarse:opacity-100 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100">
+        <div className="flex shrink-0 items-center opacity-0 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100 pointer-coarse:opacity-100">
           <Button
             className="relative"
             disabled={waiting}

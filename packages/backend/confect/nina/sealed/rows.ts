@@ -63,10 +63,11 @@ export const readTurnRows = Effect.fn("nina.sealed.turn.rows")(function* (
   let cursor: string | null = null;
   let reached = false;
   while (!reached) {
+    const from = cursor;
     const page = yield* Effect.promise(() =>
       ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
         order: "desc",
-        paginationOpts: { cursor, numItems: TURN_PAGE },
+        paginationOpts: { cursor: from, numItems: TURN_PAGE },
         threadId: turn.threadId,
         upToAndIncludingMessageId: turn.promptMessageId,
       })

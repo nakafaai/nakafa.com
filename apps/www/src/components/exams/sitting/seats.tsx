@@ -40,7 +40,7 @@ const dashboardRoute = getRouteApi(
 
 /** The frame of one seat: its colour by state, dashed while the student is disconnected, and a ring when selected. */
 const seatStyles = cva(
-  "grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-xl border bg-card p-2.5 text-start text-sm transition-colors",
+  "bg-card grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-xl border p-2.5 text-start text-sm transition-colors",
   {
     variants: {
       dashed: {
@@ -55,7 +55,7 @@ const seatStyles = cva(
       } satisfies Record<SeatFrame, string>,
       selected: {
         false: "",
-        true: "ring-1 ring-ring",
+        true: "ring-ring ring-1",
       },
       waiting: {
         false: "",
@@ -300,7 +300,7 @@ function SeatLink({
       <PersonAvatar className="size-6" mascot={attempt.mascot ?? undefined} />
       <span className="grid min-w-0 gap-0.5">
         <span className="truncate">{attempt.name}</span>
-        <span className="truncate text-muted-foreground text-xs">
+        <span className="text-muted-foreground truncate text-xs">
           {t("seat-last-activity", {
             time:
               schoolDateTimeText({

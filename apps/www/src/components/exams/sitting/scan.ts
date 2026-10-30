@@ -5,7 +5,7 @@ import { Effect, Option, Schema, String as Str } from "effect";
  * student would type it: without spaces, in upper case. An address without one carries none.
  */
 export function scannedToken(hash: string) {
-  const token = Str.toUpperCase(Str.replace(/[#\s]/g, "")(hash));
+  const token = Str.toUpperCase(Str.replace(/[#\s]/gu, "")(hash));
   return Str.isEmpty(token) ? Option.none<string>() : Option.some(token);
 }
 
@@ -26,7 +26,7 @@ function roomCodeKey(sittingId: string) {
 }
 
 /** The sitting a room address names: `/sittings/<id>` on the school host, and no deeper page. */
-const SITTING_PATH = /^\/sittings\/([^/]+)\/?$/;
+const SITTING_PATH = /^\/sittings\/([^/]+)\/?$/u;
 
 const storageOf = Effect.fn("exams.sitting.join.storage")(function* (
   storage?: RoomCodeStorage

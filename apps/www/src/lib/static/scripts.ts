@@ -1,18 +1,19 @@
 import { Array as Arr, Result, Schema } from "effect";
 
 /** Every link that preloads a JavaScript module. */
-export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/g;
+export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;
 
 /** The module script that starts the app, as TanStack's `<Scripts>` renders it. */
-const ENTRY_SCRIPT = /<script type="module" async="" src="([^"]+)"><\/script>/g;
+const ENTRY_SCRIPT =
+  /<script type="module" async="" src="([^"]+)"><\/script>/gu;
 
-const PRELOAD_HREF = /\bhref="([^"]*)"/;
-const PRELOAD_PRIORITY = /\bfetchPriority="([^"]*)"/;
+const PRELOAD_HREF = /\bhref="([^"]*)"/u;
+const PRELOAD_PRIORITY = /\bfetchPriority="([^"]*)"/u;
 const BODY_END = "</body>";
 
 /** The address of one built script: the only address a static page preloads or starts. */
 const ScriptPath = Schema.String.check(
-  Schema.isPattern(/^\/assets\/[\w.-]+\.js$/)
+  Schema.isPattern(/^\/assets\/[\w.-]+\.js$/u)
 );
 
 const ModulePreload = Schema.Struct({

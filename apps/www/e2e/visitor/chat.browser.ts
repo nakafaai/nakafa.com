@@ -8,7 +8,7 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SESSION_READ = "/api/auth/get-session";
-const AUTH_URL = /\/auth/;
+const AUTH_URL = /\/auth/u;
 
 /**
  * A visitor's new chat opens no WebSocket and sends no session read. Its composer

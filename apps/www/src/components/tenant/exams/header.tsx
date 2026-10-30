@@ -87,7 +87,7 @@ export function ExamHeader() {
         </Tooltip>
         <Input
           aria-label={t("title-label")}
-          className="min-w-0 flex-1 truncate border-0 font-semibold text-lg shadow-none md:text-lg"
+          className="min-w-0 flex-1 truncate border-0 text-lg font-semibold shadow-none md:text-lg"
           dir="auto"
           onBlur={save}
           onChange={(event) => setDraft(event.target.value)}
@@ -124,7 +124,7 @@ export function ExamLockedNote() {
         <p
           className={cn(
             contentWidthVariants({ width: "page" }),
-            "px-4 py-2 text-muted-foreground text-sm"
+            "text-muted-foreground px-4 py-2 text-sm"
           )}
         >
           <ExamGone />
@@ -142,7 +142,7 @@ export function ExamLockedNote() {
       <p
         className={cn(
           contentWidthVariants({ width: "page" }),
-          "px-4 py-2 text-muted-foreground text-sm"
+          "text-muted-foreground px-4 py-2 text-sm"
         )}
       >
         {t("archived-note")}

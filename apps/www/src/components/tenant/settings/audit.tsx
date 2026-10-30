@@ -88,7 +88,7 @@ export function SchoolAuditSettings() {
         <ReadBoundary>
           <SchoolAuditBody />
         </ReadBoundary>
-        <p className="mt-auto border-t px-4 py-3 text-muted-foreground text-sm">
+        <p className="text-muted-foreground mt-auto border-t px-4 py-3 text-sm">
           {t("audit-footer")}
         </p>
       </SettingsTablePage>

@@ -10,7 +10,7 @@ const MATERIAL_NODE =
   "class-11-mathematics-function-composition-inverse-function";
 const MATERIAL_CONTEXT = `merdeka~${MATERIAL_NODE}`;
 const CONTEXTUAL_MATERIAL_HREF = `${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`;
-const MATERIAL_TITLE_PATTERN = /^Function Concept\b/;
+const MATERIAL_TITLE_PATTERN = /^Function Concept\b/u;
 
 /** The path of the Convex query that verifies a lesson's placement. */
 const PLACEMENT_QUERY = "contentRelease/program:context";

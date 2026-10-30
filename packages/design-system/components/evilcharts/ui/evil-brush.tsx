@@ -100,7 +100,7 @@ function EvilBrush({
     [dataKeys, chartConfig]
   );
   const totalPoints = data.length;
-  const chartId = useId().replace(/:/g, "");
+  const chartId = useId().replace(/:/gu, "");
 
   const { bind, range } = useBrushSelection({
     containerRef,

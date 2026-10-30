@@ -65,10 +65,10 @@ function LegendItem({ config, item, itemKey }: LegendItemProps) {
     selected === null || selected === undefined || selected === dataKey;
   const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
   const itemClassName = cn(
-    "flex items-center gap-1.5 transition-colors [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
+    "[&>svg]:text-muted-foreground flex items-center gap-1.5 transition-colors [&>svg]:h-3 [&>svg]:w-3",
     !isSelected && "text-muted-foreground",
     isClickable &&
-      "cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      "focus-visible:ring-ring cursor-pointer rounded-sm outline-none focus-visible:ring-2"
   );
 
   if (isClickable) {

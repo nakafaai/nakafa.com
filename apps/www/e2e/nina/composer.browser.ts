@@ -16,7 +16,7 @@ import { openSheet } from "@/e2e/support/sheet";
 import { isTakenOver, waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The page's scripts, which a test holds back so React has not run yet. */
-const SCRIPTS = /\/assets\/.*\.js/;
+const SCRIPTS = /\/assets\/.*\.js/u;
 /** What the learner types before the page answers. */
 const EARLY_TEXT = "A question typed before the page answers";
 

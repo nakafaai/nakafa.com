@@ -295,7 +295,7 @@ interface ChartBackgroundProps {
 }
 
 export function ChartBackground({ variant }: ChartBackgroundProps) {
-  const baseId = useId().replace(/:/g, "");
+  const baseId = useId().replace(/:/gu, "");
   const patternId = `${baseId}-bg-${variant}`;
   const maskId = `${baseId}-bg-edge-fade`;
   const filterId = `${baseId}-bg-blur`;

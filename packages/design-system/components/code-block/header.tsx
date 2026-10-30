@@ -31,7 +31,7 @@ export function CodeBlockHeader({ className, ...props }: CodeBlockHeaderProps) {
   return (
     <div
       className={cn(
-        "flex flex-row items-center border-b bg-muted/80 p-1",
+        "bg-muted/80 flex flex-row items-center border-b p-1",
         className
       )}
       {...props}
@@ -80,7 +80,8 @@ export function CodeBlockFilename({
   const defaultIcon = Option.getOrUndefined(
     Arr.findFirst(Rec.toEntries(filenameIconMap), ([pattern]) => {
       const regex = new RegExp(
-        `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
+        `^${pattern.replace(/\\/gu, "\\\\").replace(/\./gu, "\\.").replace(/\*/gu, ".*")}$`,
+        "u"
       );
       return regex.test(children?.toString() ?? "");
     })
@@ -93,7 +94,7 @@ export function CodeBlockFilename({
 
   return (
     <div
-      className="flex min-w-0 items-center gap-2 px-4 py-1.5 text-muted-foreground text-sm"
+      className="text-muted-foreground flex min-w-0 items-center gap-2 px-4 py-1.5 text-sm"
       {...props}
     >
       {iconValue ? (
@@ -150,7 +151,7 @@ export function CodeBlockSelectTrigger({
     <SelectTrigger
       aria-label={t("language")}
       className={cn(
-        "w-fit border-none text-muted-foreground text-sm shadow-none",
+        "text-muted-foreground w-fit border-none text-sm shadow-none",
         className
       )}
       size="sm"

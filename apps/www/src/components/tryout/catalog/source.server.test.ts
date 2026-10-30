@@ -1,20 +1,4 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
-
-const layerMock = vi.hoisted(() => vi.fn());
-
-import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import {
-  CONTENT_RUNTIME_RESPONSE_HEADER,
-  CONTENT_RUNTIME_RESPONSE_MARKER,
-  PROTECTED_CONTENT_RUNTIME_PATH,
-} from "@repo/backend/content/endpoint";
-import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
-import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
-import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
-// @vitest-environment node
-
 import {
   afterEach,
   assert,
@@ -27,6 +11,16 @@ import {
   APP_LOCALE_CODES,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+  PROTECTED_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
+import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import {
   createTestPublication,
   makeRuntimeSource,
@@ -49,7 +43,12 @@ import {
   readTryoutSetPage,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/source.server";
+import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { resetTestRuntimeCache } from "@/test/store";
+
+const layerMock = vi.hoisted(() => vi.fn());
+
+// @vitest-environment node
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const transportMock = vi.hoisted(() => vi.fn<typeof fetch>());

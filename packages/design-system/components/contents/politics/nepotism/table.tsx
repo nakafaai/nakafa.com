@@ -29,7 +29,7 @@ export function StateTable({ caption, labels }: Props) {
     <div className="grid grid-cols-1">
       <Table containerClassName="scrollbar-hide">
         <TableCaption>{caption}</TableCaption>
-        <TableHeader className="border-x border-t bg-accent text-accent-foreground">
+        <TableHeader className="bg-accent text-accent-foreground border-x border-t">
           <TableRow>
             <TableHead className="border-r text-center">
               {labels.country}
@@ -50,7 +50,7 @@ export function StateTable({ caption, labels }: Props) {
         </TableHeader>
         <TableBody className="border-x border-b">
           <TableRow>
-            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
+            <TableCell className="bg-accent text-accent-foreground border-r text-center font-medium">
               Malaysia
             </TableCell>
             <TableCell className="border-r text-center">9,00</TableCell>
@@ -59,7 +59,7 @@ export function StateTable({ caption, labels }: Props) {
             <TableCell className="text-center">{labels.good}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
+            <TableCell className="bg-accent text-accent-foreground border-r text-center font-medium">
               Singapore
             </TableCell>
             <TableCell className="border-r text-center">10,00</TableCell>
@@ -68,7 +68,7 @@ export function StateTable({ caption, labels }: Props) {
             <TableCell className="text-center">{labels.good}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
+            <TableCell className="bg-accent text-accent-foreground border-r text-center font-medium">
               Thailand
             </TableCell>
             <TableCell className="border-r text-center">3,25</TableCell>
@@ -77,7 +77,7 @@ export function StateTable({ caption, labels }: Props) {
             <TableCell className="text-center">{labels.medium}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
+            <TableCell className="bg-accent text-accent-foreground border-r text-center font-medium">
               Philippines
             </TableCell>
             <TableCell className="border-r text-center">4,75</TableCell>
@@ -86,7 +86,7 @@ export function StateTable({ caption, labels }: Props) {
             <TableCell className="text-center">{labels.medium}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
+            <TableCell className="bg-accent text-accent-foreground border-r text-center font-medium">
               Indonesia
             </TableCell>
             <TableCell className="border-r text-center">2,50</TableCell>

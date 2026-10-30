@@ -55,7 +55,7 @@ export function Bar({
   const hoveredIndex = useComposedChart((chart) => chart.hoveredIndex);
   const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
   const selectDataKey = useComposedChart((chart) => chart.selectDataKey);
-  const id = useId().replace(/:/g, ""); // unique id scopes this bar's style defs
+  const id = useId().replace(/:/gu, ""); // unique id scopes this bar's style defs
   // Devices set to "reduce motion" skip the grow-in animation entirely
   const shouldReduceMotion = useReducedMotion();
 

@@ -110,7 +110,7 @@ function AuthPage() {
           }
           legal={<AuthLegal links={legal} />}
         >
-          <h1 className="font-semibold text-2xl">{t("sign-in-title")}</h1>
+          <h1 className="text-2xl font-semibold">{t("sign-in-title")}</h1>
         </SignInScreen>
       </div>
     </>

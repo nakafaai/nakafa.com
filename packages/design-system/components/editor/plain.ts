@@ -129,6 +129,6 @@ function join(tokens: readonly Token[], separator: string) {
  */
 export function plainText(markdown: string) {
   return Str.trim(
-    Str.replaceAll(/\s+/g, " ")(join(reader.lexer(markdown), " "))
+    Str.replaceAll(/\s+/gu, " ")(join(reader.lexer(markdown), " "))
   );
 }

@@ -37,7 +37,7 @@ export const MarkdownImage = memo(
       <Image
         alt={alt}
         className={cn(
-          "my-4 block h-auto max-w-full rounded-xl border bg-muted",
+          "bg-muted my-4 block h-auto max-w-full rounded-xl border",
           className
         )}
         height={resolvedHeight}

@@ -5,5 +5,5 @@ export const codeFenceBodyVariants = cva("overflow-x-auto border-t");
 
 /** The code's lines inside that box. */
 export const codeFencePreVariants = cva(
-  "overflow-x-auto bg-muted/40 p-4 font-mono text-sm"
+  "bg-muted/40 overflow-x-auto p-4 font-mono text-sm"
 );

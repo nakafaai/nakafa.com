@@ -22,7 +22,7 @@ import {
 } from "@/e2e/support/viewport";
 
 /** What a visitor must never read on this page: the error itself. */
-const ERROR_DETAILS = /ChunkLoadError|digest|5XX|\bat \w+ \(/i;
+const ERROR_DETAILS = /ChunkLoadError|digest|5XX|\bat \w+ \(/iu;
 
 /**
  * The routes that break the same way, each with the control whose first press

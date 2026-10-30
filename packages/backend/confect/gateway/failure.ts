@@ -4,7 +4,7 @@ import { Schema } from "effect";
 export const Seconds = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0));
 /** The gateway's own error type or code: a bounded plain identifier, never free text. */
 export const GatewayType = Schema.String.check(
-  Schema.isPattern(/^[A-Za-z0-9_.-]{1,128}$/)
+  Schema.isPattern(/^[A-Za-z0-9_.-]{1,128}$/u)
 );
 
 /** The deployment cannot call the gateway, such as a free, local, or self-hosted deployment. */

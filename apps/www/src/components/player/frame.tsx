@@ -27,7 +27,7 @@ export function PlayerMain({
     <>
       <PlayerToolbar />
       <ResizablePanelGroup
-        className="overflow-visible! max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden! mx-auto h-auto! max-w-7xl flex-1"
+        className="mx-auto h-auto! max-w-7xl flex-1 overflow-visible! max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!"
         orientation="horizontal"
       >
         <ResizablePanel
@@ -35,7 +35,7 @@ export function PlayerMain({
           id="questions"
           minSize="55%"
         >
-          <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-6 sm:px-6">
+          <div className="mx-auto w-full max-w-3xl min-w-0 px-4 py-6 sm:px-6">
             {children}
           </div>
         </ResizablePanel>

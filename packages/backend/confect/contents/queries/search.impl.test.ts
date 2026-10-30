@@ -25,7 +25,7 @@ import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { ConvexError } from "convex/values";
 import { Array as Arr, Effect } from "effect";
 
-const MARKDOWN_PATH_PATTERN = /\.md$/;
+const MARKDOWN_PATH_PATTERN = /\.md$/u;
 
 /** Activates signed articles and their authenticated search rows. */
 async function activateArticleSearch(

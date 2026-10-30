@@ -31,6 +31,9 @@ export function YoutubePlayer({ label, videoId }: Props) {
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
         className="size-full border-0"
+        // The player runs its own scripts on its own origin, and its title and
+        // logo open YouTube in a new tab.
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
         src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`}
         title={label}
       />

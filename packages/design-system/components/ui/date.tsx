@@ -67,7 +67,7 @@ function DatePicker({
       <PopoverTrigger
         className={cn(
           fieldBoxVariants(),
-          "cursor-pointer items-center gap-2 text-left data-placeholder:text-muted-foreground",
+          "data-placeholder:text-muted-foreground cursor-pointer items-center gap-2 text-left",
           className
         )}
         data-placeholder={Option.isNone(chosen) || undefined}
@@ -82,7 +82,7 @@ function DatePicker({
         )}
       >
         <HugeIcons
-          className="size-4 shrink-0 text-muted-foreground"
+          className="text-muted-foreground size-4 shrink-0"
           icon={Calendar03Icon}
         />
         <span className="flex-1 whitespace-nowrap" id={shownId}>

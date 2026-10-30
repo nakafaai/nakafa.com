@@ -11,7 +11,7 @@ export function HomeGreeting() {
   const { greeting } = useTenant();
 
   return (
-    <h1 className="wrap-anywhere min-w-0 text-balance font-medium text-base">
+    <h1 className="min-w-0 text-base font-medium text-balance wrap-anywhere">
       {t(`greeting-${greeting.part}`, { name: greeting.firstName })}
     </h1>
   );

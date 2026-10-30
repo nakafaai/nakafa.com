@@ -92,7 +92,7 @@ function DialogDiagram() {
   return (
     <Mermaid
       chart={chart}
-      className="h-[60dvh] rounded-lg bg-muted/40 p-4 text-base"
+      className="bg-muted/40 h-[60dvh] rounded-lg p-4 text-base"
       config={config}
       fit="natural"
       label={title}

@@ -18,7 +18,7 @@ import { arrive, arriveLocked, setHref } from "@/e2e/support/tryout";
 import { compactViewport } from "@/e2e/support/viewport";
 
 /** The English route prefix that the walked set's addresses start with. */
-const ENGLISH_PREFIX = /^\/en\//;
+const ENGLISH_PREFIX = /^\/en\//u;
 
 /** The review that a free learner sees once the whole attempt is finished. */
 const LOCKED_REVIEW = '[data-slot="tryout-review-locked"]';

@@ -2,7 +2,7 @@
 import { MODULE_PRELOAD } from "#www/src/lib/static/scripts";
 
 /** Every script element, with its attributes and its body. */
-const SCRIPT_ELEMENT = /<script\b[^>]*>([\s\S]*?)<\/script>/g;
+const SCRIPT_ELEMENT = /<script\b[^>]*>([\s\S]*?)<\/script>/gu;
 
 /** The path of the not-found page that the build prerenders for one locale. */
 export function notFoundPagePath(locale: string) {

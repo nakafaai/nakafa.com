@@ -9,8 +9,8 @@ import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
 import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const NINA_DIALOG_NAME = /^Nina/;
-const INTER_FONT = /Inter/;
+const NINA_DIALOG_NAME = /^Nina/u;
+const INTER_FONT = /Inter/u;
 
 const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
 // The lesson's pagination, breadcrumb and outline header, as the server sends them.

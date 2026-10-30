@@ -11,7 +11,7 @@ import {
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 for (const viewport of [touchViewport, desktopViewport]) {
   test(`a school with no exam offers its one step, Create exam, in the middle of the page at ${viewport.width} px`, async ({

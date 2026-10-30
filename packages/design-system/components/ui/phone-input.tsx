@@ -115,7 +115,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
       <PopoverTrigger
         render={
           <Button
-            className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
+            className="hover:bg-accent hover:text-accent-foreground inline-flex items-center rounded-r-none border px-3"
             variant="ghost"
           />
         }
@@ -146,7 +146,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
           value={searchQuery}
         >
           <AutocompleteInput
-            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+            className="focus-visible:border-border h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0"
             clearLabel={t("clear-search")}
             placeholder={t("search-country-placeholder")}
             showClear
@@ -179,7 +179,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
                     <HugeIcons
                       aria-hidden="true"
                       className={cn(
-                        "ml-auto size-4 shrink-0 text-primary",
+                        "text-primary ml-auto size-4 shrink-0",
                         c.value === value ? "opacity-100" : "opacity-0"
                       )}
                       icon={Tick01Icon}
@@ -199,7 +199,7 @@ function FlagComponent({ country, countryName }: FlagProps) {
   const Flag = flags[country];
 
   return (
-    <span className="overflow-hidden text-muted-foreground">
+    <span className="text-muted-foreground overflow-hidden">
       {Flag ? (
         <Flag title={countryName} />
       ) : (

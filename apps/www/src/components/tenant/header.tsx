@@ -50,7 +50,7 @@ export function SchoolHeader({
 
   return (
     <header
-      className="sticky top-0 z-10 h-16 shrink-0 border-b bg-background"
+      className="bg-background sticky top-0 z-10 h-16 shrink-0 border-b"
       data-slot="page-header"
     >
       <div

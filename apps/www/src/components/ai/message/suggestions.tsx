@@ -34,13 +34,13 @@ function SuggestionsPartButton({ suggestion }: { suggestion: string }) {
 
   return (
     <button
-      className="flex w-full cursor-pointer items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out hover:text-primary"
+      className="hover:text-primary flex w-full cursor-pointer items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out"
       disabled={busy}
       onClick={() => send({ text: suggestion })}
       type="button"
     >
       {suggestion}
-      <HugeIcons className="size-4 text-primary" icon={Add01Icon} />
+      <HugeIcons className="text-primary size-4" icon={Add01Icon} />
     </button>
   );
 }

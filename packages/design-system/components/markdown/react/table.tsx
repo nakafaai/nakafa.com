@@ -46,7 +46,7 @@ export const reactTableComponents: ReactMarkdownComponents = {
   ),
   thead: ({ children, node: _node, ...props }) => (
     <TableHeader
-      className="border-b bg-muted/80"
+      className="bg-muted/80 border-b"
       data-nakafa="table-header"
       {...props}
     >

@@ -200,7 +200,7 @@ function ChannelName({ row }: { row: ChannelRow }) {
         <>
           <span
             aria-hidden="true"
-            className="size-2 shrink-0 rounded-full bg-primary"
+            className="bg-primary size-2 shrink-0 rounded-full"
             data-slot="unread-dot"
           />
           <span className="sr-only">{t("unread")}</span>

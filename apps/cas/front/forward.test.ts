@@ -8,7 +8,7 @@ import {
   forwardMath,
 } from "@/front/forward";
 
-const POOLED_NAME = /^cas-(1[0-5]|[0-9])$/;
+const POOLED_NAME = /^cas-(1[0-5]|[0-9])$/u;
 
 /** The objects that each call reached, in order, and the request each one received. */
 interface Calls {

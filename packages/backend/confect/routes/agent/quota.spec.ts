@@ -3,7 +3,7 @@ import { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Schema } from "effect";
 
-const quotaKeyPattern = /^[0-9a-f]{64}$/;
+const quotaKeyPattern = /^[0-9a-f]{64}$/u;
 
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({

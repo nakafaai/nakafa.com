@@ -85,7 +85,7 @@ function WeatherSummary({ weather }: { weather: Promise<WeatherRead> }) {
     <WeatherCard>
       <div className="flex flex-col gap-1">
         <WeatherCardHeader>
-          <p className="whitespace-nowrap font-mono text-xl tracking-tight">
+          <p className="font-mono text-xl tracking-tight whitespace-nowrap">
             {currentTemp}° C
           </p>
           <HugeIcons
@@ -93,12 +93,12 @@ function WeatherSummary({ weather }: { weather: Promise<WeatherRead> }) {
             icon={getWeatherIcon(iconCode)}
           />
         </WeatherCardHeader>
-        <p className="line-clamp-2 text-card-foreground text-xs">
+        <p className="text-card-foreground line-clamp-2 text-xs">
           {conditionTitle}
         </p>
       </div>
 
-      <p className="line-clamp-2 text-pretty text-xs" title={place}>
+      <p className="line-clamp-2 text-xs text-pretty" title={place}>
         {place}
       </p>
     </WeatherCard>

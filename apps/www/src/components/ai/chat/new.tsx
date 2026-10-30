@@ -107,7 +107,7 @@ function NewChatLayout({
   return (
     <div
       className={cn(
-        "relative flex size-full min-w-0 flex-col overflow-hidden text-chat",
+        "text-chat relative flex size-full min-w-0 flex-col overflow-hidden",
         !prompt && "justify-center gap-4"
       )}
     >

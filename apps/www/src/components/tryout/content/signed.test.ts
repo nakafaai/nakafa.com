@@ -1,12 +1,5 @@
 import { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
-
-const layerMock = vi.hoisted(() => vi.fn());
-
-// @vitest-environment node
-
-// Node tests isolate Next navigation imports while real semantic renderers execute.
 import {
   afterEach,
   assert,
@@ -15,6 +8,7 @@ import {
   expect,
   it,
 } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
@@ -33,6 +27,12 @@ import {
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { activateTestRelease } from "@/test/active";
 import { resetTestRuntimeCache } from "@/test/store";
+
+const layerMock = vi.hoisted(() => vi.fn());
+
+// @vitest-environment node
+
+// Node tests isolate Next navigation imports while real semantic renderers execute.
 
 const TEST_RELEASE_ID = "release-signed-test";
 

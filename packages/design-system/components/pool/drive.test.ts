@@ -16,7 +16,7 @@ import { createElement, Fragment, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
 /** The place of a member's center in the pool's transform, as the drive writes it. */
-const PLACE = /translate3d\(([-\d.]+)px, ([-\d.]+)px/;
+const PLACE = /translate3d\(([-\d.]+)px, ([-\d.]+)px/u;
 
 /**
  * The frame callbacks that the drive has queued. The test stands in for motion's

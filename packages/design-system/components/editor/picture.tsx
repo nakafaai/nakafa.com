@@ -233,7 +233,7 @@ function PictureNode({
       {src === undefined ? (
         <div
           aria-label={alt}
-          className="size-full rounded-md bg-muted"
+          className="bg-muted size-full rounded-md"
           role="img"
         />
       ) : (
@@ -246,7 +246,7 @@ function PictureNode({
         />
       )}
       {editor.isEditable ? (
-        <div className="absolute end-2 top-2 flex gap-1 rounded-md bg-background/90 p-0.5 shadow-sm">
+        <div className="bg-background/90 absolute end-2 top-2 flex gap-1 rounded-md p-0.5 shadow-sm">
           <ToolHint label={labels.edit}>
             <Button
               aria-label={labels.edit}

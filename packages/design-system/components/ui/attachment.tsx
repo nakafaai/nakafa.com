@@ -7,14 +7,14 @@ import type { ComponentProps } from "react";
 
 // Source: https://ui.shadcn.com/docs/components/base/attachment
 const attachmentVariants = cva(
-  "group/attachment relative flex w-fit min-w-0 max-w-full shrink-0 flex-wrap rounded-md border bg-card text-card-foreground transition-colors focus-within:ring-1 focus-within:ring-ring/30 has-[>a,>button]:hover:bg-muted/50 data-[state=error]:border-destructive/30 data-[state=idle]:border-dashed",
+  "group/attachment bg-card text-card-foreground focus-within:ring-ring/30 has-[>a,>button]:hover:bg-muted/50 data-[state=error]:border-destructive/30 relative flex w-fit max-w-full min-w-0 shrink-0 flex-wrap rounded-md border transition-colors focus-within:ring-1 data-[state=idle]:border-dashed",
   {
     variants: {
       size: {
         default:
-          "gap-2 text-sm has-data-[slot=attachment-media]:p-2 has-data-[slot=attachment-content]:px-2.5 has-data-[slot=attachment-content]:py-2",
-        sm: "gap-2.5 text-xs has-data-[slot=attachment-media]:p-1.5 has-data-[slot=attachment-content]:px-2 has-data-[slot=attachment-content]:py-1.5",
-        xs: "gap-1.5 text-xs has-data-[slot=attachment-media]:p-1 has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1",
+          "gap-2 text-sm has-data-[slot=attachment-content]:px-2.5 has-data-[slot=attachment-content]:py-2 has-data-[slot=attachment-media]:p-2",
+        sm: "gap-2.5 text-xs has-data-[slot=attachment-content]:px-2 has-data-[slot=attachment-content]:py-1.5 has-data-[slot=attachment-media]:p-1.5",
+        xs: "gap-1.5 text-xs has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1 has-data-[slot=attachment-media]:p-1",
       },
       orientation: {
         horizontal: "min-w-40 items-center",
@@ -47,7 +47,7 @@ export function Attachment({
 }
 
 const mediaVariants = cva(
-  "relative flex aspect-square w-10 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted text-foreground group-data-[orientation=vertical]/attachment:w-full group-data-[size=sm]/attachment:w-8 group-data-[size=xs]/attachment:w-7 group-data-[state=error]/attachment:bg-destructive/10 group-data-[state=error]/attachment:text-destructive [&_svg:not([class*='size-'])]:size-4 group-data-[orientation=vertical]/attachment:[&_svg:not([class*='size-'])]:size-6 group-data-[size=xs]/attachment:[&_svg:not([class*='size-'])]:size-3.5 [&_svg]:pointer-events-none",
+  "bg-muted text-foreground group-data-[state=error]/attachment:bg-destructive/10 group-data-[state=error]/attachment:text-destructive relative flex aspect-square w-10 shrink-0 items-center justify-center overflow-hidden rounded-sm group-data-[orientation=vertical]/attachment:w-full group-data-[size=sm]/attachment:w-8 group-data-[size=xs]/attachment:w-7 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 group-data-[orientation=vertical]/attachment:[&_svg:not([class*='size-'])]:size-6 group-data-[size=xs]/attachment:[&_svg:not([class*='size-'])]:size-3.5",
   {
     variants: {
       variant: {
@@ -57,7 +57,7 @@ const mediaVariants = cva(
         // failed picture has no tile or text of its own, so a destructive wash
         // covers it.
         image:
-          "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 group-data-[state=error]/attachment:after:absolute group-data-[state=error]/attachment:after:inset-0 group-data-[state=error]/attachment:after:bg-destructive/40 dark:bg-foreground *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
+          "group-data-[state=error]/attachment:after:bg-destructive/40 dark:bg-foreground opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 group-data-[state=error]/attachment:after:absolute group-data-[state=error]/attachment:after:inset-0 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
       },
     },
   }
@@ -85,7 +85,7 @@ export function AttachmentContent({
   return (
     <div
       className={cn(
-        "min-w-0 max-w-full flex-1 leading-tight group-data-[orientation=vertical]/attachment:px-1",
+        "max-w-full min-w-0 flex-1 leading-tight group-data-[orientation=vertical]/attachment:px-1",
         className
       )}
       data-slot="attachment-content"
@@ -101,7 +101,7 @@ export function AttachmentTitle({
   return (
     <span
       className={cn(
-        "wrap-anywhere block min-w-0 max-w-full font-medium",
+        "block max-w-full min-w-0 font-medium wrap-anywhere",
         className
       )}
       data-slot="attachment-title"
@@ -117,7 +117,7 @@ export function AttachmentDescription({
   return (
     <span
       className={cn(
-        "wrap-anywhere mt-0.5 block min-w-0 max-w-full text-muted-foreground text-xs group-data-[state=error]/attachment:text-destructive",
+        "text-muted-foreground group-data-[state=error]/attachment:text-destructive mt-0.5 block max-w-full min-w-0 text-xs wrap-anywhere",
         className
       )}
       data-slot="attachment-description"

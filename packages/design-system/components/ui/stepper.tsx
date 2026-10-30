@@ -178,7 +178,7 @@ function StepperTrigger({
     props: {
       children,
       className: cn(
-        "pressable inline-flex items-center gap-3 rounded-full outline-none transition-[scale] focus-visible:z-10 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
+        "pressable focus-visible:border-ring focus-visible:ring-ring/50 inline-flex items-center gap-3 rounded-full transition-[scale] outline-none focus-visible:z-10 focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50",
         className
       ),
       "data-slot": "stepper-trigger",
@@ -203,7 +203,7 @@ function StepperDefaultIndicator() {
 
   return (
     <>
-      <span className="transition-[scale,opacity] group-data-[step-state=completed]/step:scale-0 group-data-loading/step:scale-0 group-data-[step-state=completed]/step:opacity-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none">
+      <span className="transition-[scale,opacity] group-data-loading/step:scale-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none group-data-[step-state=completed]/step:scale-0 group-data-[step-state=completed]/step:opacity-0">
         {step}
       </span>
       <HugeIcons
@@ -234,7 +234,7 @@ function StepperIndicator({
     props: {
       children: children ?? <StepperDefaultIndicator />,
       className: cn(
-        "relative flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs data-[step-state=active]:bg-primary data-[step-state=completed]:bg-primary data-[step-state=active]:text-primary-foreground data-[step-state=completed]:text-primary-foreground",
+        "bg-muted text-muted-foreground data-[step-state=active]:bg-primary data-[step-state=completed]:bg-primary data-[step-state=active]:text-primary-foreground data-[step-state=completed]:text-primary-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full text-xs",
         className
       ),
       "data-slot": "stepper-indicator",
@@ -251,7 +251,7 @@ function StepperTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("font-medium text-sm", className)}
+      className={cn("text-sm font-medium", className)}
       data-slot="stepper-title"
       {...props}
     >
@@ -280,7 +280,7 @@ function StepperSeparator({
   return (
     <div
       className={cn(
-        "m-0.5 bg-input group-data-[orientation=horizontal]/stepper:h-0.5 group-data-[orientation=vertical]/stepper:h-12 group-data-[orientation=horizontal]/stepper:w-full group-data-[orientation=vertical]/stepper:w-0.5 group-data-[orientation=horizontal]/stepper:flex-1 group-data-[step-state=completed]/step:bg-primary",
+        "bg-input group-data-[step-state=completed]/step:bg-primary m-0.5 group-data-[orientation=horizontal]/stepper:h-0.5 group-data-[orientation=horizontal]/stepper:w-full group-data-[orientation=horizontal]/stepper:flex-1 group-data-[orientation=vertical]/stepper:h-12 group-data-[orientation=vertical]/stepper:w-0.5",
         className
       )}
       data-slot="stepper-separator"

@@ -45,7 +45,7 @@ function PaginationItem({
 }) {
   const itemClassName = cn(
     buttonVariants({ variant: "outline" }),
-    "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
+    "group flex h-auto flex-col py-3 whitespace-normal shadow-xs",
     className
   );
   return Option.match(publicPathTarget(publicPath, context), {
@@ -97,7 +97,7 @@ function PaginationLabel({
 }) {
   return (
     <>
-      <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
+      <div className="text-muted-foreground group-hover:text-accent-foreground flex items-center gap-2 text-sm font-normal transition-colors">
         {iconPosition === "left" && (
           <HugeIcons className="size-4 shrink-0" icon={icon} />
         )}
@@ -108,7 +108,7 @@ function PaginationLabel({
       </div>
       <p
         className={cn(
-          "w-full text-foreground transition-colors group-hover:text-accent-foreground",
+          "text-foreground group-hover:text-accent-foreground w-full transition-colors",
           iconPosition === "right" ? "text-right" : ""
         )}
       >

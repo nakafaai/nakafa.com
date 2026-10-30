@@ -45,7 +45,7 @@ export function Anchor({
   }
 
   const anchorClassName = cn(
-    "h-auto p-0 font-normal text-primary underline underline-offset-4",
+    "text-primary h-auto p-0 font-normal underline underline-offset-4",
     className
   );
 

@@ -247,7 +247,7 @@ function PartSketch({
 
   return (
     <div className="grid content-start gap-2">
-      <p className="font-medium text-muted-foreground text-sm">{heading}</p>
+      <p className="text-muted-foreground text-sm font-medium">{heading}</p>
       {Arr.map(parts, (part, index) => (
         <PaperChoice key={part.id} withControls={withControls}>
           <PaperOption letter={letterOf(index)}>
@@ -297,7 +297,7 @@ function TableSketch({
             <PaperTableMark key={column.id}>
               <span
                 aria-hidden
-                className="size-4 rounded-full border border-input bg-background shadow-xs"
+                className="border-input bg-background size-4 rounded-full border shadow-xs"
               />
             </PaperTableMark>
           ))}

@@ -77,14 +77,14 @@ export const reactTextComponents: ReactMarkdownComponents = {
     />
   ),
   hr: ({ node: _node, ...props }) => (
-    <hr className="my-4 border-border" data-nakafa="hr" {...props} />
+    <hr className="border-border my-4" data-nakafa="hr" {...props} />
   ),
   img: ({ node: _node, ...props }) => (
     <MarkdownImage data-nakafa="image" {...props} />
   ),
   li: ({ node: _node, ...props }) => (
     <li
-      className="ms-8 text-pretty ps-1 text-start leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+      className="ms-8 ps-1 text-start leading-relaxed text-pretty [&>*+*]:mt-4 [&>p:first-child]:inline"
       data-nakafa="list-item"
       {...props}
     />

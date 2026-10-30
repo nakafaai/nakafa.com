@@ -12,7 +12,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const SEEDED_COHORT = "X-1";
 
 /** The address of one cohort's page. */
-const COHORT_PAGE = /\/settings\/cohorts\/[^/]+$/;
+const COHORT_PAGE = /\/settings\/cohorts\/[^/]+$/u;
 
 test("a cohort's page shows its homeroom teacher as a card above its students, and its header holds only search and placement", async ({
   baseURL,

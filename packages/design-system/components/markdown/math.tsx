@@ -102,7 +102,7 @@ export function BlockMath({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border bg-card text-card-foreground",
+        "bg-card text-card-foreground overflow-hidden rounded-xl border",
         className
       )}
       data-markdown-ignore=""
@@ -138,7 +138,7 @@ export function BlockMath({
 export function InlineMath(props: MathComponentProps) {
   return (
     <span
-      className="[&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base>.katex-strut]:absolute [&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:max-w-[calc(100%+0.5rem)] [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1"
+      className="[&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base]:max-w-[calc(100%+0.5rem)] [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1 [&_.katex-html>.katex-base>.katex-strut]:absolute"
       data-markdown-ignore=""
     >
       <KatexMarkup displayMode={false} {...props} />

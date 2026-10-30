@@ -8,12 +8,12 @@ import { cva } from "class-variance-authority";
 
 /** A paragraph, whose lines stop at about 75 characters. */
 export const paragraphVariants = cva(
-  "my-4 max-w-xl text-pretty tabular-nums leading-relaxed first:mt-0 last:mb-0"
+  "my-4 max-w-xl leading-relaxed text-pretty tabular-nums first:mt-0 last:mb-0"
 );
 
 /** A heading's box: its room above and below, and the size of its level. */
 export const headingVariants = cva(
-  "mt-10 mb-6 font-medium leading-tight tracking-tight first:mt-0 last:mb-0",
+  "mt-10 mb-6 leading-tight font-medium tracking-tight first:mt-0 last:mb-0",
   {
     variants: {
       tag: {
@@ -33,12 +33,12 @@ export const headingVariants = cva(
  * levels carry it, and deeper levels stay plain ink, so the level hierarchy reads at a glance.
  */
 export const headingTextVariants = cva(
-  "wrap-anywhere hyphens-auto text-pretty text-primary",
+  "text-primary text-pretty wrap-anywhere hyphens-auto",
   {
     variants: {
       tag: {
-        h1: "underline decoration-2 decoration-heading-rule underline-offset-4",
-        h2: "underline decoration-2 decoration-heading-rule underline-offset-4",
+        h1: "decoration-heading-rule underline decoration-2 underline-offset-4",
+        h2: "decoration-heading-rule underline decoration-2 underline-offset-4",
         h3: "",
         h4: "",
         h5: "",
@@ -60,17 +60,17 @@ export const listVariants = cva("my-4 space-y-4 ps-8 last:mb-0", {
 
 /** One item of a list, whose first paragraph sits on the marker's line. */
 export const listItemVariants = cva(
-  "max-w-xl text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+  "max-w-xl pl-1 leading-relaxed text-pretty [&>*+*]:mt-4 [&>p:first-child]:inline"
 );
 
 /** A quotation, on the muted callout surface. */
 export const quoteVariants = cva(
-  "my-4 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic"
+  "border-foreground bg-muted my-4 rounded-r-xl border-l-2 p-4 italic"
 );
 
 /** Code inside a line of text. */
 export const codeVariants = cva(
-  "inline whitespace-pre-wrap break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
+  "bg-muted text-muted-foreground inline rounded-sm border px-1 py-0.5 font-mono text-sm tracking-tight break-all whitespace-pre-wrap"
 );
 
 /**

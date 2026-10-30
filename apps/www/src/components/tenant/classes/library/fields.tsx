@@ -37,7 +37,7 @@ export function LibraryFileField({
       <FieldLabel htmlFor={id}>{t("library-file")}</FieldLabel>
       {file === null ? (
         <div
-          className="relative flex flex-col items-center gap-2 rounded-lg border bg-muted/40 px-4 py-6 text-center text-muted-foreground text-sm transition-colors hover:bg-muted has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-muted"
+          className="bg-muted/40 text-muted-foreground hover:bg-muted has-focus-visible:border-ring has-focus-visible:ring-ring/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-muted relative flex flex-col items-center gap-2 rounded-lg border px-4 py-6 text-center text-sm transition-colors has-focus-visible:ring-3"
           data-dragging={dragging}
         >
           <HugeIcons aria-hidden="true" icon={FileUploadIcon} />
@@ -85,7 +85,7 @@ export function ChosenFile({
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-lg border py-1 pr-1 pl-3 text-sm">
       <HugeIcons aria-hidden="true" icon={icon} />
-      <span className="wrap-anywhere min-w-0 flex-1" dir="auto">
+      <span className="min-w-0 flex-1 wrap-anywhere" dir="auto">
         {name}
       </span>
       <Button
@@ -138,7 +138,7 @@ export function LibraryDriveField({
         <FieldDescription>
           {t("library-drive-missing")}{" "}
           <a
-            className="font-medium text-foreground underline underline-offset-4"
+            className="text-foreground font-medium underline underline-offset-4"
             href={
               new URL(`/${locale}/user/settings/connectors`, SITE_ORIGIN).href
             }

@@ -10,7 +10,7 @@ const WIDTHS = [
 ] as const;
 
 /** The shape of a card code: Crockford base32 in two groups of five. */
-const CARD_CODE = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/;
+const CARD_CODE = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/u;
 
 test("an owner adds a teacher by email and sees the invite in the members list, and adds a student with the first card", async ({
   browser,

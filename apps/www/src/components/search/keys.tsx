@@ -53,7 +53,7 @@ function CommandKey({
   return (
     <kbd
       className={cn(
-        "pointer-events-none inline-flex h-5 min-w-5 select-none items-center justify-center gap-1 rounded bg-muted px-1 font-sans text-muted-foreground text-xs shadow-xs ring-1 ring-border [&_svg:not([class*='size-'])]:size-3",
+        "bg-muted text-muted-foreground ring-border pointer-events-none inline-flex h-5 min-w-5 items-center justify-center gap-1 rounded px-1 font-sans text-xs shadow-xs ring-1 select-none [&_svg:not([class*='size-'])]:size-3",
         className
       )}
     >

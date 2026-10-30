@@ -1,47 +1,47 @@
 import { Array as Arr } from "effect";
 
 // Hoisted regex patterns to top-level scope for performance
-const TRIPLE_BACKTICKS = /```/g;
+const TRIPLE_BACKTICKS = /```/gu;
 // Detects math expressions in backticks with dollar signs: `$x^2$`
-const DOLLAR_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$([^$][\s\S]*?[^$]|\S)\$\s*`/g;
+const DOLLAR_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$([^$][\s\S]*?[^$]|\S)\$\s*`/gu;
 // Detects math expressions in backticks with double dollar signs: `$$x^2$$`
 const DOUBLE_DOLLAR_MATH_IN_BACKTICKS_GLOBAL =
-  /`\s*\$\$([^$][\s\S]*?[^$]|\S)\$\$\s*`/g;
+  /`\s*\$\$([^$][\s\S]*?[^$]|\S)\$\$\s*`/gu;
 // Detects math expressions in backticks with LaTeX parentheses: `\(x^2\)`
-const PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\(([\s\S]*?)\\\)\s*`/g;
+const PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\(([\s\S]*?)\\\)\s*`/gu;
 // Detects LaTeX display math with square brackets: \[x^2 + y^2 = z^2\]
-const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/g;
+const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/gu;
 // Detects LaTeX inline math with parentheses: \(x^2\)
-const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
+const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/gu;
 // Detects malformed fenced math blocks: ```math x^2```
-const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
+const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/gu;
 // Detects HTML math tags: <math>x^2</math>
-const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
+const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/gu;
 // Detects MDX InlineMath components: <InlineMath math="x^2" />
 const INLINE_MATH_COMPONENT_PATTERN =
-  /<InlineMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/InlineMath>)?/g;
+  /<InlineMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/InlineMath>)?/gu;
 // Detects MDX BlockMath components: <BlockMath math="x^2" />
 const BLOCK_MATH_COMPONENT_PATTERN =
-  /<BlockMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/BlockMath>)?/g;
+  /<BlockMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/BlockMath>)?/gu;
 // Detects code blocks containing dollar math: ```\n$x^2$\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
-  /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
+  /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/gu;
 // Detects plain single-dollar spans outside code fences: $x^2$
-const SINGLE_DOLLAR_SPAN_PATTERN = /(^|[^$\\])\$([^$\n]+)\$(?!\$)/g;
-const LATEX_SIGNAL_PATTERN = /\\[a-zA-Z]+|\\[,;! ]/;
+const SINGLE_DOLLAR_SPAN_PATTERN = /(^|[^$\\])\$([^$\n]+)\$(?!\$)/gu;
+const LATEX_SIGNAL_PATTERN = /\\[a-zA-Z]+|\\[,;! ]/u;
 const MATH_SYMBOL_PATTERN = /[=^_{}<>≤≥√∞±×÷∑∫]/u;
 const MATH_OPERATOR_PATTERN = /(?:\d|\p{L})\s*(?:[+\-*/=<>])\s*(?:\d|\p{L})/u;
-const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/;
+const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/u;
 const ORDER_OR_ABSOLUTE_VALUE_PATTERN = /^\|[^|\n]*[\p{L}\\][^|\n]*\|$/u;
 const FUNCTION_NOTATION_PATTERN =
   /^(?:\\?[A-Za-z]+|[A-Z])(?:_[A-Za-z0-9{}]+)?\([^()\n]*[\p{L}\\][^()\n]*\)$/u;
 const QUOTIENT_NOTATION_PATTERN =
   /^[\p{L}\\][\p{L}\p{N}\\_{}]*(?:\([^()\n]*\))?\/[\p{L}\\][\p{L}\p{N}\\_{}]*(?:\([^()\n]*\))?$/u;
 const TRIPLE_BACKTICK_LENGTH = 3;
-const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
-const BULLET_LIST_PATTERN = /^(\s*)[-*+]\s+/;
-const NON_WHITESPACE_START_PATTERN = /^\S/;
-const BLOCKQUOTE_PREFIX_PATTERN = /^(\s*(?:>\s*)+)\s*$/;
+const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/u;
+const BULLET_LIST_PATTERN = /^(\s*)[-*+]\s+/u;
+const NON_WHITESPACE_START_PATTERN = /^\S/u;
+const BLOCKQUOTE_PREFIX_PATTERN = /^(\s*(?:>\s*)+)\s*$/u;
 
 /**
  * Applies a transform only to segments that are OUTSIDE of fenced code blocks (``` ... ```)
@@ -277,8 +277,9 @@ function normalizeMathDelimiters(input: string): string {
     ];
 
     for (const pattern of displayMathPatterns) {
-      s = s.replace(pattern, (_, inner: string, offset: number) =>
-        createFencedMathBlock(inner, s, offset)
+      const source = s;
+      s = source.replace(pattern, (_, inner: string, offset: number) =>
+        createFencedMathBlock(inner, source, offset)
       );
     }
 

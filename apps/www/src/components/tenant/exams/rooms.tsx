@@ -158,7 +158,7 @@ function ExamRoomsContent({
         <>
           <SchoolHeader items={examsItems} />
           <TablePageBody>
-            <p className="p-4 text-muted-foreground text-sm md:p-6">
+            <p className="text-muted-foreground p-4 text-sm md:p-6">
               {t("rooms-unavailable")}
             </p>
           </TablePageBody>
@@ -171,7 +171,7 @@ function ExamRoomsContent({
             title={gone.title}
           />
           <TablePageBody>
-            <p className="p-4 text-muted-foreground text-sm md:p-6">
+            <p className="text-muted-foreground p-4 text-sm md:p-6">
               <ExamGone />
             </p>
           </TablePageBody>

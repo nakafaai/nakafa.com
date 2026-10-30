@@ -18,7 +18,7 @@ export function TryoutResponseLabel({
   return (
     <>
       <Response
-        className="wrap-anywhere h-auto whitespace-normal"
+        className="h-auto wrap-anywhere whitespace-normal"
         id={`${id}-label-content`}
       >
         {children}

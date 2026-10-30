@@ -32,7 +32,7 @@ function AccordionTrigger({
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
         className={cn(
-          "group/accordion-trigger flex flex-1 cursor-pointer items-start justify-between gap-4 rounded-md py-4 text-left text-sm underline-offset-4 outline-none transition-[border-color,box-shadow] hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-disabled:pointer-events-none data-disabled:opacity-50",
+          "group/accordion-trigger focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 cursor-pointer items-start justify-between gap-4 rounded-md py-4 text-left text-sm underline-offset-4 transition-[border-color,box-shadow] outline-none hover:underline focus-visible:ring-3 data-disabled:pointer-events-none data-disabled:opacity-50",
           className
         )}
         data-slot="accordion-trigger"
@@ -40,7 +40,7 @@ function AccordionTrigger({
       >
         {children}
         <HugeIcons
-          className="pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform group-aria-expanded/accordion-trigger:rotate-180 motion-reduce:transition-none"
+          className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform group-aria-expanded/accordion-trigger:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}
         />
       </AccordionPrimitive.Trigger>
@@ -55,7 +55,7 @@ function AccordionContent({
 }: AccordionPrimitive.Panel.Props) {
   return (
     <AccordionPrimitive.Panel
-      className="overflow-hidden text-sm motion-safe:data-closed:animate-accordion-up motion-safe:data-open:animate-accordion-down"
+      className="motion-safe:data-closed:animate-accordion-up motion-safe:data-open:animate-accordion-down overflow-hidden text-sm"
       data-slot="accordion-content"
       {...props}
     >

@@ -168,7 +168,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   };
 
   return (
-    <footer className="flex shrink-0 flex-col border-t bg-background">
+    <footer className="bg-background flex shrink-0 flex-col border-t">
       {pagesOpen && !grid ? (
         <div className="border-b">
           <nav
@@ -277,7 +277,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
 
 /** The frame of a page thumbnail in the strip, one width at every screen width. */
 const pageThumb = cva(
-  "relative block aspect-4/3 w-32 shrink-0 overflow-hidden rounded-lg border bg-muted/40 outline-none hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-2 aria-[current=true]:ring-primary"
+  "bg-muted/40 hover:border-foreground/20 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-primary relative block aspect-4/3 w-32 shrink-0 overflow-hidden rounded-lg border outline-none focus-visible:ring-3 aria-[current=true]:ring-2"
 );
 
 /** One page as a thumbnail of the strip, which a click goes to. It names its page for assistive technology. */

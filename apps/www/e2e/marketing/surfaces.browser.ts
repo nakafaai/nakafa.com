@@ -267,7 +267,7 @@ test.describe("detached contributor payloads", () => {
   });
 });
 
-const DARK_THEME_CLASS = /(^|\s)dark(\s|$)/;
+const DARK_THEME_CLASS = /(^|\s)dark(\s|$)/u;
 
 test("the footer theme selector loads its list on demand and applies a theme", async ({
   page,

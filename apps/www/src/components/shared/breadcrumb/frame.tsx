@@ -26,7 +26,7 @@ export function BreadcrumbHeaderFrame({
   return (
     <header
       className={cn(
-        "sticky top-[var(--app-header-top,4rem)] z-10 flex min-h-16 w-full shrink-0 items-center border-b bg-background lg:top-0",
+        "bg-background sticky top-[var(--app-header-top,4rem)] z-10 flex min-h-16 w-full shrink-0 items-center border-b lg:top-0",
         className
       )}
       data-slot="page-header"
@@ -38,7 +38,7 @@ export function BreadcrumbHeaderFrame({
       />
       <div
         className={cn(
-          "mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6",
+          "mx-auto flex w-full max-w-3xl min-w-0 items-center justify-between gap-3 px-4 py-3 sm:px-6",
           contentClassName
         )}
       >

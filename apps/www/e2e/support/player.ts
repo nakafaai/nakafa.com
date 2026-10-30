@@ -20,7 +20,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const ARTICLE = "article[data-player-key]";
 
 /** The accessible name of the footer button that opens the navigator sheet. */
-const OPENER_NAME = /^Open the question navigator/;
+const OPENER_NAME = /^Open the question navigator/u;
 
 /** The cookie in which the server remembers the view a learner chose. */
 const VIEW_COOKIE = "player_view";

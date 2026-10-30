@@ -8,10 +8,10 @@ import { formatRead } from "@repo/backend/confect/nina/nakafa/sections";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr } from "effect";
 
-const MORE_SECTIONS = /- \d+ more sections$/;
-const FOLLOWING_SECTION = /\(section: ([^)]+)\)/;
-const DIGITS = /^\d+$/;
-const SUMMARY_PART = /\n\n(?:Kalimat|tanpa|jeda) /;
+const MORE_SECTIONS = /- \d+ more sections$/u;
+const FOLLOWING_SECTION = /\(section: ([^)]+)\)/u;
+const DIGITS = /^\d+$/u;
+const SUMMARY_PART = /\n\n(?:Kalimat|tanpa|jeda) /u;
 const subjectRoute =
   "material/lesson/mathematics/example-topic/example-section";
 

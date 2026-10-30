@@ -46,7 +46,7 @@ export function UpdatesSection() {
     <HomeSection
       action={
         <TargetLink
-          className="rounded-sm font-medium text-sm underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="focus-visible:ring-ring/50 rounded-sm text-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-3"
           target={schoolNotificationsTarget(slug)}
         >
           {t("home-updates-all")}
@@ -79,7 +79,7 @@ function UpdateRow({ notification }: { notification: ListNotification }) {
   const { sentence, ...action } = useNotificationAction(notification);
 
   return (
-    <HomeRow className="relative hover:bg-muted">
+    <HomeRow className="hover:bg-muted relative">
       <ItemContent className="min-w-0 basis-48">
         <NotificationAction {...action}>{sentence}</NotificationAction>
       </ItemContent>

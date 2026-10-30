@@ -14,6 +14,36 @@
   },
   "overrides": [
     {
+      // Playwright assertions read what a learner sees, which `innerText` gives
+      // and `textContent` does not: it includes hidden text.
+      "includes": ["apps/www/e2e/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "useDomNodeTextContent": "off"
+          }
+        }
+      }
+    },
+    {
+      // The global styles use progressive enhancements (`content-visibility`,
+      // `contain-intrinsic-size`, the scrollbar properties, `@property`) that a
+      // browser without them ignores. Tailwind's `@utility` and `@layer` blocks
+      // each scope their own selectors, which the duplicate check reads as one.
+      "includes": [
+        "apps/www/src/styles/globals.css",
+        "packages/design-system/styles/globals.css"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noDuplicateSelectors": "off",
+            "useBaseline": "off"
+          }
+        }
+      }
+    },
+    {
       // The Vite build compiles these React surfaces with React Compiler.
       // Preserve compiler-managed callbacks and TanStack server function references.
       "includes": ["apps/www/**/*.tsx", "packages/design-system/**/*.tsx"],
@@ -97,6 +127,15 @@
       ],
       "javascript": {
         "globals": ["vi"]
+      },
+      "linter": {
+        "rules": {
+          "style": {
+            // A test double stands in for a class that the code under test
+            // constructs, so its methods keep the class shape without state.
+            "useThisInClassMethods": "off"
+          }
+        }
       }
     },
     {
@@ -203,6 +242,13 @@
   ],
   "linter": {
     "rules": {
+      "correctness": {
+        // Effect handler records such as `catchTags({ NotFound: ... })` name each
+        // handler after its error tag, which this rule reads as a component made
+        // inside a function. noNestedComponentDefinitions and the policy check
+        // (scripts/check/tests.ts) still reject every nested component.
+        "noComponentHookFactories": "off"
+      },
       "suspicious": {
         "noLeakedRender": "off",
         "noShadow": "off",
@@ -212,7 +258,14 @@
         "noAwaitInLoops": "off"
       },
       "style": {
-        "useDestructuring": "off"
+        "useDestructuring": "off",
+        // `getElementById` takes the ids React's `useId` makes as they are, where a
+        // selector would need `CSS.escape` around each one.
+        "useDomQuerySelector": "off",
+        // The parsers read their groups by position (`match[1]`, `"$1"`, replace
+        // callbacks), so naming every group would rewrite each consumer with no
+        // change in what any pattern matches.
+        "useNamedCaptureGroup": "off"
       }
     }
   },

@@ -262,7 +262,7 @@ export function ReplyingTo({
   const t = useTranslations("Comments");
   return (
     <a
-      className="flex min-w-0 items-center gap-1 text-muted-foreground text-xs transition-colors ease-out hover:text-foreground"
+      className="text-muted-foreground hover:text-foreground flex min-w-0 items-center gap-1 text-xs transition-colors ease-out"
       href={`#${parentId}`}
       onClick={(event) => scrollToComment(event, parentId)}
     >

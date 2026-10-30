@@ -1,13 +1,5 @@
 import { Ref } from "@confect/core";
 import type { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
-
-const layerMock = vi.hoisted(() => vi.fn());
-
-import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
-
-// @vitest-environment node
-
 import {
   afterEach,
   assert,
@@ -16,7 +8,9 @@ import {
   expect,
   it,
 } from "@effect/vitest";
+import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
@@ -37,6 +31,10 @@ import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { activateTestRelease } from "@/test/active";
 import { resetTestRuntimeCache, testRuntimeCache } from "@/test/store";
+
+const layerMock = vi.hoisted(() => vi.fn());
+
+// @vitest-environment node
 
 const TEST_RELEASE_ID = "release-signed-test";
 

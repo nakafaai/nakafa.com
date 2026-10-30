@@ -8,7 +8,7 @@ import type { User } from "better-auth";
 import { Array as Arr, DateTime, Effect, pipe } from "effect";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
-const BASE64_PADDING_PATTERN = /[=]+$/;
+const BASE64_PADDING_PATTERN = /[=]+$/u;
 /** How many account rows `storedAccounts` reads in one query. */
 const STORED_ACCOUNT_PAGE_SIZE = 100;
 
@@ -188,10 +188,11 @@ export async function storedAccounts(
   let accounts: readonly Doc<"account">[] = [];
   let cursor: string | null = null;
   do {
+    const page = cursor;
     const result = await test.query((ctx) =>
       ctx.runQuery(components.betterAuth.adapter.findMany, {
         model: "account",
-        paginationOpts: { cursor, numItems: STORED_ACCOUNT_PAGE_SIZE },
+        paginationOpts: { cursor: page, numItems: STORED_ACCOUNT_PAGE_SIZE },
       })
     );
     accounts = Arr.appendAll(accounts, result.page);

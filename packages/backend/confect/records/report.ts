@@ -109,7 +109,7 @@ export const VerifyAnswer = Schema.Union([
 
 /** A report hash as the verification address carries it: 64 lowercase hex digits. */
 export const ReportHash = Schema.String.check(
-  Schema.isPattern(/^[0-9a-f]{64}$/)
+  Schema.isPattern(/^[0-9a-f]{64}$/u)
 );
 
 /** Everything one report PDF shows: the copy taken at approval, and the hash and link its QR carries. */

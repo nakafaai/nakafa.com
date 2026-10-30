@@ -16,7 +16,7 @@ const LLMS_LISTING_ENTRY_LIMIT = 100;
 export const getContentListingLlmsEntries = Effect.fn(
   "www.llms.contentListingEntries"
 )(function* ({ locale, route }: { locale: Locale; route: string }) {
-  const cleanRoute = route.replace(/^\/+|\/+$/g, "");
+  const cleanRoute = route.replace(/^\/+|\/+$/gu, "");
   const routeCategory = readArticleListingCategory(cleanRoute);
   if (!routeCategory) {
     return null;

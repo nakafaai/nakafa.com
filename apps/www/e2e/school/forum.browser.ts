@@ -10,7 +10,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of a channel of the seeded class, as its list links it. */
-const CHANNEL_PATH = /\/classes\/fisika-x-1\/forum\?channel=/;
+const CHANNEL_PATH = /\/classes\/fisika-x-1\/forum\?channel=/u;
 
 for (const viewport of [
   { height: 844, width: 390 },

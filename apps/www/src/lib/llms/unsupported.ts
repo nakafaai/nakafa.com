@@ -2,7 +2,7 @@ import { LLMS_TEXT_PATH } from "@repo/site/discovery";
 import { Array as Arr } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 
-const ROOT_ROUTE_PATTERN = /^\/$/;
+const ROOT_ROUTE_PATTERN = /^\/$/u;
 
 /**
  * Builds the agent-readable body for unsupported markdown routes.

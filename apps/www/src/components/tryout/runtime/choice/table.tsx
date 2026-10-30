@@ -84,7 +84,7 @@ export function TryoutChoiceTable({
           gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns.length}, minmax(4.5rem, auto))`,
         }}
       >
-        <div className="col-span-full grid grid-cols-subgrid bg-muted/50 font-medium text-sm">
+        <div className="bg-muted/50 col-span-full grid grid-cols-subgrid text-sm font-medium">
           <div aria-hidden="true" className="py-3 pl-4" />
           <div className="px-3 py-3">{statementLabel ?? t("statement")}</div>
           {Arr.map(columns, (column) => (

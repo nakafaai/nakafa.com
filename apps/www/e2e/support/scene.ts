@@ -18,8 +18,8 @@ import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
  * https://github.com/pmndrs/react-three-fiber/issues/3741
  */
 const KNOWN_SCENE_DIAGNOSTICS = [
-  /^\[\.WebGL-0x[\da-f]+\]GL Driver Message \(OpenGL, Performance, \w+, High\): GPU stall due to ReadPixels( \(this message will no longer repeat\))?$/,
-  /^THREE\.Clock: This module has been deprecated\. Please use THREE\.Timer instead\.$/,
+  /^\[\.WebGL-0x[\da-f]+\]GL Driver Message \(OpenGL, Performance, \w+, High\): GPU stall due to ReadPixels( \(this message will no longer repeat\))?$/u,
+  /^THREE\.Clock: This module has been deprecated\. Please use THREE\.Timer instead\.$/u,
 ];
 
 /** Whether a console notice is one of the known scene diagnostics above. */

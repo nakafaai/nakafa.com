@@ -9,11 +9,11 @@ import { Array as Arr } from "effect";
 import type { HTMLAttributes, ReactNode } from "react";
 
 const codeBlockLineNumberVariants = cva(
-  "[&_.line]:before:mr-4 [&_.line]:before:inline-block [&_.line]:before:w-4 [&_.line]:before:select-none [&_.line]:before:text-right [&_.line]:before:font-mono [&_.line]:before:text-muted-foreground [&_.line]:before:text-xs [&_.line]:before:content-[counter(line)] [&_.line]:before:[counter-increment:line] [&_code]:[counter-increment:line_0] [&_code]:[counter-reset:line]"
+  "[&_.line]:before:text-muted-foreground [&_.line]:before:mr-4 [&_.line]:before:inline-block [&_.line]:before:w-4 [&_.line]:before:text-right [&_.line]:before:font-mono [&_.line]:before:text-xs [&_.line]:before:content-[counter(line)] [&_.line]:before:select-none [&_.line]:before:[counter-increment:line] [&_code]:[counter-increment:line_0] [&_code]:[counter-reset:line]"
 );
 
 const codeBlockLineHighlightVariants = cva(
-  "[&_.line.highlighted]:after:absolute [&_.line.highlighted]:after:top-0 [&_.line.highlighted]:after:bottom-0 [&_.line.highlighted]:after:left-0 [&_.line.highlighted]:after:w-0.5 [&_.line.highlighted]:after:bg-primary"
+  "[&_.line.highlighted]:after:bg-primary [&_.line.highlighted]:after:absolute [&_.line.highlighted]:after:top-0 [&_.line.highlighted]:after:bottom-0 [&_.line.highlighted]:after:left-0 [&_.line.highlighted]:after:w-0.5"
 );
 
 const codeBlockLineDiffVariants = cva(
@@ -21,7 +21,7 @@ const codeBlockLineDiffVariants = cva(
 );
 
 const codeBlockLineFocusedVariants = cva(
-  "[&_code:has(.focused)_.line.focused]:blur-none [&_code:has(.focused)_.line]:blur-[2px]"
+  "[&_code:has(.focused)_.line]:blur-[2px] [&_code:has(.focused)_.line.focused]:blur-none"
 );
 
 const codeBlockWordHighlightVariants = cva(
@@ -29,7 +29,7 @@ const codeBlockWordHighlightVariants = cva(
 );
 
 const codeBlockVariants = cva(
-  "mt-0 bg-muted/40 text-sm [&_.line]:relative [&_.line]:w-full [&_.line]:px-4 [&_.shiki]:bg-transparent! [&_code]:grid [&_code]:w-full [&_code]:bg-transparent [&_pre]:overflow-x-auto [&_pre]:py-4"
+  "bg-muted/40 mt-0 text-sm [&_.line]:relative [&_.line]:w-full [&_.line]:px-4 [&_.shiki]:bg-transparent! [&_code]:grid [&_code]:w-full [&_code]:bg-transparent [&_pre]:overflow-x-auto [&_pre]:py-4"
 );
 
 /** Render-prop contract for projecting every code source into the body. */

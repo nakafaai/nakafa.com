@@ -6,7 +6,7 @@ export default mergeConfig(config, {
   resolve: {
     alias: [
       {
-        find: /^@\//,
+        find: /^@\//u,
         replacement: fileURLToPath(new URL("./", import.meta.url)),
       },
     ],

@@ -19,7 +19,7 @@ export function renderTryoutResponseLabels(
     Arr.map(readLabelEntries(responseId, response), ([id, label]) => [
       id,
       <MarkdownContent
-        className="wrap-anywhere h-auto whitespace-normal"
+        className="h-auto wrap-anywhere whitespace-normal"
         id={`${id}-label-content`}
         key={id}
       >

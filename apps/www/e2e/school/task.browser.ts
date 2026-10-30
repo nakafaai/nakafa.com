@@ -13,7 +13,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const LATE_EVENING = /^(11:45\sPM|23:45)$/u;
 
 /** The address of the task the test publishes. */
-const TASK_PATH = /\/classes\/fisika-x-1\/tasks\/latihan-gerak-lurus$/;
+const TASK_PATH = /\/classes\/fisika-x-1\/tasks\/latihan-gerak-lurus$/u;
 
 for (const viewport of [
   { height: 844, width: 390 },

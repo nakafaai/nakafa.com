@@ -4,9 +4,9 @@ import { Array as Arr, Schema, Struct } from "effect";
 
 const MARKDOWN_EXTENSION = ".md";
 const ABSOLUTE_URL_PATTERN =
-  /^[a-z][a-z\d+.-]*:\/\/[^\s/?#]+(?:[/?#][^\s]*)?$/i;
+  /^[a-z][a-z\d+.-]*:\/\/[^\s/?#]+(?:[/?#][^\s]*)?$/iu;
 const NAKAFA_CONTENT_URL_PATTERN =
-  /^https:\/\/(?:www\.)?nakafa\.com(\/[^\s?#]*)?(?:[?#][^\s]*)?$/;
+  /^https:\/\/(?:www\.)?nakafa\.com(\/[^\s?#]*)?(?:[?#][^\s]*)?$/u;
 const UrlStringSchema = Schema.String.pipe(
   Schema.check(
     Schema.makeFilter((value) => ABSOLUTE_URL_PATTERN.test(value), {

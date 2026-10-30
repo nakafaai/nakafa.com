@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 /** A user code of eight consonants. */
-const USER_CODE = /^[BCDFGHJKLMNPQRSTVWXZ]{8}$/;
+const USER_CODE = /^[BCDFGHJKLMNPQRSTVWXZ]{8}$/u;
 
 /** Starts a device authorization for the school `nf`, and answers its codes. */
 const started = Effect.fn("test.devices.started")(function* (fixture: Fixture) {
@@ -48,7 +48,7 @@ const atStep = (steps: number) =>
   );
 
 /** The two halves of a user code, as a device shows it. */
-const HALVES = /^(.{4})(.{4})$/;
+const HALVES = /^(.{4})(.{4})$/u;
 
 describe("integrations/devices", () => {
   it.effect(

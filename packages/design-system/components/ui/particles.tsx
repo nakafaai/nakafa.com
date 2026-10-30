@@ -83,7 +83,7 @@ function remapValue({
 }: RemapValueProps): number {
   const remapped =
     ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
-  return remapped > 0 ? remapped : 0;
+  return Math.max(remapped, 0);
 }
 
 /**

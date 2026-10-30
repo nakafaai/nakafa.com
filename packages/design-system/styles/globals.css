@@ -529,13 +529,13 @@
 @keyframes typing {
   0%,
   100% {
-    transform: translateY(0);
     opacity: 0.5;
+    transform: translateY(0);
   }
 
   50% {
-    transform: translateY(-2px);
     opacity: 1;
+    transform: translateY(-2px);
   }
 }
 

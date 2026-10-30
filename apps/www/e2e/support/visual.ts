@@ -24,7 +24,7 @@ const SETTLE_ATTEMPTS = 10;
 /** The animated lab's scene, which names how many bacteria it draws. */
 export const BACTERIA_SCENE = "[data-bacteria-count]";
 /** The animated lab's generation that names the start, such as "0 h". */
-const FIRST_GENERATION = /^0\s/;
+const FIRST_GENERATION = /^0\s/u;
 
 /** Hides the Fullscreen API the way iPhone Safari does for everything but video. */
 export function hideFullscreenApi() {

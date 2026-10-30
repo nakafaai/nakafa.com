@@ -8,7 +8,7 @@ const callFields = {
 };
 
 /** The realtime connection of the page to the backend. */
-export const CONVEX_SOCKET = /\/api\/[^/]+\/sync/;
+export const CONVEX_SOCKET = /\/api\/[^/]+\/sync/u;
 
 /** A change the page sends, which the server answers with the same `requestId`. */
 const MutationSchema = Schema.Struct({

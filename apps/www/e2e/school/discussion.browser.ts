@@ -9,7 +9,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of the first discussion of the seeded class. */
-const DISCUSSION_PATH = /\/classes\/fisika-x-1\/forum\/1$/;
+const DISCUSSION_PATH = /\/classes\/fisika-x-1\/forum\/1$/u;
 
 const TITLE = "Kenapa gaya gesek berlawanan arah gerak?";
 

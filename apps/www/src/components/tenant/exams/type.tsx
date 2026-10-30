@@ -72,7 +72,7 @@ export function QuestionType({
 
   if (!editable) {
     return (
-      <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
+      <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
         <HugeIcons aria-hidden="true" icon={TEMPLATE_ICON[template]} />
         <span>{name}</span>
       </span>

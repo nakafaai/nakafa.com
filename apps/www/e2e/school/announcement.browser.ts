@@ -9,7 +9,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The time line of an edited announcement. */
-const EDITED = /, edited$/;
+const EDITED = /, edited$/u;
 
 for (const viewport of [
   { height: 844, width: 390 },

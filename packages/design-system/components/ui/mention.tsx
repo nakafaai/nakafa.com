@@ -44,7 +44,7 @@ export function MentionPopup({
           sideOffset={6}
         >
           <PopoverPrimitive.Popup
-            className="max-h-64 w-64 max-w-[calc(100vw-1rem)] origin-(--transform-origin) overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden"
+            className="bg-popover text-popover-foreground max-h-64 w-64 max-w-[calc(100vw-1rem)] origin-(--transform-origin) overflow-y-auto rounded-md border p-1 shadow-md outline-hidden"
             data-slot="mention-popup"
             finalFocus={false}
             initialFocus={false}
@@ -83,7 +83,7 @@ export function MentionOption({
     <div
       aria-selected={active}
       className={cn(
-        "wrap-anywhere cursor-default rounded-sm px-2 py-1.5 text-sm data-[active=true]:bg-accent data-[active=true]:text-accent-foreground",
+        "data-[active=true]:bg-accent data-[active=true]:text-accent-foreground cursor-default rounded-sm px-2 py-1.5 text-sm wrap-anywhere",
         className
       )}
       data-active={active}

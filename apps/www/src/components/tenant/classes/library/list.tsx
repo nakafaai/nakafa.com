@@ -254,7 +254,7 @@ function LibraryTitle({ row }: { row: LibraryRow }) {
     <span className="flex items-center gap-2 font-medium">
       <HugeIcons
         aria-label={t(`library-kind-${shown.kind}`)}
-        className="shrink-0 text-muted-foreground"
+        className="text-muted-foreground shrink-0"
         icon={KIND_ICONS[shown.kind]}
       />
       {address === null ? (

@@ -37,7 +37,7 @@ export function MemoryToolbar() {
         />
         <Button
           aria-label={t("add")}
-          className="@sm/card-header:w-auto w-9"
+          className="w-9 @sm/card-header:w-auto"
           id={MEMORY_ADD_ID}
           onClick={openNew}
           onFocus={warmMemoryEditor}
@@ -46,7 +46,7 @@ export function MemoryToolbar() {
           title={t("add")}
         >
           <HugeIcons icon={Add01Icon} />
-          <span className="@sm/card-header:inline hidden">{t("memory")}</span>
+          <span className="hidden @sm/card-header:inline">{t("memory")}</span>
         </Button>
       </div>
     </CardHeader>

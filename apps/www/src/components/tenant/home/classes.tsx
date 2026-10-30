@@ -51,7 +51,7 @@ function ClassTile({
   return (
     <li className="min-w-0">
       <Item
-        className="h-full bg-card shadow-xs"
+        className="bg-card h-full shadow-xs"
         render={<TargetLink target={schoolClassTarget(slug, klass.slug)} />}
         variant="outline"
       >

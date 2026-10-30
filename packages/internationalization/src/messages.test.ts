@@ -27,7 +27,7 @@ import { Array as Arr, Record as Rec } from "effect";
 const app = { de: appDe, en: appEn, id: appId };
 
 /** A text with at least one character that is not a space. */
-const NON_BLANK = /\S/;
+const NON_BLANK = /\S/u;
 const standalone = { de, en, id };
 
 /** Every word of a standalone dictionary, named by its namespace and its key. */

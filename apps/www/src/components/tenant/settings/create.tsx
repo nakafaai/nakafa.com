@@ -164,7 +164,7 @@ function SchoolUnitCreateForm({
       description={t("unit-add-description")}
       footer={
         <>
-          <p className="me-auto text-muted-foreground text-sm">
+          <p className="text-muted-foreground me-auto text-sm">
             {t("unit-add-footer")}
           </p>
           <Button

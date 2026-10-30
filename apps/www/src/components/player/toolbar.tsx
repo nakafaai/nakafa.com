@@ -26,7 +26,7 @@ export function PlayerToolbar() {
 
   return (
     <div
-      className="sticky top-[calc(var(--app-header-top,4rem)+4rem)] z-10 border-b bg-background lg:top-16"
+      className="bg-background sticky top-[calc(var(--app-header-top,4rem)+4rem)] z-10 border-b lg:top-16"
       data-player-toolbar=""
     >
       <div className="mx-auto flex h-12 w-full max-w-7xl items-center px-4 sm:px-6">

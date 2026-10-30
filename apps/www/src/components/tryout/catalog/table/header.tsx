@@ -57,7 +57,7 @@ const headings = {
 /** Fixed columns keep the same geometry while the server changes row order. */
 export function TryoutTableHeader() {
   return (
-    <TableHeader className="sticky top-0 z-10 bg-background">
+    <TableHeader className="bg-background sticky top-0 z-10">
       <TableRow>
         <TryoutSortHeading field="title" />
         <TryoutStatusHeading />
@@ -93,7 +93,7 @@ function TryoutSortHeading({ field }: { field: keyof typeof headings }) {
             <Button
               aria-label={t("set-sort-label", { column: t(copy.label) })}
               className={cn(
-                "min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
+                "max-w-[calc(100%+1rem)] min-w-0 overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
                 field === "title" ? "-ml-2 sm:-ml-3" : "-mx-2 sm:-mx-3"
               )}
               size="sm"
@@ -147,7 +147,7 @@ function TryoutStatusHeading() {
                 column: t("set-column-status"),
               })}
               className={cn(
-                "-mx-2 min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:-mx-3 sm:max-w-[calc(100%+1.75rem)]",
+                "-mx-2 max-w-[calc(100%+1rem)] min-w-0 overflow-hidden sm:-mx-3 sm:max-w-[calc(100%+1.75rem)]",
                 filter !== "all" && "bg-muted text-foreground"
               )}
               size="sm"

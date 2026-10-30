@@ -9,7 +9,7 @@ export function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
     <span
       className={cn(
-        "my-px mr-px ml-auto size-2.5 shrink-0 rounded-full bg-primary opacity-0 transition-opacity",
+        "bg-primary my-px mr-px ml-auto size-2.5 shrink-0 rounded-full opacity-0 transition-opacity",
         isActive && "opacity-100"
       )}
     />

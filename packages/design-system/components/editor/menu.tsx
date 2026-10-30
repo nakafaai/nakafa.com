@@ -107,7 +107,7 @@ export function SlashMenu({
   return (
     <div
       aria-label={label}
-      className="z-50 max-h-72 w-64 overflow-y-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
+      className="bg-popover text-popover-foreground z-50 max-h-72 w-64 overflow-y-auto rounded-lg border p-1 shadow-md"
       role="listbox"
     >
       {Arr.map(items, (key, index) => (

@@ -211,8 +211,8 @@ export function QuranInterpretationControls({
           </DrawerHeader>
 
           <DrawerPanel className="p-4">
-            <div className="rounded-md border bg-accent p-4">
-              <p className="text-pretty text-accent-foreground leading-relaxed">
+            <div className="bg-accent rounded-md border p-4">
+              <p className="text-accent-foreground leading-relaxed text-pretty">
                 {selectedInterpretation}
               </p>
             </div>

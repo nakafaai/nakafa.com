@@ -1,10 +1,10 @@
 import { Array as Arr, MutableList } from "effect";
 
-const CODE_BLOCK_CONTENT_PATTERN = /code:\s*`((?:\\[\s\S]|[^`])*)`/g;
-const CODE_BLOCK_FILENAME_PATTERN = /filename:\s*["']([^"']+)["']/;
-const CODE_BLOCK_LANGUAGE_PATTERN = /language:\s*["']([^"']+)["']/;
-const TRIPLE_BACKTICKS_PATTERN = /```/g;
-const TEMPLATE_LITERAL_ESCAPE_PATTERN = /\\([\\`$])/g;
+const CODE_BLOCK_CONTENT_PATTERN = /code:\s*`((?:\\[\s\S]|[^`])*)`/gu;
+const CODE_BLOCK_FILENAME_PATTERN = /filename:\s*["']([^"']+)["']/u;
+const CODE_BLOCK_LANGUAGE_PATTERN = /language:\s*["']([^"']+)["']/u;
+const TRIPLE_BACKTICKS_PATTERN = /```/gu;
+const TEMPLATE_LITERAL_ESCAPE_PATTERN = /\\([\\`$])/gu;
 
 /** Formats authored CodeBlock data as real markdown code fences. */
 export function formatCodeBlockData(data: string) {

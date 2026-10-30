@@ -19,13 +19,13 @@ type FormulaMatch = typeof FormulaMatchSchema.Type;
  * The delimiters of a block formula: `$$` and `$$`, or `\[` and `\]`. A block formula may
  * stand inside a line, and the paste that converts it decides where it goes.
  */
-const BLOCKS = [/\$\$([^$]+)\$\$/g, /\\\[([\s\S]+?)\\\]/g];
+const BLOCKS = [/\$\$([^$]+)\$\$/gu, /\\\[([\s\S]+?)\\\]/gu];
 
 /**
  * The delimiters of an inline formula: one `$` and one `$`, or `\(` and `\)`. A line break
  * ends it, so an inline formula stays on its own line.
  */
-const INLINES = [/\$([^$\n]+)\$/g, /\\\(([^\n]+?)\\\)/g];
+const INLINES = [/\$([^$\n]+)\$/gu, /\\\(([^\n]+?)\\\)/gu];
 
 /** The matches of one pattern in a text, each as a formula of the given kind, with a blank formula left out. */
 function matchesOf(

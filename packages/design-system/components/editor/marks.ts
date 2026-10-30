@@ -19,8 +19,8 @@ import type { TokenizerExtension } from "marked-tiptap";
  * the space of marked words outside them.
  */
 const MARKS = {
-  highlight: { delimiter: "==", pair: /^==(?=[^\s=])([^=]*[^\s=])==/ },
-  underline: { delimiter: "++", pair: /^\+\+(?=\S)([\s\S]*?\S)\+\+/ },
+  highlight: { delimiter: "==", pair: /^==(?=[^\s=])([^=]*[^\s=])==/u },
+  underline: { delimiter: "++", pair: /^\+\+(?=\S)([\s\S]*?\S)\+\+/u },
 } as const;
 
 type Mark = keyof typeof MARKS;

@@ -12,13 +12,13 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The prompts of the three questions, in their order. */
 const PROMPTS = ["Soal satu", "Soal dua", "Soal tiga"] as const;
 
 /** The exams list on the school host, where a deleted exam's pages lead back to. */
-const EXAMS_PATH = /\/exams$/;
+const EXAMS_PATH = /\/exams$/u;
 
 /** A proctor's dashboard of one room on the school host. */
 const SITTING_PATH = /\/sittings\/[^/]+$/u;

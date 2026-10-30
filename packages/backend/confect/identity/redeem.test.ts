@@ -45,7 +45,7 @@ vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
 
 /** A placeholder address: a random UUID key at the reserved `.invalid` domain. */
 const PLACEHOLDER_ADDRESS =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}@login\.nakafa\.invalid$/;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}@login\.nakafa\.invalid$/u;
 
 /** A device the sign-in page keeps, as a UUID, numbered so that each one differs. */
 const deviceAt = (index: number) =>

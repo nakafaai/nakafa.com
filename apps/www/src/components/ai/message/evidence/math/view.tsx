@@ -37,7 +37,7 @@ export function MathPart({ children, icon, message }: Props) {
     >
       <CollapsibleTrigger
         className={cn(
-          "group/math flex w-fit max-w-full cursor-pointer items-start gap-2 rounded-sm text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+          "group/math focus-visible:ring-ring flex w-fit max-w-full cursor-pointer items-start gap-2 rounded-sm text-start text-sm transition-colors outline-none focus-visible:ring-2",
           message.status === "error"
             ? "text-destructive"
             : "text-muted-foreground hover:text-foreground"
@@ -58,7 +58,7 @@ export function MathPart({ children, icon, message }: Props) {
         />
       </CollapsibleTrigger>
       {/* Math takes the size of the words around it, as every text of a step does: KaTeX alone draws it a fifth larger. Its stylesheet is in no cascade layer, so it beats every Tailwind utility, and only an important one sets the size. */}
-      <CollapsibleContent className="max-w-full overflow-hidden text-muted-foreground text-sm outline-none [&_.katex]:text-[1em]!">
+      <CollapsibleContent className="text-muted-foreground max-w-full overflow-hidden text-sm outline-none [&_.katex]:text-[1em]!">
         <StepDetails>{children}</StepDetails>
       </CollapsibleContent>
     </Collapsible>

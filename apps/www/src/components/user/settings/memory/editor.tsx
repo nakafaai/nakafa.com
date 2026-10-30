@@ -197,7 +197,7 @@ function MemoryEditorPanel({
   return createPortal(
     <aside
       aria-label={memory ? t("edit") : t("new")}
-      className="sticky top-0 flex h-dvh w-(--memory-editor-width) max-w-[calc(100%-var(--memory-list-room))] shrink-0 flex-col border-s bg-background starting:opacity-0 transition-opacity ease-out"
+      className="bg-background sticky top-0 flex h-dvh w-(--memory-editor-width) max-w-[calc(100%-var(--memory-list-room))] shrink-0 flex-col border-s transition-opacity ease-out starting:opacity-0"
       ref={place}
       style={{
         "--memory-editor-width": `${width}px`,
@@ -212,7 +212,7 @@ function MemoryEditorPanel({
         aria-valuemin={resizerProps["aria-valuemin"]}
         aria-valuenow={resizerProps["aria-valuenow"]}
         className={cn(
-          "absolute inset-y-0 start-0 z-10 cursor-col-resize bg-transparent outline-none transition-colors hover:bg-ring focus-visible:bg-ring data-[orientation=vertical]:w-1",
+          "hover:bg-ring focus-visible:bg-ring absolute inset-y-0 start-0 z-10 cursor-col-resize bg-transparent transition-colors outline-none data-[orientation=vertical]:w-1",
           !!isResizing && "bg-ring"
         )}
         onKeyDown={resizerProps.onKeyDown}

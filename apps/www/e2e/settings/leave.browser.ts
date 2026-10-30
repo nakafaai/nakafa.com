@@ -319,11 +319,11 @@ const FUTURE = "Studies after dinner";
 const ENDED = "Exam on Friday";
 const KEPT = "Prefers worked examples";
 /** The one fact a situation's row says: when it ends. */
-const ENDS = /^Ends \S.*\S$/;
+const ENDS = /^Ends \S.*\S$/u;
 /** The fact that says Nina saved a memory and when. */
-const SAVED = /^Saved by Nina \S.* ago$/;
+const SAVED = /^Saved by Nina \S.* ago$/u;
 /** The one fact the row of a memory the learner wrote says. */
-const WRITTEN = /^Written by you \S.* ago$/;
+const WRITTEN = /^Written by you \S.* ago$/u;
 
 /** The facts line of a row. */
 const factsOf = (page: Page, words: string) =>
