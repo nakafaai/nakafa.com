@@ -14,7 +14,7 @@ function Table({
 }: React.ComponentProps<"table"> & {
   containerClassName?: string;
   /** The element that scrolls the table, for a caller that observes its scroll, such as an infinite list. */
-  viewportRef?: React.Ref<HTMLDivElement>;
+  viewportRef?: React.Ref<HTMLDivElement> | undefined;
 }) {
   return (
     <ScrollArea

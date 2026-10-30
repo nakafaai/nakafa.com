@@ -21,7 +21,7 @@ function ScrollArea({
   ...props
 }: ScrollAreaPrimitive.Root.Props & {
   /** Runs as the viewport scrolls. */
-  onViewportScroll?: UIEventHandler<HTMLDivElement>;
+  onViewportScroll?: UIEventHandler<HTMLDivElement> | undefined;
   /**
    * Fades the edges where more content is. `true` fades both ends of each
    * axis. `"end"` fades only the far end, for a list that keeps its first row
@@ -31,7 +31,7 @@ function ScrollArea({
   /** Classes of the scrolling viewport itself, such as a cap on its height. */
   viewportClassName?: string;
   /** The element that scrolls, for a caller that reads, writes or observes its scroll. */
-  viewportRef?: Ref<HTMLDivElement>;
+  viewportRef?: Ref<HTMLDivElement> | undefined;
 }) {
   return (
     <ScrollAreaPrimitive.Root

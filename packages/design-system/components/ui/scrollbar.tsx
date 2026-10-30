@@ -8,9 +8,9 @@ const SHORTEST_THUMB = 32;
 
 /** A drag of the thumb: the pointer that holds it, the page's scroll and the pointer's height when it began. */
 const ThumbDrag = Schema.Struct({
-  pointer: Schema.Number,
-  scroll: Schema.Number,
-  start: Schema.Number,
+  pointer: Schema.Finite,
+  scroll: Schema.Finite,
+  start: Schema.Finite,
 });
 
 /**
