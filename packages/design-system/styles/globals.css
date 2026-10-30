@@ -241,6 +241,9 @@
   /* The app declares Amiri Quran's faces with block display, so Arabic text waits for the face and
    * never shows in another one. */
   --font-quran: "Amiri Quran", ui-serif, serif;
+  /* The Arabic keypad's keys: Amiri Quran with balanced metrics (the app declares the face), so a
+   * letter sits in the middle of its key. Amiri Quran follows for any key outside that face. */
+  --font-keypad: "Amiri Quran Keys", "Amiri Quran", ui-serif, serif;
   /* Geist Mono's variable exists only inside a scope that applies it. Outside
    * every scope, a monospace element falls back to the system stack. Tailwind
    * inlines --default-mono-font-family into preflight's bare code, keyboard keys
