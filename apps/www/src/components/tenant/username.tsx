@@ -119,7 +119,7 @@ export function TenantEntryBack({ slug }: { slug: TenantSlug }) {
   if (guardian) {
     return (
       <Link
-        className={buttonVariants({ variant: "ghost" })}
+        className={buttonVariants({ variant: "outline" })}
         params={{ slug }}
         to="/school/$slug"
       >
@@ -135,7 +135,7 @@ export function TenantEntryBack({ slug }: { slug: TenantSlug }) {
 
   return (
     <Link
-      className={buttonVariants({ variant: "ghost" })}
+      className={buttonVariants({ variant: "outline" })}
       search={(previous) => ({ ...previous, masuk: undefined })}
     >
       <HugeIcons icon={ArrowLeft01Icon} />

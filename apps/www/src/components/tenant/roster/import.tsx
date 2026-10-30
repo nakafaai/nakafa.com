@@ -26,12 +26,12 @@ import { Array as Arr, DateTime, Effect, Option, Result } from "effect";
 import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -57,7 +57,7 @@ import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * The look of each status, in the preview's status cell and in its Filter menu, one icon per
+ * The look of each status, in the preview's status cell and in its column's filter, one icon per
  * status: the two ages of a student who imports, and the problem that keeps each other row out,
  * which reads as a danger.
  */
@@ -301,22 +301,6 @@ function RosterImportOfPeriod({
         actions={
           <>
             <TableSearch placeholder={t("search")} />
-            <TableFilter
-              facets={[
-                {
-                  column: "status",
-                  options: Arr.map(
-                    ["under", "adult", ...RowProblem.literals] as const,
-                    (status) => ({
-                      icon: ROSTER_STATUS_LOOKS[status].icon,
-                      label: t(`status-${status}`),
-                      value: status,
-                    })
-                  ),
-                  title: t("status"),
-                },
-              ]}
-            />
             <Button
               disabled={isApplying}
               onClick={() => setPreview(undefined)}
@@ -447,8 +431,22 @@ function usePreviewColumns() {
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("status"),
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(
+            ["under", "adult", ...RowProblem.literals] as const,
+            (status) => ({
+              icon: ROSTER_STATUS_LOOKS[status].icon,
+              label: t(`status-${status}`),
+              value: status,
+            })
+          )}
+          title={t("status")}
+        />
+      ),
       id: "status",
+      meta: { align: "center" },
     }),
   ]);
 }

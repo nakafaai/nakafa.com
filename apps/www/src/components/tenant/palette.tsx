@@ -27,7 +27,7 @@ import { type ComponentProps, Fragment, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { CommandKeys } from "@/components/search/keys";
 import { withMarks } from "@/components/tenant/classes/marks";
-import { useClassesQuery } from "@/components/tenant/classes/nav";
+import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { settingsSectionIcons } from "@/components/tenant/settings/icons";
 import type { LinkTarget } from "@/lib/routing/link";
@@ -108,7 +108,7 @@ function TenantPaletteCommand({ onOpened }: { onOpened: () => void }) {
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <CommandEmpty className="p-6 text-center text-muted-foreground text-sm">
+        <CommandEmpty className="text-center text-muted-foreground text-sm">
           {t("search-empty")}
         </CommandEmpty>
         <CommandList>
@@ -180,7 +180,7 @@ function TenantPaletteRow({
  */
 function usePaletteGroups(): readonly PaletteGroup[] {
   const { canManage, canOpenExams, canOpenReports, slug } = useTenant();
-  const classes = useClassesQuery(slug);
+  const classes = useMyClasses();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
   const tReports = useTranslations("SchoolReports");

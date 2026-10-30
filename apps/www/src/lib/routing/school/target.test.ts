@@ -16,6 +16,9 @@ import {
   schoolExamsTarget,
   schoolExamTarget,
   schoolHomeTarget,
+  schoolMembersTarget,
+  schoolReportsTarget,
+  schoolSettingsTarget,
   schoolSittingTarget,
 } from "@/lib/routing/school/target";
 
@@ -42,6 +45,24 @@ describe("school targets", () => {
       expect.objectContaining({
         params: { exam: "e1", slug },
         to: "/school/$slug/exams/$exam/edit",
+      })
+    );
+  });
+
+  it("builds the report cards, the members and the settings under the school's slug", () => {
+    expect(schoolReportsTarget(slug)).toEqual(
+      expect.objectContaining({ params: { slug }, to: "/school/$slug/reports" })
+    );
+    expect(schoolMembersTarget(slug)).toEqual(
+      expect.objectContaining({
+        params: { slug },
+        to: "/school/$slug/settings/members",
+      })
+    );
+    expect(schoolSettingsTarget(slug)).toEqual(
+      expect.objectContaining({
+        params: { slug },
+        to: "/school/$slug/settings/profile",
       })
     );
   });

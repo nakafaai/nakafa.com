@@ -8,6 +8,7 @@ import {
   ReactNodeViewRenderer,
   useEditorState,
 } from "@tiptap/react";
+import { Option } from "effect";
 import { type ComponentProps, createContext, type ReactNode, use } from "react";
 
 /** The names of the formula editor, which the page gives the formulas of its editor. */
@@ -42,6 +43,8 @@ function useFormulaLabels(): FormulaLabels {
 /**
  * One formula of the editor, drawn in place by KaTeX. While the editor takes changes, a press
  * opens the formula's editor, and the formula the editor saves is the attribute the node keeps.
+ * The formula the writer just inserted (`toggleFormula` with no text selected) opens its editor
+ * at once.
  * A read-only editor draws the formula alone. Inline and block math share this view, because
  * they differ only in the element that holds the formula.
  */
@@ -53,6 +56,10 @@ function FormulaNode({ editor, node, updateAttributes }: ReactNodeViewProps) {
   });
   const block = node.type.name === "mathBlock";
   const latex: string = node.attrs.latex;
+  const opening = Option.exists(
+    editor.storage.formulaToggle.opening,
+    (inserted) => inserted === node
+  );
 
   return (
     <NodeViewWrapper
@@ -66,6 +73,7 @@ function FormulaNode({ editor, node, updateAttributes }: ReactNodeViewProps) {
           labels={labels}
           latex={latex}
           onSave={(next) => updateAttributes({ latex: next })}
+          opening={opening}
         />
       ) : (
         <FormulaMarkup block={block} latex={latex} />

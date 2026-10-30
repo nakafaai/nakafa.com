@@ -8,7 +8,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 | Topic | Owner |
 | --- | --- |
-| Versions, package manager, runtime, dependency holds | `package.json`, `bunfig.toml`, `scripts/dependencies/policy.ts` |
+| Versions, package manager, runtime, dependency holds | `package.json`, `bunfig.toml`, `scripts/dependencies/policy.ts`, and the reviewed upstream of each hold in `scripts/dependencies/reviews.ts` |
 | Writing Effect v4 | `repos/effect/LLMS.md`, then source and tests under `repos/effect/packages`; https://effect.website/docs/v4/api/effect |
 | Confect v10 | https://confect.dev and the installed `@confect/*` source |
 | Convex architecture, auth, the dev deployment, retired data | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md` |

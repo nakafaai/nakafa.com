@@ -1,6 +1,6 @@
 {
   "DataTable": {
-    "filter": "Saring",
+    "filter-by": "Saring menurut {column}",
     "no-results": "Tidak ada hasil.",
     "reset": "Atur ulang"
   },
@@ -41,14 +41,11 @@
     "tile-result-released": "Sudah dirilis",
     "tile-results": "Hasil",
     "tile-setup": "Persiapan",
-    "metric-live": "Sedang berlangsung",
-    "metric-live-period": "Ruang yang sedang berlangsung",
-    "metric-next": "14 hari ke depan",
-    "metric-next-period": "Ruang yang segera dibuka",
-    "metric-waiting": "Menunggu rilis",
-    "metric-waiting-period": "Hasil yang bisa dirilis",
-    "metric-drafts": "Draf",
-    "metric-drafts-period": "Ujian yang bisa kamu edit",
+    "start-label": "Pintasan",
+    "start-exams": "Tulis soal, jadwalkan ruang, dan rilis hasil.",
+    "start-reports": "Isi nilai dan cetak rapor setiap rombel.",
+    "start-members": "Undang guru dan siswa, lalu beri mereka peran.",
+    "start-settings": "Atur unit, periode, dan kelas sekolah.",
     "tile-schedule": "Jadwal",
     "tile-now": "Sekarang",
     "now-left": "{count, plural, other {menit lagi}}",
@@ -372,6 +369,8 @@
     "schedule-key-match": "Pasangkan setiap pernyataan soal {number}.",
     "schedule-key-table": "Tandai setiap pernyataan soal {number}.",
     "schedule-past": "Pilih waktu mulai yang belum lewat.",
+    "questions-column": "Soal",
+    "created-column": "Dibuat",
     "rooms-title": "Ruang",
     "edit-action": "Ubah ujian",
     "rooms-empty": "Belum ada ruang",
@@ -500,7 +499,6 @@
     "pair-hint": "Setiap jawaban berpasangan dengan satu pernyataan, dan kunci tersimpan setelah semua pernyataan punya jawaban.",
     "pair-statement": "Jawaban untuk pernyataan {number}",
     "template-table": "Tabel benar-salah",
-    "table-columns": "Kolom",
     "column-of": "Soal {number}, kolom {name}",
     "column-placeholder": "Kolom",
     "cell-of": "Kolom untuk pernyataan {name} soal {number}",
@@ -609,8 +607,6 @@
     "policy-domains-footer": "Daftar kosong menerima setiap alamat.",
     "save": "Simpan",
     "level-other": "Lainnya",
-    "unit-level-line": "Jenjang {level}.",
-    "unit-archived-description": "Sekolah ini diarsipkan dan menolak perubahan sampai dipulihkan.",
     "unit-add": "Tambah sekolah",
     "unit-add-title": "Tambah sekolah",
     "unit-add-description": "Setiap sekolah punya jenjang, periode, dan rombel sendiri.",
@@ -620,13 +616,19 @@
     "unit-add-footer": "Tambahkan periode pertamanya di halaman Periode.",
     "unit-time-zone": "Zona waktu",
     "unit-page-language": "Bahasa halaman",
-    "unit-archive-footer": "Sekolah yang diarsipkan tetap dapat dibaca.",
-    "unit-restore-footer": "Memulihkan sekolah membuatnya dapat diubah lagi.",
     "unit-restore": "Pulihkan",
     "unit-archive": "Arsipkan",
     "unit-archive-title": "Arsipkan sekolah ini?",
     "unit-archive-description": "Sekolah menolak setiap perubahan sampai dipulihkan.",
     "unit-archive-confirm": "Arsipkan",
+    "unit-save": "Simpan",
+    "unit-edit-description": "Zona waktu mengatur kapan ujiannya dibuka, dan bahasa mengatur halamannya.",
+    "unit-npsn-unset": "Belum diisi",
+    "unit-status": "Status",
+    "unit-status-label": {
+      "active": "Aktif",
+      "archived": "Diarsipkan"
+    },
     "unit-choice": "Sekolah",
     "periods-description": "Tahun dan semester sekolah ini.",
     "period-name": "Nama",
@@ -645,6 +647,7 @@
     "period-end-placeholder": "Pilih hari terakhir",
     "period-add-footer": "Periode baru dimulai sebagai direncanakan.",
     "period-rename": "Ganti nama",
+    "period-rename-description": "Kelas dan tanggal di periode ini tetap sama.",
     "period-rename-save": "Simpan",
     "periods-empty": "Belum ada periode.",
     "periods-search": "Cari periode",
@@ -659,6 +662,7 @@
     "cohort-active": "Aktif",
     "cohort-archived": "Diarsipkan",
     "cohort-rename": "Ganti nama",
+    "cohort-rename-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
     "cohort-rename-save": "Simpan",
     "cohort-archive": "Arsipkan",
     "cohort-add-footer": "Rombel baru langsung aktif.",
@@ -910,8 +914,6 @@
     "secret-copy": "Salin",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Delapan digit",
-    "unit-npsn-footer": "Delapan digit, satu nomor per unit.",
-    "unit-npsn-save": "Simpan",
     "logins-footer": "Kartu masuk berisi nama pengguna dan kode sekali pakai.",
     "login-name": "Nama login",
     "login-person": "Orang",
@@ -1329,6 +1331,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "undo": "Urungkan",
     "arabic-fatha": "Fathah",
     "arabic-kasra": "Kasrah",
     "arabic-damma": "Dammah",
@@ -1341,6 +1344,8 @@
     "load-error": "Data ini belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
+    "month": "Bulan",
+    "year": "Tahun",
     "breadcrumb": "Jalur navigasi",
     "sidebar": "Sidebar",
     "toggle-sidebar": "Buka atau tutup sidebar",
@@ -1954,7 +1959,6 @@
     "bullets": "Daftar berbutir",
     "numbers": "Daftar bernomor",
     "tasks": "Daftar tugas",
-    "lists": "Daftar",
     "quote": "Kutipan",
     "code-block": "Blok kode",
     "divider": "Garis pemisah",
@@ -1976,15 +1980,25 @@
     "formula": "Rumus",
     "equation": "Persamaan",
     "formula-edit": "Ubah rumus",
+    "formula-keyboard": "Keyboard rumus",
+    "formula-numbers": "Angka",
+    "formula-functions": "Fungsi",
+    "formula-symbols": "Simbol",
+    "formula-greek": "Huruf Yunani",
+    "formula-left": "Geser ke kiri",
+    "formula-right": "Geser ke kanan",
+    "formula-delete": "Hapus",
     "formula-invalid": "Rumus ini tidak dapat digambar:",
     "latex": "LaTeX",
     "image": "Gambar",
     "image-add": "Tambah gambar",
+    "image-add-description": "Gambar tampil di soal setelah ditambahkan.",
     "image-alt": "Teks alternatif",
     "image-alt-hint": "Yang perlu diketahui siswa yang tidak dapat melihat gambar",
     "image-cancel": "Batal",
     "image-delete": "Hapus gambar",
     "image-edit": "Ubah teks alternatif",
+    "image-edit-description": "Gambarnya tetap, hanya teks alternatifnya yang berubah.",
     "image-save": "Simpan"
   },
   "Memory": {
@@ -2238,9 +2252,6 @@
     "admitted-elsewhere": {
       "title": "Nina sedang menjawab di chat baru"
     },
-    "open-chat": {
-      "title": "Buka chat"
-    },
     "sign-out-error": {
       "title": "Kamu belum bisa keluar.",
       "description": "Periksa koneksimu, lalu coba lagi."
@@ -2264,9 +2275,6 @@
     "school-save-error": {
       "title": "Jawabanmu belum tersimpan.",
       "description": "Coba lagi."
-    },
-    "undo": {
-      "title": "Batalkan pengarsipan"
     },
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."

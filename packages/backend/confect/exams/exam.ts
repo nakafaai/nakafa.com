@@ -60,6 +60,25 @@ export const examSummary = (row: ExamsDoc) => ({
 });
 
 /**
+ * One exam as the exam list shows it: its summary, when it was created, how many questions it holds, and where it
+ * belongs, the whole school or one unit.
+ */
+export const ExamListed = Schema.Struct({
+  ...ExamSummary.fields,
+  createdAt: Schema.Finite,
+  questionCount: Schema.Int,
+  scope: GrantScope,
+});
+
+/** A stored exam as the exam list shows it. */
+export const examListed = (row: ExamsDoc) => ({
+  ...examSummary(row),
+  createdAt: row.createdAt,
+  questionCount: row.questions.length,
+  scope: row.scope,
+});
+
+/**
  * One exam with its questions in order, as the editor opens it. `frozenAt` is present once a
  * sitting of the exam has finished, so the editor shows the exam read-only (ADR 0031).
  * `archived` is true while the unit that holds the exam is archived, which locks its edits.

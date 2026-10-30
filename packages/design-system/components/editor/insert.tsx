@@ -3,22 +3,21 @@ import {
   FunctionIcon,
   FunctionSquareIcon,
   ImageUploadIcon,
-  PlusSignIcon,
   QuoteDownIcon,
 } from "@hugeicons/core-free-icons";
 import { usePictures } from "@repo/design-system/components/editor/picture";
-import { NEW_FORMULA } from "@repo/design-system/components/editor/slash";
-import { EditorMenu } from "@repo/design-system/components/editor/tools";
+import { EditorTools } from "@repo/design-system/components/editor/tools";
 import { ImageType } from "@repo/editor/upload";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 
 /**
- * The blocks an assessment document takes besides its text, in one menu: a quote and a code
- * block, which show their check while the caret sits in them, a formula, inline or on a line of
- * its own, and an image, which the teacher picks from the device. A formula inserts a
- * placeholder that its editor changes, and a picked image starts its alt-text dialog.
+ * The blocks an assessment document takes besides its text, each its own control: a quote and a code
+ * block, pressed while the caret sits in them, a formula, inline or on a line of its own, pressed while
+ * one is selected, and an image, which the teacher picks from the device. A formula control turns the
+ * selected text into a formula and a selected formula back into text; with nothing selected it inserts a
+ * formula whose editor opens at once. A picked image starts its alt-text dialog.
  */
 export function DocumentInsert({
   labels,
@@ -28,7 +27,6 @@ export function DocumentInsert({
     equation: string;
     formula: string;
     image: string;
-    insert: string;
     quote: string;
   };
 }) {
@@ -39,15 +37,15 @@ export function DocumentInsert({
     editor,
     selector: ({ editor: current }) => ({
       codeBlock: current?.isActive("codeBlock") ?? false,
+      equation: current?.isActive("mathBlock") ?? false,
+      formula: current?.isActive("mathInline") ?? false,
       quote: current?.isActive("blockquote") ?? false,
     }),
   });
 
   return (
     <>
-      <EditorMenu
-        icon={PlusSignIcon}
-        label={labels.insert}
+      <EditorTools
         tools={[
           {
             active: state?.quote ?? false,
@@ -64,32 +62,19 @@ export function DocumentInsert({
             run: () => editor?.chain().focus().toggleCodeBlock().run(),
           },
           {
+            active: state?.formula ?? false,
             icon: FunctionIcon,
             label: labels.formula,
             name: "formula",
             run: () =>
-              editor
-                ?.chain()
-                .focus()
-                .insertContent({
-                  attrs: { latex: NEW_FORMULA },
-                  type: "mathInline",
-                })
-                .run(),
+              editor?.chain().focus().toggleFormula("mathInline").run(),
           },
           {
+            active: state?.equation ?? false,
             icon: FunctionSquareIcon,
             label: labels.equation,
             name: "equation",
-            run: () =>
-              editor
-                ?.chain()
-                .focus()
-                .insertContent({
-                  attrs: { latex: NEW_FORMULA },
-                  type: "mathBlock",
-                })
-                .run(),
+            run: () => editor?.chain().focus().toggleFormula("mathBlock").run(),
           },
           {
             icon: ImageUploadIcon,

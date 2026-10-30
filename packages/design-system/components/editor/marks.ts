@@ -1,4 +1,8 @@
-import type { MarkdownTokenizer } from "@tiptap/core";
+import type {
+  JSONContent,
+  MarkdownRendererHelpers,
+  MarkdownTokenizer,
+} from "@tiptap/core";
 import { Function as Fn, Option } from "effect";
 import type { TokenizerExtension } from "marked-tiptap";
 
@@ -49,6 +53,18 @@ export function markTokenizer(mark: Mark): MarkdownTokenizer {
         }),
       }),
   };
+}
+
+/**
+ * Writes the words of one `mark` between its delimiters, the form the editor
+ * stores and the page's reader lexes. Tiptap's own Markdown for these marks can
+ * change with a release (3.32.1 writes an underline as `<u>words</u>`), so the
+ * editor takes its writer from here, as it takes its tokenizer.
+ */
+export function markRenderer(mark: Mark) {
+  const { delimiter } = MARKS[mark];
+  return (node: JSONContent, helpers: MarkdownRendererHelpers) =>
+    `${delimiter}${helpers.renderChildren(node)}${delimiter}`;
 }
 
 /** The extension that makes a `marked` lex `mark`, as the editor does. */

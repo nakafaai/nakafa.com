@@ -5,11 +5,11 @@ import {
   FORMULA_VIEWS,
   FormulaLabelsProvider,
 } from "@repo/design-system/components/editor/formula";
-import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import {
   PICTURE_VIEW,
   PicturesProvider,
 } from "@repo/design-system/components/editor/picture";
+import { articleProse } from "@repo/design-system/components/editor/prose";
 import { documentExtensions } from "@repo/editor/document";
 import { Node } from "@tiptap/pm/model";
 import { use } from "react";
@@ -29,8 +29,14 @@ const READER_EXTENSIONS = [
   blockDirections,
 ];
 
-/** A prompt reads as the published article reads: its paragraphs take the article's classes. */
-const PAGE_EXTENSIONS = [...READER_EXTENSIONS, articleParagraphs];
+/** A prompt reads as the published article reads, its paragraphs included. */
+const PAGE_EXTENSIONS = [...READER_EXTENSIONS, articleProse];
+
+/** An option reads as the article's text too, with its paragraphs as one line of text. */
+const LINE_EXTENSIONS = [
+  ...READER_EXTENSIONS,
+  articleProse.configure({ paragraphs: false }),
+];
 
 /** Nothing begins on a reader: a read-only document takes no file. */
 const noBegin = () => undefined;
@@ -60,7 +66,7 @@ export function SittingReader({
     <FormulaLabelsProvider labels={labels.formulaEdit}>
       <PicturesProvider begin={noBegin} labels={labels.pictures} urls={urls}>
         <DocumentEditor
-          extensions={size === "page" ? PAGE_EXTENSIONS : READER_EXTENSIONS}
+          extensions={size === "page" ? PAGE_EXTENSIONS : LINE_EXTENSIONS}
           label={label}
           onChange={() => undefined}
           onEditor={(editor) => {

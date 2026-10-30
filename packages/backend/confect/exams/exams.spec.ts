@@ -6,6 +6,7 @@ import { DocumentTooLarge } from "@repo/backend/confect/editor/document";
 import { ExamAccess } from "@repo/backend/confect/exams/access";
 import { ExamInUse } from "@repo/backend/confect/exams/errors";
 import {
+  ExamListed,
   ExamSummary,
   ExamTitle,
   ExamView,
@@ -53,7 +54,7 @@ export default GroupSpec.make()
     FunctionSpec.publicPaginatedQuery({
       name: "list",
       args: () => ({ slug: TenantSlug }),
-      item: () => ExamSummary,
+      item: () => ExamListed,
     })
   )
   .addFunction(
