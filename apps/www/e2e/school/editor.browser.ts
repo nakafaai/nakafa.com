@@ -237,7 +237,7 @@ test("a teacher schedules a sitting of an exam whose question has its key, and t
   await context.close();
 });
 
-test("a teacher schedules an exam, and its editor opens read-only, saying why", async ({
+test("a teacher schedules an exam, and its editor still takes changes, with no sentence about the schedule", async ({
   browser,
   baseURL,
 }) => {
@@ -279,28 +279,25 @@ test("a teacher schedules an exam, and its editor opens read-only, saying why", 
   await scheduling.getByRole("button", { name: "Schedule" }).click();
   await page.waitForURL(ROOMS_PATH);
 
-  // The editor opened again says why its questions are fixed, and offers no change to them.
+  // A scheduled exam stays editable until a sitting of it finishes (ADR 0031): no sentence under the
+  // header, and its questions, options and key take changes.
   await page.goto(editorUrl);
   await expect(
-    page.getByText("This exam is scheduled, so its questions are fixed.")
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(
     page.getByRole("button", { name: "Add question", exact: true })
-  ).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
-    0
-  );
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(page.getByText("This exam is scheduled")).toHaveCount(0);
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
-  ).not.toBeEditable();
-  await expect(
-    page.getByRole("button", { name: "Mark option A of question 1 as correct" })
-  ).toBeDisabled();
+  ).toBeEditable();
+  const keyOfA = page.getByRole("button", {
+    name: "Mark option A of question 1 as correct",
+  });
+  await expect(keyOfA).toBeEnabled();
+  await keyOfA.click();
+  await expect(keyOfA).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("textbox", { name: "Question 1 text" })
-  ).toHaveAttribute("aria-readonly", "true", {
-    timeout: readinessTimeoutMilliseconds,
-  });
+  ).not.toHaveAttribute("aria-readonly", "true");
 
   // The title can still be renamed, and the exam can still be scheduled again.
   await expect(
