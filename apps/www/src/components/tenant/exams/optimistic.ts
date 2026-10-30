@@ -13,8 +13,8 @@ import { Array as Arr, Option } from "effect";
 /** One exam with its questions in order, as the editor reads it. */
 export type ExamView = Ref.Returns<typeof exams.exams.open>;
 
-/** One exam as the list shows it: its ID and its title. */
-export type ExamSummary = Ref.Returns<typeof exams.exams.list>["page"][number];
+/** One exam as the list shows it: its title, when it was created, how many questions it holds, and its scope. */
+export type ListedExam = Ref.Returns<typeof exams.exams.list>["page"][number];
 
 /** One question of an exam, as the editor reads it. */
 export type Question = ExamView["questions"][number];
@@ -277,9 +277,9 @@ export const copyQuestionUpdate =
     );
 
 /**
- * Shows a new exam while the server saves it: at the top of the first page of each open list,
- * and at the top of the drafts of the school home when the home is open. A list past its first
- * page keeps its pages, as the server's answer shows.
+ * Shows a new exam while the server saves it: at the top of the first page of each open list, with no question yet in
+ * the scope it is created in, and at the top of the drafts of the school home when the home is open. A list past its
+ * first page keeps its pages, as the server's answer shows.
  */
 export const insertDraftExam =
   (draft: typeof HomeDraft.Type): OptimisticUpdate<typeof exams.exams.create> =>
@@ -294,7 +294,10 @@ export const insertDraftExam =
           query.args,
           Option.some({
             ...query.value.value,
-            page: [draft, ...query.value.value.page],
+            page: [
+              { ...draft, questionCount: 0, scope: args.scope },
+              ...query.value.value.page,
+            ],
           })
         );
       }

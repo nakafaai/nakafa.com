@@ -1,14 +1,16 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import { Calendar03Icon } from "@hugeicons/core-free-icons";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+} from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -20,13 +22,14 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   CreateExam,
   ExamDraftsProvider,
 } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
-import type { ExamSummary } from "@/components/tenant/exams/optimistic";
+import type { ListedExam } from "@/components/tenant/exams/optimistic";
+import { ExamRowMenu } from "@/components/tenant/exams/row";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { Link } from "@/lib/routing/link";
@@ -35,10 +38,11 @@ import { Link } from "@/lib/routing/link";
 const EXAM_PAGE_SIZE = 20;
 
 /** The columns of the exams table. */
-const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
+const examColumns = createColumnHelper<typeof dataTableFeatures, ListedExam>();
 
 /**
- * The exams of the school, newest first, each with its title. An exam that the server has not
+ * The exams of the school, newest first, each with its title, its unit, its questions and its day. An exam that the
+ * server has not
  * saved yet is disabled until it answers. The next page loads when the end of the list comes
  * into view, so the list has no button. The page holds one create action, shown when the viewer
  * can create an exam in at least one place: in the school's one header beside the exams, or in
@@ -112,9 +116,10 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
 
 /**
  * The rows of the exam list: the failure of its read above the rows it already holds, and the exams in a
- * data table, or nothing while the first page loads. A first page that failed shows the failure alone. The
- * title links to its editor, and the row menu to the exam's rooms. An exam that the server is still saving
- * shows its title without a link and no menu, so it is inert.
+ * data table, or nothing while the first page loads. A first page that failed shows the failure alone. Each
+ * row shows where the exam belongs, how many questions it holds and when it was created. The title links to its
+ * editor, and the row menu opens its editor, its rooms, the exam as a student sees it, and Delete. An exam that
+ * the server is still saving shows its title without a link and no menu, so it is inert.
  */
 function ExamListRows({
   exams: rows,
@@ -122,12 +127,13 @@ function ExamListRows({
   loadingFirst,
   saving,
 }: {
-  exams: readonly ExamSummary[];
+  exams: readonly ListedExam[];
   failed: boolean;
   loadingFirst: boolean;
-  saving: readonly ExamSummary["id"][];
+  saving: readonly ListedExam["id"][];
 }) {
   const t = useTranslations("Exams");
+  const format = useFormatter();
   const tenant = useTenant();
 
   if (loadingFirst) {
@@ -160,12 +166,39 @@ function ExamListRows({
       sortFn: "text",
     }),
     examColumns.display({
+      cell: (info) => <ExamScope scope={info.row.original.scope} />,
+      header: t("unit"),
+      id: "unit",
+    }),
+    examColumns.accessor((exam) => exam.questionCount, {
+      cell: (info) => (
+        <span className="block text-end tabular-nums">{info.getValue()}</span>
+      ),
+      enableSorting: false,
+      header: () => (
+        <span className="block text-end">{t("questions-column")}</span>
+      ),
+      id: "questions",
+    }),
+    examColumns.accessor((exam) => exam.createdAt, {
+      cell: (info) => (
+        <span className="text-muted-foreground tabular-nums">
+          {format.dateTime(
+            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
+            { dateStyle: "medium" }
+          )}
+        </span>
+      ),
+      enableSorting: false,
+      header: t("created-column"),
+      id: "created",
+    }),
+    examColumns.display({
       cell: (info) =>
         Arr.contains(saving, info.row.original.id) ? null : (
-          <ExamRoomsLink exam={info.row.original} />
+          <ExamRowMenu exam={info.row.original} />
         ),
-      header: t("rooms-title"),
-      id: "rooms",
+      id: "actions",
     }),
   ]);
 
@@ -182,23 +215,21 @@ function ExamListRows({
   );
 }
 
-/**
- * An exam's way to its rooms, in its own column: the title already opens the editor, so the rooms
- * stay one click away instead of behind a menu.
- */
-function ExamRoomsLink({ exam }: { exam: ExamSummary }) {
+/** Where an exam belongs: the whole school, or the unit that holds it, by the name the viewer sees. */
+function ExamScope({ scope }: { scope: ListedExam["scope"] }) {
   const t = useTranslations("Exams");
-  const { slug } = useTenant();
+  const viewer = useViewerQuery();
 
-  return (
-    <Link
-      className={buttonVariants({ size: "sm", variant: "ghost" })}
-      params={{ exam: exam.id, slug }}
-      to="/school/$slug/exams/$exam"
-    >
-      <HugeIcons icon={Calendar03Icon} />
-      {t("rooms-title")}
-    </Link>
+  if (scope.kind === "tenant") {
+    return t("whole-school");
+  }
+  const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
+  return Option.match(
+    Arr.findFirst(units, (unit) => unit.id === scope.unitId),
+    {
+      onNone: () => null,
+      onSome: (unit) => <span dir="auto">{unit.name}</span>,
+    }
   );
 }
 

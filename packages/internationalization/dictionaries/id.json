@@ -369,6 +369,8 @@
     "schedule-key-match": "Pasangkan setiap pernyataan soal {number}.",
     "schedule-key-table": "Tandai setiap pernyataan soal {number}.",
     "schedule-past": "Pilih waktu mulai yang belum lewat.",
+    "questions-column": "Soal",
+    "created-column": "Dibuat",
     "rooms-title": "Ruang",
     "edit-action": "Ubah ujian",
     "rooms-empty": "Belum ada ruang",

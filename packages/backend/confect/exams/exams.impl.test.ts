@@ -126,6 +126,30 @@ describe("exams/exams", () => {
           "Kelas SMP",
           "Seluruh sekolah",
         ]);
+        // Each row says when it was created, how many questions it holds, and where it belongs.
+        expect(
+          Arr.map(admin.page, ({ createdAt, questionCount, scope }) => ({
+            createdAt,
+            questionCount,
+            scope,
+          }))
+        ).toEqual([
+          {
+            createdAt: LATEST,
+            questionCount: 0,
+            scope: { kind: "unit", unitId: fixture.units.sma },
+          },
+          {
+            createdAt: LATER,
+            questionCount: 0,
+            scope: { kind: "unit", unitId: fixture.units.smp },
+          },
+          {
+            createdAt: TENANCY_NOW,
+            questionCount: 0,
+            scope: { kind: "tenant" },
+          },
+        ]);
         const teacher = yield* fixture.as("teacher").query(list, page);
         expect(Arr.map(teacher.page, (exam) => exam.title)).toEqual([
           "Kelas SMP",
