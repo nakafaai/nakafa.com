@@ -4,28 +4,32 @@ import { Array as Arr } from "effect";
 
 describe("renderDomainModule", () => {
   it("writes the spec type and assembly that Confect writes for the leaves of a domain", () => {
-    const module = renderDomainModule("nina", [
-      {
-        localName: "nina_memory",
-        segments: ["nina", "memory"],
-        specifier: "../nina/memory.spec",
-      },
-      {
-        localName: "nina_reply_stream",
-        segments: ["nina", "reply", "stream"],
-        specifier: "../nina/reply/stream.spec",
-      },
-      {
-        localName: "nina_lifecycle",
-        segments: ["nina", "lifecycle"],
-        specifier: "../nina/lifecycle.spec",
-      },
-      {
-        localName: "nina_lifecycle_cancel",
-        segments: ["nina", "lifecycle", "cancel"],
-        specifier: "../nina/lifecycle/cancel.spec",
-      },
-    ]);
+    const module = renderDomainModule(
+      "nina",
+      [
+        {
+          localName: "nina_memory",
+          segments: ["nina", "memory"],
+          specifier: "../nina/memory.spec",
+        },
+        {
+          localName: "nina_reply_stream",
+          segments: ["nina", "reply", "stream"],
+          specifier: "../nina/reply/stream.spec",
+        },
+        {
+          localName: "nina_lifecycle",
+          segments: ["nina", "lifecycle"],
+          specifier: "../nina/lifecycle.spec",
+        },
+        {
+          localName: "nina_lifecycle_cancel",
+          segments: ["nina", "lifecycle", "cancel"],
+          specifier: "../nina/lifecycle/cancel.spec",
+        },
+      ],
+      "public"
+    );
 
     expect(module).toBe(
       Arr.join(
@@ -50,14 +54,18 @@ describe("renderDomainModule", () => {
     );
   });
 
-  it("writes a domain whose only leaf is the domain itself", () => {
-    const module = renderDomainModule("storage", [
-      {
-        localName: "storage",
-        segments: ["storage"],
-        specifier: "../storage.spec",
-      },
-    ]);
+  it("writes a domain whose only leaf is the domain itself, as the internal refs only the server reads", () => {
+    const module = renderDomainModule(
+      "storage",
+      [
+        {
+          localName: "storage",
+          segments: ["storage"],
+          specifier: "../storage.spec",
+        },
+      ],
+      "internal"
+    );
 
     expect(module).toBe(
       Arr.join(
@@ -71,7 +79,7 @@ describe("renderDomainModule", () => {
           "",
           "const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);",
           "",
-          "export default refs.public.storage;",
+          "export default refs.internal.storage;",
           "",
         ],
         "\n"

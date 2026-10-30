@@ -1,4 +1,5 @@
 import type { LeafPath } from "@repo/backend/scripts/refs/paths";
+import type { FunctionVisibility } from "convex/server";
 import { Array as Arr, Option, Order, Record } from "effect";
 
 type Leaf = typeof LeafPath.Type;
@@ -71,13 +72,14 @@ const assemblyOf = (leaves: readonly Leaf[], depth: number): string => {
 };
 
 /**
- * Writes the source of one domain's refs module. It declares the same spec
- * type and assembly that Confect writes for the spec, restricted to the leaves
- * given, so the refs keep the Convex function names of the full spec.
+ * Writes the source of one domain's refs module of a visibility. It declares the
+ * same spec type and assembly that Confect writes for the spec, restricted to the
+ * leaves given, so the refs keep the Convex function names of the full spec.
  */
 export const renderDomainModule = (
   domain: string,
-  leaves: Arr.NonEmptyReadonlyArray<Leaf>
+  leaves: Arr.NonEmptyReadonlyArray<Leaf>,
+  visibility: FunctionVisibility
 ): string => {
   const imports = Arr.sort(
     leaves,
@@ -98,7 +100,7 @@ export const renderDomainModule = (
       "",
       "const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);",
       "",
-      `export default refs.public.${domain};`,
+      `export default refs.${visibility}.${domain};`,
       "",
     ],
     "\n"

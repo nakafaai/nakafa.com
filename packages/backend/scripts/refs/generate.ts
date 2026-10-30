@@ -1,8 +1,9 @@
 import { readAssembly } from "@repo/backend/scripts/refs/assembly";
-import { isPublicLeaf } from "@repo/backend/scripts/refs/leaf";
+import { holdsVisibility } from "@repo/backend/scripts/refs/leaf";
 import { loadLeafGroups } from "@repo/backend/scripts/refs/load";
 import { leafPaths } from "@repo/backend/scripts/refs/paths";
 import { renderDomainModule } from "@repo/backend/scripts/refs/render";
+import type { FunctionVisibility } from "convex/server";
 import {
   Array as Arr,
   Effect,
@@ -13,6 +14,16 @@ import {
   Schema,
 } from "effect";
 
+/**
+ * The file of a domain's refs of each visibility. Public refs suit every reader, the
+ * browser included; internal refs go in a module only the server reads, so a server
+ * module that calls one domain's functions imports that domain's specs, not the whole spec.
+ */
+const MODULE_SUFFIX: { readonly [Visibility in FunctionVisibility]: string } = {
+  internal: ".server.ts",
+  public: ".ts",
+};
+
 /** Where the generator reads the assembled spec, writes the refs modules, and finds the leaves. */
 const RefsTarget = Schema.Struct({
   backendRoot: Schema.String,
@@ -21,9 +32,9 @@ const RefsTarget = Schema.Struct({
 });
 
 /**
- * Writes one refs module per domain that holds a public function, from the leaves
- * that the assembled spec imports. A module of a domain that no longer holds one
- * is deleted. Returns the file names that the run expects in the output folder.
+ * Writes one refs module per domain and visibility that the domain holds a function
+ * of, from the leaves that the assembled spec imports. A module that no domain needs
+ * any more is deleted. Returns the file names that the run expects in the output folder.
  */
 export const generateRefs = Effect.fn("RefsGenerate.generateRefs")(function* (
   target: typeof RefsTarget.Type
@@ -37,23 +48,33 @@ export const generateRefs = Effect.fn("RefsGenerate.generateRefs")(function* (
     path.dirname(target.specPath),
     Arr.map(leaves, (leaf) => leaf.specifier)
   );
-  const publicLeaves = Arr.filterMap(
-    Arr.zip(leaves, groups),
-    ([leaf, group]) =>
-      isPublicLeaf(group) ? Result.succeed(leaf) : Result.failVoid
+  const leafGroups = Arr.zip(leaves, groups);
+  const modules = Arr.flatMap(
+    Record.toEntries(MODULE_SUFFIX),
+    ([visibility, suffix]) => {
+      const visible = Arr.filterMap(leafGroups, ([leaf, group]) =>
+        holdsVisibility(group, visibility)
+          ? Result.succeed(leaf)
+          : Result.failVoid
+      );
+      return Arr.map(
+        Record.toEntries(Arr.groupBy(visible, (leaf) => leaf.segments[0])),
+        ([domain, domainLeaves]) => ({
+          file: `${domain}${suffix}`,
+          source: renderDomainModule(domain, domainLeaves, visibility),
+        })
+      );
+    }
   );
-  const domains = Record.toEntries(
-    Arr.groupBy(publicLeaves, (leaf) => leaf.segments[0])
-  );
-  const expected = Arr.map(domains, ([domain]) => `${domain}.ts`);
+  const expected = Arr.map(modules, (module) => module.file);
 
   yield* fs.makeDirectory(target.outputDirectory, { recursive: true });
   yield* Effect.forEach(
-    domains,
-    ([domain, domainLeaves]) =>
+    modules,
+    (module) =>
       fs.writeFileString(
-        path.join(target.outputDirectory, `${domain}.ts`),
-        renderDomainModule(domain, domainLeaves)
+        path.join(target.outputDirectory, module.file),
+        module.source
       ),
     { discard: true }
   );
@@ -67,7 +88,7 @@ export const generateRefs = Effect.fn("RefsGenerate.generateRefs")(function* (
     { discard: true }
   );
   yield* Effect.log(
-    `Wrote ${expected.length} refs modules for ${publicLeaves.length} leaves with public functions.`
+    `Wrote ${expected.length} refs modules for ${leaves.length} leaves.`
   );
   return expected;
 });

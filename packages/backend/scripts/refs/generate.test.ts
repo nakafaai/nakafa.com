@@ -3,34 +3,62 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import access from "@repo/backend/confect/_generated/refs/access";
+import analyticsInternal from "@repo/backend/confect/_generated/refs/analytics.server";
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import billing from "@repo/backend/confect/_generated/refs/billing";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import consents from "@repo/backend/confect/_generated/refs/consents";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import contents from "@repo/backend/confect/_generated/refs/contents";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
+import creditsInternal from "@repo/backend/confect/_generated/refs/credits.server";
 import editor from "@repo/backend/confect/_generated/refs/editor";
+import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import examsInternal from "@repo/backend/confect/_generated/refs/exams.server";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
+import guardiansInternal from "@repo/backend/confect/_generated/refs/guardians.server";
 import identity from "@repo/backend/confect/_generated/refs/identity";
+import identityInternal from "@repo/backend/confect/_generated/refs/identity.server";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import operators from "@repo/backend/confect/_generated/refs/operators";
+import operatorsInternal from "@repo/backend/confect/_generated/refs/operators.server";
 import posts from "@repo/backend/confect/_generated/refs/posts";
+import postsInternal from "@repo/backend/confect/_generated/refs/posts.server";
+import privacyInternal from "@repo/backend/confect/_generated/refs/privacy.server";
 import records from "@repo/backend/confect/_generated/refs/records";
+import recordsInternal from "@repo/backend/confect/_generated/refs/records.server";
 import roster from "@repo/backend/confect/_generated/refs/roster";
+import routesInternal from "@repo/backend/confect/_generated/refs/routes.server";
+import storageInternal from "@repo/backend/confect/_generated/refs/storage.server";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
+import triggersInternal from "@repo/backend/confect/_generated/refs/triggers.server";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import users from "@repo/backend/confect/_generated/refs/users";
+import usersInternal from "@repo/backend/confect/_generated/refs/users.server";
+import vaultInternal from "@repo/backend/confect/_generated/refs/vault.server";
 import spec from "@repo/backend/confect/_generated/spec";
 import { generateRefs } from "@repo/backend/scripts/refs/generate";
+import type { FunctionVisibility } from "convex/server";
 import {
   Array as Arr,
   Effect,
@@ -124,14 +152,55 @@ const domainModules = {
   tryouts,
   users,
 };
-const modules: Record.ReadonlyRecord<string, unknown> = domainModules;
+/** The per-domain internal refs modules, which only the server reads, keyed by domain. */
+const internalModules = {
+  analytics: analyticsInternal,
+  auth: authInternal,
+  billing: billingInternal,
+  classroom: classroomInternal,
+  connectors: connectorsInternal,
+  contentRelease: contentReleaseInternal,
+  contents: contentsInternal,
+  credits: creditsInternal,
+  editor: editorInternal,
+  emails: emailsInternal,
+  exams: examsInternal,
+  guardians: guardiansInternal,
+  identity: identityInternal,
+  integrations: integrationsInternal,
+  nina: ninaInternal,
+  notifications: notificationsInternal,
+  operators: operatorsInternal,
+  posts: postsInternal,
+  privacy: privacyInternal,
+  records: recordsInternal,
+  routes: routesInternal,
+  storage: storageInternal,
+  tenancy: tenancyInternal,
+  triggers: triggersInternal,
+  tryouts: tryoutsInternal,
+  users: usersInternal,
+  vault: vaultInternal,
+};
+
+/** Each visibility's domain modules, as the generator writes them. */
+const modulesOf: {
+  readonly [Visibility in FunctionVisibility]: Record.ReadonlyRecord<
+    string,
+    unknown
+  >;
+} = { internal: internalModules, public: domainModules };
+
+/** The file of a domain's module of each visibility. */
+const fileOf = (domain: string, visibility: FunctionVisibility) =>
+  visibility === "public" ? `${domain}.ts` : `${domain}.server.ts`;
 
 /** The spec's functions, reached from the full spec's top-level groups. */
 const allFunctions = specFunctions(Spec.groups(spec), []);
 
 describe("generateRefs", () => {
   it.live(
-    "writes the public domains and deletes the module of a retired one",
+    "writes each domain's public and internal modules and deletes the module of a retired one",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -154,6 +223,8 @@ describe("generateRefs", () => {
         });
 
         expect(expected).toContain("access.ts");
+        expect(expected).not.toContain("access.server.ts");
+        expect(expected).toContain("storage.server.ts");
         expect(expected).not.toContain("storage.ts");
         expect(
           Arr.sort(yield* fs.readDirectory(outputDirectory), Order.String)
@@ -242,21 +313,22 @@ export default spec;
   );
 
   it.live(
-    "reaches every public function in its domain module under the Convex name of the full spec",
+    "reaches every function in its domain module of its visibility under the Convex name of the full spec",
     () =>
       Effect.gen(function* () {
-        const publicFunctions = Arr.filter(
-          allFunctions,
-          (fn) => fn.visibility === "public"
-        );
-        expect(publicFunctions.length).toBeGreaterThan(0);
-        for (const fn of publicFunctions) {
+        expect(
+          Arr.filter(allFunctions, (fn) => fn.visibility === "internal").length
+        ).toBeGreaterThan(0);
+        for (const fn of allFunctions) {
           const expected = `${Arr.join(fn.path, "/")}:${fn.name}`;
           const inModule = Option.flatMap(
-            Record.get(modules, fn.path[0]),
+            Record.get(modulesOf[fn.visibility], fn.path[0]),
             (module) => valueAt(module, [...Arr.drop(fn.path, 1), fn.name])
           );
-          const inFullSpec = valueAt(refs.public, [...fn.path, fn.name]);
+          const inFullSpec = valueAt(refs[fn.visibility], [
+            ...fn.path,
+            fn.name,
+          ]);
           expect(
             Option.getOrUndefined(Option.flatMap(inModule, convexNameOf))
           ).toBe(expected);
@@ -268,49 +340,48 @@ export default spec;
   );
 
   it.live(
-    "holds no leaf without a public function, and no module for a domain without one",
+    "holds no function of the other visibility, and no module for a domain without a function of its own",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* backendRoot;
-        const leaves = Record.toEntries(
-          Arr.groupBy(allFunctions, (fn) => Arr.join(fn.path, "/"))
-        );
-        for (const [, functionsOfLeaf] of leaves) {
-          const [leaf] = functionsOfLeaf;
-          const isPublic = Arr.some(
-            functionsOfLeaf,
-            (fn) => fn.visibility === "public"
-          );
-          const reached = Option.flatMap(
-            Record.get(modules, leaf.path[0]),
-            (module) => valueAt(module, Arr.drop(leaf.path, 1))
-          );
-          if (!isPublic) {
-            expect(Option.isNone(reached)).toBe(true);
+        for (const [visibility, modules] of Record.toEntries(modulesOf)) {
+          for (const fn of allFunctions) {
+            if (fn.visibility !== visibility) {
+              const reached = Option.flatMap(
+                Record.get(modules, fn.path[0]),
+                (module) => valueAt(module, [...Arr.drop(fn.path, 1), fn.name])
+              );
+              expect(Option.isNone(reached)).toBe(true);
+            }
           }
         }
 
-        const publicDomains = Record.keys(
-          Arr.groupBy(
-            Arr.filter(allFunctions, (fn) => fn.visibility === "public"),
-            (fn) => fn.path[0]
-          )
-        );
+        const domainsOf = (visibility: FunctionVisibility) =>
+          Arr.map(
+            Record.keys(
+              Arr.groupBy(
+                Arr.filter(allFunctions, (fn) => fn.visibility === visibility),
+                (fn) => fn.path[0]
+              )
+            ),
+            (domain) => fileOf(domain, visibility)
+          );
         const modulesOnDisk = yield* fs.readDirectory(
           path.join(root, "confect", "_generated", "refs")
         );
         expect(Arr.sort(modulesOnDisk, Order.String)).toEqual(
           Arr.sort(
-            Arr.map(publicDomains, (domain) => `${domain}.ts`),
+            [...domainsOf("public"), ...domainsOf("internal")],
             Order.String
           )
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 
-  it("types the domain modules as the public refs of the full spec", () => {
+  it("types the domain modules as the public and internal refs of the full spec", () => {
     expectTypeOf(domainModules).toEqualTypeOf<typeof refs.public>();
+    expectTypeOf(internalModules).toEqualTypeOf<typeof refs.internal>();
   });
 });
