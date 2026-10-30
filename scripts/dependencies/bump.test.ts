@@ -23,7 +23,7 @@ import {
   RegistryVersionJson,
 } from "#scripts/dependencies/bump";
 import type { runBun } from "#scripts/dependencies/command";
-import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
+import { REGISTRY_REVIEWS } from "#scripts/dependencies/reviews";
 import { GITHUB_ACTION_REVIEWS } from "#scripts/github/policy";
 import {
   type GithubActionReleaseReview,

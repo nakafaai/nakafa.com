@@ -2,8 +2,10 @@ import "@tanstack/react-start/server-only";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
+  Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
@@ -13,11 +15,6 @@ import {
   PricingPrice,
   StaticPrice,
 } from "@/components/marketing/about/pricing/price";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-} from "@/components/shared/card/section";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import type { readReviewTranslators } from "@/components/tryout/review/copy.server";
@@ -56,6 +53,7 @@ const loadPreview = Effect.fn("TryoutReview.loadPreview")(
     });
   },
   Effect.catchTags({
+    ContentRuntimeMissingError: () => Effect.succeed([]),
     ContentRuntimeVerificationError: () => Effect.succeed([]),
     TryoutReviewProjectionError: () => Effect.succeed([]),
   })
@@ -129,10 +127,13 @@ export async function TryoutReviewLocked({
       />
 
       {/*
-       * The Pro offer: a bottom sheet with the drawer's anatomy on phones and a
-       * centered dialog card from the medium breakpoint up.
+       * The Pro offer, drawn as the pricing page draws the Pro plan: a card in
+       * the brand ring with the price, both actions side by side, and the hint
+       * beneath them. The actions stack only when large text leaves no room for
+       * both. It rises as a bottom sheet on phones and sits centered from the
+       * medium breakpoint up.
        */}
-      <CardSection className="relative w-full shadow-lg/5 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:ring-0 md:max-w-md">
+      <Card className="relative w-full shadow-lg/5 ring-2 ring-primary max-md:rounded-t-2xl max-md:rounded-b-none md:max-w-md">
         <CardHeader>
           <CardTitle>
             <h2 id="tryout-review-offer">
@@ -148,8 +149,8 @@ export async function TryoutReviewLocked({
             plan="pro"
           />
         </CardContent>
-        <CardSectionFooter bottomSheet hint={t("paywall-footer")}>
-          <CardSectionActions share>
+        <CardFooter className="grid gap-3 pb-[env(safe-area-inset-bottom,0px)]">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,--spacing(36)),1fr))] gap-2">
             <Link
               className={buttonVariants({ variant: "outline" })}
               to="/$locale/pricing"
@@ -157,9 +158,12 @@ export async function TryoutReviewLocked({
               {t("paywall-compare")}
             </Link>
             <TryoutReviewCheckout />
-          </CardSectionActions>
-        </CardSectionFooter>
-      </CardSection>
+          </div>
+          <p className="text-center text-muted-foreground text-sm">
+            {t("paywall-footer")}
+          </p>
+        </CardFooter>
+      </Card>
     </section>
   );
 }

@@ -15,21 +15,16 @@ import {
   ChannelLimit,
   ChannelNameTaken,
 } from "@repo/backend/confect/classroom/forum/errors";
-import { Array as Arr, Clock, Effect, Option } from "effect";
-
-/**
- * The position of a topic in a class that holds no channel. Every class created
- * since channels exist holds its general channel at 0, so this case only reaches a
- * class from before the backfill, and position 1 keeps the backfilled general
- * channel ahead of the topic.
- */
-const FIRST_TOPIC_POSITION = 1;
+import { Array as Arr, Clock, Effect } from "effect";
 
 /**
  * Adds a topic channel to a class, after its last channel. The name is unique
  * among the class's channels, compared without case, and a class holds at most
- * CHANNEL_LIMIT channels. The class's `forum.manage` decision admits an Admin or a
- * subject teacher of the class, and refuses an archived class as a write.
+ * CHANNEL_LIMIT channels. A class holds its general channel at 0 from its
+ * creation and no channel is removed, so the positions run from 0 without a gap
+ * and the new channel takes the count of the channels before it. The class's
+ * `forum.manage` decision admits an Admin or a subject teacher of the class, and
+ * refuses an archived class as a write.
  */
 export const add = FunctionImpl.make(
   databaseSchema,
@@ -50,10 +45,7 @@ export const add = FunctionImpl.make(
     if (Arr.some(channels, (channel) => channelNameKey(channel.name) === key)) {
       return yield* new ChannelNameTaken();
     }
-    const position = Option.match(Arr.last(channels), {
-      onNone: () => FIRST_TOPIC_POSITION,
-      onSome: (last) => last.position + 1,
-    });
+    const position = channels.length;
     const now = yield* Clock.currentTimeMillis;
     const channelId = yield* (yield* DatabaseWriter)
       .table("classroomChannels")
@@ -70,6 +62,6 @@ export const add = FunctionImpl.make(
       .table("classroomChannels")
       .get(channelId)
       .pipe(Effect.orDie);
-    return channelView(created);
+    return channelView(created, false);
   })
 );

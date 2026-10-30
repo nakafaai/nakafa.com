@@ -27,7 +27,7 @@ import {
   readSessionCookie,
 } from "@/lib/auth/cookie.server";
 import { SESSION_PATH } from "@/lib/auth/session";
-import { readSessionToken } from "@/lib/auth/token";
+import { readSessionToken } from "@/lib/auth/token.server";
 import { ClientSession } from "@/lib/auth/visitor";
 import { serverHandler } from "@/lib/server/fn";
 import { CONVEX_SITE_URL } from "@/lib/server/runtime";

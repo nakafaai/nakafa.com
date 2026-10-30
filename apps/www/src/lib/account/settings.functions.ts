@@ -32,6 +32,16 @@ export const memoryScreenFn = createServerFn({ method: "GET" })
     return memoryScreenHandler(options);
   });
 
+/** Connectors: the page head of the account's own Google connectors. */
+export const connectorsScreenFn = createServerFn({ method: "GET" })
+  .validator(Schema.toStandardSchemaV1(LocaleInput))
+  .handler(async (options) => {
+    const { connectorsScreenHandler } = await import(
+      "@/lib/account/settings.server"
+    );
+    return connectorsScreenHandler(options);
+  });
+
 /** Subscriptions: whether the visitor holds the Pro subscription. */
 export const subscriptionsScreenFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(LocaleInput))

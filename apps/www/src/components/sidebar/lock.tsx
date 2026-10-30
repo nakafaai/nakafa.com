@@ -80,7 +80,7 @@ export function LockableShell({
             would shrink every centered page column to its content, and a
             wrapper of their own would move when a lock change drops the
             header. */}
-          <SidebarInset className="block transition-[--app-sidebar-offset] duration-surface [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] lg:pl-(--app-shell-inset) group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem]">
+          <SidebarInset className="block transition-[--app-sidebar-offset] duration-surface [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] lg:pl-(--app-shell-inset) group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-collapsible=icon]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(12)] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem]">
             <SidebarScope>
               {locked ? null : (
                 <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">

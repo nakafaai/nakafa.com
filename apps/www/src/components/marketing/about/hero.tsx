@@ -1,5 +1,5 @@
-import { Button } from "@repo/design-system/components/ui/button";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
 import { Link } from "@/lib/routing/link";
@@ -30,21 +30,19 @@ export function Hero() {
           {t("hero-tag")}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button
-            nativeButton={false}
-            render={<Link to="/$locale/curricula">{t("hero-start")}</Link>}
-            size="lg"
-          />
-          <Button
-            nativeButton={false}
-            render={
-              <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/try-out">
-                {t("hero-tryout")}
-              </Link>
-            }
-            size="lg"
-            variant="outline"
-          />
+          <Link
+            className={buttonVariants({ size: "lg" })}
+            to="/$locale/curricula"
+          >
+            {t("hero-start")}
+          </Link>
+          <Link
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            className={buttonVariants({ size: "lg", variant: "outline" })}
+            to="/$locale/try-out"
+          >
+            {t("hero-tryout")}
+          </Link>
         </div>
         <div className="mt-6" id={HERO_NINA_ID}>
           <Nina act="reading" label="" size={240} whole />

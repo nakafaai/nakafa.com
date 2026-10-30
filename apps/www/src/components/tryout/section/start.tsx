@@ -3,7 +3,7 @@ import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
@@ -77,7 +77,7 @@ function StartSectionControl({
   const tTryouts = useTranslations("Tryouts");
   return (
     <Button inert={inert} onClick={onStart} type="button">
-      <HugeIcons className="size-4" icon={Rocket01Icon} />
+      <Spinner className="size-4" icon={Rocket01Icon} isLoading={inert} />
       {tTryouts("start-part-cta")}
     </Button>
   );

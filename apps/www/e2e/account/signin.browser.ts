@@ -12,6 +12,7 @@ import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SIGN_IN = "/en/auth";
 const HOME = "/en/home";
@@ -158,7 +159,7 @@ test("the Free plan's action opens home for a signed-in learner", async ({
             yield* Effect.promise(() =>
               page.goto(PRICING, { waitUntil: "load" })
             );
-            // The action is a link drawn as a button, so it carries the button role.
+            // The action is a link with a button's look.
             const action = page.locator('[data-pricing-plan="free"] a:visible');
             yield* Effect.promise(() => expect(action).toHaveCount(1));
             yield* Effect.promise(() =>
@@ -167,6 +168,9 @@ test("the Free plan's action opens home for a signed-in learner", async ({
             yield* Effect.promise(() =>
               expect(action).toHaveText(app.Pricing["free-cta"])
             );
+            // The page is static, so before React takes the link over a press
+            // loads home as a new document; only React moves in the same one.
+            yield* Effect.promise(() => waitUntilTakenOver(action));
             yield* Effect.promise(() =>
               page.evaluate((name) => {
                 Object.assign(window, { [name]: true });

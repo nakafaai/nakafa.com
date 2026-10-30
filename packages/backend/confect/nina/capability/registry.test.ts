@@ -151,6 +151,7 @@ describe("the registry of Nina's capabilities", () => {
       "deepResearch",
       "math",
       "memory",
+      "calendar",
     ]);
   });
 });

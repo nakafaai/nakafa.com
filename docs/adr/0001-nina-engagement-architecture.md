@@ -282,7 +282,7 @@ query, so question text and answer keys never come from the client. The official
 explanation is the source of truth for the answer.
 
 Provider input keeps whole turns that the conversation summary does not
-cover, newest first, within the history budget of 32,610 tokens: what a call
+cover, newest first, within the history budget of 31,610 tokens: what a call
 leaves for its history after the reserved parts at their budgets (30,000
 tokens) and the current turn's evidence (28,000 tokens). The budget of a call
 whose current turn costs more is smaller, and the history budget is the most a
@@ -315,14 +315,14 @@ estimator's undercount on 120 texts measured through the gateway on 14 October
 text on average and 4% above the provider over those texts. Every message adds 8
 tokens around its content, the overhead measured on a user message, and a tool
 call with its result costs what the budget counts for them. A call holds its
-reserved parts at their budgets, 30,000 tokens (instructions 12,500, page
+reserved parts at their budgets, 31,000 tokens (instructions 13,500, page
 10,500, account 1,000, portrait 1,000, recall 1,500, summary 3,500), then its
 current turn as it is sent: the newest learner message and its files, counted at
 the profile's costs, and the evidence, within 28,000. The learner's message may
-cost at most 32,610 tokens, the room the call leaves after the reserved parts and
+cost at most 31,610 tokens, the room the call leaves after the reserved parts and
 the evidence, and the send refuses a longer one (`NINA_MESSAGE_SIZE`), so the
 message and the evidence fit the call limit together. The history gets what is
-left, at most 32,610. Nina stays below the price step at 100,000 tokens, because
+left, at most 31,610. Nina stays below the price step at 100,000 tokens, because
 the provider bills a call above it at five times the input price (measured on
 calls of 94,423 and 104,573 prompt tokens). Three things can still take a call
 past the limit. The newest earlier turn is kept whatever it costs, and only its
@@ -335,7 +335,7 @@ long PDF can take a call past the limit, and no measured page cost bounds it yet
 The size of the history starts a fold of the conversation summary. After a
 completed turn, the follow-up action counts the complete turns the summary does
 not cover in model tokens, as the history would send them. A chat whose turns
-fit in the 32,610 token history budget, and that holds at most 64 of them, is
+fit in the 31,610 token history budget, and that holds at most 64 of them, is
 never folded. The count is a second, much wider bound: a turn also costs
 documents to read before the call, which no token counts, so very short turns
 would otherwise let the history grow to thousands of messages. Past 64 turns one fold covers the oldest 16, and the

@@ -55,11 +55,8 @@ describe("rendered route templates", () => {
   it("renders the learner routes and leaves the prerendered pages to the assets", () => {
     expect(RENDERED_ROUTE_TEMPLATES).toContain("/$locale/chat/$id");
     expect(RENDERED_ROUTE_TEMPLATES).toContain("/$locale/search");
-    expect(RENDERED_ROUTE_TEMPLATES).toContain(
-      "/$locale/try-out/$country/$exam/$track"
-    );
-    expect(RENDERED_ROUTE_TEMPLATES).toContain(
-      "/$locale/try-out/$country/$exam/$track/$set"
+    expect(RENDERED_ROUTE_TEMPLATES).not.toContain(
+      "/$locale/try-out/$country/$exam/$track/$set/$section"
     );
     expect(RENDERED_ROUTE_TEMPLATES).not.toContain("/$locale/$");
     expect(RENDERED_ROUTE_TEMPLATES).not.toContain("/$locale/quran/$surah");

@@ -124,6 +124,27 @@ export const memoryScreenHandler = accountHandler(
     })
 );
 
+/** Connector settings: the page head; the page reads its connections live. */
+export const connectorsScreenHandler = accountHandler(
+  ({ locale }: typeof LocaleInput.Type) =>
+    Effect.gen(function* () {
+      yield* admitAccount(locale);
+      const t = createTranslator({
+        locale,
+        messages: yield* messagesFor(locale),
+        namespace: "Auth",
+      });
+      const seo: ScreenSeo = {
+        canonicalPath: `/${locale}`,
+        description: t("connectors-description"),
+        indexable: false,
+        locale,
+        title: t("connectors"),
+      };
+      return { seo };
+    })
+);
+
 /** Billing settings: the viewer's billing overview, and the page head. */
 export const subscriptionsScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>

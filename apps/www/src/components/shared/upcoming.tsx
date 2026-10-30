@@ -1,8 +1,8 @@
 import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Heading } from "@repo/design-system/components/markdown/heading";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { useTranslations } from "use-intl";
 import { getGithubUrl } from "@/lib/content/repository";
@@ -19,20 +19,16 @@ export function ComingSoon({ className }: { className?: string }) {
 
       <Paragraph>{t("description")}</Paragraph>
 
-      <Button
-        nativeButton={false}
-        render={
-          <a
-            href={getGithubUrl({ path: "" })}
-            rel="noopener noreferrer"
-            target="_blank"
-            title={t("contribute")}
-          >
-            <HugeIcons icon={LoveKoreanFingerIcon} />
-            {t("contribute")}
-          </a>
-        }
-      />
+      <a
+        className={buttonVariants()}
+        href={getGithubUrl({ path: "" })}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={t("contribute")}
+      >
+        <HugeIcons icon={LoveKoreanFingerIcon} />
+        {t("contribute")}
+      </a>
     </div>
   );
 }

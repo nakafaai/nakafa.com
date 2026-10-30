@@ -23,7 +23,11 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
 const TRYOUT_TITLE_PATTERN = /Try out/i;
-const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/[^/]+\/[^/]+\/[^/.]+$/;
+/**
+ * A curriculum's page or one of its grades, which the homepage links: it links
+ * no subject page of a grade.
+ */
+const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/(?:[^/]+\/)*[^/.]+$/;
 const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;

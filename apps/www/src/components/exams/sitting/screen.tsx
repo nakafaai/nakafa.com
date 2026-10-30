@@ -106,7 +106,6 @@ export function StudentScreen({
         {Option.isSome(table) ? (
           <SittingTable
             cells={markedCells(response)}
-            labelledBy={titleId}
             onMark={Fn.constVoid}
             table={table.value}
           />

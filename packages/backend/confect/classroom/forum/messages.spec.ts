@@ -2,7 +2,11 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
-import { MessageHidden } from "@repo/backend/confect/classroom/forum/errors";
+import {
+  MentionRefused,
+  MessageHidden,
+} from "@repo/backend/confect/classroom/forum/errors";
+import { Mentions } from "@repo/backend/confect/classroom/forum/mention";
 import {
   ClientKey,
   MessageText,
@@ -43,11 +47,12 @@ export default GroupSpec.make()
         channelId: Id("classroomChannels"),
         classId: Id("classes"),
         clientKey: ClientKey,
+        mentions: Mentions,
         slug: TenantSlug,
         text: MessageText,
       }),
       returns: () => MessageView,
-      error: () => AccessDenied,
+      error: () => Schema.Union([AccessDenied, MentionRefused]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(

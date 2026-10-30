@@ -8,6 +8,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { HeaderMenu } from "@/components/sidebar/header/brand";
 import { SearchMenu } from "@/components/sidebar/search/trigger";
+import { SidebarToggle } from "@/components/sidebar/toggle";
 import { NavUser } from "@/components/sidebar/user/nav";
 
 export function AppSidebar({
@@ -21,6 +22,7 @@ export function AppSidebar({
   return (
     <Sidebar
       className={cn("z-20", props.className)}
+      collapsible="icon"
       label={tCommon("sidebar")}
       side="left"
       {...props}
@@ -30,6 +32,7 @@ export function AppSidebar({
         <SearchMenu />
       </SidebarHeader>
       <SidebarContent>{navigation}</SidebarContent>
+      <SidebarToggle />
       <NavUser />
     </Sidebar>
   );

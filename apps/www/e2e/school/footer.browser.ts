@@ -80,6 +80,18 @@ test.describe("at 1440", () => {
     const slider = page.getByRole("slider", { name: "Zoom" });
     const track = page.locator('[data-slot="slider-track"]');
     expect((await track.boundingBox())?.width ?? 0).toBeGreaterThan(120);
+    // The shared track draws as every field does: a hairline of the input colour around the
+    // page's background, so the slider reads as a control beside its fields.
+    const drawn = await track.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        border: style.borderTopWidth,
+        page: getComputedStyle(document.body).backgroundColor,
+      };
+    });
+    expect(drawn.border).toBe("1px");
+    expect(drawn.background).toBe(drawn.page);
     await slider.focus();
     await page.keyboard.press("End");
     await expect(page.getByRole("button", { name: "Zoom options" })).toHaveText(
@@ -114,7 +126,7 @@ test.describe("at 1440", () => {
   }) => {
     await examOfThree(page, baseURL);
     await page.getByRole("button", { name: ANY_OF_THREE }).click();
-    const field = page.getByRole("spinbutton", {
+    const field = page.getByRole("textbox", {
       name: "Go to question, 1 to 3",
     });
     await expect(field).toBeFocused();
