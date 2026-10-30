@@ -18,6 +18,7 @@ import {
   writeNotFoundPages,
   writeStaticAnswers,
 } from "#www/prerender.config";
+import { staticPagePath } from "#www/src/lib/routing/prerendered";
 import { SCHOOL_SHELL_PATH } from "#www/src/lib/routing/school/shell";
 import {
   createWwwHeaders,
@@ -375,7 +376,13 @@ export default defineConfig(async ({ command, isPreview }) => {
         pages:
           prerenderedPages.length === 0
             ? []
-            : [...prerenderedPages.map((path) => ({ path })), ...notFoundPages],
+            : [
+                ...prerenderedPages.map((path) => ({
+                  path,
+                  prerender: { outputPath: staticPagePath(path) },
+                })),
+                ...notFoundPages,
+              ],
         // A school renders only in the browser (ADR 0038 D2). The build prerenders
         // the root document once as the school shell, at `/_school`, and the
         // Worker answers every school page with it. The root path redirects to a
