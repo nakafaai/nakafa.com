@@ -8,6 +8,7 @@ import {
   InformationCircleIcon,
   Mail01Icon,
   Plug01Icon,
+  Presentation01Icon,
   SecurityCheckIcon,
   StudentIcon,
   UserListIcon,
@@ -29,6 +30,7 @@ export const settingsSectionIcons: Record<
 > = {
   audit: DocumentValidationIcon,
   billing: CreditCardIcon,
+  classes: Presentation01Icon,
   clients: Plug01Icon,
   cohorts: UserMultiple02Icon,
   connections: ConnectIcon,

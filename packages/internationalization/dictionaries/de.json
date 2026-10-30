@@ -650,6 +650,31 @@
     "cohorts-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Klassen.",
     "cohorts-unavailable": "Die Klassen dieser Einheit können nicht angezeigt werden.",
     "cohorts-unavailable-description": "Wähle eine andere Einheit, um ihre Klassen zu sehen.",
+    "classes": "Lerngruppen",
+    "classes-description": "Die Lerngruppen jeder Periode, in denen eine Klasse ein Fach lernt.",
+    "classes-empty": "Noch keine Lerngruppe.",
+    "classes-search": "Lerngruppe suchen",
+    "classes-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Lerngruppen.",
+    "classes-unavailable": "Die Lerngruppen dieser Einheit können nicht angezeigt werden.",
+    "classes-unavailable-description": "Wähle eine andere Einheit, um ihre Lerngruppen zu sehen.",
+    "class-create": "Lerngruppe hinzufügen",
+    "class-add-footer": "Eine neue Lerngruppe ist sofort aktiv und heißt nach ihrem Fach und ihrer Klasse.",
+    "class-add-homeroom": "Eine Grundschulklasse lernt in einer Lerngruppe, die nach der Klasse heißt.",
+    "class-cohort": "Klasse",
+    "class-cohort-placeholder": "Klasse wählen",
+    "class-cohort-none": "Lege zuerst eine Klasse an",
+    "class-subject": "Fach",
+    "class-subject-placeholder": "Physik",
+    "class-name": "Name",
+    "class-name-placeholder": "Physik 7A",
+    "class-status": "Status",
+    "class-active": "Aktiv",
+    "class-archived": "Archiviert",
+    "class-rename": "Umbenennen",
+    "class-rename-description": "Die Lerngruppe behält ihre Schüler, Lehrkräfte und Aufgaben.",
+    "class-rename-save": "Speichern",
+    "class-archive": "Archivieren",
+    "class-restore": "Wiederherstellen",
     "cohort-unavailable": "Diese Klasse kann hier nicht geöffnet werden.",
     "cohort-unavailable-description": "Wähle eine Klasse aus der Liste, denn diese gibt es nicht mehr oder sie gehört zu einer anderen Schule.",
     "placement-add": "Schüler hinzufügen",
@@ -732,7 +757,7 @@
         "archived": "Lerngruppe archiviert",
         "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
         "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt",
-        "restored": "Klasse wiederhergestellt"
+        "restored": "Lerngruppe wiederhergestellt"
       },
       "grade": {
         "released": "Note freigegeben"
@@ -2257,6 +2282,37 @@
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."
+    },
+    "school-class-archived": {
+      "title": "Lerngruppe archiviert."
+    },
+    "school-refusal-class-name-taken": {
+      "title": "Diesen Namen hat schon eine Lerngruppe.",
+      "description": "Wähle für diese Klasse einen anderen Namen."
+    },
+    "school-refusal-class-subject-taken": {
+      "title": "Diese Klasse hat schon eine aktive Lerngruppe für dieses Fach.",
+      "description": "Nutze diese Lerngruppe oder archiviere sie zuerst."
+    },
+    "school-refusal-class-limit": {
+      "title": "Diese Klasse hat schon so viele Lerngruppen wie möglich.",
+      "description": "Stelle eine archivierte Lerngruppe wieder her, statt eine neue anzulegen."
+    },
+    "school-refusal-class-address-empty": {
+      "title": "Dieser Name enthält keinen Buchstaben und keine Ziffer.",
+      "description": "Nimm ein Fach mit Buchstaben oder Ziffern."
+    },
+    "school-refusal-class-ambiguous": {
+      "title": "Die Adresse dieser Lerngruppe ist schon vergeben.",
+      "description": "Benenne die Lerngruppe um und versuche es noch einmal."
+    },
+    "school-refusal-class-subject-required": {
+      "title": "Eine Lerngruppe dieser Einheit nennt ihr Fach.",
+      "description": "Gib das Fach ein und lege sie noch einmal an."
+    },
+    "school-refusal-class-subject-not-allowed": {
+      "title": "Eine Grundschulklasse hat eine Lerngruppe ohne Fach.",
+      "description": "Lege sie ohne Fach an."
     },
     "school-period-archived": {
       "title": "Zeitraum archiviert."

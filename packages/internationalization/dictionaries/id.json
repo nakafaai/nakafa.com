@@ -650,6 +650,31 @@
     "cohorts-no-period": "Buka periode dulu, lalu rombelnya muncul di sini.",
     "cohorts-unavailable": "Rombel unit ini belum bisa ditampilkan.",
     "cohorts-unavailable-description": "Pilih unit lain untuk melihat rombelnya.",
+    "classes": "Ruang kelas",
+    "classes-description": "Ruang kelas di setiap periode, tempat satu rombel belajar satu mata pelajaran.",
+    "classes-empty": "Belum ada ruang kelas.",
+    "classes-search": "Cari ruang kelas",
+    "classes-no-period": "Buka periode dulu, lalu ruang kelasnya muncul di sini.",
+    "classes-unavailable": "Ruang kelas unit ini belum bisa ditampilkan.",
+    "classes-unavailable-description": "Pilih unit lain untuk melihat ruang kelasnya.",
+    "class-create": "Tambah ruang kelas",
+    "class-add-footer": "Ruang kelas baru langsung aktif, dengan nama mata pelajaran dan rombelnya.",
+    "class-add-homeroom": "Rombel SD belajar di satu ruang kelas dengan nama rombelnya.",
+    "class-cohort": "Rombel",
+    "class-cohort-placeholder": "Pilih rombel",
+    "class-cohort-none": "Tambah rombel dulu",
+    "class-subject": "Mata pelajaran",
+    "class-subject-placeholder": "Fisika",
+    "class-name": "Nama",
+    "class-name-placeholder": "Fisika 7A",
+    "class-status": "Status",
+    "class-active": "Aktif",
+    "class-archived": "Diarsipkan",
+    "class-rename": "Ganti nama",
+    "class-rename-description": "Siswa, guru, dan tugas di ruang kelas ini tetap sama.",
+    "class-rename-save": "Simpan",
+    "class-archive": "Arsipkan",
+    "class-restore": "Pulihkan",
     "cohort-unavailable": "Rombel ini belum bisa dibuka di sini.",
     "cohort-unavailable-description": "Pilih rombel dari daftar, karena rombel ini sudah tidak ada atau milik sekolah lain.",
     "placement-add": "Tambah siswa",
@@ -732,7 +757,7 @@
         "archived": "Ruang kelas diarsipkan",
         "teacherAssigned": "Guru ditetapkan ke ruang kelas",
         "teacherRemoved": "Guru dilepas dari ruang kelas",
-        "restored": "Kelas dipulihkan"
+        "restored": "Ruang kelas dipulihkan"
       },
       "grade": {
         "released": "Nilai dirilis"
@@ -2257,6 +2282,37 @@
     },
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."
+    },
+    "school-class-archived": {
+      "title": "Ruang kelas diarsipkan."
+    },
+    "school-refusal-class-name-taken": {
+      "title": "Nama ruang kelas ini sudah dipakai.",
+      "description": "Pilih nama lain untuk rombel ini."
+    },
+    "school-refusal-class-subject-taken": {
+      "title": "Rombel ini sudah punya ruang kelas aktif untuk mata pelajaran ini.",
+      "description": "Pakai ruang kelas itu, atau arsipkan dulu."
+    },
+    "school-refusal-class-limit": {
+      "title": "Rombel ini sudah memuat ruang kelas sebanyak mungkin.",
+      "description": "Pulihkan ruang kelas yang diarsipkan, jangan tambah yang baru."
+    },
+    "school-refusal-class-address-empty": {
+      "title": "Nama ruang kelas ini tidak punya huruf atau angka.",
+      "description": "Pakai mata pelajaran yang berisi huruf atau angka."
+    },
+    "school-refusal-class-ambiguous": {
+      "title": "Alamat ruang kelas ini sudah dipakai.",
+      "description": "Ganti nama ruang kelasnya, lalu coba lagi."
+    },
+    "school-refusal-class-subject-required": {
+      "title": "Ruang kelas di unit ini perlu nama mata pelajaran.",
+      "description": "Tulis mata pelajarannya, lalu tambah lagi."
+    },
+    "school-refusal-class-subject-not-allowed": {
+      "title": "Rombel SD punya satu ruang kelas tanpa mata pelajaran.",
+      "description": "Tambahkan tanpa mata pelajaran."
     },
     "school-period-archived": {
       "title": "Periode diarsipkan."

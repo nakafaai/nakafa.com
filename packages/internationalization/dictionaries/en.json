@@ -650,6 +650,31 @@
     "cohorts-no-period": "Open a period first, and its cohorts appear here.",
     "cohorts-unavailable": "The cohorts of this unit cannot be shown.",
     "cohorts-unavailable-description": "Choose another unit to see its cohorts.",
+    "classes": "Classrooms",
+    "classes-description": "The classrooms of each period, where a cohort learns one subject.",
+    "classes-empty": "No classroom yet.",
+    "classes-search": "Find a classroom",
+    "classes-no-period": "Open a period first, and its classrooms appear here.",
+    "classes-unavailable": "The classrooms of this unit cannot be shown.",
+    "classes-unavailable-description": "Choose another unit to see its classrooms.",
+    "class-create": "Add classroom",
+    "class-add-footer": "A new classroom starts active, named for its subject and its cohort.",
+    "class-add-homeroom": "An SD cohort learns in one classroom, named for the cohort.",
+    "class-cohort": "Cohort",
+    "class-cohort-placeholder": "Choose a cohort",
+    "class-cohort-none": "Add a cohort first",
+    "class-subject": "Subject",
+    "class-subject-placeholder": "Physics",
+    "class-name": "Name",
+    "class-name-placeholder": "Physics 7A",
+    "class-status": "Status",
+    "class-active": "Active",
+    "class-archived": "Archived",
+    "class-rename": "Rename",
+    "class-rename-description": "The classroom keeps its students, teachers and tasks.",
+    "class-rename-save": "Save",
+    "class-archive": "Archive",
+    "class-restore": "Restore",
     "cohort-unavailable": "This cohort cannot be opened here.",
     "cohort-unavailable-description": "Choose a cohort from the list, because this one is gone or belongs to another school.",
     "placement-add": "Add student",
@@ -732,7 +757,7 @@
         "archived": "Classroom archived",
         "teacherAssigned": "Teacher assigned to classroom",
         "teacherRemoved": "Teacher removed from classroom",
-        "restored": "Class restored"
+        "restored": "Classroom restored"
       },
       "grade": {
         "released": "Grade released"
@@ -2257,6 +2282,37 @@
     },
     "school-cohort-archived": {
       "title": "Class archived."
+    },
+    "school-class-archived": {
+      "title": "Classroom archived."
+    },
+    "school-refusal-class-name-taken": {
+      "title": "This classroom name is already used.",
+      "description": "Choose another name for this cohort."
+    },
+    "school-refusal-class-subject-taken": {
+      "title": "This cohort already has an active classroom for this subject.",
+      "description": "Use that classroom, or archive it first."
+    },
+    "school-refusal-class-limit": {
+      "title": "This cohort holds the most classrooms it can.",
+      "description": "Restore an archived classroom instead of adding a new one."
+    },
+    "school-refusal-class-address-empty": {
+      "title": "This classroom name has no letter or digit.",
+      "description": "Use a subject with letters or digits."
+    },
+    "school-refusal-class-ambiguous": {
+      "title": "This classroom's address is already taken.",
+      "description": "Rename the classroom, then try again."
+    },
+    "school-refusal-class-subject-required": {
+      "title": "A classroom of this unit names its subject.",
+      "description": "Write the subject, then add it again."
+    },
+    "school-refusal-class-subject-not-allowed": {
+      "title": "An SD cohort has one classroom without a subject.",
+      "description": "Add it without a subject."
     },
     "school-period-archived": {
       "title": "Period archived."

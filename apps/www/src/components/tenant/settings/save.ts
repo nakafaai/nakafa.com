@@ -66,6 +66,34 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-card-role.description",
     title: "school-refusal-card-role.title",
   },
+  ClassAddressEmpty: {
+    description: "school-refusal-class-address-empty.description",
+    title: "school-refusal-class-address-empty.title",
+  },
+  ClassAmbiguous: {
+    description: "school-refusal-class-ambiguous.description",
+    title: "school-refusal-class-ambiguous.title",
+  },
+  ClassLimit: {
+    description: "school-refusal-class-limit.description",
+    title: "school-refusal-class-limit.title",
+  },
+  ClassNameTaken: {
+    description: "school-refusal-class-name-taken.description",
+    title: "school-refusal-class-name-taken.title",
+  },
+  ClassSubjectNotAllowed: {
+    description: "school-refusal-class-subject-not-allowed.description",
+    title: "school-refusal-class-subject-not-allowed.title",
+  },
+  ClassSubjectRequired: {
+    description: "school-refusal-class-subject-required.description",
+    title: "school-refusal-class-subject-required.title",
+  },
+  ClassSubjectTaken: {
+    description: "school-refusal-class-subject-taken.description",
+    title: "school-refusal-class-subject-taken.title",
+  },
   CohortHasHomeroom: {
     description: "school-refusal-cohort-has-homeroom.description",
     title: "school-refusal-cohort-has-homeroom.title",
