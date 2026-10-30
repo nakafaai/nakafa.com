@@ -20,6 +20,7 @@ import {
 } from "effect";
 import { Base64Url } from "effect/encoding";
 import { FetchHttpClient } from "effect/http";
+import { SessionJson } from "@/lib/auth/answer";
 import {
   isConvexTokenCookieName,
   readConvexTokenCookie,
@@ -54,16 +55,6 @@ const SessionAnswer = Schema.Struct({
 });
 
 type SessionAnswer = typeof SessionAnswer.Type;
-
-/** The Better Auth session of the session route, or null for a visitor. */
-const SessionJson = Schema.fromJsonString(
-  Schema.NullOr(
-    Schema.Struct({
-      session: Schema.Struct({ id: Schema.String }),
-      user: Schema.Struct({ id: Schema.String, name: Schema.String }),
-    })
-  )
-);
 
 /**
  * The claims of a Convex token that name its session. Better Auth's Convex plugin
