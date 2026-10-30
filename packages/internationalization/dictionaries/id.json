@@ -1069,6 +1069,7 @@
     "scroll-to-latest": "Ke pesan terbaru",
     "unread-divider": "Pesan baru",
     "unread": "Belum dibaca",
+    "channel-mark-read": "Tandai sudah dibaca",
     "discussion-label": "#{number} {title}",
     "discussion-reply": "Balas",
     "discussion-replies": "{count} balasan",
