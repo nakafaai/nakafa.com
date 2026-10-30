@@ -161,7 +161,9 @@ export function PictureAltDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {/* The form is the dialog's column below the header, so its panel scrolls and its footer stays in view. */}
         <form
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(event) => {
             event.preventDefault();
             if (Option.isSome(next)) {
