@@ -114,7 +114,7 @@ function GuardianSignInForm() {
         return;
       }
       // The session changed, so the school loads again with the session this sign-in set.
-      window.location.assign("/orang-tua");
+      window.location.assign("/parents");
     });
   }
 

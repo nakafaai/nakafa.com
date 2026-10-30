@@ -39,12 +39,12 @@ import { readSchoolLocale } from "@/lib/tenant/root";
 import { readBrowserSchoolFrame, reusesVisitFrame } from "@/lib/tenant/visit";
 
 /**
- * The search params of the school entry. `masuk=username` opens the username form
+ * The search params of the school entry. `sign-in=username` opens the username form
  * of the entry surface. A value that does not decode reads as none, so a stale
  * link still opens the page.
  */
 const SchoolSearch = Schema.Struct({
-  masuk: Schema.optional(Schema.Literal("username")),
+  "sign-in": Schema.optional(Schema.Literal("username")),
 }).pipe(Schema.catchDecoding(() => Effect.succeedSome({})));
 
 /** The school address of the path, or the not-found page when no school has it. */
