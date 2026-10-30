@@ -54,15 +54,15 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
     "false"
   );
 
-  // The page has one header, the sidebar's trigger and the path, and a school with no exam
-  // offers Create exam below it, in the empty state (K27).
+  // The page has one header with the path, the sidebar's foot holds its toggle, and a school
+  // with no exam offers Create exam below it, in the empty state (K27).
   const header = page.locator('header[data-slot="page-header"]');
-  await expect(
-    header.getByRole("button", { name: "Toggle Sidebar" })
-  ).toBeVisible();
   await expect(
     header.getByRole("navigation", { name: "breadcrumb" })
   ).toContainText("Exams");
+  await expect(
+    sidebar.getByRole("button", { name: "Toggle Sidebar" })
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Toggle Sidebar" })
   ).toHaveCount(1);

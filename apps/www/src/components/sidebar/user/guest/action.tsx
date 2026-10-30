@@ -13,10 +13,16 @@ export function NavUserGuestButton() {
   return (
     <Link
       {...authNavigation.linkProps}
-      className={buttonVariants({ className: "w-full" })}
+      className={buttonVariants({
+        className:
+          "w-full group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0",
+      })}
+      title={t("login-cta-action")}
     >
       <HugeIcons icon={Login03Icon} />
-      {t("login-cta-action")}
+      <span className="group-data-[collapsible=icon]:hidden">
+        {t("login-cta-action")}
+      </span>
     </Link>
   );
 }
