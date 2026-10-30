@@ -45,7 +45,9 @@ describe("editor/model build", () => {
 
 describe("editor/model marks", () => {
   it("keeps the marks in the contract's order, which ranks them in a text", () => {
-    expect(Record.keys(assessmentModel().marks)).toEqual(MarkTypeSchema.literals);
+    expect(Record.keys(assessmentModel().marks)).toEqual(
+      MarkTypeSchema.literals
+    );
   });
 });
 
