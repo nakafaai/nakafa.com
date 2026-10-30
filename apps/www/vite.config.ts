@@ -2,7 +2,6 @@ import { spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
-import { local as assetsBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/assets/Assets";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
 import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
 import babel from "@rolldown/plugin-babel";
@@ -294,15 +293,9 @@ const NODE_BUILTIN_SPECIFIER = /^node:/;
  * sets ALCHEMY_CLOUDFLARE_VITE_INJECTED and adds its plugin, so this copy stands
  * down there. TanStack's prerender preview reloads this file with
  * TSS_PRERENDERING set and no Alchemy plugin, so this copy runs for it.
- *
- * `vite preview` of a finished build, the acceptance server's, binds the release's
- * assets as `ASSETS`, as the deployed Worker does, so its static-first answers
- * (`hasStaticRelease`) run there too. The prerender and `vite dev` bind none,
- * because no release exists yet and every route renders.
  */
 function alchemyWorker(
-  nodeEnvironment: "development" | "production",
-  preview: boolean
+  nodeEnvironment: "development" | "production"
 ): PluginOption[] {
   const isAlchemyBuild = process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1";
   const isPrerendering = process.env.TSS_PRERENDERING === "true";
@@ -316,15 +309,12 @@ function alchemyWorker(
       viteEnvironments: workerSettings.viteEnvironments,
       worker: {
         assets: workerAssets,
-        bindings: [
-          ...Object.entries({
-            ...workerEnvironment(),
-            NODE_ENV: nodeEnvironment,
-          }).flatMap(([name, value]) =>
-            value === undefined ? [] : [textBinding(name, value)]
-          ),
-          ...(preview && !isPrerendering ? [assetsBinding("ASSETS")] : []),
-        ],
+        bindings: Object.entries({
+          ...workerEnvironment(),
+          NODE_ENV: nodeEnvironment,
+        }).flatMap(([name, value]) =>
+          value === undefined ? [] : [textBinding(name, value)]
+        ),
         name: workerSettings.name,
       },
     }),
@@ -443,8 +433,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       // and `vite preview`, the acceptance server and the prerender included, run
       // it as the deployed Worker does.
       ...alchemyWorker(
-        command === "serve" && !isPreview ? "development" : "production",
-        isPreview === true
+        command === "serve" && !isPreview ? "development" : "production"
       ),
     ],
   };
