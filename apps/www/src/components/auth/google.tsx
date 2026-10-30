@@ -78,10 +78,10 @@ export function AuthGoogle({ returnPath, variant }: Props) {
     });
   }
 
-  // The button keeps its place and its label: while Google opens, a spinner
-  // takes the logo's place, and a failure shows below, never above it.
   return (
     <div className="flex flex-col items-center gap-2">
+      {/* The label stays one width while Google opens, and the button says it is
+          busy: a spinner takes the logo's place. A failure shows below it. */}
       <Button
         aria-busy={isPending || undefined}
         disabled={isPending}
@@ -93,7 +93,7 @@ export function AuthGoogle({ returnPath, variant }: Props) {
       </Button>
       {/* The sign-in page is static and prerendered without a query, so the
           provider's failure, which the query carries, shows once the page has
-          hydrated. */}
+          hydrated, under the button so the button never moves. */}
       <ClientOnly fallback={null}>
         {hasProviderError ? (
           <div

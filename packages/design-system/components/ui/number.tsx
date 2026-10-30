@@ -63,7 +63,7 @@ function NumberFieldInput({
 
 /** A stepper button of a number field, divided from the input on the side that faces it. */
 const numberFieldStepVariants = cva(
-  "flex w-9 shrink-0 cursor-pointer items-center justify-center border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50",
+  "flex w-9 shrink-0 items-center justify-center border-input text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       side: {

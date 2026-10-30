@@ -3,7 +3,12 @@
 import { QueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import { lastValue, useLastValue } from "@/lib/data/kept";
+import {
+  keptRows,
+  lastValue,
+  useKeptRows,
+  useLastValue,
+} from "@/lib/data/kept";
 
 /** The state that the mocked React hook holds, and what the hook sets it to. */
 const state = vi.hoisted(() => ({
@@ -49,6 +54,32 @@ describe("last value of a query", () => {
     expect(useLastValue(QueryResult.fail("gone"))).toStrictEqual(
       Option.some(answer)
     );
+    expect(state.set).not.toHaveBeenCalled();
+  });
+});
+
+describe("rows of a paged list across its scopes", () => {
+  it("shows the loaded rows, and the kept rows while a new scope's first page loads", () => {
+    expect(keptRows(false, ["Lab 1"], Option.none())).toStrictEqual(
+      Option.some(["Lab 1"])
+    );
+    expect(keptRows(true, [], Option.some(["Lab 1"]))).toStrictEqual(
+      Option.some(["Lab 1"])
+    );
+    expect(keptRows(true, [], Option.none())).toStrictEqual(Option.none());
+  });
+
+  it("keeps each new answer, and keeps nothing while a scope loads or for the rows it holds", () => {
+    const rows = ["Lab 1", "Lab 2"];
+    state.value.mockReturnValue(undefined);
+    state.set.mockClear();
+    expect(useKeptRows(false, rows)).toStrictEqual(Option.some(rows));
+    expect(state.set).toHaveBeenCalledWith(Option.some(rows));
+
+    state.value.mockReturnValue(Option.some(rows));
+    state.set.mockClear();
+    expect(useKeptRows(false, rows)).toStrictEqual(Option.some(rows));
+    expect(useKeptRows(true, [])).toStrictEqual(Option.some(rows));
     expect(state.set).not.toHaveBeenCalled();
   });
 });
