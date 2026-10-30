@@ -1,8 +1,11 @@
+import { KeyboardIcon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import {
   drawFormula,
   formulaProblem,
 } from "@repo/design-system/components/editor/render";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
   PopoverContent,
@@ -15,6 +18,8 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { fieldBoxVariants } from "@repo/design-system/lib/input";
+import { cn } from "cn";
 import { Effect, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
 import {
@@ -38,15 +43,20 @@ const loadMathLive = Effect.tryPromise({
 });
 
 /**
- * The MathLive field, made once MathLive has loaded. The field and the LaTeX text show one
- * formula: a change in either one reaches the other through `value`, and each keystroke of
- * the field reports its LaTeX.
+ * The MathLive field, made once MathLive has loaded, in a box drawn like a text field. The field and
+ * the LaTeX text show one formula: a change in either one reaches the other through `value`, and each
+ * keystroke of the field reports its LaTeX. MathLive's own menu and keyboard toggle are hidden
+ * (`styles/globals.css`); the box's own Keyboard button shows and hides the virtual keyboard, which
+ * takes Nakafa's colours, and stays pressed while it shows.
  */
 function MathField({
+  keyboard,
   mathlive,
   onInput,
   value,
 }: {
+  /** The name of the button that shows the virtual keyboard. */
+  keyboard: string;
   mathlive: typeof MathLive;
   onInput: (latex: string) => void;
   value: string;
@@ -54,13 +64,24 @@ function MathField({
   const host = useRef<HTMLDivElement>(null);
   const field = useRef<MathLive.MathfieldElement | null>(null);
   const input = useCallbackRef(onInput);
+  const [shown, setShown] = useState(false);
 
   useEffect(() => {
     const element = new mathlive.MathfieldElement();
+    element.mathVirtualKeyboardPolicy = "manual";
+    // The menu takes its items once the field has mounted; an empty menu leaves no context menu of MathLive's own.
+    element.addEventListener("mount", () => {
+      element.menuItems = [];
+    });
     element.addEventListener("input", () => input(element.value));
     host.current?.append(element);
     field.current = element;
+    const keys = window.mathVirtualKeyboard;
+    const follow = () => setShown(keys.visible);
+    keys.addEventListener("virtual-keyboard-toggle", follow);
     return () => {
+      keys.removeEventListener("virtual-keyboard-toggle", follow);
+      keys.hide();
       field.current = null;
       element.remove();
     };
@@ -73,7 +94,37 @@ function MathField({
     }
   }, [value]);
 
-  return <div className="min-h-12 rounded-md border px-2 py-1" ref={host} />;
+  return (
+    <div
+      className={cn(
+        fieldBoxVariants(),
+        "h-auto min-h-12 items-center gap-1 py-1 pe-1 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+      )}
+    >
+      <div className="min-w-0 flex-1" ref={host} />
+      <Button
+        aria-label={keyboard}
+        aria-pressed={shown}
+        className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
+        onClick={() => {
+          field.current?.focus();
+          const keys = window.mathVirtualKeyboard;
+          if (keys.visible) {
+            keys.hide();
+            return;
+          }
+          keys.show();
+        }}
+        // The press keeps the focus in the field, so its caret stays where the writer left it.
+        onMouseDown={(event) => event.preventDefault()}
+        size="icon-sm"
+        type="button"
+        variant="ghost"
+      >
+        <HugeIcons icon={KeyboardIcon} />
+      </Button>
+    </div>
+  );
 }
 
 /**
@@ -98,6 +149,8 @@ export function FormulaEdit({
   labels: {
     formula: string;
     invalid: string;
+    /** The button that shows the formula keyboard. */
+    keyboard: string;
     latex: string;
     open: string;
   };
@@ -170,7 +223,12 @@ export function FormulaEdit({
             {Option.match(mathlive, {
               onNone: () => null,
               onSome: (module) => (
-                <MathField mathlive={module} onInput={setDraft} value={draft} />
+                <MathField
+                  keyboard={labels.keyboard}
+                  mathlive={module}
+                  onInput={setDraft}
+                  value={draft}
+                />
               ),
             })}
           </TabsPanel>

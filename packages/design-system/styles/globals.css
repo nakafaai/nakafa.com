@@ -540,3 +540,67 @@
 .katex .katex-html > .newline {
   margin-block: 1rem;
 }
+
+/*
+ * MathLive in Nakafa's tokens. The formula field sits inside a box drawn like a text field, so it draws no
+ * border, background, menu or keyboard toggle of its own; MathLive sets the toggle's display inline, which
+ * only an important rule overrides. The virtual keyboard takes the popover's surface, the buttons' border and
+ * keys sit as the page's surface on a muted tray, its secondary keys take the accent, and its action keys the
+ * primary colour, in light and dark alike.
+ */
+math-field {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  outline: none;
+  font-size: var(--text-lg);
+  color: var(--foreground);
+  --caret-color: var(--primary);
+  --primary-color: var(--primary);
+  --selection-background-color: color-mix(in oklch, var(--primary) 20%, transparent);
+  --contains-highlight-background-color: var(--accent);
+  --placeholder-color: var(--muted-foreground);
+  --smart-fence-color: var(--muted-foreground);
+}
+
+math-field::part(menu-toggle),
+math-field::part(virtual-keyboard-toggle) {
+  display: none !important;
+}
+
+:root {
+  --keyboard-background: var(--muted);
+  --keyboard-border: var(--border);
+  --keyboard-accent-color: var(--primary);
+  --keyboard-toolbar-text: var(--muted-foreground);
+  --keyboard-toolbar-text-active: var(--foreground);
+  --keyboard-toolbar-background: transparent;
+  --keyboard-toolbar-background-hover: var(--accent);
+  --keyboard-toolbar-background-selected: var(--accent);
+  --keyboard-horizontal-rule: var(--border);
+  --keycap-background: var(--background);
+  --keycap-background-hover: var(--accent);
+  --keycap-background-active: var(--accent);
+  --keycap-background-pressed: var(--accent);
+  --keycap-border: var(--border);
+  --keycap-border-bottom: var(--input);
+  --keycap-text: var(--foreground);
+  --keycap-text-active: var(--foreground);
+  --keycap-text-hover: var(--foreground);
+  --keycap-text-pressed: var(--foreground);
+  --keycap-secondary-background: var(--accent);
+  --keycap-secondary-background-hover: var(--border);
+  --keycap-secondary-text: var(--foreground);
+  --keycap-secondary-border: var(--border);
+  --keycap-secondary-border-bottom: var(--input);
+  --keycap-primary-background: var(--primary);
+  --keycap-primary-background-hover: color-mix(in oklch, var(--primary) 90%, var(--background));
+  --keycap-primary-text: var(--primary-foreground);
+  --keycap-shift-text: var(--muted-foreground);
+  --keycap-shift-color: var(--muted-foreground);
+  --box-placeholder-color: var(--muted-foreground);
+  --box-placeholder-pressed-color: var(--primary);
+  --variant-panel-background: var(--popover);
+  --variant-keycap-text: var(--foreground);
+  --variant-keycap-background-active: var(--accent);
+}
