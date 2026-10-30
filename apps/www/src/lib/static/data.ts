@@ -9,6 +9,9 @@ import { Effect, Option } from "effect";
  * Worker request and no server work. A call that the build did not prerender asks
  * the Worker. Each side imports its reader on its first call, so neither reader
  * weighs on a page's first JavaScript.
+ *
+ * In the browser every server component in the answer is settled before the
+ * loader resolves (`settle.ts`), so the route that shows it commits whole.
  */
 export async function readStaticData<Input, Output>(
   // The server function: its address names it, it takes one input, and it
@@ -24,10 +27,15 @@ export async function readStaticData<Input, Output>(
     await Effect.runPromise(recordStaticCall(fn.url, data));
     return fn({ data });
   }
-  const { readStaticAnswer } = await import("@/lib/static/answer");
+  const [{ readStaticAnswer }, { settleServerComponents }] = await Promise.all([
+    import("@/lib/static/answer"),
+    import("@/lib/static/settle"),
+  ]);
   const answer = await Effect.runPromise(readStaticAnswer(fn.url, data));
-  return Option.match(answer, {
+  const output = await Option.match(answer, {
     onNone: () => fn({ data }),
     onSome: (response) => fn({ data, fetch: () => Promise.resolve(response) }),
   });
+  await Effect.runPromise(settleServerComponents(output));
+  return output;
 }
