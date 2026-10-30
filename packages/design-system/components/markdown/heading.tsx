@@ -1,37 +1,17 @@
 import { Link05Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  headingTextVariants,
+  headingVariants,
+} from "@repo/design-system/lib/prose";
 import type {
   HeadingProps,
   HeadingTag,
 } from "@repo/design-system/types/markdown";
 import { createHeadingId } from "@repo/math/heading";
-import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr, Predicate } from "effect";
 import type { ReactNode } from "react";
-
-/**
- * Styling for the text inside one rendered heading.
- *
- * The rule under the words marks where a section starts, so the top two
- * heading levels carry it. Deeper levels stay plain ink so the level
- * hierarchy reads at a glance.
- */
-const headingTextVariants = cva(
-  "wrap-anywhere hyphens-auto text-pretty text-primary",
-  {
-    variants: {
-      rule: {
-        none: "",
-        section:
-          "underline decoration-2 decoration-heading-rule underline-offset-4",
-      },
-    },
-    defaultVariants: {
-      rule: "none",
-    },
-  }
-);
 
 function extractTextFromNode(node: unknown): string {
   if (node === null || node === undefined) {
@@ -80,15 +60,7 @@ function HeadingText({
   Tag: HeadingTag;
   children: ReactNode;
 }) {
-  return (
-    <span
-      className={headingTextVariants({
-        rule: Tag === "h1" || Tag === "h2" ? "section" : "none",
-      })}
-    >
-      {children}
-    </span>
-  );
+  return <span className={headingTextVariants({ tag: Tag })}>{children}</span>;
 }
 
 /** Renders one content heading with the shared accent ink and anchor. */
@@ -111,7 +83,8 @@ export function Heading({
     return (
       <Tag
         className={cn(
-          "mt-10 mb-6 flex items-center font-medium leading-tight tracking-tight first:mt-0 last:mb-0",
+          headingVariants({ tag: Tag }),
+          "flex items-center",
           className
         )}
         id={id}
@@ -125,7 +98,8 @@ export function Heading({
   return (
     <Tag
       className={cn(
-        "mt-10 mb-6 flex scroll-mt-44 items-center font-medium leading-tight tracking-tight first:mt-0 last:mb-0",
+        headingVariants({ tag: Tag }),
+        "flex scroll-mt-44 items-center",
         className
       )}
       id={id}

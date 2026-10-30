@@ -1,6 +1,6 @@
 {
   "DataTable": {
-    "filter": "Filter",
+    "filter-by": "Filter by {column}",
     "no-results": "No results.",
     "reset": "Reset"
   },
@@ -41,14 +41,11 @@
     "tile-result-released": "Released",
     "tile-results": "Results",
     "tile-setup": "Setup",
-    "metric-live": "Live now",
-    "metric-live-period": "Rooms running",
-    "metric-next": "Next 14 days",
-    "metric-next-period": "Rooms opening soon",
-    "metric-waiting": "Waiting for release",
-    "metric-waiting-period": "Results to release",
-    "metric-drafts": "Drafts",
-    "metric-drafts-period": "Exams you may edit",
+    "start-label": "Shortcuts",
+    "start-exams": "Write questions, schedule rooms and release results.",
+    "start-reports": "Fill in grades and print each cohort's report cards.",
+    "start-members": "Invite teachers and students and give them their roles.",
+    "start-settings": "Set up the school's units, periods and classes.",
     "tile-schedule": "Schedule",
     "tile-now": "Now",
     "now-left": "{count, plural, one {minute left} other {minutes left}}",
@@ -372,6 +369,8 @@
     "schedule-key-match": "Pair every statement of question {number}.",
     "schedule-key-table": "Mark every statement of question {number}.",
     "schedule-past": "Choose a start time that has not passed yet.",
+    "questions-column": "Questions",
+    "created-column": "Created",
     "rooms-title": "Rooms",
     "edit-action": "Edit exam",
     "rooms-empty": "No rooms yet",
@@ -500,7 +499,6 @@
     "pair-hint": "Each answer pairs one statement, and the key saves once every statement has one.",
     "pair-statement": "Answer for statement {number}",
     "template-table": "True or false table",
-    "table-columns": "Columns",
     "column-of": "Question {number}, column {name}",
     "column-placeholder": "Column",
     "cell-of": "Column for statement {name} of question {number}",
@@ -609,8 +607,6 @@
     "policy-domains-footer": "An empty list admits every address.",
     "save": "Save",
     "level-other": "Other",
-    "unit-level-line": "Level {level}.",
-    "unit-archived-description": "This school is archived and refuses changes until it is restored.",
     "unit-add": "Add school",
     "unit-add-title": "Add a school",
     "unit-add-description": "A school has its own level, periods, and classes.",
@@ -620,13 +616,19 @@
     "unit-add-footer": "Add its first period on the Periods page.",
     "unit-time-zone": "Time zone",
     "unit-page-language": "Page language",
-    "unit-archive-footer": "An archived school stays readable.",
-    "unit-restore-footer": "Restoring the school makes it editable again.",
     "unit-restore": "Restore",
     "unit-archive": "Archive",
     "unit-archive-title": "Archive this school?",
     "unit-archive-description": "The school refuses every change until it is restored.",
     "unit-archive-confirm": "Archive",
+    "unit-save": "Save",
+    "unit-edit-description": "The time zone sets when its exams open, and the language sets its pages.",
+    "unit-npsn-unset": "Not set",
+    "unit-status": "Status",
+    "unit-status-label": {
+      "active": "Active",
+      "archived": "Archived"
+    },
     "unit-choice": "School",
     "periods-description": "The years and terms of this school.",
     "period-name": "Name",
@@ -645,6 +647,7 @@
     "period-end-placeholder": "Choose the last day",
     "period-add-footer": "A new period starts as planned.",
     "period-rename": "Rename",
+    "period-rename-description": "The period keeps its classes and dates.",
     "period-rename-save": "Save",
     "periods-empty": "No period yet.",
     "periods-search": "Find a period",
@@ -659,6 +662,7 @@
     "cohort-active": "Active",
     "cohort-archived": "Archived",
     "cohort-rename": "Rename",
+    "cohort-rename-description": "The class keeps its students, teachers and grades.",
     "cohort-rename-save": "Save",
     "cohort-archive": "Archive",
     "cohort-add-footer": "A new cohort starts active.",
@@ -910,8 +914,6 @@
     "secret-copy": "Copy",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Eight digits",
-    "unit-npsn-footer": "Eight digits, one number per unit.",
-    "unit-npsn-save": "Save",
     "logins-footer": "A login card holds a login name and a one-time code.",
     "login-name": "Login name",
     "login-person": "Person",
@@ -1329,6 +1331,7 @@
     "classification": "Education"
   },
   "Common": {
+    "undo": "Undo",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -1341,6 +1344,8 @@
     "load-error": "We could not load this data.",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
+    "month": "Month",
+    "year": "Year",
     "breadcrumb": "Breadcrumb",
     "sidebar": "Sidebar",
     "toggle-sidebar": "Toggle Sidebar",
@@ -1744,6 +1749,7 @@
     "shortcut-pick": "Choose an option",
     "shortcut-navigator": "Question navigator",
     "flag": "Flag",
+    "flag-question": "Flag question {number}",
     "review": "Review",
     "legend-answered": "Answered",
     "legend-flagged": "Flagged",
@@ -1953,7 +1959,6 @@
     "bullets": "Bulleted list",
     "numbers": "Numbered list",
     "tasks": "Task list",
-    "lists": "Lists",
     "quote": "Quote",
     "code-block": "Code block",
     "divider": "Divider",
@@ -1975,15 +1980,25 @@
     "formula": "Formula",
     "equation": "Equation",
     "formula-edit": "Edit formula",
+    "formula-keyboard": "Formula keyboard",
+    "formula-numbers": "Numbers",
+    "formula-functions": "Functions",
+    "formula-symbols": "Symbols",
+    "formula-greek": "Greek letters",
+    "formula-left": "Move left",
+    "formula-right": "Move right",
+    "formula-delete": "Delete",
     "formula-invalid": "This formula cannot be drawn:",
     "latex": "LaTeX",
     "image": "Image",
     "image-add": "Add image",
+    "image-add-description": "The image shows in the question once it is added.",
     "image-alt": "Alt text",
     "image-alt-hint": "What a student who cannot see the image needs to know",
     "image-cancel": "Cancel",
     "image-delete": "Delete image",
     "image-edit": "Edit alt text",
+    "image-edit-description": "The image stays and only its alt text changes.",
     "image-save": "Save"
   },
   "Memory": {
@@ -2237,9 +2252,6 @@
     "admitted-elsewhere": {
       "title": "Nina is answering in a new chat"
     },
-    "open-chat": {
-      "title": "Open chat"
-    },
     "sign-out-error": {
       "title": "We could not sign you out.",
       "description": "Check your connection, then try again."
@@ -2263,9 +2275,6 @@
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
-    },
-    "undo": {
-      "title": "Undo archive"
     },
     "school-cohort-archived": {
       "title": "Class archived."

@@ -46,7 +46,8 @@ interface DocumentEditorProps {
  * state through the editor it receives. The editor starts read-only, and says so to
  * assistive technology, so a caller turns editing on once the document is open. The text
  * takes the same classes whether the caller edits it or only reads it, so a reader sees the
- * document as the editor draws it. A caller loads it with `React.lazy` and renders it
+ * document as the editor draws it: the published article's, which the caller's `articleProse`
+ * gives its blocks. A caller loads it with `React.lazy` and renders it
  * after the client mounts, because the editor brings the editing library with it.
  */
 export function DocumentEditor({
@@ -68,7 +69,10 @@ export function DocumentEditor({
       attributes: {
         "aria-label": label,
         "aria-multiline": "true",
-        class: cn(editorPlaceholder(), editorDocument({ size })),
+        class: cn(
+          editorPlaceholder(),
+          editorDocument({ size, text: "article" })
+        ),
       },
     },
     extensions: [

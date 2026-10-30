@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, MutableHashMap, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
-import { sittingStorage } from "@/components/exams/sitting/storage";
+import { keptStorage } from "@/components/player/storage";
 
 /** A browser's local storage that keeps its values in a table, as a page's storage does. */
 function memoryStorage() {
@@ -28,9 +28,9 @@ const failureOf = <A>(
     KeyValueStore.KeyValueStoreError,
     KeyValueStore.KeyValueStore
   >
-) => program.pipe(Effect.provide(sittingStorage), Effect.flip);
+) => program.pipe(Effect.provide(keptStorage), Effect.flip);
 
-describe("sittingStorage", () => {
+describe("keptStorage", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -53,7 +53,7 @@ describe("sittingStorage", () => {
         size: 1,
         value: "answer",
       });
-    }).pipe(Effect.provide(sittingStorage))
+    }).pipe(Effect.provide(keptStorage))
   );
 
   it.effect("names the key of a read that the browser refuses", () =>

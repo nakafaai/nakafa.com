@@ -165,7 +165,6 @@ describe("exams home", () => {
         expect(read).toEqual({
           canManageSetup: false,
           closed: [],
-          draftsBounded: false,
           drafts: [],
           live: [],
           next: [],
@@ -401,7 +400,6 @@ describe("exams home", () => {
           "Draf 3",
           "Draf 2",
         ]);
-        expect(read.draftsBounded).toBe(true);
       })
   );
 

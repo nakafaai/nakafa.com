@@ -69,7 +69,7 @@ export function ExamHeader() {
           render={
             <Link
               aria-label={t("title")}
-              className={buttonVariants({ size: "icon", variant: "ghost" })}
+              className={buttonVariants({ size: "icon", variant: "outline" })}
               params={{ slug }}
               to="/school/$slug/exams"
             />

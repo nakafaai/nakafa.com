@@ -1,6 +1,6 @@
 {
   "DataTable": {
-    "filter": "Filtern",
+    "filter-by": "Nach {column} filtern",
     "no-results": "Keine Treffer.",
     "reset": "Zurücksetzen"
   },
@@ -41,14 +41,11 @@
     "tile-result-released": "Freigegeben",
     "tile-results": "Ergebnisse",
     "tile-setup": "Einrichtung",
-    "metric-live": "Läuft jetzt",
-    "metric-live-period": "Räume laufen",
-    "metric-next": "Nächste 14 Tage",
-    "metric-next-period": "Räume öffnen bald",
-    "metric-waiting": "Wartet auf Freigabe",
-    "metric-waiting-period": "Ergebnisse zur Freigabe",
-    "metric-drafts": "Entwürfe",
-    "metric-drafts-period": "Prüfungen, die du bearbeiten kannst",
+    "start-label": "Schnellzugriff",
+    "start-exams": "Schreibe Fragen, plane Räume und gib Ergebnisse frei.",
+    "start-reports": "Trage Noten ein und drucke die Zeugnisse jeder Klasse.",
+    "start-members": "Lade Lehrkräfte und Lernende ein und gib ihnen ihre Rollen.",
+    "start-settings": "Richte die Einheiten, Zeiträume und Klassen der Schule ein.",
     "tile-schedule": "Zeitplan",
     "tile-now": "Jetzt",
     "now-left": "{count, plural, one {Minute übrig} other {Minuten übrig}}",
@@ -372,6 +369,8 @@
     "schedule-key-match": "Ordne jede Aussage von Frage {number} zu.",
     "schedule-key-table": "Markiere jede Aussage von Frage {number}.",
     "schedule-past": "Wähle einen Beginn, der noch nicht vorbei ist.",
+    "questions-column": "Fragen",
+    "created-column": "Erstellt",
     "rooms-title": "Räume",
     "edit-action": "Prüfung bearbeiten",
     "rooms-empty": "Noch keine Räume",
@@ -500,7 +499,6 @@
     "pair-hint": "Jede Antwort gehört zu einer Aussage, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
     "pair-statement": "Antwort für Aussage {number}",
     "template-table": "Richtig-oder-falsch-Tabelle",
-    "table-columns": "Spalten",
     "column-of": "Frage {number}, Spalte {name}",
     "column-placeholder": "Spalte",
     "cell-of": "Spalte für Aussage {name} von Frage {number}",
@@ -609,8 +607,6 @@
     "policy-domains-footer": "Eine leere Liste lässt jede Adresse zu.",
     "save": "Speichern",
     "level-other": "Sonstige",
-    "unit-level-line": "Stufe {level}.",
-    "unit-archived-description": "Diese Schule ist archiviert und nimmt Änderungen erst wieder an, wenn sie wiederhergestellt wird.",
     "unit-add": "Schule hinzufügen",
     "unit-add-title": "Eine Schule hinzufügen",
     "unit-add-description": "Jede Schule hat ihre eigene Stufe, eigene Zeiträume und eigene Klassen.",
@@ -620,13 +616,19 @@
     "unit-add-footer": "Lege ihren ersten Zeitraum auf der Seite Zeiträume an.",
     "unit-time-zone": "Zeitzone",
     "unit-page-language": "Seitensprache",
-    "unit-archive-footer": "Eine archivierte Schule bleibt lesbar.",
-    "unit-restore-footer": "Wiederherstellen macht die Schule wieder bearbeitbar.",
     "unit-restore": "Wiederherstellen",
     "unit-archive": "Archivieren",
     "unit-archive-title": "Diese Schule archivieren?",
     "unit-archive-description": "Die Schule nimmt keine Änderungen an, bis sie wiederhergestellt wird.",
     "unit-archive-confirm": "Archivieren",
+    "unit-save": "Speichern",
+    "unit-edit-description": "Die Zeitzone legt fest, wann Prüfungen öffnen, und die Sprache legt die Seiten fest.",
+    "unit-npsn-unset": "Nicht gesetzt",
+    "unit-status": "Status",
+    "unit-status-label": {
+      "active": "Aktiv",
+      "archived": "Archiviert"
+    },
     "unit-choice": "Schule",
     "periods-description": "Die Schuljahre und Halbjahre dieser Schule.",
     "period-name": "Name",
@@ -645,6 +647,7 @@
     "period-end-placeholder": "Letzten Tag wählen",
     "period-add-footer": "Eine neue Periode beginnt als geplant.",
     "period-rename": "Umbenennen",
+    "period-rename-description": "Der Zeitraum behält seine Klassen und Daten.",
     "period-rename-save": "Speichern",
     "periods-empty": "Noch kein Zeitraum.",
     "periods-search": "Zeitraum suchen",
@@ -659,6 +662,7 @@
     "cohort-active": "Aktiv",
     "cohort-archived": "Archiviert",
     "cohort-rename": "Umbenennen",
+    "cohort-rename-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
     "cohort-rename-save": "Speichern",
     "cohort-archive": "Archivieren",
     "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
@@ -910,8 +914,6 @@
     "secret-copy": "Kopieren",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Acht Ziffern",
-    "unit-npsn-footer": "Acht Ziffern, eine Nummer pro Einheit.",
-    "unit-npsn-save": "Speichern",
     "logins-footer": "Eine Anmeldekarte enthält einen Anmeldenamen und einen Einmalcode.",
     "login-name": "Anmeldename",
     "login-person": "Person",
@@ -1329,6 +1331,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "undo": "Rückgängig",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -1341,6 +1344,8 @@
     "load-error": "Diese Daten konnten nicht geladen werden.",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
+    "month": "Monat",
+    "year": "Jahr",
     "breadcrumb": "Navigationspfad",
     "sidebar": "Seitenleiste",
     "toggle-sidebar": "Seitenleiste ein- oder ausblenden",
@@ -1744,6 +1749,7 @@
     "shortcut-pick": "Option wählen",
     "shortcut-navigator": "Aufgabenübersicht",
     "flag": "Markieren",
+    "flag-question": "Frage {number} markieren",
     "review": "Prüfen",
     "legend-answered": "Beantwortet",
     "legend-flagged": "Markiert",
@@ -1953,7 +1959,6 @@
     "bullets": "Aufzählung",
     "numbers": "Nummerierte Liste",
     "tasks": "Aufgabenliste",
-    "lists": "Listen",
     "quote": "Zitat",
     "code-block": "Codeblock",
     "divider": "Trennlinie",
@@ -1975,15 +1980,25 @@
     "formula": "Formel",
     "equation": "Gleichung",
     "formula-edit": "Formel bearbeiten",
+    "formula-keyboard": "Formeltastatur",
+    "formula-numbers": "Zahlen",
+    "formula-functions": "Funktionen",
+    "formula-symbols": "Symbole",
+    "formula-greek": "Griechische Buchstaben",
+    "formula-left": "Nach links",
+    "formula-right": "Nach rechts",
+    "formula-delete": "Löschen",
     "formula-invalid": "Diese Formel kann nicht gezeichnet werden:",
     "latex": "LaTeX",
     "image": "Bild",
     "image-add": "Bild hinzufügen",
+    "image-add-description": "Das Bild erscheint in der Frage, sobald es hinzugefügt ist.",
     "image-alt": "Alternativtext",
     "image-alt-hint": "Was ein Schüler wissen muss, der das Bild nicht sehen kann",
     "image-cancel": "Abbrechen",
     "image-delete": "Bild löschen",
     "image-edit": "Alternativtext ändern",
+    "image-edit-description": "Das Bild bleibt, nur sein Alternativtext ändert sich.",
     "image-save": "Speichern"
   },
   "Memory": {
@@ -2237,9 +2252,6 @@
     "admitted-elsewhere": {
       "title": "Nina antwortet in einem neuen Chat"
     },
-    "open-chat": {
-      "title": "Chat öffnen"
-    },
     "sign-out-error": {
       "title": "Abmelden ist fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
@@ -2263,9 +2275,6 @@
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
-    },
-    "undo": {
-      "title": "Archivierung rückgängig"
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."

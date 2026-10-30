@@ -155,7 +155,7 @@ export function useChatAdmission({
             { title: "admitted-elsewhere.title" },
             {
               action: {
-                label: "open-chat.title",
+                label: "open",
                 onClick: () => onComplete(receipt.chatId),
               },
             }
