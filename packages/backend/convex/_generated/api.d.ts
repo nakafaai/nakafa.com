@@ -3808,7 +3808,6 @@ export declare const api: {
             unitId: Id<"tenantUnits">;
           }>;
           drafts: Array<{ createdAt: number; id: Id<"exams">; title: string }>;
-          draftsBounded: boolean;
           live: Array<{
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
