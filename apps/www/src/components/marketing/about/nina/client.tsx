@@ -30,8 +30,9 @@ const LiveNinaComposer = lazy(() =>
  * The composer before its live code loads: one input that looks the same and
  * keeps its text while the page's session settles, so a signed-in learner never
  * sees it dim and come back. A visitor's attach and send ask for sign-in. A send
- * pressed while the session loads is held: a session that signs in loads the
- * live composer, which admits it, and a session that settles signed out asks
+ * or an attach pressed while the session loads, or before the live composer
+ * loaded, is held: a session that signs in loads the live composer, which admits
+ * the send or opens the file picker, and a session that settles signed out asks
  * for sign-in. A signed-in learner's first focus or input loads the live
  * composer as a transition, so React keeps this input, focused and holding its
  * text, until the live composer has loaded, which admits a send held here.
@@ -43,6 +44,7 @@ function NinaComposerInput() {
   const authNavigation = useCurrentAuthNavigation();
   const [engaged, setEngaged] = useState(false);
   const [held, setHeld] = useState<PromptInputMessage | null>(null);
+  const [attachHeld, setAttachHeld] = useState(false);
   const isVisitor = !(isSignedIn || isSessionPending);
   // The session settles once per page, so one deferred marks that moment.
   const [sessionKnown] = useState(() => Deferred.makeUnsafe<void>());
@@ -58,6 +60,7 @@ function NinaComposerInput() {
       return;
     }
     setHeld(null);
+    setAttachHeld(false);
     navigate(authNavigation.readTarget());
   }
 
@@ -80,6 +83,14 @@ function NinaComposerInput() {
     return false;
   }
 
+  /** Holds an attach pressed before the live composer loaded, until the session is known. */
+  function holdAttach() {
+    setAttachHeld(true);
+    Effect.runPromise(Deferred.await(sessionKnown)).then(() =>
+      follow.current?.()
+    );
+  }
+
   function signIn() {
     navigate(authNavigation.readTarget());
     return false;
@@ -92,13 +103,13 @@ function NinaComposerInput() {
   return (
     <Suspense fallback={null}>
       {engaged && isSignedIn ? (
-        <HeldPromptContext value={{ held }}>
+        <HeldPromptContext value={{ attach: attachHeld, held }}>
           <LiveNinaComposer />
         </HeldPromptContext>
       ) : (
         <NinaInput
           attachments={false}
-          onAttachRequest={isVisitor ? signIn : undefined}
+          onAttachRequest={isVisitor ? signIn : holdAttach}
           onEngage={isSignedIn ? engage : undefined}
           onSubmit={(message) => (isVisitor ? signIn() : hold(message))}
         />

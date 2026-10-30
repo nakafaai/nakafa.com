@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect, HashSet } from "effect";
+import { Deferred, Effect, HashSet } from "effect";
 import { GERMAN, openComposer } from "@/e2e/support/attachment";
 import { CHAT_PATH, runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
@@ -7,6 +7,10 @@ import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { NINA_SECTION, SHEET_POPUP } from "@/e2e/support/selector";
 import { openSheet } from "@/e2e/support/sheet";
+import { waitUntilTakenOver } from "@/e2e/support/window";
+
+/** Better Auth's answer for the session, which a test holds back. */
+const SESSION_ANSWER = "**/api/auth/get-session**";
 
 const SAMPLE_IMAGE = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=",
@@ -134,6 +138,38 @@ for (const width of [390, 1440]) {
     });
   });
 }
+
+test("a learner's attach pressed on the landing composer before the session answers opens the file picker", async ({
+  baseURL,
+  page,
+}) => {
+  await runOnPage(page, baseURL, (origin) =>
+    Effect.gen(function* () {
+      yield* seedAnalyticsConsent(page, "denied");
+      yield* signInLearner(page.context(), origin);
+      // Better Auth's answer for the session is held back, so the press lands
+      // in the moment before the page knows who is signed in.
+      const answered = yield* Deferred.make<void>();
+      const run = Effect.runPromiseWith(yield* Effect.context<never>());
+      yield* Effect.promise(() =>
+        page.route(SESSION_ANSWER, async (route) => {
+          await run(Deferred.await(answered));
+          await route.continue();
+        })
+      );
+      yield* Effect.promise(() => page.goto("/en"));
+      const attach = page
+        .locator(NINA_SECTION)
+        .getByRole("button", { name: "Attach files" });
+      yield* Effect.promise(() => waitUntilTakenOver(attach));
+
+      const chooser = page.waitForEvent("filechooser");
+      yield* Effect.promise(() => attach.click());
+      yield* Deferred.succeed(answered, undefined);
+      yield* Effect.promise(() => chooser);
+    })
+  );
+});
 
 test.describe("The file picker of the composer in German", () => {
   test("is named in German, and the attach button opens it", async ({
