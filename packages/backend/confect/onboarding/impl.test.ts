@@ -435,6 +435,10 @@ describe("onboarding/impl", () => {
             })
           )
         );
+        // The learner finishes a minute later: the programs and the draft were
+        // committed at NOW, and Convex runs each mutation after those commits.
+        const finishedAt = NOW + 60_000;
+        yield* Effect.sync(() => vi.setSystemTime(finishedAt));
         yield* Effect.promise(() =>
           test.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
@@ -450,9 +454,9 @@ describe("onboarding/impl", () => {
           test.query((ctx) => ctx.db.query("onboardingProfiles").unique())
         );
         expect(stored).toMatchObject({
-          admittedAt: NOW,
-          completedAt: NOW,
-          startedAt: NOW,
+          admittedAt: finishedAt,
+          completedAt: finishedAt,
+          startedAt: finishedAt,
         });
       })
   );

@@ -112,6 +112,10 @@ describe("auth/deletion/readiness", () => {
           }
         )
       );
+      // The deletion starts a minute after its preparation: Convex runs each
+      // mutation after the commits before it, so the start gets its own instant.
+      const startedAt = NOW + 60_000;
+      yield* Effect.sync(() => vi.setSystemTime(startedAt));
       yield* Effect.promise(() =>
         test.action((ctx) =>
           createAuthOptions(ctx).user.deleteUser.beforeDelete(
@@ -126,7 +130,7 @@ describe("auth/deletion/readiness", () => {
         )
       );
       expect(prepared).toBe(accountDeletionPreparationOutcome.ready);
-      expect(preparation?.deletionStartedAt).toBe(NOW);
+      expect(preparation?.deletionStartedAt).toBe(startedAt);
     }).pipe(
       Effect.ensuring(
         Effect.sync(() => {

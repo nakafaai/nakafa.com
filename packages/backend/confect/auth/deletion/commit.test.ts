@@ -151,6 +151,10 @@ describe("auth/deletion/commit", () => {
         },
       },
     ]);
+    // The commit continues a minute later: Convex runs each mutation after the
+    // commits before it, so the step that finalizes gets its own instant.
+    const finalizedAt = NOW + 60_000;
+    vi.setSystemTime(finalizedAt);
     expect(
       await t.mutation(
         internal.auth.deletion.continueAccountDeletionCommit,
@@ -159,13 +163,13 @@ describe("auth/deletion/commit", () => {
     ).toBe(true);
     const complete = await read();
     expect(complete.auth).toBeNull();
-    expect(complete.preparation?.finalizedAt).toBe(NOW);
+    expect(complete.preparation?.finalizedAt).toBe(finalizedAt);
     expect(complete.receipt).toMatchObject({
       attemptId: ATTEMPT_ID,
     });
     expect(complete.user).toMatchObject({
       authId: `deleted:${seeded.userId}`,
-      deletedAt: NOW,
+      deletedAt: finalizedAt,
       name: "Deleted user",
     });
     await expect(

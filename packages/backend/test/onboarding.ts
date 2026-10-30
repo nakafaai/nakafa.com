@@ -16,10 +16,15 @@ import {
 } from "@repo/backend/test/program/snapshot";
 import { Array as Arr, Effect } from "effect";
 
-/** Creates one isolated authenticated boundary for onboarding behavior. */
+/**
+ * Creates one isolated authenticated boundary for onboarding behavior. The
+ * account is seeded a minute before `now` and the clock then stands at `now`:
+ * convex-test runs each mutation after the commits before it, as Convex does,
+ * so the onboarding steps a test times keep `now` to themselves.
+ */
 export const createOnboardingTest = Effect.fn("test.onboarding.create")(
   function* (now: number, role?: Doc<"users">["role"], suffix = "onboarding") {
-    yield* Effect.sync(() => vi.setSystemTime(now));
+    yield* Effect.sync(() => vi.setSystemTime(now - 60_000));
     const test = createConvexTestWithBetterAuth();
     const identity = yield* Effect.promise(() =>
       test.mutation((ctx) =>
@@ -42,7 +47,9 @@ export const createOnboardingTest = Effect.fn("test.onboarding.create")(
       identity,
       test,
     };
-  }
+  },
+  (created, now) =>
+    Effect.tap(created, () => Effect.sync(() => vi.setSystemTime(now)))
 );
 
 /** Activates every curriculum key used by onboarding defaults. */
