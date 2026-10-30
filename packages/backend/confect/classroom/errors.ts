@@ -78,3 +78,27 @@ export class PersonNotTeacher extends Schema.TaggedError<PersonNotTeacher>()(
     "Only a teacher of this unit can teach one of its classes."
   )
 ) {}
+
+/** Work handed in after the deadline of a task that closes at its deadline. */
+export class TaskClosed extends Schema.TaggedError<TaskClosed>()(
+  "TaskClosed",
+  refusal("TASK_CLOSED", "This task closed at its deadline.")
+) {}
+
+/** Points beyond the points a task is worth. */
+export class ScoreOutOfRange extends Schema.TaggedError<ScoreOutOfRange>()(
+  "ScoreOutOfRange",
+  refusal("SCORE_OUT_OF_RANGE", "The points are more than this task is worth.")
+) {}
+
+/** A library file larger than the library keeps. The file is deleted. */
+export class FileSizeRefused extends Schema.TaggedError<FileSizeRefused>()(
+  "FileSizeRefused",
+  refusal("FILE_SIZE_REFUSED", "This file is larger than 20 MB.")
+) {}
+
+/** A library file whose bytes name no PDF and no image. The file is deleted. */
+export class FileTypeRefused extends Schema.TaggedError<FileTypeRefused>()(
+  "FileTypeRefused",
+  refusal("FILE_TYPE_REFUSED", "Only a PDF or an image can be added.")
+) {}

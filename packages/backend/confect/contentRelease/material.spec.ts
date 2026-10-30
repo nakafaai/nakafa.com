@@ -50,6 +50,7 @@ const materialSitemapValidator = Schema.Union([
     routes: Schema.mutable(
       Schema.Array(
         Schema.Struct({
+          contentKey: Schema.String,
           lastModified: Schema.String,
           publicPath: Schema.String,
         })
@@ -57,11 +58,6 @@ const materialSitemapValidator = Schema.Union([
     ),
   }),
 ]);
-const materialIdentityValidator = Schema.Struct({
-  activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
-  managed: Schema.Boolean,
-  publicPath: Schema.Union([Schema.String, Schema.Null]),
-});
 
 /** Delivers the signed lesson while navigation uses a reusable group query. */
 export default GroupSpec.make()
@@ -90,19 +86,6 @@ export default GroupSpec.make()
         materialKey: Schema.String,
       }),
       returns: () => materialNavigationValidator,
-      error: () => ReleaseError,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "identity",
-      args: () => ({
-        appLocale: appLocaleValidator,
-        contentKey: Schema.String,
-        expectedMaterialKey: Schema.String,
-        expectedSectionKey: Schema.String,
-      }),
-      returns: () => materialIdentityValidator,
       error: () => ReleaseError,
     })
   )

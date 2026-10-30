@@ -37,7 +37,6 @@ test("the school settings sidebar leads back to the school page the viewer came 
   await expect(sidebar.getByRole("link").first()).toHaveText(
     `Back to ${school.name}`
   );
-  await sidebar.getByRole("button", { name: "People" }).click();
   await sidebar.getByRole("link", { exact: true, name: "Members" }).click();
   await expect(page).toHaveURL(address("/settings/members"));
   await back.click();

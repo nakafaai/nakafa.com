@@ -1,11 +1,17 @@
 import { expect, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { MutableList } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 
 /** The search button of the sidebar, in English. */
 const SEARCH = "Search content...";
-/** The first subject group the command menu lists before a query, in English. */
-const SUBJECT_GROUP = "Elementary School";
+/**
+ * The first subject group the command menu lists before a query, in English:
+ * the subject menu holds the high school grades only.
+ */
+const SUBJECT_GROUP = en.Subject["high-school"];
 
 /**
  * The search command of the learning shell names the subjects in its first

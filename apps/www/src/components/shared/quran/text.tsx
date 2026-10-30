@@ -1,5 +1,5 @@
-import arabic from "@fontsource/amiri/files/amiri-arabic-400-normal.woff2";
-import latin from "@fontsource/amiri/files/amiri-latin-400-normal.woff2";
+import arabic from "@fontsource/amiri-quran/files/amiri-quran-arabic-400-normal.woff2";
+import latin from "@fontsource/amiri-quran/files/amiri-quran-latin-400-normal.woff2";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { preload } from "react-dom";

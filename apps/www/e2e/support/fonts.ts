@@ -105,7 +105,7 @@ export const readTypefaceFiles = Effect.fn("NakafaE2E.readTypefaceFiles")(
             if (
               !(rule instanceof CSSFontFaceRule) ||
               rule.style.getPropertyValue("font-family").replaceAll('"', "") !==
-                "Amiri"
+                "Amiri Quran"
             ) {
               return [];
             }

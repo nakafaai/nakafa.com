@@ -15,7 +15,6 @@ import {
   photo,
   pickFiles,
   refusedChipsIn,
-  runPage,
   WORD_TYPE,
   write,
 } from "@/e2e/support/attachment";
@@ -37,12 +36,12 @@ const refusedChip = (composer: Locator, name: string) =>
 
 test.describe("Files that a pick does not attach", () => {
   test("show one refused chip per file with its reason, and attach the rest without a toast", async ({
+    baseURL,
     page,
   }) => {
-    await runPage(
-      page,
+    await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        const composer = yield* openComposer(page);
+        const composer = yield* openComposer(page, origin);
         yield* pickFiles(composer, [
           photo("lesson.png"),
           fileOf("essay.docx", WORD_TYPE, 20),
@@ -71,12 +70,12 @@ test.describe("Files that a pick does not attach", () => {
   });
 
   test("refuses the files beyond the count one by one, each with the count reason", async ({
+    baseURL,
     page,
   }) => {
-    await runPage(
-      page,
+    await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        const composer = yield* openComposer(page);
+        const composer = yield* openComposer(page, origin);
         const surplus = ["last-1.png", "last-2.png"];
         yield* pickFiles(composer, [
           ...Arr.makeBy(NINA_FILE_COUNT, (index) =>
@@ -96,12 +95,12 @@ test.describe("Files that a pick does not attach", () => {
   });
 
   test("removes a refused chip with its own button, and the next pick replaces the refused chips", async ({
+    baseURL,
     page,
   }) => {
-    await runPage(
-      page,
+    await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        const composer = yield* openComposer(page);
+        const composer = yield* openComposer(page, origin);
         yield* pickFiles(composer, [
           photo("lesson.png"),
           fileOf("essay.docx", WORD_TYPE, 20),
@@ -134,12 +133,12 @@ test.describe("Files that a pick does not attach", () => {
   });
 
   test("clears the refused chips when the message is sent, and never uploads them", async ({
+    baseURL,
     page,
   }) => {
-    await runPage(
-      page,
+    await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        const composer = yield* openComposer(page);
+        const composer = yield* openComposer(page, origin);
         yield* pickFiles(composer, [
           photo("lesson.png"),
           fileOf("essay.docx", WORD_TYPE, 20),

@@ -14,10 +14,6 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { HomeClock } from "@/components/tenant/home/clock";
 import {
-  type HomePreload,
-  HomePreloadContext,
-} from "@/components/tenant/home/data";
-import {
   homeExamsRead,
   useStudentSittings,
 } from "@/components/tenant/home/query";
@@ -38,39 +34,31 @@ import { schoolSittingTarget } from "@/lib/routing/school/target";
  * to view, and the setup while it is open, and a viewer who may create exams also sees the exams they started. A member
  * with no grant, who may neither create nor watch, sees the student's view with its quiet state, because the staff
  * cells have nothing for them. Staff with a role see the staff home, which holds only the cells their actions allow,
- * since the student's sentence is not theirs. The school's context carries the viewer's access, and the loader carries
- * the greeting and the server's time, so the action, the greeting and the times are in the first HTML. Each home reads
- * its rows once, and its cells take their rows from that read.
+ * since the student's sentence is not theirs. The school's context carries the viewer's access and the greeting, so the
+ * action and the greeting draw with the first frame. Each home reads its rows once, and its cells take their rows from
+ * that read.
  */
-export function TenantHome({ preload }: { preload: HomePreload }) {
+export function TenantHome() {
   const tenant = useTenant();
   const [drafts] = useState(createExamDrafts);
   const [releases] = useState(createHomeReleases);
   const studentView = showsStudentHome(tenant, tenant.home);
-  const serverNow = preload.serverNow;
-
-  // The loader reads no home for a viewer who is not a member, so no home shows for that viewer.
-  if (serverNow === undefined) {
-    return null;
-  }
   return (
-    <HomePreloadContext value={preload}>
-      <ExamDraftsProvider drafts={drafts}>
-        <HomeReleasesProvider releases={releases}>
-          <HomeClock key={serverNow} serverNow={serverNow}>
-            <HomePage action={<HomeAction studentView={studentView} />}>
-              {studentView ? (
-                <StudentHome />
-              ) : (
-                <ReadBoundary read={homeExamsRead(tenant.slug)}>
-                  <StaffHome />
-                </ReadBoundary>
-              )}
-            </HomePage>
-          </HomeClock>
-        </HomeReleasesProvider>
-      </ExamDraftsProvider>
-    </HomePreloadContext>
+    <ExamDraftsProvider drafts={drafts}>
+      <HomeReleasesProvider releases={releases}>
+        <HomeClock>
+          <HomePage action={<HomeAction studentView={studentView} />}>
+            {studentView ? (
+              <StudentHome />
+            ) : (
+              <ReadBoundary read={homeExamsRead(tenant.slug)}>
+                <StaffHome />
+              </ReadBoundary>
+            )}
+          </HomePage>
+        </HomeClock>
+      </HomeReleasesProvider>
+    </ExamDraftsProvider>
   );
 }
 

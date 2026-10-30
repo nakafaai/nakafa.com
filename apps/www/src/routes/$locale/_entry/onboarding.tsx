@@ -14,7 +14,7 @@ import {
   readOnboardingPageFn,
 } from "@/lib/entry/page.functions";
 import { TextSearchParam } from "@/lib/entry/search";
-import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -36,11 +36,9 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
       readOnboardingPageFn({
         data: { intent: deps.intent, locale: params.locale },
       }),
-      readRouteMessages({
-        data: {
-          locale: params.locale,
-          namespaces: ["LearningPrograms", "Metadata"],
-        },
+      readRenderedRouteMessages({
+        locale: params.locale,
+        namespaces: ["LearningPrograms", "Metadata"],
       }),
       readAuthLegalFn({ data: { locale: params.locale } }),
     ]);
@@ -108,7 +106,12 @@ function OnboardingPage() {
         </div>
       </EntryShellHeader>
       <EntryShellBody>
-        <Nina act="writing" label="" size={88} whole />
+        {/* Each question's choices stand in one list, so on a screen shorter
+            than the longest question with Nina, Nina steps aside and the
+            question stays whole without scrolling. */}
+        <div className="[@media(max-height:50rem)]:hidden">
+          <Nina act="writing" label="" size={88} whole />
+        </div>
         <OnboardingQuestionnaire initialProfile={profile} intent={intent} />
         <AuthLegal links={legal} />
       </EntryShellBody>

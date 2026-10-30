@@ -12,6 +12,7 @@ import type { ConnectionInput } from "@repo/backend/confect/connectors/schema";
 import { sealRefreshToken } from "@repo/backend/confect/connectors/secret";
 import { type Actor, JournalEntry } from "@repo/backend/confect/journal/schema";
 import { Space } from "@repo/backend/confect/space";
+import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { Effect, Option, Schema } from "effect";
 
 type ConnectionDoc = Docs["connectorConnections"];
@@ -142,9 +143,56 @@ export const destroySecret = Effect.fn("connectors.connection.destroySecret")(
   }
 );
 
+/** The most mirrored events of one connection that a disconnect deletes, the most a sync keeps and some room. */
+const MIRROR_PURGE = 200;
+
 /**
- * Ends a connection: destroys its sealed token, marks it disconnected, and journals
- * one change. A connection that is already disconnected stays so with no second
+ * Deletes the Calendar mirror of a connection, which a disconnect always does
+ * (ADR 0015). A connection of another connector has none.
+ */
+const purgeMirror = Effect.fn("connectors.connection.purgeMirror")(function* (
+  connectionId: GenericId.GenericId<"connectorConnections">
+) {
+  const events = yield* (yield* DatabaseReader)
+    .table("connectorEvents")
+    .index("by_connectionId_and_start", (query) =>
+      query.eq("connectionId", connectionId)
+    )
+    .take(MIRROR_PURGE)
+    .pipe(Effect.orDie);
+  const writer = yield* DatabaseWriter;
+  yield* Effect.forEach(
+    events,
+    (event) => writer.table("connectorEvents").delete(event._id),
+    { discard: true }
+  ).pipe(Effect.orDie);
+});
+
+/**
+ * Moves a connection to `reconnect` when its source stops accepting its token:
+ * its sync stops until its owner connects again, which ends it and makes a new
+ * one. A connection already waiting or ended stays as it is.
+ */
+export const markReconnect = Effect.fn("connectors.connection.reconnect")(
+  function* (row: ConnectionDoc) {
+    if (row.status !== "active") {
+      return;
+    }
+    yield* (yield* DatabaseWriter)
+      .table("connectorConnections")
+      .patch(row._id, { nextSyncAt: null, status: "reconnect" })
+      .pipe(Effect.orDie);
+    yield* record(systemActor, row.owner, row._id, {
+      connection: row._id,
+      connector: row.connector,
+      type: "connection.reconnect",
+    });
+  }
+);
+
+/**
+ * Ends a connection: destroys its sealed token and its Calendar mirror, marks it
+ * disconnected, and journals one change. A connection that is already disconnected stays so with no second
  * entry, so a retried request succeeds.
  */
 export const disconnect = Effect.fn("connectors.connection.disconnect")(
@@ -153,6 +201,7 @@ export const disconnect = Effect.fn("connectors.connection.disconnect")(
       return;
     }
     yield* destroySecret(row._id);
+    yield* purgeMirror(row._id);
     yield* (yield* DatabaseWriter)
       .table("connectorConnections")
       .patch(row._id, { nextSyncAt: null, status: "disconnected" })

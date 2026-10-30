@@ -23,10 +23,12 @@ const readSignedInHint = createIsomorphicFn()
  * renders its player on the server, which needs the client during that render, so
  * the server decides from the hint cookie and the first HTML and the client agree.
  *
- * The hint is route context, read before every navigation. The catalog's first
- * pages are prerendered, so the answer that their HTML carries is the build's,
- * which no visitor's cookie decided, and a learner who opens one and presses into
- * a running attempt needs the client there. A loader would not do: the router
+ * The hint is route context, read before every navigation. The catalog's pages,
+ * and a visitor's tracks, sets and sections, are prerendered, so the answer that
+ * their HTML carries is the build's, which no visitor's cookie decided, and a
+ * learner who opens one and presses into a running attempt needs the client there.
+ * A learner's own track, set or section renders on the Worker for their request
+ * (`isLearnerPage`), so its first HTML is theirs. A loader would not do: the router
  * shows a stale loader answer at once and reads it again in the background, after
  * the attempt has already rendered without the client, while `beforeLoad` runs on
  * every navigation before the page renders.

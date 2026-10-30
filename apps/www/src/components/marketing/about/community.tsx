@@ -1,8 +1,8 @@
 import { DiscordIcon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -31,20 +31,15 @@ export function Community() {
           <p className="max-w-xl text-pretty text-base text-muted-foreground">
             {t("community-lead")}
           </p>
-          <Button
-            nativeButton={false}
-            render={
-              <a
-                href={COMPANY_SOCIAL_PROFILES.discord}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <HugeIcons icon={DiscordIcon} />
-                {t("community-cta")}
-              </a>
-            }
-            variant="outline"
-          />
+          <a
+            className={buttonVariants({ variant: "outline" })}
+            href={COMPANY_SOCIAL_PROFILES.discord}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <HugeIcons icon={DiscordIcon} />
+            {t("community-cta")}
+          </a>
         </div>
         <div
           aria-label={t("community-crowd")}

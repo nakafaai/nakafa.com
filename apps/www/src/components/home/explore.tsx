@@ -11,8 +11,8 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
-  getForYouNavigationItems,
-  getForYouNavigationTarget,
+  getPrimaryNavigationItems,
+  getPrimaryNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
 import {
@@ -107,7 +107,7 @@ export function HomeExplore() {
   const locale = useCurrentLocale();
   // The shared shortcuts are the same for every audience; only their resolved
   // destinations follow the learner preferences below.
-  const items = getForYouNavigationItems();
+  const items = getPrimaryNavigationItems();
   const preferences = {
     preferredCurriculumTarget: usePreferredCurriculumTarget(locale),
     preferredTryoutTarget: usePreferredTryoutTarget(locale),
@@ -124,7 +124,7 @@ export function HomeExplore() {
         {Arr.map(items, (item) => (
           <ExploreCard
             key={item.id}
-            target={getForYouNavigationTarget(item, preferences)}
+            target={getPrimaryNavigationTarget(item, preferences)}
             title={exploreCards[item.id].title}
           >
             {exploreCards[item.id].icon}
