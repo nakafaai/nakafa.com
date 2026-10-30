@@ -31,13 +31,13 @@ export const ExamTitle = Schema.String.check(
 /**
  * One school exam draft: its tenant, the scope that decides who may read and edit
  * it, its title, and its questions in order. The order lives in this one array, so a
- * reorder is one patch. A draft is not a publication: scheduling its first sitting
- * freezes it, and `frozenAt` records when (ADR 0031).
+ * reorder is one patch. It takes changes while a sitting is scheduled and while it runs; the
+ * first sitting that finishes freezes it, and `frozenAt` records when (ADR 0031).
  */
 export const examValidator = Schema.Struct({
   createdAt: Schema.Finite,
   createdBy: Id("users"),
-  /** When the first sitting of the exam was scheduled. From then on its questions, their order, and their keys cannot change. */
+  /** When the first sitting of the exam finished. From then on its questions, their order, and their keys cannot change. */
   frozenAt: Schema.optionalKey(Schema.Finite),
   questions: Schema.Array(Id("examQuestions")).check(
     Schema.isMaxLength(MAX_EXAM_QUESTIONS)
@@ -61,7 +61,7 @@ export const examSummary = (row: ExamsDoc) => ({
 
 /**
  * One exam with its questions in order, as the editor opens it. `frozenAt` is present once a
- * sitting of the exam is scheduled, so the editor shows the exam read-only (ADR 0031).
+ * sitting of the exam has finished, so the editor shows the exam read-only (ADR 0031).
  * `archived` is true while the unit that holds the exam is archived, which locks its edits.
  */
 export const ExamView = Schema.Struct({
