@@ -161,7 +161,8 @@ async function expectMixedQuestionAt(
   const home = await ownerContext.newPage();
   await home.setViewportSize(viewport);
   await home.goto(address("/"));
-  await expect(home.locator('[data-sidebar="sidebar"]:visible')).toBeVisible({
+  // The home's greeting heads it at every width, while a phone keeps the sidebar in a closed sheet.
+  await expect(home.getByRole("heading", { level: 1 })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   const amiriLoaded = await home.evaluate(
