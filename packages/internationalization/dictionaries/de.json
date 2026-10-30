@@ -1021,7 +1021,28 @@
     "device-description": "Gib den Code der Nakafa CLI ein, damit sie die Schule als {name} liest.",
     "device-code": "Gerätecode",
     "device-authorize": "Verbinden",
-    "device-deny": "Gerät ablehnen"
+    "device-deny": "Gerät ablehnen",
+    "grading": "Bewertung",
+    "grading-description": "Die Versionen des Bewertungsschemas der Schule. Jede Note behält die Version, unter der sie eingetragen wurde.",
+    "grading-empty": "Noch keine Version gespeichert.",
+    "grading-empty-description": "Noten nutzen das eingebaute Schema: KKTP {kktp}, ohne Stufen.",
+    "grading-search": "Stufe suchen",
+    "grading-new": "Neue Version",
+    "grading-new-description": "Sie bewertet jede Note, die ab jetzt eingetragen wird. Frühere Noten behalten ihre Version.",
+    "grading-effective": "Gilt ab",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Stufen",
+    "grading-bands-none": "Ohne Stufen",
+    "grading-band": "{label} ab {minimum}",
+    "grading-band-label": "Stufe",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "Ab",
+    "grading-band-add": "Stufe hinzufügen",
+    "grading-band-remove": "Stufe entfernen",
+    "grading-save": "Version speichern",
+    "grading-status": "Status",
+    "grading-current": "Gültig",
+    "grading-earlier": "Früher"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -2583,6 +2604,10 @@
     },
     "school-own-role-ended": {
       "title": "Deine Rolle ist beendet."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "Eine neuere Version ist schon gespeichert.",
+      "description": "Lade die Seite neu, um sie zu sehen, und speichere dann deine."
     }
   },
   "Ai": {

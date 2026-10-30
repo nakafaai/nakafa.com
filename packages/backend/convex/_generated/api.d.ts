@@ -7111,6 +7111,7 @@ export declare const api: {
             | "grade.enter"
             | "grade.list"
             | "scheme.manage"
+            | "scheme.view"
             | "report.list"
             | "report.write"
             | "report.open"
@@ -7230,6 +7231,7 @@ export declare const api: {
               | "grade.enter"
               | "grade.list"
               | "scheme.manage"
+              | "scheme.view"
               | "report.list"
               | "report.write"
               | "report.open"
@@ -8929,6 +8931,33 @@ export declare const api: {
       >;
     };
     schemes: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            bands: Array<{ label: string; minimum: number }>;
+            effectiveFrom: number;
+            id: Id<"gradingSchemes">;
+            kktp: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       store: FunctionReference<
         "mutation",
         "public",

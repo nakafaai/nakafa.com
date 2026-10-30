@@ -1021,7 +1021,28 @@
     "device-description": "Type the code the Nakafa CLI shows to let it read the school as {name}.",
     "device-code": "Device code",
     "device-authorize": "Connect",
-    "device-deny": "Deny device"
+    "device-deny": "Deny device",
+    "grading": "Grading",
+    "grading-description": "The versions of the school's grading scheme. Each grade keeps the version it was entered under.",
+    "grading-empty": "No version stored yet.",
+    "grading-empty-description": "Grades use the built-in scheme: KKTP {kktp}, no bands.",
+    "grading-search": "Find a band",
+    "grading-new": "New version",
+    "grading-new-description": "It judges every grade entered from now on. Grades entered before keep their version.",
+    "grading-effective": "In force from",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Bands",
+    "grading-bands-none": "No bands",
+    "grading-band": "{label} from {minimum}",
+    "grading-band-label": "Band",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "From",
+    "grading-band-add": "Add band",
+    "grading-band-remove": "Remove band",
+    "grading-save": "Save version",
+    "grading-status": "Status",
+    "grading-current": "In force",
+    "grading-earlier": "Earlier"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -2583,6 +2604,10 @@
     },
     "school-own-role-ended": {
       "title": "Your role has ended."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "A newer version is already stored.",
+      "description": "Reload the page to see it, then save yours."
     }
   },
   "Ai": {

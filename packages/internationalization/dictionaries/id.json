@@ -1021,7 +1021,28 @@
     "device-description": "Ketik kode dari Nakafa CLI agar perangkat itu membaca sekolah sebagai {name}.",
     "device-code": "Kode perangkat",
     "device-authorize": "Hubungkan",
-    "device-deny": "Tolak perangkat"
+    "device-deny": "Tolak perangkat",
+    "grading": "Penilaian",
+    "grading-description": "Versi skema penilaian sekolah. Setiap nilai tetap memakai versi saat ia dimasukkan.",
+    "grading-empty": "Belum ada versi tersimpan.",
+    "grading-empty-description": "Nilai memakai skema bawaan: KKTP {kktp}, tanpa predikat.",
+    "grading-search": "Cari predikat",
+    "grading-new": "Versi baru",
+    "grading-new-description": "Versi ini menilai setiap nilai yang dimasukkan mulai sekarang. Nilai sebelumnya tetap memakai versinya.",
+    "grading-effective": "Berlaku sejak",
+    "grading-kktp": "KKTP",
+    "grading-bands": "Predikat",
+    "grading-bands-none": "Tanpa predikat",
+    "grading-band": "{label} mulai {minimum}",
+    "grading-band-label": "Predikat",
+    "grading-band-label-placeholder": "B",
+    "grading-band-minimum": "Mulai",
+    "grading-band-add": "Tambah predikat",
+    "grading-band-remove": "Hapus predikat",
+    "grading-save": "Simpan versi",
+    "grading-status": "Status",
+    "grading-current": "Berlaku",
+    "grading-earlier": "Sebelumnya"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -2583,6 +2604,10 @@
     },
     "school-own-role-ended": {
       "title": "Peranmu sudah berakhir."
+    },
+    "school-refusal-scheme-not-later": {
+      "title": "Versi yang lebih baru sudah tersimpan.",
+      "description": "Muat ulang halaman untuk melihatnya, lalu simpan versimu."
     }
   },
   "Ai": {

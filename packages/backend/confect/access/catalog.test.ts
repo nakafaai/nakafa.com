@@ -306,6 +306,7 @@ describe("access/catalog", () => {
       "connection.create",
       "connection.view",
       "scheme.manage",
+      "scheme.view",
       "visit.approve",
       "document.edit",
       "exam.edit",
