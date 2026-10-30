@@ -37,7 +37,7 @@ export function useNotificationAction(notification: ListNotification) {
   const readOne = useMutation(notifications.inbox.read).withOptimisticUpdate(
     markReadInLists
   );
-  const { detail, exam, readAt } = notification;
+  const { detail, exam, grade, readAt } = notification;
   const href = Option.getOrUndefined(
     Option.map(pageOf(notification), (url) => url.href)
   );
@@ -86,6 +86,17 @@ export function useNotificationAction(notification: ListNotification) {
             student: exam.student ?? "",
           })
     ),
+    Match.when("grade.released", () => {
+      if (grade === null) {
+        return t("grade-gone");
+      }
+      return grade.student === null
+        ? t("grade-released", { className: grade.className })
+        : t("grade-released-child", {
+            className: grade.className,
+            student: grade.student,
+          });
+    }),
     Match.exhaustive
   );
   // The change shows at once. The server's answer ends the effect: a refusal is reported

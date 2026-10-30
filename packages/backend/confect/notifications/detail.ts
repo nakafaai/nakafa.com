@@ -145,6 +145,7 @@ const detailOf = Effect.fn("notifications.detail")(function* (
       "person.invited": () => Effect.succeedNone,
       "exam.starting": () => Effect.succeedNone,
       "exam.reminder": () => Effect.succeedNone,
+      "grade.released": () => Effect.succeedNone,
     })
   );
   return Option.getOrNull(detail);
@@ -152,18 +153,15 @@ const detailOf = Effect.fn("notifications.detail")(function* (
 
 /**
  * The sitting a sitting row opens, while the sitting still stands and has not closed: the exam's title, its room, when
- * it opens, and, on a guardian's row, the child's name. Every other row has none. A row's sitting is always of the row's
- * school, since the run that writes the row reads the sitting's own school.
+ * it opens, and, on a guardian's row, the child's name. A row's sitting is always of the row's school, since the run
+ * that writes the row reads the sitting's own school.
  */
 const examOf = Effect.fn("notifications.detail.exam")(function* (
-  row: NotificationsDoc
+  row: Extract<
+    NotificationsDoc,
+    { readonly changeType: "exam.starting" | "exam.reminder" }
+  >
 ) {
-  if (
-    row.changeType !== "exam.starting" &&
-    row.changeType !== "exam.reminder"
-  ) {
-    return null;
-  }
   const reader = yield* DatabaseReader;
   const sitting = yield* reader
     .table("examSittings")
@@ -195,14 +193,51 @@ const examOf = Effect.fn("notifications.detail.exam")(function* (
   };
 });
 
-/** What a row shows of its source, each read when the row is read: its class detail and its sitting. */
+/**
+ * The grade a grade row tells of, while it stays released: its class's name, and the student's name on a guardian's
+ * row.
+ */
+const gradeOf = Effect.fn("notifications.detail.grade")(function* (
+  row: Extract<NotificationsDoc, { readonly changeType: "grade.released" }>
+) {
+  const reader = yield* DatabaseReader;
+  const grade = yield* reader
+    .table("classGrades")
+    .get(row.gradeId)
+    .pipe(Effect.option);
+  if (Option.isNone(grade) || grade.value.state !== "released") {
+    return null;
+  }
+  const klass = yield* reader
+    .table("classes")
+    .get(grade.value.classId)
+    .pipe(Effect.orDie);
+  const student =
+    row.studentPersonId === row.recipientPersonId
+      ? null
+      : yield* reader
+          .table("tenantPeople")
+          .get(row.studentPersonId)
+          .pipe(
+            Effect.map((person) => person.name),
+            Effect.orDie
+          );
+  return { className: klass.name, student };
+});
+
+/** What a row shows of its source, each read when the row is read: its class detail, its sitting, and its grade. */
 export const partsOf = Effect.fn("notifications.detail.parts")(function* (
   row: NotificationsDoc,
   person: TenantPeopleDoc,
   tenant: TenantsDoc
 ) {
-  return {
-    detail: yield* detailOf(row, person, tenant),
-    exam: yield* examOf(row),
-  };
+  const detail = yield* detailOf(row, person, tenant);
+  // Only a sitting row reads its sitting and only a grade row its grade, so every other row adds no work.
+  const exam =
+    row.changeType === "exam.starting" || row.changeType === "exam.reminder"
+      ? yield* examOf(row)
+      : null;
+  const grade =
+    row.changeType === "grade.released" ? yield* gradeOf(row) : null;
+  return { detail, exam, grade };
 });

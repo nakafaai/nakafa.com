@@ -1587,7 +1587,10 @@
     "assignment-published-gone": "A task that is no longer there.",
     "exam-starting": "{examTitle} opens at {opensAt, time, short} in {room}.",
     "exam-reminder": "{student} sits {examTitle} on {opensAt, date, long} at {opensAt, time, short} in {room}.",
-    "exam-gone": "An exam that no longer waits to open."
+    "exam-gone": "An exam that no longer waits to open.",
+    "grade-released": "Your grade in {className} has been released.",
+    "grade-released-child": "{student}'s grade in {className} has been released.",
+    "grade-gone": "A grade that is no longer released."
   },
   "Posts": {
     "placeholder": "What's new?",

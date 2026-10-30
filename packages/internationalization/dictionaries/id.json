@@ -1587,7 +1587,10 @@
     "assignment-published-gone": "Tugas yang sudah tidak ada.",
     "exam-starting": "{examTitle} dibuka pukul {opensAt, time, short} di {room}.",
     "exam-reminder": "{student} mengikuti {examTitle} pada {opensAt, date, long} pukul {opensAt, time, short} di {room}.",
-    "exam-gone": "Ujian yang tidak lagi menunggu dibuka."
+    "exam-gone": "Ujian yang tidak lagi menunggu dibuka.",
+    "grade-released": "Nilaimu di {className} sudah dirilis.",
+    "grade-released-child": "Nilai {student} di {className} sudah dirilis.",
+    "grade-gone": "Nilai yang tidak lagi dirilis."
   },
   "Posts": {
     "placeholder": "Apa yang baru?",
