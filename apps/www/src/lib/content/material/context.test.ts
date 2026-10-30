@@ -5,7 +5,10 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer, Schema } from "effect";
-import { readPublishedMaterialContext } from "@/lib/content/material/context";
+import {
+  readPublishedMaterialContext,
+  readPublishedMaterialPlacement,
+} from "@/lib/content/material/context";
 import { makeProgramContextRuntimeSource } from "@/test/content/program-context";
 import { previewProjection } from "@/test/content-preview";
 import {
@@ -142,5 +145,49 @@ describe("published material context", () => {
           _tag: "PublishedProjectionError",
         });
       })
+  );
+  it.effect(
+    "answers the part of a verified placement that a lesson's links read",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
+        const published = yield* readPublishedMaterialContext(
+          "en",
+          previewProjection,
+          context
+        );
+        runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
+
+        expect(
+          yield* readPublishedMaterialPlacement(
+            "en",
+            previewProjection,
+            context
+          )
+        ).toStrictEqual({
+          context,
+          hash: published?.hash,
+          label: published?.label,
+          parent: { publicPath: testProgramSubject.publicPath },
+          resolvedCanonicalPath: publishedContext.resolvedCanonicalPath,
+        });
+      })
+  );
+  it.effect("answers no placement when the release verifies none", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          groupJson: null,
+          managed: true,
+          mappingJson: null,
+          parentJson: null,
+          resolvedCanonicalPath: null,
+        })
+      );
+
+      expect(
+        yield* readPublishedMaterialPlacement("en", previewProjection, context)
+      ).toBeNull();
+    })
   );
 });
