@@ -37,6 +37,7 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { DataFailure } from "@/components/shared/failure";
+import { PaneTableRow } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { ColumnChoice } from "@/components/shared/table/column";
@@ -117,9 +118,10 @@ function NotYet() {
 }
 
 /**
- * One student's row: the name, which opens the student's answers beside the list, the state, and the
- * scores of a submitted attempt, with the time it was submitted. Counts and scores stand in the middle
- * in figures of one width, so the eye runs down each column, and a value not there yet says so.
+ * One student's row, which opens the student's answers beside the list when pressed, as the name does for a
+ * keyboard: the name, the state, and the scores of a submitted attempt, with the time it was submitted. Counts and
+ * scores stand in the middle in figures of one width, so the eye runs down each column, and a value not there yet
+ * says so.
  */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
@@ -132,10 +134,7 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const close = usePanes((state) => state.close);
 
   return (
-    <TableRow
-      className="hover:bg-transparent hover:text-inherit"
-      data-state={chosen ? "selected" : undefined}
-    >
+    <PaneTableRow id={row.attemptId}>
       <TableCell className="px-2 sm:px-4">
         <Button
           aria-pressed={chosen}
@@ -183,7 +182,7 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
       <TableCell className="px-2 text-end sm:px-4">
         <StudentRowMenu attemptId={row.attemptId} />
       </TableCell>
-    </TableRow>
+    </PaneTableRow>
   );
 }
 
@@ -251,7 +250,7 @@ function StudentTable({
   return (
     <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
       <TableHeader>
-        <TableRow className="hover:bg-transparent hover:text-inherit">
+        <TableRow>
           <TableHead className="px-2 sm:px-4">{t("results-name")}</TableHead>
           <TableHead className="w-40 px-2 text-center sm:px-4">
             <ColumnChoice
