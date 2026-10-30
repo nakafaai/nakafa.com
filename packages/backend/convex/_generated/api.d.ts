@@ -15143,6 +15143,29 @@ export declare const internal: {
       >;
     };
     seed: {
+      load: FunctionReference<
+        "mutation",
+        "internal",
+        { questions: number; rooms: number; slug: string },
+        {
+          examId: Id<"exams">;
+          sittings: Array<{
+            id: Id<"examSittings">;
+            room: string;
+            token: string;
+          }>;
+        }
+      >;
+      seats: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          kind: "student" | "proctor";
+          seats: Array<{ key: string; name: string; token: string }>;
+          slug: string;
+        },
+        null
+      >;
       sitting: FunctionReference<
         "mutation",
         "internal",
