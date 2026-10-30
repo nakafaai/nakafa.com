@@ -68,7 +68,11 @@ test("the proctor shows the room's QR code and token, and a changed token comes 
     0,
     { timeout: readinessTimeoutMilliseconds }
   );
-  await changed.getByRole("button", { name: "Close", exact: true }).click();
+  // The footer's Close, beside the header's own close icon.
+  await changed
+    .locator('[data-slot="dialog-footer"]')
+    .getByRole("button", { name: "Close", exact: true })
+    .click();
   await expect(changed).toHaveCount(0);
   await proctorContext.close();
 });
