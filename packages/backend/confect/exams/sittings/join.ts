@@ -15,7 +15,10 @@ import { activeGrants } from "@repo/backend/confect/access/policy";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { googleHostedDomains } from "@repo/backend/confect/auth/tokens";
 import { ensureStudentSeat } from "@repo/backend/confect/billing/seats";
-import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
+import {
+  sittingAuthority,
+  withExam,
+} from "@repo/backend/confect/exams/sittings/authority";
 import type {
   JoinOutcome,
   JoinRefusal,
@@ -206,7 +209,7 @@ const admitStudent = Effect.fn("exams.sittings.join.admit")(function* (
   if (sitting.cohortId !== null) {
     yield* placeInCohort(person, sitting.cohortId);
   }
-  yield* sittingAuthority.record(actor, sitting, {
+  yield* sittingAuthority.record(actor, yield* withExam(sitting), {
     person: person._id,
     type: "sitting.join",
   });
@@ -294,7 +297,7 @@ const joinAsNewcomer = Effect.fn("exams.sittings.join.newcomer")(function* (
  */
 export const joinRoom = Effect.fn("exams.sittings.join")(function* (args: {
   readonly sittingId?: ExamSittingsDoc["_id"];
-  readonly slug: typeof TenantSlug.Type;
+  readonly slug: TenantSlug;
   readonly token: string;
 }) {
   const account = yield* requireAuth();

@@ -830,7 +830,8 @@
         "allowDevice": "Zweites Gerät für einen Prüfungsversuch erlaubt",
         "finish": "Prüfungsversuch abgegeben",
         "close": "Prüfungstermin geschlossen",
-        "cancel": "Prüfungsraum abgesagt"
+        "cancel": "Prüfungsraum abgesagt",
+        "join": "Schüler über den Raumcode beigetreten"
       },
       "exam": {
         "results": {

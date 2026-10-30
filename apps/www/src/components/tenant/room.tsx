@@ -8,7 +8,7 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { getRouteApi, useParams } from "@tanstack/react-router";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   type FormEvent,
   useCallback,
@@ -36,14 +36,23 @@ type JoinReason = Extract<
   { readonly outcome: "refused" }
 >["reason"];
 
-/** The sentence of each refusal, as a key of the Exams messages; each may name the school. */
-const refusals = {
+/** The sentences that explain a refused code, as keys of the Exams messages; each may name the school. */
+const JoinSentence = Schema.Literals([
+  "join-not-admitted",
+  "join-not-open",
+  "join-seat-limit",
+  "student-token-refused",
+  "student-too-many-tries",
+]);
+
+/** The sentence of each refusal. */
+const refusals: Record<JoinReason, typeof JoinSentence.Type> = {
   NotAdmitted: "join-not-admitted",
   SeatLimit: "join-seat-limit",
   SittingNotOpen: "join-not-open",
   TokenRefused: "student-token-refused",
   TooManyTries: "student-too-many-tries",
-} satisfies Record<JoinReason, string>;
+};
 
 /**
  * The room join of a signed-in account that is not a member of the school, on a room's address.
@@ -88,7 +97,7 @@ export function MemberRoomJoin() {
  * joined account keeps the code for the room and loads the room again, now as a member, which enters
  * with it.
  */
-export function RoomJoinForm() {
+function RoomJoinForm() {
   const t = useTranslations("Exams");
   const { name, slug } = schoolRoute.useRouteContext().school.profile;
   const sittingId = useParams({

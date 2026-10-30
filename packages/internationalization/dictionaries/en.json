@@ -830,7 +830,8 @@
         "allowDevice": "Second device allowed for an exam attempt",
         "finish": "Exam attempt finished",
         "close": "Exam sitting closed",
-        "cancel": "Exam room cancelled"
+        "cancel": "Exam room cancelled",
+        "join": "Student joined by the room's code"
       },
       "exam": {
         "results": {

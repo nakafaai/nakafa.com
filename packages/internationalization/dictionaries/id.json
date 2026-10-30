@@ -830,7 +830,8 @@
         "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
         "finish": "Percobaan ujian diselesaikan",
         "close": "Sesi ujian ditutup",
-        "cancel": "Ruang ujian dibatalkan"
+        "cancel": "Ruang ujian dibatalkan",
+        "join": "Siswa bergabung dengan kode ruang"
       },
       "exam": {
         "results": {
