@@ -150,37 +150,45 @@ for (const width of [390, 1440]) {
   });
 }
 
-test("a learner's attach pressed on the landing composer before the session answers opens the file picker", async ({
-  baseURL,
-  page,
-}) => {
-  await runOnPage(page, baseURL, (origin) =>
-    Effect.gen(function* () {
-      yield* seedAnalyticsConsent(page, "denied");
-      yield* signInLearner(page.context(), origin);
-      // Better Auth's answer for the session is held back, so the press lands
-      // in the moment before the page knows who is signed in.
-      const answered = yield* Deferred.make<void>();
-      const run = Effect.runPromiseWith(yield* Effect.context<never>());
-      yield* Effect.promise(() =>
-        page.route(SESSION_ANSWER, async (route) => {
-          await run(Deferred.await(answered));
-          await route.continue();
-        })
-      );
-      yield* Effect.promise(() => page.goto("/en"));
-      const attach = page
-        .locator(NINA_SECTION)
-        .getByRole("button", { name: "Attach files" });
-      yield* Effect.promise(() => waitUntilTakenOver(attach));
+/** The composers whose attach a learner may press before the session answers. */
+const EARLY_SURFACES = [
+  { name: "landing", path: "/en", scope: NINA_SECTION },
+  { name: "new chat", path: CHAT_PATH, scope: "main" },
+] as const;
 
-      const chooser = page.waitForEvent("filechooser");
-      yield* Effect.promise(() => attach.click());
-      yield* Deferred.succeed(answered, undefined);
-      yield* Effect.promise(() => chooser);
-    })
-  );
-});
+for (const surface of EARLY_SURFACES) {
+  test(`a learner's attach pressed on the ${surface.name} composer before the session answers opens the file picker`, async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* signInLearner(page.context(), origin);
+        // Better Auth's answer for the session is held back, so the press lands
+        // in the moment before the page knows who is signed in.
+        const answered = yield* Deferred.make<void>();
+        const run = Effect.runPromiseWith(yield* Effect.context<never>());
+        yield* Effect.promise(() =>
+          page.route(SESSION_ANSWER, async (route) => {
+            await run(Deferred.await(answered));
+            await route.continue();
+          })
+        );
+        yield* Effect.promise(() => page.goto(surface.path));
+        const attach = page
+          .locator(surface.scope)
+          .getByRole("button", { name: "Attach files" });
+        yield* Effect.promise(() => waitUntilTakenOver(attach));
+
+        const chooser = page.waitForEvent("filechooser");
+        yield* Effect.promise(() => attach.click());
+        yield* Deferred.succeed(answered, undefined);
+        yield* Effect.promise(() => chooser);
+      })
+    );
+  });
+}
 
 test("a learner who types and presses attach before React takes the landing page over keeps the text and gets the file picker", async ({
   baseURL,

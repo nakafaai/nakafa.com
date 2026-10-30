@@ -119,9 +119,10 @@ kept, so no first press is a dead click.
 
 Nina's entry on lessons, articles, and Quran pages keeps its press:
 `apps/www/e2e/chat/sheet.browser.ts` presses it right after the page loads. So
-does the attach button of Nina's composer on the landing page, which keeps the
-text typed before it too: `apps/www/e2e/nina/composer.browser.ts` types and
-presses while the page's scripts are held.
+does the attach button of Nina's composer on the landing and new-chat pages,
+which keeps the text typed before it too: `apps/www/e2e/nina/composer.browser.ts`
+types and presses while the page's scripts are held, and presses on both pages
+before the session answers.
 
 ## Instances Of The Store Rule
 

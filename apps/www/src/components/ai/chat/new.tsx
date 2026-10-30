@@ -11,27 +11,44 @@ import {
   useState,
 } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+import { NinaHeldAttach } from "@/components/ai/attachment";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
 import { HomeTitle } from "@/components/ai/home/title";
 import { NinaInput } from "@/components/ai/input";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
+import { hasSignedInHint } from "@/lib/auth/hint";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { useCurrentLocale } from "@/lib/routing/link";
 
-/** The send a learner pressed while the page's session loaded, until a composer takes it. */
+/**
+ * The send and the attach a learner pressed while the page's session loaded,
+ * until a composer takes them.
+ */
 interface HeldSend {
+  readonly attach: boolean;
   readonly held: PromptInputMessage | null;
   readonly hold: (message: PromptInputMessage | null) => void;
+  readonly holdAttach: (attach: boolean) => void;
 }
 
 /** Creates the held send of one new-chat page. */
 function createHeldSendStore() {
   return createStore<HeldSend>()((set) => ({
+    attach: false,
     held: null,
     hold: (message) => set({ held: message }),
+    holdAttach: (attach) => set({ attach }),
   }));
+}
+
+/**
+ * Whether the page's session has yet to settle: a page with the signed-in hint
+ * starts it after React takes the page over, and a read that failed settles it.
+ */
+function isSessionUnsettled(hasSessionError: boolean) {
+  return hasSignedInHint(document.cookie) && !hasSessionError;
 }
 
 const HeldSendContext = createContext<StoreApi<HeldSend> | null>(null);
@@ -52,7 +69,10 @@ function useHeldSend<Selected>(selector: (state: HeldSend) => Selected) {
  * admission code and opens no client. A visitor's composer sends to sign-in.
  * While the session loads the composer looks the same and holds a send, which
  * the signed-in composer then admits, or the visitor's sends to sign-in, so the
- * composer never dims and comes back.
+ * composer never dims and comes back. The server draws the visitor's composer,
+ * and a page with the signed-in hint keeps it until its session starts, so that
+ * composer holds an attach until the session settles: the signed-in composer
+ * then opens its file picker, and a visitor's asks for sign-in.
  */
 export function ChatNew({ children }: { children: ReactNode }) {
   const isSessionPending = useLiveSession((state) => state.isPending);
@@ -137,6 +157,8 @@ function SignedInChatNew({ children }: { children: ReactNode }) {
   });
   const held = useHeldSend((state) => state.held);
   const hold = useHeldSend((state) => state.hold);
+  const attach = useHeldSend((state) => state.attach);
+  const holdAttach = useHeldSend((state) => state.holdAttach);
 
   // A send pressed while the session loaded is admitted once this composer mounts.
   useEffect(() => {
@@ -149,7 +171,11 @@ function SignedInChatNew({ children }: { children: ReactNode }) {
 
   return (
     <NewChatLayout
-      composer={<NinaInput disabled={disabled} onSubmit={submit} />}
+      composer={
+        <NinaInput disabled={disabled} onSubmit={submit}>
+          {attach ? <NinaHeldAttach onOpen={() => holdAttach(false)} /> : null}
+        </NinaInput>
+      }
       prompt={prompt}
     >
       {children}
@@ -159,33 +185,54 @@ function SignedInChatNew({ children }: { children: ReactNode }) {
 
 /**
  * A visitor's composer: its attach button and its send both ask for sign-in, and
- * so does a send held while the session loaded.
+ * so does a send or an attach held while the session loaded. Until a page with
+ * the signed-in hint has settled its session, an attach is held instead.
  */
 function VisitorChatNew({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const held = useHeldSend((state) => state.held);
   const hold = useHeldSend((state) => state.hold);
+  const attach = useHeldSend((state) => state.attach);
+  const holdAttach = useHeldSend((state) => state.holdAttach);
+  const hasSessionError = useLiveSession((state) => state.hasError);
 
   function signIn() {
     navigate(authNavigation.readTarget());
     return false;
   }
 
+  function requestAttach() {
+    if (isSessionUnsettled(hasSessionError)) {
+      holdAttach(true);
+      return;
+    }
+    signIn();
+  }
+
   useEffect(() => {
-    if (held === null) {
+    if ((held === null && !attach) || isSessionUnsettled(hasSessionError)) {
       return;
     }
     hold(null);
+    holdAttach(false);
     navigate(authNavigation.readTarget());
-  }, [authNavigation, held, hold, navigate]);
+  }, [
+    attach,
+    authNavigation,
+    hasSessionError,
+    held,
+    hold,
+    holdAttach,
+    navigate,
+  ]);
 
   return (
     <NewChatLayout
       composer={
         <NinaInput
           attachments={false}
-          onAttachRequest={signIn}
+          onAttachRequest={requestAttach}
           onSubmit={signIn}
         />
       }

@@ -24,7 +24,7 @@ import type {
 } from "@repo/design-system/lib/prompt-input/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { refusalReason, splitFileName } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
@@ -237,4 +237,27 @@ export function NinaAttach() {
       <HugeIcons icon={AttachmentIcon} />
     </InputGroupButton>
   );
+}
+
+/**
+ * Opens the composer's file picker once, for an attach the learner pressed
+ * before this composer mounted, then runs `onOpen`. A browser opens a picker
+ * only within a short time after a press, so it opens as soon as it mounts.
+ */
+export function NinaHeldAttach({ onOpen }: { onOpen?: () => void }) {
+  const openFileDialog = usePromptInputAttachments(
+    (attachments) => attachments.openFileDialog
+  );
+  const opened = useRef(false);
+
+  useEffect(() => {
+    if (opened.current) {
+      return;
+    }
+    opened.current = true;
+    openFileDialog();
+    onOpen?.();
+  }, [onOpen, openFileDialog]);
+
+  return null;
 }
