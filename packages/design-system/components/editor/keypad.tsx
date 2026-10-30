@@ -186,23 +186,20 @@ export function FormulaKeypad({
       </div>
       <div className="grid grid-cols-6 gap-1">
         <CommandKey
-          command="moveToPreviousChar"
           icon={ArrowLeft01Icon}
           label={labels.left}
-          onCommand={onCommand}
+          onPress={() => onCommand("moveToPreviousChar")}
         />
         <CommandKey
-          command="moveToNextChar"
           icon={ArrowRight01Icon}
           label={labels.right}
-          onCommand={onCommand}
+          onPress={() => onCommand("moveToNextChar")}
         />
         <div className="col-span-3" />
         <CommandKey
-          command="deleteBackward"
           icon={Delete02Icon}
           label={labels.delete}
-          onCommand={onCommand}
+          onPress={() => onCommand("deleteBackward")}
         />
       </div>
     </div>
@@ -223,21 +220,19 @@ function KeyFace({ latex }: { latex: string }) {
 
 /** A key that moves the caret or deletes, named for assistive technology and drawn with its icon. */
 function CommandKey({
-  command,
   icon,
   label,
-  onCommand,
+  onPress,
 }: {
-  command: KeypadCommand;
   icon: typeof Delete02Icon;
   label: string;
-  onCommand: (command: KeypadCommand) => void;
+  onPress: () => void;
 }) {
   return (
     <Button
       aria-label={label}
       className="h-9"
-      onClick={() => onCommand(command)}
+      onClick={onPress}
       onMouseDown={(event) => event.preventDefault()}
       size="sm"
       type="button"
