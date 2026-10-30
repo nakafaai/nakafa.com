@@ -27,13 +27,6 @@ import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { ExamDocument } from "@/components/tenant/exams/rich";
 import { PaperOption } from "@/components/tenant/exams/sheet";
-import {
-  cellsKey,
-  keyCells,
-  withCellLabel,
-  withStatementAdded,
-  withStatementRemoved,
-} from "@/components/tenant/exams/table";
 
 /** One part of a match or a table: its ID and its rich text. */
 type Part = Pick<
@@ -41,8 +34,8 @@ type Part = Pick<
   "id" | "label"
 >;
 
-/** What a column of parts holds: statements, numbered, or answers or columns, lettered. */
-type PartKind = "answers" | "columns" | "statements";
+/** What a column of parts holds: statements, numbered, or answers, lettered. */
+type PartKind = "answers" | "statements";
 
 /**
  * The words of each kind of column: its heading, the name of a part's editor and of its remove control for
@@ -54,12 +47,6 @@ const PART_WORDS = {
     heading: "match-answers",
     placeholder: "answer-placeholder",
     remove: "answer-remove-of",
-  },
-  columns: {
-    editor: "column-of",
-    heading: "table-columns",
-    placeholder: "column-placeholder",
-    remove: "statement-remove-of",
   },
   statements: {
     editor: "statement-of",
@@ -245,83 +232,6 @@ export function MatchColumn({
       parts={parts}
       saved={Arr.flatMap(props.question.answers, (answer) =>
         answer.kind === "match" ? answer[side] : []
-      )}
-    />
-  );
-}
-
-/**
- * One side of a true or false table's paper: its statements, numbered, which the teacher adds and
- * removes from two to five, or its two columns, lettered, which the teacher may retype in the question's
- * language. A statement that leaves takes its mark out of the key, and the key waits for the teacher to
- * mark every statement again.
- */
-export function TableColumn({
-  side,
-  table,
-  ...props
-}: SideProps & {
-  readonly side: "columns" | "statements";
-  readonly table: Extract<Interaction, { kind: "matrix" }>;
-}) {
-  const t = useTranslations("Exams");
-  const statements = side === "statements";
-  const parts = table[side];
-
-  return (
-    <PartColumn
-      add={
-        statements && parts.length < CHOICE_OPTIONS_MAX
-          ? {
-              icon: ListPlusIcon,
-              label: t("statement-add"),
-              run: () =>
-                props.editing.saveAnswers((draft) => {
-                  const answers = withStatementAdded(draft.answers);
-                  return {
-                    ...draft,
-                    answers,
-                    key: cellsKey(answers, keyCells(draft.key)),
-                  };
-                }),
-            }
-          : null
-      }
-      chosen={props.chosen}
-      frozen={props.frozen}
-      kind={side}
-      number={props.number}
-      onLabel={(partId, label, unstored) =>
-        props.editing.saveAnswers(
-          (draft) => ({
-            ...draft,
-            answers: withCellLabel(draft.answers, partId, label),
-          }),
-          unstored
-        )
-      }
-      onRemove={
-        statements && parts.length > CHOICE_OPTIONS_MIN
-          ? (partId) =>
-              props.editing.saveAnswers((draft) => {
-                const answers = withStatementRemoved(draft.answers, partId);
-                return {
-                  ...draft,
-                  answers,
-                  key: cellsKey(
-                    answers,
-                    Arr.filter(
-                      keyCells(draft.key),
-                      (cell) => cell.statement !== partId
-                    )
-                  ),
-                };
-              })
-          : null
-      }
-      parts={parts}
-      saved={Arr.flatMap(props.question.answers, (answer) =>
-        answer.kind === "matrix" ? answer[side] : []
       )}
     />
   );

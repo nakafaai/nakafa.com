@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import type { ExamSummary } from "@repo/backend/confect/exams/exam";
-import { nf } from "@repo/backend/test/editor";
-import { archiveUnit, teacherExam } from "@repo/backend/test/exams";
+import { teacherExam } from "@repo/backend/test/exams";
 import { homeOf, insertRoom, roomsOf } from "@repo/backend/test/home";
 import { OPENS_AT, seedPlacement } from "@repo/backend/test/sittings";
 import {
@@ -13,14 +10,8 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { create } = refs.public.exams.exams;
-
 /** One day, in milliseconds. */
 const DAY = 86_400_000;
-
-/** The titles of a list of exams, in order. */
-const titlesOf = (exams: readonly (typeof ExamSummary.Type)[]) =>
-  Arr.map(exams, (exam) => exam.title);
 
 describe("exams home", () => {
   beforeEach(() => {
@@ -29,7 +20,7 @@ describe("exams home", () => {
   });
 
   it.effect(
-    "shows a teacher the open rooms of the teacher's unit, and the teacher's own drafts",
+    "shows a teacher the open rooms of the teacher's unit, and no other unit's",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -52,7 +43,6 @@ describe("exams home", () => {
 
         expect(roomsOf(read.live)).toEqual(["Lab 2"]);
         expect(read.next).toEqual([]);
-        expect(titlesOf(read.drafts)).toEqual(["PTS Biologi"]);
       })
   );
 
@@ -77,7 +67,6 @@ describe("exams home", () => {
       const read = yield* homeOf(fixture, "owner");
 
       expect(roomsOf(read.live)).toEqual(["Lab 2", "Lab SMA"]);
-      expect(read.drafts).toEqual([]);
     })
   );
 
@@ -98,31 +87,28 @@ describe("exams home", () => {
     })
   );
 
-  it.effect(
-    "shows a principal the rooms of the principal's own unit, and no drafts",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const exam = yield* teacherExam(fixture, "PTS");
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT,
-          room: "Lab 2",
-          state: "open",
-        });
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT,
-          room: "Lab SMA",
-          state: "open",
-          unitId: fixture.units.sma,
-        });
+  it.effect("shows a principal the rooms of the principal's own unit", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const exam = yield* teacherExam(fixture, "PTS");
+      yield* insertRoom(fixture, {
+        examId: exam.id,
+        opensAt: OPENS_AT,
+        room: "Lab 2",
+        state: "open",
+      });
+      yield* insertRoom(fixture, {
+        examId: exam.id,
+        opensAt: OPENS_AT,
+        room: "Lab SMA",
+        state: "open",
+        unitId: fixture.units.sma,
+      });
 
-        const read = yield* homeOf(fixture, "principal");
+      const read = yield* homeOf(fixture, "principal");
 
-        expect(roomsOf(read.live)).toEqual(["Lab SMA"]);
-        expect(read.drafts).toEqual([]);
-      })
+      expect(roomsOf(read.live)).toEqual(["Lab SMA"]);
+    })
   );
 
   it.effect("shows a deputy the rooms of the unit the deputy covers", () =>
@@ -155,7 +141,7 @@ describe("exams home", () => {
         });
         yield* insertRoom(fixture, {
           examId: exam.id,
-          opensAt: TENANCY_NOW + 2 * DAY,
+          opensAt: TENANCY_NOW + DAY / 2,
           state: "scheduled",
         });
         yield* insertRoom(fixture, {
@@ -166,51 +152,12 @@ describe("exams home", () => {
 
         const read = yield* homeOf(fixture, "student");
 
-        expect(read).toEqual({
-          canManageSetup: false,
-          closed: [],
-          draftsBounded: false,
-          drafts: [],
-          live: [],
-          next: [],
-        });
+        expect(read).toEqual({ live: [], next: [] });
       })
   );
 
   it.effect(
-    "tells the owner that the viewer may manage the school's setup, and a student that it may not",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-
-        const owner = yield* homeOf(fixture, "owner");
-        const student = yield* homeOf(fixture, "student");
-
-        expect(owner.canManageSetup).toBe(true);
-        expect(student.canManageSetup).toBe(false);
-      })
-  );
-
-  it.effect(
-    "gives the owner the school's setup with the home, and gives a student none",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-
-        const owner = yield* homeOf(fixture, "owner");
-        const student = yield* homeOf(fixture, "student");
-
-        expect(owner.setup).toEqual({
-          hasPendingInvite: false,
-          hasStudent: true,
-          hasTeacher: true,
-        });
-        expect(student.setup).toBeUndefined();
-      })
-  );
-
-  it.effect(
-    "lists the rooms that open within fourteen days, earliest first, and no other",
+    "lists the rooms that open within the next day, earliest first, and no other",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -218,20 +165,20 @@ describe("exams home", () => {
         const readAt = actedAt();
         yield* insertRoom(fixture, {
           examId: exam.id,
-          opensAt: readAt + 14 * DAY,
-          room: "Day 14",
-          state: "scheduled",
-        });
-        yield* insertRoom(fixture, {
-          examId: exam.id,
           opensAt: readAt + DAY,
-          room: "Day 1",
+          room: "In a day",
           state: "scheduled",
         });
         yield* insertRoom(fixture, {
           examId: exam.id,
-          opensAt: readAt + 14 * DAY + 1,
-          room: "Day 14 and a millisecond",
+          opensAt: readAt + DAY / 2,
+          room: "In twelve hours",
+          state: "scheduled",
+        });
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: readAt + DAY + 1,
+          room: "In a day and a millisecond",
           state: "scheduled",
         });
         yield* insertRoom(fixture, {
@@ -244,7 +191,7 @@ describe("exams home", () => {
         vi.setSystemTime(readAt);
         const read = yield* homeOf(fixture, "teacher");
 
-        expect(roomsOf(read.next)).toEqual(["Day 1", "Day 14"]);
+        expect(roomsOf(read.next)).toEqual(["In twelve hours", "In a day"]);
         expect(read.live).toEqual([]);
       })
   );
@@ -338,7 +285,7 @@ describe("exams home", () => {
       );
       yield* insertRoom(fixture, {
         examId: exam.id,
-        opensAt: TENANCY_NOW + DAY,
+        opensAt: TENANCY_NOW + DAY / 2,
         state: "scheduled",
       });
 
@@ -378,82 +325,5 @@ describe("exams home", () => {
 
       expect(read.live).toEqual([]);
     })
-  );
-
-  it.effect(
-    "lists the newest four drafts of the viewer, and no draft of another author",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        yield* Effect.forEach(
-          Arr.makeBy(5, (index) => index + 1),
-          (index) =>
-            Effect.sync(() => vi.setSystemTime(TENANCY_NOW + index)).pipe(
-              Effect.andThen(teacherExam(fixture, `Draf ${index}`))
-            ),
-          { discard: true }
-        );
-        yield* fixture.as("admin").mutation(create, {
-          scope: { kind: "tenant" },
-          slug: nf,
-          title: "Milik admin",
-        });
-
-        const read = yield* homeOf(fixture, "teacher");
-
-        expect(titlesOf(read.drafts)).toEqual([
-          "Draf 5",
-          "Draf 4",
-          "Draf 3",
-          "Draf 2",
-        ]);
-        expect(read.draftsBounded).toBe(true);
-      })
-  );
-
-  it.effect("drops a draft that its author may no longer edit", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* teacherExam(fixture, "PTS");
-      yield* fixture.run(archiveUnit(fixture.units.smp));
-
-      const read = yield* homeOf(fixture, "teacher");
-
-      expect(read.drafts).toEqual([]);
-    })
-  );
-
-  it.effect(
-    "lists an older draft that the author may edit, past newer drafts in an archived unit",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        yield* teacherExam(fixture, "PTS lama");
-        yield* Effect.forEach(
-          Arr.makeBy(4, (index) => index + 1),
-          (index) =>
-            Effect.sync(() => vi.setSystemTime(TENANCY_NOW + index)).pipe(
-              Effect.andThen(
-                fixture.run(
-                  Effect.flatMap(DatabaseWriter, (writer) =>
-                    writer.table("exams").insert({
-                      createdAt: TENANCY_NOW + index,
-                      createdBy: fixture.users.teacher.userId,
-                      questions: [],
-                      scope: { kind: "unit", unitId: fixture.units.smk },
-                      tenantId: fixture.tenants.nf,
-                      title: `Terkunci ${index}`,
-                    })
-                  ).pipe(Effect.orDie)
-                )
-              )
-            ),
-          { discard: true }
-        );
-
-        const read = yield* homeOf(fixture, "teacher");
-
-        expect(titlesOf(read.drafts)).toEqual(["PTS lama"]);
-      })
   );
 });

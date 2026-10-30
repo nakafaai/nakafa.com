@@ -21,7 +21,7 @@ type ToggleGroupContextValue = VariantProps<typeof toggleVariants> &
 const ToggleGroupContext = createContext<ToggleGroupContextValue>({
   layout: "default",
   size: "default",
-  variant: "default",
+  variant: "outline",
 });
 
 /** Shares a group's resolved layout and visual variants with its items. */
@@ -38,20 +38,26 @@ function ToggleGroupStyle({
   return <ToggleGroupContext value={style}>{children}</ToggleGroupContext>;
 }
 
+/**
+ * A group lays its items in equal columns, each as wide as the widest item's label and never narrower, so no label
+ * runs into its neighbour. `auto-cols-[1fr]` keeps the track's content minimum that `auto-cols-fr` (a zero minimum)
+ * drops.
+ */
 const toggleGroupRootVariants = cva(
-  "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:w-full data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
+  "group/toggle-group w-fit rounded-md data-[variant=outline]:shadow-xs",
   {
     variants: {
       gridColumns: {
         auto: "grid w-full grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]",
-        "2": "grid w-full grid-cols-2",
+        "2": "grid w-full auto-cols-[1fr] grid-flow-col",
         "3": "grid w-full grid-cols-1 sm:grid-cols-3",
         "4": "grid w-full grid-cols-2 sm:grid-cols-4",
         "4-lg": "grid w-full grid-cols-2 lg:grid-cols-4",
         "6": "grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
       },
       layout: {
-        default: "",
+        default:
+          "inline-grid auto-cols-[1fr] grid-flow-col items-stretch data-[orientation=vertical]:w-full data-[orientation=vertical]:grid-flow-row",
         grid: "gap-px overflow-hidden rounded-md data-[variant=outline]:border data-[variant=outline]:bg-border",
       },
     },
@@ -67,12 +73,26 @@ const toggleGroupItemLayoutVariants = cva("", {
       // Only the outline variant draws a border on each item, so only it drops the border between
       // joined items and keeps the first one's; a default item has no border (as shadcn scopes it).
       default:
-        "group-data-[orientation=vertical]/toggle-group:w-full group-data-[orientation=vertical]/toggle-group:flex-none group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:border-t-0 group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:first:border-t group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:first:border-l",
+        "group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:border-t-0 group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:data-[variant=outline]:first:border-t group-data-[orientation=horizontal]/toggle-group:data-[variant=outline]:first:border-l",
       grid: "rounded-none border-0 bg-background hover:bg-accent hover:text-accent-foreground data-pressed:bg-accent",
     },
   },
   defaultVariants: {
     layout: "default",
+  },
+});
+
+/** An item's side padding, wider than a lone toggle's so an icon and a label sit clear of the borders. */
+const toggleGroupItemPaddingVariants = cva("", {
+  variants: {
+    size: {
+      default: "px-3",
+      lg: "px-3.5",
+      sm: "px-2.5",
+    },
+  },
+  defaultVariants: {
+    size: "default",
   },
 });
 
@@ -106,7 +126,7 @@ type ToggleGroupMultipleProps = ToggleGroupBaseProps & {
 type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
 
 /**
- * Renders a single-select or multi-select toggle group.
+ * Renders a single-select or multi-select toggle group: joined outline segments of equal width, never ghost.
  */
 function ToggleGroup(props: ToggleGroupProps) {
   if (isMultipleToggleGroupProps(props)) {
@@ -121,7 +141,7 @@ function ToggleGroup(props: ToggleGroupProps) {
  */
 function SingleToggleGroup({
   className,
-  variant,
+  variant = "outline",
   size,
   children,
   defaultValue,
@@ -180,7 +200,7 @@ function SingleToggleGroup({
  */
 function MultipleToggleGroup({
   className,
-  variant,
+  variant = "outline",
   size,
   children,
   gridColumns,
@@ -278,7 +298,10 @@ function ToggleGroupItem({
           variant: itemVariant,
           size: itemSize,
         }),
-        "relative min-w-0 flex-1 shrink-0 rounded-none shadow-none hover:z-10 focus:z-10 focus-visible:z-10 data-pressed:z-10",
+        "relative rounded-none shadow-none hover:z-10 focus:z-10 focus-visible:z-10 data-pressed:z-10",
+        groupLayout === "default"
+          ? toggleGroupItemPaddingVariants({ size: itemSize })
+          : undefined,
         toggleGroupItemLayoutVariants({ layout: groupLayout }),
         className
       )}

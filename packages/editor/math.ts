@@ -6,17 +6,47 @@ import {
   Node,
   type NodeViewRenderer,
   PasteRule,
+  type Storage,
 } from "@tiptap/core";
-import { Array as Arr } from "effect";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import {
+  NodeSelection,
+  TextSelection,
+  type Transaction,
+} from "@tiptap/pm/state";
+import { Array as Arr, Option, String as Str } from "effect";
+
+/** The two formula nodes: a formula inside a line of text, and a formula on a line of its own. */
+type FormulaType = "mathBlock" | "mathInline";
+
+/** The LaTeX of a formula that a writer inserts with nothing selected, which the writer changes in its editor at once. */
+export const NEW_FORMULA = "x";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    formulaToggle: {
+      /**
+       * Turns the selected text into a formula of the type, with the text as its LaTeX, and a selected formula of the
+       * type back into its LaTeX as selected text. With no text selected it inserts a new formula, whose editor opens
+       * at once.
+       */
+      toggleFormula: (type: FormulaType) => ReturnType;
+    };
+  }
+
+  interface Storage {
+    formulaToggle: {
+      /** The formula the writer just inserted, whose editor opens as its view first draws it. */
+      opening: Option.Option<ProseMirrorNode>;
+    };
+  }
+}
 
 /**
  * The views of the formula nodes, which the caller gives: each is `null` when the caller shows
  * none. This package holds no view, because the schema reads a formula as an atom (ADR 0031).
  */
-export type MathViews = Record<
-  "mathBlock" | "mathInline",
-  NodeViewRenderer | null
->;
+export type MathViews = Record<FormulaType, NodeViewRenderer | null>;
 
 /**
  * The views of an editor that shows no formula view: each node draws its own DOM.
@@ -126,11 +156,86 @@ const MathPaste = Extension.create({
   name: "mathPaste",
 });
 
-/** The math of a document: its two formula nodes, drawn by the given views, and the paste that makes them. */
+/**
+ * Replaces the selected formula with its LaTeX as selected text: text in the line for inline math, and a paragraph
+ * for block math. A formula with no LaTeX turns into no text at all.
+ */
+function formulaToText(tr: Transaction, latex: string, block: boolean) {
+  if (latex === "") {
+    tr.deleteSelection();
+    return;
+  }
+  const { from } = tr.selection;
+  const text = tr.doc.type.schema.text(latex);
+  tr.replaceSelectionWith(
+    block ? tr.doc.type.schema.node("paragraph", null, text) : text,
+    false
+  );
+  const start = block ? from + 1 : from;
+  tr.setSelection(TextSelection.create(tr.doc, start, start + latex.length));
+}
+
+/**
+ * Turns text into a formula and a formula back into text, as Google Docs does with its equations: the toolbar and the
+ * slash menu run `toggleFormula`, and so do Mod-Shift-E for inline math and Mod-Alt-E for block math. Turning a
+ * formula back selects its LaTeX, so the same command turns it into the formula again.
+ */
+const FormulaToggle = Extension.create<
+  Record<never, never>,
+  Storage["formulaToggle"]
+>({
+  addCommands() {
+    return {
+      toggleFormula:
+        (type) =>
+        ({ dispatch, state, tr }) => {
+          if (!dispatch) {
+            return true;
+          }
+          const { from, to } = state.selection;
+          if (
+            state.selection instanceof NodeSelection &&
+            state.selection.node.type.name === type
+          ) {
+            formulaToText(
+              tr,
+              state.selection.node.attrs.latex,
+              type === "mathBlock"
+            );
+            return true;
+          }
+          const selected = Str.trim(state.doc.textBetween(from, to, " "));
+          const formula = state.schema.node(type, {
+            latex: selected === "" ? NEW_FORMULA : selected,
+          });
+          tr.replaceSelectionWith(formula).scrollIntoView();
+          this.storage.opening =
+            selected === "" ? Option.some(formula) : Option.none();
+          return true;
+        },
+    };
+  },
+  addKeyboardShortcuts() {
+    return {
+      "Mod-Alt-e": () => this.editor.commands.toggleFormula("mathBlock"),
+      "Mod-Shift-e": () => this.editor.commands.toggleFormula("mathInline"),
+    };
+  },
+  addStorage() {
+    return { opening: Option.none() };
+  },
+  name: "formulaToggle",
+});
+
+/**
+ * The math of a document: its two formula nodes, drawn by the given views, the paste that makes them, and the command
+ * that turns text into a formula and back.
+ */
 export function mathExtensions(views: MathViews): AnyExtension[] {
   return [
     MathInline.configure({ view: views.mathInline }),
     MathBlock.configure({ view: views.mathBlock }),
     MathPaste,
+    FormulaToggle,
   ];
 }

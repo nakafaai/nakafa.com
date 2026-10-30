@@ -16,9 +16,6 @@ export const SLASH_KEYS = [
   "equation",
 ] as const;
 
-/** The LaTeX of a formula that a writer inserts, which the writer changes in its editor. */
-export const NEW_FORMULA = "x";
-
 /** One block of the slash menu. */
 export type SlashKey = (typeof SLASH_KEYS)[number];
 
@@ -64,13 +61,8 @@ const COMMANDS: Record<SlashKey, (chain: ChainedCommands) => ChainedCommands> =
   {
     bullets: (chain) => chain.toggleBulletList(),
     "code-block": (chain) => chain.toggleCodeBlock(),
-    equation: (chain) =>
-      chain.insertContent({ attrs: { latex: NEW_FORMULA }, type: "mathBlock" }),
-    formula: (chain) =>
-      chain.insertContent({
-        attrs: { latex: NEW_FORMULA },
-        type: "mathInline",
-      }),
+    equation: (chain) => chain.toggleFormula("mathBlock"),
+    formula: (chain) => chain.toggleFormula("mathInline"),
     numbers: (chain) => chain.toggleOrderedList(),
     quote: (chain) => chain.toggleBlockquote(),
     table: (chain) =>

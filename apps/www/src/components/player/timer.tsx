@@ -2,28 +2,40 @@ import {
   NumberFormat,
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
-import { cn } from "cn";
+import { cva, type VariantProps } from "class-variance-authority";
 import { useTranslations } from "use-intl";
 import { readTimeNotice, splitTime } from "@/components/player/time";
 
-/** Animates timer digits without changing the width at minute or hour rollover. */
+/** The digits at the size of a running timer, or of a metric on a summary card. */
+const digitsVariants = cva(
+  "inline-flex w-[8ch] shrink-0 items-baseline justify-center font-mono tabular-nums",
+  {
+    variants: {
+      size: {
+        metric: "font-light text-5xl",
+        timer: "text-base",
+      },
+    },
+    defaultVariants: {
+      size: "timer",
+    },
+  }
+);
+
+/**
+ * Animates timer digits without changing the width at minute or hour rollover.
+ * It holds the width of its eight monospace characters (HH:MM:SS) from the first
+ * paint, before the animated digits render, so the row around it never moves
+ * when they arrive.
+ */
 export function PlayerDigits({
-  className,
   seconds,
-}: {
-  className?: string;
-  seconds: number;
-}) {
+  size,
+}: VariantProps<typeof digitsVariants> & { seconds: number }) {
   const time = splitTime(seconds);
 
   return (
-    <time
-      className={cn(
-        "inline-flex shrink-0 items-baseline font-mono text-base tabular-nums",
-        className
-      )}
-      dateTime={`PT${seconds}S`}
-    >
+    <time className={digitsVariants({ size })} dateTime={`PT${seconds}S`}>
       <NumberFormatGroup>
         <NumberFormat
           format={{ minimumIntegerDigits: 2, useGrouping: false }}

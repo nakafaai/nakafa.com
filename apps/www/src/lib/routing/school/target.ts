@@ -29,6 +29,15 @@ export function schoolExamsTarget(slug: TenantSlug): LinkTarget {
   } satisfies LinkTarget;
 }
 
+/** The viewer's notifications from the school, in the school. */
+export function schoolNotificationsTarget(slug: TenantSlug): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { slug },
+    to: "/school/$slug/notifications",
+  } satisfies LinkTarget;
+}
+
 /** The page of one exam. */
 export function schoolExamTarget(slug: TenantSlug, exam: string): LinkTarget {
   return {

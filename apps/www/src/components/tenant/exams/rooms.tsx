@@ -26,16 +26,22 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Option } from "effect";
-import { startTransition, useState } from "react";
+import { Array as Arr, Option, Schema } from "effect";
+import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnChoice } from "@/components/shared/table/column";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
-import { TableChoice } from "@/components/shared/table/toolbar";
+import {
+  TableFiltersProvider,
+  useTableFilters,
+} from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import {
   cancelRoomChange,
@@ -50,6 +56,7 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
+import { schoolExamsTarget } from "@/lib/routing/school/target";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -59,14 +66,14 @@ type Room = typeof RoomRow.Type;
 /** The state the table filters by, which is every state or one of them. */
 type StateFilter = typeof RoomStateFilter.Type;
 
-/** The states of a room, in the order the Filter menu lists them after every state. */
+/** The states of a room, in the order the state column's choice lists them after every state. */
 const ROOM_STATES = Arr.filter(
   RoomStateFilter.literals,
   (state): state is Exclude<StateFilter, "all"> => state !== "all"
 );
 
 /**
- * The look of each room state, in its table cell and in the Filter menu: a clock before it opens,
+ * The look of each room state, in its table cell and in its column's filter: a clock before it opens,
  * a running room, and a closed one, each in its tone.
  */
 const ROOM_STATE_LOOKS = {
@@ -112,9 +119,12 @@ export function ExamRooms({
 }
 
 /** The exam list's crumb of the rooms page, which only a viewer who may open the list has. */
-function useExamsItems(canOpenExams: boolean) {
+function useExamsItems(canOpenExams: boolean): readonly BreadcrumbHeaderItem[] {
   const t = useTranslations("Exams");
-  return canOpenExams ? [{ href: "/exams", label: t("title") }] : [];
+  const tenant = useTenant();
+  return canOpenExams
+    ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
+    : [];
 }
 
 /** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
@@ -128,7 +138,6 @@ function ExamRoomsContent({
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const [filter, setFilter] = useState<StateFilter>("all");
   const summary = useQuery(
     exams.rooms.exam,
     isSettled ? { examId, slug } : "skip"
@@ -175,24 +184,11 @@ function ExamRoomsContent({
   }
 
   return (
-    <>
+    <TableFiltersProvider>
       <SchoolHeader
         items={[...examsItems, { label: summary.value.title }]}
         title={summary.value.title}
       >
-        <TableChoice
-          onChange={setFilter}
-          options={[
-            { icon: Calendar03Icon, label: t("state-all"), value: "all" },
-            ...Arr.map(ROOM_STATES, (state) => ({
-              icon: ROOM_STATE_LOOKS[state].icon,
-              label: t(`room-state-${state}`),
-              value: state,
-            })),
-          ]}
-          title={t("rooms-state")}
-          value={filter}
-        />
         {tenant.canOpenExams ? (
           <Link
             className={buttonVariants({ variant: "outline" })}
@@ -204,60 +200,34 @@ function ExamRoomsContent({
         ) : null}
       </SchoolHeader>
       <TablePageBody>
-        <RoomsTable
-          examId={examId}
-          filter={filter}
-          isSettled={isSettled}
-          slug={slug}
-        />
+        <RoomsTable examId={examId} isSettled={isSettled} slug={slug} />
       </TablePageBody>
-    </>
+    </TableFiltersProvider>
   );
 }
 
 /**
- * The empty state of the rooms table once the list is exhausted: no room yet, or no room in the
- * chosen state. The way to the editor is the page's main action, in its header.
- */
-function RoomsEmpty({ filter }: { filter: StateFilter }) {
-  const t = useTranslations("Exams");
-
-  if (filter !== "all") {
-    return (
-      <TableEmpty
-        act="searching"
-        description={t("rooms-filter-empty-description")}
-        title={t("rooms-filter-empty")}
-      />
-    );
-  }
-  return (
-    <TableEmpty
-      act="pointing"
-      description={t("rooms-empty-description")}
-      title={t("rooms-empty")}
-    />
-  );
-}
-
-/**
- * The rooms in a data table that loads more rows as its end comes into view. The table waits for
- * its first page, so no empty state shows before the rows arrive. A page can hold no room the
- * viewer may see, so an empty page keeps the end in view until the list is exhausted, and only
- * then does an empty table say why it is empty: no room yet, or no room in the chosen state.
+ * The rooms in a table that loads more rows as its end comes into view, its state column choosing the state the server
+ * reads. The table waits for its first page, so no empty state shows before the rows arrive. A page can hold no room
+ * the viewer may see, so an empty page keeps the end in view until the list is exhausted, and only then does the table
+ * say why it is empty: an exam with no room yet shows its empty state alone, and a chosen state with no room keeps the
+ * table's head, so its choice stays in reach, above one sentence.
  */
 function RoomsTable({
   examId,
-  filter,
   isSettled,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
-  filter: StateFilter;
   isSettled: boolean;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  const chosen = useTableFilters((state) => state.chosen);
+  const filter = Option.getOrElse(
+    chosenOne(chosen, "state", Schema.is(RoomStateFilter)),
+    (): StateFilter => "all"
+  );
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
@@ -277,14 +247,21 @@ function RoomsTable({
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? () => pagination.loadMore(ROOM_PAGE_SIZE)
     : null;
-  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
-    if (failed) {
-      return <DataFailure onRetry={reloadPage} />;
-    }
-    if (pagination._tag !== "Exhausted") {
-      return <RoomsMore loadMore={loadMore} />;
-    }
-    return <RoomsEmpty filter={filter} />;
+  const empty = Arr.isReadonlyArrayEmpty(pagination.results);
+  if (empty && failed) {
+    return <DataFailure onRetry={reloadPage} />;
+  }
+  if (empty && pagination._tag !== "Exhausted") {
+    return <RoomsMore loadMore={loadMore} />;
+  }
+  if (empty && filter === "all") {
+    return (
+      <TableEmpty
+        act="pointing"
+        description={t("rooms-empty-description")}
+        title={t("rooms-empty")}
+      />
+    );
   }
 
   return (
@@ -297,7 +274,20 @@ function RoomsTable({
             <TableHead>{t("rooms-group")}</TableHead>
             <TableHead>{t("rooms-opens")}</TableHead>
             <TableHead>{t("rooms-closes")}</TableHead>
-            <TableHead>{t("rooms-state")}</TableHead>
+            <TableHead className="text-center">
+              <ColumnChoice
+                column="state"
+                options={[
+                  { icon: Calendar03Icon, label: t("state-all"), value: "all" },
+                  ...Arr.map(ROOM_STATES, (state) => ({
+                    icon: ROOM_STATE_LOOKS[state].icon,
+                    label: t(`room-state-${state}`),
+                    value: state,
+                  })),
+                ]}
+                title={t("rooms-state")}
+              />
+            </TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -307,6 +297,13 @@ function RoomsTable({
           ))}
         </TableBody>
       </Table>
+      {empty ? (
+        <TableEmpty
+          act="searching"
+          description={t("rooms-filter-empty-description")}
+          title={t("rooms-filter-empty")}
+        />
+      ) : null}
       <RoomsMore loadMore={loadMore} />
     </>
   );
@@ -361,7 +358,7 @@ function RoomItem({
           timeZone: room.timeZone,
         })}
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center">
         <TableStatus
           icon={ROOM_STATE_LOOKS[room.state].icon}
           label={t(`room-state-${room.state}`)}

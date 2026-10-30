@@ -152,7 +152,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     }),
     inviteColumns.display({
       cell: (info) => (
-        <div className="flex flex-wrap gap-1">
+        <div className="inline-flex flex-wrap justify-center gap-1">
           {Arr.map(info.row.original.roles, (role) => (
             <RoleBadge key={role} role={role} />
           ))}
@@ -160,6 +160,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       ),
       header: t("invite-role"),
       id: "role",
+      meta: { align: "center" },
     }),
     inviteColumns.accessor((invite) => invite.expiresAt, {
       cell: (info) =>
@@ -179,6 +180,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
     inviteColumns.display({
       cell: (info) => <SchoolInviteMenu invite={info.row.original} />,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

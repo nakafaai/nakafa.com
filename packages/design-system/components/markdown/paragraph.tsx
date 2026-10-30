@@ -1,4 +1,4 @@
-import { paragraphVariants } from "@repo/design-system/lib/paragraph";
+import { paragraphVariants } from "@repo/design-system/lib/prose";
 import type { ParagraphProps } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
 

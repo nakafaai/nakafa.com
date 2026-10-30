@@ -106,8 +106,8 @@ export const writeWorst = Effect.fn("NakafaE2E.writeWorst")(function* (
       await page.keyboard.type(text);
     }
     if (divider === true) {
-      // At the width of the panel the blocks sit behind More, and the divider is an item of
-      // the menu of blocks to insert.
+      // At the width of the panel the blocks may sit behind More, where the divider keeps its
+      // own control.
       const more = page
         .getByRole("toolbar")
         .getByRole("button", { exact: true, name: "More" });
@@ -115,12 +115,7 @@ export const writeWorst = Effect.fn("NakafaE2E.writeWorst")(function* (
       if (await more.isVisible()) {
         await more.click();
       }
-      await page
-        .getByRole("button", { exact: true, name: "Insert a block" })
-        .click();
-      await page
-        .getByRole("menuitem", { exact: true, name: "Divider" })
-        .click();
+      await page.getByRole("button", { exact: true, name: "Divider" }).click();
     }
     await editor.press("Escape");
     await expect(editor).toHaveCount(0);

@@ -37,6 +37,11 @@ test("the owner's search finds a setting by its name and opens it", async ({
   // Before a query every place the owner may open is listed, the settings included.
   await expect(palette.getByRole("option", { name: HOME_ROW })).toBeVisible();
   await expect(palette.getByRole("option", { name: AUDIT_ROW })).toHaveCount(1);
+  // While rows show, the empty state takes no room above them.
+  await expect(palette.locator('[data-slot="command-empty"]')).toHaveCSS(
+    "height",
+    "0px"
+  );
 
   await palette.getByRole("combobox").fill("memb");
   const members = palette.getByRole("option", { name: MEMBERS_ROW });

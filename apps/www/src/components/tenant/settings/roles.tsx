@@ -1,8 +1,4 @@
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
@@ -25,17 +21,14 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
-import { roleIcon } from "@/components/tenant/roles";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolGrantTable } from "@/components/tenant/settings/roles/grants";
-import { scopeOptions } from "@/components/tenant/settings/scope";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 
 /** How many grants one page of the list loads, and each page after it. */
@@ -50,8 +43,6 @@ export function SchoolRolesSettings() {
   const t = useTranslations("SchoolSettings");
   const [isGuiding, setIsGuiding] = useState(false);
   const [isGiving, setIsGiving] = useState(false);
-  const tSchool = useTranslations("School");
-  const viewer = useViewerQuery();
 
   return (
     <TableFiltersProvider>
@@ -59,26 +50,6 @@ export function SchoolRolesSettings() {
         actions={
           <>
             <TableSearch placeholder={t("roles-search")} />
-            <TableFilter
-              facets={[
-                {
-                  column: "role",
-                  options: Arr.map(BuiltinRole.literals, (role) => ({
-                    icon: roleIcon(role),
-                    label: tSchool(`role.${role}`),
-                    value: role,
-                  })),
-                  title: t("grant-role"),
-                },
-                {
-                  column: "scope",
-                  options: QueryResult.isSuccess(viewer)
-                    ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
-                    : [],
-                  title: t("grant-scope"),
-                },
-              ]}
-            />
             {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
             <Button
               onClick={() => setIsGuiding(true)}

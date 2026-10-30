@@ -182,7 +182,7 @@ function AnswerList({
             <TableHead>{t("results-name")}</TableHead>
             <TableHead>{t("results-answers")}</TableHead>
             <TableHead>{t("results-points")}</TableHead>
-            <TableHead>{t("results-status")}</TableHead>
+            <TableHead className="text-center">{t("results-status")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -201,7 +201,7 @@ function AnswerList({
                   answer.points
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 <TableStatus
                   icon={VERDICT_LOOKS[answer.verdict].icon}
                   label={t(verdictKeys[answer.verdict])}
