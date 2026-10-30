@@ -849,6 +849,12 @@
         },
         "npsn": {
           "set": "NPSN geändert"
+        },
+        "name": {
+          "set": "Einheit umbenannt"
+        },
+        "level": {
+          "set": "Stufe der Einheit geändert"
         }
       },
       "visit": {

@@ -7597,6 +7597,21 @@ export declare const api: {
               | { type: "unit.archived" }
               | { type: "unit.unarchived" }
               | { npsn: string; type: "unit.npsn.set" }
+              | { name: string; type: "unit.name.set" }
+              | {
+                  level:
+                    | "paud"
+                    | "sd"
+                    | "mi"
+                    | "smp"
+                    | "mts"
+                    | "sma"
+                    | "ma"
+                    | "smk"
+                    | "slb"
+                    | "other";
+                  type: "unit.level.set";
+                }
               | {
                   minutes: number;
                   reason: "support" | "onboarding" | "incident";
