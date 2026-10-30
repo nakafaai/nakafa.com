@@ -1,6 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { AcceptanceModeError } from "@repo/backend/scripts/content/acceptance/mode";
+import { PRODUCTION_CONCURRENCY } from "@repo/backend/scripts/content/acceptance/process";
 import { runLoadCommand } from "@repo/backend/scripts/load/command";
 import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
 import type { LoadInput } from "@repo/backend/scripts/load/run";
@@ -9,6 +10,7 @@ import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, FileSystem, Layer } from "effect";
 
 const mocks = vi.hoisted(() => ({
+  backend: vi.fn(),
   capture: vi.fn(),
   convex: vi.fn(),
   issue: vi.fn(),
@@ -33,7 +35,14 @@ vi.mock(
     ...(await importOriginal<
       typeof import("@repo/backend/scripts/content/acceptance/process")
     >()),
-    withLocalBackend: (_runtime: unknown, program: unknown) => program,
+    withLocalBackend: (
+      _runtime: unknown,
+      program: unknown,
+      concurrency: unknown
+    ) => {
+      mocks.backend(concurrency);
+      return program;
+    },
   })
 );
 vi.mock("@repo/backend/scripts/content/acceptance/convex", () => ({
@@ -94,7 +103,7 @@ describe("load command", () => {
   );
 
   it.effect(
-    "runs the blueprint's plan with the students and minutes it names, against the runtime's backend",
+    "runs the blueprint's plan with the students and minutes it names, against the runtime's backend at production's concurrency",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -108,6 +117,7 @@ describe("load command", () => {
           fs.writeFileString(path, '{"name":"Sekolah 1","slug":"acc-1"}')
         );
         yield* runLoadCommand("/root", ["report.json", "300", "10"]);
+        expect(mocks.backend).toHaveBeenCalledWith(PRODUCTION_CONCURRENCY);
         const [input] = mocks.run.mock.calls[0] ?? [];
         const load: LoadInput<AcceptanceModeError, never> = input;
         expect(load.output).toBe("report.json");

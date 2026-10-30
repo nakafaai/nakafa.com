@@ -7,7 +7,10 @@ import {
 } from "@repo/backend/scripts/content/acceptance/local";
 import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
 import { createAcceptanceOwner } from "@repo/backend/scripts/content/acceptance/owner";
-import { withLocalBackend } from "@repo/backend/scripts/content/acceptance/process";
+import {
+  PRODUCTION_CONCURRENCY,
+  withLocalBackend,
+} from "@repo/backend/scripts/content/acceptance/process";
 import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
 import { captureLogs } from "@repo/backend/scripts/load/logs";
 import { BLUEPRINT_PLAN, LoadPlan } from "@repo/backend/scripts/load/plan";
@@ -66,8 +69,8 @@ const openSchool = Effect.fn("load.command.school")(function* (
 
 /**
  * Runs the blueprint's load test (K26) against the prepared local acceptance backend, which it
- * starts and stops itself, and writes the report to the file that the command names, with its
- * Markdown table beside it. A smaller number of students or another pace makes a shorter run of
+ * starts and stops itself with production's concurrency, and writes the report to the file that
+ * the command names, with its Markdown table beside it. A smaller number of students or another pace makes a shorter run of
  * the same shape.
  */
 export const runLoadCommand = Effect.fn("load.command")(function* (
@@ -101,6 +104,7 @@ export const runLoadCommand = Effect.fn("load.command")(function* (
       run: (operation, commandArgs, sensitiveValues) =>
         runLocalConvex(runtime, operation, commandArgs, sensitiveValues),
       school: (directory) => openSchool(root, directory),
-    }).pipe(Effect.provide(recorderLayer))
+    }).pipe(Effect.provide(recorderLayer)),
+    PRODUCTION_CONCURRENCY
   );
 }, Effect.scoped);

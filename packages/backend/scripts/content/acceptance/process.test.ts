@@ -4,6 +4,7 @@ import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
   localConvexEnvironment,
+  PRODUCTION_CONCURRENCY,
   withLocalBackend,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
@@ -188,6 +189,39 @@ describe("application process ownership", () => {
       }).pipe(Effect.provide(services))
     );
   }
+
+  it.live(
+    "starts the backend with the concurrency its caller asks for, such as production's",
+    () =>
+      Effect.gen(function* () {
+        const { runtime } = yield* fixture;
+        const child = yield* spawner();
+        fetcher.mockImplementation(() =>
+          Promise.resolve(new Response("owned"))
+        );
+        yield* withLocalBackend(
+          runtime,
+          Effect.void,
+          PRODUCTION_CONCURRENCY
+        ).pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          )
+        );
+        expect(MutableList.toArray(child.commands)).toEqual([
+          expect.objectContaining({
+            options: expect.objectContaining({
+              env: expect.objectContaining({
+                APPLICATION_MAX_CONCURRENT_MUTATIONS: "256",
+                APPLICATION_MAX_CONCURRENT_QUERIES: "256",
+                APPLICATION_MAX_CONCURRENT_V8_ACTIONS: "512",
+              }),
+            }),
+          }),
+        ]);
+      }).pipe(Effect.provide(services))
+  );
 
   it.live(
     "reports bounded redacted backend diagnostics while preserving the publication failure",

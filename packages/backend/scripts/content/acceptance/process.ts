@@ -91,6 +91,19 @@ const localBackendEnvironment = {
 };
 
 /**
+ * How many queries, mutations and Convex runtime actions, HTTP actions included, the deployment
+ * class of production's Professional plan (S256) runs at once before more wait. The local backend
+ * starts with the Free plan's S16, which suits a browser suite; a run that measures production's
+ * latency under many clients, such as the load test, starts its backend with these instead.
+ * @see https://docs.convex.dev/production/state/limits
+ */
+export const PRODUCTION_CONCURRENCY = {
+  APPLICATION_MAX_CONCURRENT_MUTATIONS: "256",
+  APPLICATION_MAX_CONCURRENT_QUERIES: "256",
+  APPLICATION_MAX_CONCURRENT_V8_ACTIONS: "512",
+};
+
+/**
  * How long a start may take before its backend answers: the push of every
  * function took 2.94 minutes at a load of about 40 on 11 cores (25 Oct 2026),
  * and longer while the machine swapped, so a start gets ten minutes.
@@ -117,7 +130,11 @@ export const makeConvexTemporaryRoot = Effect.fn(
 
 /** Starts the local backend in the scope it is given and returns it once it answers. */
 const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
-  function* (runtime: LocalRuntime, logPath: string) {
+  function* (
+    runtime: LocalRuntime,
+    logPath: string,
+    concurrency: Partial<typeof PRODUCTION_CONCURRENCY>
+  ) {
     const fileSystem = yield* FileSystem.FileSystem;
     yield* fileSystem.writeFileString(logPath, "", { mode: 0o600 });
     const temporaryRoot = yield* makeConvexTemporaryRoot();
@@ -138,6 +155,7 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
         env: {
           ...localConvexEnvironment,
           ...localBackendEnvironment,
+          ...concurrency,
           AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
           AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
           TMPDIR: temporaryRoot,
@@ -195,23 +213,35 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
 /** A failed start releases its own scope before a retry; a started backend keeps it. */
 const startLocalBackendAttempt = Effect.fn(
   "contentAcceptance.startLocalBackendAttempt"
-)(function* (runtime: LocalRuntime, logPath: string) {
+)(function* (
+  runtime: LocalRuntime,
+  logPath: string,
+  concurrency: Partial<typeof PRODUCTION_CONCURRENCY>
+) {
   const attempt = yield* Scope.fork(yield* Effect.scope);
-  return yield* startLocalBackend(runtime, logPath).pipe(
+  return yield* startLocalBackend(runtime, logPath, concurrency).pipe(
     Effect.provideService(Scope.Scope, attempt),
     Effect.onExitIf(Exit.isFailure, (exit) => Scope.close(attempt, exit))
   );
 });
 
-/** Refreshes Convex bindings and owns the local backend through application acceptance. */
+/**
+ * Refreshes Convex bindings and owns the local backend through application acceptance. The
+ * backend runs with the local concurrency unless the caller asks for more, such as
+ * `PRODUCTION_CONCURRENCY`.
+ */
 export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
-  function* <A, E, R>(runtime: LocalRuntime, program: Effect.Effect<A, E, R>) {
+  function* <A, E, R>(
+    runtime: LocalRuntime,
+    program: Effect.Effect<A, E, R>,
+    concurrency: Partial<typeof PRODUCTION_CONCURRENCY> = {}
+  ) {
     // Refuse occupied ports before Convex can reuse or stop any existing backend.
     yield* assertLocalPortsFree(runtime);
     const fileSystem = yield* FileSystem.FileSystem;
     const logPath = `${runtime.directory}/convex.log`;
     const child = yield* retryVersionServiceStart(
-      startLocalBackendAttempt(runtime, logPath)
+      startLocalBackendAttempt(runtime, logPath, concurrency)
     );
     return yield* Effect.raceFirst(
       program,
