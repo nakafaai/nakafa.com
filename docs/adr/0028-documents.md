@@ -26,7 +26,7 @@ The amendment of 17 October 2026 changes the submit, which checks the document t
 
 The design system has one Tiptap editor, in
 `packages/design-system/components/editor`, which the Memory page uses. It reads
-and writes Markdown for one author, and Tiptap is pinned at 3.32.0 in
+and writes Markdown for one author, and Tiptap is pinned at 3.32.1 in
 `packages/design-system/package.json`. A school needs more. Teachers write
 questions together in real time, with formulas, images, a reading passage that
 several questions share, and rubrics. Announcements are composed in the same
@@ -86,7 +86,7 @@ three steps moves it by three.
 | 3 | Rina fetches the step of Hendra | She rebases her unsent steps on the client. |
 | 4 | Rina sends again at version 41 | Accepted. The document is at version 42. |
 
-`prosemirror-collab` is not part of `@tiptap/pm` 3.32.0 (`pnpm-lock.yaml`). It
+`prosemirror-collab` is not part of `@tiptap/pm` 3.32.1 (`bun.lock`). It
 is added next to the Tiptap packages of `packages/design-system`, pinned like
 them. It is MIT, depends on `prosemirror-state` alone, and its last release is
 1.3.1 of 17 May 2023 (npm).
@@ -98,7 +98,7 @@ them. It is MIT, depends on `prosemirror-state` alone, and its last release is
 | Yjs through `y-convex` 1.0.1 | No. It sends binary updates, and it is an unofficial package of one maintainer. | We would build both. | Unofficial | Not used |
 | One writer at a time | Yes | One writer. Presence still comes from the component. | Our code, the smallest | Not used. The owner asked for real-time collaboration. |
 
-The editor is Tiptap 3.32.0. `@convex-dev/prosemirror-sync` accepts this version
+The editor is Tiptap 3.32.1. `@convex-dev/prosemirror-sync` accepts this version
 (its peer range for `@tiptap/core` is `^2.7.0 || ^3.10.7`), and the decision
 stays the same.
 
@@ -435,7 +435,7 @@ Drive copies come through the Drive connector (ADR 0015).
 | Part | Status |
 | --- | --- |
 | The Memory page editor in `packages/design-system/components/editor` (Markdown, one author) | Live |
-| Tiptap 3.32.0 and KaTeX 0.19.0 | Live |
+| Tiptap 3.32.1 and KaTeX 0.19.0 | Live |
 | `prosemirror-collab` 1.3.1 | Installed in `packages/design-system` (the `Collab` extension) and `apps/www` (the sync loop), and pinned in the dependency policy. |
 | `@convex-dev/presence` 0.4.0 | Live in the exam editor's header: `confect/exams/presence.*` and `apps/www/src/components/tenant/exams/presence.tsx`, tested in convex-test and in `e2e/school/presence.browser.ts`. |
 | `mathlive` | Not installed. Planned for program wave B. |
@@ -452,13 +452,13 @@ Drive copies come through the Drive connector (ADR 0015).
 | The content check at submit (`confect/editor/content.ts`): the contract's block, inline, and mark schemas read each step's nodes and marks, and a refusal is `BatchInvalid` with nothing written | In code, not live: `confect/editor/steps.impl.ts`. Tested in `content.test.ts` and `steps.impl.test.ts`: a heading level of 4, a link that is not https, and a link mark out of the contract's order are refused; a list item, a heading of level 2, and an https link are accepted. A bullet list, an ordered list, or a quote that wraps a range, and a lift out of a quote, are accepted, because the content they need is in the gap or in the document; an empty list in a replace step is refused, and so is a list whose start is 0 (`slice.test.ts`). `apps/www/src/lib/editor/send.test.ts` covers the sync's drop of a step that the contract refuses. |
 | The stored snapshot is the contract's output (`encodeDocument` in `confect/editor/document.ts`): attributes the contract does not name, such as a link's `target` and `rel`, are not stored | In code, not live. Tested in `document.test.ts`. |
 | The sync modules: `apps/www/src/lib/editor/settle.ts` (settling and the skip rule), `replay.ts` (reopen, reseat, replay, and the drop), and `pull.ts` (the apply path) | In code, not live. `settle.ts` imports none of the other two, so no two modules import each other. `pull.ts` holds the apply path, which calls `reopen`. |
-| The Tiptap cohort: the dependency policy holds every Tiptap package of the design system, and `@tiptap/pm` of the web app, to `TIPTAP_COHORT_VERSION` (3.32.0) in `scripts/dependencies/policy.ts` | In code. The dependency policy test enforces it. |
+| The Tiptap cohort: the dependency policy holds every Tiptap package of the design system, and `@tiptap/pm` of the web app, to `TIPTAP_COHORT_VERSION` (3.32.1) in `scripts/dependencies/policy.ts` | In code. The dependency policy test enforces it. |
 | The assessment rules: `documentSchema` takes the rules its caller gives, the marks in their order, the heading levels, and the link rule (`packages/editor/document.ts`). `ASSESSMENT_RULES` in `confect/editor/model.ts` gives it the contract's marks in the contract's order (`MarkTypeSchema`), the heading levels 1 to 3, and `isHttpsUrl`, and the editor (`apps/www/src/lib/editor/assessment.ts`) builds its schema from the same rules and holds no horizontal rule. The server admits the node and mark types that the editor reads (`NodeTypeSchema` and `MarkTypeSchema` in `confect/editor/node.ts`), in a step and in a snapshot. | In code, not live. Tested in `packages/editor/document.test.ts`, at the commands of a headless editor: a heading level, a horizontal rule, and a link address. Tested in `assessment.test.ts`: the node types, the heading levels pinned to the contract's check, and the link rule. Tested on the server in `batch.test.ts` and `document.test.ts`: a step or a snapshot with a type the editor does not read is refused. |
 | The deletion of a document: its session records and its steps in pages, then its snapshot and its document row (`internal.editor.deletion.document`) | In code, not live: `confect/editor/deletion.impl.ts`, tested in convex-test. Its one caller is the school exam removal, `exams.questions.remove`, which schedules it for the question's prompt (row below). |
 | The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
 | The sync slice: the head version on the draft row, the step log and its pruning, the server fold that writes the snapshot, and the sync loop `apps/www/src/lib/editor/sync.ts`, which pulls and pushes steps and never writes a snapshot | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, `confect/editor/fold.ts`, and the sync loop, which the fake-client tests drive. |
 | The client engine: the `Collab` extension in `packages/design-system/components/editor/collab.ts` and the sync loop in `apps/www/src/lib/editor` | In code. No page mounts the editor yet. |
-| The editor's shared schema (`packages/editor`, `@repo/editor`): the Tiptap extensions of the assessment document, from which the editor and the server both derive their schema with `getSchema` | In code, not live. The backend declares the Tiptap packages that its bundle imports, and `scripts/dependencies/policy.ts` holds every declaration to 3.32.0. The design system's Memory editor keeps its own extensions. |
+| The editor's shared schema (`packages/editor`, `@repo/editor`): the Tiptap extensions of the assessment document, from which the editor and the server both derive their schema with `getSchema` | In code, not live. The backend declares the Tiptap packages that its bundle imports, and `scripts/dependencies/policy.ts` holds every declaration to 3.32.1. The design system's Memory editor keeps its own extensions. |
 | The client's answer to a refused batch (`apps/www/src/lib/editor/send.ts`, `apps/www/src/lib/editor/sync.ts`): the halving of a batch that the contract refuses, the drop of one step that it refuses alone (`SyncDropped`), and the round that runs again for a batch that waits for a fold (`SyncFolding`) | In code, not live. `apps/www/src/lib/editor/send.test.ts` halves a refused batch and drops its refused step once, and a batch that waits for a fold fails with `SyncFolding` and stays unsent under its id until the next round sends it under the same id. `apps/www/src/lib/editor/sync.test.ts` runs the round again after a fold refusal with no failure, after 250 ms and then 500 ms, sends the batch once the server takes it, and fails with `SyncFolding` when a fold outlasts six more rounds. It keeps the batch unsent on the four-second cadence after that until the fold ends (`tickThroughFold`, under TestClock). `apps/www/src/lib/editor/close.test.ts` sends the steps through a fold on the cadence, and reports the fold once when the ten-minute close budget ends. The fake server of `apps/www/src/test/sync.ts` refuses a batch as the server does. |
 | The formula node | Planned, program wave B |
 | Mermaid and content math under the forced KaTeX 0.19.0 | To be tested in program wave A |
