@@ -1,3 +1,4 @@
+import { drawFormula } from "@repo/design-system/components/editor/render";
 import {
   blockGapVariants,
   codeVariants,
@@ -5,8 +6,15 @@ import {
   headingVariants,
   listItemVariants,
   listVariants,
+  mathBlockVariants,
+  mathInlineVariants,
+  mathScrollVariants,
   paragraphVariants,
   quoteVariants,
+  tableCellVariants,
+  tableFrameVariants,
+  tableHeadCellVariants,
+  tableRowVariants,
 } from "@repo/design-system/lib/prose";
 import type { HeadingTag } from "@repo/design-system/types/markdown";
 import { Extension } from "@tiptap/core";
@@ -32,9 +40,10 @@ const headingClasses = (tag: HeadingTag) =>
 
 /**
  * The classes of each block of a document, by the name of its node, as the published article draws
- * the block: a heading of its level, a list and its items, a quotation, and the blocks that draw their
- * own frame (a code block, a table, a picture, a formula on its own line), which take an article's room
- * around them.
+ * the block: a heading of its level, a list and its items, a quotation, a table in the lesson's frame
+ * with its rows and cells, and the blocks that draw their own frame (a code block, a picture, a formula
+ * on its own line), which take an article's room around them. A table's decoration lands on the
+ * editor's wrapper of the table, which holds the table as the lesson's container does.
  */
 const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
   blockquote: () => Option.some(quoteVariants()),
@@ -46,8 +55,14 @@ const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
   listItem: () => Option.some(listItemVariants()),
   mathBlock: () => Option.some(blockGapVariants()),
   orderedList: () => Option.some(listVariants({ kind: "ordered" })),
-  table: () => Option.some(blockGapVariants()),
+  table: () => Option.some(tableFrameVariants()),
+  tableCell: () => Option.some(tableCellVariants()),
+  tableHeader: () => Option.some(tableHeadCellVariants()),
+  tableRow: () => Option.some(tableRowVariants()),
 };
+
+/** The cells of a table, whose paragraphs read as the cell's words, as a lesson's cell holds them. */
+const CELL_NODES = ["tableCell", "tableHeader"];
 
 /**
  * A decoration on each block and each piece of inline code of a document, with the classes that the
@@ -56,7 +71,7 @@ const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
  */
 const proseDecorations = (doc: Node, paragraphs: boolean) => {
   const decorations = MutableList.make<Decoration>();
-  doc.descendants((node, position) => {
+  doc.descendants((node, position, parent) => {
     const end = position + node.nodeSize;
     if (
       node.isText &&
@@ -68,7 +83,13 @@ const proseDecorations = (doc: Node, paragraphs: boolean) => {
       );
       return;
     }
-    if (paragraphs && node.type.name === "paragraph") {
+    if (
+      paragraphs &&
+      node.type.name === "paragraph" &&
+      !Option.exists(Option.fromNullishOr(parent), (holder) =>
+        Arr.contains(CELL_NODES, holder.type.name)
+      )
+    ) {
       MutableList.append(
         decorations,
         Decoration.node(position, end, { class: paragraphVariants() })
@@ -125,13 +146,61 @@ const ELEMENT_CLASSES = [
   ["li", listItemVariants()],
   ["ol", listVariants({ kind: "ordered" })],
   ["ul", listVariants({ kind: "bullet" })],
-  [
-    'pre, table, [data-type="image"], [data-type="math-block"]',
-    blockGapVariants(),
-  ],
+  ["tr", tableRowVariants()],
+  ["th", tableHeadCellVariants()],
+  ["td", tableCellVariants()],
+  ['pre, [data-type="image"], [data-type="math-block"]', blockGapVariants()],
 ] as const;
 
-/** Gives the elements of a document that the schema drew into `root` the classes of the published article. */
+/**
+ * Holds each table in the lesson's frame, as the editor's wrapper holds it: a document drawn without an
+ * editor has the table alone. A table already in its frame keeps it.
+ */
+function frameTables(root: HTMLElement) {
+  Arr.forEach(Arr.fromIterable(root.querySelectorAll("table")), (table) => {
+    if (table.parentElement?.dataset.slot === "table-frame") {
+      return;
+    }
+    const frame = document.createElement("div");
+    frame.className = tableFrameVariants();
+    frame.dataset.slot = "table-frame";
+    table.replaceWith(frame);
+    frame.append(table);
+  });
+}
+
+/**
+ * Draws the formulas that the schema left as empty elements with their LaTeX, as the lesson draws them: an
+ * inline formula with the lesson's inline pieces, and a formula on its own line in the lesson's card, which
+ * scrolls sideways when it is wider. The editor draws the same formulas through its node view.
+ */
+function drawFormulas(root: HTMLElement) {
+  Arr.forEach(
+    Arr.fromIterable(
+      root.querySelectorAll<HTMLElement>('[data-type="math-inline"]')
+    ),
+    (element) => {
+      element.className = mathInlineVariants();
+      element.innerHTML = drawFormula(element.dataset.latex ?? "", false);
+    }
+  );
+  Arr.forEach(
+    Arr.fromIterable(
+      root.querySelectorAll<HTMLElement>('[data-type="math-block"]')
+    ),
+    (element) => {
+      const card = document.createElement("div");
+      card.className = mathBlockVariants();
+      const row = document.createElement("div");
+      row.className = mathScrollVariants();
+      row.innerHTML = drawFormula(element.dataset.latex ?? "", true);
+      card.append(row);
+      element.replaceChildren(card);
+    }
+  );
+}
+
+/** Gives the elements of a document that the schema drew into `root` the classes and the formulas of the published article. */
 export function drawArticleProse(root: HTMLElement) {
   Arr.forEach(ELEMENT_CLASSES, ([selector, classes]) =>
     Arr.forEach(
@@ -141,4 +210,6 @@ export function drawArticleProse(root: HTMLElement) {
       }
     )
   );
+  frameTables(root);
+  drawFormulas(root);
 }
