@@ -196,9 +196,10 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
 
   const student = await studentContext.newPage();
   await student.goto(address("/"));
+  // The home draws once Convex holds the session and the student's sittings answer.
   await expect(
     student.getByRole("heading", { name: "Now", exact: true })
-  ).toBeVisible();
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   // The open room comes first in the tile, and its row enters the sitting.
   await expect(
     student.getByRole("link", { name: OPEN_ROOM_ROW }).first()
@@ -257,8 +258,12 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     })
   ).toHaveAttribute("aria-current", "step");
 
-  // The footer's flag marks the current question, the second, and the navigator marks it as well.
-  const flag = student.getByRole("button", { exact: true, name: "Flag" });
+  // In the list each question carries its own flag: the second question's flag marks it, and the navigator marks
+  // it as well.
+  const flag = student.getByRole("button", {
+    exact: true,
+    name: "Flag question 2",
+  });
   await flag.click();
   await expect(flag).toHaveAttribute("aria-pressed", "true");
   await expect(
@@ -332,7 +337,10 @@ test("a proctor sees the seat filters in a row under the header and switches the
   const filters = page.getByRole("group", { name: "Filter students" });
   const all = filters.getByRole("button", { name: "All" });
   const attention = filters.getByRole("button", { name: "Needs attention" });
-  await expect(all).toHaveAttribute("aria-pressed", "true");
+  // The dashboard draws once Convex holds the session and its first read answers.
+  await expect(all).toHaveAttribute("aria-pressed", "true", {
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(attention).toBeVisible();
   await expect(filters.getByRole("button", { name: "Finished" })).toBeVisible();
   await attention.click();

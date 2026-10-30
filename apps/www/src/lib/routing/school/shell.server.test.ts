@@ -1,8 +1,11 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import { answerSchoolPage } from "@/lib/routing/school/shell.server";
+import { Effect, Option } from "effect";
+import {
+  answerSchoolPage,
+  readSchoolFile,
+} from "@/lib/routing/school/shell.server";
 
 const assets = vi.hoisted(() => ({
   fetch: vi.fn<(request: Request) => Promise<Response>>(),
@@ -107,6 +110,50 @@ describe("answerSchoolPage", () => {
         );
 
         expect(response).toBe(OTHERWISE);
+        expect(assets.fetch).not.toHaveBeenCalled();
+      })
+  );
+});
+
+describe("readSchoolFile", () => {
+  it.effect(
+    "answers a file that a school host's address names with the static not-found page",
+    () =>
+      Effect.gen(function* () {
+        assets.fetch.mockResolvedValue(
+          new Response("<h1>Not found</h1>", { status: 404 })
+        );
+
+        const answer = yield* readSchoolFile(
+          request("https://n8n.nakafa.com/.env")
+        );
+
+        const response = Option.getOrThrow(answer);
+        expect(response.status).toBe(404);
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        const [file] = assets.fetch.mock.calls[0] ?? [];
+        expect(file?.url).toBe("https://n8n.nakafa.com/.env");
+      })
+  );
+
+  it.effect(
+    "answers nothing for a page, a shared route, a write, another host or a prerender",
+    () =>
+      Effect.gen(function* () {
+        for (const other of [
+          request("https://harapan.nakafa.com/exams"),
+          request("https://harapan.nakafa.com/api/weather.json"),
+          request("https://harapan.nakafa.com/.env", "POST"),
+          request("https://nakafa.com/.env"),
+        ]) {
+          expect(Option.isNone(yield* readSchoolFile(other))).toBe(true);
+        }
+        release.bound = false;
+        expect(
+          Option.isNone(
+            yield* readSchoolFile(request("https://harapan.nakafa.com/.env"))
+          )
+        ).toBe(true);
         expect(assets.fetch).not.toHaveBeenCalled();
       })
   );
