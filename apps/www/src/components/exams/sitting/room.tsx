@@ -2,6 +2,7 @@ import { Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { useRouter } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { useSittingData } from "@/components/exams/sitting/context";
 import { roomJoinAddress } from "@/components/exams/sitting/join";
@@ -54,6 +55,8 @@ export function JoinRoomDialog({
 function RoomCode() {
   const t = useTranslations("Exams");
   const { sittingId, value } = useSittingData();
+  // The page's own origin, which the router reads from the browser, so the code opens this school host.
+  const { origin } = useRouter();
 
   if (value.token === null) {
     return null;
@@ -64,7 +67,7 @@ function RoomCode() {
       <QrImage
         label={t("join-qr-label")}
         size="room"
-        text={roomJoinAddress(window.location.origin, sittingId, value.token)}
+        text={roomJoinAddress(origin, sittingId, value.token)}
       />
       <p
         className="font-medium font-mono text-5xl tabular-nums tracking-widest"

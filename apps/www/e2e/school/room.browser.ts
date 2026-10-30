@@ -40,11 +40,9 @@ test("the proctor shows the room's QR code and token, and a changed token comes 
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
   // The token is the header's button, readable at a glance, and it opens the room's code.
-  const token = proctor
-    .locator("header")
-    .getByRole("button", {
-      name: `Show the room's QR code, token ${sitting.token}`,
-    });
+  const token = proctor.locator("header").getByRole("button", {
+    name: `Show the room's QR code, token ${sitting.token}`,
+  });
   await expect(token).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(token).toContainText(sitting.token);
   await waitUntilTakenOver(token);
