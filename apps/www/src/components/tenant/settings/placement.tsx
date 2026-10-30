@@ -1,5 +1,9 @@
 import { useMutation } from "@confect/react";
-import { MoreHorizontalIcon, Move01Icon } from "@hugeicons/core-free-icons";
+import {
+  IdCardIcon,
+  MoreHorizontalIcon,
+  Move01Icon,
+} from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -32,6 +36,7 @@ import {
   moveStudentChange,
   placeStudentChange,
 } from "@/components/tenant/settings/moves";
+import { RosterEntryDialog } from "@/components/tenant/settings/nisn";
 import {
   type PersonId,
   SchoolStudentPicker,
@@ -129,8 +134,9 @@ export function SchoolPlacementAdd({
 }
 
 /**
- * The row menu of one student. Its one action opens the dialog that moves the student to
- * another active cohort of the same period, and the dialog closes as the move is sent.
+ * The row menu of one student: Move opens the dialog that moves the student to another active
+ * cohort of the same period, which closes as the move is sent, and NISN and age opens the student's
+ * roster row.
  */
 export function SchoolPlacementMove({
   cohortId,
@@ -151,6 +157,8 @@ export function SchoolPlacementMove({
     moveStudentChange(cohortId)
   );
   const [isMoving, setIsMoving] = useState(false);
+  const [isEditingEntry, setIsEditingEntry] = useState(false);
+  const [entryOpening, setEntryOpening] = useState(0);
   const [target, setTarget] = useState<CohortId | null>(null);
   const items = Arr.map(targets, (cohort) => ({
     label: cohort.name,
@@ -190,8 +198,23 @@ export function SchoolPlacementMove({
             <HugeIcons icon={Move01Icon} />
             {t("placement-move")}
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setEntryOpening((count) => count + 1);
+              setIsEditingEntry(true);
+            }}
+          >
+            <HugeIcons icon={IdCardIcon} />
+            {t("roster-entry")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <RosterEntryDialog
+        key={entryOpening}
+        open={isEditingEntry}
+        person={member}
+        setOpen={setIsEditingEntry}
+      />
       <ResponsiveDialog
         description={t("placement-move-footer")}
         footer={

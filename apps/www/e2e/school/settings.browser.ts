@@ -152,7 +152,7 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
   await context.close();
 });
 
-test("an admin places a student in a cohort, then moves the student to another", async ({
+test("an admin places a student in a cohort, moves the student to another, and sets their NISN and age flag", async ({
   browser,
   baseURL,
 }) => {
@@ -223,6 +223,34 @@ test("an admin places a student in a cohort, then moves the student to another",
   await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
     1
   );
+
+  // The admin sets the student's NISN and under-age flag by hand; the roster keeps both, and never shows the NISN.
+  await page.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "NISN and age" }).click();
+  const entryDialog = page.getByRole("dialog");
+  const nisnField = entryDialog.getByRole("textbox", { name: "NISN" });
+  await expect(nisnField).toBeEnabled();
+  await expect(nisnField).toHaveAttribute("placeholder", "10 digits");
+  await nisnField.fill("0012345678");
+  await entryDialog
+    .getByRole("switch", { name: "Under the age limit" })
+    .click();
+  await entryDialog.getByRole("button", { name: "Save" }).click();
+  await expect(entryDialog).toBeHidden();
+  await page.reload();
+  const reopened = page.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(reopened);
+  await reopened.click();
+  await page.getByRole("menuitem", { name: "NISN and age" }).click();
+  const kept = page.getByRole("dialog");
+  await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveAttribute(
+    "placeholder",
+    "Stored; type a new one to replace it"
+  );
+  await expect(kept.getByRole("textbox", { name: "NISN" })).toHaveValue("");
+  await expect(
+    kept.getByRole("switch", { name: "Under the age limit" })
+  ).toBeChecked();
   await context.close();
 });
 
