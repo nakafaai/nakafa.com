@@ -40,6 +40,7 @@ import {
 } from "@/components/tenant/classes/scope";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
 import { TaskPage } from "@/components/tenant/classes/tasks/page";
+import { TaskWorkSearch } from "@/components/tenant/classes/tasks/work";
 import type { ClassView } from "@/components/tenant/classes/view";
 import {
   ClassGradebook,
@@ -327,12 +328,14 @@ function ClassBody({
   }
   if (view._tag === "task") {
     return (
-      <>
-        <ClassHeader />
+      <TableFiltersProvider>
+        <ClassHeader>
+          {Arr.contains(klass.can, "task.manage") ? <TaskWorkSearch /> : null}
+        </ClassHeader>
         <ClassScroll>
           <TaskPage task={view.task} />
         </ClassScroll>
-      </>
+      </TableFiltersProvider>
     );
   }
   return <ChannelList />;

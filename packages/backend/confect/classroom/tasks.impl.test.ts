@@ -171,6 +171,18 @@ describe("classroom/tasks", () => {
             text: "Ringkasan kedua.",
           }),
         ]);
+        const searched = (search: string) =>
+          teacher.query(tasks.submissions, {
+            ...firstPage,
+            classId: forum.classId,
+            search,
+            slug: nf,
+            task: "ringkasan",
+          });
+        expect((yield* searched("stu")).page).toEqual([
+          expect.objectContaining({ text: "Ringkasan kedua." }),
+        ]);
+        expect((yield* searched("Teacher")).page).toEqual([]);
         const submissionId = Arr.getUnsafe(work.page, 0).id;
         const scored = yield* teacher.mutation(tasks.score, {
           classId: forum.classId,

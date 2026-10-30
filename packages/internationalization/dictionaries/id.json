@@ -1128,6 +1128,9 @@
     "task-hand-in-again": "Kumpulkan lagi",
     "task-work-empty": "Belum ada pekerjaan",
     "task-work-empty-description": "Pekerjaan yang dikumpulkan siswa tampil di sini.",
+    "task-work-search": "Cari siswa",
+    "task-work-no-match": "Tidak ada tugas yang cocok",
+    "task-work-no-match-description": "Belum ada siswa dengan nama yang cocok yang mengumpulkan tugas.",
     "task-new": "Tugas baru",
     "task-new-description": "Semua anggota kelas menerimanya di notifikasi.",
     "task-publish": "Terbitkan"

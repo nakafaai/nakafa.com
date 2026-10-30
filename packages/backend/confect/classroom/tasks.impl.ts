@@ -28,6 +28,7 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
+import { namedPeople } from "@repo/backend/confect/tenancy/named";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
@@ -187,18 +188,44 @@ const submissionViews = Effect.fn("classroom.tasks.submissionViews")(function* (
   );
 });
 
-/** One page of the work handed in for a task, as its teacher reads it. */
+/**
+ * One page of the work handed in for a task, as its teacher reads it. A `search` reads the school's people whose
+ * names match it, best match first (`namedPeople`), and keeps those who handed work in, so a page of a search can
+ * hold less work than it read.
+ */
 const submissions = FunctionImpl.make(
   databaseSchema,
   spec,
   "submissions",
   Effect.fn("classroom.tasks.submissions")(function* ({
     paginationOpts,
+    search,
     task,
   }) {
     const found = yield* classTask(task, "task.manage");
-    const page = yield* (yield* DatabaseReader)
-      .table("classroomSubmissions")
+    const table = (yield* DatabaseReader).table("classroomSubmissions");
+    if (search !== undefined) {
+      const people = yield* namedPeople(
+        (yield* Class).tenantId,
+        search,
+        paginationOpts
+      );
+      const work = yield* Effect.forEach(
+        people.page,
+        (person) =>
+          table
+            .index("by_taskId_and_personId", (query) =>
+              query.eq("taskId", found._id).eq("personId", person._id)
+            )
+            .first()
+            .pipe(Effect.orDie),
+        { concurrency: "unbounded" }
+      );
+      return Struct.assign(people, {
+        page: yield* submissionViews(Arr.getSomes(work)),
+      });
+    }
+    const page = yield* table
       .index("by_taskId_and_personId", (query) => query.eq("taskId", found._id))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
