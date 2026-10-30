@@ -74,7 +74,12 @@ export function ChatNew({ children }: { children: ReactNode }) {
   );
 }
 
-/** The welcome layout of a new chat, which every variant of the page shares. */
+/**
+ * The welcome layout of a new chat, which every variant of the page shares. Its
+ * title stands a fixed share of the page's height from the top, so a page that
+ * arrives in parts on a slow connection never moves the title when the composer
+ * and the cards below it come in.
+ */
 function NewChatLayout({
   children,
   composer,
@@ -88,7 +93,7 @@ function NewChatLayout({
     <div
       className={cn(
         "relative flex size-full min-w-0 flex-col overflow-hidden text-chat",
-        !prompt && "justify-center gap-4"
+        !prompt && "gap-4"
       )}
     >
       {prompt ? (
@@ -104,9 +109,15 @@ function NewChatLayout({
       {prompt ? (
         <StartPrompt className="mx-auto w-full max-w-3xl p-6" prompt={prompt} />
       ) : (
-        <div className="relative mx-auto w-full max-w-xl px-6">
-          <HomeTitle />
-        </div>
+        <>
+          <div
+            aria-hidden="true"
+            className="shrink-0 basis-[max(4.5rem,calc(50%-15rem))]"
+          />
+          <div className="relative mx-auto w-full max-w-xl px-6">
+            <HomeTitle />
+          </div>
+        </>
       )}
       <div
         className={cn(
