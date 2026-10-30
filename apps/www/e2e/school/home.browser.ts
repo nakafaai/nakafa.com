@@ -303,6 +303,56 @@ test("Beranda fits a 320 px phone without a sideways scroll", async ({
   await context.close();
 });
 
+test("Beranda shows its greeting and each row's title whole from a 320 px phone to a tablet, wrapping instead of clipping", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `home-wrap-${school.slug}@acceptance.example.test`;
+  const learnerContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: learnerContext,
+      slug: school.slug,
+    })
+  );
+  const context = await browser.newContext({
+    viewport: { height: 640, width: 320 },
+  });
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  await Effect.runPromise(seedSitting(school.slug, learner));
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+
+  // The greeting, and the seeded exam's title in the live and drafts rows beside their times: a text that a box clips
+  // is wider inside than the box shows.
+  const greeting = page
+    .locator('[data-slot="page-header"]')
+    .getByRole("heading", { level: 1 });
+  const titles = page.getByText(SEEDED_EXAM, { exact: true });
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ height: 900, width });
+    await expect(greeting).toBeVisible();
+    await expect(titles).toHaveCount(2);
+    const clipped = [
+      ...(await greeting.evaluateAll((elements) =>
+        elements.map((element) => element.scrollWidth > element.clientWidth)
+      )),
+      ...(await titles.evaluateAll((elements) =>
+        elements.map((element) => element.scrollWidth > element.clientWidth)
+      )),
+    ];
+    expect(clipped).not.toContain(true);
+  }
+  await context.close();
+  await learnerContext.close();
+});
+
 test("Beranda takes the app's page width on a wide screen, centred beside the sidebar", async ({
   baseURL,
   browser,
