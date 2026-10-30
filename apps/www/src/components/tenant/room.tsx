@@ -100,9 +100,12 @@ export function MemberRoomJoin() {
 function RoomJoinForm() {
   const t = useTranslations("Exams");
   const { name, slug } = schoolRoute.useRouteContext().school.profile;
+  // `/join` names no room, so its code is looked up among the school's open rooms.
   const sittingId = useParams({
     select: (params) =>
-      Option.getOrUndefined(readSittingId(params.sitting ?? "")),
+      Option.getOrUndefined(
+        Option.flatMap(Option.fromNullishOr(params.sitting), readSittingId)
+      ),
     strict: false,
   });
   // A mutation before Convex holds the session's token fails as signed out.
