@@ -13,7 +13,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
@@ -22,6 +22,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
+import { daysColumn } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
@@ -211,9 +212,13 @@ function LibraryRows({
           )}
         </span>
       ),
-      enableSorting: false,
       header: t("library-added"),
       id: "added",
+      sortFn: "basic",
+      // The day prints on the reader's own clock, so the filter keeps the days that clock shows.
+      ...daysColumn(
+        Option.some(DateTime.zoneToString(DateTime.zoneMakeLocal()))
+      ),
     }),
     ...(Arr.contains(can, "library.manage")
       ? [

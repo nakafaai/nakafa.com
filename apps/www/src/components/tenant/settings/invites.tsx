@@ -32,6 +32,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
+import { daysColumn } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
@@ -53,7 +54,10 @@ import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
-import { SchoolDateTime } from "@/components/tenant/settings/time";
+import {
+  SchoolDateTime,
+  useSchoolTimeZone,
+} from "@/components/tenant/settings/time";
 
 const SOURCE = "components/tenant/settings/invites";
 
@@ -125,6 +129,7 @@ function SchoolInvitesBody() {
 /** The invites in a data table, or the table's empty state when there is none. */
 function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const timeZone = useSchoolTimeZone();
 
   if (Arr.isReadonlyArrayEmpty(invites)) {
     return (
@@ -174,6 +179,7 @@ function SchoolInviteTable({ invites }: { invites: readonly InviteItem[] }) {
       header: t("invite-expires"),
       id: "expires",
       sortFn: "basic",
+      ...daysColumn(timeZone),
     }),
     inviteColumns.display({
       cell: (info) => <SchoolInviteMenu invite={info.row.original} />,
