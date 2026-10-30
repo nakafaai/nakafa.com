@@ -67,7 +67,7 @@ const columnAlign = cva("px-2 sm:px-4", {
   variants: {
     align: {
       center: "text-center tabular-nums",
-      menu: "sticky end-0 bg-card in-[tr[data-pressable]:hover]:bg-accent in-aria-selected:bg-accent text-end",
+      menu: "sticky end-0 bg-card in-[tr[data-pressable]:hover]:bg-accent in-data-[state=selected]:bg-accent text-end",
       start: "",
     },
   },
