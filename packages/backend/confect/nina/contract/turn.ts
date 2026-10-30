@@ -221,11 +221,13 @@ export function readNinaLearningPage(page: NinaPage) {
  * offered on every page.
  */
 export function createNinaAgentContext({
+  calendar,
   memory,
   page,
   runtime,
   user,
 }: {
+  readonly calendar: boolean;
   readonly memory: boolean;
   readonly page: NinaPage;
   readonly runtime: NinaRuntime;
@@ -233,6 +235,7 @@ export function createNinaAgentContext({
 }): AgentContext {
   const learningPage = readNinaLearningPage(page);
   return {
+    calendar,
     currentDate: runtime.currentDate,
     memory,
     slug: learningPage.slug,

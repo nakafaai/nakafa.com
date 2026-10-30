@@ -35,7 +35,7 @@ function NotificationsPage() {
         <NotificationsHeader first={page} />
         <LayoutContent className="flex flex-col gap-6 py-6">
           <NotificationsClockContext value={clock}>
-            <NotificationsList first={page} />
+            <NotificationsList first={page} slug={undefined} />
           </NotificationsClockContext>
         </LayoutContent>
       </LayoutMaterialContent>

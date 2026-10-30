@@ -7,6 +7,7 @@ const UserSettingsLabelKeySchema = Schema.Literals([
   "learning",
   "billing",
   "memory",
+  "connectors",
 ]);
 
 /** The message key of one settings section. The `Auth` dictionary owns it. */
@@ -55,6 +56,10 @@ export const userSettingsGroups = [
     userSettingsSection("memory", {
       from: LOCALE_ROUTE,
       to: "/$locale/user/settings/memory",
+    } satisfies LinkTarget),
+    userSettingsSection("connectors", {
+      from: LOCALE_ROUTE,
+      to: "/$locale/user/settings/connectors",
     } satisfies LinkTarget),
   ]),
 ] as const;

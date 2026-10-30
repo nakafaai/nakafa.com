@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { QueryResult } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -23,7 +22,6 @@ import {
   ExamUnavailable,
 } from "@/components/tenant/exams/unavailable";
 import { useLastValue } from "@/lib/data/kept";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolExamEditTarget } from "@/lib/routing/school/target";
 
@@ -36,20 +34,17 @@ import { schoolExamEditTarget } from "@/lib/routing/school/target";
  */
 export function ExamTryPaper({
   examId,
-  preload,
   slug,
 }: {
   examId: Id<"exams">;
-  preload: Ref.Returns<typeof exams.exams.open> | undefined;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  // The server draws this page before the browser's connection signs in, so the exam waits for it.
+  // The exam needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const result = usePreloadedQueryResult(
+  const result = useQuery(
     exams.exams.open,
-    isSettled ? { examId, slug } : "skip",
-    preload
+    isSettled ? { examId, slug } : "skip"
   );
   const [store] = useState(createExamTry);
   // An exam that goes while it is tried keeps its paper and its title, and says so in place of the note.

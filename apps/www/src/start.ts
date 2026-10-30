@@ -7,6 +7,9 @@ import { Effect, Option } from "effect";
 import { hintCookieFor, hintScopeFor, isHintCurrent } from "@/lib/auth/hint";
 import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";
 
+/** The path of Better Auth's routes, which the proxy serves on this site. */
+const AUTH_ROUTE_PREFIX = "/api/auth/";
+
 /**
  * Creates the request's session memo and reads the session once for the whole
  * request, so every reader shares that read. The signed-in hint follows the
@@ -17,6 +20,12 @@ import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";
  */
 const requestSession = createMiddleware({ type: "request" }).server(
   async ({ next, request }) => {
+    // Better Auth's own routes read the session themselves, and the proxy keeps the
+    // hint from the session read's answer (`withSessionHint`), so a second read here
+    // would only repeat a Convex call.
+    if (new URL(request.url).pathname.startsWith(AUTH_ROUTE_PREFIX)) {
+      return next();
+    }
     const [{ readSessionMemo }, { runServerEffect }] = await Promise.all([
       import("@/lib/auth/session.server"),
       import("@/lib/server/fn"),

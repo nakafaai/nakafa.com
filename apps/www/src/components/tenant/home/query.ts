@@ -1,25 +1,17 @@
-import { useMutation } from "@confect/react";
+import { useMutation, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option } from "effect";
-import { use } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useTenant } from "@/components/tenant/context";
-import { HomePreloadContext } from "@/components/tenant/home/data";
 import { releaseInRows } from "@/components/tenant/home/release";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /** The exams and rooms the school home lists for the viewer, read in one bounded call. */
 export function useHomeExams() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const { home } = use(HomePreloadContext);
-  return usePreloadedQueryResult(
-    exams.exams.home,
-    isSettled ? { slug } : "skip",
-    home
-  );
+  return useQuery(exams.exams.home, isSettled ? { slug } : "skip");
 }
 
 /** The read of the exams and rooms the school home lists, which a cell's failure part runs again. */
@@ -59,11 +51,9 @@ export function useReleaseHomeResult() {
 export function useHomeSetup() {
   const { canManage, slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const { home } = use(HomePreloadContext);
-  return usePreloadedQueryResult(
+  return useQuery(
     tenancy.home.setup,
-    isSettled && canManage ? { slug } : "skip",
-    home?.setup
+    isSettled && canManage ? { slug } : "skip"
   );
 }
 
@@ -81,10 +71,5 @@ export function studentSittingsRead(slug: TenantSlug) {
 export function useStudentSittings() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const { sittings } = use(HomePreloadContext);
-  return usePreloadedQueryResult(
-    exams.sittings.mine,
-    isSettled ? { slug } : "skip",
-    sittings
-  );
+  return useQuery(exams.sittings.mine, isSettled ? { slug } : "skip");
 }
