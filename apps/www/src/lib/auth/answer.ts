@@ -1,6 +1,16 @@
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { readSessionCookie } from "@/lib/auth/cookie.server";
 import { SESSION_PATH, TOKEN_PATH } from "@/lib/auth/session";
+
+/** The Better Auth session of the session route, or null for a visitor. */
+export const SessionJson = Schema.fromJsonString(
+  Schema.NullOr(
+    Schema.Struct({
+      session: Schema.Struct({ id: Schema.String }),
+      user: Schema.Struct({ id: Schema.String, name: Schema.String }),
+    })
+  )
+);
 
 /** Whether a request sends nothing that could prove a session: no session cookie and no bearer token. */
 function sendsNoCredentials(request: Request) {
