@@ -39,17 +39,17 @@ const ToasterStyleSchema = Schema.Struct({
 type ToasterStyle = React.CSSProperties & typeof ToasterStyleSchema.Type;
 
 /**
- * Status toasts reuse the subtle recipe of the `*-outline` buttons: a status
- * border, the popover tinted with 5% of the status color, and popover text.
+ * A status toast keeps its status border and is filled with 15% of its status colour over the popover, so its
+ * kind reads before its words; its text stays the popover's.
  */
 const toasterStyle: ToasterStyle = {
   "--border-radius": "var(--radius)",
-  "--error-bg": "color-mix(in oklch, var(--destructive) 5%, var(--popover))",
+  "--error-bg": "color-mix(in oklch, var(--destructive) 15%, var(--popover))",
   "--error-border": "var(--destructive)",
   "--error-text": "var(--popover-foreground)",
   "--gray2": "var(--accent)",
   "--gray5": "var(--input)",
-  "--info-bg": "color-mix(in oklch, var(--info) 5%, var(--popover))",
+  "--info-bg": "color-mix(in oklch, var(--info) 15%, var(--popover))",
   "--info-border": "var(--info)",
   "--info-text": "var(--popover-foreground)",
   "--normal-bg": "var(--popover)",
@@ -57,10 +57,10 @@ const toasterStyle: ToasterStyle = {
   "--normal-border": "var(--border)",
   "--normal-border-hover": "var(--input)",
   "--normal-text": "var(--popover-foreground)",
-  "--success-bg": "color-mix(in oklch, var(--success) 5%, var(--popover))",
+  "--success-bg": "color-mix(in oklch, var(--success) 15%, var(--popover))",
   "--success-border": "var(--success)",
   "--success-text": "var(--popover-foreground)",
-  "--warning-bg": "color-mix(in oklch, var(--warning) 5%, var(--popover))",
+  "--warning-bg": "color-mix(in oklch, var(--warning) 15%, var(--popover))",
   "--warning-border": "var(--warning)",
   "--warning-text": "var(--popover-foreground)",
 };
@@ -109,7 +109,7 @@ function Toaster({
           actionButton: buttonVariants({ size: "sm" }),
           cancelButton: buttonVariants({ size: "sm", variant: "secondary" }),
           closeButton: cn(
-            buttonVariants({ size: "icon-xs", variant: "ghost" }),
+            buttonVariants({ size: "icon-xs", variant: "outline" }),
             "absolute start-0 top-0 -translate-x-[35%] -translate-y-[35%]"
           ),
           content: "flex min-w-0 flex-1 flex-col gap-0.5",

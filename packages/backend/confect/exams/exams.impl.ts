@@ -10,7 +10,7 @@ import {
   examAccess,
   examAuthority,
 } from "@repo/backend/confect/exams/authority";
-import { examSummary } from "@repo/backend/confect/exams/exam";
+import { examListed } from "@repo/backend/confect/exams/exam";
 import spec from "@repo/backend/confect/exams/exams.spec";
 import { readHome } from "@repo/backend/confect/exams/home/read";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
@@ -103,7 +103,7 @@ const list = FunctionImpl.make(
         .allowed(row)
         .pipe(Effect.map((actions) => Arr.contains(actions, "exam.view")))
     );
-    return Struct.assign(page, { page: Arr.map(viewable, examSummary) });
+    return Struct.assign(page, { page: Arr.map(viewable, examListed) });
   })
 );
 
@@ -121,7 +121,7 @@ const home = FunctionImpl.make(
 );
 
 /**
- * One exam with its questions in order, and its frozen time once a sitting of it is scheduled.
+ * One exam with its questions in order, and its frozen time once a sitting of it has finished.
  * Each question is one small row, and the exam holds at most the limit of them.
  */
 const open = FunctionImpl.make(
@@ -159,7 +159,7 @@ const rename = FunctionImpl.make(
   })
 );
 
-/** Deletes a draft exam with its questions, their documents, and its images (`removeExam`). */
+/** Deletes an exam that has no sitting, with its questions, their documents, and its images (`removeExam`). */
 const remove = FunctionImpl.make(
   databaseSchema,
   spec,

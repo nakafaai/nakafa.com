@@ -27,6 +27,7 @@ import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
 import { TryoutPageLink } from "@/components/tryout/route/link";
+import { useResendKeptPicks } from "@/components/tryout/runtime/response/kept";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
@@ -62,6 +63,7 @@ export function TryoutPlayer({
   const tTryouts = useTranslations("Tryouts");
   const answer = useTryoutResponseSubmit();
   const flag = useTryoutFlag();
+  useResendKeptPicks({ locked, questions: runtime.questions });
   const questions = projectTryoutQuestions({
     answer,
     flag,
@@ -78,7 +80,7 @@ export function TryoutPlayer({
         <PlayerHeaderStart>
           <TryoutPageLink
             aria-label={tCommon("back")}
-            className={buttonVariants({ size: "icon", variant: "ghost" })}
+            className={buttonVariants({ size: "icon", variant: "outline" })}
             {...finish.returnAddress}
           >
             <HugeIcons icon={ArrowLeft01Icon} />

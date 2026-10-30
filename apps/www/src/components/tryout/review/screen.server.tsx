@@ -29,9 +29,16 @@ const readTryoutReviewQuestions = Effect.fn("TryoutReview.readQuestions")(
     access: SignedContentAccess,
     runtime: TryoutSectionRuntime
   ) {
-    const content = yield* loadSignedTryoutContent(attemptId, access);
+    const loaded = yield* loadSignedTryoutContent(attemptId, access).pipe(
+      Effect.asSome,
+      // A retired attempt's bodies are no longer served: the screen keeps its score without a review.
+      Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeedNone)
+    );
+    if (Option.isNone(loaded)) {
+      return Option.none();
+    }
     return yield* projectTryoutReview({
-      content,
+      content: loaded.value,
       questions: runtime.questions,
     }).pipe(
       Effect.asSome,

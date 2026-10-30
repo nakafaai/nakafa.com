@@ -7,7 +7,7 @@ import { Header } from "@/components/sidebar/header/bar";
 import { LockableShell } from "@/components/sidebar/lock";
 import { SidebarNavigation } from "@/components/sidebar/navigation";
 import { AppSidebar } from "@/components/sidebar/panel";
-import { NavForYou } from "@/components/sidebar/primary";
+import { NavPrimary } from "@/components/sidebar/primary";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 /**
@@ -47,7 +47,7 @@ export function AppShell({
             <SidebarNavigation
               browse={
                 <>
-                  <NavForYou />
+                  <NavPrimary />
                   <NavExplore
                     articleIcons={getArticleCategoryIcons(articleNavigation)}
                     articleNavigation={articleNavigation}

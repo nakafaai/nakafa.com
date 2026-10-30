@@ -14,13 +14,13 @@ const storageFailure = (method: string, key?: string) => (cause: unknown) =>
   });
 
 /**
- * The browser's local storage as an Effect key-value store, which keeps a student's unsent answers and
- * flags on this device across reloads. It is the layer that `@effect/platform-browser` names
+ * The browser's local storage as an Effect key-value store, which keeps the answers that a player has not
+ * seen the server confirm on this device across reloads, the School sitting's and the try-out's alike. It is the layer that `@effect/platform-browser` names
  * `layerLocalStorage` in Effect 4.0.5, written here so the web app needs no further package. A browser
  * that refuses its storage fails the store's calls with a `KeyValueStoreError`, so the caller reports it
  * and the page still answers.
  */
-export const sittingStorage = Layer.effect(KeyValueStore.KeyValueStore)(
+export const keptStorage = Layer.effect(KeyValueStore.KeyValueStore)(
   Effect.map(
     Effect.try({
       catch: storageFailure("open"),

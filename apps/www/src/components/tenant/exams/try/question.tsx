@@ -8,7 +8,7 @@ import {
   typedText,
 } from "@repo/backend/confect/exams/sittings/response";
 import { ClientOnly } from "@tanstack/react-router";
-import { Option } from "effect";
+import { Option, Record as Rec } from "effect";
 import { lazy, Suspense, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
@@ -22,8 +22,11 @@ import {
   writtenOf,
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
+import { PlayerQuestionFlag } from "@/components/player/flag";
+import { PlayerQuestion } from "@/components/player/question";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
+import { useLastValue } from "@/lib/data/kept";
 
 /** The session name the try reads prompts under. It never writes, so the server records nothing. */
 const TRY_CLIENT = "try";
@@ -39,8 +42,8 @@ const TryPrompt = lazy(() =>
 );
 
 /**
- * One question as a student meets it: its number, its prompt, and its options, with the same
- * controls as the paper of a sitting. The options are answered in the browser only, through the
+ * One question as a student meets it, in the player's own question article: its number, its prompt,
+ * and its options, with the same controls as the paper of a sitting. The options are answered in the browser only, through the
  * try's own answers, so nothing is sent.
  */
 export function ExamTryQuestion({
@@ -52,59 +55,74 @@ export function ExamTryQuestion({
 }) {
   const t = useTranslations("Exams");
   const titleId = useId();
+  const articleId = useId();
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
+  const flag = useExamTry((state) => state.flag);
+  const flagged = useExamTry((state) => Rec.has(state.flags, question.id));
   const choice = choiceOf(question.answers);
   const entry = writtenOf(question.answers);
   const pairing = pairingOf(question.answers);
   const table = tableOf(question.answers);
 
   return (
-    <section aria-labelledby={titleId} className="grid gap-6">
-      <h2 className="font-medium" id={titleId}>
-        {t("question", { number })}
-      </h2>
-      <ExamTryPrompt documentId={question.prompt} />
-      {Option.isSome(choice) ? (
-        <SittingChoice
-          choice={choice.value}
-          labelledBy={titleId}
-          onChoose={(next) => choose(question.id, next)}
-          response={chosenOptions(response ?? NO_RESPONSE)}
-        />
-      ) : null}
-      {Option.isSome(entry) ? (
-        <SittingField
-          entry={entry.value}
-          labelledBy={titleId}
-          onType={(text) => choose(question.id, { text })}
-          text={typedText(response ?? NO_RESPONSE)}
-        />
-      ) : null}
-      {Option.isSome(pairing) ? (
-        <SittingPairs
-          labelledBy={titleId}
-          match={pairing.value}
-          onPair={(pairs) => choose(question.id, { pairs })}
-          pairs={madePairs(response ?? NO_RESPONSE)}
-        />
-      ) : null}
-      {Option.isSome(table) ? (
-        <SittingTable
-          cells={markedCells(response ?? NO_RESPONSE)}
-          labelledBy={titleId}
-          onMark={(cells) => choose(question.id, { cells })}
-          table={table.value}
-        />
-      ) : null}
-    </section>
+    <PlayerQuestion
+      id={articleId}
+      labelledBy={titleId}
+      questionKey={question.id}
+    >
+      <PlayerQuestionFlag
+        flagged={flagged}
+        locked={false}
+        onFlag={() => flag(question.id)}
+        questionKey={question.id}
+      />
+      <div className="grid gap-6">
+        <h2 className="font-medium" id={titleId}>
+          {t("question", { number })}
+        </h2>
+        <ExamTryPrompt documentId={question.prompt} />
+        {Option.isSome(choice) ? (
+          <SittingChoice
+            choice={choice.value}
+            labelledBy={titleId}
+            onChoose={(next) => choose(question.id, next)}
+            response={chosenOptions(response ?? NO_RESPONSE)}
+          />
+        ) : null}
+        {Option.isSome(entry) ? (
+          <SittingField
+            entry={entry.value}
+            labelledBy={titleId}
+            onType={(text) => choose(question.id, { text })}
+            text={typedText(response ?? NO_RESPONSE)}
+          />
+        ) : null}
+        {Option.isSome(pairing) ? (
+          <SittingPairs
+            labelledBy={titleId}
+            match={pairing.value}
+            onPair={(pairs) => choose(question.id, { pairs })}
+            pairs={madePairs(response ?? NO_RESPONSE)}
+          />
+        ) : null}
+        {Option.isSome(table) ? (
+          <SittingTable
+            cells={markedCells(response ?? NO_RESPONSE)}
+            onMark={(cells) => choose(question.id, { cells })}
+            table={table.value}
+          />
+        ) : null}
+      </div>
+    </PlayerQuestion>
   );
 }
 
 /**
  * The prompt of one question. It keeps a prompt's height from the first draw until its reader is
  * ready, as a sitting's prompt does, so the options below it do not move while the document opens
- * and the reader loads. A prompt that does not open leaves no space.
+ * and the reader loads. A prompt that does not open leaves no space, and one whose exam goes while
+ * it is tried keeps the text it showed, as the paper keeps the exam's title and questions.
  */
 function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
   const slug = useTrySlug();
@@ -113,17 +131,15 @@ function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
     documentId,
     slug,
   });
+  const opened = useLastValue(reply);
 
-  if (QueryResult.isFailure(reply)) {
-    return null;
-  }
-  if (!QueryResult.isSuccess(reply)) {
-    return <PromptReserve />;
+  if (Option.isNone(opened)) {
+    return QueryResult.isFailure(reply) ? null : <PromptReserve />;
   }
   return (
     <Suspense fallback={<PromptReserve />}>
       <ClientOnly fallback={<PromptReserve />}>
-        <TryPrompt key={documentId} opened={reply.value} />
+        <TryPrompt key={documentId} opened={opened.value} />
       </ClientOnly>
     </Suspense>
   );

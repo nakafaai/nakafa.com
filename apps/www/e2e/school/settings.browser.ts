@@ -274,8 +274,8 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
     ownerGrant.getByRole("cell", { name: "Owner", exact: true })
   ).toBeVisible();
 
-  // The page is header and body: the header row holds the search box and the one Filter
-  // menu before the page's actions, and the table fills the body from edge to edge.
+  // The page is header and body: the header row holds the search box before the page's
+  // actions, and the table fills the body from edge to edge.
   const search = header.getByRole("textbox", { name: "Find a person" });
   await expect(search).toBeVisible();
   const table = page.locator('[data-slot="table-container"]');
@@ -290,10 +290,11 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
     ownerGrant.getByRole("button", { name: "More actions" })
   ).toBeVisible();
 
-  // A role chosen in the Filter menu stays in its menu while the search hides every
-  // row, so it can be unchosen, and the grant shows again once both are cleared. Each
-  // value of the menu carries its icon.
-  const filter = header.getByRole("button", { name: "Filter" });
+  // The header holds no Filter: the role column filters in its head. A role chosen there stays
+  // chosen while the search hides every row, the head stays in reach so it can be unchosen, and the
+  // grant shows again once both are cleared. Each value of the menu carries its icon.
+  await expect(header.getByRole("button", { name: "Filter" })).toHaveCount(0);
+  const filter = page.getByRole("button", { name: "Filter by Role" });
   await filter.click();
   const owner = page.getByRole("menuitemcheckbox", { name: OWNER_OPTION });
   await expect(owner.locator("svg").first()).toBeVisible();

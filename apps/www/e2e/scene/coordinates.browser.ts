@@ -291,9 +291,9 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
         ratio(Math.tan(radians)),
       ];
       for (const input of [formatted, ""]) {
-        // The client render can still replace the field after the reveal, and
-        // an edit made on the node it replaces is lost. The edit repeats until
-        // the live field keeps it.
+        // The lab can still hydrate after the reveal. An edit made before it
+        // stays in the field's text but never reaches the visual, so the edit
+        // repeats until the footer shows it.
         yield* Effect.promise(() =>
           expect(async () => {
             await angle.fill(input);
@@ -301,10 +301,12 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
             await expect(angle).toHaveValue(formatted, {
               timeout: EDIT_PROBE_TIMEOUT_MILLISECONDS,
             });
+            await expect(annotations).toHaveText(expected, {
+              timeout: EDIT_PROBE_TIMEOUT_MILLISECONDS,
+            });
           }).toPass({ intervals: [100], timeout: revealTimeoutMilliseconds })
         );
         yield* Effect.promise(() => expect(card).not.toContainText("NaN"));
-        yield* Effect.promise(() => expect(annotations).toHaveText(expected));
       }
     }
   }

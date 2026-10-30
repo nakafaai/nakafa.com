@@ -110,6 +110,14 @@ function DatePicker({
             Option.map(first, (before) => ({ before })),
             Option.map(last, (after) => ({ after })),
           ])}
+          {...Option.match(first, {
+            onNone: () => ({}),
+            onSome: (startMonth) => ({ startMonth }),
+          })}
+          {...Option.match(last, {
+            onNone: () => ({}),
+            onSome: (endMonth) => ({ endMonth }),
+          })}
           mode="single"
           onSelect={(day) => {
             onValueChange(getCalendarDayKey(day));

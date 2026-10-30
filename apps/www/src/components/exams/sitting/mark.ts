@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
+import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { changePaper, setPaperFlag } from "@/components/exams/sitting/paper";
 
 /** One flag that the student sets or clears, which names the question and its sitting. */
@@ -32,7 +33,7 @@ function useFlagMutation() {
  * Sends one flag change, and resolves to the failure that the caller tells the student about, or to none when
  * the server took the change, so the caller shows its failures with one toast.
  */
-export function useMarkFlag() {
+function useMarkFlag() {
   const flag = useFlagMutation();
 
   return (input: FlagInput) =>
@@ -42,5 +43,33 @@ export function useMarkFlag() {
         onFailure: (error) => Option.some(error),
         onSuccess: () => Option.none(),
       })
+    );
+}
+
+/**
+ * Flags one question of the student's paper, or takes its flag off, and tells the student with one toast when
+ * the server refuses it. The footer, the keys and each question's own flag send it the same way.
+ */
+export function useFlagQuestion(sitting: {
+  readonly deviceId: string;
+  readonly sittingId: FlagInput["sittingId"];
+  readonly slug: FlagInput["slug"];
+}) {
+  const mark = useMarkFlag();
+
+  return (question: {
+    readonly flagged: boolean;
+    readonly id: FlagInput["questionId"];
+  }) =>
+    Effect.runPromise(
+      mark({
+        ...sitting,
+        flagged: !question.flagged,
+        questionId: question.id,
+      }).pipe(
+        Effect.flatMap((failure) =>
+          sittingCallFailures(Option.toArray(failure))
+        )
+      )
     );
 }

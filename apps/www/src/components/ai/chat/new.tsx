@@ -122,10 +122,7 @@ function NewChatLayout({
         </>
       )}
       {prompt ? (
-        <StartPrompt
-          className="mx-auto w-full max-w-7xl px-4 py-6"
-          prompt={prompt}
-        />
+        <StartPrompt className="mx-auto w-full max-w-3xl p-6" prompt={prompt} />
       ) : (
         <div className="relative mx-auto w-full max-w-xl px-6">
           <HomeTitle />
@@ -134,7 +131,7 @@ function NewChatLayout({
       <div
         className={cn(
           "relative mx-auto grid w-full shrink-0",
-          prompt ? "max-w-7xl px-4 pb-4" : "max-w-3xl px-6"
+          prompt ? "max-w-3xl px-4 pb-4" : "max-w-3xl px-6"
         )}
         key="composer"
       >

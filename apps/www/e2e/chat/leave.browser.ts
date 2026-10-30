@@ -32,7 +32,7 @@ const FIRST = {
 /** What the learner adds to a chat that has answered. */
 const FOLLOW_UP = "And what about the tangent?";
 const NOTICE = en.Toast["admitted-elsewhere"].title;
-const OPEN = en.Toast["open-chat"].title;
+const OPEN = en.Common.open;
 
 /**
  * Writes the prompt in the new chat and presses Enter. The server holds the
