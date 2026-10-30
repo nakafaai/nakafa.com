@@ -5,6 +5,7 @@ import { operatorAccount } from "@repo/backend/test/operators";
 import {
   journal,
   slugOf,
+  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -110,8 +111,9 @@ describe("operators/expiry sweep", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const staff = yield* operatorAccount(fixture, "swept");
+        vi.setSystemTime(actedAt());
         const visit = yield* approvedVisit(fixture, staff, 60);
-        vi.setSystemTime(TENANCY_NOW + HOUR_MS);
+        vi.setSystemTime(actedAt() + HOUR_MS);
         yield* fixture.internal.mutation(sweep, {});
         const stored = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
@@ -119,7 +121,7 @@ describe("operators/expiry sweep", () => {
           )
         );
         expect(stored.state).toEqual({
-          at: TENANCY_NOW + HOUR_MS,
+          at: actedAt() + HOUR_MS,
           reason: "expired",
           status: "ended",
         });

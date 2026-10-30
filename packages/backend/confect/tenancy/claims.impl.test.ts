@@ -15,6 +15,7 @@ import {
   INVITE_TERM,
 } from "@repo/backend/confect/tenancy/schema";
 import {
+  actedAt,
   invitePerson,
   scheduledJobs,
   slugOf,
@@ -83,6 +84,7 @@ describe("tenancy/claims run", () => {
         const before = yield* account.client
           .query(viewer, { slug: nf })
           .pipe(Effect.flip);
+        vi.setSystemTime(actedAt(0, NOW));
         yield* fixture.internal.mutation(run, {
           cursor: null,
           userId: account.userId,
@@ -91,13 +93,13 @@ describe("tenancy/claims run", () => {
         const view = yield* account.client.query(viewer, { slug: nf });
         expect(before).toMatchObject({ _tag: "NotMember" });
         expect(after.person.account).toEqual({
-          claimedAt: NOW,
+          claimedAt: actedAt(0, NOW),
           method: "invite",
           state: "claimed",
           userId: account.userId,
         });
         expect(after.invite.state).toEqual({
-          at: NOW,
+          at: actedAt(0, NOW),
           status: "accepted",
           userId: account.userId,
         });

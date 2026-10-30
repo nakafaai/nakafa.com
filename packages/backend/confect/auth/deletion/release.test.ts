@@ -15,6 +15,7 @@ import {
   personOf,
 } from "@repo/backend/test/operators";
 import {
+  actedAt,
   invitePerson,
   journal,
   slugOf,
@@ -102,6 +103,7 @@ describe("auth/deletion release", () => {
             },
           })
         );
+        vi.setSystemTime(actedAt(0, NOW));
         yield* fixture.run(finalizeAccountDeletion(account.authUserId));
         const released = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
@@ -112,7 +114,10 @@ describe("auth/deletion release", () => {
           )
         );
         expect(released.person.account).toEqual({ state: "unclaimed" });
-        expect(released.invite.state).toEqual({ at: NOW, status: "revoked" });
+        expect(released.invite.state).toEqual({
+          at: actedAt(0, NOW),
+          status: "revoked",
+        });
         expect(yield* fixture.run(journal)).toMatchObject([
           {
             actor: { kind: "system" },
@@ -140,6 +145,7 @@ describe("auth/deletion release", () => {
           visitId: visit.id,
         });
         const person = yield* personOf(fixture, staff.userId);
+        vi.setSystemTime(actedAt(0, NOW));
         yield* fixture.run(finalizeAccountDeletion(staff.authUserId));
         const released = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
@@ -154,7 +160,7 @@ describe("auth/deletion release", () => {
           status: "suspended",
         });
         expect(released.visit.state).toEqual({
-          at: NOW,
+          at: actedAt(0, NOW),
           reason: "left",
           status: "ended",
         });

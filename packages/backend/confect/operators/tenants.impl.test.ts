@@ -11,6 +11,7 @@ import { operatorAccount } from "@repo/backend/test/operators";
 import {
   journal,
   slugOf,
+  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -278,6 +279,7 @@ describe("operators/tenants replaceOwner", () => {
           internalOpen,
           openRequest("ganti", "lama@ganti.example.test")
         );
+        vi.setSystemTime(actedAt());
         const row = yield* staff.client.mutation(replaceOwner, {
           locale: "id",
           owner: { email: replacement, name: "Kepala Baru" },
@@ -317,7 +319,7 @@ describe("operators/tenants replaceOwner", () => {
           ])
         ).toEqual([
           ["baru@ganti.example.test", { status: "pending" }],
-          ["lama@ganti.example.test", { at: TENANCY_NOW, status: "revoked" }],
+          ["lama@ganti.example.test", { at: actedAt(), status: "revoked" }],
         ]);
         const entries = yield* fixture.run(journal);
         expect(Arr.takeRight(entries, 6)).toMatchObject([

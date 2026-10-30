@@ -21,6 +21,7 @@ import {
   journal,
   slugOf,
   suspend,
+  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -30,6 +31,11 @@ const { send } = refs.public.guardians.codes;
 const DEVICE = "6f2b0f3e-3a39-4f25-9a51-6a7f6f1d2c11";
 const SIX_DIGITS = /\b(\d{6})\b/;
 const AYAH = Schema.decodeSync(Email)("ayah@example.com");
+
+/** The answer to a request made at `at`: a code that expires one term later. */
+const answerAt = (at: number) => ({
+  expiresAt: at + Duration.toMillis(CODE_TERM),
+});
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -62,10 +68,9 @@ describe("guardians/codes send", () => {
         yield* asStaffSchool(fixture);
         const link = yield* startLink(fixture);
         const mail = vi.spyOn(resend, "sendEmail");
+        vi.setSystemTime(actedAt());
         const answer = yield* ask(fixture);
-        expect(answer).toEqual({
-          expiresAt: TENANCY_NOW + Duration.toMillis(CODE_TERM),
-        });
+        expect(answer).toEqual(answerAt(actedAt()));
         expect(mail).toHaveBeenCalledTimes(1);
         const message = mail.mock.calls[0]?.[1];
         expect(message).toMatchObject({
@@ -118,15 +123,18 @@ describe("guardians/codes send", () => {
         yield* asStaffSchool(fixture);
         yield* startLink(fixture);
         const mail = vi.spyOn(resend, "sendEmail");
-        const expected = {
-          expiresAt: TENANCY_NOW + Duration.toMillis(CODE_TERM),
-        };
-        expect(yield* ask(fixture, AYAH)).toEqual(expected);
+        const unlinked = actedAt(0);
+        const unknown = actedAt(1);
+        const suspended = actedAt(2);
+        vi.setSystemTime(unlinked);
+        expect(yield* ask(fixture, AYAH)).toEqual(answerAt(unlinked));
+        vi.setSystemTime(unknown);
         expect(yield* ask(fixture, IBU, DEVICE, slugOf("missing"))).toEqual(
-          expected
+          answerAt(unknown)
         );
         yield* fixture.run(suspend(fixture.tenants.nf));
-        expect(yield* ask(fixture)).toEqual(expected);
+        vi.setSystemTime(suspended);
+        expect(yield* ask(fixture)).toEqual(answerAt(suspended));
         expect(mail).not.toHaveBeenCalled();
         expect(yield* fixture.run(codeRows)).toEqual([]);
       })

@@ -11,6 +11,7 @@ import {
   journal,
   slugOf,
   suspend,
+  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -38,6 +39,7 @@ describe("operators/visits request", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const staff = yield* operatorAccount(fixture, "requester");
+        vi.setSystemTime(actedAt());
         const visit = yield* staff.client.mutation(requestVisit, {
           minutes: 60,
           note: "Pendampingan kurikulum semester ini",
@@ -48,7 +50,7 @@ describe("operators/visits request", () => {
           minutes: 60,
           note: "Pendampingan kurikulum semester ini",
           reason: "support",
-          requestedAt: TENANCY_NOW,
+          requestedAt: actedAt(),
           state: { status: "pending" },
         });
         const entries = yield* fixture.run(journal);
@@ -171,19 +173,20 @@ describe("operators/visits approve", () => {
           reason: "support",
           tenantId: fixture.tenants.nf,
         });
+        vi.setSystemTime(actedAt());
         const approved = yield* fixture.as("admin").mutation(approve, {
           slug: nf,
           visitId: visit.id,
         });
         expect(approved.state).toEqual({
-          at: TENANCY_NOW,
-          expiresAt: TENANCY_NOW + HOUR_MS,
+          at: actedAt(),
+          expiresAt: actedAt() + HOUR_MS,
           status: "approved",
         });
         const person = yield* personOf(fixture, staff.userId);
         expect(person).toMatchObject({
           account: {
-            claimedAt: TENANCY_NOW,
+            claimedAt: actedAt(),
             method: "operator",
             state: "claimed",
             userId: staff.userId,
@@ -196,7 +199,7 @@ describe("operators/visits approve", () => {
           {
             role: { key: "auditor", kind: "builtin" },
             scope: { kind: "tenant" },
-            term: { expiresAt: TENANCY_NOW + HOUR_MS, kind: "temporary" },
+            term: { expiresAt: actedAt() + HOUR_MS, kind: "temporary" },
           },
         ]);
         expect(yield* fixture.run(journal)).toMatchObject([
@@ -213,7 +216,7 @@ describe("operators/visits approve", () => {
           },
           {
             change: {
-              term: { expiresAt: TENANCY_NOW + HOUR_MS, kind: "temporary" },
+              term: { expiresAt: actedAt() + HOUR_MS, kind: "temporary" },
               type: "grant.created",
             },
             subject: { id: person._id, kind: "person" },

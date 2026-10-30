@@ -48,6 +48,19 @@ export const TENANCY_NOW = DateTime.toEpochMillis(
   DateTime.makeUnsafe("2026-10-01T08:00:00Z")
 );
 
+/**
+ * The instant of a mutation under test: a minute after the setup that ran at
+ * `setUpAt`, plus `seconds`. convex-test pins each mutation's clock at or after
+ * the commit before it, as the Convex backend does, so setup that commits at
+ * the frozen instant moves the next mutation past it. A test that reads a
+ * mutation's time runs it at an instant of its own, after the setup.
+ */
+export const actedAt = (seconds = 0, setUpAt = TENANCY_NOW) =>
+  setUpAt +
+  Duration.toMillis(
+    Duration.sum(Duration.minutes(1), Duration.seconds(seconds))
+  );
+
 export const slugOf = Schema.decodeSync(TenantSlug);
 
 /** The defect an exit died with, as text, so a test can name the wiring fault it expects. */

@@ -11,7 +11,11 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import { scheduledJobs, TENANCY_NOW } from "@repo/backend/test/tenancy";
+import {
+  actedAt,
+  scheduledJobs,
+  TENANCY_NOW,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 import { Base64Url } from "effect/encoding";
 
@@ -168,6 +172,8 @@ describe("notifications/deliver", () => {
         yield* fixture
           .as("student")
           .mutation(push.subscribe, yield* browserKeys);
+        const sentAt = actedAt(0, Date.UTC(2026, 9, 1, 15, 0, 0));
+        vi.setSystemTime(sentAt);
         yield* fixture.as("teacher").mutation(send, {
           ...forum,
           clientKey: "zoneless-mention",
@@ -178,9 +184,7 @@ describe("notifications/deliver", () => {
         const pushes = Arr.filter(yield* fixture.run(scheduledJobs), (job) =>
           job.name.includes("deliver")
         );
-        expect(Arr.map(pushes, (job) => job.scheduledTime)).toEqual([
-          Date.UTC(2026, 9, 1, 15, 0, 0),
-        ]);
+        expect(Arr.map(pushes, (job) => job.scheduledTime)).toEqual([sentAt]);
       })
   );
 

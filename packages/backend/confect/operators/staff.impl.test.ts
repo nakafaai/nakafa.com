@@ -4,6 +4,7 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { operatorAccount } from "@repo/backend/test/operators";
 import {
   slugOf,
+  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -33,16 +34,17 @@ describe("operators/staff grant", () => {
           "grantee@nakafa.example.test",
           true
         );
+        vi.setSystemTime(actedAt());
         const first = yield* fixture.internal.mutation(grant, {
           userId: account.userId,
         });
-        vi.setSystemTime(TENANCY_NOW + 1000);
+        vi.setSystemTime(actedAt(1));
         const again = yield* fixture.internal.mutation(grant, {
           userId: account.userId,
         });
         expect(first).toMatchObject({
-          changedAt: TENANCY_NOW,
-          grantedAt: TENANCY_NOW,
+          changedAt: actedAt(),
+          grantedAt: actedAt(),
           status: "active",
           userId: account.userId,
         });
@@ -96,11 +98,12 @@ describe("operators/staff revoke", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const staff = yield* operatorAccount(fixture, "leaving");
+      vi.setSystemTime(actedAt());
       const revoked = yield* fixture.internal.mutation(revoke, {
         userId: staff.userId,
       });
       expect(revoked).toMatchObject({
-        changedAt: TENANCY_NOW,
+        changedAt: actedAt(),
         status: "revoked",
       });
       const denial = yield* staff.client

@@ -9,6 +9,7 @@ import { connect } from "@repo/backend/confect/connectors/connection";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import {
   journal,
+  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -126,6 +127,7 @@ describe("connectors/sync", () => {
         const fixture = yield* tenancyFixture;
         const connectionId = yield* connectionOf(fixture, "calendar");
         google([meeting, holiday, cancelled]);
+        vi.setSystemTime(actedAt(0));
         yield* fixture.internal.action(sync.run, { connectionId });
         const events = yield* fixture.run(mirror);
         expect(
@@ -141,11 +143,12 @@ describe("connectors/sync", () => {
           "Bearer access"
         );
         expect((yield* fixture.run(rowOf(connectionId))).nextSyncAt).toBe(
-          TENANCY_NOW + HOUR / 2
+          actedAt(0) + HOUR / 2
         );
+        vi.setSystemTime(actedAt(1));
         yield* fixture.internal.action(sync.run, { connectionId });
         expect((yield* fixture.run(rowOf(connectionId))).nextSyncAt).toBe(
-          TENANCY_NOW + 3 * HOUR
+          actedAt(1) + 3 * HOUR
         );
         yield* fixture.as("student").mutation(disconnectOwn, { connectionId });
         expect(yield* fixture.run(mirror)).toEqual([]);
@@ -253,6 +256,7 @@ describe("connectors/sync", () => {
               .patch(idle, { nextSyncAt: null })
           ).pipe(Effect.orDie)
         );
+        vi.setSystemTime(actedAt());
         expect(yield* fixture.internal.mutation(sync.sweep, {})).toEqual({
           scheduled: 6,
         });
@@ -260,10 +264,10 @@ describe("connectors/sync", () => {
           Effect.forEach(due, (connectionId) => rowOf(connectionId))
         );
         expect(
-          Arr.filter(leased, (row) => row.nextSyncAt === TENANCY_NOW + HOUR / 4)
+          Arr.filter(leased, (row) => row.nextSyncAt === actedAt() + HOUR / 4)
         ).toHaveLength(5);
         expect((yield* fixture.run(rowOf(school))).nextSyncAt).toBe(
-          TENANCY_NOW + HOUR / 4
+          actedAt() + HOUR / 4
         );
         expect((yield* fixture.run(rowOf(idle))).nextSyncAt).toBeNull();
       })

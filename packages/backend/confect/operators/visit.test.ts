@@ -10,6 +10,7 @@ import {
   journal,
   slugOf,
   suspend,
+  actedAt,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -48,12 +49,13 @@ describe("operators/visit end", () => {
           visitId: visit.id,
         });
         const person = yield* personOf(fixture, staff.userId);
+        vi.setSystemTime(actedAt());
         const ended = yield* staff.client.mutation(endVisit, {
           slug: nf,
           visitId: visit.id,
         });
         expect(ended.state).toEqual({
-          at: TENANCY_NOW,
+          at: actedAt(),
           reason: "left",
           status: "ended",
         });
@@ -307,11 +309,12 @@ describe("operators/visit decline", () => {
           reason: "support",
           tenantId: fixture.tenants.nf,
         });
+        vi.setSystemTime(actedAt());
         const declined = yield* fixture.as("admin").mutation(decline, {
           slug: nf,
           visitId: visit.id,
         });
-        expect(declined.state).toEqual({ at: TENANCY_NOW, status: "declined" });
+        expect(declined.state).toEqual({ at: actedAt(), status: "declined" });
         expect(yield* fixture.run(journal)).toMatchObject([
           { change: { type: "visit.requested" } },
           {

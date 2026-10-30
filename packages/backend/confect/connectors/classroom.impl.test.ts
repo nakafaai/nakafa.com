@@ -15,7 +15,7 @@ import {
   writeClass,
 } from "@repo/backend/test/classroom";
 import { otherSchoolTeacher } from "@repo/backend/test/editor";
-import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
+import { actedAt, slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, DateTime, Effect } from "effect";
 
@@ -203,13 +203,14 @@ describe("connectors/classroom", () => {
           at("2026-11-03T23:59:00Z"),
           at("2026-11-03T23:59:00Z"),
         ]);
+        vi.setSystemTime(actedAt());
         yield* fixture.internal.action(sync.run, { connectionId });
         const quiet = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             reader.table("connectorConnections").get(connectionId)
           ).pipe(Effect.orDie)
         );
-        expect(quiet.nextSyncAt).toBe(TENANCY_NOW + 3 * 3_600_000);
+        expect(quiet.nextSyncAt).toBe(actedAt() + 3 * 3_600_000);
         yield* admin.mutation(classroom.link, {
           classId: null,
           connectionId,

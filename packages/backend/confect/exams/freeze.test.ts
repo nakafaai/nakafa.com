@@ -20,7 +20,11 @@ import {
   OPENS_AT,
   scheduleSitting,
 } from "@repo/backend/test/sittings";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  actedAt,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
@@ -81,11 +85,12 @@ describe("exams/freeze", () => {
           );
         const unfrozen = yield* row();
         expect(unfrozen.frozenAt).toBeUndefined();
+        vi.setSystemTime(actedAt(0));
         yield* fixture.run(freezeExam(unfrozen));
-        expect((yield* row()).frozenAt).toBe(TENANCY_NOW);
-        vi.setSystemTime(TENANCY_NOW + 60_000);
+        expect((yield* row()).frozenAt).toBe(actedAt(0));
+        vi.setSystemTime(actedAt(60));
         yield* fixture.run(freezeExam(yield* row()));
-        expect((yield* row()).frozenAt).toBe(TENANCY_NOW);
+        expect((yield* row()).frozenAt).toBe(actedAt(0));
       })
   );
 
@@ -236,12 +241,13 @@ describe("exams/freeze", () => {
         });
         const scheduled = yield* teacher.query(open, { examId, slug: nf });
         expect(scheduled.frozenAt).toBeUndefined();
+        vi.setSystemTime(actedAt());
         yield* fixture.internal.mutation(closeDue, {
           atDeadline: "now",
           sittingId: made.id,
         });
         const finished = yield* teacher.query(open, { examId, slug: nf });
-        expect(finished.frozenAt).toBe(TENANCY_NOW);
+        expect(finished.frozenAt).toBe(actedAt());
       })
   );
 

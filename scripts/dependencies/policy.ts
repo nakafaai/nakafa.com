@@ -192,16 +192,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
     approved: "catalog:",
-    dependency: "@convex-dev/agent",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "0.4.14",
-    declarationPaths: ["packages/backend/package.json"],
-    dependency: "@convex-dev/workpool",
-  },
-  {
-    approved: "catalog:",
     dependency: "@convex-dev/ai-sdk-provider",
     minimumDeclarations: 1,
   },
@@ -211,11 +201,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   { approved: "1.6.33", dependency: "auth", minimumDeclarations: 1 },
-  {
-    allowed: ["^0.0.62"],
-    dependency: "convex-test",
-    minimumDeclarations: 1,
-  },
   {
     approved: "0.12.6",
     dependency: "@convex-dev/better-auth",
