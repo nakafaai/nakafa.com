@@ -1342,6 +1342,8 @@
     "load-error": "We could not load this data.",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
+    "month": "Month",
+    "year": "Year",
     "breadcrumb": "Breadcrumb",
     "sidebar": "Sidebar",
     "toggle-sidebar": "Toggle Sidebar",

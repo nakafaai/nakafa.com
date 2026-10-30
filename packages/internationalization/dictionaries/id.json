@@ -1342,6 +1342,8 @@
     "load-error": "Data ini belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
+    "month": "Bulan",
+    "year": "Tahun",
     "breadcrumb": "Jalur navigasi",
     "sidebar": "Sidebar",
     "toggle-sidebar": "Buka atau tutup sidebar",
