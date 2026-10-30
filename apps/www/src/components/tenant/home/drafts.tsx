@@ -71,10 +71,7 @@ function DraftRow({
     <Dashboard.Row
       render={
         saving ? undefined : (
-          <TargetLink
-            target={schoolExamEditTarget(tenant.slug, draft.id)}
-            title={draft.title}
-          />
+          <TargetLink target={schoolExamEditTarget(tenant.slug, draft.id)} />
         )
       }
       title={draft.title}
