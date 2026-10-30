@@ -386,10 +386,7 @@ describe("signed try-out execution", () => {
         )
       );
       expect(yield* loadFailure(fixture)).toMatchObject({
-        _tag: "ContentRuntimeVerificationError",
-        cause: {
-          _tag: "ContentRuntimeMissingError",
-        },
+        _tag: "ContentRuntimeMissingError",
       });
       expect(queryMock).toHaveBeenCalledTimes(2);
     })
@@ -453,7 +450,7 @@ describe("signed try-out execution", () => {
           yield* renderSignedTryoutRows(fixture.access, [null]).pipe(
             Effect.flip
           )
-        ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+        ).toMatchObject({ _tag: "ContentRuntimeMissingError" });
       })
   );
 
