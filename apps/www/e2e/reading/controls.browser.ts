@@ -212,7 +212,11 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
         name: "On this page",
         exact: true,
       });
-      const outline = sidebar.locator('[data-slot="sidebar-content"]');
+      // The outline's own links, which the rail hides while its area keeps the panel's height.
+      const outline = sidebar
+        .locator('[data-slot="sidebar-content"]')
+        .getByRole("link")
+        .first();
       yield* Effect.promise(() =>
         expect(toggle).toHaveAttribute("aria-expanded", "true")
       );
