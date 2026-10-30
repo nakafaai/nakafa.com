@@ -253,6 +253,7 @@ export const period = Kind.make("period", "tenantPeriods", {
     Schema.Struct({ type: Schema.Literal("period.archived") }),
     Schema.Struct({ type: Schema.Literal("period.restored") }),
     Schema.Struct({ type: Schema.Literal("period.rename") }),
+    Schema.Struct({ type: Schema.Literal("period.rescheduled") }),
   ],
   published: [],
   relations: [],

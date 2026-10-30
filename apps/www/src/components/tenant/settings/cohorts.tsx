@@ -457,7 +457,6 @@ function SchoolCohortTable({
       filterFn: "oneOf",
       header: () => <CohortStatusFilter />,
       id: "status",
-      meta: { align: "center" },
     }),
     cohortColumns.display({
       cell: (info) =>
@@ -467,7 +466,7 @@ function SchoolCohortTable({
           <SchoolCohortMenu cohort={info.row.original} slug={slug} />
         ),
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

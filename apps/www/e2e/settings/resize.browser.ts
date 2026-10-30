@@ -10,9 +10,10 @@ const WORDS = "Studies after dinner";
 /** Where the pointer lets go of the edge, in pixels from the left of the window. */
 const POINTER = 760;
 
-// The page has a scrollbar that takes room, as the pages of Windows and Linux
-// do. The root scroller shows one only when the page overflows the window, so
-// verifyDrag writes memories until the page overflows.
+// The browser draws classic scrollbars, as Windows and Linux do. The page hides
+// every native bar and draws its own overlay (PageScrollbar), so none takes room
+// even here. The root scroller would show one only when the page overflows the
+// window, so verifyDrag writes memories until the page overflows.
 test.use({
   launchOptions: {
     args: ["--disable-features=OverlayScrollbar"],
@@ -30,9 +31,9 @@ const pageOverflows = (page: Page) =>
   );
 
 /**
- * The learner drags the edge of the panel with the mouse. The panel ends where
- * the page ends, so its edge lands where the pointer is, and not the width of
- * the scrollbar away from it.
+ * The learner drags the edge of the panel with the mouse while the system draws
+ * classic scrollbars. No bar takes room, so the panel ends where the page ends
+ * and its edge lands where the pointer is.
  */
 const verifyDrag = Effect.fn("NakafaE2E.verifyDrag")(function* (
   page: Page,
@@ -68,8 +69,8 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyDrag")(function* (
   );
   const edge = yield* Effect.promise(() => resizerOf(page).boundingBox());
 
-  // A page with no scrollbar of its own would prove nothing.
-  expect(scrollbar).toBeGreaterThan(0);
+  // Classic bars are on, and the page still gives none of them any room.
+  expect(scrollbar).toBe(0);
   expect(edge).not.toBeNull();
   yield* Effect.promise(async () => {
     const y = (edge?.y ?? 0) + 200;
@@ -84,7 +85,7 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyDrag")(function* (
   ).toBe(POINTER);
 });
 
-test.describe("Memory panel dragged beside a scrollbar that takes room", () => {
+test.describe("Memory panel dragged while the system draws classic scrollbars", () => {
   test("lands its edge under the pointer", async ({ baseURL, page }) => {
     await Effect.runPromise(
       withObservedPageErrors(

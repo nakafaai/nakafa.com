@@ -32,25 +32,15 @@ import type { CohortDetail } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/homeroom";
 
-/** The sentence that says what the card's action does, or what stops it. A cohort not read yet reads as one with none. */
-function hintKeyOf(
-  cohort: CohortDetail | undefined
-): "homeroom-archived" | "homeroom-footer" | "homeroom-remove-footer" {
-  if (cohort?.status === "archived") {
-    return "homeroom-archived";
-  }
-  return (cohort?.homeroom ?? null) === null
-    ? "homeroom-footer"
-    : "homeroom-remove-footer";
-}
-
 /**
  * The homeroom teacher of a cohort, as one card of the settings column above the cohort's
  * students. While the cohort has none, the card picks a teacher and saves them; once it has
- * one, the card shows the teacher and removes them. An archived cohort shows its teacher and
- * offers no change. Before the cohort is read, the card is its frame: the title, the field's label, an empty line in
- * the field's place and Save disabled. The teacher's line and the picker take one height, so nothing below moves
- * when the cohort answers.
+ * one, the card shows the teacher and removes them. Remove and Save stay in the footer in every
+ * state with the same words, each disabled while it has nothing to do, so the action a click
+ * lands on never turns into another while the change shows at once. An archived cohort shows its
+ * teacher and offers no change. Before the cohort is read, the card is its frame: the title, the
+ * field's label, an empty line in the field's place and both actions disabled. The teacher's line
+ * and the picker take one height, so nothing below moves when the cohort answers.
  */
 export function SchoolHomeroomCard({
   cohort,
@@ -121,28 +111,32 @@ export function SchoolHomeroomCard({
           </Field>
         </FieldGroup>
       </CardContent>
-      <CardSectionFooter hint={t(hintKeyOf(cohort))}>
+      <CardSectionFooter
+        hint={t(isArchived ? "homeroom-archived" : "homeroom-footer")}
+      >
         {isArchived ? null : (
           <CardSectionActions>
-            {homeroom === null ? (
-              <Button
-                disabled={cohort === undefined || teacherId === undefined}
-                onClick={save}
-                size="sm"
-                type="button"
-              >
-                {t("homeroom-save")}
-              </Button>
-            ) : (
-              <Button
-                onClick={remove}
-                size="sm"
-                type="button"
-                variant="destructive"
-              >
-                {t("homeroom-remove")}
-              </Button>
-            )}
+            <Button
+              disabled={homeroom === null}
+              onClick={remove}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {t("homeroom-remove")}
+            </Button>
+            <Button
+              disabled={
+                cohort === undefined ||
+                homeroom !== null ||
+                teacherId === undefined
+              }
+              onClick={save}
+              size="sm"
+              type="button"
+            >
+              {t("homeroom-save")}
+            </Button>
           </CardSectionActions>
         )}
       </CardSectionFooter>

@@ -22,13 +22,14 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, DateTime, Effect, Option, Result } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Order, Result } from "effect";
 import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
@@ -50,6 +51,7 @@ import {
   RosterUnitProvider,
   useRosterUnit,
 } from "@/components/tenant/roster/unit";
+import { GRADE_ICONS } from "@/components/tenant/settings/choices";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { UnitId } from "@/components/tenant/settings/unit";
@@ -187,7 +189,6 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
   const period = QueryResult.isSuccess(active)
     ? Option.fromNullOr(active.value)
     : Option.none();
-  const columns = usePreviewColumns();
   const apply = useMutation(roster.imports.apply);
   const exportLines = useAction(roster.exports.lines);
   const input = useRef<HTMLInputElement>(null);
@@ -306,12 +307,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
           </>
         }
       >
-        <DataTable
-          columns={columns}
-          data={preview}
-          rowId={(row) => String(row.line)}
-          search="name"
-        />
+        <RosterPreviewTable rows={preview} />
       </SettingsTablePage>
     );
   }
@@ -406,37 +402,65 @@ function RosterImportEmpty({
   );
 }
 
-/** The preview's columns: each read row and its status, which shows the rows a problem keeps out. */
-function usePreviewColumns() {
-  const t = useTranslations("SchoolRoster");
+/** The class group a read row names, or none for a row that a problem keeps out. */
+const cohortOf = (row: typeof ReadRow.Type) =>
+  row.outcome === "row" ? (row.row.cohortName ?? "") : "";
 
-  return rowColumns.columns([
+/**
+ * The preview of a read file: each row, its class group and its status, which shows the rows a problem keeps out. The
+ * header's search finds a row by its name or its NISN, and the class group and status heads filter the rows.
+ */
+function RosterPreviewTable({
+  rows,
+}: {
+  readonly rows: readonly (typeof ReadRow.Type)[];
+}) {
+  const t = useTranslations("SchoolRoster");
+  const cohorts = Arr.sort(
+    Arr.filter(Arr.dedupe(Arr.map(rows, cohortOf)), (cohort) => cohort !== ""),
+    Order.String
+  );
+
+  const columns = rowColumns.columns([
     rowColumns.accessor((row) => row.line, {
       header: t("line"),
       id: "line",
       sortFn: "basic",
     }),
-    rowColumns.accessor((row) => (row.outcome === "row" ? row.row.name : ""), {
-      cell: (info) => (
-        <span className="font-medium" dir="auto">
-          {info.getValue()}
-        </span>
-      ),
-      filterFn: "includesString",
-      header: t("name"),
-      id: "name",
-      sortFn: "text",
-    }),
+    // The name with the NISN after it, so the header's search finds a row by either; the cell shows the name alone.
+    rowColumns.accessor(
+      (row) => (row.outcome === "row" ? `${row.row.name} ${row.row.nisn}` : ""),
+      {
+        cell: (info) =>
+          info.row.original.outcome === "row" ? (
+            <span className="font-medium" dir="auto">
+              {info.row.original.row.name}
+            </span>
+          ) : null,
+        filterFn: "includesString",
+        header: t("name"),
+        id: "name",
+        sortFn: "text",
+      }
+    ),
     rowColumns.accessor((row) => (row.outcome === "row" ? row.row.nisn : ""), {
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
       enableSorting: false,
       header: t("nisn"),
       id: "nisn",
     }),
-    rowColumns.accessor(
-      (row) => (row.outcome === "row" ? (row.row.cohortName ?? "") : ""),
-      { header: t("cohort"), id: "cohort", sortFn: "text" }
-    ),
+    rowColumns.accessor(cohortOf, {
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="cohort"
+          options={namedOptions(cohorts, GRADE_ICONS)}
+          title={t("cohort")}
+        />
+      ),
+      id: "cohort",
+    }),
     rowColumns.accessor(statusOf, {
       cell: (info) => (
         <TableStatus
@@ -462,7 +486,15 @@ function usePreviewColumns() {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
   ]);
+
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      rowId={(row) => String(row.line)}
+      search="name"
+    />
+  );
 }
