@@ -369,6 +369,8 @@
     "schedule-key-match": "Ordne jede Aussage von Frage {number} zu.",
     "schedule-key-table": "Markiere jede Aussage von Frage {number}.",
     "schedule-past": "Wähle einen Beginn, der noch nicht vorbei ist.",
+    "questions-column": "Fragen",
+    "created-column": "Erstellt",
     "rooms-title": "Räume",
     "edit-action": "Prüfung bearbeiten",
     "rooms-empty": "Noch keine Räume",

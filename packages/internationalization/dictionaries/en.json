@@ -369,6 +369,8 @@
     "schedule-key-match": "Pair every statement of question {number}.",
     "schedule-key-table": "Mark every statement of question {number}.",
     "schedule-past": "Choose a start time that has not passed yet.",
+    "questions-column": "Questions",
+    "created-column": "Created",
     "rooms-title": "Rooms",
     "edit-action": "Edit exam",
     "rooms-empty": "No rooms yet",
