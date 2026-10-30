@@ -61,7 +61,7 @@ function InboxFilter({ all }: { all: boolean }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button size="sm" type="button" variant="outline">
+          <Button type="button" variant="outline">
             <HugeIcons icon={FilterHorizontalIcon} />
             <span className="max-sm:sr-only">
               {all ? t("all-schools") : t("this-school")}

@@ -65,7 +65,6 @@ export function MarkAllRead({
           )
         )
       }
-      size="sm"
       variant="ghost"
     >
       <HugeIcons icon={CheckmarkCircle02Icon} />
