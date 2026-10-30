@@ -108,6 +108,9 @@ describe("contents/views/viewer", () => {
       makeMaterialViewArgs("shared-device")
     );
 
+    // The first user views again half a second later, which moves the view's
+    // last time: Convex runs each mutation after the commits before it.
+    vi.setSystemTime(NOW + 500);
     await expect(
       firstSignedIn.mutation(
         api.contents.mutations.views.recordContentView,
@@ -133,7 +136,7 @@ describe("contents/views/viewer", () => {
       expect.arrayContaining([
         expect.objectContaining({
           deviceId: "shared-device",
-          lastViewedAt: NOW,
+          lastViewedAt: NOW + 500,
           userId: identity.firstUser.userId,
         }),
         expect.objectContaining({
@@ -147,7 +150,7 @@ describe("contents/views/viewer", () => {
       expect.arrayContaining([
         expect.objectContaining({
           content_id: identity.contentId,
-          lastViewedAt: NOW,
+          lastViewedAt: NOW + 500,
           userId: identity.firstUser.userId,
         }),
         expect.objectContaining({

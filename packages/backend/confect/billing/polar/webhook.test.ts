@@ -315,10 +315,13 @@ describe("billing/polar/webhook", () => {
 
   it("ends the grant now when a subscription turns incomplete", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(INCOMPLETE_AT);
+    // The subscription exists a minute before it turns incomplete: Convex runs
+    // each mutation after the commits before it, so the update gets its instant.
+    vi.setSystemTime(INCOMPLETE_AT - 60_000);
     const t = createBillingTestConvex();
     await t.mutation((ctx) => seed(ctx));
     await applyBody(t, subscriptionEvent("subscription.created"));
+    vi.setSystemTime(INCOMPLETE_AT);
     await applyBody(
       t,
       subscriptionEvent("subscription.updated", {

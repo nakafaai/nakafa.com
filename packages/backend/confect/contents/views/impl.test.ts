@@ -45,6 +45,10 @@ describe("contents/views/impl", () => {
       alreadyViewed: false,
     });
 
+    // The view comes a minute after the setup: Convex runs each mutation after
+    // the commits before it, so the view whose time the test reads gets its own.
+    const viewedAt = NOW + 60_000;
+    vi.setSystemTime(viewedAt);
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
       makeMaterialViewArgs("device-1")
@@ -63,8 +67,8 @@ describe("contents/views/impl", () => {
         contextKey: "canonical",
         contextMode: "canonical",
         deviceId: "device-1",
-        firstViewedAt: NOW,
-        lastViewedAt: NOW,
+        firstViewedAt: viewedAt,
+        lastViewedAt: viewedAt,
         locale: "en",
         route: FUNCTION_MATERIAL.publicPath,
         section: "material",
@@ -82,7 +86,7 @@ describe("contents/views/impl", () => {
         section: "material",
         scopeMode: "global",
         viewerKey: "device:device-1",
-        viewedAt: NOW,
+        viewedAt,
       },
     ]);
     expect(state.viewerSignals).toMatchObject([

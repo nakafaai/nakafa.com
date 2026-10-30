@@ -226,10 +226,12 @@ describe("contents/mutations/analytics", () => {
     const state = await readDrainState(target);
     expect(state.queue).toEqual([]);
     expect(state.partition).toMatchObject({
-      lastProcessedAt: NOW,
       leaseExpiresAt: 0,
       leaseVersion: 1,
     });
+    // The last page runs after every commit before it, as Convex runs it, so its
+    // time is the drain's start or later.
+    expect(state.partition.lastProcessedAt).toBeGreaterThanOrEqual(NOW);
     expect(state.signals).toHaveLength(IDENTITY_COUNT);
     expect(
       Arr.filter(

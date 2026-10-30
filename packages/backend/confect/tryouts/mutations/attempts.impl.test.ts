@@ -290,6 +290,10 @@ describe("tryouts/mutations/attempts", () => {
 
     expect(resumed).toEqual(attempt);
 
+    // The section starts a minute after the attempt: Convex runs each mutation
+    // after the commits before it, so the start whose time the test reads gets its own.
+    const sectionStartedAt = NOW + 60_000;
+    vi.setSystemTime(sectionStartedAt);
     await authed.mutation(api.tryouts.mutations.sections.start, {
       attemptId: attempt.attemptId,
       sectionKey: SECTION,
@@ -305,7 +309,7 @@ describe("tryouts/mutations/attempts", () => {
     );
 
     expect(sectionAttempt).toMatchObject({
-      expiresAt: NOW + 1_800_000,
+      expiresAt: sectionStartedAt + 1_800_000,
       sectionIdentity: seeded.fixture.sectionIdentity,
       sectionKey: SECTION,
       status: "in-progress",

@@ -76,9 +76,13 @@ describe("tryouts/mutations/expiry", () => {
   );
   it("queues isolated attempt and section expiry jobs idempotently", async () => {
     const t = createConvexTestWithBetterAuth();
+    // The seed commits a minute before the sweeps, so both sweeps read NOW:
+    // convex-test runs each mutation after the commits before it.
+    vi.setSystemTime(NOW - 60_000);
     const fixture = await t.mutation((ctx) =>
       seedExpirySweep(ctx, EXPIRED_AT, ACTIVE_EXPIRES_AT)
     );
+    vi.setSystemTime(NOW);
     await t.mutation(internal.tryouts.mutations.expiry.sweep, {});
     await t.mutation(internal.tryouts.mutations.expiry.sweep, {});
     const beforeDrain = await t.query(async (ctx) => {
