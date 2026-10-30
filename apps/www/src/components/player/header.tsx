@@ -2,15 +2,15 @@ import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 /**
- * Keeps the player's header in one row, as wide as the questions and the
- * navigator beside them, in three zones: back and the title at the start, the
- * timer in the centre, and the one primary action at the end. The start and the
- * end share the space left by the timer, so the timer stays centred whatever
- * the title says.
+ * Keeps the player's header in one row across the app's width (`max-w-7xl`),
+ * in three zones: back and the title at the start, the timer in the centre, and
+ * the one primary action at the end. The start and the end share the space left
+ * by the timer, so the timer stays centred whatever the title says, and the end
+ * keeps its place when a header has no timer.
  */
 export function PlayerHeader({ children }: { children: ReactNode }) {
   return (
-    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2 lg:max-w-5xl">
+    <BreadcrumbHeaderFrame contentClassName="grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2">
       {children}
     </BreadcrumbHeaderFrame>
   );
@@ -21,9 +21,9 @@ export function PlayerHeaderStart({ children }: { children: ReactNode }) {
   return <div className="flex min-w-0 items-center gap-2">{children}</div>;
 }
 
-/** The end of the header: the one primary action. */
+/** The end of the header, in the last zone whether or not a timer is beside it: the one primary action. */
 export function PlayerHeaderEnd({ children }: { children: ReactNode }) {
-  return <div className="flex justify-end">{children}</div>;
+  return <div className="col-start-3 flex justify-end">{children}</div>;
 }
 
 /**

@@ -7,20 +7,25 @@ import {
   madePairs,
   markedCells,
   NO_RESPONSE,
-  typedText,
 } from "@repo/backend/confect/exams/sittings/response";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import { useId, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import { useChooseAnswer } from "@/components/exams/sitting/answer";
+import {
+  keepResponse,
+  useChooseAnswer,
+} from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import {
   PromptReserve,
   SittingDocument,
 } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
+import { useKeptText } from "@/components/exams/sitting/kept";
+import { usePaperLocked } from "@/components/exams/sitting/lock";
+import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
@@ -34,6 +39,7 @@ import {
   writtenOf,
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
+import { PlayerQuestionFlag } from "@/components/player/flag";
 import { PlayerQuestion } from "@/components/player/question";
 
 /**
@@ -66,6 +72,9 @@ export function SittingQuestion({
     slug,
   });
   const choose = useChooseAnswer();
+  const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
+  const locked = usePaperLocked();
+  const keptText = useKeptText({ attemptId, question, sittingId });
   const choice = useMemo(
     () => choiceOf(question.interactions),
     [question.interactions]
@@ -147,6 +156,12 @@ export function SittingQuestion({
       labelledBy={titleId}
       questionKey={question.id}
     >
+      <PlayerQuestionFlag
+        flagged={question.flagged}
+        locked={locked}
+        onFlag={() => flagQuestion(question)}
+        questionKey={question.id}
+      />
       <div className="grid gap-6">
         <h2 className="font-medium" id={titleId}>
           {t("question", { number: question.number })}
@@ -175,8 +190,16 @@ export function SittingQuestion({
             <SittingField
               entry={entry.value}
               labelledBy={titleId}
+              onKeep={(text) =>
+                keepResponse({
+                  attemptId,
+                  question,
+                  response: { text },
+                  sittingId,
+                })
+              }
               onType={(text) => onChoose({ text })}
-              text={typedText(question.response ?? NO_RESPONSE)}
+              text={keptText}
             />
           ) : null}
           {Option.isSome(pairing) ? (

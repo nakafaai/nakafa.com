@@ -3,13 +3,10 @@ import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import {
-  runSittingCall,
-  sittingCallFailures,
-} from "@/components/exams/sitting/actions";
+import { runSittingCall } from "@/components/exams/sitting/actions";
 import { useChooseAnswer, useFinish } from "@/components/exams/sitting/answer";
 import {
   type AttemptValue,
@@ -27,7 +24,7 @@ import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
 import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingLook } from "@/components/exams/sitting/look";
-import { useMarkFlag } from "@/components/exams/sitting/mark";
+import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
@@ -239,7 +236,7 @@ function RunningPaper({
 }) {
   const t = useTranslations("Exams");
   const choose = useChooseAnswer();
-  const mark = useMarkFlag();
+  const flagQuestion = useFlagQuestion({ deviceId, sittingId, slug });
   useResendKeptAnswers({ attemptId, deviceId, locked, paper, sittingId, slug });
 
   const questions = projectSittingQuestions({
@@ -252,21 +249,7 @@ function RunningPaper({
         sittingId,
         slug,
       }),
-    // Flags the question, or takes its flag off, and tells the student when the server refuses it.
-    flag: (question) =>
-      Effect.runPromise(
-        mark({
-          deviceId,
-          flagged: !question.flagged,
-          questionId: question.id,
-          sittingId,
-          slug,
-        }).pipe(
-          Effect.flatMap((failure) =>
-            sittingCallFailures(Option.toArray(failure))
-          )
-        )
-      ),
+    flag: flagQuestion,
     paper,
   });
 

@@ -25,7 +25,8 @@ export function sectionLink(page: Page) {
 
 /**
  * Rests on a link the way a pointer or a finger does before it presses, and
- * waits until the link has asked for more than the shell. Playwright presses
+ * waits until the link has asked for more than the shell: a server function
+ * call or a static answer, which `recordDataRequests` records. Playwright presses
  * in the same instant as intent arrives, so a press without this step can
  * navigate as if nobody had shown intent.
  */

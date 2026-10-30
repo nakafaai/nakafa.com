@@ -23,7 +23,7 @@ import {
   withOptionLabel,
   withOptionRemoved,
 } from "@/components/tenant/exams/answer";
-import { MatchColumn, TableColumn } from "@/components/tenant/exams/columns";
+import { MatchColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import {
   type QuestionEditing,
@@ -32,6 +32,7 @@ import {
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
+import { TableSheet } from "@/components/tenant/exams/matrix";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -90,7 +91,8 @@ interface PageRowProps {
 
 /**
  * The row above a page's paper: the grip that moves the page, its number, its type, a mark while it needs a
- * key, and its actions. A page the server has not saved yet, or a page of a locked exam, shows its number and
+ * key, and its actions. The type and the mark follow the edit on screen, so a key the teacher just set clears the
+ * mark at once, before the server answers. A page the server has not saved yet, or a page of a locked exam, shows its number and
  * its type alone, and the type takes a change only once Convex holds the session.
  */
 function PageRow({ editing, index, question, saved }: PageRowProps) {
@@ -116,7 +118,8 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
           onChange={editing.setTemplate}
           template={editing.displayed.template}
         />
-        {question.key === null && needsKey(question.template) ? (
+        {editing.displayed.key === null &&
+        needsKey(editing.displayed.template) ? (
           <span className="flex items-center gap-1 text-muted-foreground text-xs">
             <HugeIcons
               aria-hidden="true"
@@ -346,26 +349,14 @@ function LivePaper({
         </div>
       )}
       {table === null ? null : (
-        <div className="grid min-w-0 gap-6 md:grid-cols-2">
-          <TableColumn
-            chosen={chosen}
-            editing={editing}
-            frozen={locked}
-            number={number}
-            question={question}
-            side="statements"
-            table={table}
-          />
-          <TableColumn
-            chosen={chosen}
-            editing={editing}
-            frozen={locked}
-            number={number}
-            question={question}
-            side="columns"
-            table={table}
-          />
-        </div>
+        <TableSheet
+          chosen={chosen}
+          editing={editing}
+          frozen={locked}
+          number={number}
+          question={question}
+          table={table}
+        />
       )}
       {choice === null ? null : (
         <PaperOptions>

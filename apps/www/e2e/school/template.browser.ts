@@ -163,7 +163,9 @@ test("a teacher turns a question into true or false and then cause and effect, w
   await page
     .getByRole("button", { name: "Question type: Multiple choice" })
     .click();
-  await page.getByRole("menuitemradio", { name: "True or false" }).click();
+  await page
+    .getByRole("menuitemradio", { exact: true, name: "True or false" })
+    .click();
   const optionOf = (letter: string) =>
     page.getByRole("textbox", { name: `Question 1, option ${letter}` });
   await expect(optionOf("A")).toContainText("True");
@@ -367,7 +369,7 @@ test("a teacher turns a question into matching, pairs every statement in the key
   await context.close();
 });
 
-test("a teacher turns a question into a true or false table, marks every statement in the key, and the student marks each one", async ({
+test("a teacher turns a question into a true or false table, marks the key in the table's rows, and the student marks each one", async ({
   baseURL,
   browser,
 }) => {
@@ -417,20 +419,25 @@ test("a teacher turns a question into a true or false table, marks every stateme
     await field.press("Tab");
   }
 
-  // The key marks each statement True or False, and saves once all three are marked.
-  const panel = page.getByRole("complementary", { name: "For teachers" });
+  // The key is marked in the table itself, True or False in each statement's row, and saves once all three are
+  // marked. The side panel holds no second copy of it.
   for (const [statement, column] of [
     ["1", "True"],
     ["2", "False"],
     ["3", "True"],
   ] as const) {
-    await panel
-      .getByRole("group", {
+    await page
+      .getByRole("radiogroup", {
         name: `Column for statement ${statement} of question 1`,
       })
-      .getByRole("button", { exact: true, name: column })
+      .getByRole("radio", { exact: true, name: column })
       .click();
   }
+  await expect(
+    page
+      .getByRole("complementary", { name: "For teachers" })
+      .getByRole("radiogroup")
+  ).toHaveCount(0);
   await expect(
     page.getByRole("region", { name: FIRST_QUESTION })
   ).not.toContainText("No key yet");
@@ -440,7 +447,10 @@ test("a teacher turns a question into a true or false table, marks every stateme
   const trying = await context.newPage();
   await trying.goto(page.url().replace(EDIT_SUFFIX, "/try"));
   await trying.waitForURL(TRY_PATH);
-  const first = trying.getByRole("radiogroup", { name: "Statement 1" });
+  // Each statement's row is a radio group named by the statement it asks about.
+  const first = trying.getByRole("radiogroup", {
+    name: "Air mendidih pada 100 derajat Celsius.",
+  });
   await expect(first).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await first.getByRole("radio", { exact: true, name: "True" }).click();
   await expect(

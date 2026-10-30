@@ -10,6 +10,12 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
+import {
+  codeVariants,
+  listItemVariants,
+  listVariants,
+  quoteVariants,
+} from "@repo/design-system/lib/prose";
 import type {
   BlockquoteProps,
   CodeProps,
@@ -78,54 +84,47 @@ export function ContentGrid({
 
 /** Renders a level-one MDX heading with Nakafa typography. */
 export function MdxHeading1(props: HeadingProps) {
-  return <Heading className="text-3xl" Tag="h1" {...props} />;
+  return <Heading Tag="h1" {...props} />;
 }
 
 /** Renders a level-two MDX heading with Nakafa typography. */
 export function MdxHeading2(props: HeadingProps) {
-  return <Heading className="text-2xl" Tag="h2" {...props} />;
+  return <Heading Tag="h2" {...props} />;
 }
 
 /** Renders a level-three MDX heading with Nakafa typography. */
 export function MdxHeading3(props: HeadingProps) {
-  return <Heading className="text-xl" Tag="h3" {...props} />;
+  return <Heading Tag="h3" {...props} />;
 }
 
 /** Renders a level-four MDX heading with Nakafa typography. */
 export function MdxHeading4(props: HeadingProps) {
-  return <Heading className="text-lg" Tag="h4" {...props} />;
+  return <Heading Tag="h4" {...props} />;
 }
 
 /** Renders a level-five MDX heading with Nakafa typography. */
 export function MdxHeading5(props: HeadingProps) {
-  return <Heading className="text-lg" Tag="h5" {...props} />;
+  return <Heading Tag="h5" {...props} />;
 }
 
 /** Renders a level-six MDX heading with Nakafa typography. */
 export function MdxHeading6(props: HeadingProps) {
-  return <Heading className="text-lg" Tag="h6" {...props} />;
+  return <Heading Tag="h6" {...props} />;
 }
 
 /** Renders an ordered MDX list with readable vertical rhythm. */
 export function MdxOrderedList(props: ListProps) {
-  return (
-    <ol className="my-4 list-decimal space-y-4 ps-8 last:mb-0" {...props} />
-  );
+  return <ol className={listVariants({ kind: "ordered" })} {...props} />;
 }
 
 /** Renders an unordered MDX list with readable vertical rhythm. */
 export function MdxUnorderedList(props: ListProps) {
-  return <ul className="my-4 list-disc space-y-4 ps-8 last:mb-0" {...props} />;
+  return <ul className={listVariants({ kind: "bullet" })} {...props} />;
 }
 
 /** Renders one MDX list item with consistent prose spacing. */
 export function MdxListItem(props: ListItemProps) {
-  return (
-    <li
-      className="max-w-xl text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
-      {...props}
-    />
-  );
+  return <li className={listItemVariants()} {...props} />;
 }
 
 /** Renders italic MDX emphasis without changing the surrounding weight. */
@@ -160,22 +159,12 @@ export function Highlight({ className, variant, ...props }: HighlightProps) {
 
 /** Renders an MDX quotation with the shared callout treatment. */
 export function MdxBlockquote(props: BlockquoteProps) {
-  return (
-    <blockquote
-      className="my-4 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic"
-      {...props}
-    />
-  );
+  return <blockquote className={quoteVariants()} {...props} />;
 }
 
 /** Renders inline MDX code without changing block-code behavior. */
 export function MdxCode(props: CodeProps) {
-  return (
-    <code
-      className="inline whitespace-pre-wrap break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
-      {...props}
-    />
-  );
+  return <code className={codeVariants()} {...props} />;
 }
 
 /** Renders an MDX table and removes compiler-only whitespace nodes. */

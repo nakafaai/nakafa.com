@@ -134,7 +134,7 @@ export function SchoolCohortMenu({
                       { title: "school-cohort-archived.title" },
                       {
                         action: {
-                          label: "undo.title",
+                          label: "undo",
                           onClick: () =>
                             startTransition(() =>
                               saveSchool(
@@ -155,6 +155,7 @@ export function SchoolCohortMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog
+        description={t("cohort-rename-description")}
         footer={
           <>
             <Button

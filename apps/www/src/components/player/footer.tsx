@@ -27,7 +27,7 @@ export function PlayerFooter({ children }: { children?: ReactNode }) {
       className="sticky bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom,0px)]"
       data-player-footer=""
     >
-      <fieldset className="mx-auto grid h-16 w-full min-w-0 max-w-3xl grid-cols-[1fr_auto_1fr] items-center gap-2 border-0 px-4 sm:px-6 lg:max-w-5xl">
+      <fieldset className="mx-auto grid h-16 w-full min-w-0 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 border-0 px-4 sm:px-6">
         <legend className="sr-only">{t("controls")}</legend>
         <div className="flex justify-start">
           <PlayerPrevious />

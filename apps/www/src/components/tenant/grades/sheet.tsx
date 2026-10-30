@@ -49,10 +49,11 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
-import { TableFilter, TableSearch } from "@/components/shared/table/toolbar";
+import { TableSearch } from "@/components/shared/table/toolbar";
 import {
   enterChange,
   releaseChange,
@@ -101,31 +102,11 @@ function useGradebook() {
   return value;
 }
 
-/** The gradebook's search by student and its state filter, in the class page's header. */
-export function GradebookFilters() {
+/** The gradebook's search by student, in the class page's header; the state column filters the lines by state. */
+export function GradebookSearch() {
   const t = useTranslations("SchoolGrades");
 
-  return (
-    <>
-      <TableSearch placeholder={t("search")} />
-      <TableFilter
-        facets={[
-          {
-            column: "state",
-            options: Arr.map(
-              ["none", "draft", "released"] as const,
-              (state) => ({
-                icon: LINE_STATE_ICONS[state],
-                label: t(`state-${state}`),
-                value: state,
-              })
-            ),
-            title: t("state"),
-          },
-        ]}
-      />
-    </>
-  );
+  return <TableSearch placeholder={t("search")} />;
 }
 
 /**
@@ -204,12 +185,23 @@ export function ClassGradebook({
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("state"),
+      header: () => (
+        <ColumnFilter
+          column="state"
+          options={Arr.map(["none", "draft", "released"] as const, (state) => ({
+            icon: LINE_STATE_ICONS[state],
+            label: t(`state-${state}`),
+            value: state,
+          }))}
+          title={t("state")}
+        />
+      ),
       id: "state",
     }),
     lineColumns.display({
       cell: (info) => <GradeLineMenu line={info.row.original} />,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

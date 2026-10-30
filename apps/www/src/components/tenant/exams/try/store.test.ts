@@ -48,4 +48,15 @@ describe("exam try store", () => {
 
     expect(second.getState().responses).toEqual({});
   });
+
+  it("flags a question to come back to it, and takes the flag off on the next press", () => {
+    const store = createExamTry();
+
+    store.getState().flag("q1");
+    store.getState().flag("q2");
+    expect(store.getState().flags).toEqual({ q1: true, q2: true });
+
+    store.getState().flag("q1");
+    expect(store.getState().flags).toEqual({ q2: true });
+  });
 });

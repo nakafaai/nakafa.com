@@ -1,9 +1,8 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Option } from "effect";
 import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, visibleLink } from "@/e2e/support/input";
-import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -55,6 +54,9 @@ export const questionHeading = (page: Page, number: number) =>
 
 /** The navigator column that the large breakpoint shows beside the questions. */
 export const sidebarOf = (page: Page) => page.locator("[data-player-sidebar]");
+
+/** The toolbar row under the player's header, which holds the view. */
+const toolbarOf = (page: Page) => page.locator("[data-player-toolbar]");
 
 /** The button in the footer that opens the navigator sheet and names the current question. */
 const openerOf = (page: Page) =>
@@ -218,45 +220,27 @@ export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
   }
 );
 
-/** Opens the navigator sheet below the large breakpoint and waits for it to settle. */
-const openNavigatorSheet = Effect.fn("NakafaE2E.openNavigatorSheet")(function* (
-  page: Page,
-  hasTouch: boolean
-) {
-  yield* Effect.promise(() => waitUntilTakenOver(openerOf(page)));
-  yield* activate(openerOf(page), hasTouch);
-  const sheet = openSurface(page);
-  yield* Effect.promise(() =>
-    expect(sheet).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-  );
-  yield* waitForSlide(sheet);
-  return sheet;
-});
-
 /**
- * Switches the player to one of its views from the navigator: the sidebar from
- * the large breakpoint, and the sheet below it, which closes itself once the
- * view has changed.
+ * Switches the player to one of its views from the toolbar row under the
+ * header, which every width shows.
  */
 export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   page: Page,
   hasTouch: boolean,
   view: PlayerView
 ) {
-  const scope: Locator = hasTouch
-    ? yield* openNavigatorSheet(page, hasTouch)
-    : sidebarOf(page);
-  const choice = scope.getByRole("button", { exact: true, name: view });
+  const choice = toolbarOf(page).getByRole("button", {
+    exact: true,
+    name: view,
+  });
   // A page that was just loaded may not be React's yet, and a press before then is lost.
   yield* Effect.promise(() => waitUntilTakenOver(choice));
   yield* activate(choice, hasTouch);
-  if (hasTouch) {
-    yield* Effect.promise(() =>
-      expect(openSurface(page)).toBeHidden({
-        timeout: readinessTimeoutMilliseconds,
-      })
-    );
-  }
+  yield* Effect.promise(() =>
+    expect(choice).toHaveAttribute("aria-pressed", "true", {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
 });
 
 /**

@@ -8,6 +8,7 @@ import {
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -32,14 +33,18 @@ import { saveSchool } from "@/components/tenant/settings/save";
 const SOURCE = "components/tenant/settings/grant";
 
 /**
- * The dialog that gives a role of the whole school to a chosen person. The request
- * goes out first, and the dialog closes at once, so the grant shows in the table.
+ * The dialog that gives a role of the whole school to a person: one the viewer chooses, or the `person` that the
+ * dialog was opened for, such as a member's row, who shows by name. The request goes out first, and the dialog closes
+ * at once, so the grant shows in the table.
  */
 export function SchoolGrantDialog({
   open,
+  person,
   setOpen,
 }: {
   open: boolean;
+  /** The person the dialog gives the role to, in place of the picker. */
+  person?: { readonly id: PersonId; readonly name: string };
   setOpen: (open: boolean) => void;
 }) {
   const { slug } = useTenant();
@@ -50,7 +55,8 @@ export function SchoolGrantDialog({
   const assign = useMutation(access.grants.assign).withOptimisticUpdate(
     assignGrantChange
   );
-  const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
+  const [chosen, setChosen] = useState<PersonId | undefined>(undefined);
+  const personId = person?.id ?? chosen;
   const [role, setRole] = useState<BuiltinRole | undefined>(undefined);
   // The grant's person and role stay selected until the server accepts it, and the submit waits for it.
   const [isPending, startAssigning] = useTransition();
@@ -91,7 +97,7 @@ export function SchoolGrantDialog({
                     }),
                   SOURCE,
                   () => {
-                    setPersonId(undefined);
+                    setChosen(undefined);
                     setRole(undefined);
                   }
                 )
@@ -110,11 +116,21 @@ export function SchoolGrantDialog({
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor={`${id}-person`}>{t("grant-person")}</FieldLabel>
-          <SchoolPersonPicker
-            id={`${id}-person`}
-            onChoose={setPersonId}
-            personId={personId}
-          />
+          {person === undefined ? (
+            <SchoolPersonPicker
+              id={`${id}-person`}
+              onChoose={setChosen}
+              personId={chosen}
+            />
+          ) : (
+            <Input
+              dir="auto"
+              id={`${id}-person`}
+              placeholder={t("grant-person")}
+              readOnly
+              value={person.name}
+            />
+          )}
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-role`}>{t("grant-role")}</FieldLabel>

@@ -1,0 +1,144 @@
+import {
+  blockGapVariants,
+  codeVariants,
+  headingTextVariants,
+  headingVariants,
+  listItemVariants,
+  listVariants,
+  paragraphVariants,
+  quoteVariants,
+} from "@repo/design-system/lib/prose";
+import type { HeadingTag } from "@repo/design-system/types/markdown";
+import { Extension } from "@tiptap/core";
+import type { Node } from "@tiptap/pm/model";
+import { Plugin } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { cn } from "cn";
+import { Array as Arr, MutableList, Option, Record as Rec } from "effect";
+
+/** The element of a heading of each level that a document holds. */
+const HEADING_TAGS: Record<string, HeadingTag> = {
+  "1": "h1",
+  "2": "h2",
+  "3": "h3",
+  "4": "h4",
+  "5": "h5",
+  "6": "h6",
+};
+
+/** A heading's box and its words, which an article draws as two elements and a document as one. */
+const headingClasses = (tag: HeadingTag) =>
+  cn(headingVariants({ tag }), headingTextVariants({ tag }));
+
+/**
+ * The classes of each block of a document, by the name of its node, as the published article draws
+ * the block: a heading of its level, a list and its items, a quotation, and the blocks that draw their
+ * own frame (a code block, a table, a picture, a formula on its own line), which take an article's room
+ * around them.
+ */
+const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
+  blockquote: () => Option.some(quoteVariants()),
+  bulletList: () => Option.some(listVariants({ kind: "bullet" })),
+  codeBlock: () => Option.some(blockGapVariants()),
+  heading: (node) =>
+    Option.map(Rec.get(HEADING_TAGS, String(node.attrs.level)), headingClasses),
+  image: () => Option.some(blockGapVariants()),
+  listItem: () => Option.some(listItemVariants()),
+  mathBlock: () => Option.some(blockGapVariants()),
+  orderedList: () => Option.some(listVariants({ kind: "ordered" })),
+  table: () => Option.some(blockGapVariants()),
+};
+
+/**
+ * A decoration on each block and each piece of inline code of a document, with the classes that the
+ * published article draws them with, and on each paragraph too when `paragraphs` is set. A decoration
+ * styles the view only: no node changes, so the stored document is the same as before.
+ */
+const proseDecorations = (doc: Node, paragraphs: boolean) => {
+  const decorations = MutableList.make<Decoration>();
+  doc.descendants((node, position) => {
+    const end = position + node.nodeSize;
+    if (
+      node.isText &&
+      Arr.some(node.marks, (mark) => mark.type.name === "code")
+    ) {
+      MutableList.append(
+        decorations,
+        Decoration.inline(position, end, { class: codeVariants() })
+      );
+      return;
+    }
+    if (paragraphs && node.type.name === "paragraph") {
+      MutableList.append(
+        decorations,
+        Decoration.node(position, end, { class: paragraphVariants() })
+      );
+      return;
+    }
+    Option.map(
+      Option.flatMap(Rec.get(BLOCK_CLASSES, node.type.name), (classes) =>
+        classes(node)
+      ),
+      (classes) =>
+        MutableList.append(
+          decorations,
+          Decoration.node(position, end, { class: classes })
+        )
+    );
+  });
+  return DecorationSet.create(doc, MutableList.toArray(decorations));
+};
+
+/**
+ * Draws a document as the published article draws its text: its headings, lists, quotations and
+ * inline code, and, for a prompt or a note (`paragraphs`), its paragraphs. An option's short text
+ * leaves its paragraphs as one line of text.
+ */
+export const articleProse = Extension.create<{ paragraphs: boolean }>({
+  addOptions() {
+    return { paragraphs: true };
+  },
+  addProseMirrorPlugins() {
+    const { paragraphs } = this.options;
+    return [
+      new Plugin({
+        props: {
+          decorations: (state) => proseDecorations(state.doc, paragraphs),
+        },
+      }),
+    ];
+  },
+  name: "articleProse",
+});
+
+/**
+ * The classes of each element of a document drawn without an editor, by the selector that finds it,
+ * as the editor's decorations give them, so a text that stands in for its editor takes the same boxes.
+ * A paragraph is left to the caller, which knows whether its text reads as an article.
+ */
+const ELEMENT_CLASSES = [
+  ["blockquote", quoteVariants()],
+  [":not(pre) > code", codeVariants()],
+  ["h1", headingClasses("h1")],
+  ["h2", headingClasses("h2")],
+  ["h3", headingClasses("h3")],
+  ["li", listItemVariants()],
+  ["ol", listVariants({ kind: "ordered" })],
+  ["ul", listVariants({ kind: "bullet" })],
+  [
+    'pre, table, [data-type="image"], [data-type="math-block"]',
+    blockGapVariants(),
+  ],
+] as const;
+
+/** Gives the elements of a document that the schema drew into `root` the classes of the published article. */
+export function drawArticleProse(root: HTMLElement) {
+  Arr.forEach(ELEMENT_CLASSES, ([selector, classes]) =>
+    Arr.forEach(
+      Arr.fromIterable(root.querySelectorAll(selector)),
+      (element) => {
+        element.className = classes;
+      }
+    )
+  );
+}

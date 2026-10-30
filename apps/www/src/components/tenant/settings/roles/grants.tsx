@@ -5,6 +5,7 @@ import {
 } from "@confect/react";
 import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -20,14 +21,16 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { RoleBadge } from "@/components/tenant/role";
+import { roleIcon } from "@/components/tenant/roles";
 import { revokeGrantChange } from "@/components/tenant/settings/mutation";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { scopeNameOf } from "@/components/tenant/settings/scope";
+import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/roles/grants";
@@ -39,11 +42,13 @@ type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 const grantColumns = createColumnHelper<typeof dataTableFeatures, GrantItem>();
 
 /**
- * The grants in a data table that finds a person and filters by role and by what a grant
- * covers, or the table's empty state when no one holds a role.
+ * The grants in a data table that finds a person, filters by role and by what a grant covers in
+ * those columns, and gives each revocable grant its menu, or the table's empty state when no one
+ * holds a role.
  */
 export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
   const viewer = useViewerQuery();
 
   if (Arr.isReadonlyArrayEmpty(grants)) {
@@ -73,14 +78,35 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
       cell: (info) => <RoleBadge role={info.getValue()} />,
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("grant-role"),
+      header: () => (
+        <ColumnFilter
+          column="role"
+          options={Arr.map(BuiltinRole.literals, (role) => ({
+            icon: roleIcon(role),
+            label: tSchool(`role.${role}`),
+            value: role,
+          }))}
+          title={t("grant-role")}
+        />
+      ),
       id: "role",
+      meta: { align: "center" },
     }),
     grantColumns.accessor(scopeName, {
+      enableSorting: false,
       filterFn: "oneOf",
-      header: t("grant-scope"),
+      header: () => (
+        <ColumnFilter
+          column="scope"
+          options={
+            QueryResult.isSuccess(viewer)
+              ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
+              : []
+          }
+          title={t("grant-scope")}
+        />
+      ),
       id: "scope",
-      sortFn: "text",
     }),
     grantColumns.display({
       cell: (info) =>
@@ -88,6 +114,7 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
           <SchoolGrantMenu grant={info.row.original} />
         ) : null,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

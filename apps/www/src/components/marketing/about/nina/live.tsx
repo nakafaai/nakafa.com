@@ -2,17 +2,22 @@ import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
 import { useEffect, useRef } from "react";
+import { NinaHeldAttach } from "@/components/ai/attachment";
 import { useChatAdmission } from "@/components/ai/chat/admission";
 import { NinaInput } from "@/components/ai/input";
 import { NinaPromptTurn } from "@/components/marketing/about/nina/composer";
-import { useHeldPrompt } from "@/components/marketing/about/nina/held";
+import {
+  useHeldAttach,
+  useHeldPrompt,
+} from "@/components/marketing/about/nina/held";
 import { useLiveSession } from "@/components/providers/live";
 import { useCurrentLocale } from "@/lib/routing/link";
 
 /**
  * A signed-in account's composer: its prompt starts a chat through admission. Its
  * own island mounts the page's one Convex client around the admission code. A send
- * the learner pressed before this code loaded is admitted once it mounts.
+ * the learner pressed before this code loaded is admitted once it mounts, and an
+ * attach pressed then opens the file picker.
  */
 export function LiveNinaComposer() {
   const client = useLiveSession((state) => state.client);
@@ -29,6 +34,7 @@ export function LiveNinaComposer() {
 /** Sends the composer's prompt through admission, then opens the new chat. */
 function LiveNinaAdmission() {
   const held = useHeldPrompt();
+  const attach = useHeldAttach();
   const locale = useCurrentLocale();
   const navigate = useNavigate();
   const { disabled, prompt, submit } = useChatAdmission({
@@ -47,6 +53,7 @@ function LiveNinaAdmission() {
 
   return (
     <NinaInput attachments autoFocus disabled={disabled} onSubmit={submit}>
+      {attach ? <NinaHeldAttach /> : null}
       {prompt ? <NinaPromptTurn prompt={prompt} /> : null}
     </NinaInput>
   );

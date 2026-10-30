@@ -8,7 +8,7 @@ import { Collab } from "@repo/design-system/components/editor/collab";
 import { slashCommand } from "@repo/design-system/components/editor/command";
 import { depthGuard } from "@repo/design-system/components/editor/depth";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
-import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
+import { articleProse } from "@repo/design-system/components/editor/prose";
 import {
   documentSizeGuard,
   stepSizeGuard,
@@ -46,13 +46,13 @@ const SOURCE = "components/tenant/exams/text";
 /**
  * The extensions of a question's rich text, the prompt, the rubric, or the explanation: the shared
  * assessment document, its collab plugin (the session's client ID comes with the document when it
- * opens), the classes of the published article's paragraphs, and the bounds the server folds with,
+ * opens), the classes of the published article's text, and the bounds the server folds with,
  * so the editor refuses what the server would refuse.
  */
 const TEXT_EXTENSIONS = [
   ...RICH_EXTENSIONS,
   Collab.configure({ clientId: "", version: 0 }),
-  articleParagraphs,
+  articleProse,
   depthGuard(MAX_DOCUMENT_DEPTH),
   stepSizeGuard(MAX_STEP_BYTES),
   documentSizeGuard(MAX_DOCUMENT_BYTES),

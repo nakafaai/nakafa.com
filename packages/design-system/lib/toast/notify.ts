@@ -1,6 +1,10 @@
 import { captureException } from "@repo/analytics/posthog/capture";
-import { ToastMessage } from "@repo/design-system/lib/toast/message";
+import {
+  ToastAction,
+  ToastMessage,
+} from "@repo/design-system/lib/toast/message";
 import type {
+  ToastActionKey,
   ToastDescriptionKey,
   ToastTitleKey,
   ToastValueKey,
@@ -45,12 +49,12 @@ export type ToastCopy = PlainCopy | ValuedCopy;
 
 /**
  * The options of a toast: its place, its length, its id, and an action. The
- * label of the action is a key of the `Toast` namespace that takes no values,
- * because a button has no copy to fill.
+ * label of the action is one word of the `Common` namespace, such as `undo`,
+ * which owns the app's verbs, so no toast's own copy repeats it.
  */
 type ToastOptions = Pick<ExternalToast, "duration" | "id" | "position"> & {
   readonly action?: {
-    readonly label: Exclude<ToastTitleKey, ToastValueKey>;
+    readonly label: ToastActionKey;
     readonly onClick: () => void;
   };
 };
@@ -206,7 +210,7 @@ function dataOf(copy: ToastCopy, options: ToastOptions = {}): ExternalToast {
       action === undefined
         ? undefined
         : {
-            label: messageNode(action.label),
+            label: createElement(ToastAction, { label: action.label }),
             onClick: action.onClick,
           },
     description:

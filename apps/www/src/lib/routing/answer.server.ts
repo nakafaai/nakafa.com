@@ -4,7 +4,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
-import { readProfileGate } from "@/lib/profile/gate";
+import { isRawProfileAddress } from "@/lib/profile/gate";
 import { isLearnerPage, readVisitorAsset } from "@/lib/routing/learner.server";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
@@ -26,7 +26,10 @@ import {
   UncaughtRequestError,
 } from "@/lib/routing/routed.server";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
-import { answerSchoolPage } from "@/lib/routing/school/shell.server";
+import {
+  answerSchoolPage,
+  readSchoolFile,
+} from "@/lib/routing/school/shell.server";
 import { readPathSegments } from "@/lib/routing/template";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
@@ -131,11 +134,13 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * decide each answer, in this order: a host under the production domain that
  * names no school moves to the main site; a non-canonical slash spelling moves to
  * its canonical address; a non-public spelling moves to its public address. A
- * school tree path and a refused school page answer not found (a refused school
- * page with the static school shell). A visitor's try-out track, set or section
+ * school tree path answers not found, a file that a school host's address names
+ * answers the static not-found page before any read, and a refused school page
+ * answers not found with the static school shell. A visitor's try-out track, set or section
  * answers the page that the build wrote for every visitor, before any content
  * read. A removed address answers not found, and a migrated or moved
- * address moves to its successor. A raw user address answers not found. A page in
+ * address moves to its successor. A raw user address answers the static
+ * not-found page, its Markdown spelling included. A page in
  * a locale that no Worker route renders answers the static not-found page before
  * any content read, and a document that the source does not own answers not found
  * (ADR 0026). The root and a bare page address then move to the negotiated locale.
@@ -168,6 +173,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   const schoolTree = readSchoolTreeGate(request);
   if (Option.isSome(schoolTree)) {
     return yield* answerRejection(request, schoolTree.value, route);
+  }
+
+  const schoolFile = yield* readSchoolFile(request);
+  if (Option.isSome(schoolFile)) {
+    return schoolFile.value;
   }
 
   const refused = yield* readSchoolRefusal(request);
@@ -203,9 +213,8 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
     return moved.value;
   }
 
-  const profileGate = readProfileGate(request);
-  if (Option.isSome(profileGate)) {
-    return yield* answerRejection(request, profileGate.value, route);
+  if (isRawProfileAddress(request)) {
+    return yield* answerUnmatchedRequest(request);
   }
 
   const url = new URL(request.url);
