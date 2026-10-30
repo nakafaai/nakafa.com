@@ -1,6 +1,4 @@
-import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Option } from "effect";
-import { useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
@@ -8,12 +6,12 @@ import {
   markedWith,
   type TablePart,
 } from "@/components/exams/sitting/response";
-import { TryoutSelectableRadioOption } from "@/components/tryout/runtime/choice/surface";
+import { TryoutChoiceTable } from "@/components/tryout/runtime/choice/table";
 
 /**
- * A true or false table as the student reads it: each statement, numbered, with its own pair of choices,
- * true or false, framed as the player frames a choice. Each statement takes one column, and choosing the
- * other moves the mark.
+ * A true or false table as the student reads it and as a printed exam sets it: a row for each numbered
+ * statement and a column for each choice, true and false, as the try-out player draws it. Each statement
+ * takes one column, and choosing the other moves the mark.
  */
 export function SittingTable({
   cells,
@@ -36,62 +34,41 @@ export function SittingTable({
 }) {
   const disabled = usePaperLocked();
   const t = useTranslations("Exams");
-  const id = useId();
 
   return (
-    <ol aria-labelledby={labelledBy} className="grid min-w-0 gap-6">
-      {Arr.map(table.statements, (statement, index) => (
-        <li className="grid gap-3" key={statement.id}>
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="font-medium tabular-nums">{index + 1}.</span>
-            <SittingDocument
-              document={statement.label}
-              label={table.label}
-              size="line"
-            />
-          </div>
-          <RadioGroup
-            aria-label={t("statement-number", { name: index + 1 })}
-            className="grid grid-cols-2 gap-2"
-            onValueChange={(column) =>
-              onMark(
-                markedWith(table.statements, cells, {
-                  column,
-                  statement: statement.id,
-                })
-              )
-            }
-            value={Option.getOrElse(
-              Option.map(
-                Arr.findFirst(cells, (cell) => cell.statement === statement.id),
-                (cell) => cell.column
-              ),
-              () => ""
-            )}
-          >
-            {Arr.map(table.columns, (column) => (
-              <TryoutSelectableRadioOption
-                checked={Arr.some(
-                  cells,
-                  (cell) =>
-                    cell.statement === statement.id && cell.column === column.id
-                )}
-                disabled={disabled}
-                id={`${id}-${statement.id}-${column.id}`}
-                key={column.id}
-                label={
-                  <SittingDocument
-                    document={column.label}
-                    label={table.label}
-                    size="line"
-                  />
-                }
-                value={column.id}
-              />
-            ))}
-          </RadioGroup>
-        </li>
-      ))}
-    </ol>
+    <TryoutChoiceTable
+      columns={Arr.map(table.columns, (column) => ({
+        id: column.id,
+        label: (
+          <SittingDocument
+            document={column.label}
+            label={table.label}
+            size="line"
+          />
+        ),
+      }))}
+      disabled={disabled}
+      labelledBy={labelledBy}
+      onMark={(statement, column) =>
+        onMark(markedWith(table.statements, cells, { column, statement }))
+      }
+      statementLabel={t("statement-placeholder")}
+      statements={Arr.map(table.statements, (statement) => ({
+        id: statement.id,
+        label: (
+          <SittingDocument
+            document={statement.label}
+            label={table.label}
+            size="line"
+          />
+        ),
+        marked: Option.getOrUndefined(
+          Option.map(
+            Arr.findFirst(cells, (cell) => cell.statement === statement.id),
+            (cell) => cell.column
+          )
+        ),
+      }))}
+    />
   );
 }
