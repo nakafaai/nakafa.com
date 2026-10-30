@@ -1617,6 +1617,7 @@
     "shortcut-pick": "Choose an option",
     "shortcut-navigator": "Question navigator",
     "flag": "Flag",
+    "flag-question": "Flag question {number}",
     "review": "Review",
     "legend-answered": "Answered",
     "legend-flagged": "Flagged",
