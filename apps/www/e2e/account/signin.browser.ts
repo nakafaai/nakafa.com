@@ -158,7 +158,7 @@ test("the Free plan's action opens home for a signed-in learner", async ({
             yield* Effect.promise(() =>
               page.goto(PRICING, { waitUntil: "load" })
             );
-            // The action is a link drawn as a button, so it carries the button role.
+            // The action is a link with a button's look.
             const action = page.locator('[data-pricing-plan="free"] a:visible');
             yield* Effect.promise(() => expect(action).toHaveCount(1));
             yield* Effect.promise(() =>

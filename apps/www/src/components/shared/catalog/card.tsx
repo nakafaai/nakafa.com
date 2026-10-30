@@ -1,5 +1,4 @@
 import { Image } from "@repo/design-system/components/image";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
   CardFooter,
@@ -7,13 +6,25 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Predicate } from "effect";
-import { type ReactElement, type ReactNode, use } from "react";
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  use,
+} from "react";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
 
 interface CatalogCardProps {
-  readonly action: ReactElement;
+  /**
+   * Draws the link to the choice from what the card gives it: the label its
+   * grid names, that label with the title for a screen reader, and a button's look.
+   */
+  readonly action: (
+    anchor: Pick<ComponentProps<"a">, "aria-label" | "children" | "className">
+  ) => ReactElement;
   readonly children: ReactElement;
   readonly title: string;
 }
@@ -35,14 +46,11 @@ export function CatalogCard({ action, children, title }: CatalogCardProps) {
         </CardTitle>
       </CardHeader>
       <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
-        <Button
-          aria-label={`${actionLabel} ${title}`}
-          className="w-full"
-          nativeButton={false}
-          render={action}
-        >
-          {actionLabel}
-        </Button>
+        {action({
+          "aria-label": `${actionLabel} ${title}`,
+          children: actionLabel,
+          className: buttonVariants({ className: "w-full" }),
+        })}
       </CardFooter>
     </Card>
   );
