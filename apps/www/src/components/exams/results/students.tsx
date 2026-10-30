@@ -3,13 +3,23 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   HourglassIcon,
+  MoreHorizontalIcon,
   SquareLock01Icon,
   UserGroupIcon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -153,7 +163,7 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
       <TableCell className="text-right tabular-nums">
         <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
       </TableCell>
-      <TableCell className="tabular-nums">
+      <TableCell className="text-right tabular-nums">
         {row.submittedAt === null ? (
           <NotYet />
         ) : (
@@ -167,7 +177,45 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           )
         )}
       </TableCell>
+      <TableCell className="text-right">
+        <StudentRowMenu attemptId={row.attemptId} />
+      </TableCell>
     </TableRow>
+  );
+}
+
+/** The row menu of one student: Answers, which opens the student's answers beside the list. */
+function StudentRowMenu({
+  attemptId,
+}: {
+  readonly attemptId: (typeof StudentRowSchema.Type)["attemptId"];
+}) {
+  const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const show = usePanes((state) => state.show);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label={common("more-actions")}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => show(attemptId)}>
+            <HugeIcons icon={ViewIcon} />
+            {t("results-answers")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -219,7 +267,10 @@ function StudentTable({
             {t("results-pending")}
           </TableHead>
           <TableHead className="w-36 text-right">{t("results-away")}</TableHead>
-          <TableHead className="w-44">{t("results-finished")}</TableHead>
+          <TableHead className="w-44 text-right">
+            {t("results-finished")}
+          </TableHead>
+          <TableHead className="w-12" />
         </TableRow>
       </TableHeader>
       <TableBody>
