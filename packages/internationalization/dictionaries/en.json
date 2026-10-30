@@ -1190,7 +1190,11 @@
     "grade": "Grade",
     "result": "Result",
     "kktp-reached": "Meets KKTP",
-    "kktp-notReached": "Below KKTP"
+    "kktp-notReached": "Below KKTP",
+    "own-title": "My report cards",
+    "own-search": "Find a class group",
+    "own-empty": "No report card is locked yet.",
+    "own-empty-description": "Your report card shows here once the principal approves it."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",

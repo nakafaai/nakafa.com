@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { reportAccess } from "@repo/backend/confect/records/authority";
+import { own } from "@repo/backend/confect/records/reports/own";
 import {
   cohorts,
   get,
@@ -18,9 +19,10 @@ import spec from "@repo/backend/confect/records/reports.spec";
 import { cohortAccess } from "@repo/backend/confect/tenancy/authority";
 import { Layer } from "effect";
 
-/** The report cards of a cohort: the homeroom teacher writes and hands them in, and the principal approves them. */
+/** The report cards of a cohort: the homeroom teacher writes and hands them in, the principal approves them, and a student reads their own locked ones. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(cohorts),
+  Layer.provide(own),
   Layer.provide(sheet),
   Layer.provide(get),
   Layer.provide(write),

@@ -1190,7 +1190,11 @@
     "grade": "Nilai",
     "result": "Hasil",
     "kktp-reached": "Mencapai KKTP",
-    "kktp-notReached": "Belum mencapai KKTP"
+    "kktp-notReached": "Belum mencapai KKTP",
+    "own-title": "Rapor saya",
+    "own-search": "Cari rombel",
+    "own-empty": "Belum ada rapor yang dikunci.",
+    "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya."
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
