@@ -194,12 +194,15 @@ describe("Nina memory removal", () => {
   it("confirms a memory written after Delete all later than it even when the clock has not moved, so no reader hides it and no batch takes it", async () => {
     const f = await createMemoryTest();
     await f.fill(60);
+    // The fill commits first, so the deletion has its own moment.
+    const clearedAt = NOW + 1000;
+    vi.setSystemTime(clearedAt);
     expect(await f.owner.mutation(clear, {})).toBeNull();
     // The clock still reads the moment of the deletion.
     const kept = await f.owner.mutation(add, { text: "Written after memory" });
     const after = ["Written after memory"];
     expect(await f.stored()).toContainEqual(
-      expect.objectContaining({ _id: kept, confirmedAt: NOW + 1 })
+      expect.objectContaining({ _id: kept, confirmedAt: clearedAt + 1 })
     );
     expect(await readers(f)).toEqual({
       capture: after,
@@ -233,12 +236,15 @@ describe("Nina memory removal", () => {
   it("confirms an edit after Delete all later than it when the clock has not moved, so no reader hides the edited memory", async () => {
     const f = await createMemoryTest();
     await f.fill(3);
+    // The fill commits first, so the deletion has its own moment.
+    const clearedAt = NOW + 1000;
+    vi.setSystemTime(clearedAt);
     expect(await f.owner.mutation(clear, {})).toBeNull();
     const kept = await f.owner.mutation(add, { text: "Written after memory" });
     await f.owner.mutation(edit, { id: kept, text: "Rewritten after memory" });
     const after = ["Rewritten after memory"];
     expect(await f.stored()).toContainEqual(
-      expect.objectContaining({ _id: kept, confirmedAt: NOW + 1 })
+      expect.objectContaining({ _id: kept, confirmedAt: clearedAt + 1 })
     );
     expect(await readers(f)).toMatchObject({ listed: after, turn: after });
   });
@@ -311,12 +317,13 @@ describe("Nina memory removal", () => {
       })
     );
     await f.owner.mutation(pause, { paused: true });
+    vi.setSystemTime(NOW + 1000);
     await f.owner.mutation(clear, {});
     expect(
       await f.t.query((ctx) => ctx.db.query("learningPreferences").collect())
     ).toEqual([
       expect.objectContaining({
-        ninaMemoryClearedAt: NOW,
+        ninaMemoryClearedAt: NOW + 1000,
         ninaMemoryPaused: true,
         preferredTryoutCountryKey: "indonesia",
       }),
@@ -326,7 +333,7 @@ describe("Nina memory removal", () => {
     const [row] = await f.t.query((ctx) =>
       ctx.db.query("learningPreferences").collect()
     );
-    expect(row).toMatchObject({ ninaMemoryClearedAt: NOW });
+    expect(row).toMatchObject({ ninaMemoryClearedAt: NOW + 1000 });
     expect(row?.ninaMemoryPaused).toBeUndefined();
   });
 
@@ -362,15 +369,21 @@ describe("Nina memory pause", () => {
     expect(await stranger.owner.mutation(pause, { paused: false })).toBeNull();
     expect(await preferences()).toEqual([]);
     await f.seed({ author: "learner", text: "Kept" });
-    vi.setSystemTime(1000);
+    vi.setSystemTime(NOW + 1000);
     await f.owner.mutation(pause, { paused: true });
     expect(await preferences()).toEqual([
-      expect.objectContaining({ ninaMemoryPaused: true, updatedAt: 1000 }),
+      expect.objectContaining({
+        ninaMemoryPaused: true,
+        updatedAt: NOW + 1000,
+      }),
     ]);
-    vi.setSystemTime(2000);
+    vi.setSystemTime(NOW + 2000);
     await f.owner.mutation(pause, { paused: true });
     expect(await preferences()).toEqual([
-      expect.objectContaining({ ninaMemoryPaused: true, updatedAt: 1000 }),
+      expect.objectContaining({
+        ninaMemoryPaused: true,
+        updatedAt: NOW + 1000,
+      }),
     ]);
     expect(await f.owner.query(state, {})).toEqual({ paused: true });
     expect(
@@ -382,10 +395,11 @@ describe("Nina memory pause", () => {
       })
     ).toMatchObject({ paused: true, recalled: [] });
     expect(await f.stored()).toHaveLength(1);
+    vi.setSystemTime(NOW + 3000);
     await f.owner.mutation(pause, { paused: false });
     const [resumed] = await preferences();
     expect(resumed?.ninaMemoryPaused).toBeUndefined();
-    expect(resumed?.updatedAt).toBe(2000);
+    expect(resumed?.updatedAt).toBe(NOW + 3000);
     expect(await f.owner.query(state, {})).toEqual({ paused: false });
     expect(
       await readLearner(f, {

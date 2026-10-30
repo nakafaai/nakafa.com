@@ -31,6 +31,12 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
 }));
 
 const NOW = Date.UTC(2026, 9, 10, 12);
+/**
+ * When a capture whose time a test reads runs: a second after the setup, which
+ * commits at `NOW`, because Convex runs each mutation after the commits before
+ * it.
+ */
+const ACTED_AT = NOW + 1000;
 const LESSON = "material:lesson:mathematics:material-section:limits";
 const SLUG = "subjects/mathematics/limits/concept";
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
@@ -258,6 +264,7 @@ describe("memory capture", () => {
     await f.fill(12, { author: "learner", text: `kelas ${rare}` });
     // The model names the thirteenth place, which the list does not show.
     const model = answers({ ...level, known: 13 });
+    vi.setSystemTime(ACTED_AT);
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     expect(Arr.length(knownLines(prompt))).toBe(12);
@@ -267,7 +274,7 @@ describe("memory capture", () => {
     expect(await f.stored()).toHaveLength(13);
     expect(Arr.map(await f.stored(), (row) => row.confirmedAt)).toEqual([
       ...Arr.makeBy(12, (index) => index + 1),
-      NOW,
+      ACTED_AT,
     ]);
   });
 
@@ -312,6 +319,7 @@ describe("memory capture", () => {
     });
     const [before] = await f.stored();
     const model = answers({ ...level, known: 1, text: "Kelas 12 IPA." });
+    vi.setSystemTime(ACTED_AT);
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     // The title with its colon and the first words take 18 of the 240.
@@ -322,7 +330,7 @@ describe("memory capture", () => {
     // The model said the new sentence restates the memory, so the memory is
     // confirmed and keeps its words. `toStrictEqual` compares the sealed bytes;
     // `toEqual` takes any two buffers for equal.
-    expect(after).toMatchObject({ author: "learner", confirmedAt: NOW });
+    expect(after).toMatchObject({ author: "learner", confirmedAt: ACTED_AT });
     expect(after?.text).toStrictEqual(before?.text);
     expect(after?.title).toStrictEqual(before?.title);
   });

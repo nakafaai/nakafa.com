@@ -21,6 +21,12 @@ vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
 const NOW = Date.UTC(2026, 8, 27, 12);
+/**
+ * When a learner stops a turn after the setup and the claim: Convex runs each
+ * mutation after the commits before it, so a stop that a test times comes at a
+ * moment of its own.
+ */
+const STOPPED_AT = NOW + 500;
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
@@ -78,6 +84,7 @@ describe("native Nina stop and resend", () => {
       const f = await fixture();
       await f.setCredits(leftAfterHold);
       await f.t.mutation(claim, { turnId: f.turnId });
+      vi.setSystemTime(STOPPED_AT);
       await f.owner.mutation(cancel, { chatId: f.chatId });
 
       // The stop leaves the turn open, its hold taken, until something settles it.
@@ -87,7 +94,7 @@ describe("native Nina stop and resend", () => {
           _id: f.turnId,
           phase: "active",
           state: expect.objectContaining({ status: "running" }),
-          cancelRequestedAt: NOW,
+          cancelRequestedAt: STOPPED_AT,
         }),
       ]);
       expect(stopped.user?.credits).toBe(leftAfterHold);
@@ -107,7 +114,7 @@ describe("native Nina stop and resend", () => {
       expect(admitted.turns[0]).toMatchObject({
         _id: f.turnId,
         phase: "settled",
-        state: { status: "cancelled", finishedAt: NOW },
+        state: { status: "cancelled", finishedAt: STOPPED_AT },
       });
       expect(admitted.turns[0]).not.toHaveProperty("cancelRequestedAt");
       expect(admitted.turns[1]).toMatchObject({
@@ -163,7 +170,7 @@ describe("native Nina stop and resend", () => {
       ).toEqual([
         expect.objectContaining({
           args: [{ turnId: f.turnId }],
-          scheduledTime: NOW + grace,
+          scheduledTime: STOPPED_AT + grace,
         }),
       ]);
       // The run's exit also carries the stages it reached, and the turn stores
@@ -172,7 +179,7 @@ describe("native Nina stop and resend", () => {
         turnId: f.turnId,
         timing: { readyMs: 1500, progressMs: 4000, tokenMs: 4200 },
       });
-      vi.setSystemTime(NOW + grace);
+      vi.setSystemTime(STOPPED_AT + grace);
       await f.t.mutation(recover, { turnId: f.turnId });
       const settled = await f.inspect();
       expect(settled).toEqual(admitted);
@@ -206,6 +213,7 @@ describe("native Nina stop and resend", () => {
     const f = await fixture();
     await f.setCredits(0);
     await f.t.mutation(claim, { turnId: f.turnId });
+    vi.setSystemTime(STOPPED_AT);
     await f.owner.mutation(cancel, { chatId: f.chatId });
 
     // The stopped turn holds the only credits the learner has, and the next
@@ -221,7 +229,7 @@ describe("native Nina stop and resend", () => {
       {
         _id: f.turnId,
         phase: "settled",
-        state: { status: "cancelled", finishedAt: NOW },
+        state: { status: "cancelled", finishedAt: STOPPED_AT },
       },
       { _id: next.turnId, phase: "active", state: { status: "queued" } },
     ]);
@@ -279,6 +287,7 @@ describe("native Nina stop and resend", () => {
     );
     await f.t.mutation(claim, { turnId: f.turnId });
     await f.t.mutation(claim, { turnId: other.turnId });
+    vi.setSystemTime(STOPPED_AT);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     await f.owner.mutation(cancel, { chatId: other.chatId });
 
@@ -330,7 +339,7 @@ describe("native Nina stop and resend", () => {
     expect(settled.turns[0]).toMatchObject({
       _id: f.turnId,
       phase: "settled",
-      state: { status: "cancelled", finishedAt: NOW },
+      state: { status: "cancelled", finishedAt: STOPPED_AT },
     });
     expect(settled.chats[0]?.activeTurnId).toBe(again.turnId);
     expect(settled.user?.credits).toBe(0);

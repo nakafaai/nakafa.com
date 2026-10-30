@@ -22,6 +22,12 @@ const clear = Ref.getFunctionReference(memory.clear);
 const state = Ref.getFunctionReference(memory.state);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
+/**
+ * When an act whose time a test reads runs: a second after the setup, which
+ * commits at `NOW`, because Convex runs each mutation after the commits before
+ * it.
+ */
+const ACTED_AT = NOW + 1000;
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
 const rejected = (reason: "empty" | "limit" | "missing") => ({
   data: { _tag: "NinaMemoryRejected", reason },
@@ -205,14 +211,14 @@ describe("Nina memory writes", () => {
       topics: [LESSON],
       validUntil,
     });
-    vi.setSystemTime(5000);
+    vi.setSystemTime(ACTED_AT);
     expect(
       await f.owner.mutation(edit, { id, text: "Ulangan kimia 20 Oktober" })
     ).toBeNull();
     expect(await f.stored()).toEqual([
       expect.objectContaining({
         author: "learner",
-        confirmedAt: 5000,
+        confirmedAt: ACTED_AT,
         kind: "situation",
         topics: [LESSON],
         validUntil,
@@ -224,7 +230,7 @@ describe("Nina memory writes", () => {
     const rows = await f.keys();
     expect(Arr.map(rows, (row) => row.key)).toContain(`t:${LESSON}`);
     expect(Arr.map(rows, (row) => row.confirmedAt)).toEqual(
-      Arr.makeBy(Arr.length(rows), () => 5000)
+      Arr.makeBy(Arr.length(rows), () => ACTED_AT)
     );
     expect(
       await f.find({ limit: 5, text: "oktober", topics: [LESSON] })
@@ -248,7 +254,7 @@ describe("Nina memory writes", () => {
       await f.owner.mutation(edit, { id, ...fields });
       return [await f.titles(), await f.texts()];
     };
-    vi.setSystemTime(5000);
+    vi.setSystemTime(ACTED_AT);
     expect(await edited({ text: "Kelas 12", title: "Sekolah lama" })).toEqual([
       ["Sekolah lama"],
       ["Kelas 12"],
@@ -264,6 +270,7 @@ describe("Nina memory writes", () => {
     // The title is found by its words, and the words that went are not.
     expect(await f.find({ limit: 5, text: "baru" })).toEqual([""]);
     expect(await f.find({ limit: 5, text: "lama kelas" })).toEqual([]);
+    vi.setSystemTime(ACTED_AT + 1000);
     expect(await edited({ text: "Kelas 12 IPA" })).toEqual([
       [null],
       ["Kelas 12 IPA"],
@@ -271,7 +278,7 @@ describe("Nina memory writes", () => {
     const [bare] = await f.stored();
     expect(bare).toMatchObject({
       author: "learner",
-      confirmedAt: 5000,
+      confirmedAt: ACTED_AT + 1000,
       kind: "goal",
     });
     expect(bare).not.toHaveProperty("title");
@@ -317,6 +324,7 @@ describe("Nina memory writes", () => {
     const taken = await f.seed({ confirmedAt: 5, text: "Taken" });
     const kept = await f.seed({ confirmedAt: 6, text: "Kept" });
     await f.markCleared(5);
+    vi.setSystemTime(ACTED_AT);
     await expect(
       f.owner.mutation(edit, { id: taken, text: "Too late" })
     ).rejects.toMatchObject(rejected("missing"));
@@ -326,7 +334,7 @@ describe("Nina memory writes", () => {
     expect(await f.texts()).toEqual(["Taken", "Edited"]);
     expect(await f.stored()).toEqual([
       expect.objectContaining({ confirmedAt: 5 }),
-      expect.objectContaining({ confirmedAt: NOW }),
+      expect.objectContaining({ confirmedAt: ACTED_AT }),
     ]);
   });
 });
@@ -340,10 +348,11 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
       text: "Kelas 11.",
       through: 4,
     });
+    vi.setSystemTime(ACTED_AT);
     await f.owner.mutation(add, { text: "Mau ikut SNBT 2027" });
     expect(await f.portrait()).toBe("Kelas 11.");
     expect(await f.rows()).toEqual([
-      expect.objectContaining({ scheduledAt: NOW, through: 4 }),
+      expect.objectContaining({ scheduledAt: ACTED_AT, through: 4 }),
     ]);
     expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
     // Once that build has gone to the model, a second memory the same day asks
@@ -351,7 +360,7 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
     await f.t.mutation(async (ctx) => {
       const row = await ctx.db.query("ninaMemoryPortraits").first();
       if (row) {
-        await ctx.db.patch(row._id, { builtAt: NOW });
+        await ctx.db.patch(row._id, { builtAt: ACTED_AT });
       }
     });
     await f.owner.mutation(add, { text: "Kelas 12 IPA" });
@@ -367,13 +376,14 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
       text: "Kelas 11.",
       through: 4,
     });
+    vi.setSystemTime(ACTED_AT);
     return { ...f, id };
   }
 
   /** Whether the portrait lost its text and a build from scratch is asked for. */
   async function expectRebuild(f: Awaited<ReturnType<typeof withPortrait>>) {
     const [row] = await f.rows();
-    expect(row).toMatchObject({ scheduledAt: NOW, through: 0 });
+    expect(row).toMatchObject({ scheduledAt: ACTED_AT, through: 0 });
     expect(row).not.toHaveProperty("text");
     expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
   }
@@ -414,13 +424,14 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
     await f.owner.mutation(pause, { paused: true });
     await f.owner.mutation(add, { text: "Mau ikut SNBT 2027" });
     expect(await f.scheduled()).toHaveLength(1);
+    vi.setSystemTime(ACTED_AT);
     await f.owner.mutation(pause, { paused: false });
     expect(await f.scheduled()).toEqual([
       { userId: f.identity.userId },
       { userId: f.identity.userId },
     ]);
     expect(await f.rows()).toEqual([
-      expect.objectContaining({ scheduledAt: NOW, through: 0 }),
+      expect.objectContaining({ scheduledAt: ACTED_AT, through: 0 }),
     ]);
   });
 

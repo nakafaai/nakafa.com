@@ -281,8 +281,10 @@ describe("Nina conversation visibility", () => {
         await f.owner.query(get, { chatId: f.chatId })
       ).turn?.state;
     expect(await read()).toEqual({ status: "queued" });
+    // The fixture commits twice, so the claim a test times has its own moment.
+    vi.setSystemTime(NOW + 1000);
     await f.t.mutation(claim, { turnId: f.turnId });
-    expect(await read()).toEqual({ status: "running", startedAt: NOW });
+    expect(await read()).toEqual({ status: "running", startedAt: NOW + 1000 });
   });
 
   it("shows a turn as cancelled from the moment the learner stopped it, before its run has exited", async () => {

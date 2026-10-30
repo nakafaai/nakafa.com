@@ -23,6 +23,12 @@ vi.mock("@repo/backend/confect/nina/settlement", async (load) => {
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
+/**
+ * When a learner stops a turn after the claim and the stream: Convex runs each
+ * mutation after the commits before it, so a stop that a test times comes at a
+ * moment of its own.
+ */
+const STOPPED_AT = NOW + 1000;
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
@@ -234,6 +240,7 @@ describe("native Nina settlement", () => {
         format: "UIMessageChunk",
       })
     );
+    vi.setSystemTime(STOPPED_AT);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     await f.t.mutation((ctx) =>
       saveMessages(ctx, components.nina, {
@@ -246,7 +253,10 @@ describe("native Nina settlement", () => {
     await f.t.mutation(recover, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.user?.credits).toBe(10);
-    expect(state.turn?.state).toEqual({ status: "cancelled", finishedAt: NOW });
+    expect(state.turn?.state).toEqual({
+      status: "cancelled",
+      finishedAt: STOPPED_AT,
+    });
     expect(
       Option.getOrUndefined(
         Arr.findFirst(
@@ -280,6 +290,7 @@ describe("native Nina settlement", () => {
         format: "UIMessageChunk",
       })
     );
+    vi.setSystemTime(STOPPED_AT);
     await f.owner.mutation(cancel, { chatId: f.chatId });
 
     // The stream is cut off, but the turn stays open with its credits held.
@@ -287,7 +298,7 @@ describe("native Nina settlement", () => {
     expect(stopping.turn).toMatchObject({
       phase: "active",
       state: { status: "running" },
-      cancelRequestedAt: NOW,
+      cancelRequestedAt: STOPPED_AT,
     });
     expect(stopping.user?.credits).toBe(0);
     expect(stopping.chat?.activeTurnId).toBe(f.turnId);
@@ -311,7 +322,7 @@ describe("native Nina settlement", () => {
     const settled = await f.inspect();
     expect(settled.turn?.state).toEqual({
       status: "cancelled",
-      finishedAt: NOW,
+      finishedAt: STOPPED_AT,
     });
     expect(settled.turn).not.toHaveProperty("cancelRequestedAt");
     expect(settled.user?.credits).toBe(10);
@@ -330,7 +341,10 @@ describe("native Nina settlement", () => {
     // changes nothing.
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     const later = await f.inspect();
-    expect(later.turn?.state).toEqual({ status: "cancelled", finishedAt: NOW });
+    expect(later.turn?.state).toEqual({
+      status: "cancelled",
+      finishedAt: STOPPED_AT,
+    });
     expect(later.user?.credits).toBe(10);
     expect(
       Arr.filter(later.ledger, (row) => row.type === "refund")
@@ -340,6 +354,7 @@ describe("native Nina settlement", () => {
   it("settles a stopped turn once the grace has passed when its run never exits", async () => {
     const f = await fixture();
     await f.t.mutation(claim, { turnId: f.turnId });
+    vi.setSystemTime(STOPPED_AT);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     const grace = Duration.toMillis(STOP_GRACE);
     const jobs = await f.t.query((ctx) =>
@@ -350,7 +365,7 @@ describe("native Nina settlement", () => {
     ).toEqual([
       expect.objectContaining({
         args: [{ turnId: f.turnId }],
-        scheduledTime: NOW + grace,
+        scheduledTime: STOPPED_AT + grace,
       }),
     ]);
     // The run is gone, so until then the turn stays open with its credits held.
@@ -363,7 +378,7 @@ describe("native Nina settlement", () => {
     // The turn finished when the learner stopped it, not when the grace settled it.
     expect(state.turn?.state).toEqual({
       status: "cancelled",
-      finishedAt: NOW,
+      finishedAt: STOPPED_AT,
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chat?.activeTurnId).toBeUndefined();
@@ -375,10 +390,13 @@ describe("native Nina settlement", () => {
   it("keeps the first request when a running turn is stopped twice", async () => {
     const f = await fixture();
     await f.t.mutation(claim, { turnId: f.turnId });
+    vi.setSystemTime(STOPPED_AT);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     vi.setSystemTime(NOW + 5000);
     await f.owner.mutation(cancel, { chatId: f.chatId });
-    expect((await f.inspect()).turn).toMatchObject({ cancelRequestedAt: NOW });
+    expect((await f.inspect()).turn).toMatchObject({
+      cancelRequestedAt: STOPPED_AT,
+    });
   });
 
   it("refunds a stopped generation with no final text and never enlarges the next credit period", async () => {

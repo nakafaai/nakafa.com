@@ -69,22 +69,22 @@ describe("Nina memory page", () => {
 
   it("adds memories as the learner's pure text, sealed at rest, and lists them opened, the newest first", async () => {
     const f = await createMemoryTest();
-    vi.setSystemTime(1000);
+    vi.setSystemTime(NOW + 1000);
     const level = await f.owner.mutation(add, { text: "Kelas 12 IPA" });
-    vi.setSystemTime(2000);
+    vi.setSystemTime(NOW + 2000);
     await f.owner.mutation(add, { text: "Ikut SNBT 2027" });
     const { page } = await pageOf(f.owner, 10);
     expect(page).toEqual([
       {
         author: "learner",
-        confirmedAt: 2000,
+        confirmedAt: NOW + 2000,
         createdAt: expect.any(Number),
         id: expect.any(String),
         text: "Ikut SNBT 2027",
       },
       {
         author: "learner",
-        confirmedAt: 1000,
+        confirmedAt: NOW + 1000,
         createdAt: expect.any(Number),
         id: level,
         text: "Kelas 12 IPA",
@@ -109,12 +109,12 @@ describe("Nina memory page", () => {
 
   it("lists a memory with a title and words, and a memory that is only a title with no words", async () => {
     const f = await createMemoryTest();
-    vi.setSystemTime(1000);
+    vi.setSystemTime(NOW + 1000);
     const titled = await f.owner.mutation(add, {
       text: "Kelas 12 IPA",
       title: "Sekolah",
     });
-    vi.setSystemTime(2000);
+    vi.setSystemTime(NOW + 2000);
     await f.owner.mutation(add, { text: "", title: "Ujian akhir" });
     const { page } = await pageOf(f.owner, 10);
     expect(Arr.map(page, (item) => [item.text, item.title])).toEqual([

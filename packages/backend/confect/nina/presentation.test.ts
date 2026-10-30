@@ -6,7 +6,11 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { deployment, provider } from "@repo/backend/test/gateway";
-import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
+import {
+  createNinaTest,
+  fireDueJobs,
+  ninaModel,
+} from "@repo/backend/test/nina";
 import { sealThreadIn, writtenThreadIn } from "@repo/backend/test/nina/seal";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { showsText } from "@repo/backend/test/seal";
@@ -51,7 +55,7 @@ describe("Nina presentation after an answer", () => {
           : () => Promise.resolve(providerStep([{ type: "text", text: "" }]));
       provider.languageModel.mockReturnValue(model);
       await f.t.action(run, { turnId: f.turnId });
-      await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+      await f.t.finishAllScheduledFunctions(fireDueJobs);
       const state = await f.t.query(async (ctx) => ({
         turn: await ctx.db.get("ninaTurns", f.turnId),
         user: await ctx.db.get("users", f.identity.userId),
@@ -80,7 +84,7 @@ describe("Nina presentation after an answer", () => {
     const model = ninaModel();
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(model.doGenerateCalls).toHaveLength(1);
     const prompt = model.doGenerateCalls[0]?.prompt ?? [];
     expect(Option.getOrThrow(Arr.last(prompt)).role).toBe("user");
@@ -141,7 +145,7 @@ describe("Nina presentation after an answer", () => {
     if (copy === "sealed") {
       await sealThreadIn(f.t, f.threadId, f.identity.userId);
     }
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     return Arr.map(model.doGenerateCalls, (call) => call.prompt);
   }
 
@@ -185,7 +189,7 @@ describe("Nina presentation after an answer", () => {
         }
       }
     });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(
       encodeJsonText(Arr.map(model.doGenerateCalls, (call) => call.prompt))
     ).not.toContain("Generate follow-up suggestions");
@@ -198,7 +202,7 @@ describe("Nina presentation after an answer", () => {
     const model = ninaModel();
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     const prompt = model.doGenerateCalls[0]?.prompt ?? [];
     // Sixteen messages are eight exchanges, the one just answered included,
     // and the request for suggestions is one more message of the learner. The
@@ -230,7 +234,7 @@ describe("Nina presentation after an answer", () => {
         prompt: "Now explain a completely different subject: photosynthesis.",
       })
     );
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     const [suggestions, title] = model.doGenerateCalls;
     expect(encodeJsonText(suggestions?.prompt)).toContain("Explain a limit.");
     expect(encodeJsonText(suggestions?.prompt)).toContain(
@@ -324,7 +328,7 @@ describe("Nina presentation after an answer", () => {
       Effect.fail(new GatewayConfigurationError({ message: "Unavailable" }))
     );
     provider.languageModel.mockClear();
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    await f.t.finishAllScheduledFunctions(fireDueJobs);
     expect(
       await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
     ).toMatchObject({ state: { status: "complete" } });

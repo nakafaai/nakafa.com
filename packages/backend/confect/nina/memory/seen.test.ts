@@ -233,6 +233,7 @@ describe("memory capture write after the learner changed their memory", () => {
     const f = await createCaptureTest();
     const id = await f.seed({ confirmedAt: 2, kind: "level", text: SCHOOL });
     // The call read the memory when it was confirmed at 1, and it was said again since.
+    vi.setSystemTime(NOW + 1000);
     expect(
       await f.run([candidate({ known: 1, text: SCHOOL_NOW })], {
         seen: [{ confirmedAt: 1, id }],
@@ -240,7 +241,7 @@ describe("memory capture write after the learner changed their memory", () => {
     ).toBe(1);
     expect(await f.texts()).toEqual([SCHOOL]);
     expect(await f.stored()).toEqual([
-      expect.objectContaining({ author: "nina", confirmedAt: NOW }),
+      expect.objectContaining({ author: "nina", confirmedAt: NOW + 1000 }),
     ]);
   });
 });
