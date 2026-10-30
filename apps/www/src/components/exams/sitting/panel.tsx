@@ -27,6 +27,12 @@ import {
   UnlockDialog,
 } from "@/components/exams/sitting/dialogs";
 import { StudentScreen } from "@/components/exams/sitting/screen";
+import {
+  awaySince,
+  awayTime,
+  SECONDS_IN_MINUTE,
+} from "@/components/exams/sitting/seat";
+import { useSittingClock } from "@/components/exams/sitting/timer";
 import { DataFailure } from "@/components/shared/failure";
 import { PaneBody, PaneFooter, PaneHeader } from "@/components/shared/pane";
 import { PanesDetail } from "@/components/shared/panes";
@@ -55,9 +61,6 @@ const stateLabels: Record<
 };
 
 /** The copy key of each signal of a student's screen, as the panel names it. */
-/** The seconds of one minute, which a long time away is told in. */
-const SECONDS_IN_MINUTE = 60;
-
 const signalLabels: Record<
   NonNullable<DashboardAttempt["latestSignal"]>["kind"],
   | "signal-blur"
@@ -150,7 +153,11 @@ function StudentPanel({ attempt }: { readonly attempt: DashboardAttempt }) {
           <StudentScreen attemptId={attempt.id} key={`screen-${attempt.id}`} />
           <div className="grid gap-2">
             <p className="text-muted-foreground text-sm">{t("signals")}</p>
-            <SignalList attemptId={attempt.id} key={attempt.id} />
+            <SignalList
+              attemptId={attempt.id}
+              away={awaySince(attempt)}
+              key={attempt.id}
+            />
           </div>
         </div>
       </PaneBody>
@@ -258,8 +265,11 @@ function useFirstSignalPage(attemptId: DashboardAttempt["id"]) {
  */
 function SignalList({
   attemptId,
+  away,
 }: {
   readonly attemptId: DashboardAttempt["id"];
+  /** When the student went away, while the seat shows the student away, so that exit's line counts on. */
+  readonly away: Option.Option<number>;
 }) {
   const t = useTranslations("Exams");
   const { slug, value } = useSittingData();
@@ -291,25 +301,41 @@ function SignalList({
           title={t("signals-empty-title")}
         />
       ) : null}
-      {Arr.map(signals.results, (signal) => (
-        <p key={`${signal.at}-${signal.kind}`}>
-          {signal.kind === "exit"
-            ? Option.match(awayFor(signals.results, signal), {
-                onNone: () => t(signalLabels[signal.kind]),
-                onSome: (seconds) =>
-                  seconds < SECONDS_IN_MINUTE
-                    ? t("signal-away-seconds", { seconds })
-                    : t("signal-away-minutes", {
-                        minutes: Math.floor(seconds / SECONDS_IN_MINUTE),
-                        seconds: seconds % SECONDS_IN_MINUTE,
-                      }),
-              })
-            : t(signalLabels[signal.kind])}
-        </p>
-      ))}
+      {Arr.map(signals.results, (signal) =>
+        signal.kind === "exit" && Option.contains(away, signal.at) ? (
+          <p key={`${signal.at}-${signal.kind}`}>
+            <SignalAway since={signal.at} />
+          </p>
+        ) : (
+          <p key={`${signal.at}-${signal.kind}`}>
+            {signal.kind === "exit"
+              ? Option.match(awayFor(signals.results, signal), {
+                  onNone: () => t(signalLabels[signal.kind]),
+                  onSome: (seconds) =>
+                    seconds < SECONDS_IN_MINUTE
+                      ? t("signal-away-seconds", { seconds })
+                      : t("signal-away-minutes", {
+                          minutes: Math.floor(seconds / SECONDS_IN_MINUTE),
+                          seconds: seconds % SECONDS_IN_MINUTE,
+                        }),
+                })
+              : t(signalLabels[signal.kind])}
+          </p>
+        )
+      )}
       {PaginatedQueryResult.isCanLoadMore(signals) ? (
         <Intersection onIntersect={() => signals.loadMore(SIGNAL_PAGE_SIZE)} />
       ) : null}
     </div>
   );
+}
+
+/** The exit the student has not come back from, with the time away counted each second. */
+function SignalAway({ since }: { readonly since: number }) {
+  const t = useTranslations("Exams");
+  const { minutes, seconds } = awayTime(since, useSittingClock());
+
+  return minutes === 0
+    ? t("signal-away-seconds", { seconds })
+    : t("signal-away-minutes", { minutes, seconds });
 }
