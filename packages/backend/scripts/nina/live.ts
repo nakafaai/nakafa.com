@@ -9,7 +9,8 @@ import {
   makeDeployment,
 } from "@repo/backend/scripts/nina/deployment";
 import { gateError } from "@repo/backend/scripts/nina/error";
-import { Crypto, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { ChildProcessSpawner } from "effect/process";
 
 /** Gives a failure of the Convex CLI the gate's own type, with the message it already has. */
@@ -31,7 +32,7 @@ export const DeploymentLive = Layer.effect(
     );
     const cli = yield* ConvexCli;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const crypto = yield* Crypto.Crypto;
+    const random = yield* SecureRandom.SecureRandom;
     return makeDeployment(
       (operation, args, sensitiveValues) =>
         runConvex(operation, args, sensitiveValues).pipe(
@@ -45,7 +46,7 @@ export const DeploymentLive = Layer.effect(
             spawner
           )
         ),
-      crypto
+      random
     );
   })
 );

@@ -34,37 +34,32 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@latest",
     "4.1.0",
-    "Effect 4.1.0 is the latest release and is reviewed here, but the cohort stays on 4.0.5 (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services (Digest, SecureRandom, Signature, KeyFormat, Mac, Aead) and no longer bundles crypto in the runtime layers. Every published @nakafa/aksara-contracts (1.0.0, 1.0.1 and 2.0.0) peers effect 4.0.5 exactly, and its dist/hash/digest.js calls Crypto.make from effect when the module loads, so on 4.1 every contracts import fails. nakafa.com therefore moves to 4.1.0 in the change that adopts contracts 3.0.0, the release built on 4.1 (nakafaai/aksara#497), which follows the contracts 2.0 adoption (#1434, #1436); that change is #1524. Checked 30 October 2026.",
-  ],
-  [
-    "@effect/platform-browser@latest",
-    "4.1.0",
-    "@effect/platform-browser follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "Effect 4.1.0 is the latest release, and the cohort is on it (EFFECT_COHORT_VERSION). 4.1.0 replaces effect/Crypto with the effect/crypto services: random bytes and UUIDs come from SecureRandom and digests from Digest, each provided by its Web Crypto layer where it is read, and the scripts' Node entry points provide NodeCrypto.layerSecureRandom, because NodeServices carries no crypto service. @nakafa/aksara-contracts 3.0.0 is the release built on 4.1, and it peers effect 4.1.0 exactly. @effect/platform-browser leaves the repository with this move: its BrowserCrypto layer was its only use. Checked 30 October 2026.",
   ],
   [
     "@effect/platform-node@latest",
     "4.1.0",
-    "@effect/platform-node follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/platform-node follows the Effect cohort, which is on 4.1.0.",
   ],
   [
     "@effect/platform-node-shared@latest",
     "4.1.0",
-    "@effect/platform-node-shared follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/platform-node-shared follows the Effect cohort, which is on 4.1.0.",
   ],
   [
     "@effect/vitest@latest",
     "4.1.0",
-    "@effect/vitest follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/vitest follows the Effect cohort, which is on 4.1.0.",
   ],
   [
     "@effect/ai-openai-compat@latest",
     "4.1.0",
-    "@effect/ai-openai-compat follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/ai-openai-compat follows the Effect cohort, which is on 4.1.0.",
   ],
   [
     "@effect/ai-openrouter@latest",
     "4.1.0",
-    "@effect/ai-openrouter follows the Effect cohort. Its 4.1.0 release peers effect ^4.1.0, so it moves with effect@latest and stays on 4.0.5 until the cohort moves.",
+    "@effect/ai-openrouter follows the Effect cohort, which is on 4.1.0.",
   ],
   [
     "@effect/tsgo@latest",

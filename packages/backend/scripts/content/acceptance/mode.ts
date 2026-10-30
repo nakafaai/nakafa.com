@@ -4,7 +4,6 @@ import {
 } from "@repo/backend/scripts/content/acceptance/error";
 import {
   Array as Arr,
-  type Crypto,
   Effect,
   type FileSystem,
   type Path,
@@ -12,6 +11,7 @@ import {
   Schema,
   type Scope,
 } from "effect";
+import type { SecureRandom } from "effect/crypto";
 import type { HttpClient } from "effect/http";
 import type { ChildProcessSpawner } from "effect/process";
 import type { SocketServer } from "effect/socket";
@@ -32,7 +32,7 @@ export type AcceptanceModeError =
  * them except the scope, which the command line gives each mode while it runs.
  */
 type AcceptanceModeServices =
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner

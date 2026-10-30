@@ -220,9 +220,10 @@ crypto.subtle.digest("SHA-256", bytes);
       Effect.gen(function* () {
         assert.deepStrictEqual(
           yield* findings(
-            `import { Crypto, Effect } from "effect";
+            `import { Effect } from "effect";
+import { SecureRandom } from "effect/crypto";
 export const randomUuid = Effect.gen(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   return yield* crypto.randomUUID;
 });
 `,

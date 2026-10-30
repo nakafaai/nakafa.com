@@ -1,13 +1,12 @@
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
-  Crypto,
   Duration,
   Effect,
   Redacted,
   Schema,
 } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { Base64Url } from "effect/encoding";
 import { HttpClient, HttpClientRequest } from "effect/http";
 
@@ -138,7 +137,7 @@ export const encryptPayload = Effect.fn("notifications.webpush.encrypt")(
     );
     // A random source that fails is a defect of the runtime, not of the push.
     const salt = new Uint8Array(
-      yield* (yield* Crypto.Crypto).randomBytes(16).pipe(Effect.orDie)
+      yield* (yield* SecureRandom.SecureRandom).randomBytes(16)
     );
     const pseudo = yield* hmac(salt, keyMaterial);
     const contentKey = (yield* hmac(
@@ -170,7 +169,7 @@ export const encryptPayload = Effect.fn("notifications.webpush.encrypt")(
     header[20] = serverKey.length;
     return join([header, serverKey, sealed]);
   },
-  Effect.provide(WebCryptoLayer)
+  Effect.provide(SecureRandom.layerWebCrypto)
 );
 
 /**

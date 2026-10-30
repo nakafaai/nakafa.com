@@ -279,7 +279,7 @@ built yet.
   canonical code under `LOGIN_CARD_SECRET`, read through `Config` and never
   printed or stored (declared in `convex/convex.config.ts`, so Convex refuses a
   push to a deployment without it), its issuer, its dates, and `redeemedAt`. The code has ten
-  characters of Crockford base32. It is drawn from Effect's `Crypto` service,
+  characters of Crockford base32. It is drawn from Effect's `SecureRandom` service,
   because the default `Random` is not secure. A card works for `CARD_TERM`, 14
   days. Issuing or reissuing replaces the row, so the old code matches nothing.
   `card.issue` is an Admin's right. A card never goes to a Person who holds the

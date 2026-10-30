@@ -11,7 +11,8 @@ import { GateTurn, StoredMessage } from "@repo/backend/scripts/nina/verdict";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
 import { getFunctionName } from "convex/server";
-import { Context, Crypto, Duration, Effect, Schema } from "effect";
+import { Context, Duration, Effect, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 /** Outlasts the longest turn and its follow-up and nothing more: the learner is removed after. */
 const SESSION_LIFETIME = Duration.minutes(30);
@@ -108,7 +109,7 @@ const readPrinted = Effect.fn("ninaGate.readPrinted")(function* <A, I>(
  */
 export function makeDeployment(
   run: RunConvex<NinaGateError, never>,
-  crypto: Crypto.Crypto
+  random: typeof SecureRandom.SecureRandom.Service
 ) {
   const callAs = Effect.fn("ninaGate.callAs")(function* (
     learner: Learner,
@@ -131,7 +132,7 @@ export function makeDeployment(
 
   return Deployment.of({
     signIn: createLearnerAccount(run, SESSION_LIFETIME).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(SecureRandom.SecureRandom, random),
       Effect.map(({ sessionId, userId }) => ({ authId: userId, sessionId })),
       Effect.mapError((error) => asGateError("Learner account", error))
     ),

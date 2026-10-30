@@ -38,7 +38,6 @@
     "@convex-dev/resend": "^0.2.10",
     "@convex-dev/workflow": "^0.4.10",
     "@convex-dev/workpool": "0.4.14",
-    "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "@nakafa/aksara-contracts": "1.0.0",
     "@polar-sh/sdk": "^1.0.2",

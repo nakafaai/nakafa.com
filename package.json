@@ -19,7 +19,6 @@
       "@confect/core": "10.4.1",
       "@convex-dev/agent": "0.7.8",
       "@convex-dev/ai-sdk-provider": "0.3.0",
-      "@effect/platform-browser": "4.1.0",
       "@effect/platform-bun": "4.1.0",
       "@effect/platform-node": "4.1.0",
       "@effect/vitest": "4.1.0",

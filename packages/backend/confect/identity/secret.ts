@@ -1,9 +1,9 @@
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import {
   CODE_LENGTH,
   codeFromBytes,
 } from "@repo/backend/confect/identity/code";
-import { Config, Crypto, Effect, Redacted } from "effect";
+import { Config, Effect, Redacted } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { Hex } from "effect/encoding";
 
 /** Names what each hash is for, so the same secret never hashes a code for another purpose. */
@@ -12,17 +12,16 @@ const GUARDIAN_CODE_LABEL = "nakafa/identity/guardian-code/v1:";
 const encoder = new TextEncoder();
 
 /**
- * Draws a new canonical code from Effect's `Crypto` service, which reads the
+ * Draws a new canonical code from Effect's `SecureRandom` service, which reads the
  * platform's secure random source. Effect's default `Random` is not secure, so
  * a code never comes from it.
  */
 export const drawCardCode = Effect.fn("identity.code.draw")(
   function* () {
-    const bytes = yield* (yield* Crypto.Crypto).randomBytes(CODE_LENGTH);
+    const bytes = yield* (yield* SecureRandom.SecureRandom).randomBytes(CODE_LENGTH);
     return codeFromBytes(bytes);
   },
-  Effect.orDie,
-  Effect.provide(WebCryptoLayer)
+  Effect.provide(SecureRandom.layerWebCrypto)
 );
 
 /**
@@ -59,18 +58,17 @@ export const hashCardCode = Effect.fn("identity.code.hash")(function* (
 const GUARDIAN_CODE_RANGE = 1_000_000n;
 
 /**
- * Draws a six-digit guardian code from Effect's `Crypto` service. Eight random
+ * Draws a six-digit guardian code from Effect's `SecureRandom` service. Eight random
  * bytes taken modulo a million leave every code within 5.5 x 10^-14 of equally
  * likely, so no draw is repeated.
  */
 export const drawGuardianCode = Effect.fn("identity.guardianCode.draw")(
   function* () {
-    const bytes = yield* (yield* Crypto.Crypto).randomBytes(8);
+    const bytes = yield* (yield* SecureRandom.SecureRandom).randomBytes(8);
     const value = new DataView(bytes.buffer, bytes.byteOffset).getBigUint64(0);
     return String(value % GUARDIAN_CODE_RANGE).padStart(6, "0");
   },
-  Effect.orDie,
-  Effect.provide(WebCryptoLayer)
+  Effect.provide(SecureRandom.layerWebCrypto)
 );
 
 /**

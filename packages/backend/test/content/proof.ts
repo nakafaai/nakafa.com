@@ -90,9 +90,9 @@ export const TEST_PUBLIC_KEY = keys.publicKey
   .toString();
 
 /**
- * Signs one canonical message with the technical test key. Web Crypto signs
- * only asynchronously and Effect's `Crypto` has no signing, so Node's
- * synchronous Ed25519 signs, which the fixtures built at module load need.
+ * Signs one canonical message with the technical test key. Web Crypto and
+ * Effect's `Signature` sign only asynchronously, so Node's synchronous Ed25519
+ * signs, which the fixtures built at module load need.
  */
 function signTestMessage(message: string) {
   return Ed25519SignatureSchema.make(

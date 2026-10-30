@@ -1,4 +1,3 @@
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -8,7 +7,8 @@ import { deriveKeys, open, seal } from "@repo/backend/confect/vault/cipher";
 import { readRing } from "@repo/backend/confect/vault/ring";
 import { VaultError } from "@repo/backend/confect/vault/schema";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Clock, Crypto, Effect, HashMap, Option } from "effect";
+import { Clock, Effect, HashMap, Option } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 /** Bytes in every key that a root key wraps: a learner's key and a school's key. */
 const KEY_BYTES = 32;
@@ -154,9 +154,7 @@ export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
   if (!user || user.deletedAt !== undefined) {
     return yield* new VaultError({ reason: "key" });
   }
-  const key = yield* (yield* Crypto.Crypto)
-    .randomBytes(KEY_BYTES)
-    .pipe(Effect.orDie);
+  const key = yield* (yield* SecureRandom.SecureRandom).randomBytes(KEY_BYTES);
   yield* (yield* DatabaseWriter)
     .table("vaultKeys")
     .insert({
@@ -167,7 +165,7 @@ export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
     })
     .pipe(Effect.orDie);
   return { ...(yield* deriveKeys(key)), userId };
-}, Effect.provide(WebCryptoLayer));
+}, Effect.provide(SecureRandom.layerWebCrypto));
 
 /**
  * Creates generation 1 of a school's key: 32 random bytes, stored only wrapped
@@ -178,9 +176,7 @@ export const createTenantKey = Effect.fn("vault.keys.createTenant")(function* (
   tenantId: TenantId
 ) {
   const ring = yield* readRing();
-  const key = yield* (yield* Crypto.Crypto)
-    .randomBytes(KEY_BYTES)
-    .pipe(Effect.orDie);
+  const key = yield* (yield* SecureRandom.SecureRandom).randomBytes(KEY_BYTES);
   yield* (yield* DatabaseWriter)
     .table("tenantKeys")
     .insert({
@@ -195,7 +191,7 @@ export const createTenantKey = Effect.fn("vault.keys.createTenant")(function* (
       ),
     })
     .pipe(Effect.orDie);
-}, Effect.provide(WebCryptoLayer));
+}, Effect.provide(SecureRandom.layerWebCrypto));
 
 /** Finds the one row of the connector key, or null while no Google account has been blinded. */
 const findConnectorKey = Effect.fn("vault.keys.findConnector")(function* () {
@@ -232,9 +228,7 @@ export const ensureConnectorKeys = Effect.fn("vault.keys.ensureConnector")(
       );
       return yield* deriveKeys(key);
     }
-    const key = yield* (yield* Crypto.Crypto)
-      .randomBytes(KEY_BYTES)
-      .pipe(Effect.orDie);
+    const key = yield* (yield* SecureRandom.SecureRandom).randomBytes(KEY_BYTES);
     yield* (yield* DatabaseWriter)
       .table("connectorKeys")
       .insert({
@@ -246,7 +240,7 @@ export const ensureConnectorKeys = Effect.fn("vault.keys.ensureConnector")(
       .pipe(Effect.orDie);
     return yield* deriveKeys(key);
   },
-  Effect.provide(WebCryptoLayer)
+  Effect.provide(SecureRandom.layerWebCrypto)
 );
 
 /**

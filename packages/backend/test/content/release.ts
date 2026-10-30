@@ -1,4 +1,4 @@
-import { layer as nodeCryptoLayer } from "@effect/platform-node/NodeCrypto";
+import { layerDigest } from "@effect/platform-node/NodeCrypto";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
@@ -35,7 +35,8 @@ import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Crypto, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+import { Digest } from "effect/crypto";
 import { Hex } from "effect/encoding";
 
 type ArtifactLocaleCode = typeof ArtifactLocaleSchema.Encoded;
@@ -63,15 +64,15 @@ export function testArticleGraph(
 }
 /**
  * Hashes one canonical technical wire value with the production algorithm. The
- * Node layer of Effect's `Crypto` computes a digest synchronously, which the
+ * Node layer of Effect's `Digest` computes a digest synchronously, which the
  * fixtures built at module load need, and it is not the Web Crypto layer that
  * production hashes with.
  */
 export function testTextHash(value: string) {
   const digest = Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
-    return yield* crypto.digest("SHA-256", new TextEncoder().encode(value));
-  }).pipe(Effect.provide(nodeCryptoLayer), Effect.runSync);
+    const sha = yield* Digest.Digest;
+    return yield* sha.digest(Digest.sha256, new TextEncoder().encode(value));
+  }).pipe(Effect.provide(layerDigest), Effect.runSync);
   return Sha256HashSchema.make(`sha256:${Hex.encode(digest)}`);
 }
 /** Creates a complete technical renderer snapshot with no lesson content. */

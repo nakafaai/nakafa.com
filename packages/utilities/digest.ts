@@ -1,19 +1,19 @@
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
-import { Array as Arr, Crypto, Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
+import { Digest } from "effect/crypto";
 import { Hex } from "effect/encoding";
 
 /**
  * Computes the SHA-256 digest bytes of one byte sequence through Effect's
- * `Crypto` service. The Web Crypto layer serves every runtime Nakafa runs in:
- * browsers, Node and Convex. A failed digest fails with `PlatformError`, and
- * each caller maps it to its own typed error.
+ * `Digest` service. The Web Crypto layer serves every runtime Nakafa runs in:
+ * browsers, Node and Convex. A runtime whose digest fails is a defect, not an
+ * expected failure, as Effect's `Digest` defines it.
  */
 export const sha256 = Effect.fn("utilities.sha256")(function* (
   data: Uint8Array
 ) {
-  const crypto = yield* Crypto.Crypto;
-  return yield* crypto.digest("SHA-256", data);
-}, Effect.provide(WebCryptoLayer));
+  const digest = yield* Digest.Digest;
+  return yield* digest.digest(Digest.sha256, data);
+}, Effect.provide(Digest.layerWebCrypto));
 
 /**
  * Computes the lower-case hexadecimal SHA-256 digest of the UTF-8 bytes of one

@@ -127,7 +127,7 @@ export const RULES = {
   },
   "node-module": {
     message:
-      "use FileSystem, Path, and ChildProcess from effect with NodeServices from @effect/platform-node, Crypto from effect for digests and random bytes, Web Crypto for keys, signatures, and HMACs, Uint8Array with effect/encoding for bytes, ConfigProvider.fromDotEnvContents for .env text, NodeSocketServer and NodeHttpServer from @effect/platform-node for ports and servers, and navigator.hardwareConcurrency for the core count, instead of node:fs, node:path, node:child_process, node:crypto, node:buffer, node:util, node:os, node:net, or node:http.",
+      "use FileSystem, Path, and ChildProcess from effect with NodeServices from @effect/platform-node, the effect/crypto services (SecureRandom, Digest, Mac, Signature, KeyFormat, Aead) or Web Crypto for random bytes, digests, HMACs, signatures, and keys, Uint8Array with effect/encoding for bytes, ConfigProvider.fromDotEnvContents for .env text, NodeSocketServer and NodeHttpServer from @effect/platform-node for ports and servers, and navigator.hardwareConcurrency for the core count, instead of node:fs, node:path, node:child_process, node:crypto, node:buffer, node:util, node:os, node:net, or node:http.",
     scope: "code",
   },
   "object-helper": {
@@ -147,7 +147,7 @@ export const RULES = {
   },
   random: {
     message:
-      "draw random values from Random in effect instead of Math.random, and draw a UUID with randomUuid from @repo/utilities/uuid, which reads Effect's Crypto service, instead of crypto.randomUUID.",
+      "draw random values from Random in effect instead of Math.random, and draw a UUID with randomUuid from @repo/utilities/uuid, which reads Effect's SecureRandom service, instead of crypto.randomUUID.",
     scope: "code",
   },
   switch: {

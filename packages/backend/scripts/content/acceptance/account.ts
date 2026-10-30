@@ -1,5 +1,6 @@
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Clock, Crypto, Duration, Effect, Schema, String as Str } from "effect";
+import { Clock, Duration, Effect, Schema, String as Str } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { Base64Url, Hex } from "effect/encoding";
 
 /** A document the Convex CLI printed after it created a Better Auth row. */
@@ -121,7 +122,7 @@ export const createLearnerAccount = Effect.fn(
   address?: string
 ) {
   const now = yield* Clock.currentTimeMillis;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const id = Hex.encode(yield* crypto.randomBytes(8));
   const token = Base64Url.encode(yield* crypto.randomBytes(32));
   const user = {
@@ -211,7 +212,7 @@ export const openLearnerAccount = Effect.fn(
     return yield* createLearnerAccount(run, lifetime, address);
   }
   const now = yield* Clock.currentTimeMillis;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const token = Base64Url.encode(yield* crypto.randomBytes(32));
   const opened = yield* writeSession(run, {
     lifetime,

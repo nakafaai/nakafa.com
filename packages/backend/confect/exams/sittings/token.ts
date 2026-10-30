@@ -1,11 +1,11 @@
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import type { TenantKeys } from "@repo/backend/confect/vault/keys";
 import {
   blindText,
   openText,
   sealText,
 } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Crypto, Effect, Random } from "effect";
+import { Array as Arr, Effect, Random } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { Base64Url } from "effect/encoding";
 
 /**
@@ -17,7 +17,7 @@ const TOKEN_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 /** A sitting token has six characters, such as `K7Q4XM` (ADR 0013). */
 const TOKEN_LENGTH = 6;
 
-/** Bytes of the seed that starts a token's random generator. `Crypto` draws them. */
+/** Bytes of the seed that starts a token's random generator. `SecureRandom` draws them. */
 const SEED_BYTES = 32;
 
 /** One character of a token, chosen evenly from the alphabet. */
@@ -28,7 +28,7 @@ const character = Random.nextIntBetween(0, TOKEN_ALPHABET.length, {
 /**
  * Draws a token from a random generator seeded with `seed`, so the same seed always
  * draws the same token. The seed must come from a cryptographic source, which is why
- * `drawToken` takes it from `Crypto`.
+ * `drawToken` takes it from `SecureRandom`.
  */
 export const drawTokenFrom = (seed: Uint8Array) =>
   Effect.all(Arr.makeBy(TOKEN_LENGTH, () => character)).pipe(
@@ -37,14 +37,14 @@ export const drawTokenFrom = (seed: Uint8Array) =>
   );
 
 /**
- * Draws a new sitting token. The random generator is seeded with bytes from `Crypto`,
- * so the token is as strong as the platform's random source. A failed random source
- * fails with `PlatformError`.
+ * Draws a new sitting token. The random generator is seeded with bytes from
+ * `SecureRandom`, so the token is as strong as the platform's random source. A failed
+ * random source is a defect.
  */
 export const drawToken = Effect.fn("exams.sittings.drawToken")(function* () {
-  const seed = yield* (yield* Crypto.Crypto).randomBytes(SEED_BYTES);
+  const seed = yield* (yield* SecureRandom.SecureRandom).randomBytes(SEED_BYTES);
   return yield* drawTokenFrom(seed);
-}, Effect.provide(WebCryptoLayer));
+}, Effect.provide(SecureRandom.layerWebCrypto));
 
 /**
  * A token as the server compares it: without a space at either end, and in upper case,

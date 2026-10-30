@@ -21,8 +21,8 @@ export const SESSION_LIFETIME = Duration.hours(24);
 
 /**
  * Writes the session cookie of one session token, mode 600, for a browser test
- * to send. Better Auth signs its cookie with HMAC-SHA256, which Effect's Crypto
- * does not provide, so Better Auth's own signature function signs it.
+ * to send. Better Auth signs its cookie with HMAC-SHA256 in its own encoding, so
+ * Better Auth's own signature function signs it and the cookie is the one it reads.
  */
 export const writeSessionCookie = Effect.fn("contentAcceptance.writeCookie")(
   function* (output: string, token: string) {

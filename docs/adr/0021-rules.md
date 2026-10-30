@@ -171,7 +171,7 @@ A module counts by its name, so `fs-extra`, `crypto-js`, and `./fs` stay.
 | Node module | Replacement |
 | --- | --- |
 | `fs`, `path`, `child_process` | `FileSystem`, `Path`, and `ChildProcess` from `effect`, provided by `NodeServices.layer` |
-| `crypto` | `Crypto` from `effect` for digests and random bytes; Web Crypto (`crypto.subtle`) for keys, signatures, and HMACs |
+| `crypto` | the `effect/crypto` services (`SecureRandom`, `Digest`, `Mac`, `Signature`, `KeyFormat`, `Aead`) or Web Crypto (`crypto.subtle`) for random bytes, digests, HMACs, signatures, and keys |
 | `buffer` | `Uint8Array`, `TextEncoder`, and `effect/encoding` |
 | `util` | `ConfigProvider.fromDotEnvContents` for the one function Nakafa used, `parseEnv` |
 | `os` | `navigator.hardwareConcurrency` for the core count, and `FileSystem.makeTempDirectoryScoped` for a temporary folder |
@@ -244,9 +244,9 @@ platform layer builds the server itself, the construction goes away.
 ### A synchronous Ed25519 signer
 
 The imports of `generateKeyPairSync` and `sign` from `node:crypto` stay in a
-fixture that signs with Ed25519 as its module loads. Effect's `Crypto` has
-digests and random bytes and no signing (4.0.5, `packages/effect/src/Crypto.ts`), and
-`crypto.subtle.sign` returns a Promise. The technical signed artifacts,
+fixture that signs with Ed25519 as its module loads. Effect's `Signature`
+signs only as an Effect on Web Crypto (4.1.0, `packages/effect/src/crypto/Signature.ts`),
+and `crypto.subtle.sign` returns a Promise. The technical signed artifacts,
 releases, and bundles of the backend tests come from
 `packages/backend/test/content/proof.ts`: 77 calls in 40 modules, 15 of them
 declared at the top level of a module, so signing them asynchronously would
@@ -260,7 +260,7 @@ change every one of those modules. All of these hold:
 - The module makes at least one such call.
 
 Hashes, HMACs, random bytes, and every other key type are still reported, so
-they go to `Crypto` and Web Crypto. Two modules use the construction:
+they go to the `effect/crypto` services and Web Crypto. Two modules use the construction:
 `proof.ts` and `confect/contentRelease/ingress/stage.test.ts`. When the signed
 fixtures become Effects, the construction goes away.
 

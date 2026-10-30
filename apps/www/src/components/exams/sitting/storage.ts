@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Predicate } from "effect";
 import { KeyValueStore } from "effect/persistence";
 
 /**
@@ -15,10 +15,10 @@ const storageFailure = (method: string, key?: string) => (cause: unknown) =>
 
 /**
  * The browser's local storage as an Effect key-value store, which keeps a student's unsent answers and
- * flags on this device across reloads. It is the layer that `@effect/platform-browser` names
- * `layerLocalStorage` in Effect 4.0.5, written here so the web app needs no further package. A browser
- * that refuses its storage fails the store's calls with a `KeyValueStoreError`, so the caller reports it
- * and the page still answers.
+ * flags on this device across reloads. Effect's own `KeyValueStore.layerStorage` reads the storage
+ * synchronously when the layer builds, so a browser that refuses it would end the sitting with a
+ * defect. Here a browser that refuses its storage fails the store's calls with a `KeyValueStoreError`,
+ * so the caller reports it and the page still answers.
  */
 export const sittingStorage = Layer.effect(KeyValueStore.KeyValueStore)(
   Effect.map(
@@ -37,6 +37,15 @@ export const sittingStorage = Layer.effect(KeyValueStore.KeyValueStore)(
             catch: storageFailure("get", key),
             try: () => storage.getItem(key) ?? undefined,
           }),
+        // An index past the last key reads null, which also covers an empty storage.
+        keys: Effect.try({
+          catch: storageFailure("keys"),
+          try: () =>
+            Arr.filter(
+              Arr.makeBy(storage.length, (index) => storage.key(index)),
+              Predicate.isNotNull
+            ),
+        }),
         remove: (key) =>
           Effect.try({
             catch: storageFailure("remove", key),

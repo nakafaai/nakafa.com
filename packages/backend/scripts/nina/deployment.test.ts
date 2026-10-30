@@ -12,12 +12,12 @@ import {
 } from "@repo/backend/scripts/nina/error";
 import {
   Array as Arr,
-  Crypto,
   Effect,
   MutableList,
   Option,
   Schema,
 } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
@@ -61,9 +61,11 @@ const onlyCall = (calls: MutableList.MutableList<Call>) =>
 const argumentAt = (args: readonly string[], index: number) =>
   Option.getOrThrow(Arr.get(args, index));
 
-/** Builds the deployment over a scripted runner and the real Crypto service. */
+/** Builds the deployment over a scripted runner and the real secure random source. */
 const deploymentOver = (run: RunConvex<NinaGateError, never>) =>
-  Effect.map(Crypto.Crypto, (crypto) => makeDeployment(run, crypto));
+  Effect.map(SecureRandom.SecureRandom, (random) =>
+    makeDeployment(run, random)
+  ).pipe(Effect.provide(SecureRandom.layerWebCrypto));
 
 const Identity = Schema.fromJsonString(
   Schema.Struct({ sessionId: Schema.String, subject: Schema.String })

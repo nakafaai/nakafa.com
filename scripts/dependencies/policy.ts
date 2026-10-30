@@ -162,11 +162,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   {
     approved: "catalog:",
-    dependency: "@effect/platform-browser",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "catalog:",
     dependency: "@effect/platform-node",
     minimumDeclarations: 1,
   },

@@ -1,14 +1,14 @@
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import { GoogleFailed } from "@repo/backend/confect/connectors/errors";
+import { sha256 } from "@repo/utilities/digest";
 import {
   Array as Arr,
-  Crypto,
   Duration,
   Effect,
   Option,
   Redacted,
   Schema,
 } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { Base64Url } from "effect/encoding";
 import {
   HttpClient,
@@ -61,20 +61,20 @@ const TokenRefusal = Schema.fromJsonString(
  * until the code is exchanged.
  */
 export const pkcePair = Effect.fn("connectors.google.pkce")(function* () {
-  const crypto = yield* Crypto.Crypto;
-  const verifier = Base64Url.encode(yield* crypto.randomBytes(RANDOM_BYTES));
+  const random = yield* SecureRandom.SecureRandom;
+  const verifier = Base64Url.encode(yield* random.randomBytes(RANDOM_BYTES));
   const challenge = Base64Url.encode(
-    yield* crypto.digest("SHA-256", new TextEncoder().encode(verifier))
+    yield* sha256(new TextEncoder().encode(verifier))
   );
   return { challenge, verifier };
-}, Effect.provide(WebCryptoLayer));
+}, Effect.provide(SecureRandom.layerWebCrypto));
 
 /** A new state of one connect: 43 random characters that the callback brings back. */
 export const newState = Effect.fn("connectors.google.state")(function* () {
   return Base64Url.encode(
-    yield* (yield* Crypto.Crypto).randomBytes(RANDOM_BYTES)
+    yield* (yield* SecureRandom.SecureRandom).randomBytes(RANDOM_BYTES)
   );
-}, Effect.provide(WebCryptoLayer));
+}, Effect.provide(SecureRandom.layerWebCrypto));
 
 /**
  * The address that sends the user to Google's consent screen for one connection:

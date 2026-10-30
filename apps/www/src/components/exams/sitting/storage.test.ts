@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Effect, MutableHashMap, Option } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import { sittingStorage } from "@/components/exams/sitting/storage";
 
@@ -9,6 +9,8 @@ function memoryStorage() {
   return {
     clear: () => MutableHashMap.clear(values),
     getItem: (key: string) => Option.getOrNull(MutableHashMap.get(values, key)),
+    key: (index: number) =>
+      Option.getOrNull(Arr.get(Arr.fromIterable(MutableHashMap.keys(values)), index)),
     get length() {
       return MutableHashMap.size(values);
     },
@@ -46,8 +48,12 @@ describe("sittingStorage", () => {
       yield* store.remove("kept");
       const removed = yield* store.get("kept");
       yield* store.set("other", "text");
+      const keys = yield* store.keys;
       yield* store.clear;
-      expect({ missing, removed, size, value }).toEqual({
+      const cleared = yield* store.keys;
+      expect({ cleared, keys, missing, removed, size, value }).toEqual({
+        cleared: [],
+        keys: ["other"],
         missing: undefined,
         removed: undefined,
         size: 1,
@@ -96,6 +102,25 @@ describe("sittingStorage", () => {
         });
         expect(error).not.toHaveProperty("key");
       })
+  );
+
+  it.effect("names the listing that the browser refuses", () =>
+    Effect.gen(function* () {
+      vi.stubGlobal("localStorage", {
+        ...memoryStorage(),
+        length: 1,
+        key: () => {
+          throw new Error("blocked");
+        },
+      });
+      const error = yield* failureOf(
+        Effect.flatMap(KeyValueStore.KeyValueStore, (store) => store.keys)
+      );
+      expect(error).toMatchObject({
+        _tag: "KeyValueStoreError",
+        method: "keys",
+      });
+    })
   );
 
   it.effect(
