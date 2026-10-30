@@ -130,18 +130,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "posthog-node@latest",
-    "5.60.1",
-    "posthog-node 5.57.2 and later read the OpenTelemetry API from its global symbol instead of importing @opentelemetry/api, and 5.59 moves the OpenTelemetry integration to the separate posthog-node/otel entrypoint, so the Convex bundle of @posthog/convex resolves without the optional peer. The override that held the component on 5.55.1 is gone, and the component and the analytics package share one release. 5.60.1 is the latest release and becomes one day old at 2026-10-30 17:51 UTC; the release-age gate resolves 5.57.2 until then.",
-  ],
-  [
-    "@biomejs/biome@latest",
-    "2.6.4",
-    "Formatting is reviewed as one cohort with Ultracite. Biome stays on 2.5.15. Ultracite 8.1.0 peers Biome ^2.6.2 and renames useSortedClasses to useTailwindSortedClasses, so the 2.6 line loads now, but the cohort also sorts classes in Tailwind CSS v4 order and turns on the rules that Biome 2.6 made stable. Measured on 30 October 2026 with Biome 2.6.4 and Ultracite 8.1.0: 1,620 findings in about 550 files, among them 733 class lists to re-sort in 290 files, 410 regular expressions without the unicode flag, 177 unnamed capture groups, 101 hook factory components (noComponentHookFactories) and 83 imports after code. That change touches most of the files that the open pull requests touch, so the hold lifts in its own change: one that applies Ultracite's fixes, clears the remaining findings by hand, and lands right after a merge train, when the fewest pull requests are open.",
-  ],
-  [
-    "ultracite@latest",
-    "8.1.0",
-    "Ultracite 8.1 moves with Biome 2.6, as the Biome entry describes: it renames the class sort rule, sorts the class lists of cva variants, turns on the newly stable Biome rules that match its Oxlint presets, and formats YAML and SCSS. Its ESLint, Oxlint, Oxfmt and Zed changes do not apply to this Biome setup.",
+    "5.61.1",
+    "posthog-node 5.57.2 and later read the OpenTelemetry API from its global symbol instead of importing @opentelemetry/api, and 5.59 moves the OpenTelemetry integration to the separate posthog-node/otel entrypoint, so the Convex bundle of @posthog/convex resolves without the optional peer. The override that held the component on 5.55.1 is gone, and the component and the analytics package share one release. 5.61.1 is the latest release and becomes one day old at 2026-10-31 14:56 UTC; the release-age gate resolves 5.60.1 until then.",
   ],
   ["@types/node@24", "24.19.2", "Declarations remain on the Node 24 line."],
   ["node@24", "24.22.2", "The repository supports the Node 24 runtime line."],
