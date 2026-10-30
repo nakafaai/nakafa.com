@@ -1,4 +1,4 @@
-# ADR 0037: Nakafa Runs On Cloudflare Workers Free Through Alchemy
+# ADR 0037: Nakafa Runs On Cloudflare Workers Through Alchemy
 
 ## Status
 
@@ -6,6 +6,9 @@ Accepted on 24 October 2026. It supersedes the hosting, delivery, and deployment
 decisions in ADR 0007, ADR 0008, ADR 0021 (the deployment policy), and ADR 0029
 (the edge Workers). Each of those ADRs carries a note that points here. The Vercel
 projects were deleted on 25 October 2026, when Nakafa moved to Cloudflare.
+
+Amended on 30 October 2026: the account runs on Workers Paid, and every Worker
+declares a CPU cap (decision 10).
 
 ## Context
 
@@ -20,6 +23,13 @@ Measured on 23 October 2026: Workers Free allows 100,000 Worker requests a day,
 10 ms of CPU per request, 128 MB of memory, 50 subrequests, and 20,000 static
 asset files per Worker version. Static asset requests are free, unlimited, and
 never invoke a Worker.
+
+The 10 ms did not hold. In the 24 hours before 10:00 UTC on 30 October 2026, 463
+requests ended in `exceededCpu`, which the visitor sees as Error 1102, 47 of them
+on the sign-in pages. A cold isolate evaluates the lazy module graph of a server
+function in 60 to 95 ms, and the auth relay and the session read reached 61 to
+63 ms. Fitting every such request under 10 ms would have needed a special entry
+for each, which is a workaround and not a better design.
 
 ## Decision
 
@@ -132,6 +142,23 @@ never invoke a Worker.
      touching the cloud, and the next deploy adopts each Worker by its
      `alchemy:stack`, `alchemy:stage`, and `alchemy:id` tags. A Durable Object
      namespace keeps the name it was created with; only its owning Worker changes.
+
+10. **Workers Paid, with a CPU cap on every Worker.** The owner moved the account
+    to Workers Paid on 30 October 2026. It costs $5 a month and includes 10 million
+    requests and 30 million CPU milliseconds a month; beyond them, a million
+    requests cost $0.30 and a million CPU milliseconds $0.02. From 23 to 30 October
+    the web Worker ran 101,560 invocations with 2.0 million CPU milliseconds, which
+    is about 4.4% of the included requests and 29% of the included CPU in a month
+    at that rate, and 6.8% and 42% at the rate of 29 to 30 October. The caps in
+    `apps/www/deploy/stage.ts` stop a runaway invocation before it bills: 2,000 ms
+    for the web Worker, whose p99.9 was 660 ms and maximum 1,420 ms; 500 ms for the
+    API, MCP, and CAS front relays, which used at most 29 ms; and 10,000 ms for the
+    CAS engine, whose solves reached p99.9 2,736 ms on its probe stage. A budget
+    alert at $1 warns before any charge beyond the plan; it lives in the dashboard,
+    because the Cloudflare alerting API, and so Alchemy, has no budget alert type
+    (`billing_usage_alert` counts a product's usage, not money). Static first
+    (decision 1) stays, because a static asset answers faster than any Worker and
+    costs neither a request nor CPU.
 
 ## Consequences
 

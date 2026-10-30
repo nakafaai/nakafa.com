@@ -1,4 +1,5 @@
 import type {
+  WorkerLimits,
   WorkerObservability,
   WorkerPlacement,
   WorkerRouteConfig,
@@ -40,6 +41,20 @@ export function workerName(service: string, stage: string) {
   }
   return `nakafa-${service}-${stage}`;
 }
+
+/**
+ * The CPU caps that stop a runaway invocation before it bills on Workers Paid
+ * (ADR 0037). Each is a multiple of what the Worker used from 23 to 30 October
+ * 2026 in Workers Logs, so no answer that ran then would stop:
+ *
+ * - web: 101,560 invocations, p99.9 660 ms, and the maximum 1,420 ms on 30 October;
+ * - the relays (api, mcp, the CAS front): at most 29 ms over 430 invocations;
+ * - the CAS engine: at most 608 ms over 20 solves in production, and p99.9
+ *   2,736 ms over 1,400 solves on its probe stage, where a symbolic solve is the work.
+ */
+export const WEB_LIMITS: WorkerLimits = { cpuMs: 2000 };
+export const RELAY_LIMITS: WorkerLimits = { cpuMs: 500 };
+export const CAS_ENGINE_LIMITS: WorkerLimits = { cpuMs: 10_000 };
 
 /** Workers Logs record every invocation, and nothing is sampled away. */
 export const WORKER_OBSERVABILITY: WorkerObservability = {
