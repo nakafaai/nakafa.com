@@ -52,7 +52,6 @@ export function Language({ compact = false }: { compact?: boolean }) {
         <DropdownMenuGroup>
           {Arr.map(languages, (language) => (
             <DropdownMenuItem
-              className="cursor-pointer"
               disabled={isPending}
               key={language.value}
               onClick={(event) => {
