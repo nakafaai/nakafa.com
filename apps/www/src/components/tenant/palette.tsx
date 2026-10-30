@@ -29,7 +29,7 @@ import { CommandKeys } from "@/components/search/keys";
 import { withMarks } from "@/components/tenant/classes/marks";
 import { useClassesQuery } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
-import { settingsSectionIcons } from "@/components/tenant/settings/nav";
+import { settingsSectionIcons } from "@/components/tenant/settings/icons";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 import { schoolSettingsGroups } from "@/lib/settings/school";
