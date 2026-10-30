@@ -78,7 +78,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   const seats = proctor.getByRole("list", { name: "Student seats" });
   // The seat in its list: once it opens the learner's panel, the panel's More actions button names
   // the learner too.
-  const seat = seats.getByRole("button", { name: LEARNER_NAME });
+  const seat = seats.getByRole("link", { name: LEARNER_NAME });
   await expect(async () => {
     await seats.getByRole("listitem").last().scrollIntoViewIfNeeded();
     await expect(seat).toBeVisible({ timeout: 1000 });
