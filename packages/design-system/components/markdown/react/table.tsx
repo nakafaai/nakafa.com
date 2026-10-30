@@ -13,11 +13,13 @@ import {
   tableFrameVariants,
   tableHeadCellVariants,
   tableRowVariants,
+  tableVariants,
 } from "@repo/design-system/lib/prose";
 
 export const reactTableComponents: ReactMarkdownComponents = {
   table: ({ children, node: _node, ...props }) => (
     <Table
+      className={tableVariants()}
       containerClassName={tableFrameVariants()}
       data-nakafa="table"
       {...props}
@@ -49,7 +51,7 @@ export const reactTableComponents: ReactMarkdownComponents = {
     </TableHead>
   ),
   thead: ({ children, node: _node, ...props }) => (
-    <TableHeader className="border-b" data-nakafa="table-header" {...props}>
+    <TableHeader data-nakafa="table-header" {...props}>
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),
