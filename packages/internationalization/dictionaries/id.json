@@ -497,7 +497,6 @@
     "pair-hint": "Setiap jawaban berpasangan dengan satu pernyataan, dan kunci tersimpan setelah semua pernyataan punya jawaban.",
     "pair-statement": "Jawaban untuk pernyataan {number}",
     "template-table": "Tabel benar-salah",
-    "table-columns": "Kolom",
     "column-of": "Soal {number}, kolom {name}",
     "column-placeholder": "Kolom",
     "cell-of": "Kolom untuk pernyataan {name} soal {number}",
@@ -646,6 +645,7 @@
     "period-end-placeholder": "Pilih hari terakhir",
     "period-add-footer": "Periode baru dimulai sebagai direncanakan.",
     "period-rename": "Ganti nama",
+    "period-rename-description": "Kelas dan tanggal di periode ini tetap sama.",
     "period-rename-save": "Simpan",
     "periods-empty": "Belum ada periode.",
     "periods-search": "Cari periode",
@@ -660,6 +660,7 @@
     "cohort-active": "Aktif",
     "cohort-archived": "Diarsipkan",
     "cohort-rename": "Ganti nama",
+    "cohort-rename-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
     "cohort-rename-save": "Simpan",
     "cohort-archive": "Arsipkan",
     "cohort-add-footer": "Rombel baru langsung aktif.",
@@ -1328,6 +1329,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "undo": "Urungkan",
     "arabic-fatha": "Fathah",
     "arabic-kasra": "Kasrah",
     "arabic-damma": "Dammah",
@@ -1340,6 +1342,8 @@
     "load-error": "Data ini belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
+    "month": "Bulan",
+    "year": "Tahun",
     "breadcrumb": "Jalur navigasi",
     "sidebar": "Sidebar",
     "toggle-sidebar": "Buka atau tutup sidebar",
@@ -1953,7 +1957,6 @@
     "bullets": "Daftar berbutir",
     "numbers": "Daftar bernomor",
     "tasks": "Daftar tugas",
-    "lists": "Daftar",
     "quote": "Kutipan",
     "code-block": "Blok kode",
     "divider": "Garis pemisah",
@@ -1975,15 +1978,25 @@
     "formula": "Rumus",
     "equation": "Persamaan",
     "formula-edit": "Ubah rumus",
+    "formula-keyboard": "Keyboard rumus",
+    "formula-numbers": "Angka",
+    "formula-functions": "Fungsi",
+    "formula-symbols": "Simbol",
+    "formula-greek": "Huruf Yunani",
+    "formula-left": "Geser ke kiri",
+    "formula-right": "Geser ke kanan",
+    "formula-delete": "Hapus",
     "formula-invalid": "Rumus ini tidak dapat digambar:",
     "latex": "LaTeX",
     "image": "Gambar",
     "image-add": "Tambah gambar",
+    "image-add-description": "Gambar tampil di soal setelah ditambahkan.",
     "image-alt": "Teks alternatif",
     "image-alt-hint": "Yang perlu diketahui siswa yang tidak dapat melihat gambar",
     "image-cancel": "Batal",
     "image-delete": "Hapus gambar",
     "image-edit": "Ubah teks alternatif",
+    "image-edit-description": "Gambarnya tetap, hanya teks alternatifnya yang berubah.",
     "image-save": "Simpan"
   },
   "Memory": {
@@ -2237,9 +2250,6 @@
     "admitted-elsewhere": {
       "title": "Nina sedang menjawab di chat baru"
     },
-    "open-chat": {
-      "title": "Buka chat"
-    },
     "sign-out-error": {
       "title": "Kamu belum bisa keluar.",
       "description": "Periksa koneksimu, lalu coba lagi."
@@ -2263,9 +2273,6 @@
     "school-save-error": {
       "title": "Jawabanmu belum tersimpan.",
       "description": "Coba lagi."
-    },
-    "undo": {
-      "title": "Batalkan pengarsipan"
     },
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."

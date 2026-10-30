@@ -497,7 +497,6 @@
     "pair-hint": "Each answer pairs one statement, and the key saves once every statement has one.",
     "pair-statement": "Answer for statement {number}",
     "template-table": "True or false table",
-    "table-columns": "Columns",
     "column-of": "Question {number}, column {name}",
     "column-placeholder": "Column",
     "cell-of": "Column for statement {name} of question {number}",
@@ -646,6 +645,7 @@
     "period-end-placeholder": "Choose the last day",
     "period-add-footer": "A new period starts as planned.",
     "period-rename": "Rename",
+    "period-rename-description": "The period keeps its classes and dates.",
     "period-rename-save": "Save",
     "periods-empty": "No period yet.",
     "periods-search": "Find a period",
@@ -660,6 +660,7 @@
     "cohort-active": "Active",
     "cohort-archived": "Archived",
     "cohort-rename": "Rename",
+    "cohort-rename-description": "The class keeps its students, teachers and grades.",
     "cohort-rename-save": "Save",
     "cohort-archive": "Archive",
     "cohort-add-footer": "A new cohort starts active.",
@@ -1328,6 +1329,7 @@
     "classification": "Education"
   },
   "Common": {
+    "undo": "Undo",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -1340,6 +1342,8 @@
     "load-error": "We could not load this data.",
     "part-denied": "This part of the school is not open to you.",
     "loading": "Loading",
+    "month": "Month",
+    "year": "Year",
     "breadcrumb": "Breadcrumb",
     "sidebar": "Sidebar",
     "toggle-sidebar": "Toggle Sidebar",
@@ -1953,7 +1957,6 @@
     "bullets": "Bulleted list",
     "numbers": "Numbered list",
     "tasks": "Task list",
-    "lists": "Lists",
     "quote": "Quote",
     "code-block": "Code block",
     "divider": "Divider",
@@ -1975,15 +1978,25 @@
     "formula": "Formula",
     "equation": "Equation",
     "formula-edit": "Edit formula",
+    "formula-keyboard": "Formula keyboard",
+    "formula-numbers": "Numbers",
+    "formula-functions": "Functions",
+    "formula-symbols": "Symbols",
+    "formula-greek": "Greek letters",
+    "formula-left": "Move left",
+    "formula-right": "Move right",
+    "formula-delete": "Delete",
     "formula-invalid": "This formula cannot be drawn:",
     "latex": "LaTeX",
     "image": "Image",
     "image-add": "Add image",
+    "image-add-description": "The image shows in the question once it is added.",
     "image-alt": "Alt text",
     "image-alt-hint": "What a student who cannot see the image needs to know",
     "image-cancel": "Cancel",
     "image-delete": "Delete image",
     "image-edit": "Edit alt text",
+    "image-edit-description": "The image stays and only its alt text changes.",
     "image-save": "Save"
   },
   "Memory": {
@@ -2237,9 +2250,6 @@
     "admitted-elsewhere": {
       "title": "Nina is answering in a new chat"
     },
-    "open-chat": {
-      "title": "Open chat"
-    },
     "sign-out-error": {
       "title": "We could not sign you out.",
       "description": "Check your connection, then try again."
@@ -2263,9 +2273,6 @@
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
-    },
-    "undo": {
-      "title": "Undo archive"
     },
     "school-cohort-archived": {
       "title": "Class archived."

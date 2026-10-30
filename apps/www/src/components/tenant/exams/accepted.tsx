@@ -1,11 +1,17 @@
-import { BadgePlusIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
+  Field,
   FieldDescription,
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@repo/design-system/components/ui/input-group";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -38,8 +44,9 @@ interface AcceptedRowProps {
 }
 
 /**
- * One accepted answer: a field that saves when the teacher leaves it or presses Enter, and an action
- * that takes the answer out. A text the teacher did not change saves nothing.
+ * One accepted answer: a field that saves when the teacher leaves it or presses Enter, with the action
+ * that takes the answer out inside its end, so every answer's field takes the full width. A text the
+ * teacher did not change saves nothing.
  */
 function AcceptedRow({
   editable,
@@ -65,8 +72,8 @@ function AcceptedRow({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Input
+    <InputGroup>
+      <InputGroupInput
         aria-label={label}
         disabled={!editable}
         maxLength={ACCEPTED_LENGTH_MAX}
@@ -82,18 +89,18 @@ function AcceptedRow({
         value={draft ?? text}
       />
       {onRemove === null ? null : (
-        <Button
-          aria-label={removeLabel}
-          disabled={!editable}
-          onClick={onRemove}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-        </Button>
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton
+            aria-label={removeLabel}
+            disabled={!editable}
+            onClick={onRemove}
+            size="icon-xs"
+          >
+            <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+          </InputGroupButton>
+        </InputGroupAddon>
       )}
-    </div>
+    </InputGroup>
   );
 }
 
@@ -111,8 +118,9 @@ interface AcceptedAnswersProps {
 
 /**
  * The key of a short answer, as Google Forms lists the correct answers of a short answer question: one
- * field for each accepted answer, and an action that adds a field. A student's answer that matches one
- * of them after case and extra spaces is correct at once, and any other waits for the teacher to mark.
+ * field for each accepted answer, and an outline action under them that adds a field. A student's answer
+ * that matches one of them after case and extra spaces is correct at once, and any other waits for the
+ * teacher to mark.
  */
 export function AcceptedAnswers({
   accepted,
@@ -126,7 +134,7 @@ export function AcceptedAnswers({
   const canAdd = editable && !adding && accepted.length < ACCEPTED_MAX;
 
   return (
-    <div className="grid gap-2">
+    <Field>
       <FieldTitle>{t("accepted-answers")}</FieldTitle>
       {Arr.map(accepted, (text, index) => (
         <AcceptedRow
@@ -161,19 +169,18 @@ export function AcceptedAnswers({
         />
       ) : null}
       {canAdd ? (
-        <div>
-          <Button
-            onClick={() => setAdding(true)}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons aria-hidden="true" icon={BadgePlusIcon} />
-            {t("accepted-add")}
-          </Button>
-        </div>
+        <Button
+          className="self-start"
+          onClick={() => setAdding(true)}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <HugeIcons aria-hidden="true" icon={PlusSignIcon} />
+          {t("accepted-add")}
+        </Button>
       ) : null}
       <FieldDescription>{t("accepted-hint")}</FieldDescription>
-    </div>
+    </Field>
   );
 }

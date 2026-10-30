@@ -497,7 +497,6 @@
     "pair-hint": "Jede Antwort gehört zu einer Aussage, und der Schlüssel wird gespeichert, sobald jede Aussage eine hat.",
     "pair-statement": "Antwort für Aussage {number}",
     "template-table": "Richtig-oder-falsch-Tabelle",
-    "table-columns": "Spalten",
     "column-of": "Frage {number}, Spalte {name}",
     "column-placeholder": "Spalte",
     "cell-of": "Spalte für Aussage {name} von Frage {number}",
@@ -646,6 +645,7 @@
     "period-end-placeholder": "Letzten Tag wählen",
     "period-add-footer": "Eine neue Periode beginnt als geplant.",
     "period-rename": "Umbenennen",
+    "period-rename-description": "Der Zeitraum behält seine Klassen und Daten.",
     "period-rename-save": "Speichern",
     "periods-empty": "Noch kein Zeitraum.",
     "periods-search": "Zeitraum suchen",
@@ -660,6 +660,7 @@
     "cohort-active": "Aktiv",
     "cohort-archived": "Archiviert",
     "cohort-rename": "Umbenennen",
+    "cohort-rename-description": "Die Klasse behält ihre Schüler, Lehrkräfte und Noten.",
     "cohort-rename-save": "Speichern",
     "cohort-archive": "Archivieren",
     "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
@@ -1328,6 +1329,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "undo": "Rückgängig",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -1340,6 +1342,8 @@
     "load-error": "Diese Daten konnten nicht geladen werden.",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
+    "month": "Monat",
+    "year": "Jahr",
     "breadcrumb": "Navigationspfad",
     "sidebar": "Seitenleiste",
     "toggle-sidebar": "Seitenleiste ein- oder ausblenden",
@@ -1953,7 +1957,6 @@
     "bullets": "Aufzählung",
     "numbers": "Nummerierte Liste",
     "tasks": "Aufgabenliste",
-    "lists": "Listen",
     "quote": "Zitat",
     "code-block": "Codeblock",
     "divider": "Trennlinie",
@@ -1975,15 +1978,25 @@
     "formula": "Formel",
     "equation": "Gleichung",
     "formula-edit": "Formel bearbeiten",
+    "formula-keyboard": "Formeltastatur",
+    "formula-numbers": "Zahlen",
+    "formula-functions": "Funktionen",
+    "formula-symbols": "Symbole",
+    "formula-greek": "Griechische Buchstaben",
+    "formula-left": "Nach links",
+    "formula-right": "Nach rechts",
+    "formula-delete": "Löschen",
     "formula-invalid": "Diese Formel kann nicht gezeichnet werden:",
     "latex": "LaTeX",
     "image": "Bild",
     "image-add": "Bild hinzufügen",
+    "image-add-description": "Das Bild erscheint in der Frage, sobald es hinzugefügt ist.",
     "image-alt": "Alternativtext",
     "image-alt-hint": "Was ein Schüler wissen muss, der das Bild nicht sehen kann",
     "image-cancel": "Abbrechen",
     "image-delete": "Bild löschen",
     "image-edit": "Alternativtext ändern",
+    "image-edit-description": "Das Bild bleibt, nur sein Alternativtext ändert sich.",
     "image-save": "Speichern"
   },
   "Memory": {
@@ -2237,9 +2250,6 @@
     "admitted-elsewhere": {
       "title": "Nina antwortet in einem neuen Chat"
     },
-    "open-chat": {
-      "title": "Chat öffnen"
-    },
     "sign-out-error": {
       "title": "Abmelden ist fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
@@ -2263,9 +2273,6 @@
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
-    },
-    "undo": {
-      "title": "Archivierung rückgängig"
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."

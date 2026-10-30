@@ -5,8 +5,8 @@ import { useTenant } from "@/components/tenant/context";
 
 /**
  * Reads the classes that the viewer teaches or attends in the school's active periods, once Convex has settled the
- * session, so the query never runs before the viewer is known. The sidebar, the home and the search palette read the
- * same query, which Convex serves from one subscription.
+ * session, so the query never runs before the viewer is known. The sidebar and the home read the same query, which
+ * Convex serves from one subscription.
  */
 export function useMyClasses() {
   const { slug } = useTenant();

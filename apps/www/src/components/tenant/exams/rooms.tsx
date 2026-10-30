@@ -30,6 +30,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ColumnChoice } from "@/components/shared/table/column";
@@ -55,6 +56,7 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { useLastValue } from "@/lib/data/kept";
 import { Link } from "@/lib/routing/link";
+import { schoolExamsTarget } from "@/lib/routing/school/target";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -117,9 +119,12 @@ export function ExamRooms({
 }
 
 /** The exam list's crumb of the rooms page, which only a viewer who may open the list has. */
-function useExamsItems(canOpenExams: boolean) {
+function useExamsItems(canOpenExams: boolean): readonly BreadcrumbHeaderItem[] {
   const t = useTranslations("Exams");
-  return canOpenExams ? [{ href: "/exams", label: t("title") }] : [];
+  const tenant = useTenant();
+  return canOpenExams
+    ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
+    : [];
 }
 
 /** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
