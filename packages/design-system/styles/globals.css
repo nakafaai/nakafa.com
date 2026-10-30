@@ -542,3 +542,33 @@
 .katex .katex-html > .newline {
   margin-block: 1rem;
 }
+
+/*
+ * MathLive in Nakafa's tokens. The formula field sits inside a box drawn like a text field, so it draws no
+ * border, background, menu or keyboard toggle of its own; MathLive sets the toggle's display inline, which
+ * only an important rule overrides. Nakafa's own keypad (`components/editor/keypad.tsx`) takes the place of
+ * MathLive's virtual keyboard, which never opens.
+ */
+math-field {
+  --caret-color: var(--primary);
+  --primary-color: var(--primary);
+  --selection-background-color: color-mix(
+    in oklch,
+    var(--primary) 20%,
+    transparent
+  );
+  --contains-highlight-background-color: var(--accent);
+  --placeholder-color: var(--muted-foreground);
+  --smart-fence-color: var(--muted-foreground);
+  width: 100%;
+  font-size: var(--text-lg);
+  color: var(--foreground);
+  outline: none;
+  background: transparent;
+  border: 0;
+}
+
+math-field::part(menu-toggle),
+math-field::part(virtual-keyboard-toggle) {
+  display: none !important;
+}

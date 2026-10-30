@@ -205,7 +205,7 @@ describe("live session store", () => {
   );
 
   it.effect(
-    "keeps the visitor's signed-out page when a module fails to load",
+    "keeps the visitor's page, with its session unread, when a module fails to load",
     () =>
       Effect.gen(function* () {
         const store = createLiveSessionStore();
@@ -222,6 +222,8 @@ describe("live session store", () => {
 
         expect(Option.isNone(store.getState().client)).toBe(true);
         expect(store.getState().isPending).toBe(false);
+        expect(store.getState().hasError).toBe(true);
+        expect(store.getState().sessionId).toBeNull();
       })
   );
 });

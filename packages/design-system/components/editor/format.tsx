@@ -9,7 +9,7 @@ import {
   TextUnderlineIcon,
 } from "@hugeicons/core-free-icons";
 import { RichEditorLink } from "@repo/design-system/components/editor/link";
-import { EditorToggles } from "@repo/design-system/components/editor/tools";
+import { EditorTools } from "@repo/design-system/components/editor/tools";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
 
 /**
@@ -46,7 +46,7 @@ export function RichEditorMarks({
 
   return (
     <>
-      <EditorToggles
+      <EditorTools
         tools={[
           {
             active: state?.bold ?? false,
@@ -136,7 +136,7 @@ export function DocumentMarks({
 
   return (
     <>
-      <EditorToggles
+      <EditorTools
         tools={[
           {
             active: state?.bold ?? false,

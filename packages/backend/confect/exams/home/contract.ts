@@ -33,13 +33,11 @@ export const HomeDraft = Schema.Struct({
  * still edit, the rooms the viewer may watch that run now, the rooms that open within the next
  * fourteen days, and the closed sittings whose results the viewer may view. A viewer who holds none
  * of those gets four empty lists. `canManageSetup` tells whether the viewer manages the school. Only
- * such a viewer gets `setup`, the school's setup, which the home's setup tile starts from. `draftsBounded` tells
- * whether the drafts read stopped at its bound, so a draft of the viewer may exist beyond the drafts listed.
+ * such a viewer gets `setup`, the school's setup, which the home's setup tile starts from.
  */
 export const HomeView = Schema.Struct({
   canManageSetup: Schema.Boolean,
   closed: Schema.Array(ClosedView),
-  draftsBounded: Schema.Boolean,
   drafts: Schema.Array(HomeDraft),
   live: Schema.Array(SittingView),
   next: Schema.Array(SittingView),

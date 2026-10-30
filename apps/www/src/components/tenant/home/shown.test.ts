@@ -4,6 +4,7 @@ import { staffShown, studentShown } from "@/components/tenant/home/shown";
 const staff = {
   canCreate: false,
   canWatch: false,
+  classes: 0,
   closed: 0,
   drafts: 0,
   live: 0,
@@ -44,28 +45,18 @@ describe("tenant home shown cells", () => {
     });
   });
 
-  it("shows the drafts and their count only to a viewer who may create exams", () => {
-    const shown = staffShown({ ...staff, canWatch: true, drafts: 2 });
-    expect(shown.drafts).toBe(false);
-    expect(shown["count-drafts"]).toBe(false);
-    expect(
-      staffShown({ ...staff, canCreate: true, drafts: 2 })["count-drafts"]
-    ).toBe(true);
+  it("shows the drafts only to a viewer who may create exams", () => {
+    expect(staffShown({ ...staff, canWatch: true, drafts: 2 }).drafts).toBe(
+      false
+    );
+    expect(staffShown({ ...staff, canCreate: true, drafts: 2 }).drafts).toBe(
+      true
+    );
   });
 
-  it("shows the strip's rooms and results counts only to a viewer who may watch rooms", () => {
-    const creator = staffShown({ ...staff, canCreate: true });
-    expect(creator).toMatchObject({
-      "count-live": false,
-      "count-next": false,
-      "count-waiting": false,
-    });
-    const watcher = staffShown({ ...staff, canWatch: true });
-    expect(watcher).toMatchObject({
-      "count-live": true,
-      "count-next": true,
-      "count-waiting": true,
-    });
+  it("shows the classes once the viewer teaches one, whatever the viewer may do with exams", () => {
+    expect(staffShown(staff).classes).toBe(false);
+    expect(staffShown({ ...staff, classes: 2 }).classes).toBe(true);
   });
 
   it("shows no quiet state to a viewer who may not watch rooms", () => {
@@ -80,20 +71,28 @@ describe("tenant home shown cells", () => {
 
   it("shows the now cell, the schedule and the results of a student with a sitting and results", () => {
     expect(
-      studentShown({ finished: 2, hasNow: true, upcoming: 1 })
-    ).toStrictEqual({ now: true, quiet: false, results: true, schedule: true });
+      studentShown({ classes: 1, finished: 2, hasNow: true, upcoming: 1 })
+    ).toStrictEqual({
+      classes: true,
+      now: true,
+      quiet: false,
+      results: true,
+      schedule: true,
+    });
   });
 
   it("shows the schedule for a sitting still to come, even beyond its fourteen days", () => {
     expect(
-      studentShown({ finished: 0, hasNow: true, upcoming: 1 }).schedule
+      studentShown({ classes: 0, finished: 0, hasNow: true, upcoming: 1 })
+        .schedule
     ).toBe(true);
   });
 
-  it("shows only the quiet state to a student with no sitting and no result", () => {
+  it("shows only the classes and the quiet state to a student with no sitting and no result", () => {
     expect(
-      studentShown({ finished: 0, hasNow: false, upcoming: 0 })
+      studentShown({ classes: 1, finished: 0, hasNow: false, upcoming: 0 })
     ).toStrictEqual({
+      classes: true,
       now: false,
       quiet: true,
       results: false,

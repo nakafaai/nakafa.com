@@ -111,7 +111,9 @@ const followSession = Effect.fn("www.auth.followSession")(function* (
  * session from pending, and creates the page's one Convex client. Constructing
  * that client opens no socket: the first subscription or `setAuth` opens one.
  * The fiber runs until it is interrupted, which closes the subscription. A
- * failed load reports the failure and leaves the page as a visitor's.
+ * failed load reports the failure and leaves the page as a visitor's whose
+ * session the page could not read (`hasError`), so no reader takes it for a
+ * signed-out session and a press held for it settles.
  */
 export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
   function* (
@@ -145,7 +147,11 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
       Effect.result
     );
     if (Result.isFailure(loaded)) {
-      store.setState({ ...previewAuthSession, client: Option.none() });
+      store.setState({
+        ...previewAuthSession,
+        client: Option.none(),
+        hasError: true,
+      });
       return;
     }
     store.setState({

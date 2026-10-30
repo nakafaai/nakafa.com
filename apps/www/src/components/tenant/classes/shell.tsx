@@ -43,7 +43,7 @@ import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import type { ClassView } from "@/components/tenant/classes/view";
 import {
   ClassGradebook,
-  GradebookFilters,
+  GradebookSearch,
 } from "@/components/tenant/grades/sheet";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -315,7 +315,7 @@ function ClassBody({
       <TableFiltersProvider>
         <PanesProvider>
           <ClassHeader>
-            <GradebookFilters />
+            <GradebookSearch />
           </ClassHeader>
           {/* The header's 4rem and the tabs' 3rem stand above the gradebook's panes. */}
           <div className="flex min-h-0 flex-1 flex-col [--panes-offset:7rem]">

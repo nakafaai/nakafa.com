@@ -13,10 +13,10 @@ import {
   answerUpdate,
   appendedQuestion,
   copyQuestionUpdate,
-  type ExamSummary,
   type ExamView,
   insertDraftExam,
   insertedAfter,
+  type ListedExam,
   movedQuestion,
   moveUpdate,
   placeholderQuestion,
@@ -380,8 +380,11 @@ describe("the optimistic updates of the new questions", () => {
       id: examIdOf("draft-exam"),
       title: "Draf",
     };
-    const existing: ExamSummary = {
+    const existing: ListedExam = {
+      createdAt: 0,
       id: examIdOf("exam-old"),
+      questionCount: 3,
+      scope: { kind: "tenant" },
       title: "Lama",
     };
     const firstArgs = { paginationOpts: { cursor: null, numItems: 20 }, slug };
@@ -405,7 +408,13 @@ describe("the optimistic updates of the new questions", () => {
     expect(setQuery).toHaveBeenCalledWith(
       exams.exams.list,
       firstArgs,
-      Option.some({ isDone: false, page: [draft, existing] })
+      Option.some({
+        isDone: false,
+        page: [
+          { ...draft, questionCount: 1, scope: { kind: "tenant" } },
+          existing,
+        ],
+      })
     );
   });
 
@@ -416,7 +425,8 @@ describe("the optimistic updates of the new questions", () => {
       id: examIdOf("draft-exam"),
       title: "Draf",
     };
-    const existing: ExamSummary = {
+    const existing: typeof HomeDraft.Type = {
+      createdAt: 0,
       id: examIdOf("exam-old"),
       title: "Lama",
     };

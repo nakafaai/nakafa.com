@@ -36,7 +36,10 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { gradeItems } from "@/components/tenant/settings/choices";
-import { CohortFilter } from "@/components/tenant/settings/cohort/filter";
+import {
+  CohortGradeFilter,
+  CohortStatusFilter,
+} from "@/components/tenant/settings/cohort/filter";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,
@@ -219,7 +222,6 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
         <>
           <CohortsUnitChoice />
           <TableSearch placeholder={t("cohorts-search")} />
-          <CohortFilter />
           <SchoolCohortAdd periodId={periodId} slug={slug} />
         </>
       }
@@ -407,10 +409,10 @@ function SchoolCohortTable({
       sortFn: "text",
     }),
     cohortColumns.accessor((cohort) => String(cohort.grade), {
+      enableSorting: false,
       filterFn: "oneOf",
-      header: t("cohort-grade"),
+      header: () => <CohortGradeFilter />,
       id: "grade",
-      sortFn: "alphanumeric",
     }),
     cohortColumns.accessor((cohort) => cohort.status, {
       cell: (info) => (
@@ -422,8 +424,9 @@ function SchoolCohortTable({
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("cohort-status"),
+      header: () => <CohortStatusFilter />,
       id: "status",
+      meta: { align: "center" },
     }),
     cohortColumns.display({
       cell: (info) =>
@@ -433,6 +436,7 @@ function SchoolCohortTable({
           <SchoolCohortMenu cohort={info.row.original} slug={slug} />
         ),
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 
