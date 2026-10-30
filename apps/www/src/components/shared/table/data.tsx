@@ -60,14 +60,15 @@ const sortNames = {
  * Where a column's head and cells stand, as the try-out tables place them: the first column, which names the row, at
  * the start, and every other column in the middle, its figures in digits of one width. The row's menu stands at the
  * end and stays at the table's end edge on the row's background while a table wider than the phone scrolls under it,
- * so every row's actions stay in reach.
+ * so every row's actions stay in reach: the card's, or the accent the base row draws while a pressable row is hovered
+ * (`data-pressable`) or its row is open (`data-state="selected"`).
  */
 const columnAlign = cva("px-2 sm:px-4", {
   defaultVariants: { align: "center" },
   variants: {
     align: {
       center: "text-center tabular-nums",
-      menu: "sticky end-0 bg-card in-[tr[data-pressable]:hover]:bg-accent in-data-[state=selected]:bg-accent text-end",
+      menu: "sticky end-0 bg-card in-[tr[data-pressable]:hover]:bg-accent in-[tr[data-state=selected]]:bg-accent text-end",
       start: "",
     },
   },
