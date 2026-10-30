@@ -51,7 +51,15 @@ export function ResponsiveDialog({
   onOpenChangeComplete,
   size = "default",
 }: Props) {
-  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
+  // The screen's width is read while the dialog renders: read in an effect it is false at first, so a dialog that
+  // opens as it mounts would paint the drawer, then the dialog, and remount its body. Its popup renders through a
+  // portal only in the browser, so the server's markup holds none of it and the read cannot differ from it.
+  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, undefined, {
+    getInitialValueInEffect: false,
+  });
+  // The body is there whenever the caller gives one, also while what it holds is empty, so a message that
+  // appears inside it never adds the panel and its padding at the same time.
+  const hasBody = children !== undefined;
 
   if (isDesktop) {
     return (
@@ -65,7 +73,7 @@ export function ResponsiveDialog({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          {!!children && <DialogPanel>{children}</DialogPanel>}
+          {hasBody ? <DialogPanel>{children}</DialogPanel> : null}
           {!!footer && <DialogFooter>{footer}</DialogFooter>}
         </DialogContent>
       </Dialog>
@@ -79,13 +87,15 @@ export function ResponsiveDialog({
       open={open}
     >
       <DrawerPopup finalFocus={finalFocus} showBar>
-        <DrawerHeader className={cn("border-b", !children && "border-b-0")}>
+        <DrawerHeader className={cn(hasBody && "border-b")}>
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className={cn("min-h-0 flex-1", !children && "hidden")}>
-          <DrawerPanel>{children}</DrawerPanel>
-        </div>
+        {hasBody ? (
+          <div className="min-h-0 flex-1">
+            <DrawerPanel>{children}</DrawerPanel>
+          </div>
+        ) : null}
         {!!footer && <DrawerFooter>{footer}</DrawerFooter>}
       </DrawerPopup>
     </Drawer>
