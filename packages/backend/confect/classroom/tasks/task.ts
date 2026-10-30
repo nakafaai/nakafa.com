@@ -74,7 +74,10 @@ export const submissionValidator = Schema.Struct({
   updatedAt: Schema.Finite,
 });
 
-/** One task as a class shows it, with what the viewer has handed in and how many have handed in. */
+/**
+ * One task as a class shows it, with how many have handed in and the viewer's own work: its text, so the viewer
+ * can read and change what they handed in, whether it came late, and its points.
+ */
 export const TaskView = Schema.Struct({
   deadline: Schema.Finite,
   handedIn: Schema.Int,
@@ -84,6 +87,7 @@ export const TaskView = Schema.Struct({
     Schema.Struct({
       late: Schema.Boolean,
       score: Schema.NullOr(Schema.Int),
+      text: Schema.String,
       updatedAt: Schema.Finite,
     })
   ),

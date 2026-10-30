@@ -139,7 +139,10 @@ describe("classroom/tasks", () => {
           task: "ringkasan",
           text: "Ringkasan pertama.",
         });
-        expect(handed).toMatchObject({ handedIn: 1, mine: { late: false } });
+        expect(handed).toMatchObject({
+          handedIn: 1,
+          mine: { late: false, text: "Ringkasan pertama." },
+        });
         vi.setSystemTime(TENANCY_NOW + 2 * DAY);
         const again = yield* student.mutation(tasks.submit, {
           classId: forum.classId,
@@ -147,7 +150,10 @@ describe("classroom/tasks", () => {
           task: "ringkasan",
           text: "Ringkasan kedua.",
         });
-        expect(again).toMatchObject({ handedIn: 1, mine: { late: true } });
+        expect(again).toMatchObject({
+          handedIn: 1,
+          mine: { late: true, text: "Ringkasan kedua." },
+        });
         const closed = yield* student
           .mutation(tasks.submit, {
             classId: forum.classId,
@@ -193,7 +199,11 @@ describe("classroom/tasks", () => {
           slug: nf,
           task: "ringkasan",
         });
-        expect(mine.mine).toMatchObject({ late: true, score: 45 });
+        expect(mine.mine).toMatchObject({
+          late: true,
+          score: 45,
+          text: "Ringkasan kedua.",
+        });
         const moved = yield* teacher.mutation(tasks.reschedule, {
           classId: forum.classId,
           deadline: TENANCY_NOW + 5 * DAY,
