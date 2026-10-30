@@ -2109,7 +2109,7 @@
       "title": "Nina antwortet in einem neuen Chat"
     },
     "open-chat": {
-      "title": "Chat öffnen"
+      "title": "Öffnen"
     },
     "school-language-error": {
       "title": "Sprache nicht geändert.",
@@ -2140,7 +2140,7 @@
       "description": "Versuch es noch einmal."
     },
     "undo": {
-      "title": "Archivierung rückgängig"
+      "title": "Rückgängig"
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."
