@@ -5,30 +5,51 @@ import { hasStaticRelease } from "@/lib/routing/release";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 import { SCHOOL_SHELL_PATH } from "@/lib/routing/school/shell";
 import { namesFile } from "@/lib/routing/template";
+import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 
 /**
- * Whether the release's static shell answers a request: a read of a school host's
- * address that names no file and that no shared route, such as `/api`, owns. A
- * missing file, such as a chunk of an older release, keeps its own not-found
- * answer. A prerender and a development server bind no release, so their router
- * renders the school's root document instead.
+ * The path of a read of a school host's address that no shared route, such as
+ * `/api`, owns, or none. A prerender and a development server bind no release, so
+ * their router answers every school address instead.
  */
-function readsSchoolShell(request: Request) {
-  if (!hasStaticRelease()) {
-    return false;
-  }
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    return false;
+function readSchoolHostPath(request: Request): Option.Option<string> {
+  if (
+    !hasStaticRelease() ||
+    (request.method !== "GET" && request.method !== "HEAD")
+  ) {
+    return Option.none();
   }
   const { pathname } = new URL(request.url);
-  return (
-    Option.isSome(
-      Option.flatMap(readRequestHostname(request.headers), readSchoolSlug)
-    ) &&
-    !isSharedPath(pathname) &&
-    !namesFile(pathname)
+  return Option.isSome(
+    Option.flatMap(readRequestHostname(request.headers), readSchoolSlug)
+  ) && !isSharedPath(pathname)
+    ? Option.some(pathname)
+    : Option.none();
+}
+
+/** Whether the release's static shell answers a request: a school host's page, an address that names no file. */
+function readsSchoolShell(request: Request) {
+  return Option.exists(
+    readSchoolHostPath(request),
+    (pathname) => !namesFile(pathname)
   );
 }
+
+/**
+ * The static not-found page for a file that a school host's address names, or
+ * none. The release's own files are assets, which never reach the Worker, so the
+ * file is missing: a chunk of an older release, or a scanner's probe such as
+ * `/.env`. It answers before the school's refusal read and the router, which
+ * would render a page for it.
+ */
+export const readSchoolFile = Effect.fn("www.routing.school.file")(function* (
+  request: Request
+) {
+  if (!Option.exists(readSchoolHostPath(request), namesFile)) {
+    return Option.none<Response>();
+  }
+  return Option.some(yield* answerUnmatchedRequest(request));
+});
 
 /** The release's static shell at the visitor's address, with the given status. */
 const answerSchoolShell = Effect.fn("www.routing.school.shell")(function* (

@@ -359,7 +359,7 @@ describe("decisions before the router", () => {
   );
 
   it.effect(
-    "answers a refused school page with the static school shell before its migration",
+    "answers a refused school page with the static shell before its migration, and a school file with the static page before any read",
     () =>
       Effect.gen(function* () {
         refusal.read.mockReturnValue(Effect.succeedSome("id"));
@@ -382,6 +382,15 @@ describe("decisions before the router", () => {
         );
         expect(handle).not.toHaveBeenCalled();
         expect(migration.read).not.toHaveBeenCalled();
+        assets.fetch.mockResolvedValueOnce(new Response("<h1>Not found</h1>"));
+        const file = yield* answerRequest(
+          new Request("https://harapan.nakafa.com/.env", {
+            headers: { host: "harapan.nakafa.com" },
+          }),
+          handle
+        );
+        expect(file.status).toBe(404);
+        expect(refusal.read).toHaveBeenCalledOnce();
       })
   );
 
