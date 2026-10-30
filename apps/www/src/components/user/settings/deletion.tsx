@@ -74,13 +74,13 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
       return;
     }
     setOpen(nextOpen);
-    if (!nextOpen) {
-      setError(null);
-    }
   }
-  /** Runs the durable account-deletion flow from the browser event boundary. */
+  /**
+   * Runs the durable account-deletion flow from the browser event boundary. A
+   * shown error stays until the next answer replaces it, so the dialog never
+   * shrinks and grows again while the deletion is retried.
+   */
   function handleDelete() {
-    setError(null);
     startTransition(async () => {
       const result = await Effect.runPromise(
         requireConvexOnline(convex).pipe(
@@ -119,7 +119,6 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   }
   /** Signs out an expired session before returning to the localized auth page. */
   function handleReauthenticate() {
-    setError(null);
     startTransition(async () => {
       const result = await Effect.runPromise(
         Effect.result(signOutAccountBrowserIdentity())
@@ -133,8 +132,11 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
       startTransition(() => setError(dialogError.generic));
     });
   }
+  // An expired session cannot delete: Delete stays in place but waits, and
+  // signing in again is the one action, on its own line in the alert.
+  const expired = error === dialogError.sessionExpired;
   let errorMessage = t("delete-account-error");
-  if (error === dialogError.sessionExpired) {
+  if (expired) {
     errorMessage = t("delete-account-session-expired");
   }
   return (
@@ -170,28 +172,24 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
             >
               {common("cancel")}
             </Button>
-            {error === dialogError.sessionExpired ? (
-              <Button
-                disabled={isPending}
-                onClick={handleReauthenticate}
-                type="button"
-              >
-                <Spinner icon={Login01Icon} isLoading={isPending} />
-                {t("delete-account-sign-in-again")}
-              </Button>
-            ) : (
-              <Button
-                disabled={isPending}
-                onClick={handleDelete}
-                type="button"
-                variant="destructive"
-              >
-                <Spinner icon={Delete02Icon} isLoading={isPending} />
-                {t("delete-account")}
-              </Button>
-            )}
+            <Button
+              disabled={isPending || expired}
+              onClick={handleDelete}
+              type="button"
+              variant="destructive"
+            >
+              <Spinner icon={Delete02Icon} isLoading={isPending && !expired} />
+              {t("delete-account")}
+            </Button>
           </>
         }
+        // The error leaves once the dialog has closed, so it never vanishes
+        // while the dialog is still on screen.
+        onOpenChangeComplete={(nextOpen) => {
+          if (!nextOpen) {
+            setError(null);
+          }
+        }}
         open={open}
         setOpen={handleOpenChange}
         title={t("delete-account-dialog-title")}
@@ -199,7 +197,21 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         {error && (
           <Alert variant="destructive">
             <HugeIcons icon={Alert02Icon} />
-            <AlertDescription>{errorMessage}</AlertDescription>
+            <AlertDescription>
+              <p>{errorMessage}</p>
+              {expired && (
+                <Button
+                  disabled={isPending}
+                  onClick={handleReauthenticate}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <Spinner icon={Login01Icon} isLoading={isPending} />
+                  {t("delete-account-sign-in-again")}
+                </Button>
+              )}
+            </AlertDescription>
           </Alert>
         )}
       </ResponsiveDialog>
