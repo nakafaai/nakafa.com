@@ -113,6 +113,7 @@ function ClassPage({
   classSlug: string;
   slug: TenantSlug;
 }) {
+  const view = useClassView();
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const resolved = useQuery(
@@ -130,7 +131,14 @@ function ClassPage({
     throw resolved.error;
   }
   if (!QueryResult.isSuccess(resolved)) {
-    return <ClassLoading classSlug={classSlug} />;
+    // While the class is read: the school header and the class's tab row, with the current tab marked from the
+    // address. The Grades tab, which only a viewer who keeps the grades has, joins at the row's end.
+    return (
+      <>
+        <SchoolHeader items={[]} />
+        <ClassTabs canGrade={false} classSlug={classSlug} tab={view._tag} />
+      </>
+    );
   }
   return (
     <ClassScopeContext
@@ -143,21 +151,6 @@ function ClassPage({
     >
       <ResolvedClass klass={resolved.value} />
     </ClassScopeContext>
-  );
-}
-
-/**
- * The top of a class page while its class is read: the school header and the class's tab row, with the current tab
- * marked from the address. The Grades tab, which only a viewer who keeps the grades has, joins at the row's end.
- */
-function ClassLoading({ classSlug }: { classSlug: string }) {
-  const view = useClassView();
-
-  return (
-    <>
-      <SchoolHeader items={[]} />
-      <ClassTabs canGrade={false} classSlug={classSlug} tab={view._tag} />
-    </>
   );
 }
 

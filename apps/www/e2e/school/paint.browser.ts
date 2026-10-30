@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import {
   createSchool,
@@ -221,7 +221,7 @@ test("a class page keeps its tab row from the first paint, and nothing on it mov
   const first = await readFirstControls(page);
   const now = await readControls(page, CLASS_TABS);
   expect(first).toEqual(["Home", "Forum", "Library", "Tasks"]);
-  expect(now.slice(0, 4)).toEqual(first);
+  expect(Arr.take(now, 4)).toEqual(first);
   expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
   await context.close();
 });

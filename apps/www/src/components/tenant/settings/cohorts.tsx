@@ -165,13 +165,10 @@ function CohortsUnitChoice() {
 }
 
 /**
- * The table of the unit's active period, or the state of a unit that has none, once the period is read. The header
- * keeps the same actions in every state, from the first paint: the unit choice, the search and Add cohort, which waits
- * disabled until the period is known and stays disabled for a unit with no active period, so the header never grows
- * when the period answers.
+ * The active period of the chosen unit, read once Convex has settled the session: pending while it is read, null for a
+ * unit with none, and a failure for a unit the viewer may not read. Any other failure is thrown to the page's boundary.
  */
-function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
-  const t = useTranslations("SchoolSettings");
+function useActivePeriod(slug: TenantSlug) {
   const { unitId } = useCohortsUnit();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const active = useQuery(
@@ -181,18 +178,39 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   if (QueryResult.isFailure(active) && !isDenied(active.error)) {
     throw active.error;
   }
-  const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
-  const actions = (
+  return active;
+}
+
+/**
+ * The cohorts page's actions, the same in every state from the first paint: the unit choice, the search and Add
+ * cohort, which waits disabled until the period is known and stays disabled for a unit with no active period, so the
+ * header never grows when the period answers.
+ */
+function CohortsActions({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
+  const active = useActivePeriod(slug);
+
+  return (
     <>
       <CohortsUnitChoice />
       <TableSearch placeholder={t("cohorts-search")} />
-      <SchoolCohortAdd periodId={periodId ?? null} slug={slug} />
+      <SchoolCohortAdd
+        periodId={QueryResult.isSuccess(active) ? active.value : null}
+        slug={slug}
+      />
     </>
   );
+}
+
+/** The table of the unit's active period, or the state of a unit that has none, once the period is read. */
+function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
+  const active = useActivePeriod(slug);
+  const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
 
   if (QueryResult.isFailure(active)) {
     return (
-      <SettingsTablePage actions={actions}>
+      <SettingsTablePage actions={<CohortsActions slug={slug} />}>
         <TableEmpty
           act="pointing"
           description={t("cohorts-unavailable-description")}
@@ -202,11 +220,15 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
     );
   }
   if (periodId === undefined) {
-    return <SettingsTablePage actions={actions}>{null}</SettingsTablePage>;
+    return (
+      <SettingsTablePage actions={<CohortsActions slug={slug} />}>
+        {null}
+      </SettingsTablePage>
+    );
   }
   if (periodId === null) {
     return (
-      <SettingsTablePage actions={actions}>
+      <SettingsTablePage actions={<CohortsActions slug={slug} />}>
         <TableEmpty
           act="pointing"
           action={
@@ -225,7 +247,7 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
     );
   }
   return (
-    <SettingsTablePage actions={actions}>
+    <SettingsTablePage actions={<CohortsActions slug={slug} />}>
       <ReadBoundary
         read={{ args: { periodId, slug }, ref: tenancy.cohorts.list }}
       >
