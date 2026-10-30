@@ -160,7 +160,7 @@ for (const width of [390, 1440]) {
           failure
         );
         await expect(
-          page.getByRole("button", { name: "Create exam" })
+          page.getByRole("region", { name: "Updates", exact: true })
         ).toBeVisible();
         await page.close();
       }

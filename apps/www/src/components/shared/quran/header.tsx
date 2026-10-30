@@ -1,11 +1,5 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -13,6 +7,7 @@ import {
   BreadcrumbHeaderFold,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { PanelSheetTrigger } from "@/components/sidebar/sheet";
 import { HOME_TARGET, QURAN_TARGET } from "@/lib/routing/target";
 
 /**
@@ -86,25 +81,15 @@ export function QuranSurahHeader({
         className="col-start-3 row-start-1 flex justify-end"
         data-slot="surah-header-actions"
       >
-        <ButtonGroup aria-label={tCommon("content-actions")}>
-          {actions}
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <SidebarTrigger
-                  className="size-9"
-                  icon={Menu02Icon}
-                  label={tCommon("on-this-page")}
-                  size="icon"
-                  variant="outline"
-                />
-              }
-            />
-            <TooltipContent side="bottom">
-              {tCommon("on-this-page")}
-            </TooltipContent>
-          </Tooltip>
-        </ButtonGroup>
+        <div className="flex items-center gap-2">
+          <ButtonGroup aria-label={tCommon("content-actions")}>
+            {actions}
+          </ButtonGroup>
+          <PanelSheetTrigger
+            icon={Menu02Icon}
+            label={tCommon("on-this-page")}
+          />
+        </div>
       </div>
     </BreadcrumbHeaderFrame>
   );

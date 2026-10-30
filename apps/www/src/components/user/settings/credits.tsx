@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Dashboard } from "@repo/design-system/components/ui/dashboard";
+import { Meter } from "@repo/design-system/components/ui/meter";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -79,7 +79,7 @@ export function UserSettingsCredits({
           })}
           used={t("credits-used", { percent })}
         >
-          <Dashboard.Meter
+          <Meter
             label={t("credits-left", {
               left: formatCount(period.balance, locale),
               total: formatCount(period.allowance, locale),
