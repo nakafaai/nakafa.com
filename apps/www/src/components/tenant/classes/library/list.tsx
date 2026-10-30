@@ -224,6 +224,7 @@ function LibraryRows({
               ) : null,
             header: "",
             id: "actions",
+            meta: { align: "menu" },
           }),
         ]
       : []),

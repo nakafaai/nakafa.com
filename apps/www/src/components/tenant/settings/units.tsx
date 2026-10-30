@@ -124,7 +124,7 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
     unitColumns.display({
       cell: (info) => <UnitMenu unit={info.row.original} />,
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 

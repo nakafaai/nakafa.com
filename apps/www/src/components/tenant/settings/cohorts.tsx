@@ -436,7 +436,7 @@ function SchoolCohortTable({
           <SchoolCohortMenu cohort={info.row.original} slug={slug} />
         ),
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 
