@@ -63,11 +63,11 @@ export function ExamHeader() {
   }
 
   return (
-    <header className="shrink-0 border-b" data-slot="page-header">
+    <header className="h-14 shrink-0 border-b" data-slot="page-header">
       <div
         className={cn(
           contentWidthVariants({ width: "page" }),
-          "flex h-14 w-full items-center gap-2 px-2"
+          "flex h-full w-full items-center gap-2 px-2"
         )}
       >
         <Tooltip>

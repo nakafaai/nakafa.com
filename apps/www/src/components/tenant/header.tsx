@@ -50,13 +50,13 @@ export function SchoolHeader({
 
   return (
     <header
-      className="sticky top-0 z-10 shrink-0 border-b bg-background"
+      className="sticky top-0 z-10 h-16 shrink-0 border-b bg-background"
       data-slot="page-header"
     >
       <div
         className={cn(
           contentWidthVariants({ width: "page" }),
-          "flex h-16 w-full items-center gap-2 px-4"
+          "flex h-full w-full items-center gap-2 px-4"
         )}
       >
         <SidebarTrigger
