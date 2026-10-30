@@ -8,7 +8,8 @@ Accepted. Amended on 13 October 2026: the assessment player and the school
 working set are two more instances of the store rule (Instances Of The Store
 Rule). Amended on 17 October 2026: the pending actions of the chat stay out of
 transitions (Pending Actions Are Not Transitions). Amended on 30 October 2026:
-a press before hydration is kept and replayed (A Press Before Hydration).
+a press before hydration is kept and replayed (A Press Before Hydration), and
+text typed before hydration is kept with it.
 
 ## Decision
 
@@ -104,9 +105,20 @@ kept, so no first press is a dead click.
   no other code. The hook hydrates the control with `suppressHydrationWarning`,
   because the mark is an attribute React did not render.
 
-Nina's entry on lessons, articles, and Quran pages is the first control that
-keeps its press: `apps/www/e2e/chat/sheet.browser.ts` presses it right after
-the page loads.
+- Text typed into a field before hydration stays in the field: React
+  hydrates a textarea without writing its value. A field whose value lives in
+  a store would lose it at its next render, so the field's component moves the
+  text into the store when it mounts, as Nina's composer does
+  (`apps/www/src/components/ai/input.tsx`).
+- A replayed press runs when React mounts the control, before the page's live
+  session starts. A handler that treats a visitor differently counts the reader
+  as a visitor only when the page has no signed-in hint (`hasSignedInHint`).
+
+Nina's entry on lessons, articles, and Quran pages keeps its press:
+`apps/www/e2e/chat/sheet.browser.ts` presses it right after the page loads. So
+does the attach button of Nina's composer on the landing page, which keeps the
+text typed before it too: `apps/www/e2e/nina/composer.browser.ts` types and
+presses while the page's scripts are held.
 
 ## Instances Of The Store Rule
 

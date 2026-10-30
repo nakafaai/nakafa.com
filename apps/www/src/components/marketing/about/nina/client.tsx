@@ -13,6 +13,7 @@ import {
 import { NinaInput } from "@/components/ai/input";
 import { HeldPromptContext } from "@/components/marketing/about/nina/held";
 import { useLiveSession } from "@/components/providers/live";
+import { hasSignedInHint } from "@/lib/auth/hint";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /**
@@ -26,6 +27,11 @@ const LiveNinaComposer = lazy(() =>
   }))
 );
 
+/** Whether this page starts no session: its signed-in hint is not set, so it stays a visitor's. */
+function startsNoSession() {
+  return !hasSignedInHint(document.cookie);
+}
+
 /**
  * The composer before its live code loads: one input that looks the same and
  * keeps its text while the page's session settles, so a signed-in learner never
@@ -33,7 +39,10 @@ const LiveNinaComposer = lazy(() =>
  * or an attach pressed while the session loads, or before the live composer
  * loaded, is held: a session that signs in loads the live composer, which admits
  * the send or opens the file picker, and a session that settles signed out asks
- * for sign-in. A signed-in learner's first focus or input loads the live
+ * for sign-in. The page's session starts only after React takes the page over,
+ * so until then a reader counts as a visitor only when the page has no signed-in
+ * hint, and an attach pressed before then is kept (`useEarlyPress`) and follows
+ * the same way. A signed-in learner's first focus or input loads the live
  * composer as a transition, so React keeps this input, focused and holding its
  * text, until the live composer has loaded, which admits a send held here.
  */
@@ -46,13 +55,14 @@ function NinaComposerInput() {
   const [held, setHeld] = useState<PromptInputMessage | null>(null);
   const [attachHeld, setAttachHeld] = useState(false);
   const isVisitor = !(isSignedIn || isSessionPending);
-  // The session settles once per page, so one deferred marks that moment.
+  // The session settles once per page, so one deferred marks that moment: a
+  // settled session with its client, or a page that starts none.
   const [sessionKnown] = useState(() => Deferred.makeUnsafe<void>());
   useEffect(() => {
-    if (!isSessionPending) {
+    if (!isSessionPending && (isSignedIn || startsNoSession())) {
       Deferred.doneUnsafe(sessionKnown, Effect.void);
     }
-  }, [isSessionPending, sessionKnown]);
+  }, [isSessionPending, isSignedIn, sessionKnown]);
   /** Loads the live composer for a signed-in session, or asks a visitor to sign in. */
   function followSession() {
     if (isSignedIn) {
@@ -96,6 +106,20 @@ function NinaComposerInput() {
     return false;
   }
 
+  /** Whether the reader is a visitor: no session, none loading, and none the page will start. */
+  function isVisitorNow() {
+    return isVisitor && startsNoSession();
+  }
+
+  /** Asks a visitor to sign in, and holds any other reader's attach. */
+  function requestAttach() {
+    if (isVisitorNow()) {
+      signIn();
+      return;
+    }
+    holdAttach();
+  }
+
   function engage() {
     startTransition(() => setEngaged(true));
   }
@@ -109,9 +133,9 @@ function NinaComposerInput() {
       ) : (
         <NinaInput
           attachments={false}
-          onAttachRequest={isVisitor ? signIn : holdAttach}
+          onAttachRequest={requestAttach}
           onEngage={isSignedIn ? engage : undefined}
-          onSubmit={(message) => (isVisitor ? signIn() : hold(message))}
+          onSubmit={(message) => (isVisitorNow() ? signIn() : hold(message))}
         />
       )}
     </Suspense>
