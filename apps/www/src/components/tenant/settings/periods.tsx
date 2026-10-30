@@ -245,7 +245,7 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
           <SchoolPeriodMenu period={info.row.original} slug={slug} />
         ),
       id: "actions",
-      meta: { align: "end" },
+      meta: { align: "menu" },
     }),
   ]);
 
