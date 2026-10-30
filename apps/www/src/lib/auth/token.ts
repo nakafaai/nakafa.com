@@ -59,43 +59,24 @@ const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
   return yield* failure;
 });
 
-/** How a request that never reached an answer fails: once, or tried again. */
-type TransportFailure = (
-  cause: unknown
-) => SessionTokenUnavailable | RetryableNetworkAttempt<SessionTokenUnavailable>;
-
-/**
- * The server's rule: a failure that names a retryable network code is tried
- * again, and any other is final.
- */
-const classifyServerTransport: TransportFailure = (cause) =>
-  classifyNetworkFailure(
-    cause,
-    new SessionTokenUnavailable({ reason: "fetch" })
-  );
-
-/**
- * The browser's rule: every failure is tried again. A browser rejects a dropped
- * connection with a bare TypeError that names no network code, so no failure on
- * the way can be told apart from a dropped one, and the request is a read.
- */
-const retryBrowserTransport: TransportFailure = () =>
-  new RetryableNetworkAttempt({
-    failure: new SessionTokenUnavailable({ reason: "fetch" }),
-  });
-
 /**
  * Sends one token request and reads its answer. The scope aborts a response
  * that is never read, so a 401 does not keep its connection open.
  */
 const sendTokenRequest = Effect.fn("www.auth.sendTokenRequest")(function* (
-  request: HttpClientRequest.HttpClientRequest,
-  transportFailure: TransportFailure
+  request: HttpClientRequest.HttpClientRequest
 ) {
   const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
   const response = yield* client
     .execute(request)
-    .pipe(Effect.mapError((error) => transportFailure(error.reason.cause)));
+    .pipe(
+      Effect.mapError((error) =>
+        classifyNetworkFailure(
+          error.reason.cause,
+          new SessionTokenUnavailable({ reason: "fetch" })
+        )
+      )
+    );
   return yield* readTokenAnswer(response);
 }, Effect.scoped);
 
@@ -106,21 +87,14 @@ const sendTokenRequest = Effect.fn("www.auth.sendTokenRequest")(function* (
  * A 5xx answer, a missed deadline, and a retryable network failure are tried
  * again on the shared schedule; the request is a read, so repeating it is safe.
  */
-const sendUntilAnswered = Effect.fn("www.auth.sendUntilAnswered")(function* (
-  request: HttpClientRequest.HttpClientRequest,
-  transportFailure: TransportFailure
-) {
-  return yield* retryNetworkAttempt(
-    sendTokenRequest(request, transportFailure),
-    new SessionTokenUnavailable({ reason: "deadline" })
-  );
-}, Effect.provide(FetchClient));
-
-/** Sends the server's token request until it answers, by the server's rule for a transport failure. */
 export const requestSessionToken = Effect.fn("www.auth.requestSessionToken")(
   function* (request: HttpClientRequest.HttpClientRequest) {
-    return yield* sendUntilAnswered(request, classifyServerTransport);
-  }
+    return yield* retryNetworkAttempt(
+      sendTokenRequest(request),
+      new SessionTokenUnavailable({ reason: "deadline" })
+    );
+  },
+  Effect.provide(FetchClient)
 );
 
 /**
@@ -132,8 +106,7 @@ export const requestSessionToken = Effect.fn("www.auth.requestSessionToken")(
 export const readBrowserSessionToken = Effect.fn(
   "www.auth.readBrowserSessionToken"
 )(function* (origin: string) {
-  return yield* sendUntilAnswered(
-    HttpClientRequest.get(new URL(TOKEN_PATH, origin)),
-    retryBrowserTransport
+  return yield* requestSessionToken(
+    HttpClientRequest.get(new URL(TOKEN_PATH, origin))
   );
 });
