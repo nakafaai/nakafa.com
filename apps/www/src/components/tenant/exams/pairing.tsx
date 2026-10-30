@@ -103,7 +103,7 @@ export function MatchKey({
             >
               <SelectTrigger
                 aria-label={t("pair-of", { name: index + 1, number })}
-                className="w-24"
+                className="w-32"
                 disabled={!editable}
               >
                 <SelectValue placeholder={t("pair-choose")} />
