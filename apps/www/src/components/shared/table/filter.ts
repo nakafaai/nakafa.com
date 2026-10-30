@@ -15,6 +15,15 @@ export function isChosen(value: unknown, chosen: unknown) {
   );
 }
 
+/** Whether a cell that holds a list, such as a member's roles, holds one of the values a facet chose. */
+export function holdsChosen(value: unknown, chosen: unknown) {
+  return (
+    Schema.is(FacetValues)(chosen) &&
+    Schema.is(FacetValues)(value) &&
+    Arr.some(value, (item) => Arr.contains(chosen, item))
+  );
+}
+
 /** Whether a facet chose nothing, so it filters nothing and the table drops it. */
 export function choosesNothing(chosen: unknown) {
   return !(
@@ -39,6 +48,12 @@ export const chosenOne = <A extends string>(
 export const oneOfFilter = constructFilterFn({
   autoRemove: choosesNothing,
   filter: isChosen,
+});
+
+/** Keeps the rows whose list holds one of the values a facet chose. */
+export const anyOfFilter = constructFilterFn({
+  autoRemove: choosesNothing,
+  filter: holdsChosen,
 });
 
 /**

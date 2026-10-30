@@ -46,6 +46,7 @@ import {
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
+import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
@@ -139,6 +140,7 @@ function SchoolMembersBody() {
 /** The members in a data table, or the table's empty state when the school has none. */
 function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
   const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
 
   if (Arr.isReadonlyArrayEmpty(members)) {
     return (
@@ -182,15 +184,30 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       id: "status",
       meta: { align: "center" },
     }),
-    memberColumns.display({
+    memberColumns.accessor((member) => member.roles, {
       cell: (info) => (
         <div className="inline-flex items-center gap-1 whitespace-nowrap">
-          {Arr.map(info.row.original.roles, (role) => (
+          {Arr.map(info.getValue(), (role) => (
             <RoleBadge key={role} role={role} />
           ))}
         </div>
       ),
-      header: t("member-roles"),
+      enableSorting: false,
+      filterFn: "anyOf",
+      header: () => (
+        <ColumnFilter
+          column="roles"
+          options={Arr.map(
+            Arr.dedupe(Arr.flatMap(members, (member) => member.roles)),
+            (role) => ({
+              icon: roleLooks[role].icon,
+              label: tSchool(`role.${role}`),
+              value: role,
+            })
+          )}
+          title={t("member-roles")}
+        />
+      ),
       id: "roles",
       meta: { align: "center" },
     }),

@@ -1,19 +1,23 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { Archive02Icon, SchoolIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import type { UnitStatus } from "@repo/backend/confect/tenancy/schema";
+import { UnitStatus } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { createColumnHelper } from "@tanstack/react-table";
+import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolUnitCreateDialog } from "@/components/tenant/settings/create";
+import { UNIT_ICONS } from "@/components/tenant/settings/scope";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import type { Unit } from "@/components/tenant/settings/state";
 import { UnitMenu } from "@/components/tenant/settings/units/menu";
@@ -71,6 +75,9 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
     return null;
   }
 
+  const levelName = (level: Unit["level"]) =>
+    level === "other" ? t("level-other") : level.toUpperCase();
+  const levels = Arr.dedupe(Arr.map(units.value, (unit) => unit.level));
   const columns = unitColumns.columns([
     unitColumns.accessor((unit) => unit.name, {
       cell: (info) => (
@@ -84,12 +91,24 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
       sortFn: "text",
     }),
     unitColumns.accessor((unit) => unit.level, {
-      cell: (info) =>
-        info.getValue() === "other"
-          ? t("level-other")
-          : info.getValue().toUpperCase(),
+      cell: (info) => levelName(info.getValue()),
       enableSorting: false,
-      header: t("unit-add-level"),
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="level"
+          options={Arr.zipWith(
+            levels,
+            namedOptions(levels, UNIT_ICONS),
+            (level, option) => ({
+              icon: option.icon,
+              label: levelName(level),
+              value: level,
+            })
+          )}
+          title={t("unit-add-level")}
+        />
+      ),
       id: "level",
     }),
     unitColumns.accessor((unit) => unit.npsn, {
@@ -117,7 +136,18 @@ function SchoolUnitsTable({ slug }: { slug: TenantSlug }) {
         />
       ),
       enableSorting: false,
-      header: t("unit-status"),
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(UnitStatus.literals, (status) => ({
+            icon: STATUS_LOOKS[status].icon,
+            label: t(`unit-status-label.${status}`),
+            value: status,
+          }))}
+          title={t("unit-status")}
+        />
+      ),
       id: "status",
       meta: { align: "center" },
     }),

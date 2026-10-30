@@ -15,8 +15,10 @@ import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -32,6 +34,7 @@ import type { ListedExam } from "@/components/tenant/exams/optimistic";
 import { ExamRowMenu } from "@/components/tenant/exams/row";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { UNIT_ICONS } from "@/components/tenant/settings/scope";
 import { Link } from "@/lib/routing/link";
 
 /** How many exams the list asks for each time its end comes into view. */
@@ -135,10 +138,23 @@ function ExamListRows({
   const t = useTranslations("Exams");
   const format = useFormatter();
   const tenant = useTenant();
+  const viewer = useViewerQuery();
 
   if (loadingFirst) {
     return null;
   }
+  const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
+  // The place of an exam, as its column filters it: the whole school, or the unit by its ID.
+  const placeOf = (scope: ListedExam["scope"]) =>
+    scope.kind === "tenant" ? scope.kind : scope.unitId;
+  const placeName = (place: string) =>
+    place === "tenant"
+      ? t("whole-school")
+      : Option.match(
+          Arr.findFirst(units, (unit) => unit.id === place),
+          { onNone: () => "", onSome: (unit) => unit.name }
+        );
+  const places = Arr.dedupe(Arr.map(rows, (exam) => placeOf(exam.scope)));
   if (failed && Arr.isReadonlyArrayEmpty(rows)) {
     return <DataFailure onRetry={reloadPage} />;
   }
@@ -165,9 +181,25 @@ function ExamListRows({
       id: "title",
       sortFn: "text",
     }),
-    examColumns.display({
-      cell: (info) => <ExamScope scope={info.row.original.scope} />,
-      header: t("unit"),
+    examColumns.accessor((exam) => placeOf(exam.scope), {
+      cell: (info) => <span dir="auto">{placeName(info.getValue())}</span>,
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="unit"
+          options={Arr.zipWith(
+            places,
+            namedOptions(places, UNIT_ICONS),
+            (place, option) => ({
+              icon: option.icon,
+              label: placeName(place),
+              value: place,
+            })
+          )}
+          title={t("unit")}
+        />
+      ),
       id: "unit",
     }),
     examColumns.accessor((exam) => exam.questionCount, {
@@ -210,24 +242,6 @@ function ExamListRows({
         search="title"
       />
     </>
-  );
-}
-
-/** Where an exam belongs: the whole school, or the unit that holds it, by the name the viewer sees. */
-function ExamScope({ scope }: { scope: ListedExam["scope"] }) {
-  const t = useTranslations("Exams");
-  const viewer = useViewerQuery();
-
-  if (scope.kind === "tenant") {
-    return t("whole-school");
-  }
-  const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
-  return Option.match(
-    Arr.findFirst(units, (unit) => unit.id === scope.unitId),
-    {
-      onNone: () => null,
-      onSome: (unit) => <span dir="auto">{unit.name}</span>,
-    }
   );
 }
 

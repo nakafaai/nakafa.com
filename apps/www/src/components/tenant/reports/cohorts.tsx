@@ -1,13 +1,21 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
+import {
+  Calendar01Icon,
+  Calendar03Icon,
+  CalendarCheckIn01Icon,
+  CalendarsIcon,
+} from "@hugeicons/core-free-icons";
 import records from "@repo/backend/confect/_generated/refs/records";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
@@ -18,6 +26,14 @@ import { Link } from "@/lib/routing/link";
 
 /** One class group whose report cards the viewer opens. */
 type CohortItem = Ref.Returns<typeof records.reports.cohorts>[number];
+
+/** The icons of the periods in the period filter, one calendar for each. */
+const PERIOD_ICONS = [
+  Calendar03Icon,
+  Calendar01Icon,
+  CalendarCheckIn01Icon,
+  CalendarsIcon,
+] as const;
 
 /** The columns of the class group list. */
 const cohortColumns = createColumnHelper<
@@ -58,9 +74,24 @@ export function ReportCohorts({ slug }: { slug: TenantSlug }) {
       sortFn: "text",
     }),
     cohortColumns.accessor((cohort) => cohort.period, {
-      header: t("period"),
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="period"
+          options={namedOptions(
+            Arr.dedupe(
+              Arr.map(
+                QueryResult.isSuccess(cohorts) ? cohorts.value : [],
+                (cohort) => cohort.period
+              )
+            ),
+            PERIOD_ICONS
+          )}
+          title={t("period")}
+        />
+      ),
       id: "period",
-      sortFn: "text",
     }),
   ]);
 
