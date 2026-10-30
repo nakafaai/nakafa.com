@@ -95,7 +95,6 @@ export function SchoolGrantTable({ grants }: { grants: readonly GrantItem[] }) {
         />
       ),
       id: "role",
-      meta: { align: "center" },
     }),
     grantColumns.accessor(scopeName, {
       enableSorting: false,

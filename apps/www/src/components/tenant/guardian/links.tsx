@@ -203,7 +203,6 @@ function GuardianLinkTable() {
         />
       ),
       id: "status",
-      meta: { align: "center" },
     }),
     linkColumns.display({
       cell: (info) => <GuardianLinkMenu link={info.row.original} />,
