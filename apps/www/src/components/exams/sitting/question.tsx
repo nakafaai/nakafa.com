@@ -201,7 +201,6 @@ export function SittingQuestion({
           {Option.isSome(table) ? (
             <SittingTable
               cells={markedCells(question.response ?? NO_RESPONSE)}
-              labelledBy={titleId}
               onMark={(cells) => onChoose({ cells })}
               table={table.value}
             />

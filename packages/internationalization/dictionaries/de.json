@@ -1592,6 +1592,7 @@
     "set-update-error": "Ergebnisse konnten nicht aktualisiert werden.",
     "set-offline": "Verbindung unterbrochen.",
     "answer": "Antwort",
+    "statement": "Aussage",
     "check-answer": "Antwort prüfen",
     "correct": "Richtig",
     "incorrect": "Falsch",
