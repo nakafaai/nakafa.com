@@ -47,14 +47,11 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ListedExam>();
  * The exams of the school, newest first, each with its title, its unit, its questions and its day. An exam that the
  * server has not
  * saved yet is disabled until it answers. The next page loads when the end of the list comes
- * into view, so the list has no button. The page holds one create action, shown when the viewer
- * can create an exam in at least one place: in the school's one header beside the exams, or in
- * the empty state while the school has no saved exam (K27), so a new teacher meets one step in
- * the middle of the page. While the first page loads the page holds no create action, since it
- * cannot know yet where the action goes. An exam that is still saving does not end the empty
- * state, so its create action stays where it was pressed until the editor opens. A failed read of the list
- * shows its own sentence and a retry, and a viewer who lost the school's access is sent to the
- * refused page.
+ * into view, so the list has no button. The header holds the search and the page's one create action, shown when
+ * the viewer can create an exam in at least one place, from the first paint, so it never changes shape: Create waits
+ * disabled while the first page loads, and an empty school's list says so under it. An exam that is still saving does
+ * not end the empty state. A failed read of the list shows its own sentence and a retry, and a viewer who lost the
+ * school's access is sent to the refused page.
  */
 export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
@@ -84,17 +81,17 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   const empty =
     !(loadingFirst || failed) &&
     Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
-  // Until the first page arrives the page cannot know whether search and Create belong in the
-  // header or Create in the empty state, so the header holds neither: a dialog opened from the
-  // header would close, and lose its title, when an empty list moved Create into the page.
-  const listed = !(loadingFirst || empty);
   return (
     <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
         <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-          {listed ? <TableSearch placeholder={t("exams-search")} /> : null}
-          {tenant.home.canCreate && listed ? (
-            <CreateExam choices={tenant.home.choices} slug={slug} />
+          <TableSearch placeholder={t("exams-search")} />
+          {tenant.home.canCreate ? (
+            <CreateExam
+              choices={tenant.home.choices}
+              disabled={loadingFirst}
+              slug={slug}
+            />
           ) : null}
         </SchoolHeader>
         <TablePageBody>
@@ -245,9 +242,9 @@ function ExamListRows({
 }
 
 /**
- * The empty state of the exam list. A viewer who can create an exam meets its one step here,
- * Create exam, with Nina writing. A viewer with no unit to create an exam in is told why and
- * where it is fixed: a manager goes to the units, and anyone else is told to ask an admin.
+ * The empty state of the exam list. A viewer who can create an exam reads that there is none yet, with Nina writing,
+ * under the header's Create exam. A viewer with no unit to create an exam in is told why and where it is fixed: a
+ * manager goes to the units, and anyone else is told to ask an admin.
  */
 function NoExamEmpty() {
   const tenant = useTenant();
@@ -257,7 +254,6 @@ function NoExamEmpty() {
     return (
       <TableEmpty
         act="writing"
-        action={<CreateExam choices={tenant.home.choices} slug={tenant.slug} />}
         description={t("create-description")}
         title={t("empty")}
       />

@@ -91,9 +91,12 @@ function useExamDrafts() {
  */
 export function CreateExam({
   choices,
+  disabled = false,
   slug,
 }: {
   choices: readonly ScopeChoice[];
+  /** Whether the action waits, such as while the list it adds to is first read. */
+  disabled?: boolean;
   slug: TenantSlug;
 }) {
   const drafts = useExamDrafts();
@@ -173,7 +176,9 @@ export function CreateExam({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{t("create")}</Button>
+      <Button disabled={disabled} onClick={() => setOpen(true)}>
+        {t("create")}
+      </Button>
       <ResponsiveDialog
         description={t("create-description")}
         footer={
