@@ -8,7 +8,14 @@ import { Recorder, recorderLayer } from "@repo/backend/scripts/load/recorder";
 import type { LoadInput } from "@repo/backend/scripts/load/run";
 import { sessionCookie, TokenFailed } from "@repo/backend/scripts/load/token";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Array as Arr, Effect, Fiber, FileSystem, Layer } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Fiber,
+  FileSystem,
+  Layer,
+  MutableRef,
+} from "effect";
 import { TestClock } from "effect/testing";
 
 const mocks = vi.hoisted(() => ({
@@ -174,8 +181,12 @@ describe("load command", () => {
         yield* runLoadCommand("/root", ["report.json"]);
         const load: LoadInput<AcceptanceModeError, never> =
           mocks.run.mock.calls[0]?.[0];
+        const attempts = MutableRef.make(0);
         mocks.issue.mockReturnValue(
-          Effect.fail(new TokenFailed({ status: 503 }))
+          Effect.suspend(() => {
+            MutableRef.increment(attempts);
+            return Effect.fail(new TokenFailed({ status: 503 }));
+          })
         );
         mocks.open.mockReturnValue("the connection");
         expect(load.connect("session-1")).toBe("the connection");
@@ -197,7 +208,7 @@ describe("load command", () => {
         expect(signedOut.samples).toEqual([
           expect.objectContaining({ failed: true, name: "auth:token" }),
         ]);
-        expect(mocks.issue).toHaveBeenCalledTimes(6);
+        expect(MutableRef.get(attempts)).toBe(6);
       }).pipe(Effect.scoped, Effect.provide(services))
   );
 

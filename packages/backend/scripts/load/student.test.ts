@@ -10,6 +10,7 @@ import {
   Effect,
   MutableHashMap,
   Option,
+  Order,
   Schema,
 } from "effect";
 
@@ -202,16 +203,16 @@ describe("load student", () => {
           (call) => call.name === "exams/sittings:enter"
         );
         expect(enters[1]?.args.deviceId).toBe(enters[0]?.args.deviceId);
+        // The second tab opens at the middle step's time, so its change and that step may land in either order.
         expect(
-          Arr.map(result.acknowledged, (answer) => [
-            answer.question,
-            answer.version,
-          ])
-        ).toEqual([
-          ["q1", 1],
-          ["q1", 2],
-          ["q2", 1],
-        ]);
+          Arr.sort(
+            Arr.map(
+              result.acknowledged,
+              (answer) => `${answer.question} v${answer.version}`
+            ),
+            Order.String
+          )
+        ).toEqual(["q1 v1", "q1 v2", "q2 v1"]);
       })
   );
 
