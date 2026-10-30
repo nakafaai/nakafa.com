@@ -1,22 +1,19 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
-import { readProfileGate } from "@/lib/profile/gate";
+import { isRawProfileAddress } from "@/lib/profile/gate";
 
 const request = (path: string) => new Request(`https://nakafa.com${path}`);
 
-describe("readProfileGate", () => {
-  it("answers a raw user address with the not-found locale of its own address", () => {
-    expect(
-      Option.getOrThrow(readProfileGate(request("/en/user/nabilfatih")))
-    ).toBe("en");
-  });
-
-  it("answers the raw user address of a tab too, in its own locale", () => {
-    expect(
-      Option.getOrThrow(readProfileGate(request("/id/user/nabilfatih/chat")))
-    ).toBe("id");
+describe("isRawProfileAddress", () => {
+  it("names a raw user address, its tab and its Markdown spelling", () => {
+    for (const path of [
+      "/en/user/nabilfatih",
+      "/id/user/nabilfatih/chat",
+      "/en/user/k57abc.md",
+    ]) {
+      expect(isRawProfileAddress(request(path)), path).toBe(true);
+    }
   });
 
   it("leaves the settings page, the profile address and every other path to the router", () => {
@@ -30,7 +27,7 @@ describe("readProfileGate", () => {
       "/xx/user/nabilfatih",
       "/en/articles/nabilfatih",
     ]) {
-      expect(Option.isNone(readProfileGate(request(path))), path).toBe(true);
+      expect(isRawProfileAddress(request(path)), path).toBe(false);
     }
   });
 });
