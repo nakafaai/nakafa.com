@@ -7,7 +7,6 @@ import {
   openComposer,
   pickFiles,
   pictureOf,
-  runPage,
   TRANSPARENT,
   write,
 } from "@/e2e/support/attachment";
@@ -50,12 +49,12 @@ test.describe("Previews of images in the composer", () => {
     { height: 200, name: "panorama.png", width: 4000 },
   ]) {
     test(`a ${shape.width} by ${shape.height} image fills its chip`, async ({
+      baseURL,
       page,
     }) => {
-      await runPage(
-        page,
+      await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
-          const composer = yield* openComposer(page);
+          const composer = yield* openComposer(page, origin);
           yield* pickFiles(composer, [
             yield* pictureOf(page, shape.name, shape),
           ]);
@@ -132,11 +131,10 @@ for (const scheme of ThemeSchema.literals) {
   test.describe(`A transparent image with dark ink in the ${scheme} theme`, () => {
     test.use({ colorScheme: scheme, viewport: { height: 900, width: 390 } });
 
-    test("stays visible on its chip", async ({ page }) => {
-      await runPage(
-        page,
+    test("stays visible on its chip", async ({ baseURL, page }) => {
+      await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
-          const composer = yield* openComposer(page);
+          const composer = yield* openComposer(page, origin);
           yield* pickFiles(composer, [
             yield* pictureOf(page, "formula.png", {
               height: 120,

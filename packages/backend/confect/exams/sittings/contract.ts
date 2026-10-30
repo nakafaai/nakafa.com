@@ -42,6 +42,33 @@ export const EnterOutcome = Schema.Union([
   }),
 ]);
 
+/**
+ * Why a room's code did not let an account in: no room of the school holds the code, too many
+ * wrong codes, the room is not open or is locked, the school on the free plan has no student
+ * seat left, or the school does not admit the account as a student (it removed the account's
+ * Person, the Person holds a staff role or another class, or its email domain is not the school's).
+ */
+export const JoinRefusal = Schema.Literals([
+  "NotAdmitted",
+  "SeatLimit",
+  "SittingNotOpen",
+  "TokenRefused",
+  "TooManyTries",
+]);
+
+/**
+ * The reply to a room's code: the room it opens, which the account may now enter as a student,
+ * or a refusal. A refusal is a value, not an error, so the failed try that a wrong code counts
+ * stays in the database when the reply is sent.
+ */
+export const JoinOutcome = Schema.Union([
+  Schema.Struct({
+    outcome: Schema.Literal("joined"),
+    sittingId: Id("examSittings"),
+  }),
+  Schema.Struct({ outcome: Schema.Literal("refused"), reason: JoinRefusal }),
+]);
+
 /** The sitting actions that a caller may take, which the server computes for each sitting. */
 export const SittingAction = Kind.actions(entries, "sitting");
 

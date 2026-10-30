@@ -19,14 +19,13 @@ describe("savePlayerModeHandler", () => {
     vi.clearAllMocks();
   });
 
-  it("remembers the chosen view for a year, for the server only", async () => {
+  it("remembers the chosen view for a year, readable by the browser", async () => {
     await savePlayerModeHandler({ data: "single" });
 
     expect(cookies.setCookie).toHaveBeenCalledExactlyOnceWith(
       PLAYER_MODE_COOKIE,
       "single",
       {
-        httpOnly: true,
         maxAge: PLAYER_MODE_MAX_AGE,
         path: "/",
         sameSite: "lax",

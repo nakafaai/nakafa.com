@@ -181,12 +181,15 @@ export function readConvexAuth(
  * Convex asks for a fresh one. A read that fails retryably is tried again on the
  * shared network schedule. A failed read is kept for no time, so every request
  * waiting on it sees the failure and the next request reads again. Convex
- * receives `null` when no token can be read, as its contract requires.
+ * receives `null` when no token can be read, as its contract requires, but only
+ * after `refuse` has run: Convex drops its credentials the moment it receives
+ * `null` and runs every query it still holds without them.
  * https://docs.convex.dev/api/classes/react.ConvexReactClient#setauth
  */
 const makeTokenFetcher = Effect.fnUntraced(function* (
   readToken: Effect.Effect<string, ConvexTokenReadError>,
-  sessionId: string
+  sessionId: string,
+  refuse: Effect.Effect<void>
 ) {
   const services = yield* Effect.context<never>();
   const read = readToken.pipe(
@@ -209,7 +212,9 @@ const makeTokenFetcher = Effect.fnUntraced(function* (
         : Effect.void
       ).pipe(
         Effect.andThen(Cache.get(tokens, sessionId)),
-        Effect.catchTag("ConvexTokenReadError", () => Effect.succeed(null))
+        Effect.catchTag("ConvexTokenReadError", () =>
+          refuse.pipe(Effect.as(null))
+        )
       )
     );
 });
@@ -255,6 +260,11 @@ function isRefused(confirmation: Option.Option<ConvexAuthConfirmation>) {
  * Convex asks for a token once more after a failed one and then gives up, so a
  * refused session is handed to Convex again each time `returns` emits.
  *
+ * When no token can be read, the store records the refusal before Convex hears
+ * it. The store's change queues React's render ahead of Convex's continuation,
+ * so the readers render the session as loading and React drops their
+ * subscriptions before Convex runs a query it still holds without credentials.
+ *
  * Closing the scope stops reporting and forgets the answer, so a session that
  * returns later waits for Convex again. It leaves Convex's credentials in
  * place: the provider clears them from its last child, as
@@ -274,18 +284,22 @@ export const authenticateConvex = Effect.fn("NakafaAuth.authenticateConvex")(
     readonly sessionId: string;
     readonly store: ConvexAuthStore;
   }) {
-    const fetchToken = yield* makeTokenFetcher(readToken, sessionId);
     const isCurrent = MutableRef.make(true);
-    const authenticate = () =>
-      client.setAuth(fetchToken, (isAuthenticated) => {
-        if (MutableRef.get(isCurrent)) {
-          store.setState({
-            confirmation: Option.some(
-              ConvexAuthConfirmation.make({ isAuthenticated, sessionId })
-            ),
-          });
-        }
-      });
+    const confirm = (isAuthenticated: boolean) => {
+      if (MutableRef.get(isCurrent)) {
+        store.setState({
+          confirmation: Option.some(
+            ConvexAuthConfirmation.make({ isAuthenticated, sessionId })
+          ),
+        });
+      }
+    };
+    const fetchToken = yield* makeTokenFetcher(
+      readToken,
+      sessionId,
+      Effect.sync(() => confirm(false))
+    );
+    const authenticate = () => client.setAuth(fetchToken, confirm);
     yield* Effect.acquireRelease(Effect.sync(authenticate), () =>
       Effect.sync(() => {
         MutableRef.set(isCurrent, false);

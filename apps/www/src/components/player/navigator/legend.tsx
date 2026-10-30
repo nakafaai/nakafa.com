@@ -3,7 +3,8 @@ import { PlayerFlagMark } from "@/components/player/navigator/grid";
 
 /**
  * Names the three marks of the numbers, each beside a small swatch drawn the
- * way the grid draws it: filled when answered, outlined when unanswered, and
+ * way the grid draws it: filled when answered, outlined in the destructive
+ * color when unanswered, and
  * the flag mark when flagged.
  */
 export function PlayerLegend() {
@@ -21,7 +22,7 @@ export function PlayerLegend() {
       <li className="flex items-center gap-2">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-sm border bg-background"
+          className="size-4 shrink-0 rounded-sm border border-destructive bg-destructive/5"
         />
         {t("unanswered")}
       </li>

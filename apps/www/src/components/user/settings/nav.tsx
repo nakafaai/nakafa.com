@@ -2,6 +2,7 @@ import {
   AiBrain01Icon,
   BookOpen02Icon,
   HeartAddIcon,
+  Link01Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -36,6 +37,7 @@ const sectionIcons: Record<
   learning: BookOpen02Icon,
   billing: HeartAddIcon,
   memory: AiBrain01Icon,
+  connectors: Link01Icon,
 };
 
 /**

@@ -49,9 +49,20 @@ export const connection = Kind.make("connection", "connectorConnections", {
   relations: [],
 });
 
-/** A school's connections are listed on its tenant, for its Owner and Admin. */
+/**
+ * A school's connections are listed on its tenant, for its Owner and Admin, who
+ * also connect the school to a source and link its Classroom courses (ADR 0015,
+ * journey J7). A teacher's own entry point, which a grant on a unit decides, is
+ * planned.
+ */
 const tenantConnections = Kind.extend(tenant, {
   actions: {
+    "connection.create": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
     "connection.view": {
       access: "read",
       grantedBy: "roles",

@@ -6,8 +6,9 @@ import { homePage } from "@repo/backend/test/nina/page";
 const runtime = { currentDate: "2026-09-27" };
 
 describe("the context of a Nina turn", () => {
-  it("says whether memory is on, and carries the role and the curriculum of the learner only when they have them", () => {
+  it("says whether memory is on and whether Calendar is connected, and carries the role and the curriculum of the learner only when they have them", () => {
     const known = createNinaAgentContext({
+      calendar: true,
       memory: true,
       page: homePage,
       runtime,
@@ -22,6 +23,7 @@ describe("the context of a Nina turn", () => {
       },
     });
     expect(known).toEqual({
+      calendar: true,
       currentDate: "2026-09-27",
       curriculumPreference: {
         program: {
@@ -36,12 +38,14 @@ describe("the context of a Nina turn", () => {
       verified: false,
     });
     const unknown = createNinaAgentContext({
+      calendar: false,
       memory: false,
       page: homePage,
       runtime,
       user: {},
     });
     expect(unknown).toEqual({
+      calendar: false,
       currentDate: "2026-09-27",
       memory: false,
       slug: "home",

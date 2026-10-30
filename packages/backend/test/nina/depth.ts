@@ -138,10 +138,11 @@ export function deepest(ast: SchemaAST.AST): unknown {
 
 /**
  * The artifact types each capability publishes, from the `publish` calls of its
- * tools in `math/tools`, `nakafa/tools` and `research/tools`. Memory publishes
- * none.
+ * tools in `math/tools`, `nakafa/tools` and `research/tools`. Memory and the
+ * calendar publish none.
  */
 const published = {
+  calendar: [],
   deepResearch: ["data-scrape-url", "data-web-search"],
   math: ["data-math"],
   memory: [],

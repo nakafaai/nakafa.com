@@ -5,7 +5,8 @@ import { usePlayer } from "@/components/player/provider";
  * One question of the player. The list shows every question, and one at a time
  * shows only the current one. A question that is not shown stays mounted
  * inside `Activity`: its answer and focus survive, switching is instant, and
- * the server renders only the questions that are shown.
+ * the server renders only the questions that are shown. The article holds its
+ * question's own flag in its top end corner (`PlayerQuestionFlag`).
  */
 export function PlayerQuestion({
   children,
@@ -29,7 +30,7 @@ export function PlayerQuestion({
     <Activity mode={shown ? "visible" : "hidden"}>
       <article
         aria-labelledby={labelledBy}
-        className="outline-none"
+        className="relative outline-none"
         data-player-key={questionKey}
         id={id}
         tabIndex={-1}

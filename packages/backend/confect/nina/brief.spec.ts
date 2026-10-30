@@ -13,11 +13,13 @@ import { Schema } from "effect";
 
 /**
  * What a run reads of a learner and a chat before it calls the model, in one
- * read: what the turn knows about the learner (`learner`), the chat's rolling
- * summary (`summary`), and the newest complete turns the summary does not cover
- * (`uncovered`), which the history is built from.
+ * read: whether the learner connected Google Calendar (`calendar`), what the turn
+ * knows about the learner (`learner`), the chat's rolling summary (`summary`),
+ * and the newest complete turns the summary does not cover (`uncovered`), which
+ * the history is built from.
  */
 const NinaBrief = Schema.Struct({
+  calendar: Schema.Boolean,
   learner: NinaLearner,
   summary: Schema.NullOr(NinaSummaryView),
   uncovered: Schema.Array(NinaUncoveredTurn),

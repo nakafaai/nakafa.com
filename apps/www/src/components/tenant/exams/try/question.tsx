@@ -8,7 +8,7 @@ import {
   typedText,
 } from "@repo/backend/confect/exams/sittings/response";
 import { ClientOnly } from "@tanstack/react-router";
-import { Option } from "effect";
+import { Option, Record as Rec } from "effect";
 import { lazy, Suspense, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
@@ -22,6 +22,7 @@ import {
   writtenOf,
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
+import { PlayerQuestionFlag } from "@/components/player/flag";
 import { PlayerQuestion } from "@/components/player/question";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
@@ -57,6 +58,8 @@ export function ExamTryQuestion({
   const articleId = useId();
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
+  const flag = useExamTry((state) => state.flag);
+  const flagged = useExamTry((state) => Rec.has(state.flags, question.id));
   const choice = choiceOf(question.answers);
   const entry = writtenOf(question.answers);
   const pairing = pairingOf(question.answers);
@@ -68,6 +71,12 @@ export function ExamTryQuestion({
       labelledBy={titleId}
       questionKey={question.id}
     >
+      <PlayerQuestionFlag
+        flagged={flagged}
+        locked={false}
+        onFlag={() => flag(question.id)}
+        questionKey={question.id}
+      />
       <div className="grid gap-6">
         <h2 className="font-medium" id={titleId}>
           {t("question", { number })}

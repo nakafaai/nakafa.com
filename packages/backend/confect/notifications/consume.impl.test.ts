@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -29,6 +30,10 @@ import {
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Order, Schema } from "effect";
+
+/** The journal entry that an invitation row was read from; a class row has none. */
+const entryOf = (row: NotificationsDoc) =>
+  row.changeType === "person.invited" ? row.journalEntryId : null;
 
 const GURU = "guru@harapan.example.test";
 const lain = Schema.decodeSync(Email)("lain@lain.example.test");
@@ -124,7 +129,7 @@ describe("notifications/consume run", () => {
         expect(entry).toMatchObject({
           change: { invite: made.id, type: "person.invited" },
         });
-        expect(rows[0]?.journalEntryId).toBe(entry._id);
+        expect(Arr.map(rows, entryOf)[0]).toBe(entry._id);
         expect(rows[0]?.createdAt).toBe(entry._creationTime);
         // The entry is not settled yet, so the cursor keeps it, and since stays before it.
         expect(yield* cursors(fixture)).toEqual([
@@ -344,7 +349,7 @@ describe("notifications/consume run", () => {
         expect(yield* storedRows(fixture)).toHaveLength(2);
         yield* fixture.run(consumeInboxPage(fixture.tenants.nf, 2));
         const rows = yield* storedRows(fixture);
-        expect(Arr.map(rows, (row) => row.journalEntryId)).toEqual(
+        expect(Arr.map(rows, entryOf)).toEqual(
           Arr.map(entries, (entry) => entry._id)
         );
         expect(Arr.map(rows, (row) => row.recipientPersonId)).toEqual(people);
