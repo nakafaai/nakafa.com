@@ -25,13 +25,17 @@ const completion = (fields: Record<string, unknown>) =>
     logLines: [],
     timestamp: 1,
     udfType: "Mutation",
-    usageStats: { databaseReadDocuments: 14 },
+    usageStats: {
+      databaseReadBytes: 1500,
+      databaseReadDocuments: 14,
+      databaseWriteBytes: 250,
+    },
     ...fields,
   });
 
 describe("load logs", () => {
   it.effect(
-    "reads each execution's timing, reads and conflict, named by its kind, component and function",
+    "reads each execution's timing, reads, conflict and bandwidth, named by its kind, component and function",
     () =>
       Effect.gen(function* () {
         const text = Arr.join(
@@ -85,6 +89,26 @@ describe("load logs", () => {
           failed: false,
           name: "mutation:exams/sittings:answer",
           value: 14,
+        });
+        expect(run.usage).toEqual({
+          "mutation:exams/sittings:answer": {
+            calls: 3,
+            readBytes: 4500,
+            readDocuments: 42,
+            writeBytes: 750,
+          },
+          "query:betterAuth/session:live": {
+            calls: 1,
+            readBytes: 1500,
+            readDocuments: 14,
+            writeBytes: 250,
+          },
+          "query:exams/sittings:paper (cached)": {
+            calls: 1,
+            readBytes: 1500,
+            readDocuments: 14,
+            writeBytes: 250,
+          },
         });
         expect(run.conflicts).toEqual([
           {

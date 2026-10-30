@@ -7,8 +7,10 @@ import { Sample } from "@repo/backend/scripts/load/stats";
 import {
   Effect,
   FileSystem,
+  MutableHashMap,
   MutableList,
   Option,
+  Record,
   Schema,
   String as Str,
   Stream,
@@ -18,7 +20,8 @@ import { ChildProcess } from "effect/process";
 /**
  * One finished function execution as `convex logs --jsonl --success` prints it: the function and
  * the component it runs in, its kind, how long it ran in seconds, whether a cached result answered
- * it, the documents it read, the write conflict that made Convex run it again, and its error.
+ * it, the documents and bytes it read and the bytes it wrote, the write conflict that made Convex
+ * run it again, and its error.
  */
 const Completion = Schema.Struct({
   cachedResult: Schema.optionalKey(Schema.Boolean),
@@ -35,7 +38,11 @@ const Completion = Schema.Struct({
     )
   ),
   udfType: Schema.String,
-  usageStats: Schema.Struct({ databaseReadDocuments: Schema.Finite }),
+  usageStats: Schema.Struct({
+    databaseReadBytes: Schema.Finite,
+    databaseReadDocuments: Schema.Finite,
+    databaseWriteBytes: Schema.Finite,
+  }),
 });
 type Completion = typeof Completion.Type;
 
@@ -48,15 +55,37 @@ const decodeCompletion = Schema.decodeUnknownOption(
 );
 
 /**
- * What the backend's own log says about a run, as samples by call: how long each execution ran
+ * What one function cost the backend over a run, as Convex bills a deployment: its calls, and the
+ * documents and bytes it read and the bytes it wrote, whose sum is its database bandwidth.
+ */
+export const Usage = Schema.Struct({
+  calls: Schema.Int,
+  readBytes: Schema.Finite,
+  readDocuments: Schema.Finite,
+  writeBytes: Schema.Finite,
+});
+export type Usage = typeof Usage.Type;
+
+/**
+ * What the backend's own log says about a run: as samples by call, how long each execution ran
  * (a cached answer apart, since it runs nothing), the documents each read, and one sample for each
- * write conflict that Convex retried, named by the function and the table it conflicted on.
+ * write conflict that Convex retried, named by the function and the table it conflicted on; and
+ * the usage of each function, summed as the log streams, since a full run holds millions of calls.
  */
 const ServerRun = Schema.Struct({
   conflicts: Schema.Array(Sample),
   reads: Schema.Array(Sample),
   timings: Schema.Array(Sample),
+  usage: Schema.Record(Schema.String, Usage),
 });
+
+/** No call yet: the usage a function starts from. */
+const NO_USAGE: Usage = {
+  calls: 0,
+  readBytes: 0,
+  readDocuments: 0,
+  writeBytes: 0,
+};
 
 /** The name of an execution's function: its kind, its component, and its path, such as `mutation:exams/sittings:answer`. */
 const nameOf = (completion: Completion) =>
@@ -82,6 +111,7 @@ export const readServerRun = Effect.fn("load.logs.read")(function* (
   const conflicts = MutableList.make<Sample>();
   const reads = MutableList.make<Sample>();
   const timings = MutableList.make<Sample>();
+  const usage = MutableHashMap.empty<string, Usage>();
   yield* (yield* FileSystem.FileSystem).stream(path).pipe(
     Stream.decodeText(),
     Stream.splitLines,
@@ -107,10 +137,23 @@ export const readServerRun = Effect.fn("load.logs.read")(function* (
           name,
           value: completion.usageStats.databaseReadDocuments,
         });
+        const call =
+          completion.cachedResult === true ? `${name} (cached)` : name;
         MutableList.append(timings, {
           failed,
-          name: completion.cachedResult === true ? `${name} (cached)` : name,
+          name: call,
           value: completion.executionTime * 1000,
+        });
+        const used = Option.getOrElse(
+          MutableHashMap.get(usage, call),
+          () => NO_USAGE
+        );
+        const stats = completion.usageStats;
+        MutableHashMap.set(usage, call, {
+          calls: used.calls + 1,
+          readBytes: used.readBytes + stats.databaseReadBytes,
+          readDocuments: used.readDocuments + stats.databaseReadDocuments,
+          writeBytes: used.writeBytes + stats.databaseWriteBytes,
         });
       })
     )
@@ -119,6 +162,7 @@ export const readServerRun = Effect.fn("load.logs.read")(function* (
     conflicts: MutableList.toArray(conflicts),
     reads: MutableList.toArray(reads),
     timings: MutableList.toArray(timings),
+    usage: Record.fromEntries(usage),
   } satisfies typeof ServerRun.Type;
 });
 

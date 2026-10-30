@@ -1,4 +1,5 @@
 import { Audit } from "@repo/backend/scripts/load/ledger";
+import { Usage } from "@repo/backend/scripts/load/logs";
 import { LoadPlan } from "@repo/backend/scripts/load/plan";
 import { Spread } from "@repo/backend/scripts/load/stats";
 import { Array as Arr, Option, Order, pipe, Record, Schema } from "effect";
@@ -17,7 +18,8 @@ const TARGETS = {
 
 /**
  * What one run measured: its plan and length, every call's latency on both ends, the documents
- * each function read, the write conflicts the backend retried, and the audit of the answers.
+ * each function read, the write conflicts the backend retried, each function's calls and database
+ * bandwidth, and the audit of the answers.
  */
 export const LoadReport = Schema.Struct({
   audit: Audit,
@@ -29,6 +31,7 @@ export const LoadReport = Schema.Struct({
   reads: Schema.Record(Schema.String, Spread),
   server: Schema.Record(Schema.String, Spread),
   startedAt: Schema.Finite,
+  usage: Schema.Record(Schema.String, Usage),
 });
 export type LoadReport = typeof LoadReport.Type;
 
@@ -107,7 +110,50 @@ const conflictLines = (conflicts: Record.ReadonlyRecord<string, Spread>) =>
         ),
       ];
 
-/** The report as Markdown: the verdict, the client and server latencies, the reads, the conflicts, and the audit. */
+/** Bytes in megabytes of a million bytes, to one decimal. */
+const megabytes = (bytes: number) => (bytes / 1_000_000).toFixed(1);
+
+/** One row of the bandwidth table. */
+const usageRow = (name: string, usage: Usage) =>
+  `| ${name} | ${usage.calls} | ${usage.readDocuments} | ${megabytes(usage.readBytes)} | ${megabytes(usage.writeBytes)} |`;
+
+/**
+ * Each function's calls and database bandwidth, the costliest first, and the run's total, which
+ * is what the run would add to a deployment's bill.
+ */
+const usageLines = (usage: Record.ReadonlyRecord<string, Usage>) => {
+  const entries = Record.toEntries(usage);
+  const total = Arr.reduce(
+    entries,
+    { calls: 0, readBytes: 0, readDocuments: 0, writeBytes: 0 },
+    (sum, [, used]) => ({
+      calls: sum.calls + used.calls,
+      readBytes: sum.readBytes + used.readBytes,
+      readDocuments: sum.readDocuments + used.readDocuments,
+      writeBytes: sum.writeBytes + used.writeBytes,
+    })
+  );
+  return [
+    "| Function | Calls | Documents read | MB read | MB written |",
+    "| --- | ---: | ---: | ---: | ---: |",
+    ...Arr.map(
+      Arr.sort(
+        entries,
+        Order.flip(
+          Order.mapInput(
+            Order.Number,
+            ([, used]: readonly [string, Usage]) =>
+              used.readBytes + used.writeBytes
+          )
+        )
+      ),
+      ([name, used]) => usageRow(name, used)
+    ),
+    usageRow("Total", total),
+  ];
+};
+
+/** The report as Markdown: the verdict, the client and server latencies, the reads, the conflicts, the bandwidth, and the audit. */
 export const markdownOf = (report: LoadReport) =>
   Arr.join(
     [
@@ -126,6 +172,10 @@ export const markdownOf = (report: LoadReport) =>
       spreadTable(report.reads, "docs"),
       "",
       ...conflictLines(report.conflicts),
+      "",
+      "Calls and database bandwidth of each function, as the backend counted them:",
+      "",
+      ...usageLines(report.usage),
       "",
       "| Answers | Acknowledged | Stored | Lost | Duplicated | Mismatched | Ahead | Unacknowledged |",
       "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",

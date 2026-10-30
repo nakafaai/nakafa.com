@@ -43,7 +43,11 @@ describe("load run", () => {
                 identifier: "exams/sittings.js:answer",
                 kind: "Completion",
                 udfType: "Mutation",
-                usageStats: { databaseReadDocuments: 14 },
+                usageStats: {
+                  databaseReadBytes: 2048,
+                  databaseReadDocuments: 14,
+                  databaseWriteBytes: 512,
+                },
               })
             ),
           connect: () => fake.open,

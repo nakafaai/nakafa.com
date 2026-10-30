@@ -165,6 +165,7 @@ export const runLoad = Effect.fn("load.run")(function* <E, R>(
     reads: spreadByName(server.reads),
     server: spreadByName(server.timings),
     startedAt: start,
+    usage: server.usage,
   });
   yield* fs.writeFileString(
     input.output,

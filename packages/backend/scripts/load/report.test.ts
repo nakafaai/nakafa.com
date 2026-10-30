@@ -55,7 +55,7 @@ describe("load report", () => {
     expect(passes(fast, { ...clean, mismatched: 1 })).toBe(false);
   });
 
-  it("prints the verdict, both latency tables sorted by call, and the audit", () => {
+  it("prints the verdict, both latency tables sorted by call, the bandwidth costliest first, and the audit", () => {
     const report: LoadReport = {
       audit: clean,
       client: { "query:paper": latency(40.4), ...fast },
@@ -66,6 +66,20 @@ describe("load report", () => {
       reads: { "mutation:exams/sittings:answer": latency(14) },
       server: { "mutation:exams/sittings:answer": latency(12.6) },
       startedAt: 1000,
+      usage: {
+        "mutation:exams/sittings:answer": {
+          calls: 30,
+          readBytes: 1_250_000,
+          readDocuments: 420,
+          writeBytes: 300_000,
+        },
+        "query:exams/sittings:paper": {
+          calls: 90,
+          readBytes: 9_000_000,
+          readDocuments: 3600,
+          writeBytes: 0,
+        },
+      },
     };
     const text = markdownOf(report);
     expect(text).toContain(
@@ -83,6 +97,13 @@ describe("load report", () => {
       "| Call | Count | Failed | p50 docs | p95 docs | p99 docs | Max docs |"
     );
     expect(text).toContain("The backend retried no write after a conflict.");
+    expect(text).toContain(
+      "| query:exams/sittings:paper | 90 | 3600 | 9.0 | 0.0 |"
+    );
+    expect(text.indexOf("| query:exams/sittings:paper |")).toBeLessThan(
+      text.indexOf("| mutation:exams/sittings:answer | 30 |")
+    );
+    expect(text).toContain("| Total | 120 | 4020 | 10.3 | 0.3 |");
     expect(markdownOf({ ...report, passed: true })).toContain("Verdict: pass.");
     const conflicted = markdownOf({
       ...report,
