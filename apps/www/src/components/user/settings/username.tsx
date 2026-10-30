@@ -60,7 +60,12 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
     users.queries.checkUsername,
     isAuthenticated ? { username: asked } : "skip"
   );
-  if (QueryResult.isFailure(check)) {
+  // A prepared deletion makes the account unavailable while its page is still on
+  // screen: the card then asks nothing more and keeps what it showed.
+  if (
+    QueryResult.isFailure(check) &&
+    check.error._tag !== "AccountUnavailable"
+  ) {
     throw check.error;
   }
   const reply = usernameReply({
