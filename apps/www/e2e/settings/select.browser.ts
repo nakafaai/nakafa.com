@@ -2,7 +2,6 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { pinnedRoutes } from "@/e2e/support/corpus";
 import { signInLearner } from "@/e2e/support/learner";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -11,13 +10,16 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The learning settings, whose curriculum select holds the longest values of the app. */
 const LEARNING_PATH = `${appRoutes.settings}/learning`;
 
-/** The pages whose selects show a value from the start. */
-const SELECT_PAGES = [pinnedRoutes.upcoming.en, appRoutes.tryout] as const;
+/** The pages whose selects show a value from the start: a curriculum's page and a try-out country's page. */
+const SELECT_PAGES = [
+  "/en/curriculum/merdeka",
+  "/en/try-out/indonesia",
+] as const;
 
 /**
  * Where a select's value and chevron stand in its trigger: the value is drawn in
- * full or clamped inside its own box, and ends before the chevron, which ends
- * inside the trigger. Read in one frame, in the page.
+ * full, or clamped by an ellipsis inside its own box, and ends before the
+ * chevron, which ends inside the trigger. Read in one frame, in the page.
  */
 const readFit = (trigger: Locator) =>
   trigger.evaluate((element) => {
@@ -35,7 +37,12 @@ const readFit = (trigger: Locator) =>
     const chevronBox = chevron.getBoundingClientRect();
     return {
       chevronInside: chevronBox.right <= box.right + 0.5,
-      valueClamped: value.scrollWidth <= value.clientWidth + 0.5,
+      // A block draws the ellipsis; a row of flex items would cut its text without one.
+      valueClamped:
+        value.scrollWidth <= value.clientWidth + 0.5 ||
+        (getComputedStyle(value).display === "block" &&
+          getComputedStyle(value).textOverflow === "ellipsis" &&
+          getComputedStyle(value).overflowX === "hidden"),
       valueEndsFirst: valueBox.right <= chevronBox.left + 0.5,
     };
   });

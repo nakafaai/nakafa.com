@@ -28,14 +28,15 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
 
 /**
  * The chosen item in the trigger, on one line: a label longer than the trigger ends in an ellipsis, so it never
- * pushes the text or the chevron past the trigger's border. A plain label is a block, where the ellipsis draws;
- * an item drawn with an icon, such as a flag, keeps its row, and each part of the row clamps.
+ * pushes the text or the chevron past the trigger's border. The value is a block, where the ellipsis draws, and
+ * an item drawn with an icon, such as a flag, keeps the icon inline before its label: Base UI copies the item's
+ * nodes into the value, the label often as bare text, which a row of flex items could not end in an ellipsis.
  */
 function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   return (
     <SelectPrimitive.Value
       className={cn(
-        "min-w-0 flex-1 truncate text-left *:min-w-0 *:truncate has-[>*]:flex has-[>*]:items-center has-[>*]:gap-2",
+        "min-w-0 flex-1 truncate text-left [&>svg]:me-2 [&>svg]:inline-block [&>svg]:align-[-0.1875em]",
         className
       )}
       data-slot="select-value"
