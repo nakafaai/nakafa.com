@@ -40,6 +40,7 @@ import {
   useClassScope,
 } from "@/components/tenant/classes/scope";
 import { ClassTabs } from "@/components/tenant/classes/tabs";
+import { EditTask } from "@/components/tenant/classes/tasks/edit";
 import { TaskList } from "@/components/tenant/classes/tasks/list";
 import { TaskPage } from "@/components/tenant/classes/tasks/page";
 import { TaskWorkSearch } from "@/components/tenant/classes/tasks/work";
@@ -341,7 +342,12 @@ function ClassBody({
     return (
       <TableFiltersProvider>
         <ClassHeader>
-          {Arr.contains(klass.can, "task.manage") ? <TaskWorkSearch /> : null}
+          {Arr.contains(klass.can, "task.manage") ? (
+            <>
+              <TaskWorkSearch />
+              <EditTask task={view.task} />
+            </>
+          ) : null}
         </ClassHeader>
         <ClassScroll>
           <TaskPage task={view.task} />

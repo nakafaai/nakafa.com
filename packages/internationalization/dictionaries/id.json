@@ -717,7 +717,8 @@
         "created": "Wali kelas ditetapkan",
         "removed": "Wali kelas dilepas",
         "published": "Tugas diterbitkan",
-        "deadlineChanged": "Tenggat tugas diubah"
+        "deadlineChanged": "Tenggat tugas diubah",
+        "edited": "Tugas diubah"
       },
       "billing": {
         "invoice": {
@@ -1134,7 +1135,11 @@
     "task-work-no-match-description": "Belum ada siswa dengan nama yang cocok yang mengumpulkan tugas.",
     "task-new": "Tugas baru",
     "task-new-description": "Semua anggota kelas menerimanya di notifikasi.",
-    "task-publish": "Terbitkan"
+    "task-publish": "Terbitkan",
+    "task-edit": "Ubah tugas",
+    "task-edit-description": "Alamatnya tetap, jadi setiap tautannya tetap membuka tugas ini.",
+    "task-edit-save": "Simpan",
+    "task-points-fixed": "Poin tetap setelah ada tugas yang dikumpulkan."
   },
   "SchoolGrades": {
     "student": "Siswa",

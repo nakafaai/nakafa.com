@@ -102,6 +102,10 @@ export const classKind = Kind.make("class", "classes", {
       task: Id("classroomTasks"),
       type: Schema.Literal("assignment.deadlineChanged"),
     }),
+    Schema.Struct({
+      task: Id("classroomTasks"),
+      type: Schema.Literal("assignment.edited"),
+    }),
   ],
   published: [
     "announcement.posted",

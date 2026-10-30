@@ -717,7 +717,8 @@
         "created": "Klassenlehrer zugewiesen",
         "removed": "Klassenlehrer entfernt",
         "published": "Aufgabe veröffentlicht",
-        "deadlineChanged": "Abgabefrist geändert"
+        "deadlineChanged": "Abgabefrist geändert",
+        "edited": "Aufgabe bearbeitet"
       },
       "billing": {
         "invoice": {
@@ -1134,7 +1135,11 @@
     "task-work-no-match-description": "Kein Schüler mit passendem Namen hat etwas abgegeben.",
     "task-new": "Neue Aufgabe",
     "task-new-description": "Alle in der Klasse erhalten sie in ihren Benachrichtigungen.",
-    "task-publish": "Veröffentlichen"
+    "task-publish": "Veröffentlichen",
+    "task-edit": "Aufgabe bearbeiten",
+    "task-edit-description": "Ihre Adresse bleibt, also öffnet jeder Link sie weiter.",
+    "task-edit-save": "Speichern",
+    "task-points-fixed": "Die Punkte stehen fest, sobald Arbeit abgegeben ist."
   },
   "SchoolGrades": {
     "student": "Schüler",

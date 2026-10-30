@@ -207,6 +207,7 @@ describe("access/catalog", () => {
           "announcement.posted",
           "assignment.published",
           "assignment.deadlineChanged",
+          "assignment.edited",
           "grade.released",
           "scheme.stored",
           "visit.requested",

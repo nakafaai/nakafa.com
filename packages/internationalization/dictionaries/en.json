@@ -717,7 +717,8 @@
         "created": "Homeroom teacher assigned",
         "removed": "Homeroom teacher removed",
         "published": "Task published",
-        "deadlineChanged": "Task deadline changed"
+        "deadlineChanged": "Task deadline changed",
+        "edited": "Task edited"
       },
       "billing": {
         "invoice": {
@@ -1134,7 +1135,11 @@
     "task-work-no-match-description": "No student whose name matches has handed work in.",
     "task-new": "New task",
     "task-new-description": "Everyone in the class gets it in their notifications.",
-    "task-publish": "Publish"
+    "task-publish": "Publish",
+    "task-edit": "Edit task",
+    "task-edit-description": "Its address stays, so every link to it still opens it.",
+    "task-edit-save": "Save",
+    "task-points-fixed": "Points are fixed once work is handed in."
   },
   "SchoolGrades": {
     "student": "Student",
