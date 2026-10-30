@@ -13,9 +13,8 @@ import {
   Schedule,
   Schema,
 } from "effect";
+import { answerFromAuth, answerWithoutAuth } from "@/lib/auth/answer";
 import { bufferResponse } from "@/lib/auth/body";
-import { readSessionCookie } from "@/lib/auth/cookie.server";
-import { SESSION_PATH } from "@/lib/auth/session";
 import { readRequestHost } from "@/lib/routing/school/host";
 import { runServerEffect } from "@/lib/server/fn";
 
@@ -160,38 +159,6 @@ export const answerAuthDeadline = (
   );
 
 /**
- * Whether a request asks Better Auth for the session of a visitor who sent
- * nothing that could prove one: no session cookie and no bearer token.
- *
- * Better Auth answers such a request with `null` before it reads a table, so
- * Convex has nothing to add. Without this answer each read is still one HTTP
- * action on the Convex site, because `handler.GET` fetches it: a function call
- * and its action compute, though no database I/O. Every page load and every
- * return to the tab makes this read, signed in or not, and most visitors are
- * not. The browser cannot skip the request itself, because the session cookie
- * is HttpOnly and no script can see that it is missing; only the server can.
- */
-function isSignedOutSessionRead(request: Request) {
-  return (
-    new URL(request.url).pathname === SESSION_PATH &&
-    readSessionCookie(request) === null &&
-    !request.headers.has("authorization")
-  );
-}
-
-/**
- * The answer Better Auth gives a session read that has no session cookie: a
- * JSON `null` that no cache may keep. Its own answer also clears a Convex JWT
- * cookie, which nothing here reads, because the Better Auth helper that does is
- * used without its JWT cache.
- */
-function answerSignedOutSession() {
-  return Response.json(null, {
-    headers: { "Cache-Control": "no-store", Pragma: "no-cache" },
-  });
-}
-
-/**
  * The request with the host that the browser asked for in its URL. A local
  * `next start` on its own hostname and port builds each request's URL from that
  * address, so every school would read as `localhost`, and the Better Auth handler
@@ -211,22 +178,30 @@ function withBrowserHost(request: Request): Request {
 }
 
 /**
+ * Answers one read: the relay's own answer for a request that sends no
+ * credentials (`answerWithoutAuth`), or else Better Auth's, reached with the
+ * browser's host (`withBrowserHost`) and given as the browser gets it
+ * (`answerFromAuth`).
+ */
+function answerRead(handler: AuthRouteHandler, request: Request) {
+  return Option.match(answerWithoutAuth(request), {
+    onNone: () =>
+      readAuthResponse(handler, withBrowserHost(request)).pipe(
+        Effect.map((response) => answerFromAuth(request, response)),
+        answerAuthDeadline
+      ),
+    onSome: (answer) => Effect.succeed(answer),
+  });
+}
+
+/**
  * Builds the route methods for the Better Auth handler. A network failure that
- * is not repeated rejects the route, and the server answers 500. A session read
- * from a visitor without a session
- * cookie is answered here and never reaches Convex. Every other request reaches
- * Better Auth with the browser's host (`withBrowserHost`).
+ * is not repeated rejects the route, and the server answers 500. Reads go
+ * through `answerRead`, and writes reach Better Auth with the browser's host.
  */
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
-    GET: (request: Request) =>
-      runServerEffect(
-        isSignedOutSessionRead(request)
-          ? Effect.succeed(answerSignedOutSession())
-          : readAuthResponse(handler, withBrowserHost(request)).pipe(
-              answerAuthDeadline
-            )
-      ),
+    GET: (request: Request) => runServerEffect(answerRead(handler, request)),
     POST: (request: Request) =>
       runServerEffect(
         writeAuthResponse(handler, withBrowserHost(request)).pipe(
