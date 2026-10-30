@@ -104,6 +104,8 @@
     "prosemirror-transform": "1.12.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "seroval": "1.7.3",
+    "seroval-plugins": "1.7.3",
     "source-map-js": "1.2.2",
     "zod": "4.6.7"
   },

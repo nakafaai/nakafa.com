@@ -129,8 +129,12 @@ const TIPTAP_PACKAGES = Arr.dedupe(
 );
 
 /**
- * Three transitive overrides in the root `package.json` hold a version for a reason
- * that no manifest states. `prosemirror-transform` 1.12.4 is the one copy that the
+ * Five transitive overrides in the root `package.json` hold a version for a reason
+ * that no manifest states. `seroval` and `seroval-plugins` 1.7.3 are one copy each
+ * for TanStack Start's serializer, its web plugins, and the prerender
+ * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
+ * kept their nested 1.6.8 copies, which GHSA-9wx9-5pv9-3349 and GHSA-f86p-h4j2-7qgj
+ * affect, when the web app moved. `prosemirror-transform` 1.12.4 is the one copy that the
  * ProseMirror packages of `@tiptap/pm` and the backend's step folding share: Bun
  * kept the packages' nested 1.12.2 copies when the backend moved to 1.12.4, and a
  * step made by one copy fails `instanceof` checks against the other. `convex-helpers` 0.1.131, the latest release that the
