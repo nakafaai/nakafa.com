@@ -1214,6 +1214,8 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "month": "Bulan",
+    "year": "Tahun",
     "arabic-fatha": "Fathah",
     "arabic-kasra": "Kasrah",
     "arabic-damma": "Dammah",

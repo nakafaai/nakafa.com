@@ -1214,6 +1214,8 @@
     "classification": "Education"
   },
   "Common": {
+    "month": "Month",
+    "year": "Year",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
