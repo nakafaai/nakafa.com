@@ -112,7 +112,10 @@ kept, so no first press is a dead click.
   (`apps/www/src/components/ai/input.tsx`).
 - A replayed press runs when React mounts the control, before the page's live
   session starts. A handler that treats a visitor differently counts the reader
-  as a visitor only when the page has no signed-in hint (`hasSignedInHint`).
+  as a visitor only when the page has no signed-in hint (`hasSignedInHint`). A
+  press it holds for the session settles once Better Auth confirms the session,
+  answers signed out, or cannot be read (`hasError`, which a failed module load
+  sets too), so no held press waits on a read that failed.
 
 Nina's entry on lessons, articles, and Quran pages keeps its press:
 `apps/www/e2e/chat/sheet.browser.ts` presses it right after the page loads. So

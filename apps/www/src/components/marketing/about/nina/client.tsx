@@ -37,18 +37,22 @@ function startsNoSession() {
  * keeps its text while the page's session settles, so a signed-in learner never
  * sees it dim and come back. A visitor's attach and send ask for sign-in. A send
  * or an attach pressed while the session loads, or before the live composer
- * loaded, is held: a session that signs in loads the live composer, which admits
- * the send or opens the file picker, and a session that settles signed out asks
- * for sign-in. The page's session starts only after React takes the page over,
- * so until then a reader counts as a visitor only when the page has no signed-in
- * hint, and an attach pressed before then is kept (`useEarlyPress`) and follows
- * the same way. A signed-in learner's first focus or input loads the live
- * composer as a transition, so React keeps this input, focused and holding its
- * text, until the live composer has loaded, which admits a send held here.
+ * loaded, is held: a session that Better Auth confirms loads the live composer,
+ * which admits the send or opens the file picker, and any other answer, signed
+ * out or a read that failed, asks for sign-in, where a learner who is signed in
+ * after all is sent straight back. The page's session starts only after React
+ * takes the page over, so until then a reader counts as a visitor only when the
+ * page has no signed-in hint, and an attach pressed before then is kept
+ * (`useEarlyPress`) and follows the same way. A signed-in learner's first focus
+ * or input loads the live composer as a transition, so React keeps this input,
+ * focused and holding its text, until the live composer has loaded, which admits
+ * a send held here.
  */
 function NinaComposerInput() {
   const isSignedIn = useLiveSession((state) => Option.isSome(state.client));
   const isSessionPending = useLiveSession((state) => state.isPending);
+  const hasSessionError = useLiveSession((state) => state.hasError);
+  const hasSession = useLiveSession((state) => state.sessionId !== null);
   const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const [engaged, setEngaged] = useState(false);
@@ -56,16 +60,20 @@ function NinaComposerInput() {
   const [attachHeld, setAttachHeld] = useState(false);
   const isVisitor = !(isSignedIn || isSessionPending);
   // The session settles once per page, so one deferred marks that moment: a
-  // settled session with its client, or a page that starts none.
+  // settled session with its client, a read that failed, or a page that starts
+  // none.
   const [sessionKnown] = useState(() => Deferred.makeUnsafe<void>());
   useEffect(() => {
-    if (!isSessionPending && (isSignedIn || startsNoSession())) {
+    if (
+      hasSessionError ||
+      (!isSessionPending && (isSignedIn || startsNoSession()))
+    ) {
       Deferred.doneUnsafe(sessionKnown, Effect.void);
     }
-  }, [isSessionPending, isSignedIn, sessionKnown]);
-  /** Loads the live composer for a signed-in session, or asks a visitor to sign in. */
+  }, [hasSessionError, isSessionPending, isSignedIn, sessionKnown]);
+  /** Loads the live composer for a session Better Auth confirmed, or asks for sign-in. */
   function followSession() {
-    if (isSignedIn) {
+    if (isSignedIn && hasSession) {
       startTransition(() => setEngaged(true));
       return;
     }
