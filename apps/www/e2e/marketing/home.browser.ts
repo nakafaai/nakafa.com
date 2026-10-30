@@ -301,7 +301,50 @@ function readableName(radio: Element) {
   return label === null ? "" : readable(label).trim();
 }
 
-test("every choice of the home's practice question is named by its own words", async ({
+/**
+ * The KaTeX drawings in a radio's label that assistive technology still reaches: each `.katex` and its
+ * MathML copy outside an `aria-hidden` subtree of the label. None, when the label hides each whole
+ * drawing, so a screen reader hears the spoken words once and not the MathML too.
+ */
+function reachableDrawings(radio: Element) {
+  const label = document.getElementById(
+    radio.getAttribute("aria-labelledby") ?? ""
+  );
+  if (label === null) {
+    return -1;
+  }
+  return Array.from(
+    label.querySelectorAll(".katex, .katex-mathml, math")
+  ).filter((drawing) => {
+    const hidden = drawing.closest('[aria-hidden="true"]');
+    return hidden === null || !label.contains(hidden);
+  }).length;
+}
+
+/**
+ * The text of the MathML in a radio's label without KaTeX's TeX annotation, which a browser that reads
+ * MathML names the radio with, when that text is a plain number such as `10`; empty for any other label.
+ */
+function plainNumberText(radio: Element) {
+  const label = document.getElementById(
+    radio.getAttribute("aria-labelledby") ?? ""
+  );
+  const text = Array.from(
+    label?.querySelectorAll(".katex-mathml semantics") ?? [],
+    (semantics) => semantics.firstElementChild?.textContent ?? ""
+  )
+    .join(" ")
+    .trim();
+  const plain = Array.from(text).every(
+    (character) =>
+      (character >= "0" && character <= "9") ||
+      character === "," ||
+      character === "."
+  );
+  return plain ? text : "";
+}
+
+test("every choice of the home's practice question is named once, by its own words", async ({
   page,
 }) => {
   await page.goto("/id");
@@ -310,6 +353,12 @@ test("every choice of the home's practice question is named by its own words", a
   const all = await choices.all();
   expect(all.length).toBeGreaterThan(0);
   for (const choice of all) {
-    expect(await choice.evaluate(readableName)).not.toBe("");
+    const name = await choice.evaluate(readableName);
+    expect(name).not.toBe("");
+    // The drawing, its MathML copy included, is hidden, so its words are read once.
+    expect(await choice.evaluate(reachableDrawings)).toBe(0);
+    // A plain number is named with exactly the text its MathML holds.
+    const number = await choice.evaluate(plainNumberText);
+    expect(name).toBe(number === "" ? name : number);
   }
 });

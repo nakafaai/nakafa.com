@@ -12,14 +12,29 @@ const INLINE_FORMULA = /\$([^$]+)\$/g;
 const SPACE = /\s+/g;
 
 /**
- * A formula as words, with a space on each side: KaTeX's own reading of it, or its TeX where KaTeX cannot
- * read a command of it.
+ * A formula that is a plain number, such as `10`, `3.14` or `2{,}5`, or one identifier, such as `x`. Its
+ * MathML holds the same characters, so a screen reader reads it in its own language.
  */
-const spokenFormula = (_formula: string, tex: string) =>
-  ` ${Result.getOrElse(
-    Result.try(() => renderA11yString(tex)),
-    () => tex
+const PLAIN_FORMULA = /^(?:\d+(?:(?:\{[.,]\}|[.,])\d+)*|[A-Za-z])$/;
+
+/** The braces of a decimal comma, `{,}`, which a plain number's MathML does not hold. */
+const BRACE = /[{}]/g;
+
+/**
+ * A formula as words, with a space on each side. A plain number or identifier keeps the text its MathML
+ * holds, so `$10$` stays `10`; structured math takes KaTeX's own reading, in English, since KaTeX speaks no
+ * other language; and a formula with a command KaTeX cannot read keeps its TeX.
+ */
+const spokenFormula = (_formula: string, tex: string) => {
+  const formula = Str.trim(tex);
+  if (PLAIN_FORMULA.test(formula)) {
+    return ` ${formula.replace(BRACE, "")} `;
+  }
+  return ` ${Result.getOrElse(
+    Result.try(() => renderA11yString(formula)),
+    () => formula
   )} `;
+};
 
 /** The words of Markdown tokens: a token's own tokens where it holds them, else its text. */
 const wordsOf = (tokens: readonly Token[]): string =>
@@ -37,7 +52,7 @@ const wordsOf = (tokens: readonly Token[]): string =>
 
 /**
  * Authored Markdown as the words a screen reader says for it: its words without their marks, with each
- * formula spoken as KaTeX reads it. A label drawn only as math holds no text an accessible name can read,
+ * plain number or identifier as its MathML text and each other formula spoken as KaTeX reads it. A label drawn only as math holds no text an accessible name can read,
  * since its formula is MathML, which counts as embedded content, and its drawing is hidden from assistive
  * technology; these words are what such a label names its control with.
  */

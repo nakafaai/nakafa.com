@@ -4,8 +4,14 @@ import { describe, expect, it } from "@effect/vitest";
 import { spokenText } from "@repo/design-system/lib/markdown/spoken";
 
 describe("authored Markdown as spoken words", () => {
-  it("speaks a label drawn only as math", () => {
+  it("reads a plain number or identifier as the text its MathML holds", () => {
     expect(spokenText("$10$")).toBe("10");
+    expect(spokenText("$3.14$")).toBe("3.14");
+    expect(spokenText("$2{,}5$")).toBe("2,5");
+    expect(spokenText("$ x $")).toBe("x");
+  });
+
+  it("speaks structured math as KaTeX reads it", () => {
     expect(spokenText("$\\frac{1}{2}$")).toBe(
       "start fraction, 1, divided by, 2, end fraction"
     );
