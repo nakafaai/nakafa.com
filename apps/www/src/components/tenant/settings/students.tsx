@@ -158,13 +158,20 @@ function SchoolLoginTable({ logins }: { logins: readonly LoginItem[] }) {
   }
 
   const columns = loginColumns.columns([
-    loginColumns.accessor((login) => login.loginName, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      filterFn: "includesString",
-      header: t("login-name"),
-      id: "login",
-      sortFn: "text",
-    }),
+    // The login name with the student's name after it, so the header's search finds a login by either; the cell
+    // shows the login name.
+    loginColumns.accessor(
+      (login) => `${login.loginName} ${login.person.name}`,
+      {
+        cell: (info) => (
+          <span className="font-medium">{info.row.original.loginName}</span>
+        ),
+        filterFn: "includesString",
+        header: t("login-name"),
+        id: "login",
+        sortFn: "text",
+      }
+    ),
     loginColumns.accessor((login) => login.person.name, {
       header: t("login-person"),
       id: "person",

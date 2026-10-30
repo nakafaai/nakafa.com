@@ -5,19 +5,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import {
-  Download01Icon,
-  UserAccountIcon,
-  UserCheck01Icon,
-  UserCircleIcon,
-  UserEdit01Icon,
-  UserIcon,
-  UserLove01Icon,
-  UserSettings01Icon,
-  UserShield01Icon,
-  UserSquareIcon,
-  UserStar01Icon,
-} from "@hugeicons/core-free-icons";
+import { Download01Icon } from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -42,22 +30,9 @@ import {
 } from "@/components/shared/table/toolbar";
 import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { PERSON_ICONS } from "@/components/tenant/settings/choices";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-
-/** The icons of the people in the Who column's filter, one of a person for each. */
-const PERSON_ICONS = [
-  UserIcon,
-  UserCircleIcon,
-  UserSquareIcon,
-  UserStar01Icon,
-  UserAccountIcon,
-  UserCheck01Icon,
-  UserEdit01Icon,
-  UserLove01Icon,
-  UserSettings01Icon,
-  UserShield01Icon,
-] as const;
 
 /** How many entries one page of the journal loads, and each page after it. */
 const PAGE_SIZE = 25;
