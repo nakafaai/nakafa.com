@@ -110,6 +110,7 @@ function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
           setKey: value.page.set.setKey,
           trackKey: value.page.set.trackKey,
         },
+        publicPath: value.page.set.publicPath,
       }}
     >
       <TryoutTimeLimitStat>
