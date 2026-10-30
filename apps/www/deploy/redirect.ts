@@ -3,10 +3,12 @@ import { Effect } from "effect";
 import { NAKAFA_ZONE } from "#www/deploy/stage";
 
 /**
- * The redirects of the nakafa.com zone, which answer before any Worker: the www
- * host moves to the apex, and a plain-HTTP request on any host moves to HTTPS,
- * both with 301 and the path and query kept, so every page has one address that
- * search engines index (ADR 0038, the zone rules it left open).
+ * The redirects of the nakafa.com zone, which answer before any Worker, with the
+ * path and query kept, so every page has one address that search engines index
+ * (ADR 0038, the zone rules it left open). The www host moves to the apex with a
+ * 301. A plain-HTTP request on any host moves to HTTPS with a 308, which keeps
+ * the method and body, so a POST to an API, MCP or CAS host over HTTP arrives as
+ * the same POST.
  */
 export const deployNakafaRedirects = Effect.fn("deploy.nakafaRedirects")(
   function* (zone: Zone.Zone) {
@@ -36,7 +38,7 @@ export const deployNakafaRedirects = Effect.fn("deploy.nakafaRedirects")(
           actionParameters: {
             fromValue: {
               preserveQueryString: true,
-              statusCode: 301,
+              statusCode: 308,
               targetUrl: {
                 expression:
                   'concat("https://", http.host, http.request.uri.path)',
