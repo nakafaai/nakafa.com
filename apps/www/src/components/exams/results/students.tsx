@@ -3,13 +3,23 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   HourglassIcon,
+  MoreHorizontalIcon,
   SquareLock01Icon,
   UserGroupIcon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -27,6 +37,7 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { DataFailure } from "@/components/shared/failure";
+import { PaneTableRow } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
 import { ColumnChoice } from "@/components/shared/table/column";
@@ -107,9 +118,10 @@ function NotYet() {
 }
 
 /**
- * One student's row: the name, which opens the student's answers beside the list, the state, and the
- * scores of a submitted attempt, with the time it was submitted. Counts and scores sit to the right
- * in figures of one width, so the eye runs down each column, and a value not there yet says so.
+ * One student's row, which opens the student's answers beside the list when pressed, as the name does for a
+ * keyboard: the name, the state, and the scores of a submitted attempt, with the time it was submitted. Counts and
+ * scores stand in the middle in figures of one width, so the eye runs down each column, and a value not there yet
+ * says so.
  */
 function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
@@ -122,8 +134,8 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const close = usePanes((state) => state.close);
 
   return (
-    <TableRow data-state={chosen ? "selected" : undefined}>
-      <TableCell>
+    <PaneTableRow id={row.attemptId}>
+      <TableCell className="px-2 sm:px-4">
         <Button
           aria-pressed={chosen}
           className="h-auto px-0"
@@ -134,26 +146,26 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           {row.name}
         </Button>
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell className="px-2 text-center sm:px-4">
         <TableStatus
           icon={STATE_LOOKS[row.state].icon}
           label={t(stateKeys[row.state])}
           tone={STATE_LOOKS[row.state].tone}
         />
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.points === null ? <NotYet /> : `${row.points} / ${total}`}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.answered ?? <NotYet />}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.pending ?? <NotYet />}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         <AwayCell awaySeconds={row.awaySeconds} exits={row.exits} />
       </TableCell>
-      <TableCell className="tabular-nums">
+      <TableCell className="px-2 text-center tabular-nums sm:px-4">
         {row.submittedAt === null ? (
           <NotYet />
         ) : (
@@ -167,7 +179,45 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           )
         )}
       </TableCell>
-    </TableRow>
+      <TableCell className="px-2 text-end sm:px-4">
+        <StudentRowMenu attemptId={row.attemptId} />
+      </TableCell>
+    </PaneTableRow>
+  );
+}
+
+/** The row menu of one student: Answers, which opens the student's answers beside the list. */
+function StudentRowMenu({
+  attemptId,
+}: {
+  readonly attemptId: (typeof StudentRowSchema.Type)["attemptId"];
+}) {
+  const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const show = usePanes((state) => state.show);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label={common("more-actions")}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => show(attemptId)}>
+            <HugeIcons icon={ViewIcon} />
+            {t("results-answers")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -201,25 +251,30 @@ function StudentTable({
     <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
       <TableHeader>
         <TableRow>
-          <TableHead>{t("results-name")}</TableHead>
-          <TableHead className="w-40 text-center">
+          <TableHead className="px-2 sm:px-4">{t("results-name")}</TableHead>
+          <TableHead className="w-40 px-2 text-center sm:px-4">
             <ColumnChoice
               column="status"
               options={statusChoices}
               title={t("results-status")}
             />
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-score")}
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-answered")}
           </TableHead>
-          <TableHead className="w-28 text-right">
+          <TableHead className="w-28 px-2 text-center sm:px-4">
             {t("results-pending")}
           </TableHead>
-          <TableHead className="w-36 text-right">{t("results-away")}</TableHead>
-          <TableHead className="w-44">{t("results-finished")}</TableHead>
+          <TableHead className="w-36 px-2 text-center sm:px-4">
+            {t("results-away")}
+          </TableHead>
+          <TableHead className="w-44 px-2 text-center sm:px-4">
+            {t("results-finished")}
+          </TableHead>
+          <TableHead className="w-12 px-2 sm:px-4" />
         </TableRow>
       </TableHeader>
       <TableBody>
