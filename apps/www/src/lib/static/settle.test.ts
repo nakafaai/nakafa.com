@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { settleServerComponents } from "@/lib/static/settle";
+import { SETTLED_RENDERER, settleServerComponents } from "@/lib/static/settle";
 
 const TREE_GETTER = Symbol.for("tanstack.rsc.getTree");
 const LAZY_NODE = Symbol.for("react.lazy");
@@ -34,6 +34,25 @@ describe("lib/static/settle", () => {
         expect(outer._init).toHaveBeenCalledOnce();
         expect(outer._init).toHaveBeenCalledWith("payload");
         expect(inner._init).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "loads the lazy renderer a component of the tree carries, the component reached through a lazy type included",
+    () =>
+      Effect.gen(function* () {
+        const renderer = lazyNode(() => "card");
+        const component = Object.assign(() => null, {
+          [SETTLED_RENDERER]: renderer,
+        });
+        const type = lazyNode(() => component);
+
+        yield* settleServerComponents(
+          serverComponent(() => ({ props: {}, type }))
+        );
+
+        expect(type._init).toHaveBeenCalledOnce();
+        expect(renderer._init).toHaveBeenCalledOnce();
       })
   );
 

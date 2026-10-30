@@ -10,6 +10,14 @@ const TREE_GETTER = Symbol.for("tanstack.rsc.getTree");
 /** React's mark on a lazy node: the Flight client makes one for each part of a tree it reads later. */
 const LAZY_NODE = Symbol.for("react.lazy");
 
+/**
+ * The key under which an app component that renders a lazy component of its
+ * own exposes that lazy component, so settling loads it with the tree. A lazy
+ * component inside another component is beyond the tree's reach otherwise, and
+ * its first render would draw nothing until its code arrives.
+ */
+export const SETTLED_RENDERER = Symbol.for("nakafa.settle.renderer");
+
 /** The most times one lazy node is read while the parts it waits on arrive. */
 const MAX_READS = 64;
 
@@ -70,6 +78,8 @@ function treeOf(value: object) {
  * mounts on a client navigation would show its body empty until the parsing
  * ends, then move everything under it. Reading each lazy node here does that
  * parsing while the previous page still shows, so the new page draws whole.
+ * A component of the tree that renders a lazy component of its own exposes it
+ * under `SETTLED_RENDERER`, and its code loads here too.
  */
 export const settleServerComponents = Effect.fn(
   "www.static.settleServerComponents"
@@ -85,6 +95,11 @@ export const settleServerComponents = Effect.fn(
     next !== MutableList.Empty;
     next = MutableList.take(pending)
   ) {
+    // A component reached through the tree may carry a lazy component of its own.
+    if (Predicate.isFunction(next)) {
+      MutableList.append(pending, Reflect.get(next, SETTLED_RENDERER));
+      continue;
+    }
     if (!Predicate.isObjectOrArray(next) || seen.has(next)) {
       continue;
     }
