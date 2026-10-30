@@ -18,6 +18,7 @@ import { Effect } from "effect";
 
 const { look, screen } = refs.public.exams.screens;
 const { answer, paper } = refs.public.exams.sittings;
+const questions = refs.public.exams.questions;
 
 /** The screen rows of the test database, as the student's looks wrote them. */
 const screenRows = (fixture: SittingFixture) =>
@@ -92,6 +93,47 @@ describe("exams/sittings screen", () => {
           prompt: expect.any(String),
           response: ["option-2"],
         });
+      })
+  );
+
+  it.effect(
+    "shows no screen once the teacher removes the question the student was on, while the sitting runs",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const entered = yield* enteredSitting(fixture);
+        yield* fixture.as("student").mutation(look, {
+          attemptId: entered.attemptId,
+          deviceId: deviceOf(1),
+          questionId: entered.questionId,
+          slug: nf,
+        });
+        const { examId } = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("examSittings")
+              .get(entered.sittingId)
+              .pipe(Effect.orDie)
+          )
+        );
+        const teacher = fixture.as("teacher");
+        yield* teacher.mutation(questions.add, {
+          after: entered.questionId,
+          examId,
+          slug: nf,
+        });
+        yield* teacher.mutation(questions.remove, {
+          examId,
+          questionId: entered.questionId,
+          slug: nf,
+        });
+        expect(
+          yield* teacher.query(screen, {
+            attemptId: entered.attemptId,
+            sittingId: entered.sittingId,
+            slug: nf,
+          })
+        ).toBeNull();
       })
   );
 

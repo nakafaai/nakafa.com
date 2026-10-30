@@ -79,28 +79,29 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await page.keyboard.press("Enter");
   await expect(prompt.locator("ul li")).toHaveCount(2);
 
-  // A quote, which the quote of the toolbar's insert menu lifts back to a paragraph when it is
-  // closed. The menu shows the quote checked while the caret sits in it.
-  const insert = toolbar.getByRole("button", { name: "Insert a block" });
+  // A quote, which the toolbar's quote control lifts back to a paragraph. The control is pressed
+  // while the caret sits in the quote.
+  const quote = toolbar.getByRole("button", { exact: true, name: "Quote" });
   await page.keyboard.type("/");
   await menu.getByRole("option", { name: "Quote" }).click();
   await page.keyboard.type("Kutipan");
   await expect(prompt.locator("blockquote")).toHaveText("Kutipan");
-  await insert.click();
-  const quote = page.getByRole("menuitemcheckbox", { name: "Quote" });
-  await expect(quote).toHaveAttribute("aria-checked", "true");
+  await expect(quote).toHaveAttribute("aria-pressed", "true");
   await quote.click();
   await expect(prompt.locator("blockquote")).toHaveCount(0);
 
-  // A code block takes plain text, and the code block of the toolbar's insert menu closes it.
+  // A code block takes plain text, and the toolbar's code block control closes it. The press
+  // leaves the caret in the text, so the next keys write there.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
   await menu.getByRole("option", { name: "Code block" }).click();
   await page.keyboard.type("const luas = p * l");
   await expect(prompt.locator("pre")).toHaveText("const luas = p * l");
-  await insert.click();
-  await page.getByRole("menuitemcheckbox", { name: "Code block" }).click();
+  await toolbar
+    .getByRole("button", { exact: true, name: "Code block" })
+    .click();
   await expect(prompt.locator("pre")).toHaveCount(0);
+  await expect(prompt).toBeFocused();
 
   // A 2 by 2 table from the slash menu, with its header row filled through Tab.
   await page.keyboard.press("Enter");
@@ -113,12 +114,11 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(prompt.locator("tr")).toHaveCount(2);
   await expect(prompt.locator("th")).toHaveCount(2);
 
-  // A formula comes from the slash menu, and its editor opens from the drawn formula. The LaTeX
+  // A formula comes from the slash menu, and its editor opens at once, ready to type in. The LaTeX
   // tab takes x^2, and a press outside the popover closes it and saves the formula.
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
   await menu.getByRole("option", { name: "Formula" }).click();
-  await prompt.getByRole("button", { name: "Edit formula" }).click();
   await page.getByRole("tab", { name: "LaTeX" }).click();
   await page.getByRole("textbox", { name: "LaTeX" }).fill("x^2");
   await prompt.click();
@@ -170,7 +170,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   );
 
   // The try shows the same document the way a student reads it, with the formula drawn.
-  await reopened.getByRole("button", { name: "Try as student" }).click();
+  await reopened.getByRole("link", { name: "Try as student" }).click();
   await reopened.waitForURL(TRY_PATH);
   await expect(reopened.getByText("Rumus")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

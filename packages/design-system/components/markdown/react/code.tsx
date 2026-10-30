@@ -11,6 +11,7 @@ import {
   readMarkdownNodeText,
 } from "@repo/design-system/components/markdown/react/node";
 import { readMermaidMetadata } from "@repo/design-system/lib/markdown/mermaid";
+import { codeVariants } from "@repo/design-system/lib/prose";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 
@@ -30,10 +31,7 @@ export const reactCodeComponents: ReactMarkdownComponents = {
     if (inline) {
       return (
         <code
-          className={cn(
-            "inline whitespace-pre-wrap break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight",
-            className
-          )}
+          className={codeVariants({ className })}
           data-nakafa="code-block"
           {...props}
         >

@@ -2,6 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   expiredHintCookie,
+  followSignedInHint,
   hasSignedInHint,
   hintCookieFor,
   hintScopeFor,
@@ -124,5 +125,29 @@ describe("hasSignedInHint", () => {
     expect(hasSignedInHint("nakafa-signed-in=0")).toBe(false);
     expect(hasSignedInHint("nakafa-signed-in=")).toBe(false);
     expect(hasSignedInHint("")).toBe(false);
+  });
+});
+
+describe("followSignedInHint", () => {
+  /** Follows the cookie onto a stub root and returns the attribute that it sets. */
+  const follow = (cookie: string) => {
+    const attributes: Record<string, string> = {};
+    followSignedInHint(
+      {
+        setAttribute: (name: string, value: string) => {
+          attributes[name] = value;
+        },
+      },
+      cookie
+    );
+    return attributes[SIGNED_IN_ATTRIBUTE];
+  };
+
+  it("marks the root while the hint cookie says a session may exist", () => {
+    expect(follow("theme=dark; nakafa-signed-in=1")).toBe("yes");
+  });
+
+  it("clears the mark once an answer has cleared the hint cookie", () => {
+    expect(follow("theme=dark")).toBe("no");
   });
 });

@@ -50,10 +50,10 @@ export function SchoolHeader({
       data-slot="page-header"
     >
       <SidebarTrigger
-        className="-ms-1 shrink-0"
+        className="-ms-1 shrink-0 lg:hidden"
         label={tCommon("toggle-sidebar")}
       />
-      <Separator className="me-1 h-4" orientation="vertical" />
+      <Separator className="me-1 h-4 lg:hidden" orientation="vertical" />
       {title === undefined ? null : (
         <h1 className="sr-only" dir="auto">
           {title}

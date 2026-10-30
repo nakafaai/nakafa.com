@@ -76,8 +76,8 @@ export const expectThings = Effect.fn("NakafaE2E.expectThings")(function* (
 });
 
 /**
- * The files of a web font, as the browser asks for them: WOFF2, and WOFF, which Amiri's faces
- * offer after it. Holding WOFF2 alone lets Amiri's WOFF arrive late, and Amiri covers Latin text
+ * The files of a web font, as the browser asks for them: WOFF2, and WOFF, which Amiri Quran's faces
+ * offer after it. Holding WOFF2 alone lets Amiri Quran's WOFF arrive late, and Amiri Quran covers Latin text
  * too, so the words would still be drawn again in another face.
  */
 const WEB_FONT = "**/*.{woff,woff2}";

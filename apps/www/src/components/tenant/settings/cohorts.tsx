@@ -1,4 +1,4 @@
-import { QueryResult, useMutation } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CohortGrade, CohortName } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -36,7 +36,10 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import { gradeItems } from "@/components/tenant/settings/choices";
-import { CohortFilter } from "@/components/tenant/settings/cohort/filter";
+import {
+  CohortGradeFilter,
+  CohortStatusFilter,
+} from "@/components/tenant/settings/cohort/filter";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,
@@ -51,28 +54,12 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
-import type { readCohortsFn } from "@/lib/tenant/settings.functions";
 
 const SOURCE = "components/tenant/settings/cohorts";
 
 /** The columns of the cohorts table. */
 const cohortColumns = createColumnHelper<typeof dataTableFeatures, Cohort>();
-
-/**
- * The first screen of the cohorts tab, which its loader read for the school's first active unit: the unit,
- * its active period, and the cohorts of that period. A unit or a period that the tab chose later reads live.
- */
-type CohortsPreload = Pick<
-  Awaited<ReturnType<typeof readCohortsFn>>,
-  "active" | "cohorts" | "unitId"
->;
-
-/** The loader's first screen of the cohorts tab, which the tab's reads take their first values from. */
-const CohortsPreloadContext = createContext<CohortsPreload | undefined>(
-  undefined
-);
 
 /** The unit whose cohorts the tab shows, the school's units, and the choice of another one. */
 const CohortsUnitContext = createContext<{
@@ -96,25 +83,15 @@ function useCohortsUnit() {
  * cohort, in the header once the unit has an active period. A school with no active unit says
  * so and links to the units, because a cohort belongs to a period of a unit.
  */
-export function SchoolCohortsSettings({
-  preload,
-  slug,
-}: {
-  preload: CohortsPreload | undefined;
-  slug: TenantSlug;
-}) {
+export function SchoolCohortsSettings({ slug }: { slug: TenantSlug }) {
   return (
     <TableFiltersProvider>
-      <CohortsPreloadContext value={preload}>
-        <ReadBoundary
-          fallback={(failure) => (
-            <SettingsTablePage>{failure}</SettingsTablePage>
-          )}
-          read={{ args: { slug }, ref: tenancy.viewer.get }}
-        >
-          <SchoolCohortsContent />
-        </ReadBoundary>
-      </CohortsPreloadContext>
+      <ReadBoundary
+        fallback={(failure) => <SettingsTablePage>{failure}</SettingsTablePage>}
+        read={{ args: { slug }, ref: tenancy.viewer.get }}
+      >
+        <SchoolCohortsContent />
+      </ReadBoundary>
     </TableFiltersProvider>
   );
 }
@@ -192,11 +169,9 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const { unitId } = useCohortsUnit();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const preload = use(CohortsPreloadContext);
-  const active = usePreloadedQueryResult(
+  const active = useQuery(
     tenancy.cohorts.activePeriod,
-    isSettled ? { slug, unitId } : "skip",
-    preload?.unitId === unitId ? preload.active : undefined
+    isSettled ? { slug, unitId } : "skip"
   );
   if (QueryResult.isFailure(active)) {
     if (isDenied(active.error)) {
@@ -247,7 +222,6 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
         <>
           <CohortsUnitChoice />
           <TableSearch placeholder={t("cohorts-search")} />
-          <CohortFilter />
           <SchoolCohortAdd periodId={periodId} slug={slug} />
         </>
       }
@@ -398,11 +372,9 @@ function SchoolCohortTable({
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const preload = use(CohortsPreloadContext);
-  const cohorts = usePreloadedQueryResult(
+  const cohorts = useQuery(
     tenancy.cohorts.list,
-    isSettled ? { periodId, slug } : "skip",
-    preload?.active === periodId ? preload.cohorts : undefined
+    isSettled ? { periodId, slug } : "skip"
   );
   if (QueryResult.isFailure(cohorts)) {
     throw cohorts.error;
@@ -437,10 +409,10 @@ function SchoolCohortTable({
       sortFn: "text",
     }),
     cohortColumns.accessor((cohort) => String(cohort.grade), {
+      enableSorting: false,
       filterFn: "oneOf",
-      header: t("cohort-grade"),
+      header: () => <CohortGradeFilter />,
       id: "grade",
-      sortFn: "alphanumeric",
     }),
     cohortColumns.accessor((cohort) => cohort.status, {
       cell: (info) => (
@@ -452,8 +424,9 @@ function SchoolCohortTable({
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("cohort-status"),
+      header: () => <CohortStatusFilter />,
       id: "status",
+      meta: { align: "center" },
     }),
     cohortColumns.display({
       cell: (info) =>
@@ -463,6 +436,7 @@ function SchoolCohortTable({
           <SchoolCohortMenu cohort={info.row.original} slug={slug} />
         ),
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

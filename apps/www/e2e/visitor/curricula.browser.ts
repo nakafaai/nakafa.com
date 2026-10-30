@@ -35,10 +35,10 @@ test("a visitor's curricula open no socket and send no session read, and a curri
         );
         // A card opens its level list, and a visitor's choice of a level navigates to it.
         yield* Effect.promise(() =>
-          page.getByRole("button", { name: CHOOSE_LEVEL }).first().click()
+          page.getByRole("link", { name: CHOOSE_LEVEL }).first().click()
         );
         yield* Effect.promise(() =>
-          page.getByRole("button", { name: VIEW_OPTIONS }).first().click()
+          page.getByRole("link", { name: VIEW_OPTIONS }).first().click()
         );
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new RegExp(`${CURRICULA_PATH}/[^/?#]+`))

@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
   CheckmarkCircle02Icon,
   Clock01Icon,
@@ -30,21 +29,16 @@ import {
 import { DataFailure } from "@/components/shared/failure";
 import { usePanes } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnChoice } from "@/components/shared/table/column";
+import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
-export const STUDENT_PAGE_SIZE = 50;
-
-/** The first page of the students of one sitting, which its loader read on the server. */
-type StudentsFirstPage = Pick<
-  Ref.Returns<typeof exams.results.results.byStudent>,
-  "isDone" | "page"
->;
+const STUDENT_PAGE_SIZE = 50;
 
 /** The copy key of each state of an attempt. */
 const stateKeys = {
@@ -58,7 +52,7 @@ const stateKeys = {
 >;
 
 /**
- * The look of each attempt state, in its table cell and in the Filter menu: a running clock, the
+ * The look of each attempt state, in its table cell and in its column's filter: a running clock, the
  * sand of a closing sitting, a lock, and a check once submitted, each in its tone.
  */
 const STATE_LOOKS = {
@@ -73,7 +67,7 @@ const STATE_LOOKS = {
 
 /** The status that the list shows: every attempt, or only the attempts in one state. */
 const StatusFilter = Schema.Union([Schema.Literal("all"), AttemptState]);
-export type StatusFilter = typeof StatusFilter.Type;
+type StatusFilter = typeof StatusFilter.Type;
 
 /** The seconds of one minute, which a long time away is told in. */
 const SECONDS_IN_MINUTE = 60;
@@ -140,7 +134,7 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
           {row.name}
         </Button>
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center">
         <TableStatus
           icon={STATE_LOOKS[row.state].icon}
           label={t(stateKeys[row.state])}
@@ -178,10 +172,10 @@ function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
 }
 
 /**
- * The values of the students' Filter menu, which the results page draws in its header row: every attempt, or
- * only the attempts in one state, which the server reads. Each value carries the icon of its state.
+ * The values of the students' status column, which chooses the attempts the server reads: every attempt, or only the
+ * attempts in one state. Each value carries the icon of its state.
  */
-export function useStatusChoices() {
+function useStatusChoices() {
   const t = useTranslations("Exams");
 
   return [
@@ -201,13 +195,20 @@ function StudentTable({
   readonly rows: readonly (typeof StudentRowSchema.Type)[];
 }) {
   const t = useTranslations("Exams");
+  const statusChoices = useStatusChoices();
 
   return (
     <Table containerClassName="[&_[data-slot=table-cell]]:whitespace-nowrap">
       <TableHeader>
         <TableRow>
           <TableHead>{t("results-name")}</TableHead>
-          <TableHead className="w-40">{t("results-status")}</TableHead>
+          <TableHead className="w-40 text-center">
+            <ColumnChoice
+              column="status"
+              options={statusChoices}
+              title={t("results-status")}
+            />
+          </TableHead>
           <TableHead className="w-28 text-right">
             {t("results-score")}
           </TableHead>
@@ -236,25 +237,21 @@ function StudentTable({
  * that are loaded. The list reads one page at a time through an intersection sentinel, not a button, so a
  * search that matches no loaded row keeps reading the next page until one matches or the list ends.
  */
-export function StudentsTable({
-  first,
-  status,
-}: {
-  first: StudentsFirstPage | undefined;
-  /** The state the header's Filter menu chose, which the server reads. */
-  status: StatusFilter;
-}) {
+export function StudentsTable() {
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
   const search = useTableFilters((state) => state.search);
+  const chosen = useTableFilters((state) => state.chosen);
+  const status = Option.getOrElse(
+    chosenOne(chosen, "status", Schema.is(StatusFilter)),
+    (): StatusFilter => "all"
+  );
   const scope =
     status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
-  // The loader's first page is the page of every student, so a filtered list waits for its own first page.
-  const students = usePaginatedPreloaded(
+  const students = usePaginatedQuery(
     exams.results.results.byStudent,
     settled ? scope : "skip",
-    { initialNumItems: STUDENT_PAGE_SIZE },
-    status === "all" ? Option.fromUndefinedOr(first) : Option.none()
+    { initialNumItems: STUDENT_PAGE_SIZE }
   );
 
   if (
@@ -309,7 +306,8 @@ function StudentRowsSection({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      {rows.length > 0 ? <StudentTable rows={rows} /> : null}
+      {/* While a filter or a search narrows the list, the table keeps its head, so the status choice stays in reach. */}
+      {rows.length > 0 || filtering ? <StudentTable rows={rows} /> : null}
       {/* A page that holds no match is not the end of the search while later pages still load, so
           the empty state waits for the last page, and the table shows nothing in the meantime. */}
       {exhausted && rows.length === 0 ? (

@@ -1,15 +1,16 @@
-import type { Ref } from "@confect/core";
-import { PaginatedQueryResult } from "@confect/react";
-import { Calendar03Icon } from "@hugeicons/core-free-icons";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+} from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -21,55 +22,46 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   CreateExam,
   ExamDraftsProvider,
 } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
-import type { ExamSummary } from "@/components/tenant/exams/optimistic";
+import type { ListedExam } from "@/components/tenant/exams/optimistic";
+import { ExamRowMenu } from "@/components/tenant/exams/row";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { Link } from "@/lib/routing/link";
-import { EXAM_PAGE_SIZE } from "@/lib/tenant/exams";
 
-/** The first page of the exam list, which its loader read on the server. */
-type ExamListFirstPage = Pick<
-  Ref.Returns<typeof exams.exams.list>,
-  "isDone" | "page"
->;
+/** How many exams the list asks for each time its end comes into view. */
+const EXAM_PAGE_SIZE = 20;
 
 /** The columns of the exams table. */
-const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
+const examColumns = createColumnHelper<typeof dataTableFeatures, ListedExam>();
 
 /**
- * The exams of the school, newest first, each with its title. An exam that the server has not
+ * The exams of the school, newest first, each with its title, its unit, its questions and its day. An exam that the
+ * server has not
  * saved yet is disabled until it answers. The next page loads when the end of the list comes
  * into view, so the list has no button. The page holds one create action, shown when the viewer
  * can create an exam in at least one place: in the school's one header beside the exams, or in
  * the empty state while the school has no saved exam (K27), so a new teacher meets one step in
- * the middle of the page. An exam that is still saving does not end the empty state, so its
- * create action stays where it was pressed until the editor opens. A failed read of the list
+ * the middle of the page. While the first page loads the page holds no create action, since it
+ * cannot know yet where the action goes. An exam that is still saving does not end the empty
+ * state, so its create action stays where it was pressed until the editor opens. A failed read of the list
  * shows its own sentence and a retry, and a viewer who lost the school's access is sent to the
  * refused page.
  */
-export function ExamList({
-  first,
-  slug,
-}: {
-  first: ExamListFirstPage | undefined;
-  slug: TenantSlug;
-}) {
+export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
   // The list needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     exams.exams.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: EXAM_PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: EXAM_PAGE_SIZE }
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);
@@ -89,12 +81,16 @@ export function ExamList({
   const empty =
     !(loadingFirst || failed) &&
     Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
+  // Until the first page arrives the page cannot know whether search and Create belong in the
+  // header or Create in the empty state, so the header holds neither: a dialog opened from the
+  // header would close, and lose its title, when an empty list moved Create into the page.
+  const listed = !(loadingFirst || empty);
   return (
     <ExamDraftsProvider drafts={drafts}>
       <TableFiltersProvider>
         <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-          {empty ? null : <TableSearch placeholder={t("exams-search")} />}
-          {tenant.home.canCreate && !empty ? (
+          {listed ? <TableSearch placeholder={t("exams-search")} /> : null}
+          {tenant.home.canCreate && listed ? (
             <CreateExam choices={tenant.home.choices} slug={slug} />
           ) : null}
         </SchoolHeader>
@@ -120,9 +116,10 @@ export function ExamList({
 
 /**
  * The rows of the exam list: the failure of its read above the rows it already holds, and the exams in a
- * data table, or nothing while the first page loads. A first page that failed shows the failure alone. The
- * title links to its editor, and the row menu to the exam's rooms. An exam that the server is still saving
- * shows its title without a link and no menu, so it is inert.
+ * data table, or nothing while the first page loads. A first page that failed shows the failure alone. Each
+ * row shows where the exam belongs, how many questions it holds and when it was created. The title links to its
+ * editor, and the row menu opens its editor, its rooms, the exam as a student sees it, and Delete. An exam that
+ * the server is still saving shows its title without a link and no menu, so it is inert.
  */
 function ExamListRows({
   exams: rows,
@@ -130,12 +127,13 @@ function ExamListRows({
   loadingFirst,
   saving,
 }: {
-  exams: readonly ExamSummary[];
+  exams: readonly ListedExam[];
   failed: boolean;
   loadingFirst: boolean;
-  saving: readonly ExamSummary["id"][];
+  saving: readonly ListedExam["id"][];
 }) {
   const t = useTranslations("Exams");
+  const format = useFormatter();
   const tenant = useTenant();
 
   if (loadingFirst) {
@@ -168,12 +166,37 @@ function ExamListRows({
       sortFn: "text",
     }),
     examColumns.display({
+      cell: (info) => <ExamScope scope={info.row.original.scope} />,
+      header: t("unit"),
+      id: "unit",
+    }),
+    examColumns.accessor((exam) => exam.questionCount, {
+      cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
+      enableSorting: false,
+      header: t("questions-column"),
+      id: "questions",
+      meta: { align: "end" },
+    }),
+    examColumns.accessor((exam) => exam.createdAt, {
+      cell: (info) => (
+        <span className="text-muted-foreground tabular-nums">
+          {format.dateTime(
+            DateTime.toDateUtc(DateTime.makeUnsafe(info.getValue())),
+            { dateStyle: "medium" }
+          )}
+        </span>
+      ),
+      enableSorting: false,
+      header: t("created-column"),
+      id: "created",
+    }),
+    examColumns.display({
       cell: (info) =>
         Arr.contains(saving, info.row.original.id) ? null : (
-          <ExamRoomsLink exam={info.row.original} />
+          <ExamRowMenu exam={info.row.original} />
         ),
-      header: t("rooms-title"),
-      id: "rooms",
+      id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 
@@ -190,23 +213,21 @@ function ExamListRows({
   );
 }
 
-/**
- * An exam's way to its rooms, in its own column: the title already opens the editor, so the rooms
- * stay one click away instead of behind a menu.
- */
-function ExamRoomsLink({ exam }: { exam: ExamSummary }) {
+/** Where an exam belongs: the whole school, or the unit that holds it, by the name the viewer sees. */
+function ExamScope({ scope }: { scope: ListedExam["scope"] }) {
   const t = useTranslations("Exams");
-  const { slug } = useTenant();
+  const viewer = useViewerQuery();
 
-  return (
-    <Link
-      className={buttonVariants({ size: "sm", variant: "ghost" })}
-      params={{ exam: exam.id, slug }}
-      to="/school/$slug/exams/$exam"
-    >
-      <HugeIcons icon={Calendar03Icon} />
-      {t("rooms-title")}
-    </Link>
+  if (scope.kind === "tenant") {
+    return t("whole-school");
+  }
+  const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
+  return Option.match(
+    Arr.findFirst(units, (unit) => unit.id === scope.unitId),
+    {
+      onNone: () => null,
+      onSome: (unit) => <span dir="auto">{unit.name}</span>,
+    }
   );
 }
 

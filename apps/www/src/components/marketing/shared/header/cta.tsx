@@ -1,4 +1,4 @@
-import { Button } from "@repo/design-system/components/ui/button";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
 import { Link } from "@/lib/routing/link";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
@@ -44,26 +44,22 @@ export function HeaderCta() {
   return (
     <>
       <span className="contents" data-account="visitor">
-        <Button
-          nativeButton={false}
-          render={
-            <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/auth">
-              {t("try-nakafa")}
-            </Link>
-          }
-          variant="secondary"
-        />
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={buttonVariants({ variant: "secondary" })}
+          to="/$locale/auth"
+        >
+          {t("try-nakafa")}
+        </Link>
       </span>
       <span className="contents" data-account="member">
-        <Button
-          nativeButton={false}
-          render={
-            <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/home">
-              {t("try-nakafa")}
-            </Link>
-          }
-          variant="secondary"
-        />
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={buttonVariants({ variant: "secondary" })}
+          to="/$locale/home"
+        >
+          {t("try-nakafa")}
+        </Link>
       </span>
     </>
   );

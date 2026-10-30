@@ -14,16 +14,13 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { HomeClock } from "@/components/tenant/home/clock";
 import {
-  type HomePreload,
-  HomePreloadContext,
-} from "@/components/tenant/home/data";
-import {
   homeExamsRead,
   useStudentSittings,
 } from "@/components/tenant/home/query";
 import { createHomeReleases } from "@/components/tenant/home/release";
 import { HomeReleasesProvider } from "@/components/tenant/home/results";
 import { StaffHome } from "@/components/tenant/home/staff";
+import { HomeStart } from "@/components/tenant/home/start";
 import { StudentHome } from "@/components/tenant/home/student";
 import { HomeGreeting } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -32,45 +29,39 @@ import { TargetLink } from "@/lib/routing/link";
 import { schoolSittingTarget } from "@/lib/routing/school/target";
 
 /**
- * The home of a school: a header row with the greeting as its heading and the page's one end-goal action at its end,
- * and below it one connected dashboard of what the viewer must act on now. A student sees the student's sittings and
- * results. A viewer who watches rooms sees the numbers of the rooms that run and open soon, their schedule, the results
- * to view, and the setup while it is open, and a viewer who may create exams also sees the exams they started. A member
+ * The home of a school, a start page of what the viewer can do next: a header row with the greeting as its heading and
+ * the page's one end-goal action at its end, the shortcuts to the parts of the school the viewer may open, and one
+ * connected dashboard of the viewer's classes and of what the viewer must act on now. A student sees the student's
+ * classes, sittings and results. A viewer who watches rooms sees the rooms that run and open soon, the results to
+ * view, and the setup while it is open, and a viewer who may create exams also sees the exams they started. A member
  * with no grant, who may neither create nor watch, sees the student's view with its quiet state, because the staff
  * cells have nothing for them. Staff with a role see the staff home, which holds only the cells their actions allow,
- * since the student's sentence is not theirs. The school's context carries the viewer's access, and the loader carries
- * the greeting and the server's time, so the action, the greeting and the times are in the first HTML. Each home reads
- * its rows once, and its cells take their rows from that read.
+ * since the student's sentence is not theirs. The school's context carries the viewer's access and the greeting, so the
+ * action and the greeting draw with the first frame. Each home reads its rows once, and its cells take their rows from
+ * that read.
  */
-export function TenantHome({ preload }: { preload: HomePreload }) {
+export function TenantHome() {
   const tenant = useTenant();
   const [drafts] = useState(createExamDrafts);
   const [releases] = useState(createHomeReleases);
   const studentView = showsStudentHome(tenant, tenant.home);
-  const serverNow = preload.serverNow;
-
-  // The loader reads no home for a viewer who is not a member, so no home shows for that viewer.
-  if (serverNow === undefined) {
-    return null;
-  }
   return (
-    <HomePreloadContext value={preload}>
-      <ExamDraftsProvider drafts={drafts}>
-        <HomeReleasesProvider releases={releases}>
-          <HomeClock key={serverNow} serverNow={serverNow}>
-            <HomePage action={<HomeAction studentView={studentView} />}>
-              {studentView ? (
-                <StudentHome />
-              ) : (
-                <ReadBoundary read={homeExamsRead(tenant.slug)}>
-                  <StaffHome />
-                </ReadBoundary>
-              )}
-            </HomePage>
-          </HomeClock>
-        </HomeReleasesProvider>
-      </ExamDraftsProvider>
-    </HomePreloadContext>
+    <ExamDraftsProvider drafts={drafts}>
+      <HomeReleasesProvider releases={releases}>
+        <HomeClock>
+          <HomePage action={<HomeAction studentView={studentView} />}>
+            <HomeStart />
+            {studentView ? (
+              <StudentHome />
+            ) : (
+              <ReadBoundary read={homeExamsRead(tenant.slug)}>
+                <StaffHome />
+              </ReadBoundary>
+            )}
+          </HomePage>
+        </HomeClock>
+      </HomeReleasesProvider>
+    </ExamDraftsProvider>
   );
 }
 
@@ -116,7 +107,7 @@ function StudentAction() {
   );
 }
 
-/** The header row and the dashboard of the school home, in the page's one column of content. */
+/** The header row of the school home, and its shortcuts and dashboard in the page's one column of content. */
 function HomePage({
   action,
   children,
@@ -129,7 +120,7 @@ function HomePage({
       <SchoolHeader heading={<HomeGreeting />} items={[]}>
         {action}
       </SchoolHeader>
-      <LayoutContent className="w-full max-w-7xl py-6">
+      <LayoutContent className="flex w-full flex-col gap-6 py-6" width="page">
         {children}
       </LayoutContent>
     </>

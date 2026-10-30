@@ -40,7 +40,7 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   await Effect.runPromise(signInOwner(owner, school.slug, address("/")));
   const settings = await owner.newPage();
   await settings.goto(address("/settings/cohorts"));
-  const cohortLink = settings.getByRole("link", { name: "X-1" });
+  const cohortLink = settings.getByRole("link", { exact: true, name: "X-1" });
   await waitUntilTakenOver(cohortLink);
   await cohortLink.click();
   await settings
@@ -52,8 +52,8 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   await settings.getByRole("option", { name: "Acceptance Learner" }).click();
   await placeDialog.getByRole("button", { name: "Add student" }).click();
   await expect(
-    settings.getByRole("button", { name: "More actions" })
-  ).toHaveCount(1);
+    settings.getByRole("row").filter({ hasText: "Acceptance Learner" })
+  ).toBeVisible();
   await owner.close();
 
   const page = await teacher.newPage();

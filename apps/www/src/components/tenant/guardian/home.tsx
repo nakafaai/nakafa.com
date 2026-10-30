@@ -53,7 +53,6 @@ import {
 import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { SchoolHeader } from "@/components/tenant/header";
 import { saveSchool } from "@/components/tenant/settings/save";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 const SOURCE = "components/tenant/guardian/home";
 
@@ -69,18 +68,10 @@ const childColumns = createColumnHelper<typeof dataTableFeatures, ChildItem>();
  * NISN, or says that the school checks it; a verified link shows the child's released grades
  * with the way to withdraw consent; and an ended link says how it ended.
  */
-export function GuardianHome({
-  first,
-}: {
-  first: readonly ChildItem[] | undefined;
-}) {
+export function GuardianHome() {
   const t = useTranslations("SchoolGuardians");
   const { slug } = useTenant();
-  const children = usePreloadedQueryResult(
-    guardians.family.children,
-    { slug },
-    first
-  );
+  const children = useQuery(guardians.family.children, { slug });
 
   return (
     <TableFiltersProvider>
@@ -132,6 +123,7 @@ function GuardianChildren({ items }: { items: readonly ChildItem[] }) {
       enableSorting: false,
       header: t("status"),
       id: "status",
+      meta: { align: "center" },
     }),
   ]);
 

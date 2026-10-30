@@ -3,6 +3,7 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import {
   Archive02Icon,
@@ -23,18 +24,18 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
-import { createContext, use, useId, useState, useTransition } from "react";
-import { useTranslations } from "use-intl";
+import { Array as Arr, DateTime, Option } from "effect";
+import { useId, useState, useTransition } from "react";
+import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -52,11 +53,9 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import type { readPeriodsFn } from "@/lib/tenant/settings.functions";
 
 /**
- * The look of each period status, in its table cell and in the Filter menu: a planned calendar, a
+ * The look of each period status, in its table cell and in its column's filter: a planned calendar, a
  * running one, and an archive, each in its tone.
  */
 const PERIOD_STATUS_LOOKS = {
@@ -68,15 +67,7 @@ const PERIOD_STATUS_LOOKS = {
 const SOURCE = "components/tenant/settings/periods";
 
 /** How many periods one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first screen of the periods tab: the first page of the periods of the unit the tab opens, and that unit. */
-type PeriodsPreload = Pick<
-  Awaited<ReturnType<typeof readPeriodsFn>>,
-  "page" | "unitId"
->;
-
-/** The ID of one unit of the school. */
+const PAGE_SIZE = 25;
 
 /** One period as the periods list shows it. */
 type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
@@ -87,32 +78,19 @@ const periodColumns = createColumnHelper<
   PeriodItem
 >();
 
-/** The first screen of the periods tab, which the page's loader read on the server. */
-const PeriodsPreloadContext = createContext<PeriodsPreload | undefined>(
-  undefined
-);
-
 /**
  * Renders the periods of the school's unit as the page's table, with their row menus. The
  * header row holds the unit choice when the school has more than one unit, the search, the
  * status filter, and Add period once a unit is known.
  */
-export function SchoolPeriodsSettings({
-  preload,
-  slug,
-}: {
-  preload: PeriodsPreload | undefined;
-  slug: TenantSlug;
-}) {
+export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
   return (
     <TableFiltersProvider>
       <ReadBoundary
         fallback={(failure) => <SettingsTablePage>{failure}</SettingsTablePage>}
         read={{ args: { slug }, ref: tenancy.viewer.get }}
       >
-        <PeriodsPreloadContext value={preload}>
-          <SchoolPeriodsContent />
-        </PeriodsPreloadContext>
+        <SchoolPeriodsContent />
       </ReadBoundary>
     </TableFiltersProvider>
   );
@@ -123,7 +101,6 @@ export function SchoolPeriodsSettings({
  * A school with no active unit says so and links to the units, because a period belongs to a unit.
  */
 function SchoolPeriodsContent() {
-  const preload = use(PeriodsPreloadContext);
   const t = useTranslations("SchoolSettings");
   const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
@@ -157,19 +134,6 @@ function SchoolPeriodsContent() {
               />
             ) : null}
             <TableSearch placeholder={t("periods-search")} />
-            <TableFilter
-              facets={[
-                {
-                  column: "status",
-                  options: Arr.map(PeriodStatus.literals, (status) => ({
-                    icon: PERIOD_STATUS_LOOKS[status].icon,
-                    label: t(`period-${status}`),
-                    value: status,
-                  })),
-                  title: t("period-status"),
-                },
-              ]}
-            />
             <Button onClick={() => setIsAdding(true)} type="button">
               {t("period-add")}
             </Button>
@@ -182,10 +146,7 @@ function SchoolPeriodsContent() {
       ) : (
         <>
           <ReadBoundary>
-            <SchoolPeriodTable
-              first={unit.id === preload?.unitId ? preload.page : undefined}
-              unitId={unit.id}
-            />
+            <SchoolPeriodTable unitId={unit.id} />
           </ReadBoundary>
           <SchoolPeriodAddDialog
             open={isAdding}
@@ -199,26 +160,20 @@ function SchoolPeriodsContent() {
 }
 
 /**
- * Renders the periods of one unit in a data table that finds a name, filters by status,
- * sorts by dates, and loads more rows as its end comes into view, or the table's empty
+ * Renders the periods of one unit in a data table that finds a name, filters by status in its
+ * column, sorts by dates in the reader's own date format, and loads more rows as its end comes into view, or the table's empty
  * state while the unit has no period. The table waits for its first page, so no empty state shows before the
  * rows arrive.
  */
-function SchoolPeriodTable({
-  first,
-  unitId,
-}: {
-  first: PeriodsPreload["page"] | undefined;
-  unitId: UnitId;
-}) {
+function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const format = useFormatter();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     tenancy.periods.list,
     isSettled ? { slug, unitId } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -247,8 +202,15 @@ function SchoolPeriodTable({
       sortFn: "text",
     }),
     periodColumns.accessor((period) => period.start, {
-      cell: (info) => `${info.row.original.start} - ${info.row.original.end}`,
-      filterFn: "includesString",
+      cell: (info) => (
+        <span className="tabular-nums">
+          {format.dateTimeRange(
+            DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.start)),
+            DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.end)),
+            { dateStyle: "medium", timeZone: "UTC" }
+          )}
+        </span>
+      ),
       header: t("period-dates"),
       id: "dates",
       sortFn: "text",
@@ -263,8 +225,19 @@ function SchoolPeriodTable({
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("period-status"),
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(PeriodStatus.literals, (status) => ({
+            icon: PERIOD_STATUS_LOOKS[status].icon,
+            label: t(`period-${status}`),
+            value: status,
+          }))}
+          title={t("period-status")}
+        />
+      ),
       id: "status",
+      meta: { align: "center" },
     }),
     periodColumns.display({
       cell: (info) =>
@@ -274,6 +247,7 @@ function SchoolPeriodTable({
           <SchoolPeriodMenu period={info.row.original} slug={slug} />
         ),
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 
@@ -380,7 +354,7 @@ function SchoolPeriodAddDialog({
             value={name}
           />
         </Field>
-        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-4">
           <Field>
             <FieldLabel htmlFor={`${id}-start`}>{t("period-start")}</FieldLabel>
             <DatePicker

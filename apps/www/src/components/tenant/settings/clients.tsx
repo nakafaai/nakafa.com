@@ -3,6 +3,7 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import {
   CommandLineIcon,
@@ -26,18 +27,18 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { type StatusLook, TableStatus } from "@/components/shared/table/status";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -50,13 +51,9 @@ import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf, scopeOptions } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
 
 /**
- * The look of each client status, in its table cell and in the Filter menu: a plugged-in client,
+ * The look of each client status, in its table cell and in its column's filter: a plugged-in client,
  * and an unlinked one, each in its tone.
  */
 const CLIENT_STATUS_LOOKS = {
@@ -67,12 +64,7 @@ const CLIENT_STATUS_LOOKS = {
 const SOURCE = "components/tenant/settings/clients";
 
 /** How many clients one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first page of the list, which its loader read on the server. */
-type ClientsFirstPage = PreloadedPage<
-  PaginatedQueryItem<typeof integrations.clients.list>
->;
+const PAGE_SIZE = 25;
 
 /** One integration client as the clients list shows it. */
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
@@ -82,11 +74,6 @@ const clientColumns = createColumnHelper<
   typeof dataTableFeatures,
   ClientItem
 >();
-
-/** The first page of the clients, which the page's loader read on the server. */
-const ClientsFirstPageContext = createContext<ClientsFirstPage | undefined>(
-  undefined
-);
 
 /** Shows a secret the server issued once, which the page's secret dialog holds. */
 const SecretIssueContext = createContext<((secret: string) => void) | null>(
@@ -107,17 +94,12 @@ function useIssueSecret() {
  * covers, in a data table with Create client in the header. A client is created, rotated
  * (which issues a new secret that is shown once), or revoked.
  */
-export function SchoolClientsSettings({
-  first,
-}: {
-  first: ClientsFirstPage | undefined;
-}) {
+export function SchoolClientsSettings() {
   const t = useTranslations("SchoolSettings");
   const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
     undefined
   );
   const [isCreating, setIsCreating] = useState(false);
-  const viewer = useViewerQuery();
 
   return (
     <TableFiltersProvider>
@@ -125,26 +107,6 @@ export function SchoolClientsSettings({
         actions={
           <>
             <TableSearch placeholder={t("clients-search")} />
-            <TableFilter
-              facets={[
-                {
-                  column: "scope",
-                  options: QueryResult.isSuccess(viewer)
-                    ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
-                    : [],
-                  title: t("client-scope"),
-                },
-                {
-                  column: "status",
-                  options: Arr.map(IntegrationStatus.literals, (status) => ({
-                    icon: CLIENT_STATUS_LOOKS[status].icon,
-                    label: t(`client-${status}`),
-                    value: status,
-                  })),
-                  title: t("client-status"),
-                },
-              ]}
-            />
             <Button onClick={() => setIsCreating(true)} type="button">
               {t("client-add")}
             </Button>
@@ -152,11 +114,9 @@ export function SchoolClientsSettings({
         }
       >
         <ReadBoundary>
-          <ClientsFirstPageContext value={first}>
-            <SecretIssueContext value={setIssuedSecret}>
-              <SchoolClientTable />
-            </SecretIssueContext>
-          </ClientsFirstPageContext>
+          <SecretIssueContext value={setIssuedSecret}>
+            <SchoolClientTable />
+          </SecretIssueContext>
         </ReadBoundary>
         <SchoolClientCreateDialog
           onIssued={setIssuedSecret}
@@ -182,14 +142,12 @@ export function SchoolClientsSettings({
  */
 function SchoolClientTable() {
   const { slug } = useTenant();
-  const first = use(ClientsFirstPageContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     integrations.clients.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
   const viewer = useViewerQuery();
 
@@ -224,10 +182,20 @@ function SchoolClientTable() {
       sortFn: "text",
     }),
     clientColumns.accessor(scopeName, {
+      enableSorting: false,
       filterFn: "oneOf",
-      header: t("client-scope"),
+      header: () => (
+        <ColumnFilter
+          column="scope"
+          options={
+            QueryResult.isSuccess(viewer)
+              ? scopeOptions(viewer.value.tenant.name, viewer.value.units)
+              : []
+          }
+          title={t("client-scope")}
+        />
+      ),
       id: "scope",
-      sortFn: "text",
     }),
     clientColumns.accessor((client) => client.status, {
       cell: (info) => (
@@ -239,8 +207,19 @@ function SchoolClientTable() {
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("client-status"),
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(IntegrationStatus.literals, (status) => ({
+            icon: CLIENT_STATUS_LOOKS[status].icon,
+            label: t(`client-${status}`),
+            value: status,
+          }))}
+          title={t("client-status")}
+        />
+      ),
       id: "status",
+      meta: { align: "center" },
     }),
     clientColumns.display({
       cell: (info) =>
@@ -248,6 +227,7 @@ function SchoolClientTable() {
           <SchoolClientMenu client={info.row.original} />
         ) : null,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

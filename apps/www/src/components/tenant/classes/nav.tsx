@@ -9,16 +9,12 @@ import {
 import type { Mascot } from "@repo/mascot/code";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { use } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/auth/convex";
 import { withMarks } from "@/components/tenant/classes/marks";
-import { ClassesPreloadContext } from "@/components/tenant/classes/preload";
-import type { TenantValue } from "@/components/tenant/context";
+import { useMyClasses } from "@/components/tenant/classes/mine";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
 
 /**
@@ -49,8 +45,7 @@ export function TenantClassesGroup() {
 
 /** The classes of the viewer as sidebar entries, or nothing while they load or for a viewer with none. */
 function TenantClassesRows() {
-  const { slug } = useTenant();
-  const classes = useClassesQuery(slug);
+  const classes = useMyClasses();
   const t = useTranslations("School");
 
   if (QueryResult.isFailure(classes)) {
@@ -73,20 +68,6 @@ function TenantClassesRows() {
         />
       ))}
     </TenantSidebarGroup>
-  );
-}
-
-/**
- * Reads the viewer's classes in the school's active periods once Convex has settled
- * the session, so the query never runs before the viewer is known.
- */
-function useClassesQuery(slug: TenantValue["slug"]) {
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const classes = use(ClassesPreloadContext);
-  return usePreloadedQueryResult(
-    classroom.classes.mine,
-    isSettled ? { slug } : "skip",
-    classes
   );
 }
 

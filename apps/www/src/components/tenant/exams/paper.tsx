@@ -23,7 +23,7 @@ import {
   withOptionLabel,
   withOptionRemoved,
 } from "@/components/tenant/exams/answer";
-import { MatchColumn, TableColumn } from "@/components/tenant/exams/columns";
+import { MatchColumn } from "@/components/tenant/exams/columns";
 import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import {
   type QuestionEditing,
@@ -32,6 +32,7 @@ import {
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { TeacherLayer } from "@/components/tenant/exams/layer";
 import { matchOf } from "@/components/tenant/exams/match";
+import { TableSheet } from "@/components/tenant/exams/matrix";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
@@ -346,26 +347,14 @@ function LivePaper({
         </div>
       )}
       {table === null ? null : (
-        <div className="grid min-w-0 gap-6 md:grid-cols-2">
-          <TableColumn
-            chosen={chosen}
-            editing={editing}
-            frozen={locked}
-            number={number}
-            question={question}
-            side="statements"
-            table={table}
-          />
-          <TableColumn
-            chosen={chosen}
-            editing={editing}
-            frozen={locked}
-            number={number}
-            question={question}
-            side="columns"
-            table={table}
-          />
-        </div>
+        <TableSheet
+          chosen={chosen}
+          editing={editing}
+          frozen={locked}
+          number={number}
+          question={question}
+          table={table}
+        />
       )}
       {choice === null ? null : (
         <PaperOptions>

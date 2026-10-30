@@ -523,12 +523,17 @@ export declare const api: {
             | "forum.manage"
             | "forum.post"
             | "forum.read"
+            | "library.manage"
+            | "post.publish"
+            | "task.manage"
+            | "task.submit"
             | "grade.enter"
             | "grade.list"
           >;
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
           name: string;
+          opens: boolean;
           periodId: Id<"tenantPeriods">;
           slug: string;
           status: "active" | "archived";
@@ -546,6 +551,7 @@ export declare const api: {
             id: Id<"classroomChannels">;
             kind: "general" | "topic";
             name: string;
+            unread: boolean;
           }
         >;
         list: FunctionReference<
@@ -570,6 +576,7 @@ export declare const api: {
               id: Id<"classroomChannels">;
               kind: "general" | "topic";
               name: string;
+              unread: boolean;
             }>;
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
@@ -590,8 +597,19 @@ export declare const api: {
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
             mine: boolean;
             text: string | null;
           }
@@ -608,8 +626,19 @@ export declare const api: {
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
             mine: boolean;
             text: string | null;
           }
@@ -637,8 +666,19 @@ export declare const api: {
               author: { id: Id<"tenantPeople">; name: string };
               clientKey: string;
               createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
               editedAt: number | null;
               id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
               mine: boolean;
               text: string | null;
             }>;
@@ -653,6 +693,9 @@ export declare const api: {
             channelId: Id<"classroomChannels">;
             classId: Id<"classes">;
             clientKey: string;
+            mentions: Array<
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+            >;
             slug: string;
             text: string;
           },
@@ -660,13 +703,584 @@ export declare const api: {
             author: { id: Id<"tenantPeople">; name: string };
             clientKey: string;
             createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
             editedAt: number | null;
             id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
             mine: boolean;
             text: string | null;
           }
         >;
       };
+      people: {
+        list: FunctionReference<
+          "query",
+          "public",
+          { classId: Id<"classes">; slug: string },
+          Array<{ id: Id<"tenantPeople">; name: string }>
+        >;
+      };
+      reads: {
+        get: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            place:
+              | { _tag: "channel"; channelId: Id<"classroomChannels"> }
+              | { _tag: "discussion"; number: number };
+            slug: string;
+          },
+          { at: number | null }
+        >;
+        mark: FunctionReference<
+          "mutation",
+          "public",
+          {
+            at: number;
+            classId: Id<"classes">;
+            place:
+              | { _tag: "channel"; channelId: Id<"classroomChannels"> }
+              | { _tag: "discussion"; number: number };
+            slug: string;
+          },
+          { at: number | null }
+        >;
+      };
+      threads: {
+        get: FunctionReference<
+          "query",
+          "public",
+          { classId: Id<"classes">; number: number; slug: string },
+          {
+            channelId: Id<"classroomChannels">;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            };
+            id: Id<"classroomThreads">;
+            opening: {
+              author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
+              createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
+              mine: boolean;
+              text: string | null;
+            };
+          }
+        >;
+        open: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            clientKey: string;
+            mentions: Array<
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+            >;
+            slug: string;
+            text: string;
+            title: string;
+          },
+          {
+            channelId: Id<"classroomChannels">;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            };
+            id: Id<"classroomThreads">;
+            opening: {
+              author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
+              createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
+              mine: boolean;
+              text: string | null;
+            };
+          }
+        >;
+        replies: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            number: number;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              author: { id: Id<"tenantPeople">; name: string };
+              clientKey: string;
+              createdAt: number;
+              discussion: {
+                lastReplyAt: number | null;
+                number: number;
+                replies: number;
+                title: string;
+                unread: boolean;
+              } | null;
+              editedAt: number | null;
+              id: Id<"classroomMessages">;
+              mentions: Array<
+                | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+                | { _tag: "everyone" }
+              >;
+              mine: boolean;
+              text: string | null;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        reply: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            clientKey: string;
+            mentions: Array<
+              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+            >;
+            number: number;
+            slug: string;
+            text: string;
+          },
+          {
+            author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
+            createdAt: number;
+            discussion: {
+              lastReplyAt: number | null;
+              number: number;
+              replies: number;
+              title: string;
+              unread: boolean;
+            } | null;
+            editedAt: number | null;
+            id: Id<"classroomMessages">;
+            mentions: Array<
+              | { _tag: "person"; id: Id<"tenantPeople">; name: string }
+              | { _tag: "everyone" }
+            >;
+            mine: boolean;
+            text: string | null;
+          }
+        >;
+      };
+    };
+    library: {
+      addLink: FunctionReference<
+        "mutation",
+        "public",
+        {
+          address: string;
+          classId: Id<"classes">;
+          clientKey: string;
+          slug: string;
+          title: string;
+        },
+        {
+          address: string | null;
+          author: string;
+          byteSize: number | null;
+          clientKey: string;
+          createdAt: number;
+          id: Id<"classroomLibrary">;
+          kind: "link" | "pdf" | "image";
+          title: string;
+        }
+      >;
+      canAdd: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        { authorId: Id<"tenantPeople"> }
+      >;
+      importDrive: FunctionReference<
+        "action",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          fileId: string;
+          slug: string;
+          title: string;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            address: string | null;
+            author: string;
+            byteSize: number | null;
+            clientKey: string;
+            createdAt: number;
+            id: Id<"classroomLibrary">;
+            kind: "link" | "pdf" | "image";
+            title: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          slug: string;
+          storageId: Id<"_storage">;
+          title: string;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+        },
+        null
+      >;
+      uploadUrl: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        string
+      >;
+    };
+    posts: {
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          postId: Id<"classroomPosts">;
+          slug: string;
+          text: string;
+        },
+        {
+          author: { id: Id<"tenantPeople">; name: string };
+          clientKey: string;
+          createdAt: number;
+          editedAt: number | null;
+          email: boolean;
+          id: Id<"classroomPosts">;
+          mine: boolean;
+          text: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            author: { id: Id<"tenantPeople">; name: string };
+            clientKey: string;
+            createdAt: number;
+            editedAt: number | null;
+            email: boolean;
+            id: Id<"classroomPosts">;
+            mine: boolean;
+            text: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      publish: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          email: boolean;
+          slug: string;
+          text: string;
+        },
+        {
+          author: { id: Id<"tenantPeople">; name: string };
+          clientKey: string;
+          createdAt: number;
+          editedAt: number | null;
+          email: boolean;
+          id: Id<"classroomPosts">;
+          mine: boolean;
+          text: string;
+        }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; postId: Id<"classroomPosts">; slug: string },
+        null
+      >;
+    };
+    tasks: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            deadline: number;
+            handedIn: number;
+            id: Id<"classroomTasks">;
+            latePolicy: "accept" | "close";
+            mine: {
+              late: boolean;
+              score: number | null;
+              updatedAt: number;
+            } | null;
+            points: number;
+            slug: string;
+            text: string;
+            title: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      publish: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          clientKey: string;
+          deadline: number;
+          latePolicy: "accept" | "close";
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
+      reschedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          deadline: number;
+          slug: string;
+          task: string;
+        },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
+      score: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          points: number;
+          slug: string;
+          submissionId: Id<"classroomSubmissions">;
+        },
+        {
+          id: Id<"classroomSubmissions">;
+          late: boolean;
+          person: { id: Id<"tenantPeople">; name: string };
+          score: number | null;
+          text: string;
+          updatedAt: number;
+        }
+      >;
+      submissions: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+          task: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"classroomSubmissions">;
+            late: boolean;
+            person: { id: Id<"tenantPeople">; name: string };
+            score: number | null;
+            text: string;
+            updatedAt: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      submit: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; task: string; text: string },
+        {
+          deadline: number;
+          handedIn: number;
+          id: Id<"classroomTasks">;
+          latePolicy: "accept" | "close";
+          mine: {
+            late: boolean;
+            score: number | null;
+            updatedAt: number;
+          } | null;
+          points: number;
+          slug: string;
+          text: string;
+          title: string;
+        }
+      >;
     };
     teachers: {
       assign: FunctionReference<
@@ -867,6 +1481,36 @@ export declare const api: {
     };
   };
   connectors: {
+    classroom: {
+      canImport: FunctionReference<"query", "public", { slug: string }, {}>;
+      link: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes"> | null;
+          connectionId: Id<"connectorConnections">;
+          courseId: string;
+          slug: string;
+        },
+        null
+      >;
+      preview: FunctionReference<
+        "action",
+        "public",
+        { slug: string },
+        {
+          classes: Array<{ id: Id<"classes">; name: string }>;
+          connectionId: Id<"connectorConnections">;
+          courses: Array<{
+            classId: Id<"classes"> | null;
+            courseId: string;
+            name: string;
+            section: string | null;
+            students: number;
+          }>;
+        } | null
+      >;
+    };
     connections: {
       disconnectOwn: FunctionReference<
         "mutation",
@@ -950,6 +1594,49 @@ export declare const api: {
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+    };
+    drive: {
+      pickerToken: FunctionReference<
+        "action",
+        "public",
+        {},
+        { accessToken: string; apiKey: string; appId: string } | null
+      >;
+    };
+    google: {
+      finish: FunctionReference<
+        "action",
+        "public",
+        { code: string | null; state: string },
+        { location: string; outcome: "connected" | "cancelled" | "refused" }
+      >;
+      offered: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<"drive" | "calendar" | "classroom">
+      >;
+      startPersonal: FunctionReference<
+        "mutation",
+        "public",
+        {
+          connector: "drive" | "calendar" | "classroom";
+          redirectUri: string;
+          returnPath: string;
+        },
+        { url: string }
+      >;
+      startSchool: FunctionReference<
+        "mutation",
+        "public",
+        {
+          connector: "drive" | "calendar" | "classroom";
+          redirectUri: string;
+          returnPath: string;
+          slug: string;
+        },
+        { url: string }
       >;
     };
   };
@@ -1285,21 +1972,6 @@ export declare const api: {
           }> | null;
         }
       >;
-      identity: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          contentKey: string;
-          expectedMaterialKey: string;
-          expectedSectionKey: string;
-        },
-        {
-          activeReleaseId: string | null;
-          managed: boolean;
-          publicPath: string | null;
-        }
-      >;
       latest: FunctionReference<
         "query",
         "public",
@@ -1443,7 +2115,13 @@ export declare const api: {
         "query",
         "public",
         { appLocale: "en" | "id" | "de"; bucket: Array<string> },
-        null | { routes: Array<{ lastModified: string; publicPath: string }> }
+        null | {
+          routes: Array<{
+            contentKey: string;
+            lastModified: string;
+            publicPath: string;
+          }>;
+        }
       >;
     };
     ownership: {
@@ -3130,7 +3808,6 @@ export declare const api: {
             unitId: Id<"tenantUnits">;
           }>;
           drafts: Array<{ createdAt: number; id: Id<"exams">; title: string }>;
-          draftsBounded: boolean;
           live: Array<{
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
@@ -3179,7 +3856,14 @@ export declare const api: {
         {
           continueCursor: string;
           isDone: boolean;
-          page: Array<{ id: Id<"exams">; title: string }>;
+          page: Array<{
+            createdAt: number;
+            id: Id<"exams">;
+            questionCount: number;
+            scope:
+              { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+            title: string;
+          }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
@@ -3512,6 +4196,23 @@ export declare const api: {
           left: number;
           placed: Array<{ id: Id<"examQuestions">; number: number | null }>;
         }
+      >;
+    };
+    joins: {
+      join: FunctionReference<
+        "mutation",
+        "public",
+        { sittingId?: Id<"examSittings">; slug: string; token: string },
+        | { outcome: "joined"; sittingId: Id<"examSittings"> }
+        | {
+            outcome: "refused";
+            reason:
+              | "NotAdmitted"
+              | "SeatLimit"
+              | "SittingNotOpen"
+              | "TokenRefused"
+              | "TooManyTries";
+          }
       >;
     };
     presence: {
@@ -6372,6 +7073,10 @@ export declare const api: {
             | "forum.manage"
             | "forum.post"
             | "forum.read"
+            | "library.manage"
+            | "post.publish"
+            | "task.manage"
+            | "task.submit"
             | "grade.release"
             | "grade.view"
             | "report.approve"
@@ -6406,6 +7111,7 @@ export declare const api: {
             | "integration.manage"
             | "integration.view"
             | "integration.manage"
+            | "connection.create"
             | "connection.view"
             | "class.create"
             | "class.list"
@@ -6486,6 +7192,10 @@ export declare const api: {
               | "forum.manage"
               | "forum.post"
               | "forum.read"
+              | "library.manage"
+              | "post.publish"
+              | "task.manage"
+              | "task.submit"
               | "grade.release"
               | "grade.view"
               | "report.approve"
@@ -6520,6 +7230,7 @@ export declare const api: {
               | "integration.manage"
               | "integration.view"
               | "integration.manage"
+              | "connection.create"
               | "connection.view"
               | "class.create"
               | "class.list"
@@ -6625,6 +7336,12 @@ export declare const api: {
               | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
               | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { message: Id<"classroomMessages">; type: "message.hidden" }
+              | { post: Id<"classroomPosts">; type: "announcement.posted" }
+              | { task: Id<"classroomTasks">; type: "assignment.published" }
+              | {
+                  task: Id<"classroomTasks">;
+                  type: "assignment.deadlineChanged";
+                }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
@@ -6729,7 +7446,13 @@ export declare const api: {
                   type: "person.invited";
                 }
               | {
-                  method: "card" | "code" | "invite" | "operator" | "founder";
+                  method:
+                    | "card"
+                    | "code"
+                    | "invite"
+                    | "operator"
+                    | "founder"
+                    | "room";
                   type: "person.claimed";
                 }
               | { type: "person.released" }
@@ -6847,6 +7570,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | { type: "sitting.cancel" }
+              | { person: Id<"tenantPeople">; type: "sitting.join" }
               | {
                   contract: {
                     contentLicense: string;
@@ -7392,13 +8116,27 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          slug?: string;
         },
         {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
-            changeType: "person.invited";
+            changeType:
+              | "person.invited"
+              | "forum.mentioned"
+              | "announcement.posted"
+              | "assignment.published";
             createdAt: number;
+            detail: {
+              actor: string;
+              channelId: Id<"classroomChannels"> | null;
+              className: string;
+              classSlug: string;
+              discussion: number | null;
+              messageId: Id<"classroomMessages"> | null;
+              task: string | null;
+            } | null;
             id: Id<"notifications">;
             readAt?: number;
             subject:
@@ -7439,8 +8177,21 @@ export declare const api: {
         "public",
         { notificationId: Id<"notifications"> },
         {
-          changeType: "person.invited";
+          changeType:
+            | "person.invited"
+            | "forum.mentioned"
+            | "announcement.posted"
+            | "assignment.published";
           createdAt: number;
+          detail: {
+            actor: string;
+            channelId: Id<"classroomChannels"> | null;
+            className: string;
+            classSlug: string;
+            discussion: number | null;
+            messageId: Id<"classroomMessages"> | null;
+            task: string | null;
+          } | null;
           id: Id<"notifications">;
           readAt?: number;
           subject:
@@ -7473,7 +8224,22 @@ export declare const api: {
           };
         }
       >;
-      readAll: FunctionReference<"mutation", "public", {}, null>;
+      readAll: FunctionReference<"mutation", "public", { slug?: string }, null>;
+    };
+    push: {
+      publicKey: FunctionReference<"query", "public", {}, string | null>;
+      subscribe: FunctionReference<
+        "mutation",
+        "public",
+        { auth: string; endpoint: string; p256dh: string },
+        null
+      >;
+      unsubscribe: FunctionReference<
+        "mutation",
+        "public",
+        { endpoint: string },
+        null
+      >;
     };
   };
   onboarding: {
@@ -12988,6 +13754,41 @@ export declare const internal: {
     };
   };
   classroom: {
+    forum: {
+      seed: {
+        history: FunctionReference<
+          "mutation",
+          "internal",
+          { classSlug: string; count: number; read: number; slug: string },
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            messages: Array<Id<"classroomMessages">>;
+          }
+        >;
+      };
+    };
+    library: {
+      commit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          authorId: Id<"tenantPeople">;
+          byteSize: number;
+          classId: Id<"classes">;
+          clientKey: string;
+          contentType:
+            | "image/png"
+            | "image/jpeg"
+            | "image/webp"
+            | "image/gif"
+            | "application/pdf";
+          storageId: Id<"_storage">;
+          title: string;
+        },
+        { id: Id<"classroomLibrary"> }
+      >;
+    };
     seed: {
       teacher: FunctionReference<
         "mutation",
@@ -13005,6 +13806,149 @@ export declare const internal: {
           periodId: Id<"tenantPeriods">;
           person: Id<"tenantPeople">;
         }
+      >;
+    };
+  };
+  connectors: {
+    classroom: {
+      links: FunctionReference<
+        "query",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        Array<{ courseId: string }>
+      >;
+      storeWork: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          connectionId: Id<"connectorConnections">;
+          courseId: string;
+          works: Array<{
+            deadline: number;
+            points: number;
+            text: string;
+            title: string;
+            workId: string;
+          }>;
+        },
+        { changed: boolean }
+      >;
+      target: FunctionReference<
+        "query",
+        "internal",
+        { slug: string },
+        {
+          classes: Array<{ id: Id<"classes">; name: string }>;
+          connectionId: Id<"connectorConnections">;
+          links: Array<{ classId: Id<"classes">; courseId: string }>;
+          refreshToken: string;
+        } | null
+      >;
+    };
+    drive: {
+      ownTarget: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        {
+          connectionId: Id<"connectorConnections">;
+          refreshToken: string;
+        } | null
+      >;
+    };
+    events: {
+      upcoming: FunctionReference<
+        "query",
+        "internal",
+        { from: number; until: number; userId: Id<"users"> },
+        Array<{ allDay: boolean; end: number; start: number; title: string }>
+      >;
+    };
+    google: {
+      claim: FunctionReference<
+        "mutation",
+        "internal",
+        { state: string; userId: Id<"users"> },
+        {
+          connector: "drive" | "calendar" | "classroom";
+          location: string;
+          owner:
+            | { kind: "personal"; userId: Id<"users"> }
+            | { kind: "tenant"; tenantId: Id<"tenants"> };
+          personId: Id<"tenantPeople"> | null;
+          redirectUri: string;
+          verifier: string;
+        } | null
+      >;
+      store: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          connector: "drive" | "calendar" | "classroom";
+          owner:
+            | { kind: "personal"; userId: Id<"users"> }
+            | { kind: "tenant"; tenantId: Id<"tenants"> };
+          personId: Id<"tenantPeople"> | null;
+          refreshToken: string;
+          scopes: Array<string>;
+          subject: string;
+          userId: Id<"users">;
+        },
+        Id<"connectorConnections">
+      >;
+    };
+    sync: {
+      reconnect: FunctionReference<
+        "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      run: FunctionReference<
+        "action",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      settle: FunctionReference<
+        "mutation",
+        "internal",
+        { changed: boolean; connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      storeEvents: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          connectionId: Id<"connectorConnections">;
+          events: Array<{
+            allDay: boolean;
+            end: number;
+            eventId: string;
+            start: number;
+            title: string;
+          }>;
+        },
+        null
+      >;
+      sweep: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        { scheduled: number }
+      >;
+      target: FunctionReference<
+        "query",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        {
+          connector:
+            "drive" | "forms" | "classroom" | "calendar" | "gmail" | "dapodik";
+          owner:
+            | { kind: "personal"; userId: Id<"users"> }
+            | { kind: "tenant"; tenantId: Id<"tenants"> };
+          refreshToken: string;
+        } | null
       >;
     };
   };
@@ -15019,6 +15963,61 @@ export declare const internal: {
         >;
       };
     };
+    notice: {
+      delivery: {
+        render: FunctionReference<
+          "action",
+          "internal",
+          {
+            classUrl: string;
+            locale: "en" | "id" | "de";
+            privacyPolicyUrl: string;
+            termsOfServiceUrl: string;
+          },
+          { html: string; subject: string; text: string }
+        >;
+      };
+      internal: {
+        enqueue: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
+            html: string;
+            postId: Id<"classroomPosts">;
+            subject: string;
+            text: string;
+          },
+          null
+        >;
+        readInput: FunctionReference<
+          "query",
+          "internal",
+          {
+            postId: Id<"classroomPosts">;
+            recipients: Array<Id<"tenantPeople">>;
+          },
+          {
+            addresses: Array<{ email: string; personId: Id<"tenantPeople"> }>;
+            input: {
+              classUrl: string;
+              locale: "en" | "id" | "de";
+              privacyPolicyUrl: string;
+              termsOfServiceUrl: string;
+            };
+          } | null
+        >;
+        send: FunctionReference<
+          "action",
+          "internal",
+          {
+            postId: Id<"classroomPosts">;
+            recipients: Array<Id<"tenantPeople">>;
+          },
+          null
+        >;
+      };
+    };
     retention: {
       cleanupRetainedEmailData: FunctionReference<
         "mutation",
@@ -15391,6 +16390,7 @@ export declare const internal: {
           userId: Id<"users">;
         },
         {
+          calendar: boolean;
           learner: {
             paused: boolean;
             portrait?: string;
@@ -16412,6 +17412,44 @@ export declare const internal: {
         null
       >;
       sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    deliver: {
+      forget: FunctionReference<
+        "mutation",
+        "internal",
+        { endpoint: string },
+        null
+      >;
+      notice: FunctionReference<
+        "query",
+        "internal",
+        { notificationId: Id<"notifications"> },
+        {
+          payload: string;
+          targets: Array<{ auth: string; endpoint: string; p256dh: string }>;
+        } | null
+      >;
+      send: FunctionReference<
+        "action",
+        "internal",
+        { notificationId: Id<"notifications"> },
+        null
+      >;
+    };
+    fanout: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          phase: "students" | "teachers";
+          source:
+            | { _tag: "mention"; messageId: Id<"classroomMessages"> }
+            | { _tag: "post"; postId: Id<"classroomPosts"> }
+            | { _tag: "task"; taskId: Id<"classroomTasks"> };
+        },
+        null
+      >;
     };
     purge: {
       run: FunctionReference<

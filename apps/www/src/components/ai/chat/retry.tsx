@@ -6,6 +6,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "use-intl";
 import { readStopFailure } from "@/components/ai/chat/cancel";
 import { useChat } from "@/components/ai/chat/context";
@@ -86,41 +87,30 @@ function FailureActions({
         </Button>
       ) : null}
       {action === "credits" ? (
-        <Button
-          nativeButton={false}
-          render={
-            <Link
-              activeOptions={EXACT_ACTIVE_OPTIONS}
-              to="/$locale/user/settings/subscriptions"
-            />
-          }
-          size="sm"
-          variant="outline"
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={buttonVariants({ size: "sm", variant: "outline" })}
+          to="/$locale/user/settings/subscriptions"
         >
           {t("review-credits")}
-        </Button>
+        </Link>
       ) : null}
       {action === "sign-in" ? (
-        <Button
-          nativeButton={false}
-          render={<Link {...authNavigation.linkProps} />}
-          size="sm"
-          variant="outline"
+        <Link
+          {...authNavigation.linkProps}
+          className={buttonVariants({ size: "sm", variant: "outline" })}
         >
           {t("sign-in-again")}
-        </Button>
+        </Link>
       ) : null}
       {action === "new-chat" ? (
-        <Button
-          nativeButton={false}
-          render={
-            <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/chat" />
-          }
-          size="sm"
-          variant="outline"
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className={buttonVariants({ size: "sm", variant: "outline" })}
+          to="/$locale/chat"
         >
           {t("new-chat")}
-        </Button>
+        </Link>
       ) : null}
     </>
   );

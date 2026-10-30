@@ -1,9 +1,9 @@
 import type { GenericId } from "@confect/core";
-import { QueryResult } from "@confect/react";
+import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Number as Num } from "effect";
-import { createContext, type ReactNode, use, useMemo, useState } from "react";
+import { createContext, type ReactNode, use, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import { StudentAnswersPanel } from "@/components/exams/results/answers";
 import {
@@ -13,15 +13,11 @@ import {
 } from "@/components/exams/results/context";
 import { QuestionsAction } from "@/components/exams/results/questions";
 import { ReleaseAction } from "@/components/exams/results/release";
-import {
-  type StatusFilter,
-  StudentsTable,
-  useStatusChoices,
-} from "@/components/exams/results/students";
+import { StudentsTable } from "@/components/exams/results/students";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { TablePageBody } from "@/components/shared/table/frame";
 import {
-  TableChoice,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -29,20 +25,17 @@ import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import { schoolExamsTarget } from "@/lib/routing/school/target";
-import type { readResultsFn } from "@/lib/tenant/exams.functions";
+import {
+  schoolExamEditTarget,
+  schoolExamSittingTarget,
+  schoolExamsTarget,
+  schoolExamTarget,
+} from "@/lib/routing/school/target";
 
-/** The first screen of the results, which the results page's loader read on the server. */
-type ResultsPreload = Partial<
-  Pick<Awaited<ReturnType<typeof readResultsFn>>, "overview" | "students">
->;
-
-/** The exam the page's address names, and the first screen of the results, which the page's loader read on the server. */
+/** The exam the page's address names. */
 const ResultsPageContext = createContext<{
   readonly examId: GenericId.GenericId<"exams"> | undefined;
-  readonly preload: ResultsPreload | undefined;
-}>({ examId: undefined, preload: undefined });
+}>({ examId: undefined });
 
 /**
  * The results of one sitting for its teacher: the students' list as the page's body, and in its one
@@ -53,12 +46,10 @@ const ResultsPageContext = createContext<{
  */
 export function SittingResults({
   examId,
-  preload,
   sittingId,
   slug,
 }: {
   readonly examId: GenericId.GenericId<"exams">;
-  readonly preload: ResultsPreload | undefined;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
@@ -74,7 +65,7 @@ export function SittingResults({
       )}
       read={{ args: scope, ref: exams.results.results.overview }}
     >
-      <ResultsPageContext value={{ examId, preload }}>
+      <ResultsPageContext value={{ examId }}>
         <SittingResultsContent scope={scope} />
       </ResultsPageContext>
     </ReadBoundary>
@@ -90,12 +81,11 @@ function SittingResultsContent({
     readonly slug: TenantSlug;
   };
 }) {
-  const { examId, preload } = use(ResultsPageContext);
+  const { examId } = use(ResultsPageContext);
   const settled = useSessionSettled();
-  const overview = usePreloadedQueryResult(
+  const overview = useQuery(
     exams.results.results.overview,
-    settled ? scope : "skip",
-    preload?.overview
+    settled ? scope : "skip"
   );
   const timeZone = QueryResult.isSuccess(overview)
     ? overview.value.sitting.timeZone
@@ -112,8 +102,6 @@ function SittingResultsContent({
     () => ({ canGrade, timeZone, total }),
     [canGrade, timeZone, total]
   );
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const statusChoices = useStatusChoices();
   const t = useTranslations("Exams");
 
   if (QueryResult.isFailure(overview)) {
@@ -146,12 +134,6 @@ function SittingResultsContent({
               sittingId={scope.sittingId}
             >
               <TableSearch placeholder={t("results-search")} />
-              <TableChoice
-                onChange={setStatus}
-                options={statusChoices}
-                title={t("filter-label")}
-                value={status}
-              />
               <QuestionsAction questions={questions} />
               <ReleaseAction canRelease={canRelease} releasedAt={releasedAt} />
             </ResultsHeader>
@@ -163,7 +145,7 @@ function SittingResultsContent({
                       {t("release-wait")}
                     </p>
                   )}
-                  <StudentsTable first={preload?.students} status={status} />
+                  <StudentsTable />
                 </TablePageBody>
               </PanesList>
               <StudentAnswersPanel />
@@ -183,16 +165,16 @@ function SittingResultsContent({
 function useExamCrumbs(
   examId: GenericId.GenericId<"exams">,
   examTitle: string
-) {
+): readonly BreadcrumbHeaderItem[] {
   const t = useTranslations("Exams");
   const tenant = useTenant();
 
   return tenant.canOpenExams
     ? [
-        { href: "/exams", label: t("title") },
-        { href: `/exams/${examId}/edit`, label: examTitle },
+        { label: t("title"), target: schoolExamsTarget(tenant.slug) },
+        { label: examTitle, target: schoolExamEditTarget(tenant.slug, examId) },
       ]
-    : [{ href: `/exams/${examId}`, label: examTitle }];
+    : [{ label: examTitle, target: schoolExamTarget(tenant.slug, examId) }];
 }
 
 /**
@@ -213,13 +195,17 @@ function ResultsHeader({
   readonly sittingId: GenericId.GenericId<"examSittings">;
 }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
   const crumbs = useExamCrumbs(examId, examTitle);
 
   return (
     <SchoolHeader
       items={[
         ...crumbs,
-        { href: `/exams/${examId}/sittings/${sittingId}`, label: room },
+        {
+          label: room,
+          target: schoolExamSittingTarget(tenant.slug, examId, sittingId),
+        },
         { label: t("results-title") },
       ]}
       title={t("results-title")}

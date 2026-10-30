@@ -122,14 +122,20 @@ export function useHasPanes() {
   return use(PanesContext) !== null;
 }
 
-/** Whether the screen is wide enough for the second pane to stand beside the first. */
+/**
+ * Whether the screen is wide enough for the second pane to stand beside the first. Every page with
+ * panes is a School page, which renders only in the browser (ADR 0038), so the first render already
+ * reads the screen and a detail that opens with the page never shows in a sheet on a wide screen.
+ */
 function useWide() {
   const width = use(PanesWidthContext);
 
   return useMediaQuery(
     width === "lg"
       ? TAILWIND_MEDIA_QUERIES.lgAndUp
-      : TAILWIND_MEDIA_QUERIES.mdAndUp
+      : TAILWIND_MEDIA_QUERIES.mdAndUp,
+    undefined,
+    { getInitialValueInEffect: false }
   );
 }
 
@@ -191,7 +197,8 @@ export function PanesList({ children }: { children: ReactNode }) {
  * the bottom of the screen. A row's detail says in `empty` what it will show while no row is open,
  * shows a row as it opens, and closes the row as its sheet closes. A detail without `empty` is
  * always on beside the first pane, and its sheet opens by `showSheet`. A page whose own selection
- * holds the open row passes `open` and `onClose`. The detail draws in one place at a time.
+ * holds the open row passes `open` and `onClose`, and its detail closes like a row's, with or
+ * without `empty`. The detail draws in one place at a time.
  */
 export function PanesDetail({
   children,
@@ -218,7 +225,8 @@ export function PanesDetail({
   const isOpen = open ?? rowOpen;
   const sheet = open ?? sheetOpen;
   const close = onClose ?? closePanes;
-  const closes = empty !== undefined;
+  const closes = empty !== undefined || onClose !== undefined;
+  const beside = !closes || (wide && isOpen);
 
   return (
     <>
@@ -228,18 +236,19 @@ export function PanesDetail({
           aria-label={label}
           className="flex h-full flex-col bg-background"
         >
-          {closes && !(wide && isOpen) ? (
-            <Empty className="flex-1">
-              <EmptyHeader>
-                <EmptyDescription>{empty}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
+          {beside ? (
             <PaneModeContext
               value={{ close: closes ? close : undefined, place: "aside" }}
             >
               {children}
             </PaneModeContext>
+          ) : null}
+          {beside || empty === undefined ? null : (
+            <Empty className="flex-1">
+              <EmptyHeader>
+                <EmptyDescription>{empty}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
         </aside>
       </ResizablePanel>

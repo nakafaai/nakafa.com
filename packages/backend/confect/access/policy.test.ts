@@ -183,6 +183,7 @@ describe("access/policy authority", () => {
             "audit.view",
             "billing.manage",
             "billing.view",
+            "connection.create",
             "connection.view",
             "document.edit",
             "exam.edit",

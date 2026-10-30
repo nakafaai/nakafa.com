@@ -2,38 +2,44 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
+  usePaginatedQuery,
 } from "@confect/react";
 import {
   IdCardIcon,
   MailSend01Icon,
+  MoreHorizontalIcon,
   UserAdd01Icon,
   UserCircleIcon,
   UserRemove01Icon,
+  UserStar01Icon,
 } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
-import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option } from "effect";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
-  type ComponentProps,
-  createContext,
-  startTransition,
-  use,
-} from "react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Array as Arr } from "effect";
+import { type ComponentProps, startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
-import { ConfirmRowMenu } from "@/components/shared/table/confirm";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import type { StatusTone } from "@/components/shared/table/tone";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -41,18 +47,15 @@ import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
+import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/members";
 
 /**
- * How each member status shows, in the list and in its Filter menu: an icon that fits it and that no
+ * How each member status shows, in the list and in its column's filter: an icon that fits it and that no
  * other status shares, and the tone of its badge. A member who still needs an invitation stands out,
  * a joined member reads as done.
  */
@@ -70,12 +73,7 @@ const STATUS_LOOKS = {
 >;
 
 /** How many members one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first page of the list, which its loader read on the server. */
-type MembersFirstPage = PreloadedPage<
-  PaginatedQueryItem<typeof tenancy.roster.members>
->;
+const PAGE_SIZE = 25;
 
 /** One member of the school as the members list shows it. */
 type MemberItem = PaginatedQueryItem<typeof tenancy.roster.members>;
@@ -86,21 +84,12 @@ const memberColumns = createColumnHelper<
   MemberItem
 >();
 
-/** The first page of the members, which the page's loader read on the server. */
-const MembersFirstPageContext = createContext<MembersFirstPage | undefined>(
-  undefined
-);
-
 /**
- * Every active member of the school as the page's table: its name, how far it has joined,
- * and its roles. The header row searches the names, filters by status, and holds Invite,
- * the page's main action. The list loads more rows as its end comes into view.
+ * Every active member of the school as the page's table: its name, how far it has joined, its
+ * roles, and its menu. The header row searches the names and holds Invite, the page's main action,
+ * and the status column filters the rows by status. The list loads more rows as its end comes into view.
  */
-export function SchoolMembersSettings({
-  first,
-}: {
-  first: MembersFirstPage | undefined;
-}) {
+export function SchoolMembersSettings() {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -109,27 +98,12 @@ export function SchoolMembersSettings({
         actions={
           <>
             <TableSearch placeholder={t("members-search")} />
-            <TableFilter
-              facets={[
-                {
-                  column: "status",
-                  options: Arr.map(MemberStatus.literals, (status) => ({
-                    icon: STATUS_LOOKS[status].icon,
-                    label: t(`member-status-label.${status}`),
-                    value: status,
-                  })),
-                  title: t("member-status"),
-                },
-              ]}
-            />
             <SchoolInviteAction />
           </>
         }
       >
         <ReadBoundary>
-          <MembersFirstPageContext value={first}>
-            <SchoolMembersBody />
-          </MembersFirstPageContext>
+          <SchoolMembersBody />
         </ReadBoundary>
       </SettingsTablePage>
     </TableFiltersProvider>
@@ -139,13 +113,11 @@ export function SchoolMembersSettings({
 /** The members of the school, read a page at a time, with the table and its end. */
 function SchoolMembersBody() {
   const { slug } = useTenant();
-  const first = use(MembersFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     tenancy.roster.members,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -194,14 +166,25 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
           tone={STATUS_LOOKS[info.getValue()].tone}
         />
       ),
+      enableSorting: false,
       filterFn: "oneOf",
-      header: t("member-status"),
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(MemberStatus.literals, (status) => ({
+            icon: STATUS_LOOKS[status].icon,
+            label: t(`member-status-label.${status}`),
+            value: status,
+          }))}
+          title={t("member-status")}
+        />
+      ),
       id: "status",
-      sortFn: "text",
+      meta: { align: "center" },
     }),
     memberColumns.display({
       cell: (info) => (
-        <div className="flex items-center gap-1 whitespace-nowrap">
+        <div className="inline-flex items-center gap-1 whitespace-nowrap">
           {Arr.map(info.row.original.roles, (role) => (
             <RoleBadge key={role} role={role} />
           ))}
@@ -209,14 +192,12 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
       ),
       header: t("member-roles"),
       id: "roles",
+      meta: { align: "center" },
     }),
     memberColumns.display({
-      cell: (info) =>
-        info.row.original.removable &&
-        info.row.original.status !== "invited" ? (
-          <SchoolMemberMenu member={info.row.original} />
-        ) : null,
+      cell: (info) => <SchoolMemberMenu member={info.row.original} />,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 
@@ -231,30 +212,86 @@ function SchoolMemberTable({ members }: { members: readonly MemberItem[] }) {
 }
 
 /**
- * The row menu of a member whom the viewer may remove: one who joined, one whose card waits,
- * and one whose invite ended or card expired. It removes the member behind a confirmation, and
- * the account of a member who joined loses the school at once. An invited member is handled on
- * the invitations page, and the list answers which rows the viewer may remove.
+ * The row menu of a member: Give a role, which gives the member a role of the whole school, and Remove for a member
+ * whom the viewer may remove, one who joined, one whose card waits, and one whose invite ended or card expired. Remove
+ * asks first, and the account of a member who joined loses the school at once. An invited member is handled on the
+ * invitations page, and the list answers which rows the viewer may remove.
  */
 function SchoolMemberMenu({ member }: { member: MemberItem }) {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange
   );
+  const [isGiving, setIsGiving] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const removable = member.removable && member.status !== "invited";
+
+  const removeMember = () => {
+    setIsRemoving(false);
+    startTransition(() =>
+      saveSchool(() => remove({ personId: member.id, slug }), SOURCE)
+    );
+  };
 
   return (
-    <ConfirmRowMenu
-      action={t("member-remove")}
-      confirm={t("member-remove-confirm")}
-      description={t("member-remove-description")}
-      icon={UserRemove01Icon}
-      onConfirm={() =>
-        startTransition(() =>
-          saveSchool(() => remove({ personId: member.id, slug }), SOURCE)
-        )
-      }
-      title={t("member-remove-title")}
-    />
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => setIsGiving(true)}>
+              <HugeIcons icon={UserStar01Icon} />
+              {t("roles-assign-dialog")}
+            </DropdownMenuItem>
+            {removable ? (
+              <DropdownMenuItem
+                onClick={() => setIsRemoving(true)}
+                variant="destructive"
+              >
+                <HugeIcons icon={UserRemove01Icon} />
+                {t("member-remove")}
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <SchoolGrantDialog
+        open={isGiving}
+        person={{ id: member.id, name: member.name }}
+        setOpen={setIsGiving}
+      />
+      <ResponsiveDialog
+        description={t("member-remove-description")}
+        footer={
+          <>
+            <Button
+              onClick={() => setIsRemoving(false)}
+              type="button"
+              variant="outline"
+            >
+              {common("cancel")}
+            </Button>
+            <Button onClick={removeMember} type="button" variant="destructive">
+              {t("member-remove-confirm")}
+            </Button>
+          </>
+        }
+        open={isRemoving}
+        setOpen={setIsRemoving}
+        title={t("member-remove-title")}
+      />
+    </div>
   );
 }

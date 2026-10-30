@@ -1,4 +1,4 @@
-import { PaginatedQueryResult } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Link01Icon } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import { LinkStatus } from "@repo/backend/confect/guardians/schema";
@@ -27,12 +27,12 @@ import {
   usePanes,
 } from "@/components/shared/panes";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { TableStatus } from "@/components/shared/table/status";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -47,24 +47,12 @@ import { LINK_STATUS_LOOKS } from "@/components/tenant/guardian/status";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
 
 /** How many links one page of the list loads, and each page after it. */
-export const PAGE_SIZE = 25;
-
-/** The first page of the list, which its loader read on the server. */
-type LinksFirstPage = PreloadedPage<LinkItem>;
+const PAGE_SIZE = 25;
 
 /** The columns of the links table. */
 const linkColumns = createColumnHelper<typeof dataTableFeatures, LinkItem>();
-
-/** The first page of the links, which the page's loader read on the server. */
-const LinksFirstPageContext = createContext<LinksFirstPage | undefined>(
-  undefined
-);
 
 /** The links loaded so far, which the table lists and the open link is found in. */
 const LinksContext = createContext<readonly LinkItem[] | null>(null);
@@ -85,11 +73,7 @@ function useLinks() {
  * state, and its actions. A link that the roster cannot check by NISN is checked by hand, and
  * any live link can be ended, from its row menu or from the open link.
  */
-export function GuardianLinksSettings({
-  first,
-}: {
-  first: LinksFirstPage | undefined;
-}) {
+export function GuardianLinksSettings() {
   const t = useTranslations("SchoolGuardians");
   const [isStarting, setIsStarting] = useState(false);
 
@@ -100,19 +84,6 @@ export function GuardianLinksSettings({
           actions={
             <>
               <TableSearch placeholder={t("links-search")} />
-              <TableFilter
-                facets={[
-                  {
-                    column: "status",
-                    options: Arr.map(LinkStatus.literals, (status) => ({
-                      icon: LINK_STATUS_LOOKS[status].icon,
-                      label: t(`status-${status}`),
-                      value: status,
-                    })),
-                    title: t("status"),
-                  },
-                ]}
-              />
               <Button onClick={() => setIsStarting(true)} type="button">
                 <HugeIcons icon={Link01Icon} />
                 {t("link-add")}
@@ -121,9 +92,7 @@ export function GuardianLinksSettings({
           }
         >
           <ReadBoundary>
-            <LinksFirstPageContext value={first}>
-              <GuardianLinksBody />
-            </LinksFirstPageContext>
+            <GuardianLinksBody />
           </ReadBoundary>
           <GuardianLinkStartDialog open={isStarting} setOpen={setIsStarting} />
         </SettingsTablePage>
@@ -137,15 +106,13 @@ export function GuardianLinksSettings({
  * comes into view, beside the open link; or the empty state while the school has no link.
  */
 function GuardianLinksBody() {
-  const first = use(LinksFirstPageContext);
   const t = useTranslations("SchoolGuardians");
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     guardians.links.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -224,12 +191,24 @@ function GuardianLinkTable() {
       ),
       enableSorting: false,
       filterFn: "oneOf",
-      header: t("status"),
+      header: () => (
+        <ColumnFilter
+          column="status"
+          options={Arr.map(LinkStatus.literals, (status) => ({
+            icon: LINK_STATUS_LOOKS[status].icon,
+            label: t(`status-${status}`),
+            value: status,
+          }))}
+          title={t("status")}
+        />
+      ),
       id: "status",
+      meta: { align: "center" },
     }),
     linkColumns.display({
       cell: (info) => <GuardianLinkMenu link={info.row.original} />,
       id: "actions",
+      meta: { align: "end" },
     }),
   ]);
 

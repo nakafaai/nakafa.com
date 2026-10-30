@@ -26,11 +26,13 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
-import { TryoutScoreCard } from "@/components/tryout/score/card";
+import { TryoutScoreHeader } from "@/components/tryout/score/card";
+import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
+import { TryoutPartSummary } from "@/components/tryout/section/card";
 import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
@@ -217,8 +219,15 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   );
 }
 
-/** Renders a score card with selectable immutable attempt history. */
-export function TryoutAttemptResults({ value }: TryoutAttemptResultsProps) {
+/**
+ * Renders the score card of a set's attempts: the statuses with the picker of
+ * immutable attempt history, then the chosen attempt's metrics and the metrics
+ * the caller composed after them.
+ */
+export function TryoutAttemptResults({
+  children,
+  value,
+}: TryoutAttemptResultsProps & { children?: ReactNode }) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const [selectedAttemptId, setSelectedAttemptId] = useState<
     HistoryRow["attemptId"] | null
@@ -238,22 +247,27 @@ export function TryoutAttemptResults({ value }: TryoutAttemptResultsProps) {
   const visibleAttempt = Option.getOrElse(selectedAttempt, () => value.attempt);
 
   return (
-    <TryoutScoreCard
-      value={{ score: visibleAttempt.score, status: visibleAttempt.status }}
-    >
-      {PaginatedQueryResult.isFailure(history) && <DataFailure />}
-      <TryoutAttemptHistory
-        value={{
-          attempts,
-          locale: value.identity.locale,
-          onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
-            ? () => history.loadMore(25)
-            : undefined,
-          onChoose: setSelectedAttemptId,
-          selectedAttemptId: visibleAttempt.attemptId,
-        }}
-      />
-    </TryoutScoreCard>
+    <TryoutPartSummary>
+      <TryoutScoreHeader
+        value={{ score: visibleAttempt.score, status: visibleAttempt.status }}
+      >
+        {PaginatedQueryResult.isFailure(history) && <DataFailure />}
+        <TryoutAttemptHistory
+          value={{
+            attempts,
+            locale: value.identity.locale,
+            onLoadMore: PaginatedQueryResult.isCanLoadMore(history)
+              ? () => history.loadMore(25)
+              : undefined,
+            onChoose: setSelectedAttemptId,
+            selectedAttemptId: visibleAttempt.attemptId,
+          }}
+        />
+      </TryoutScoreHeader>
+      <TryoutScoreMetrics score={visibleAttempt.score}>
+        {children}
+      </TryoutScoreMetrics>
+    </TryoutPartSummary>
   );
 }
 

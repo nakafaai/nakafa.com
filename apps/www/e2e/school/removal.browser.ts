@@ -158,7 +158,12 @@ test("a device the proctor retired says so and offers no Finish, while the attem
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
-  await proctor.getByRole("button", { name: "Acceptance Learner" }).click();
+  // The seat is pressed as soon as it shows, as a proctor does: it is a link, so it opens the panel
+  // whether or not the page's script has run.
+  await proctor
+    .getByRole("list", { name: "Student seats" })
+    .getByRole("link", { name: "Acceptance Learner" })
+    .click();
   // An attempt in progress keeps Lock as the panel's main action and Allow a second device in its menu.
   await proctor
     .getByRole("button", { name: "More actions for Acceptance Learner" })
@@ -238,7 +243,12 @@ test("an exam deleted in another tab keeps its editor, try and rooms on screen w
   await expect(trying.getByText(GONE)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(trying.getByText("Penghapusan")).toBeVisible();
+  // The sitting bar names the exam for a screen reader and in its breadcrumb, which is the title on screen.
+  await expect(
+    trying
+      .getByRole("navigation", { name: "Breadcrumb" })
+      .getByText("Penghapusan")
+  ).toBeVisible();
   await expect(trying.getByText(PROMPTS[0])).toBeVisible();
   await expect(rooms.getByText(GONE)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

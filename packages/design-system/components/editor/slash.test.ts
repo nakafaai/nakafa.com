@@ -3,12 +3,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   filterSlash,
-  NEW_FORMULA,
   runSlash,
   SLASH_KEYS,
   type SlashLabels,
 } from "@repo/design-system/components/editor/slash";
 import { documentExtensions } from "@repo/editor/document";
+import { NEW_FORMULA } from "@repo/editor/math";
 import { Editor } from "@tiptap/core";
 import { Array as Arr } from "effect";
 

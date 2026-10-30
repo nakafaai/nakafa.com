@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/confect/_generated/id";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 
 import type { LinkTarget } from "@/lib/routing/link";
@@ -25,6 +26,33 @@ export function schoolExamsTarget(slug: TenantSlug): LinkTarget {
     from: LOCALE_ROUTE,
     params: { slug },
     to: "/school/$slug/exams",
+  } satisfies LinkTarget;
+}
+
+/** The school's report cards, by cohort. */
+export function schoolReportsTarget(slug: TenantSlug): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { slug },
+    to: "/school/$slug/reports",
+  } satisfies LinkTarget;
+}
+
+/** The school's members, in its settings. */
+export function schoolMembersTarget(slug: TenantSlug): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { slug },
+    to: "/school/$slug/settings/members",
+  } satisfies LinkTarget;
+}
+
+/** The school's settings, at their first section, the school's profile. */
+export function schoolSettingsTarget(slug: TenantSlug): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { slug },
+    to: "/school/$slug/settings/profile",
   } satisfies LinkTarget;
 }
 
@@ -108,5 +136,69 @@ export function schoolClassForumTarget(
     from: LOCALE_ROUTE,
     params: { classSlug, slug },
     to: "/school/$slug/classes/$classSlug/forum",
+  } satisfies LinkTarget;
+}
+
+/** One channel of a class's forum, by the channel's ID. */
+export function schoolClassChannelTarget(
+  slug: TenantSlug,
+  classSlug: string,
+  channel: Id<"classroomChannels">
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug },
+    search: { channel },
+    to: "/school/$slug/classes/$classSlug/forum",
+  } satisfies LinkTarget;
+}
+
+/** One numbered discussion of a class's forum, by its number (ADR 0026). */
+export function schoolClassDiscussionTarget(
+  slug: TenantSlug,
+  classSlug: string,
+  number: number
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, number: String(number), slug },
+    to: "/school/$slug/classes/$classSlug/forum/$number",
+  } satisfies LinkTarget;
+}
+
+/** The library of one class of a school, the newest item first. */
+export function schoolClassLibraryTarget(
+  slug: TenantSlug,
+  classSlug: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug },
+    to: "/school/$slug/classes/$classSlug/library",
+  } satisfies LinkTarget;
+}
+
+/** The tasks of one class of a school, by deadline. */
+export function schoolClassTasksTarget(
+  slug: TenantSlug,
+  classSlug: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug },
+    to: "/school/$slug/classes/$classSlug/tasks",
+  } satisfies LinkTarget;
+}
+
+/** One task of a class of a school, by its address (ADR 0026). */
+export function schoolClassTaskTarget(
+  slug: TenantSlug,
+  classSlug: string,
+  task: string
+): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { classSlug, slug, task },
+    to: "/school/$slug/classes/$classSlug/tasks/$task",
   } satisfies LinkTarget;
 }

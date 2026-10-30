@@ -9,8 +9,10 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PortalContainer } from "@repo/design-system/lib/portal";
 import { cn } from "cn";
 import type * as React from "react";
+import { use } from "react";
 
 const Select = SelectPrimitive.Root;
 
@@ -78,7 +80,7 @@ function SelectContent({
     "align" | "alignOffset" | "alignItemWithTrigger" | "side" | "sideOffset"
   >) {
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal container={use(PortalContainer)}>
       <SelectPrimitive.Positioner
         align={align}
         alignItemWithTrigger={alignItemWithTrigger}
@@ -89,7 +91,7 @@ function SelectContent({
       >
         <SelectPrimitive.Popup
           className={cn(
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 inset-shadow-[0_-1px_--theme(--color-black/4%)] z-50 max-h-(--available-height) w-max min-w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) overflow-y-auto overflow-x-hidden rounded-md border bg-popover not-dark:bg-clip-padding text-popover-foreground shadow-md duration-ui ease-out data-[align-trigger=true]:animate-none motion-safe:data-closed:animate-out motion-safe:data-open:animate-in dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 relative inset-shadow-[0_-1px_--theme(--color-black/4%)] isolate z-50 max-h-(--available-height) w-max min-w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) overflow-y-auto overflow-x-hidden rounded-md border bg-popover not-dark:bg-clip-padding text-popover-foreground shadow-md duration-ui ease-out data-[align-trigger=true]:animate-none motion-safe:data-closed:animate-out motion-safe:data-open:animate-in dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
             className
           )}
           data-align-trigger={alignItemWithTrigger}
@@ -166,7 +168,7 @@ function SelectScrollUpButton({
   return (
     <SelectPrimitive.ScrollUpArrow
       className={cn(
-        "flex cursor-default items-center justify-center py-1",
+        "top-0 z-10 flex w-full cursor-default items-center justify-center bg-popover py-1",
         className
       )}
       data-slot="select-scroll-up-button"
@@ -184,7 +186,7 @@ function SelectScrollDownButton({
   return (
     <SelectPrimitive.ScrollDownArrow
       className={cn(
-        "flex cursor-default items-center justify-center py-1",
+        "bottom-0 z-10 flex w-full cursor-default items-center justify-center bg-popover py-1",
         className
       )}
       data-slot="select-scroll-down-button"

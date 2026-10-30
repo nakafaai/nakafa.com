@@ -1,7 +1,11 @@
-import type { Locale } from "@repo/internationalization/src/locale";
+import {
+  type Locale,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readProfileGate } from "@/lib/profile/gate";
+import { isLearnerPage, readVisitorAsset } from "@/lib/routing/learner.server";
 import { notFoundPageOf, withContentLanguage } from "@/lib/routing/not-found";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
@@ -22,6 +26,11 @@ import {
   UncaughtRequestError,
 } from "@/lib/routing/routed.server";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
+import {
+  answerSchoolPage,
+  readSchoolFile,
+} from "@/lib/routing/school/shell.server";
+import { readPathSegments } from "@/lib/routing/template";
 import { answerUnmatchedRequest } from "@/lib/routing/unmatched.server";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
 
@@ -52,6 +61,14 @@ const answerNotFound = Effect.fn("www.routing.answer.notFound")(function* (
 });
 
 /**
+ * Whether the Worker renders a request: a path that a Worker route renders, or a
+ * learner's own try-out page, which the build prerenders for a visitor.
+ */
+function rendersRequest(request: Request) {
+  return isRenderedRoutePath(new URL(request.url)) || isLearnerPage(request);
+}
+
+/**
  * Answers a rejection that names no page the Worker renders with the static
  * not-found page, and any other rejection with the app's own not-found page.
  */
@@ -60,18 +77,28 @@ const answerRejection = Effect.fn("www.routing.answer.rejection")(function* (
   locale: Locale,
   route: RouterHandler
 ) {
-  if (!isRenderedRoutePath(new URL(request.url))) {
+  if (!rendersRequest(request)) {
     return yield* answerUnmatchedRequest(request);
   }
   return yield* answerNotFound(request, locale, route);
 });
 
 /**
+ * Whether a request names a page in a locale that no Worker route renders. Such a
+ * page is an asset of the release when it exists, so a request for one that reaches
+ * the Worker names no page, and the content reads that could only say so are skipped.
+ */
+function namesUnrenderedPage(request: Request) {
+  const [locale] = readPathSegments(new URL(request.url).pathname);
+  return Schema.is(LocaleSchema)(locale) && !rendersRequest(request);
+}
+
+/**
  * Answers a request that no address decision answered: the not-found page of a
  * document that the projection does not own, then the root's locale redirect, then
- * the locale redirect of a bare page address, or else the router's page. A path
- * that no Worker route renders answers the static not-found page before the
- * router runs.
+ * the locale redirect of a bare page address, then the static shell of a school
+ * page, or else the router's page. A path that no Worker route renders answers the
+ * static not-found page before the router runs.
  */
 const answerRouter = Effect.fn("www.routing.answer.router")(function* (
   request: Request,
@@ -96,10 +123,10 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
       return bare.value;
     }
   }
-  if (!isRenderedRoutePath(url)) {
+  if (!rendersRequest(request)) {
     return yield* answerUnmatchedRequest(request);
   }
-  return yield* answerRouted(request, route);
+  return yield* answerSchoolPage(request, 200, answerRouted(request, route));
 });
 
 /**
@@ -107,15 +134,21 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
  * decide each answer, in this order: a host under the production domain that
  * names no school moves to the main site; a non-canonical slash spelling moves to
  * its canonical address; a non-public spelling moves to its public address. A
- * school tree path, a refused school page and a removed address answer not found,
- * and a migrated or moved address moves to its successor. A raw user address
- * answers not found, and a document that the source does not own answers not found
+ * school tree path answers not found, a file that a school host's address names
+ * answers the static not-found page before any read, and a refused school page
+ * answers not found with the static school shell. A visitor's try-out track, set or section
+ * answers the page that the build wrote for every visitor, before any content
+ * read. A removed address answers not found, and a migrated or moved
+ * address moves to its successor. A raw user address answers not found. A page in
+ * a locale that no Worker route renders answers the static not-found page before
+ * any content read, and a document that the source does not own answers not found
  * (ADR 0026). The root and a bare page address then move to the negotiated locale.
  * The router answers the rest only for a path that a Worker route renders: every
- * other path, a probe for a file included, answers the static not-found page. A
- * not-found answer of a Worker route is the app's own page, in the locale of the
- * address. Markdown is never negotiated: an agent reads a page's `.md` twin, which
- * the build writes beside its HTML.
+ * other path, a probe for a file included, answers the static not-found page.
+ * Every not-found answer is that static page unless a Worker route renders the
+ * path, which answers the app's own page in the address's locale. Markdown is
+ * never negotiated: an agent reads a page's `.md` twin, which the build writes
+ * beside its HTML.
  */
 export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   request: Request,
@@ -138,19 +171,33 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
 
   const schoolTree = readSchoolTreeGate(request);
   if (Option.isSome(schoolTree)) {
-    return yield* answerNotFound(request, schoolTree.value, route);
+    return yield* answerRejection(request, schoolTree.value, route);
+  }
+
+  const schoolFile = yield* readSchoolFile(request);
+  if (Option.isSome(schoolFile)) {
+    return schoolFile.value;
   }
 
   const refused = yield* readSchoolRefusal(request);
   if (Option.isSome(refused)) {
-    return yield* answerNotFound(request, refused.value, route);
+    return yield* answerSchoolPage(
+      request,
+      404,
+      answerRejection(request, refused.value, route)
+    );
+  }
+
+  const visitorAsset = yield* readVisitorAsset(request);
+  if (Option.isSome(visitorAsset)) {
+    return visitorAsset.value;
   }
 
   const removed = yield* readRemovedAddressNotFound(request).pipe(
     Effect.mapError(toUncaughtRequestError)
   );
   if (Option.isSome(removed)) {
-    return yield* answerNotFound(request, removed.value, route);
+    return yield* answerRejection(request, removed.value, route);
   }
 
   const migrated = yield* readMigrationResponse(request).pipe(
@@ -167,12 +214,17 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
 
   const profileGate = readProfileGate(request);
   if (Option.isSome(profileGate)) {
-    return yield* answerNotFound(request, profileGate.value, route);
+    return yield* answerRejection(request, profileGate.value, route);
+  }
+
+  const url = new URL(request.url);
+  if (namesUnrenderedPage(request)) {
+    return yield* answerUnmatchedRequest(request);
   }
 
   const sourceRejection = yield* readSourceBackedHtmlRouteRejection({
     method: request.method,
-    pathname: new URL(request.url).pathname,
+    pathname: url.pathname,
   }).pipe(Effect.mapError(toUncaughtRequestError));
   if (sourceRejection !== null) {
     return yield* answerRejection(request, sourceRejection, route);

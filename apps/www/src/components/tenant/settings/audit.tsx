@@ -2,6 +2,8 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
+  usePaginatedQuery,
+  useQuery,
 } from "@confect/react";
 import {
   Download01Icon,
@@ -23,18 +25,18 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Effect, Option } from "effect";
-import { createContext, use, useTransition } from "react";
+import { Array as Arr, Effect } from "effect";
+import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableEmpty } from "@/components/shared/table/frame";
 import {
-  TableFilter,
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
@@ -42,11 +44,8 @@ import { useTenant } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readAuditFn } from "@/lib/tenant/settings.functions";
 
-/** The icons of the people in the trail's Filter menu, one of a person for each. */
+/** The icons of the people in the Who column's filter, one of a person for each. */
 const PERSON_ICONS = [
   UserIcon,
   UserCircleIcon,
@@ -61,43 +60,19 @@ const PERSON_ICONS = [
 ] as const;
 
 /** How many entries one page of the journal loads, and each page after it. */
-export const PAGE_SIZE = 25;
+const PAGE_SIZE = 25;
 
 /** One journal entry as the audit list shows it. */
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 
-/** The audit's first screen as its loader reads it on the server. */
-type AuditFirstScreen = Awaited<ReturnType<typeof readAuditFn>>;
-
-/**
- * An audit entry as the loader sends it to the page: the subject's name is a string, or none, because an
- * Option does not cross the server boundary. The page restores the Option before it reads the entry.
- */
-type EntryWire = NonNullable<AuditFirstScreen["entries"]>["page"][number];
-
-/** The first screen of the audit: the first page of its entries, and the people who appear in them. */
-type AuditPreload = Pick<AuditFirstScreen, "entries" | "people">;
-
-/** The loader's entry with its subject name as the page reads it. */
-function restoreEntry(entry: EntryWire): EntryItem {
-  return { ...entry, subjectName: Option.fromNullishOr(entry.subjectName) };
-}
-
 /** The columns of the audit table. */
 const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 
-/** The audit's first screen, which the page's loader read on the server. */
-const AuditPreloadContext = createContext<AuditPreload | undefined>(undefined);
-
 /**
- * The audit trail as the page's table. The header row searches the changes, filters them by
- * who made them and exports the whole trail, and shows while the body loads.
+ * The audit trail as the page's table. The header row searches the changes and exports the
+ * whole trail, the Who column filters them by who made them, and the header shows while the body loads.
  */
-export function SchoolAuditSettings({
-  preload,
-}: {
-  preload: AuditPreload | undefined;
-}) {
+export function SchoolAuditSettings() {
   const t = useTranslations("SchoolSettings");
 
   return (
@@ -106,15 +81,12 @@ export function SchoolAuditSettings({
         actions={
           <>
             <TableSearch placeholder={t("audit-search")} />
-            <AuditFilter people={preload?.people} />
             <AuditExport />
           </>
         }
       >
         <ReadBoundary>
-          <AuditPreloadContext value={preload}>
-            <SchoolAuditBody />
-          </AuditPreloadContext>
+          <SchoolAuditBody />
         </ReadBoundary>
         <p className="mt-auto border-t px-4 py-3 text-muted-foreground text-sm">
           {t("audit-footer")}
@@ -125,22 +97,14 @@ export function SchoolAuditSettings({
 }
 
 /**
- * The audit's Filter menu, by who made each change. It lists every active member of the
- * school, so an actor on a later page is offered before that page loads, beside the staff
- * and the system that the journal also records.
+ * The head of the audit's Who column, which filters the changes by who made them. It lists every active member of the
+ * school, so an actor on a later page is offered before that page loads, beside the staff and the system that the
+ * journal also records.
  */
-function AuditFilter({
-  people: preloaded,
-}: {
-  people: AuditPreload["people"] | undefined;
-}) {
+function AuditWhoFilter() {
   const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
-  const people = usePreloadedQueryResult(
-    journal.audit.actors,
-    { slug },
-    preloaded
-  );
+  const people = useQuery(journal.audit.actors, { slug });
   const actors = Arr.dedupe([
     ...(QueryResult.isSuccess(people)
       ? Arr.map(people.value, (person) => person.name)
@@ -150,14 +114,10 @@ function AuditFilter({
   ]);
 
   return (
-    <TableFilter
-      facets={[
-        {
-          column: "who",
-          options: namedOptions(actors, PERSON_ICONS),
-          title: t("audit-who"),
-        },
-      ]}
+    <ColumnFilter
+      column="who"
+      options={namedOptions(actors, PERSON_ICONS)}
+      title={t("audit-who")}
     />
   );
 }
@@ -170,22 +130,13 @@ function AuditFilter({
  */
 function SchoolAuditBody() {
   const { slug } = useTenant();
-  const preload = use(AuditPreloadContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const words = useEntryWords();
-  const first =
-    preload?.entries === undefined
-      ? undefined
-      : {
-          isDone: preload.entries.isDone,
-          page: Arr.map(preload.entries.page, restoreEntry),
-        };
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     journal.audit.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    { initialNumItems: PAGE_SIZE }
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -213,10 +164,10 @@ function SchoolAuditBody() {
       sortFn: "basic",
     }),
     entryColumns.accessor(words.actor, {
+      enableSorting: false,
       filterFn: "oneOf",
-      header: t("audit-who"),
+      header: () => <AuditWhoFilter />,
       id: "who",
-      sortFn: "text",
     }),
     entryColumns.accessor(words.change, {
       filterFn: "includesString",

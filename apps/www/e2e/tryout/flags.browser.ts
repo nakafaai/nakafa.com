@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { activate } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
@@ -76,6 +77,7 @@ const verifyFlags = Effect.fn("NakafaE2E.verifyPlayerFlags")(function* (
   hasTouch: boolean,
   baseURL: string
 ) {
+  const changes = yield* trackChanges(page, []);
   yield* runFirstSection(page, hasTouch, baseURL);
   yield* expectView(page, "List");
   yield* chooseView(page, hasTouch, "One question");
@@ -110,12 +112,16 @@ const verifyFlags = Effect.fn("NakafaE2E.verifyPlayerFlags")(function* (
   yield* expectCell(page, hasTouch, "Question 2, answered");
 
   // F flags the current question as the button does.
+  const sentBefore = changes.sent;
   yield* Effect.promise(() => page.keyboard.press("f"));
   yield* Effect.promise(() =>
     expect(flag).toHaveAttribute("aria-pressed", "true")
   );
 
   // The flags are the server's, so a reload shows them once the page is React's again.
+  // The press shows the flag before the server has it, and a reload drops a change still
+  // on its way, so the reload waits until the server answered every change.
+  yield* Effect.promise(() => saved(changes, sentBefore));
   yield* Effect.promise(() => page.reload({ waitUntil: "commit" }));
   yield* Effect.promise(() =>
     waitUntilTakenOver(page.getByRole("button", { exact: true, name: "Flag" }))
