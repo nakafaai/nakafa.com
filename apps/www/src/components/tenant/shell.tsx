@@ -55,7 +55,6 @@ import {
   ViewerPreloadContext,
 } from "@/components/tenant/context";
 import type { HomeAccess } from "@/components/tenant/home/access";
-import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { TenantSearch } from "@/components/tenant/search";
@@ -273,7 +272,6 @@ export function TenantShell({
   canOpenExams,
   canOpenReports,
   children,
-  greeting,
   home,
   personName,
   profile,
@@ -285,7 +283,6 @@ export function TenantShell({
   canOpenExams: boolean;
   canOpenReports: boolean;
   children: ReactNode;
-  greeting: Greeting;
   home: HomeAccess;
   personName: string;
   profile: typeof TenantProfile.Type;
@@ -299,7 +296,6 @@ export function TenantShell({
           canManage,
           canOpenExams,
           canOpenReports,
-          greeting,
           logo: profile.logo,
           mascot: profile.mascot,
           home,

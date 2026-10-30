@@ -11,7 +11,6 @@ import {
   ExamTitle,
   ExamView,
 } from "@repo/backend/confect/exams/exam";
-import { HomeView } from "@repo/backend/confect/exams/home/contract";
 import {
   ScheduleCohort,
   ScheduleResult,
@@ -55,14 +54,6 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({ slug: TenantSlug }),
       item: () => ExamListed,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "home",
-      args: () => ({ slug: TenantSlug }),
-      returns: () => HomeView,
-      error: () => Schema.Never,
     })
   )
   .addFunction(

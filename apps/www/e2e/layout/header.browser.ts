@@ -90,8 +90,7 @@ const classPaths = ["/classes/fisika-x-1", "/classes/fisika-x-1/forum"];
  * height, and the elements inside it whose box reaches past its right or bottom
  * edge. Elements hidden at this width and the screen reader's one-pixel boxes are
  * left out, and so are the shapes inside a drawing: an SVG draws them only within
- * its own box, which is measured instead, as the half of Nina that rises from the
- * school home's header shows.
+ * its own box, which is measured instead.
  */
 function readHeaders() {
   return Array.from(

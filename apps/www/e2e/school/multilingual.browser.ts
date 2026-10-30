@@ -157,11 +157,12 @@ async function expectMixedQuestionAt(
     path: testInfo.outputPath(`multilingual-student-${viewport.name}.png`),
   });
 
-  // A page that shows no Arabic loads no Amiri Quran face: the school's home has only Latin text.
+  // A page that shows no Arabic loads no Amiri Quran face: the school's root opens the owner's exam list, whose
+  // titles are Latin.
   const home = await ownerContext.newPage();
   await home.setViewportSize(viewport);
   await home.goto(address("/"));
-  // The home's greeting heads it at every width, while a phone keeps the sidebar in a closed sheet.
+  await home.waitForURL(/\/exams$/u);
   await expect(home.getByRole("heading", { level: 1 })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

@@ -118,8 +118,6 @@ export const SentenceKeySchema = Schema.Literals([
   "PricingPage.a17",
   "PricingPage.a6",
   "PricingPage.a9",
-  "School.home-classes-empty",
-  "School.home-updates-empty",
   "SchoolEntry.outsider-description",
   "SchoolSettings.card-code-description",
   "SchoolSettings.card-print-footer",

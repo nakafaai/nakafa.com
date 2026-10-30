@@ -169,7 +169,6 @@ function SchoolLayout(): ReactElement {
         canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
         canOpenReports={canOpenReports(viewer)}
-        greeting={school.greeting}
         home={school.home}
         personName={viewer.person.name}
         profile={school.profile}
