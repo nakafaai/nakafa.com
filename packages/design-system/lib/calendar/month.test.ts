@@ -8,37 +8,39 @@ import {
   chosenMonth,
   defaultBounds,
 } from "@repo/design-system/lib/calendar/month";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 
 /** The local start of the day a key names, which every key here does. */
 const day = (key: string) => Option.getOrThrow(parseCalendarDayKey(key));
+
+/** The months of a caption that lie outside its bounds. */
+const disabledMonths = (months: ReturnType<typeof captionChoices>["months"]) =>
+  Arr.map(
+    Arr.filter(months, (month) => month.disabled),
+    (month) => month.month
+  );
 
 describe("calendar caption", () => {
   it("offers every month of the year and the years between the bounds, marking the months outside them", () => {
     const choices = captionChoices(2026, day("2026-03-15"), day("2027-06-01"));
 
     expect(choices.years).toEqual([2026, 2027]);
-    expect(choices.months.map((month) => month.month)).toEqual([
+    expect(Arr.map(choices.months, (month) => month.month)).toEqual([
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
     ]);
+    expect(disabledMonths(choices.months)).toEqual([0, 1]);
     expect(
-      choices.months
-        .filter((month) => month.disabled)
-        .map((month) => month.month)
-    ).toEqual([0, 1]);
-    expect(
-      choices.months.map((month) => getCalendarDayKey(month.date))[3]
-    ).toBe("2026-04-01");
+      Arr.get(
+        Arr.map(choices.months, (month) => getCalendarDayKey(month.date)),
+        3
+      )
+    ).toEqual(Option.some("2026-04-01"));
   });
 
   it("marks the months after the last bound", () => {
     const choices = captionChoices(2027, day("2026-03-15"), day("2027-06-01"));
 
-    expect(
-      choices.months
-        .filter((month) => month.disabled)
-        .map((month) => month.month)
-    ).toEqual([6, 7, 8, 9, 10, 11]);
+    expect(disabledMonths(choices.months)).toEqual([6, 7, 8, 9, 10, 11]);
   });
 
   it("goes to the first day of the chosen month, kept within the bounds", () => {
