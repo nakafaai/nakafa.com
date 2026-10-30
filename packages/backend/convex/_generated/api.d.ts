@@ -6828,6 +6828,7 @@ export declare const api: {
           className: string;
           id: Id<"classGrades">;
           kktp: "reached" | "notReached";
+          period: string;
           value: number;
         }>
       >;
@@ -8741,6 +8742,19 @@ export declare const api: {
           kktp: "reached" | "notReached";
           personId: Id<"tenantPeople">;
           state: "draft" | "released";
+          value: number;
+        }>
+      >;
+      own: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          band?: string;
+          className: string;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          period: string;
           value: number;
         }>
       >;

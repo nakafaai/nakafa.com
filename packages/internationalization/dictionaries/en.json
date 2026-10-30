@@ -1143,7 +1143,15 @@
     "empty-description": "Students appear here once they are placed in the class group.",
     "detail": "Student's grade",
     "detail-empty": "Choose a student to see their grade.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "My grades",
+    "own-search": "Find a class",
+    "own-class": "Class",
+    "own-period": "Period",
+    "own-band": "Band",
+    "own-band-none": "No band",
+    "own-empty": "No grade is released yet.",
+    "own-empty-description": "Each grade shows here once its teacher releases it."
   },
   "SchoolReports": {
     "title": "Report cards",

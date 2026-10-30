@@ -1143,7 +1143,15 @@
     "empty-description": "Schüler erscheinen hier, sobald sie der Klasse zugeordnet sind.",
     "detail": "Note der Schülerin oder des Schülers",
     "detail-empty": "Wähle eine Person aus der Liste, um ihre Note zu sehen.",
-    "kktp": "KKTP"
+    "kktp": "KKTP",
+    "own-title": "Meine Noten",
+    "own-search": "Klasse suchen",
+    "own-class": "Klasse",
+    "own-period": "Periode",
+    "own-band": "Stufe",
+    "own-band-none": "Ohne Stufe",
+    "own-empty": "Noch keine Note freigegeben.",
+    "own-empty-description": "Jede Note erscheint hier, sobald ihre Lehrkraft sie freigibt."
   },
   "SchoolReports": {
     "title": "Zeugnisse",
