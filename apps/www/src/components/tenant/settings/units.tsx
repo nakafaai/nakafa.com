@@ -1,5 +1,4 @@
-import type { Ref } from "@confect/core";
-import { QueryResult, useMutation } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Npsn } from "@repo/backend/confect/tenancy/schema";
@@ -27,7 +26,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, Fragment, startTransition, use, useState } from "react";
+import { Fragment, startTransition, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
@@ -51,23 +50,11 @@ import {
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";
 import type { Unit } from "@/components/tenant/settings/state";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 const SOURCE = "components/tenant/settings/units";
 
-/** The first page of the units, which the page's loader read on the server. */
-const UnitsPreloadContext = createContext<
-  Ref.Returns<typeof tenancy.units.list> | undefined
->(undefined);
-
 /** The section in the settings page frame, whose header shows while its body loads. */
-export function SchoolUnitsSettings({
-  preload,
-  slug,
-}: {
-  preload: Ref.Returns<typeof tenancy.units.list> | undefined;
-  slug: TenantSlug;
-}) {
+export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const [isAdding, setIsAdding] = useState(false);
 
@@ -80,13 +67,10 @@ export function SchoolUnitsSettings({
       }
     >
       <ReadBoundary read={{ args: { slug }, ref: tenancy.units.list }}>
-        <UnitsPreloadContext value={preload}>
-          <SchoolUnitsBody slug={slug} />
-        </UnitsPreloadContext>
+        <SchoolUnitsBody slug={slug} />
       </ReadBoundary>
       <SchoolUnitCreateDialog
         open={isAdding}
-        preload={preload}
         setOpen={setIsAdding}
         slug={slug}
       />
@@ -96,13 +80,8 @@ export function SchoolUnitsSettings({
 
 /** Renders one card per unit of the school, with its time zone and page language, and its NPSN card. */
 function SchoolUnitsBody({ slug }: { slug: TenantSlug }) {
-  const preload = use(UnitsPreloadContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const units = usePreloadedQueryResult(
-    tenancy.units.list,
-    isSettled ? { slug } : "skip",
-    preload
-  );
+  const units = useQuery(tenancy.units.list, isSettled ? { slug } : "skip");
 
   if (QueryResult.isFailure(units)) {
     throw units.error;
@@ -245,7 +224,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       </CardHeader>
       <CardContent>
         <FieldGroup>
-          <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-4">
             <Field>
               <FieldLabel htmlFor={`unit-time-zone-${unit.id}`}>
                 {t("unit-time-zone")}

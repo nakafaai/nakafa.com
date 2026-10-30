@@ -9,9 +9,9 @@ import { ScopeChoice, scopeChoices } from "@/components/tenant/exams/create";
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
 /**
- * What the viewer may do with exams in the school, as the school layout computes it from the
- * viewer it reads on the server. The shell's context carries it to every page of the school, so the
- * pages draw the actions and the tiles that the viewer may use in their first HTML.
+ * What the viewer may do with exams in the school, as the school layout's gate computes it from the
+ * viewer it reads. The shell's context carries it to every page of the school, so the pages draw the
+ * actions and the tiles that the viewer may use in their first frame.
  */
 export const HomeAccessSchema = Schema.Struct({
   canCreate: Schema.Boolean,

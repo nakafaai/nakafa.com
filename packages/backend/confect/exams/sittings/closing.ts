@@ -8,6 +8,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { recordResults } from "@repo/backend/confect/exams/results/record";
 import { scheduleSubmit } from "@repo/backend/confect/exams/sittings/timers";
 import { Array as Arr, Clock, Duration, Effect, Number as Num } from "effect";
@@ -75,7 +76,7 @@ const closeAttempt = Effect.fn("exams.sittings.closing.attempt")(function* (
 
 /**
  * Closes one page of a sitting's open attempts, and schedules the next page while this
- * one is full. A sitting first becomes closed. The scheduled close reads the attempts
+ * one is full. A sitting first becomes closed, which freezes its exam. The scheduled close reads the attempts
  * up to the sitting's closing time, and a proctor's close, with `now`, reads them all
  * and sets each deadline to now (ADR 0013, round 2 decisions 2, 8).
  */
@@ -94,6 +95,11 @@ export const closeDue = Effect.fn("exams.sittings.timers.closeDue")(
         .table("examSittings")
         .patch(sitting._id, { state: "closed" })
         .pipe(Effect.orDie);
+      // A finished sitting fixes the paper its students sat (ADR 0031).
+      yield* (yield* DatabaseReader)
+        .table("exams")
+        .get(sitting.examId)
+        .pipe(Effect.orDie, Effect.flatMap(freezeExam));
     }
     const now = yield* Clock.currentTimeMillis;
     const inProgress = yield* openAttempts(

@@ -53,7 +53,7 @@ const SchoolFrameSchema = Schema.Union([
 ]);
 
 /** The frame of one request, as the school layout renders it. */
-type SchoolFrame = typeof SchoolFrameSchema.Type;
+export type SchoolFrame = typeof SchoolFrameSchema.Type;
 
 /** The refusal that answers a school page with not found. */
 const RefusedRead = Schema.TaggedStruct("Refused", {});
@@ -97,13 +97,6 @@ export function outsiderOf(
 /** Whether the viewer may manage the school, which the school's settings and its setup need. */
 export function canManageSchool(can: readonly string[]): boolean {
   return Arr.contains(can, "tenant.manage");
-}
-
-/** The unit that a settings page opens first: the school's first active unit, or none when no unit is active. */
-export function firstActiveUnitOf<Unit extends { readonly status: string }>(
-  units: readonly Unit[]
-) {
-  return Arr.findFirst(units, (unit) => unit.status === "active");
 }
 
 /** The first role the viewer holds in the school, or none when the viewer holds no grant. */

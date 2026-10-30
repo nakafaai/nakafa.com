@@ -1,5 +1,11 @@
 import type { GenericId } from "@confect/core";
-import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  useMutation,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import {
   Calendar03Icon,
   Cancel01Icon,
@@ -21,9 +27,10 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option } from "effect";
-import { createContext, startTransition, use, useState } from "react";
+import { startTransition, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
@@ -43,10 +50,8 @@ import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { useLastValue } from "@/lib/data/kept";
-import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
-import type { readExamRoomsFn } from "@/lib/tenant/exams.functions";
+import { schoolExamsTarget } from "@/lib/routing/school/target";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -73,17 +78,7 @@ const ROOM_STATE_LOOKS = {
 } as const satisfies Record<Room["state"], StatusLook>;
 
 /** How many rooms each page asks for. The next page loads when the end of the table comes into view. */
-export const ROOM_PAGE_SIZE = 20;
-
-/** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
-type ExamRoomsPreload = Partial<
-  Pick<Awaited<ReturnType<typeof readExamRoomsFn>>, "rooms" | "summary">
->;
-
-/** The first screen of the rooms page, which the page's loader read on the server. */
-const ExamRoomsPreloadContext = createContext<ExamRoomsPreload | undefined>(
-  undefined
-);
+const ROOM_PAGE_SIZE = 20;
 
 /**
  * The rooms of one exam: its title in the header, the state filter, and a table of its rooms in
@@ -94,11 +89,9 @@ const ExamRoomsPreloadContext = createContext<ExamRoomsPreload | undefined>(
  */
 export function ExamRooms({
   examId,
-  preload,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
-  preload: ExamRoomsPreload | undefined;
   slug: TenantSlug;
 }) {
   const tenant = useTenant();
@@ -115,17 +108,18 @@ export function ExamRooms({
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
     >
-      <ExamRoomsPreloadContext value={preload}>
-        <ExamRoomsContent examId={examId} slug={slug} />
-      </ExamRoomsPreloadContext>
+      <ExamRoomsContent examId={examId} slug={slug} />
     </ReadBoundary>
   );
 }
 
 /** The exam list's crumb of the rooms page, which only a viewer who may open the list has. */
-function useExamsItems(canOpenExams: boolean) {
+function useExamsItems(canOpenExams: boolean): readonly BreadcrumbHeaderItem[] {
   const t = useTranslations("Exams");
-  return canOpenExams ? [{ href: "/exams", label: t("title") }] : [];
+  const tenant = useTenant();
+  return canOpenExams
+    ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
+    : [];
 }
 
 /** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
@@ -136,15 +130,13 @@ function ExamRoomsContent({
   examId: GenericId.GenericId<"exams">;
   slug: TenantSlug;
 }) {
-  const preload = use(ExamRoomsPreloadContext);
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const [filter, setFilter] = useState<StateFilter>("all");
-  const summary = usePreloadedQueryResult(
+  const summary = useQuery(
     exams.rooms.exam,
-    isSettled ? { examId, slug } : "skip",
-    preload?.summary
+    isSettled ? { examId, slug } : "skip"
   );
   const examsItems = useExamsItems(tenant.canOpenExams);
   // An exam deleted, or closed to the viewer, while its rooms are open keeps its title and says so.
@@ -220,7 +212,6 @@ function ExamRoomsContent({
         <RoomsTable
           examId={examId}
           filter={filter}
-          first={preload?.rooms}
           isSettled={isSettled}
           slug={slug}
         />
@@ -263,23 +254,19 @@ function RoomsEmpty({ filter }: { filter: StateFilter }) {
 function RoomsTable({
   examId,
   filter,
-  first,
   isSettled,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
   filter: StateFilter;
-  first: ExamRoomsPreload["rooms"] | undefined;
   isSettled: boolean;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  // The loader's first page is the page of the default filter, so a filtered table waits for its own first page.
-  const pagination = usePaginatedPreloaded(
+  const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
-    { initialNumItems: ROOM_PAGE_SIZE },
-    filter === "all" ? Option.fromUndefinedOr(first) : Option.none()
+    { initialNumItems: ROOM_PAGE_SIZE }
   );
 
   if (

@@ -90,7 +90,7 @@ test("a student writes an essay, the teacher grades it with part of its points, 
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(row).toContainText("Waiting for review");
-  const points = row.getByRole("spinbutton", {
+  const points = row.getByRole("textbox", {
     name: `Points of ${LEARNER_NAME}`,
   });
   await points.fill("3");

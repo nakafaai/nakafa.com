@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, HashSet } from "effect";
-import { GERMAN, openComposer, runPage } from "@/e2e/support/attachment";
-import { CHAT_PATH, chatPathOf } from "@/e2e/support/chat";
+import { GERMAN, openComposer } from "@/e2e/support/attachment";
+import { CHAT_PATH, runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+import { signInLearner } from "@/e2e/support/learner";
 import { NINA_SECTION, SHEET_POPUP } from "@/e2e/support/selector";
 import { openSheet } from "@/e2e/support/sheet";
 
@@ -100,9 +100,12 @@ const verifyComposer = Effect.fn("NakafaE2E.verifyNinaComposer")(function* (
 });
 
 const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
-  page: Page
+  page: Page,
+  origin: string
 ) {
+  // A visitor's attach button asks for sign-in, so a learner attaches.
   yield* seedAnalyticsConsent(page, "denied");
+  yield* signInLearner(page.context(), origin);
   yield* Effect.promise(() => page.goto("/en"));
   yield* verifyComposer(page.locator(NINA_SECTION));
 
@@ -124,24 +127,23 @@ for (const width of [390, 1440]) {
     test.use({ reducedMotion: "reduce", viewport: { height: 900, width } });
 
     test("keeps composer controls and attachments consistent across bento, chat and lesson sheet", async ({
+      baseURL,
       page,
     }) => {
-      await Effect.runPromise(
-        withObservedPageErrors(page, verifySurfaces(page))
-      );
+      await runOnPage(page, baseURL, (origin) => verifySurfaces(page, origin));
     });
   });
 }
 
 test.describe("The file picker of the composer in German", () => {
   test("is named in German, and the attach button opens it", async ({
+    baseURL,
     page,
   }) => {
-    await runPage(
-      page,
+    await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         // The new chat page in German, where the composer's labels are German.
-        const composer = yield* openComposer(page, chatPathOf("de"), GERMAN);
+        const composer = yield* openComposer(page, origin, "de", GERMAN);
 
         yield* Effect.promise(async () => {
           const chooser = page.waitForEvent("filechooser");

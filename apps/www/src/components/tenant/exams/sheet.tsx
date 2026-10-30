@@ -125,7 +125,8 @@ export function PaperLine({ essay = false }: { essay?: boolean }) {
 /**
  * A true or false table on a paper, as the student's player draws it: one bordered grid, a numbers column, the
  * statements, then a column for each choice. The live editor and the drawing without editors both build on it, so a
- * page keeps its size when its editors mount.
+ * page keeps its size when its editors mount. A choice column is at least 6rem wide, and on a narrow paper the choice
+ * columns together start at half the table, so the statements heading keeps its room.
  */
 export function PaperTable({
   children,
@@ -139,7 +140,7 @@ export function PaperTable({
     <div
       className="grid min-w-0 overflow-hidden rounded-xl border"
       style={{
-        gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns}, minmax(6rem, auto))`,
+        gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns}, minmax(min(6rem, calc(50% / ${columns})), auto))`,
       }}
     >
       {children}

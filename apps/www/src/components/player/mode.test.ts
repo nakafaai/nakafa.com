@@ -1,8 +1,9 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   decodePlayerMode,
   type PlayerMode,
+  readBrowserPlayerMode,
   readPlayerModeParam,
   resolvePlayerMode,
 } from "@/components/player/mode";
@@ -57,5 +58,23 @@ describe("resolvePlayerMode", () => {
     expect(
       resolvePlayerMode({ cookie: Option.none(), param: { kind: "absent" } })
     ).toBe("list");
+  });
+});
+
+describe("readBrowserPlayerMode", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("reads the view the learner saved in this browser when the address names none", () => {
+    vi.stubGlobal("document", { cookie: "theme=dark; player_view=single" });
+    expect(readBrowserPlayerMode({ kind: "absent" })).toBe("single");
+  });
+
+  it("prefers the address, and reads the list for a saved view it does not know", () => {
+    vi.stubGlobal("document", { cookie: "player_view=single" });
+    expect(readBrowserPlayerMode({ kind: "valid", mode: "list" })).toBe("list");
+    vi.stubGlobal("document", { cookie: "player_view=grid" });
+    expect(readBrowserPlayerMode({ kind: "absent" })).toBe("list");
   });
 });

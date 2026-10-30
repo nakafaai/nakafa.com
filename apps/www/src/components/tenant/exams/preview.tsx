@@ -12,7 +12,8 @@ import {
   editorDocument,
   editorPlaceholder,
 } from "@repo/design-system/components/editor/frame";
-import { paragraphVariants } from "@repo/design-system/lib/paragraph";
+import { drawArticleProse } from "@repo/design-system/components/editor/prose";
+import { paragraphVariants } from "@repo/design-system/lib/prose";
 import { DOMSerializer, Node } from "@tiptap/pm/model";
 import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
@@ -50,7 +51,12 @@ import { tableOf } from "@/components/tenant/exams/table";
 import { useLastValue } from "@/lib/data/kept";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { foldedDocument } from "@/lib/editor/fold";
-import { PREVIEW_CLIENT } from "@/lib/tenant/exams";
+
+/**
+ * The session name the editor reads a prompt under to draw it without an editor. It never writes, so the
+ * server holds no record of it, and the read answers the document alone.
+ */
+const PREVIEW_CLIENT = "preview";
 
 /**
  * A rich text of a question as a document to draw: the one its editor holds when the question is
@@ -130,8 +136,10 @@ const EMPTY_TEXT = Node.fromJSON(assessmentSchema, {
  * editor draws, in the wrapper and the document classes the editor gives its text, so the text takes
  * the same box and spacing as it does once the editor mounts, and each block takes the direction of
  * its own words, as the editor gives it. A text that changes while the teacher types is drawn when
- * the browser has time. `article` gives each paragraph the classes the article's paragraphs take, which
- * the prompt and the notes of a question take in their editors, and an option does not. An empty
+ * the browser has time. Its headings, lists, quotations and code take the published article's classes,
+ * as `articleProse` gives them in the editor, and `article` gives each paragraph the classes the
+ * article's paragraphs take, which the prompt and the notes of a question take in their editors, and an
+ * option does not. An empty
  * paragraph gets the line break an editor gives it, so an empty text keeps the height of its editor.
  */
 export function PreviewProse({
@@ -156,6 +164,7 @@ export function PreviewProse({
         )
       );
       markBlockDirections(element);
+      drawArticleProse(element);
       Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
         if (article) {
           p.className = paragraphVariants();
@@ -171,7 +180,10 @@ export function PreviewProse({
   return (
     <div className={editorContent({ size })}>
       <div
-        className={cn(editorPlaceholder(), editorDocument({ size }))}
+        className={cn(
+          editorPlaceholder(),
+          editorDocument({ size, text: "article" })
+        )}
         ref={draw}
       />
     </div>

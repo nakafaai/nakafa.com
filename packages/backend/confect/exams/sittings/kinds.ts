@@ -69,6 +69,11 @@ export const sittingKind = Kind.make("sitting", "examSittings", {
     }),
     Schema.Struct({ type: Schema.Literal("sitting.close") }),
     Schema.Struct({ type: Schema.Literal("sitting.cancel") }),
+    // A student who joined the school by the room's code, journaled under that student.
+    Schema.Struct({
+      person: Id("tenantPeople"),
+      type: Schema.Literal("sitting.join"),
+    }),
   ],
   published: [],
   relations: ["examAuthor"],

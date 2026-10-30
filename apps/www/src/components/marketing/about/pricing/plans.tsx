@@ -1,6 +1,5 @@
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,6 +8,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -60,25 +60,29 @@ function FreePlanAction() {
   return (
     <>
       <span className="contents" data-account="visitor">
-        <Button
-          className="w-full"
-          nativeButton={false}
-          render={
-            <Link rel="noopener noreferrer" target="_blank" to="/$locale/auth">
-              <HugeIcons icon={ArrowUpRight01Icon} />
-              {t("free-cta")}
-            </Link>
-          }
-          variant="outline"
-        />
+        <Link
+          className={buttonVariants({
+            className: "w-full",
+            variant: "outline",
+          })}
+          rel="noopener noreferrer"
+          target="_blank"
+          to="/$locale/auth"
+        >
+          <HugeIcons icon={ArrowUpRight01Icon} />
+          {t("free-cta")}
+        </Link>
       </span>
       <span className="contents" data-account="member">
-        <Button
-          className="w-full"
-          nativeButton={false}
-          render={<Link to="/$locale/home">{t("free-cta")}</Link>}
-          variant="outline"
-        />
+        <Link
+          className={buttonVariants({
+            className: "w-full",
+            variant: "outline",
+          })}
+          to="/$locale/home"
+        >
+          {t("free-cta")}
+        </Link>
       </span>
     </>
   );

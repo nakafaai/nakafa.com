@@ -29,7 +29,7 @@ Measured on origin/main 2359c75ad0, before origin/main e4776b377e. The research 
 
 D1. Public pages are prerendered HTML in assets-only Workers. A Node renderer runs once per release against one bulk read of the active release, and writes every public URL. Each shard holds at most 18,000 files, and today one shard holds every public page. An unmatched path answers the static 404 page (not_found_handling 404-page), never a render.
 
-D2. Signed-in and School surfaces render only in the browser. School hosts (*.nakafa.com) get an assets-only single-page-application shell. Its school gate and refusal run in the browser against Convex. Signed-in apex screens are client routes of a static shell that owns their route prefixes. No server function runs for them.
+D2. Signed-in and School surfaces render only in the browser. School hosts (*.nakafa.com) get a static single-page-application shell. Its school gate and refusal run in the browser against Convex. Signed-in apex screens are client routes of a static shell that owns their route prefixes. No server function runs for them. (Amended 26 Oct 2026 for School, see "Phase B for School as implemented": the web Worker answers the shell from its own assets instead of a second, assets-only Worker.)
 
 D3. One small dynamic Worker, with its own bundle and no TanStack or SSR code, serves nakafa.com/api/*. It answers the Better Auth relay, weather from request.cf coordinates, the pricing currency from CF-IPCountry, and the Aksara renderer manifest. Its target is under 10 ms CPU per request, measured in Workers Logs. The Convex token is fetched per document load and held in memory only.
 
@@ -49,8 +49,8 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the
   active release from the sitemap readers: every sitemap URL except the search
-  screen and the try-out tracks, sets and sections, plus the articles index and the
-  try-out hub of each locale. The sitemap files drop the same paths
+  screen and the try-out tracks, sets and sections (which Phase B for try-out adds),
+  plus the articles index and the try-out hub of each locale. The sitemap files drop the same paths
   (`apps/www/src/lib/sitemap/files.ts`), so every sitemap URL is a static page.
   `scripts/static/run.mjs pages` writes the list before the client build, and
   `vite.config.ts` gives it to TanStack's prerender with `autoStaticPathsDiscovery`
@@ -101,6 +101,59 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
   on that repository. A target whose `NAKAFA_DEPLOY_SURFACE` is `none` (development)
   starts nothing. The cache POST and its receipt are deleted. The Nakafa deploy
   workflow has no repository dispatch trigger.
+
+## Phase B for try-out, slice 1, as implemented
+
+- **Visitor pages.** The page list and the sitemap now include every try-out track, set and section
+  (`apps/www/src/lib/static/pages.ts`, `apps/www/src/lib/sitemap/files.ts`), and their loaders read
+  the build's visitor answer (`readStaticData`) unless the signed-in hint is set or the address binds
+  an attempt.
+- **Written beside their address.** The build writes those pages under `/_tryout`
+  (`staticPagePath` in `apps/www/src/lib/routing/prerendered.ts`, each page's `prerender.outputPath`),
+  so their own addresses have no asset and reach the Worker, as before. Their Markdown twins and social
+  images stay at their own paths and are answered by the assets alone.
+- **Learner pages on the Worker.** A page request that sends a session cookie or binds an attempt
+  renders on the Worker as before (`isLearnerPage` in `apps/www/src/lib/routing/learner.server.ts`),
+  so the learner's attempt, the shell lock, the score card and the player's view are in the first
+  HTML. A visitor's request takes the page under `/_tryout` (`readVisitorAsset`), after the redirect
+  and School decisions and before any content read. A page the release does not hold goes on through
+  the Worker's decisions, which answer the static not-found page without a render.
+- **Not `runWorkerFirst`.** A list of paths in `assets.runWorkerFirst` makes Cloudflare answer every
+  path the list does not name from the assets alone, so the API, server functions, search, chat and
+  School hosts would answer the assets' 404 page (#1337, reverted by #1413). School host paths cannot
+  be listed, so the pages move out of the way instead.
+- **No swap after hydration.** The assets match a path without its query, so a static page at its
+  own address would give a learner's hard load, `?attemptId` included, the visitor's HTML. Their own
+  page would replace it after hydration: the shell lock moving the header, the player replacing the
+  set page, the score card replacing the facts card, and Start turning into Continue.
+- **Cost.** A visitor's view is the same Worker request as before, now one asset read instead of a
+  render, which cost 40 to 333 ms of CPU for a missing set. A learner's view costs what it did. Slice
+  2 moves the attempt into the browser, after which the pages return to their own paths and
+  `isLearnerPage` is deleted.
+
+## Phase B for School as implemented
+
+- **Browser only.** The `/school` route is client-only (`ssr: false`), so the server renders the root
+  document alone. Its root reads the locale (the language cookie, then the browser's languages), the
+  school's messages from the locale's dictionary chunk, and the instant in the browser
+  (`src/lib/tenant/root.ts`). The layout's gate reads the session's Convex token from the token route
+  of the school's own host and makes the same `readSchoolFrame` decision as before
+  (`readBrowserSchoolFrame`). A visitor's legal links come from the static answer of the shell
+  navigation that every locale's pages already write. Every page reads its rows live, so a click reads
+  nothing before it commits. Every School server function, its handler and its tests are
+  deleted, and so are the school language save (the browser writes its cookie) and the `httpOnly` flag
+  of the saved player view, which the browser now reads.
+- **Static shell.** The build prerenders the root document once as `/_school.html` (Start's `spa`
+  option, masked at `/`, which redirects to a locale). The Worker answers every page of a school host
+  with that asset after the refusal check, with status 404 for a refused school and 200 otherwise
+  (`src/lib/routing/school/shell.server.ts`), so a school page costs no render. `/api/*`, `/_serverFn/*`
+  and every asset keep their answers on the same host.
+- **One Worker, not two.** A second, assets-only School Worker would need its own asset set built in
+  the same deploy. Alchemy 2.0.0-beta.84 reads a Worker's asset folder when it plans an update, before
+  the Web build writes it, and resolves a binding to the web Worker by its stable name, so nothing
+  orders the second Worker after the build. Moving `*.nakafa.com/*` between Workers in one deploy also
+  hits Alchemy's refusal to take a route that another Worker holds. The web Worker already binds the
+  release's assets and answers `/api` and server functions on every host, so it serves the shell.
 
 Not in Phase A: the `/api` relay and the School shell (Phase B), shards and the
 stable loader (Phase C), and per-request cookies for the pricing currency, which

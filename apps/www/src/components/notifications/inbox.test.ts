@@ -2,7 +2,8 @@
 
 import { PaginatedQueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Option, Schema } from "effect";
 import { useInbox } from "@/components/notifications/inbox";
 
 const mocks = vi.hoisted(() => ({
@@ -27,7 +28,7 @@ describe("useInbox", () => {
       PaginatedQueryResult.loadingFirstPage({ skipped: false })
     );
 
-    const inbox = useInbox(Option.some({ isDone: true, page: [] }));
+    const inbox = useInbox(Option.some({ isDone: true, page: [] }), undefined);
 
     expect(mocks.usePaginatedQuery).toHaveBeenLastCalledWith(
       expect.anything(),
@@ -43,13 +44,29 @@ describe("useInbox", () => {
     });
   });
 
+  it("reads one school's rows when a slug names it", () => {
+    mocks.settled.isLoading = false;
+    mocks.usePaginatedQuery.mockReturnValue(
+      PaginatedQueryResult.loadingFirstPage({ skipped: false })
+    );
+    const slug = Schema.decodeSync(TenantSlug)("harapan");
+
+    useInbox(Option.none(), slug);
+
+    expect(mocks.usePaginatedQuery).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { slug },
+      { initialNumItems: 20 }
+    );
+  });
+
   it("skips the subscription while the session is still loading", () => {
     mocks.settled.isLoading = true;
     mocks.usePaginatedQuery.mockReturnValue(
       PaginatedQueryResult.loadingFirstPage({ skipped: true })
     );
 
-    const inbox = useInbox(Option.none());
+    const inbox = useInbox(Option.none(), undefined);
 
     expect(mocks.usePaginatedQuery).toHaveBeenLastCalledWith(
       expect.anything(),
@@ -66,7 +83,7 @@ describe("useInbox", () => {
       PaginatedQueryResult.canLoadMore({ loadMore, results: [] })
     );
 
-    const inbox = useInbox(Option.none());
+    const inbox = useInbox(Option.none(), undefined);
     inbox.loadMore?.();
 
     expect(loadMore).toHaveBeenCalledExactlyOnceWith(20);

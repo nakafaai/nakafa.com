@@ -207,6 +207,18 @@ describe("Nina call limit", () => {
     const languageModel = ninaModel();
     provider.languageModel.mockReturnValue(languageModel);
     const f = await createNinaTest();
+    // A learner who connected Calendar is offered every tool, the largest part.
+    await f.t.mutation((ctx) =>
+      ctx.db.insert("connectorConnections", {
+        connector: "calendar",
+        googleAccountKey: null,
+        lastSyncedAt: null,
+        nextSyncAt: null,
+        owner: { kind: "personal", userId: f.identity.userId },
+        scopes: ["openid"],
+        status: "active",
+      })
+    );
     await f.t.action(run, { turnId: f.turnId });
     const [call] = languageModel.doStreamCalls;
     // A question focus adds instructions, and the roles differ in length.
@@ -231,6 +243,7 @@ describe("Nina call limit", () => {
       "deepResearch",
       "math",
       "memory",
+      "calendar",
     ]);
     const measured = instructions + tools + runtime;
     expect(measured).toBeLessThanOrEqual(NINA_BUDGET.instructions);
@@ -241,10 +254,10 @@ describe("Nina call limit", () => {
   it("holds a call whose history and summary are full inside the limit", async () => {
     const languageModel = ninaModel();
     provider.languageModel.mockReturnValue(languageModel);
-    // Eight turns of about 4,500 tokens. The summary covers the first, and the
-    // other seven cost 31,500, inside the history budget of 32,610.
+    // Eight turns of about 4,400 tokens. The summary covers the first, and the
+    // other seven cost 30,800, inside the history budget of 31,610.
     const f = await createNinaTest({
-      history: Arr.makeBy(8, () => ({ tokens: 4500 })),
+      history: Arr.makeBy(8, () => ({ tokens: 4400 })),
     });
     await f.t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {

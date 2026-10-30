@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
+  calendarToolInputSchema,
   mathToolInputSchema,
   memoryToolInputSchema,
   nakafaToolInputSchema,
@@ -25,6 +26,7 @@ const tools = {
   math: { inputSchema: mathToolInputSchema },
   memory: { inputSchema: memoryToolInputSchema },
   deepResearch: { inputSchema: researchToolInputSchema },
+  calendar: { inputSchema: calendarToolInputSchema },
 };
 const toolCall = {
   type: "tool-call" as const,
