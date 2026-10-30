@@ -2,7 +2,7 @@ import { QueryResult } from "@confect/react";
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { homeSetupRead, useHomeSetup } from "@/components/tenant/home/query";
@@ -69,20 +69,26 @@ function stepsOf(
 }
 
 /**
- * Whether the setup section shows on the staff home. Only the owner and the admin see it, while a step is missing or
- * the setup read has failed, so the failure shows inside the section with its own Try again.
+ * Whether the setup section shows on the staff home, once its reads have settled: none while the owner's or the
+ * admin's setup and units still load, so the home waits rather than move when the section arrives. Only the owner and
+ * the admin see it, while a step is missing or the setup read has failed, so the failure shows inside the section with
+ * its own Try again. Everyone else settles at once, without it.
  */
-export function useSetupShown() {
+export function useSetupShown(): Option.Option<boolean> {
   const tenant = useTenant();
   const setup = useHomeSetup();
   const viewer = useViewerQuery();
   if (!tenant.canManage) {
-    return false;
+    return Option.some(false);
   }
   if (QueryResult.isFailure(setup)) {
-    return true;
+    return Option.some(true);
   }
-  return stepsOf(setup, viewer).length > 0;
+  // A failed units read settles it too, with no step, because the first step needs the units.
+  if (!QueryResult.isSuccess(setup) || QueryResult.isLoading(viewer)) {
+    return Option.none();
+  }
+  return Option.some(stepsOf(setup, viewer).length > 0);
 }
 
 /**

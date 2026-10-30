@@ -35,8 +35,7 @@ const section = (page: Page, name: string) =>
   page.getByRole("region", { name, exact: true });
 
 /** Waits until the home has drawn its sections, which appear at once. */
-const homeDrawn = (page: Page) =>
-  expect(section(page, UPDATES)).toBeVisible();
+const homeDrawn = (page: Page) => expect(section(page, UPDATES)).toBeVisible();
 
 test("the owner's home is a greeting with no page action, then the setup and the updates under their headings", async ({
   baseURL,
@@ -103,9 +102,8 @@ test("no card of the home draws a rule inside it", async ({
   await expect(section(page, "Rooms")).toBeVisible();
 
   // A rule is a visible top or bottom border on anything inside a card.
-  const rules = await page
-    .locator('main [data-slot="card"] *')
-    .evaluateAll((elements) =>
+  const rules = await page.locator('main [data-slot="card"] *').evaluateAll(
+    (elements) =>
       elements.filter((element) => {
         const style = getComputedStyle(element);
         const drawn = (width: string, color: string) =>
@@ -117,7 +115,7 @@ test("no card of the home draws a rule inside it", async ({
           drawn(style.borderBottomWidth, style.borderBottomColor)
         );
       }).length
-    );
+  );
   expect(rules).toBe(0);
   await context.close();
   await learnerContext.close();

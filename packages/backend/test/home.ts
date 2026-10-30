@@ -14,11 +14,7 @@ type RoomSeed = Pick<ExamSittingsDoc, "examId" | "opensAt" | "state"> &
   Partial<
     Pick<
       ExamSittingsDoc,
-      | "closesAt"
-      | "cohortId"
-      | "room"
-      | "tenantId"
-      | "unitId"
+      "closesAt" | "cohortId" | "room" | "tenantId" | "unitId"
     >
   >;
 

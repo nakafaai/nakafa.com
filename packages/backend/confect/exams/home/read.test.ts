@@ -83,30 +83,28 @@ describe("exams home", () => {
     })
   );
 
-  it.effect(
-    "shows a principal the rooms of the principal's own unit",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const exam = yield* teacherExam(fixture, "PTS");
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT,
-          room: "Lab 2",
-          state: "open",
-        });
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT,
-          room: "Lab SMA",
-          state: "open",
-          unitId: fixture.units.sma,
-        });
+  it.effect("shows a principal the rooms of the principal's own unit", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const exam = yield* teacherExam(fixture, "PTS");
+      yield* insertRoom(fixture, {
+        examId: exam.id,
+        opensAt: OPENS_AT,
+        room: "Lab 2",
+        state: "open",
+      });
+      yield* insertRoom(fixture, {
+        examId: exam.id,
+        opensAt: OPENS_AT,
+        room: "Lab SMA",
+        state: "open",
+        unitId: fixture.units.sma,
+      });
 
-        const read = yield* homeOf(fixture, "principal");
+      const read = yield* homeOf(fixture, "principal");
 
-        expect(roomsOf(read.live)).toEqual(["Lab SMA"]);
-      })
+      expect(roomsOf(read.live)).toEqual(["Lab SMA"]);
+    })
   );
 
   it.effect("shows a deputy the rooms of the unit the deputy covers", () =>
