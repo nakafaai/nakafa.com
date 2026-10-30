@@ -18,12 +18,14 @@ import { SittingRetry } from "@/components/exams/sitting/retry";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingFilterRow } from "@/components/exams/sitting/toolbar";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { Link } from "@/lib/routing/link";
+import { schoolExamsTarget } from "@/lib/routing/school/target";
 
 /**
  * The proctor's dashboard of one sitting: the page's header with the room, the token and the
@@ -114,8 +116,8 @@ function SittingRefusal({
 }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
-  const examsItems = tenant.canOpenExams
-    ? [{ href: "/exams", label: t("title") }]
+  const examsItems: readonly BreadcrumbHeaderItem[] = tenant.canOpenExams
+    ? [{ label: t("title"), target: schoolExamsTarget(tenant.slug) }]
     : [];
 
   return (

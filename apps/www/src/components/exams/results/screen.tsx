@@ -18,6 +18,7 @@ import {
   StudentsTable,
   useStatusChoices,
 } from "@/components/exams/results/students";
+import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { Panes, PanesList, PanesProvider } from "@/components/shared/panes";
 import { TablePageBody } from "@/components/shared/table/frame";
 import {
@@ -30,7 +31,12 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import { schoolExamsTarget } from "@/lib/routing/school/target";
+import {
+  schoolExamEditTarget,
+  schoolExamSittingTarget,
+  schoolExamsTarget,
+  schoolExamTarget,
+} from "@/lib/routing/school/target";
 import type { readResultsFn } from "@/lib/tenant/exams.functions";
 
 /** The first screen of the results, which the results page's loader read on the server. */
@@ -183,16 +189,16 @@ function SittingResultsContent({
 function useExamCrumbs(
   examId: GenericId.GenericId<"exams">,
   examTitle: string
-) {
+): readonly BreadcrumbHeaderItem[] {
   const t = useTranslations("Exams");
   const tenant = useTenant();
 
   return tenant.canOpenExams
     ? [
-        { href: "/exams", label: t("title") },
-        { href: `/exams/${examId}/edit`, label: examTitle },
+        { label: t("title"), target: schoolExamsTarget(tenant.slug) },
+        { label: examTitle, target: schoolExamEditTarget(tenant.slug, examId) },
       ]
-    : [{ href: `/exams/${examId}`, label: examTitle }];
+    : [{ label: examTitle, target: schoolExamTarget(tenant.slug, examId) }];
 }
 
 /**
@@ -213,13 +219,17 @@ function ResultsHeader({
   readonly sittingId: GenericId.GenericId<"examSittings">;
 }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
   const crumbs = useExamCrumbs(examId, examTitle);
 
   return (
     <SchoolHeader
       items={[
         ...crumbs,
-        { href: `/exams/${examId}/sittings/${sittingId}`, label: room },
+        {
+          label: room,
+          target: schoolExamSittingTarget(tenant.slug, examId, sittingId),
+        },
         { label: t("results-title") },
       ]}
       title={t("results-title")}
