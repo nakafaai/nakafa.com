@@ -1,9 +1,12 @@
 import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { NO_SEATS } from "@repo/backend/confect/exams/sittings/standing";
 import { denied, nf } from "@repo/backend/test/editor";
 import {
   CLOSES_AT as CLOSES,
+  deviceOf,
+  enterOk,
   keyedExam,
   keyedSchool,
   mentions,
@@ -65,6 +68,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: LATER,
           room: "Lab 3",
+          seats: NO_SEATS,
         });
         const early = yield* scheduleSitting(fixture, {
           closesAt: CLOSES,
@@ -72,6 +76,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS,
           room: "Lab 2",
+          seats: NO_SEATS,
         });
         const page = yield* roomsOf(fixture, "teacher", examId);
         expect(page.isDone).toBe(true);
@@ -83,6 +88,7 @@ describe("exams/rooms", () => {
             id: early.id,
             opensAt: OPENS,
             room: "Lab 2",
+            seats: NO_SEATS,
             state: "scheduled",
             timeZone: "Asia/Jakarta",
           },
@@ -93,6 +99,7 @@ describe("exams/rooms", () => {
             id: late.id,
             opensAt: LATER,
             room: "Lab 3",
+            seats: NO_SEATS,
             state: "scheduled",
             timeZone: "Asia/Jakarta",
           },
@@ -113,6 +120,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS,
           room: "Lab 1",
+          seats: NO_SEATS,
         });
         const byAdmin = yield* scheduleSitting(fixture, {
           actor: "admin",
@@ -121,6 +129,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: LATER,
           room: "Lab 2",
+          seats: NO_SEATS,
         });
         const asTeacher = yield* roomsOf(fixture, "teacher", examId);
         const asAdmin = yield* roomsOf(fixture, "admin", examId);
@@ -154,6 +163,7 @@ describe("exams/rooms", () => {
         group: { cohortId, kind: "cohort" },
         opensAt: OPENS,
         room: "Lab 2",
+        seats: NO_SEATS,
       });
       const page = yield* roomsOf(fixture, "teacher", examId);
       expect(page.page).toMatchObject([
@@ -216,6 +226,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.sma },
           opensAt: OPENS,
           room: "Lab 9",
+          seats: NO_SEATS,
         });
         const own = yield* scheduleSitting(fixture, {
           closesAt: CLOSES,
@@ -223,6 +234,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: LATER,
           room: "Lab 2",
+          seats: NO_SEATS,
         });
         const first = yield* roomsOf(fixture, "deputy", examId, 1);
         expect(first.page).toEqual([]);
@@ -248,6 +260,7 @@ describe("exams/rooms", () => {
         group: { kind: "unit", unitId: fixture.units.smp },
         opensAt: LATER,
         room: "Lab 3",
+        seats: NO_SEATS,
       });
       const readState = (state: "open" | "scheduled") =>
         fixture.as("teacher").query(list, {
@@ -332,6 +345,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS,
           room: "Lab 2",
+          seats: NO_SEATS,
         });
         const page = yield* roomsOf(fixture, "deputy", examId);
         expect(Arr.map(page.page, (row) => row.id)).toEqual([made.id]);
@@ -358,6 +372,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS,
           room: "Lab 2",
+          seats: NO_SEATS,
         });
         const elsewhere = yield* scheduleSitting(fixture, {
           actor: "admin",
@@ -366,6 +381,7 @@ describe("exams/rooms", () => {
           group: { kind: "unit", unitId: fixture.units.sma },
           opensAt: LATER,
           room: "Lab 9",
+          seats: NO_SEATS,
         });
         // The teacher who wrote the exam sees every room of it through the exam author's
         // relation, so the caller here is the Deputy, who wrote nothing and holds one unit.
@@ -376,6 +392,62 @@ describe("exams/rooms", () => {
           own.id,
           elsewhere.id,
         ]);
+      })
+  );
+
+  it.effect(
+    "counts a room's seats live as its student enters, leaves, comes back, is locked and unlocked, and finishes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const { examId } = yield* sittingRow(fixture, made.id);
+        const device = deviceOf(1);
+        const entered = yield* enterOk(fixture, {
+          deviceId: device,
+          sittingId: made.id,
+          token: made.token,
+        });
+        const seats = () =>
+          fixture.finishScheduled().pipe(
+            Effect.andThen(roomsOf(fixture, "teacher", examId)),
+            Effect.map((page) =>
+              Arr.map(
+                Arr.filter(page.page, (room) => room.id === made.id),
+                (room) => room.seats
+              )
+            )
+          );
+        const student = fixture.as("student");
+        const signal = (kind: "exit" | "return") =>
+          student.mutation(refs.public.exams.sittings.signal, {
+            attemptId: entered.attempt,
+            deviceId: device,
+            kind,
+            slug: nf,
+          });
+        const proctor = (action: "lock" | "unlock") =>
+          fixture.as("teacher").mutation(refs.public.exams.sittings[action], {
+            attemptId: entered.attempt,
+            reason: "power-outage",
+            sittingId: made.id,
+            slug: nf,
+          });
+        expect(yield* seats()).toStrictEqual([{ ...NO_SEATS, present: 1 }]);
+        yield* signal("exit");
+        expect(yield* seats()).toStrictEqual([{ ...NO_SEATS, away: 1 }]);
+        yield* signal("return");
+        expect(yield* seats()).toStrictEqual([{ ...NO_SEATS, present: 1 }]);
+        yield* proctor("lock");
+        expect(yield* seats()).toStrictEqual([{ ...NO_SEATS, locked: 1 }]);
+        yield* proctor("unlock");
+        expect(yield* seats()).toStrictEqual([{ ...NO_SEATS, present: 1 }]);
+        yield* student.mutation(refs.public.exams.sittings.finish, {
+          deviceId: device,
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(yield* seats()).toStrictEqual([{ ...NO_SEATS, finished: 1 }]);
       })
   );
 });

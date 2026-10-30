@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { recordResults } from "@repo/backend/confect/exams/results/record";
+import { moveState } from "@repo/backend/confect/exams/sittings/counts";
 import { scheduleSubmit } from "@repo/backend/confect/exams/sittings/timers";
 import { Array as Arr, Clock, Duration, Effect, Number as Num } from "effect";
 
@@ -71,6 +72,7 @@ const closeAttempt = Effect.fn("exams.sittings.closing.attempt")(function* (
     .table("examAttempts")
     .patch(attempt._id, { deadline, state: "closing" })
     .pipe(Effect.orDie);
+  yield* moveState(attempt, "closing");
   yield* scheduleSubmit(attempt._id, deadline);
 });
 

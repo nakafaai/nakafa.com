@@ -56,5 +56,8 @@ app.use(posthog, {
 
 app.use(aggregate, { name: "globalLeaderboard" });
 app.use(aggregate, { name: "learningPopularityRankings" });
+// The seats of each sitting by how they stand (present, away, locked, finished), written in the queued mode so the
+// students who enter a room in the same seconds never contend on one row.
+app.use(aggregate, { name: "roomCounts" });
 
 export default app;

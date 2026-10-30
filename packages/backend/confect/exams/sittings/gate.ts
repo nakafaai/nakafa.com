@@ -24,6 +24,7 @@ import {
   sittingAuthority,
   withExam,
 } from "@repo/backend/confect/exams/sittings/authority";
+import { moveState } from "@repo/backend/confect/exams/sittings/counts";
 import { sittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
 import {
   NotInSitting,
@@ -249,6 +250,7 @@ const storeFinish = Effect.fn("exams.sittings.gate.finish.store")(function* (
     .table("examAttempts")
     .patch(attempt._id, { state: "submitted", submittedAt: now })
     .pipe(Effect.orDie);
+  yield* moveState(attempt, "submitted");
   yield* recordResults(attempt, sitting);
   yield* sittingAuthority.record(personActor(person), sitting, {
     attempt: attempt._id,

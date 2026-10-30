@@ -35,6 +35,7 @@ export function registerLearningPopularityAggregate(
   t: TestConvex<typeof schema>
 ) {
   aggregateTest.register(t, "learningPopularityRankings");
+  aggregateTest.register(t, "roomCounts");
 }
 
 /** Builds a Convex test instance with the Better Auth component registered. */

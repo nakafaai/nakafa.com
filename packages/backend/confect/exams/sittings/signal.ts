@@ -2,11 +2,16 @@ import type { ExamAttemptsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { rules } from "@repo/backend/confect/assessment/gate/rules";
 import {
+  latestSignalOf,
+  moveSeat,
+} from "@repo/backend/confect/exams/sittings/counts";
+import {
   sectionOf,
   sittingGate,
 } from "@repo/backend/confect/exams/sittings/gate";
 import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
 import type { SignalKind } from "@repo/backend/confect/exams/sittings/schema";
+import { seatStandingOf } from "@repo/backend/confect/exams/sittings/standing";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Effect, Number as Num, Option } from "effect";
 
@@ -41,20 +46,39 @@ export const signal = Effect.fn("exams.sittings.signal")(function* (args: {
         Effect.fail(toSittingError(refusal))
       )
     );
+  const at =
+    args.kind === "disconnect" && args.since !== undefined
+      ? Num.clamp(args.since, {
+          maximum: now,
+          minimum: live.attempt.startedAt,
+        })
+      : now;
+  // The seat moves when the new signal becomes the latest: a disconnect recorded at an earlier moment does not undo
+  // a return that came after it.
+  const previous = yield* latestSignalOf(live.attempt._id);
+  const latest = Option.match(previous, {
+    onNone: () => args.kind,
+    onSome: (signal) => (at >= signal.at ? args.kind : signal.kind),
+  });
   yield* (yield* DatabaseWriter)
     .table("examSignals")
     .insert({
-      at:
-        args.kind === "disconnect" && args.since !== undefined
-          ? Num.clamp(args.since, {
-              maximum: now,
-              minimum: live.attempt.startedAt,
-            })
-          : now,
+      at,
       attempt: live.attempt._id,
       kind: args.kind,
       tenantId: live.attempt.tenantId,
     })
     .pipe(Effect.orDie);
+  yield* moveSeat(
+    live.attempt,
+    seatStandingOf(
+      live.attempt.state,
+      Option.match(previous, {
+        onNone: () => null,
+        onSome: (signal) => signal.kind,
+      })
+    ),
+    seatStandingOf(live.attempt.state, latest)
+  );
   return null;
 });

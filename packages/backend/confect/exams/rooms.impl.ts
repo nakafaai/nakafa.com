@@ -8,6 +8,8 @@ import { examSummary } from "@repo/backend/confect/exams/exam";
 import { roomRow } from "@repo/backend/confect/exams/rooms";
 import spec from "@repo/backend/confect/exams/rooms.spec";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
+import { seatCountsOf } from "@repo/backend/confect/exams/sittings/counts";
+import { NO_SEATS } from "@repo/backend/confect/exams/sittings/standing";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -95,12 +97,19 @@ const list = FunctionImpl.make(
       Arr.contains(actions, "sitting.view")
     );
     const rows = yield* Effect.forEach(viewable, ({ actions, row }) =>
-      roomOf(
-        row,
-        row.state === "scheduled" &&
-          Arr.contains(actions, "sitting.proctor") &&
-          (row.scheduledBy === member.person._id || isAdmin)
-      )
+      Effect.all({
+        room: roomOf(
+          row,
+          row.state === "scheduled" &&
+            Arr.contains(actions, "sitting.proctor") &&
+            (row.scheduledBy === member.person._id || isAdmin)
+        ),
+        // A room that has not opened holds no seat, so it reads no counts.
+        seats:
+          row.state === "scheduled"
+            ? Effect.succeed(NO_SEATS)
+            : seatCountsOf(row._id),
+      }).pipe(Effect.map(({ room, seats }) => ({ ...room, seats })))
     );
     return Struct.assign(page, { page: rows });
   })

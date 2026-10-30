@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/assessment/gate/refusal";
 import { attemptOf } from "@repo/backend/confect/exams/sittings/attempt";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
+import { addSeat } from "@repo/backend/confect/exams/sittings/counts";
 import {
   mayEnter,
   sittingLocked,
@@ -132,6 +133,7 @@ const startAttempt = Effect.fn("exams.sittings.gate.start")(function* (
       tenantId: sitting.tenantId,
     })
     .pipe(Effect.orDie);
+  yield* addSeat({ _id: id, sitting: sitting._id });
   return admitted(
     { _id: id, deadline: sitting.closesAt, state: "inProgress" },
     now

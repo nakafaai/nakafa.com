@@ -8,6 +8,7 @@ import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
+import { moveState } from "@repo/backend/confect/exams/sittings/counts";
 import { RetiredDevicesFull } from "@repo/backend/confect/exams/sittings/errors";
 import {
   type Minutes,
@@ -43,6 +44,7 @@ const setState = Effect.fn("exams.sittings.proctor.state")(function* (
       .table("examAttempts")
       .patch(attempt._id, { state })
       .pipe(Effect.orDie);
+    yield* moveState(attempt, state);
   }
 });
 

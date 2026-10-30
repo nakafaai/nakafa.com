@@ -4,6 +4,7 @@ import {
   RoomName,
   SittingState,
 } from "@repo/backend/confect/exams/sittings/schema";
+import { SeatCounts } from "@repo/backend/confect/exams/sittings/standing";
 import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { Schema } from "effect";
 
@@ -18,8 +19,8 @@ const RoomGroup = Schema.Struct({
 
 /**
  * One room of an exam as the rooms list shows it: the room and its group, its opening and its
- * closing in the time zone of its unit, its state, and whether the caller may cancel it. A room
- * holds no token (ADR 0013).
+ * closing in the time zone of its unit, its state, whether the caller may cancel it, and how its
+ * seats stand now, live (K25). A room holds no token (ADR 0013).
  */
 export const RoomRow = Schema.Struct({
   canCancel: Schema.Boolean,
@@ -28,6 +29,7 @@ export const RoomRow = Schema.Struct({
   id: Id("examSittings"),
   opensAt: Schema.Finite,
   room: RoomName,
+  seats: SeatCounts,
   state: SittingState,
   timeZone: TimeZone,
 });
@@ -42,7 +44,7 @@ export const roomRow = (
   group: typeof RoomGroup.Type,
   timeZone: typeof TimeZone.Type,
   canCancel: boolean
-): typeof RoomRow.Type => ({
+): Omit<typeof RoomRow.Type, "seats"> => ({
   canCancel,
   closesAt: row.closesAt,
   group,

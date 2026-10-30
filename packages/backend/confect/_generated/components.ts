@@ -9,6 +9,7 @@ export type Components = {
   "posthog": import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
   "presence": import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
   "resend": import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
+  "roomCounts": import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"roomCounts">;
   "workflow": import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
 };
 

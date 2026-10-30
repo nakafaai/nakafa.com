@@ -31,6 +31,7 @@ import {
   placeQuestion,
 } from "@repo/backend/confect/exams/questions/place";
 import { openSitting } from "@repo/backend/confect/exams/sittings/closing";
+import { addSeat } from "@repo/backend/confect/exams/sittings/counts";
 import { createSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -116,6 +117,9 @@ const seatCrowd = Effect.fn("exams.seed.crowd")(function* (crowd: {
               state: "inProgress",
               tenantId: crowd.tenantId,
             })
+          ),
+          Effect.flatMap((attempt) =>
+            addSeat({ _id: attempt, sitting: crowd.sittingId })
           ),
           Effect.orDie
         ),
