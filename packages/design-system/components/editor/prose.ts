@@ -11,6 +11,10 @@ import {
   mathScrollVariants,
   paragraphVariants,
   quoteVariants,
+  tableCellVariants,
+  tableFrameVariants,
+  tableHeadCellVariants,
+  tableRowVariants,
 } from "@repo/design-system/lib/prose";
 import type { HeadingTag } from "@repo/design-system/types/markdown";
 import { Extension } from "@tiptap/core";
@@ -36,9 +40,10 @@ const headingClasses = (tag: HeadingTag) =>
 
 /**
  * The classes of each block of a document, by the name of its node, as the published article draws
- * the block: a heading of its level, a list and its items, a quotation, and the blocks that draw their
- * own frame (a code block, a table, a picture, a formula on its own line), which take an article's room
- * around them.
+ * the block: a heading of its level, a list and its items, a quotation, a table in the lesson's frame
+ * with its rows and cells, and the blocks that draw their own frame (a code block, a picture, a formula
+ * on its own line), which take an article's room around them. A table's decoration lands on the
+ * editor's wrapper of the table, which holds the table as the lesson's container does.
  */
 const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
   blockquote: () => Option.some(quoteVariants()),
@@ -50,8 +55,14 @@ const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
   listItem: () => Option.some(listItemVariants()),
   mathBlock: () => Option.some(blockGapVariants()),
   orderedList: () => Option.some(listVariants({ kind: "ordered" })),
-  table: () => Option.some(blockGapVariants()),
+  table: () => Option.some(tableFrameVariants()),
+  tableCell: () => Option.some(tableCellVariants()),
+  tableHeader: () => Option.some(tableHeadCellVariants()),
+  tableRow: () => Option.some(tableRowVariants()),
 };
+
+/** The cells of a table, whose paragraphs read as the cell's words, as a lesson's cell holds them. */
+const CELL_NODES = ["tableCell", "tableHeader"];
 
 /**
  * A decoration on each block and each piece of inline code of a document, with the classes that the
@@ -60,7 +71,7 @@ const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
  */
 const proseDecorations = (doc: Node, paragraphs: boolean) => {
   const decorations = MutableList.make<Decoration>();
-  doc.descendants((node, position) => {
+  doc.descendants((node, position, parent) => {
     const end = position + node.nodeSize;
     if (
       node.isText &&
@@ -72,7 +83,13 @@ const proseDecorations = (doc: Node, paragraphs: boolean) => {
       );
       return;
     }
-    if (paragraphs && node.type.name === "paragraph") {
+    if (
+      paragraphs &&
+      node.type.name === "paragraph" &&
+      !Option.exists(Option.fromNullishOr(parent), (holder) =>
+        Arr.contains(CELL_NODES, holder.type.name)
+      )
+    ) {
       MutableList.append(
         decorations,
         Decoration.node(position, end, { class: paragraphVariants() })
@@ -129,11 +146,28 @@ const ELEMENT_CLASSES = [
   ["li", listItemVariants()],
   ["ol", listVariants({ kind: "ordered" })],
   ["ul", listVariants({ kind: "bullet" })],
-  [
-    'pre, table, [data-type="image"], [data-type="math-block"]',
-    blockGapVariants(),
-  ],
+  ["tr", tableRowVariants()],
+  ["th", tableHeadCellVariants()],
+  ["td", tableCellVariants()],
+  ['pre, [data-type="image"], [data-type="math-block"]', blockGapVariants()],
 ] as const;
+
+/**
+ * Holds each table in the lesson's frame, as the editor's wrapper holds it: a document drawn without an
+ * editor has the table alone. A table already in its frame keeps it.
+ */
+function frameTables(root: HTMLElement) {
+  Arr.forEach(Arr.fromIterable(root.querySelectorAll("table")), (table) => {
+    if (table.parentElement?.dataset.slot === "table-frame") {
+      return;
+    }
+    const frame = document.createElement("div");
+    frame.className = tableFrameVariants();
+    frame.dataset.slot = "table-frame";
+    table.replaceWith(frame);
+    frame.append(table);
+  });
+}
 
 /**
  * Draws the formulas that the schema left as empty elements with their LaTeX, as the lesson draws them: an
@@ -176,5 +210,6 @@ export function drawArticleProse(root: HTMLElement) {
       }
     )
   );
+  frameTables(root);
   drawFormulas(root);
 }
