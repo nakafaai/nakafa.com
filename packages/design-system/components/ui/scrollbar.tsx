@@ -15,8 +15,10 @@ const ThumbDrag = Schema.Struct({
 
 /**
  * Wires the page's bar to the window: it places the thumb as the page scrolls or changes height, shows the bar
- * while the page moves, and lets the thumb drag the page and the track jump it. It writes the DOM directly, so a
- * scroll lays out the thumb alone and renders nothing. The returned function unwires it.
+ * while the page moves, and lets the thumb drag the page and the track jump it. The page keeps its own scrolling,
+ * by wheel, keys, find and anchors; only its native bar is hidden. The bar writes the DOM directly, so it renders
+ * nothing: the page's and the window's heights are read only when either changes, and a scroll reads its offset
+ * once in the next frame and moves the thumb. The returned function unwires it.
  */
 function wirePageScrollbar(track: HTMLDivElement) {
   const thumb = track.firstElementChild;
@@ -24,27 +26,45 @@ function wirePageScrollbar(track: HTMLDivElement) {
     return () => undefined;
   }
   const root = document.documentElement;
+  let frame = 0;
   let hide = 0;
   let drag = Option.none<typeof ThumbDrag.Type>();
+  let size = { length: 0, room: 0, travel: 0 };
 
-  /** The page's travel, the thumb's length and how far the thumb may move. */
+  /** Reads the page's travel, the thumb's length and how far the thumb may move, after either height changed. */
   const measure = () => {
     const view = root.clientHeight;
-    const travel = root.scrollHeight - view;
-    const length = Math.max((view * view) / root.scrollHeight, SHORTEST_THUMB);
-    return { length, room: view - length, travel };
+    const height = root.scrollHeight;
+    const length = Math.max((view * view) / height, SHORTEST_THUMB);
+    size = { length, room: view - length, travel: height - view };
+    track.hidden = size.travel <= 0;
+    thumb.style.height = `${length}px`;
   };
 
   const place = () => {
-    const { length, room, travel } = measure();
-    track.hidden = travel <= 0;
-    thumb.style.height = `${length}px`;
-    thumb.style.transform = `translateY(${travel > 0 ? (root.scrollTop / travel) * room : 0}px)`;
+    frame = 0;
+    const offset =
+      size.travel > 0 ? (root.scrollTop / size.travel) * size.room : 0;
+    thumb.style.transform = `translateY(${offset}px)`;
+  };
+
+  /** Moves the thumb once in the next frame, however many scroll events the frame holds. */
+  const schedule = () => {
+    if (frame === 0) {
+      frame = window.requestAnimationFrame(place);
+    }
+  };
+
+  const resized = () => {
+    measure();
+    schedule();
   };
 
   const onScroll = () => {
-    place();
-    track.dataset.scrolling = "";
+    schedule();
+    if (track.dataset.scrolling === undefined) {
+      track.dataset.scrolling = "";
+    }
     window.clearTimeout(hide);
     hide = window.setTimeout(() => {
       delete track.dataset.scrolling;
@@ -66,10 +86,11 @@ function wirePageScrollbar(track: HTMLDivElement) {
     Option.map(
       Option.filter(drag, (held) => held.pointer === event.pointerId),
       (held) => {
-        const { room, travel } = measure();
         window.scrollTo({
           behavior: "instant",
-          top: held.scroll + ((event.clientY - held.start) * travel) / room,
+          top:
+            held.scroll +
+            ((event.clientY - held.start) * size.travel) / size.room,
         });
       }
     );
@@ -80,31 +101,31 @@ function wirePageScrollbar(track: HTMLDivElement) {
 
   /** A press on the track brings the thumb's middle under the pointer. */
   const onTrackDown = (event: PointerEvent) => {
-    const { length, room, travel } = measure();
     const offset =
-      event.clientY - track.getBoundingClientRect().top - length / 2;
+      event.clientY - track.getBoundingClientRect().top - size.length / 2;
     window.scrollTo({
-      top: (Math.min(Math.max(offset, 0), room) / room) * travel,
+      top: (Math.min(Math.max(offset, 0), size.room) / size.room) * size.travel,
     });
   };
 
-  const resize = new ResizeObserver(place);
+  const resize = new ResizeObserver(resized);
   resize.observe(root);
   resize.observe(document.body);
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", place);
+  window.addEventListener("resize", resized, { passive: true });
   thumb.addEventListener("pointerdown", onThumbDown);
   thumb.addEventListener("pointermove", onThumbMove);
   thumb.addEventListener("pointerup", onThumbUp);
   thumb.addEventListener("pointercancel", onThumbUp);
   track.addEventListener("pointerdown", onTrackDown);
-  place();
+  resized();
 
   return () => {
     resize.disconnect();
+    window.cancelAnimationFrame(frame);
     window.clearTimeout(hide);
     window.removeEventListener("scroll", onScroll);
-    window.removeEventListener("resize", place);
+    window.removeEventListener("resize", resized);
     thumb.removeEventListener("pointerdown", onThumbDown);
     thumb.removeEventListener("pointermove", onThumbMove);
     thumb.removeEventListener("pointerup", onThumbUp);
@@ -115,15 +136,16 @@ function wirePageScrollbar(track: HTMLDivElement) {
 
 /**
  * The page's own scrollbar. Native bars take no room (globals.css), so the page draws a thin overlay bar at the
- * window's end edge, as the design system's ScrollArea draws one for every other scroller: it shows on hover and
- * while the page moves. A touch screen keeps its own overlay bar, so the page draws none there. Overlays such as
- * sidebars and dialogs stand above it.
+ * window's inline end, as the design system's ScrollArea draws one for every other scroller: it shows on hover
+ * and while the page moves, and shows without a fade where motion is reduced. It is decorative to assistive
+ * technology and takes no focus; the page scrolls by its own means. A touch screen keeps its own overlay bar, so
+ * the page draws none there. Overlays such as sidebars and dialogs stand above it.
  */
 export function PageScrollbar() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-coarse:hidden fixed inset-e-0 top-0 z-10 flex h-svh w-2.5 touch-none select-none p-0.5 opacity-0 transition-opacity delay-300 hover:opacity-100 hover:delay-0 hover:duration-100 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-100"
+      className="fixed inset-e-0 top-0 z-10 flex pointer-coarse:hidden h-svh w-2.5 touch-none select-none p-0.5 opacity-0 transition-opacity delay-300 hover:opacity-100 hover:delay-0 hover:duration-100 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-100 motion-reduce:transition-none"
       data-slot="page-scrollbar"
       hidden
       ref={wirePageScrollbar}
