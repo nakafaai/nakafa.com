@@ -4,10 +4,17 @@ import { type ReactNode, useEffect, useState } from "react";
 
 /**
  * Renders its children once the page has loaded and the browser has an idle
- * moment after it. A marketing page's toys wait here: they animate, and their
- * work at load would hold back the page's own first frames and its first press.
+ * moment after it, and `fallback` until then. Motion that no first frame needs
+ * waits here, such as a page's toys or Nina's life: its work at load would hold
+ * back the page's own first frames and its first press.
  */
-export function AfterPageSettled({ children }: { children: ReactNode }) {
+export function AfterPageSettled({
+  children,
+  fallback = null,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
   const [settled, setSettled] = useState(false);
 
   useEffect(() => {
@@ -19,5 +26,5 @@ export function AfterPageSettled({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  return settled ? children : null;
+  return settled ? children : fallback;
 }

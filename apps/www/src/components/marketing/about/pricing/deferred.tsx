@@ -1,8 +1,8 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { AfterPageSettled } from "@repo/design-system/components/ui/settled";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { lazy, Suspense } from "react";
-import { AfterPageSettled } from "@/components/marketing/shared/settled";
 
 /** The toys of the pricing page, whose code stays out of the page's first JavaScript. */
 const PricingToys = lazy(() =>
