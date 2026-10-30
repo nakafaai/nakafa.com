@@ -62,13 +62,16 @@ const cellVariants = cva(
   }
 );
 
-/** A row of a list. A row that opens a page lights up on hover, the way a link row does. */
-const rowVariants = cva("group flex min-w-0 flex-col gap-2 px-6 py-3", {
+/**
+ * A row of a list. A row that opens a page lights up on hover, the way a link row does, and its link covers the whole
+ * row, so every part the hover lights takes the press; an unlinked row keeps still.
+ */
+const rowVariants = cva("flex min-w-0 flex-col gap-2 px-6 py-3", {
   defaultVariants: { linked: false },
   variants: {
     linked: {
       false: "",
-      true: "transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
+      true: "group relative transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
     },
   },
 });
@@ -214,7 +217,7 @@ function DashboardRow({
   title,
   trailing,
 }: {
-  /** An action of the row, such as a button, which sits outside the link. */
+  /** An action of the row, such as a button, which sits above the link and takes its own press. */
   action?: ReactNode;
   /** The second line, which says where or when, in one line that truncates. */
   detail?: string | undefined;
@@ -235,7 +238,9 @@ function DashboardRow({
           title={title}
           trailing={trailing}
         />
-        {action}
+        {action === undefined || action === null ? null : (
+          <div className="relative shrink-0">{action}</div>
+        )}
       </div>
       {footer === undefined || footer === null ? null : (
         <div className="min-w-0">{footer}</div>
@@ -244,7 +249,10 @@ function DashboardRow({
   );
 }
 
-/** The text of a row, which is a link when the row opens a page and a plain block when it does not. */
+/**
+ * The text of a row, which is a link when the row opens a page and a plain block when it does not. The link stretches
+ * over its row, the bar under the text included.
+ */
 function DashboardRowText({
   detail,
   render,
@@ -276,8 +284,10 @@ function DashboardRowText({
           )}
         </>
       ),
-      className:
+      className: cn(
         "flex min-w-0 flex-1 items-center gap-3 rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        render !== undefined && "after:absolute after:inset-0"
+      ),
     },
     render,
   });

@@ -58,7 +58,7 @@ const headings = {
 export function TryoutTableHeader() {
   return (
     <TableHeader className="sticky top-0 z-10 bg-background">
-      <TableRow className="hover:bg-transparent hover:text-inherit">
+      <TableRow>
         <TryoutSortHeading field="title" />
         <TryoutStatusHeading />
         <TryoutSortHeading field="readyQuestionCount" />

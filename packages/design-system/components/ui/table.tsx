@@ -1,3 +1,4 @@
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
 
@@ -70,13 +71,30 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
 }
 
 /**
+ * A row lights up under the pointer only when it takes a press itself, so a hover always means the whole
+ * row is clickable; a header row, an empty row and a row of plain values keep still. A row marked
+ * `data-state="selected"` (the one open beside a list) keeps the accent.
+ */
+const tableRowVariants = cva(
+  "border-b transition-colors data-[state=selected]:bg-accent data-[state=selected]:text-accent-foreground",
+  {
+    variants: {
+      pressable: {
+        true: "cursor-pointer hover:bg-accent hover:text-accent-foreground",
+        false: "",
+      },
+    },
+  }
+);
+
+/**
  * Renders one table row with the shared Nakafa table styles.
  */
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "border-b transition-colors hover:bg-accent hover:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground",
+        tableRowVariants({ pressable: props.onClick !== undefined }),
         className
       )}
       data-slot="table-row"

@@ -24,7 +24,7 @@ export function TryoutTableRows({
 }) {
   if (rows.length === 0) {
     return (
-      <TableRow className="hover:bg-transparent">
+      <TableRow>
         <TableCell
           className="h-24 text-center text-muted-foreground"
           colSpan={5}
@@ -59,7 +59,6 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
   const address = getTryoutSetRowAddress(row);
   return (
     <TableRow
-      className="cursor-pointer"
       onClick={(event) => {
         if (event.target instanceof Element && event.target.closest("a")) {
           return;

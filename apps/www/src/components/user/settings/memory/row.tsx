@@ -68,14 +68,16 @@ export const MemoryRow = memo(
       []
     );
 
+    // The name's button stretches over the row, so every part the hover lights opens the memory; the row's own
+    // buttons sit above it and take their own press.
     return (
       <div
-        className="group/row flex h-full items-center gap-1 pe-4 transition-colors ease-out focus-within:bg-muted/50 hover:bg-muted/50 data-selected:bg-muted/50"
+        className="group/row relative flex h-full items-center gap-1 pe-4 transition-colors ease-out focus-within:bg-muted/50 hover:bg-muted/50 data-selected:bg-muted/50"
         data-selected={selected ? "" : undefined}
         ref={row}
       >
         <button
-          className="flex h-full min-w-0 flex-1 cursor-pointer flex-col justify-center gap-1 ps-(--card-spacing) text-start outline-none disabled:cursor-default"
+          className="flex h-full min-w-0 flex-1 cursor-pointer flex-col justify-center gap-1 ps-(--card-spacing) text-start outline-none after:absolute after:inset-0 disabled:cursor-default"
           disabled={waiting}
           id={memoryRowId(memory.id)}
           onClick={() => openEdit(memory)}
@@ -101,6 +103,7 @@ export const MemoryRow = memo(
         </button>
         <div className="flex shrink-0 items-center opacity-0 pointer-coarse:opacity-100 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100">
           <Button
+            className="relative"
             disabled={waiting}
             onClick={() => openEdit(memory)}
             onFocus={warmMemoryEditor}
@@ -113,6 +116,7 @@ export const MemoryRow = memo(
             <span className="sr-only">{t("edit")}</span>
           </Button>
           <Button
+            className="relative"
             disabled={waiting}
             onClick={() => askDelete(memory)}
             size="icon-sm"
