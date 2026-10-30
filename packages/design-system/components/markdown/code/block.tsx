@@ -16,12 +16,13 @@ import {
   CodeBlockSelectValue,
 } from "@repo/design-system/components/code-block/header";
 import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
+import { blockGapVariants } from "@repo/design-system/lib/prose";
 
 /** Composes authored MDX code sources into Nakafa's tabbed code block. */
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
   return (
     <CodeBlock
-      className="my-4 content-auto-code"
+      className={blockGapVariants({ className: "content-auto-code" })}
       data={data}
       defaultValue={data[0].language}
     >

@@ -82,16 +82,18 @@ describe("code highlighting", () => {
   );
 
   it.effect(
-    "applies a pre class and removes Shiki's inline background on request",
+    "removes Shiki's inline background on request and keeps the classes its dark theme selects",
     () =>
       Effect.gen(function* () {
         const html = yield* highlightCode({
           code: "example",
-          preClassName: "overflow-x-auto",
           transparentBackground: true,
         });
 
-        expect(html.startsWith('<pre class="overflow-x-auto"')).toBe(true);
+        expect(html.startsWith('<pre class="shiki ')).toBe(true);
+        // One class attribute on the opening tag: a second would be dropped by the parser.
+        const opening = html.slice(0, html.indexOf(">"));
+        expect(opening.split(" class=")).toHaveLength(2);
         expect(html).not.toContain("background-color");
       })
   );
