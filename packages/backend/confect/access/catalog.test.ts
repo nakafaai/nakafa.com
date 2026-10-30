@@ -174,6 +174,7 @@ describe("access/catalog", () => {
           "period.rename",
           "cohort.created",
           "cohort.renamed",
+          "cohort.grade.set",
           "cohort.archived",
           "cohort.restored",
           "assignment.created",

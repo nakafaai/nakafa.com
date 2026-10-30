@@ -109,14 +109,20 @@ export function insertCohort(cohorts: readonly Cohort[], cohort: Cohort) {
   return Arr.sort(Arr.prepend(cohorts, cohort), byGradeAndName);
 }
 
-/** Sets the name of one cohort in a list, and keeps every other cohort as it is. */
-export function setCohortName(
+/**
+ * Gives one cohort of a list its new name and school year, keeps every other cohort as it is, and puts the list in
+ * the order it shows its cohorts.
+ */
+export function editCohort(
   cohorts: readonly Cohort[],
   cohortId: Cohort["id"],
-  name: Cohort["name"]
+  change: Pick<Cohort, "grade" | "name">
 ) {
-  return Arr.map(cohorts, (cohort) =>
-    cohort.id === cohortId ? { ...cohort, name } : cohort
+  return Arr.sort(
+    Arr.map(cohorts, (cohort) =>
+      cohort.id === cohortId ? { ...cohort, ...change } : cohort
+    ),
+    byGradeAndName
   );
 }
 

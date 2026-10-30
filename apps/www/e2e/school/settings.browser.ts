@@ -11,6 +11,7 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The Admin grant that the Owner gives an invited learner. */
@@ -99,7 +100,7 @@ test("an admin opens the profile and the periods of a school", async ({
   await context.close();
 });
 
-test("an admin opens a period, then creates and renames a cohort of it", async ({
+test("an admin opens a period, then creates a cohort of it and edits its name and grade", async ({
   browser,
   baseURL,
 }) => {
@@ -143,12 +144,31 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
   const cohortRow = page.getByRole("row", { name: "7A" });
   await expect(cohortRow).toBeVisible();
 
+  // Edit starts from the cohort's name and grade, and the row shows both changes at once.
   await cohortRow.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Rename" }).click();
-  const renameDialog = page.getByRole("dialog");
-  await renameDialog.getByLabel("Name").fill("7 Biru");
-  await renameDialog.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("row", { name: "7 Biru" })).toBeVisible();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  const editDialog = page.getByRole("dialog");
+  await expect(editDialog.getByLabel("Name")).toHaveValue("7A");
+  await expect(editDialog.getByRole("combobox", { name: "Grade" })).toHaveText(
+    "7"
+  );
+  await editDialog.getByLabel("Name").fill("8 Biru");
+  await editDialog.getByRole("combobox", { name: "Grade" }).click();
+  await page.getByRole("option", { exact: true, name: "8" }).click();
+  await editDialog.getByRole("button", { name: "Save" }).click();
+  const editedRow = page.getByRole("row", { name: "8 Biru" });
+  await expect(editedRow).toBeVisible();
+  await expect(
+    editedRow.getByRole("cell", { exact: true, name: "8" })
+  ).toBeVisible();
+
+  // The server kept both.
+  await page.reload();
+  await expect(
+    page
+      .getByRole("row", { name: "8 Biru" })
+      .getByRole("cell", { exact: true, name: "8" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });
 

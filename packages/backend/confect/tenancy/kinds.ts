@@ -4,6 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
 import { AssignmentKind } from "@repo/backend/confect/tenancy/assignment";
+import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
@@ -281,6 +282,10 @@ export const cohort = Kind.make("cohort", "tenantCohorts", {
   changes: [
     Schema.Struct({ type: Schema.Literal("cohort.created") }),
     Schema.Struct({ type: Schema.Literal("cohort.renamed") }),
+    Schema.Struct({
+      grade: CohortGrade,
+      type: Schema.Literal("cohort.grade.set"),
+    }),
     Schema.Struct({ type: Schema.Literal("cohort.archived") }),
     Schema.Struct({ type: Schema.Literal("cohort.restored") }),
     Schema.Struct({

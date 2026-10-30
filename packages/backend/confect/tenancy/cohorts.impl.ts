@@ -149,17 +149,18 @@ const create = FunctionImpl.make(
 );
 
 /**
- * Renames one cohort. The name stays unique within its period, and a name that
- * only differs in case from the cohort's own is not taken by the cohort itself.
+ * Sets the name and the school year of one cohort, which its creation chose. The name stays unique within its
+ * period, and a name that only differs in case from the cohort's own is not taken by the cohort itself. Each value
+ * that changes is recorded on its own, and values already stored write and record nothing.
  */
-const rename = FunctionImpl.make(
+const edit = FunctionImpl.make(
   databaseSchema,
   spec,
-  "rename",
-  Effect.fn("tenancy.cohorts.rename")(function* ({ name }) {
+  "edit",
+  Effect.fn("tenancy.cohorts.edit")(function* ({ grade, name }) {
     const { person } = yield* Member;
     const cohort = yield* Cohort;
-    if (cohort.name === name) {
+    if (cohort.grade === grade && cohort.name === name) {
       return view(cohort);
     }
     const nameKey = cohortNameKey(name);
@@ -173,20 +174,23 @@ const rename = FunctionImpl.make(
     if (Option.exists(sameName, (other) => other._id !== cohort._id)) {
       return yield* new CohortNameTaken();
     }
+    const edited = Struct.assign(cohort, { grade, name, nameKey });
     yield* (yield* DatabaseWriter)
       .table("tenantCohorts")
-      .replace(
-        cohort._id,
-        Struct.assign(Struct.omit(cohort, ["_creationTime", "_id"]), {
-          name,
-          nameKey,
-        })
-      )
+      .replace(cohort._id, Struct.omit(edited, ["_creationTime", "_id"]))
       .pipe(Effect.orDie);
-    yield* cohortAuthority.record(personActor(person), cohort, {
-      type: "cohort.renamed",
-    });
-    return view(Struct.assign(cohort, { name, nameKey }));
+    if (cohort.name !== name) {
+      yield* cohortAuthority.record(personActor(person), cohort, {
+        type: "cohort.renamed",
+      });
+    }
+    if (cohort.grade !== grade) {
+      yield* cohortAuthority.record(personActor(person), cohort, {
+        grade,
+        type: "cohort.grade.set",
+      });
+    }
+    return view(edited);
   })
 );
 
@@ -232,7 +236,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(activePeriod),
   Layer.provide(members),
   Layer.provide(create),
-  Layer.provide(rename),
+  Layer.provide(edit),
   Layer.provide(archive),
   Layer.provide(restore),
   Layer.provide(session),

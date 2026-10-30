@@ -1,23 +1,10 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { CohortGrade, CohortName } from "@repo/backend/confect/tenancy/cohort";
+import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
+import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
@@ -35,7 +22,11 @@ import {
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
-import { gradeItems } from "@/components/tenant/settings/choices";
+import {
+  CohortGradeField,
+  CohortNameField,
+  chosenGrade,
+} from "@/components/tenant/settings/cohort/fields";
 import {
   CohortGradeFilter,
   CohortStatusFilter,
@@ -235,13 +226,6 @@ function SchoolCohortsOfPeriod({ slug }: { slug: TenantSlug }) {
   );
 }
 
-/** The school year that a grade choice holds, if the choice holds one the schema accepts. */
-function chosenGrade(value: string | null) {
-  return value === null
-    ? Option.none()
-    : Schema.decodeOption(CohortGrade)(Number(value));
-}
-
 /**
  * The page's one action: the Add cohort button and the dialog it opens, for a name and a
  * school year. The dialog closes as the add is sent, and its values clear once the server
@@ -322,36 +306,12 @@ function SchoolCohortAdd({
         title={t("cohort-create")}
       >
         <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-name`}>{t("cohort-name")}</FieldLabel>
-            <Input
-              id={`${id}-name`}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t("cohort-name-placeholder")}
-              value={name}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-grade`}>{t("cohort-grade")}</FieldLabel>
-            <Select
-              items={gradeItems}
-              onValueChange={setGradeValue}
-              value={gradeValue}
-            >
-              <SelectTrigger className="w-full" id={`${id}-grade`}>
-                <SelectValue placeholder={t("cohort-grade-placeholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {Arr.map(gradeItems, (item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </Field>
+          <CohortNameField id={`${id}-name`} onChange={setName} value={name} />
+          <CohortGradeField
+            id={`${id}-grade`}
+            onChange={setGradeValue}
+            value={gradeValue}
+          />
         </FieldGroup>
       </ResponsiveDialog>
     </>
