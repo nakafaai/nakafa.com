@@ -22,6 +22,7 @@ import {
   writtenOf,
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
+import { PlayerQuestion } from "@/components/player/question";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
 
@@ -39,8 +40,8 @@ const TryPrompt = lazy(() =>
 );
 
 /**
- * One question as a student meets it: its number, its prompt, and its options, with the same
- * controls as the paper of a sitting. The options are answered in the browser only, through the
+ * One question as a student meets it, in the player's own question article: its number, its prompt,
+ * and its options, with the same controls as the paper of a sitting. The options are answered in the browser only, through the
  * try's own answers, so nothing is sent.
  */
 export function ExamTryQuestion({
@@ -52,6 +53,7 @@ export function ExamTryQuestion({
 }) {
   const t = useTranslations("Exams");
   const titleId = useId();
+  const articleId = useId();
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
   const choice = choiceOf(question.answers);
@@ -60,43 +62,49 @@ export function ExamTryQuestion({
   const table = tableOf(question.answers);
 
   return (
-    <section aria-labelledby={titleId} className="grid gap-6">
-      <h2 className="font-medium" id={titleId}>
-        {t("question", { number })}
-      </h2>
-      <ExamTryPrompt documentId={question.prompt} />
-      {Option.isSome(choice) ? (
-        <SittingChoice
-          choice={choice.value}
-          labelledBy={titleId}
-          onChoose={(next) => choose(question.id, next)}
-          response={chosenOptions(response ?? NO_RESPONSE)}
-        />
-      ) : null}
-      {Option.isSome(entry) ? (
-        <SittingField
-          entry={entry.value}
-          labelledBy={titleId}
-          onType={(text) => choose(question.id, { text })}
-          text={typedText(response ?? NO_RESPONSE)}
-        />
-      ) : null}
-      {Option.isSome(pairing) ? (
-        <SittingPairs
-          labelledBy={titleId}
-          match={pairing.value}
-          onPair={(pairs) => choose(question.id, { pairs })}
-          pairs={madePairs(response ?? NO_RESPONSE)}
-        />
-      ) : null}
-      {Option.isSome(table) ? (
-        <SittingTable
-          cells={markedCells(response ?? NO_RESPONSE)}
-          onMark={(cells) => choose(question.id, { cells })}
-          table={table.value}
-        />
-      ) : null}
-    </section>
+    <PlayerQuestion
+      id={articleId}
+      labelledBy={titleId}
+      questionKey={question.id}
+    >
+      <div className="grid gap-6">
+        <h2 className="font-medium" id={titleId}>
+          {t("question", { number })}
+        </h2>
+        <ExamTryPrompt documentId={question.prompt} />
+        {Option.isSome(choice) ? (
+          <SittingChoice
+            choice={choice.value}
+            labelledBy={titleId}
+            onChoose={(next) => choose(question.id, next)}
+            response={chosenOptions(response ?? NO_RESPONSE)}
+          />
+        ) : null}
+        {Option.isSome(entry) ? (
+          <SittingField
+            entry={entry.value}
+            labelledBy={titleId}
+            onType={(text) => choose(question.id, { text })}
+            text={typedText(response ?? NO_RESPONSE)}
+          />
+        ) : null}
+        {Option.isSome(pairing) ? (
+          <SittingPairs
+            labelledBy={titleId}
+            match={pairing.value}
+            onPair={(pairs) => choose(question.id, { pairs })}
+            pairs={madePairs(response ?? NO_RESPONSE)}
+          />
+        ) : null}
+        {Option.isSome(table) ? (
+          <SittingTable
+            cells={markedCells(response ?? NO_RESPONSE)}
+            onMark={(cells) => choose(question.id, { cells })}
+            table={table.value}
+          />
+        ) : null}
+      </div>
+    </PlayerQuestion>
   );
 }
 
