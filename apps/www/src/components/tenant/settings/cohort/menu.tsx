@@ -155,6 +155,7 @@ export function SchoolCohortMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog
+        description={t("cohort-rename-description")}
         footer={
           <>
             <Button
