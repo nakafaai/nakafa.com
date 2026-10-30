@@ -9,13 +9,7 @@ import {
 } from "@repo/backend/client/quran/interpretation";
 import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import {
-  Drawer,
-  DrawerHeader,
-  DrawerPanel,
-  DrawerPopup,
-  DrawerTitle,
-} from "@repo/design-system/components/ui/drawer";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import {
@@ -27,6 +21,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useTranslations } from "use-intl";
 import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
 import { reportClientException } from "@/lib/analytics/client";
 import { httpLayer } from "@/lib/convex/http";
@@ -60,6 +55,7 @@ export function QuranInterpretationControls({
   snapshotId,
   surahNumber,
 }: Props) {
+  const t = useTranslations("Holy");
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
   const [pendingVerseNumber, setPendingVerseNumber] = useOptimistic<
@@ -204,21 +200,18 @@ export function QuranInterpretationControls({
   return (
     <QuranInterpretationContext value={contextValue}>
       {children}
-      <Drawer onOpenChange={set} open={isOpen}>
-        <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
-          <DrawerHeader className="border-b">
-            <DrawerTitle className="text-center">{label}</DrawerTitle>
-          </DrawerHeader>
-
-          <DrawerPanel className="p-4">
-            <div className="rounded-md border bg-accent p-4">
-              <p className="text-pretty text-accent-foreground leading-relaxed">
-                {selectedInterpretation}
-              </p>
-            </div>
-          </DrawerPanel>
-        </DrawerPopup>
-      </Drawer>
+      <ResponsiveDialog
+        description={t("interpretation-description")}
+        open={isOpen}
+        setOpen={set}
+        title={label}
+      >
+        <div className="rounded-md border bg-accent p-4">
+          <p className="text-pretty text-accent-foreground leading-relaxed">
+            {selectedInterpretation}
+          </p>
+        </div>
+      </ResponsiveDialog>
     </QuranInterpretationContext>
   );
 }

@@ -1331,6 +1331,7 @@
     "classification": "Bildung"
   },
   "Common": {
+    "contributor-description": "Diese Person baut Nakafa mit auf.",
     "undo": "Rückgängig",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
@@ -1630,6 +1631,7 @@
   },
   "Holy": {
     "holy": "Heilige Schriften",
+    "interpretation-description": "Was dieser Vers bedeutet, erklärt durch seinen Tafsir.",
     "quran": "Koran",
     "quran-description": "Lies den Koran mit einer Übersetzung Vers für Vers.",
     "verse": "Vers",

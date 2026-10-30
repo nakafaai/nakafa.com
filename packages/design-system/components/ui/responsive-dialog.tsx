@@ -35,6 +35,8 @@ interface Props {
   onOpenChangeComplete?: (open: boolean) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
+  /** The width of the dialog on a wide screen: `wide` for content such as a diagram at its natural size. */
+  size?: ComponentProps<typeof DialogContent>["size"];
   title: ReactNode;
 }
 
@@ -47,6 +49,7 @@ export function ResponsiveDialog({
   finalFocus,
   footer,
   onOpenChangeComplete,
+  size = "default",
 }: Props) {
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
 
@@ -57,7 +60,7 @@ export function ResponsiveDialog({
         onOpenChangeComplete={onOpenChangeComplete}
         open={open}
       >
-        <DialogContent finalFocus={finalFocus}>
+        <DialogContent finalFocus={finalFocus} size={size}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>

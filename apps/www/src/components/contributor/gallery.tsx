@@ -6,17 +6,9 @@ import {
 import { useMounted } from "@mantine/hooks";
 import type { Contributor } from "@repo/contents/contributor";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import {
-  Drawer,
-  DrawerCreateHandle,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerPopup,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -71,7 +63,7 @@ function galleryEntries(contributors: readonly Contributor[]) {
   }));
 }
 
-/** One contributor of the gallery with the animal the gallery and its drawer show. */
+/** One contributor of the gallery with the animal the gallery and its dialog show. */
 type Entry = ReturnType<typeof galleryEntries>[number];
 
 type ContributorGalleryProps = VariantProps<typeof galleryVariants> & {
@@ -83,7 +75,11 @@ export function ContributorGallery({
   variant,
 }: ContributorGalleryProps) {
   const t = useTranslations("Common");
-  const [contributorDrawer] = useState(() => DrawerCreateHandle<Entry>());
+  // The contributor the one dialog shows, kept while it closes so its card animates out whole.
+  const [card, setCard] = useState({
+    entry: Option.none<Entry>(),
+    open: false,
+  });
   const isMounted = useMounted();
 
   return (
@@ -93,20 +89,22 @@ export function ContributorGallery({
           <Tooltip key={entry.contributor.username}>
             <TooltipTrigger
               render={
-                <DrawerTrigger
+                <button
                   aria-label={`${t("open")} ${entry.contributor.name}`}
                   className="cursor-pointer disabled:cursor-default"
                   data-contributor-username={entry.contributor.username}
                   disabled={!isMounted}
-                  handle={contributorDrawer}
-                  payload={entry}
+                  onClick={() =>
+                    setCard({ entry: Option.some(entry), open: true })
+                  }
                   title={entry.contributor.name}
+                  type="button"
                 >
                   <PersonAvatar
                     className={avatarVariants({ variant })}
                     mascot={entry.mascot}
                   />
-                </DrawerTrigger>
+                </button>
               }
             />
             <TooltipContent>
@@ -116,81 +114,87 @@ export function ContributorGallery({
         ))}
       </div>
 
-      <Drawer handle={contributorDrawer}>
-        {({ payload }) => {
-          if (!payload) {
-            return null;
-          }
-
-          return (
-            <ContributorDrawer
-              contributor={payload.contributor}
-              mascot={payload.mascot}
-            />
-          );
-        }}
-      </Drawer>
+      <ResponsiveDialog
+        description={t("contributor-description")}
+        footer={Option.match(card.entry, {
+          onNone: () => null,
+          onSome: ({ contributor }) =>
+            contributor.social ? (
+              <ContributorLinks social={contributor.social} />
+            ) : null,
+        })}
+        open={card.open}
+        setOpen={(open) => setCard((current) => ({ ...current, open }))}
+        title={Option.match(card.entry, {
+          onNone: () => "",
+          onSome: ({ contributor }) => contributor.name,
+        })}
+      >
+        {Option.match(card.entry, {
+          onNone: () => null,
+          onSome: (entry) => <ContributorCard {...entry} />,
+        })}
+      </ResponsiveDialog>
     </>
   );
 }
 
-function ContributorDrawer({ contributor, mascot }: Entry) {
+/** A contributor's animal and their kind of contribution, in the gallery's dialog. */
+function ContributorCard({ contributor, mascot }: Entry) {
   const t = useTranslations("Common");
 
   return (
-    <DrawerPopup
-      className="mx-auto sm:max-w-xs"
-      data-contributor-drawer=""
-      data-contributor-username={contributor.username}
-      showBar
-    >
-      <DrawerHeader className="items-center">
-        <PersonAvatar className="size-16" mascot={mascot} />
-        <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
-        <Badge>{t(contributor.type)}</Badge>
-      </DrawerHeader>
-      <DrawerFooter className="sm:justify-center">
-        {contributor.social && (
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {contributor.social.twitter && (
-              <a
-                className={buttonVariants({ size: "icon", variant: "outline" })}
-                href={contributor.social.twitter}
-                rel="noopener noreferrer"
-                target="_blank"
-                title="Twitter"
-              >
-                <HugeIcons className="size-4" icon={NewTwitterIcon} />
-                <span className="sr-only">Twitter</span>
-              </a>
-            )}
-            {contributor.social.github && (
-              <a
-                className={buttonVariants({ size: "icon", variant: "outline" })}
-                href={contributor.social.github}
-                rel="noopener noreferrer"
-                target="_blank"
-                title="GitHub"
-              >
-                <HugeIcons className="size-4" icon={GithubIcon} />
-                <span className="sr-only">GitHub</span>
-              </a>
-            )}
-            {contributor.social.linkedin && (
-              <a
-                className={buttonVariants({ size: "icon", variant: "outline" })}
-                href={contributor.social.linkedin}
-                rel="noopener noreferrer"
-                target="_blank"
-                title="LinkedIn"
-              >
-                <HugeIcons className="size-4" icon={Linkedin02Icon} />
-                <span className="sr-only">LinkedIn</span>
-              </a>
-            )}
-          </div>
-        )}
-      </DrawerFooter>
-    </DrawerPopup>
+    <div className="flex flex-col items-center gap-3">
+      <PersonAvatar className="size-16" mascot={mascot} />
+      <Badge>{t(contributor.type)}</Badge>
+    </div>
+  );
+}
+
+/** A contributor's profiles elsewhere, each opening in a new tab. */
+function ContributorLinks({
+  social,
+}: {
+  social: NonNullable<Contributor["social"]>;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      {social.twitter && (
+        <a
+          className={buttonVariants({ size: "icon", variant: "outline" })}
+          href={social.twitter}
+          rel="noopener noreferrer"
+          target="_blank"
+          title="Twitter"
+        >
+          <HugeIcons className="size-4" icon={NewTwitterIcon} />
+          <span className="sr-only">Twitter</span>
+        </a>
+      )}
+      {social.github && (
+        <a
+          className={buttonVariants({ size: "icon", variant: "outline" })}
+          href={social.github}
+          rel="noopener noreferrer"
+          target="_blank"
+          title="GitHub"
+        >
+          <HugeIcons className="size-4" icon={GithubIcon} />
+          <span className="sr-only">GitHub</span>
+        </a>
+      )}
+      {social.linkedin && (
+        <a
+          className={buttonVariants({ size: "icon", variant: "outline" })}
+          href={social.linkedin}
+          rel="noopener noreferrer"
+          target="_blank"
+          title="LinkedIn"
+        >
+          <HugeIcons className="size-4" icon={Linkedin02Icon} />
+          <span className="sr-only">LinkedIn</span>
+        </a>
+      )}
+    </div>
   );
 }

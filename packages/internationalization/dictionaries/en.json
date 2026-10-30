@@ -1331,6 +1331,7 @@
     "classification": "Education"
   },
   "Common": {
+    "contributor-description": "This person helps build Nakafa.",
     "undo": "Undo",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
@@ -1630,6 +1631,7 @@
   },
   "Holy": {
     "holy": "Holy",
+    "interpretation-description": "What this verse means, explained by its tafsir.",
     "quran": "Quran",
     "quran-description": "Read the Quran with verse-by-verse translation.",
     "verse": "Verse",

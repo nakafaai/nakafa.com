@@ -1331,6 +1331,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
+    "contributor-description": "Orang ini ikut membangun Nakafa.",
     "undo": "Urungkan",
     "arabic-fatha": "Fathah",
     "arabic-kasra": "Kasrah",
@@ -1630,6 +1631,7 @@
   },
   "Holy": {
     "holy": "Suci",
+    "interpretation-description": "Makna ayat ini, dijelaskan oleh tafsirnya.",
     "quran": "Al-Qur'an",
     "quran-description": "Baca Al-Qur'an dengan terjemahan dan tafsir per ayat.",
     "verse": "Ayat",

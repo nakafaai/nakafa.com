@@ -3,21 +3,13 @@ import { altText } from "@repo/design-system/components/editor/image";
 import { ToolHint } from "@repo/design-system/components/editor/tip";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogTitle,
-} from "@repo/design-system/components/ui/dialog";
-import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { ImageType } from "@repo/editor/upload";
 import type { Editor } from "@tiptap/core";
 import { FileHandler } from "@tiptap/extension-file-handler";
@@ -146,64 +138,61 @@ export function PictureAltDialog({
 
   const next = altText(text);
   const field = useId();
+  const form = useId();
 
   return (
-    <Dialog
-      onOpenChange={(open) => {
+    <ResponsiveDialog
+      description={description}
+      footer={
+        <>
+          <Button onClick={onCancel} type="button" variant="outline">
+            {labels.cancel}
+          </Button>
+          <Button disabled={Option.isNone(next)} form={form} type="submit">
+            {submit}
+          </Button>
+        </>
+      }
+      open={preview !== null}
+      setOpen={(open) => {
         if (!open) {
           onCancel();
         }
       }}
-      open={preview !== null}
+      title={title}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        {/* The form is the dialog's column below the header, so its panel scrolls and its footer stays in view. */}
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (Option.isSome(next)) {
-              onConfirm(next.value);
-            }
-          }}
-        >
-          <DialogPanel>
-            <FieldGroup>
-              {preview === null ? null : (
-                <img
-                  alt=""
-                  className="max-h-64 rounded-md object-contain"
-                  height={256}
-                  src={preview}
-                  width={256}
-                />
-              )}
-              <Field>
-                <FieldLabel htmlFor={field}>{labels.alt}</FieldLabel>
-                <Input
-                  id={field}
-                  onChange={(event) => setText(event.target.value)}
-                  placeholder={labels.altHint}
-                  value={text}
-                />
-              </Field>
-            </FieldGroup>
-          </DialogPanel>
-          <DialogFooter>
-            <Button onClick={onCancel} type="button" variant="outline">
-              {labels.cancel}
-            </Button>
-            <Button disabled={Option.isNone(next)} type="submit">
-              {submit}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      {/* The footer's submit button belongs to this form by its id, so Enter in the field confirms too. */}
+      <form
+        id={form}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (Option.isSome(next)) {
+            onConfirm(next.value);
+          }
+        }}
+      >
+        <FieldGroup>
+          {preview === null ? null : (
+            <img
+              alt=""
+              className="max-h-64 rounded-md object-contain"
+              height={256}
+              src={preview}
+              width={256}
+            />
+          )}
+          <Field>
+            <FieldLabel htmlFor={field}>{labels.alt}</FieldLabel>
+            <Input
+              id={field}
+              onChange={(event) => setText(event.target.value)}
+              placeholder={labels.altHint}
+              value={text}
+            />
+          </Field>
+        </FieldGroup>
+      </form>
+    </ResponsiveDialog>
   );
 }
 
