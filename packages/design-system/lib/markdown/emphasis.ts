@@ -13,9 +13,15 @@ import { cva } from "class-variance-authority";
  * learner has already met, such as a satisfied requirement or a completed step.
  * Math needs an inline block so the surface encloses tall matrices and fractions;
  * ordinary phrases keep their cloned inline decoration when wrapping.
+ *
+ * Everything inside the phrase reads in the surface's own text colour: math,
+ * a bolder or slanted word and a sub- or superscript inherit it, and a link
+ * takes it too, instead of the page's link colour, which on the surface's fill
+ * reads poorly in light and not at all in dark. The link keeps its underline as
+ * its cue. Inline code keeps its own muted chip, which carries its own pair.
  */
 export const emphasisVariants = cva(
-  "rounded-sm box-decoration-clone p-1 font-[weight:inherit] has-[.katex]:inline-block",
+  "rounded-sm box-decoration-clone p-1 font-[weight:inherit] has-[.katex]:inline-block [&_a]:text-inherit",
   {
     variants: {
       variant: {
