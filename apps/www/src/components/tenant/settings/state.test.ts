@@ -4,12 +4,12 @@ import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Schema } from "effect";
 import {
   type Client,
+  editPeriod,
   insertPeriod,
   isDraft,
   mapUnit,
   type Period,
   revokeClient,
-  setPeriodName,
   setPeriodStatus,
   type Unit,
   withoutItem,
@@ -111,14 +111,24 @@ describe("components/tenant/settings/state", () => {
     ).toEqual(["20100001", null]);
   });
 
-  it("sets the name of only the period with the given id", () => {
-    const page = [period("first"), period("second")];
+  it("edits only the period with the given id, and moves it to the place its new start gives it", () => {
+    const page = [
+      period("first", { start: "2027-01-01" }),
+      period("second", { start: "2026-07-01" }),
+    ];
     expect(
       Arr.map(
-        setPeriodName(page, periodId("second"), "Genap 2027"),
-        (item) => item.name
+        editPeriod(page, periodId("second"), {
+          end: "2027-12-20",
+          name: "Genap 2027",
+          start: "2027-07-01",
+        }),
+        (item) => [item.name, item.start, item.end]
       )
-    ).toEqual(["first", "Genap 2027"]);
+    ).toEqual([
+      ["Genap 2027", "2027-07-01", "2027-12-20"],
+      ["first", "2027-01-01", "2027-06-30"],
+    ]);
   });
 
   it("marks only the IDs that the page made before the server answered", () => {
