@@ -1214,8 +1214,6 @@
     "classification": "Bildung"
   },
   "Common": {
-    "month": "Monat",
-    "year": "Jahr",
     "arabic-fatha": "Fatha",
     "arabic-kasra": "Kasra",
     "arabic-damma": "Damma",
@@ -1228,6 +1226,8 @@
     "load-error": "Diese Daten konnten nicht geladen werden.",
     "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
+    "month": "Monat",
+    "year": "Jahr",
     "breadcrumb": "Navigationspfad",
     "sidebar": "Seitenleiste",
     "toggle-sidebar": "Seitenleiste ein- oder ausblenden",

@@ -1214,8 +1214,6 @@
     "classification": "Pendidikan"
   },
   "Common": {
-    "month": "Bulan",
-    "year": "Tahun",
     "arabic-fatha": "Fathah",
     "arabic-kasra": "Kasrah",
     "arabic-damma": "Dammah",
@@ -1228,6 +1226,8 @@
     "load-error": "Data ini belum dapat dimuat.",
     "part-denied": "Bagian sekolah ini tidak dibuka.",
     "loading": "Memuat",
+    "month": "Bulan",
+    "year": "Tahun",
     "breadcrumb": "Jalur navigasi",
     "sidebar": "Sidebar",
     "toggle-sidebar": "Buka atau tutup sidebar",
