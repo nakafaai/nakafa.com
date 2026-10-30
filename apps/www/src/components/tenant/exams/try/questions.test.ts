@@ -14,7 +14,7 @@ const documentId = Schema.decodeUnknownSync(Id("editorDocuments"));
 const [choice] = choiceAnswers([textLabel("A"), textLabel("B")]);
 
 /** A short answer, which no digit key picks. */
-const typed = Schema.decodeUnknownSync(InteractionSchema)({
+const typed = Schema.decodeSync(InteractionSchema)({
   id: "typed",
   kind: "textEntry",
   label: "Ibu kota",
