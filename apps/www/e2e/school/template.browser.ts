@@ -282,7 +282,10 @@ test("a teacher turns a question into a short answer with accepted answers, and 
   // The student types the answer into one field, and no option shows.
   await reopened.getByRole("link", { name: "Try as student" }).click();
   await reopened.waitForURL(TRY_PATH);
-  const field = reopened.getByRole("textbox", { name: "Question 1" });
+  const field = reopened.getByRole("textbox", {
+    exact: true,
+    name: "Question 1",
+  });
   await expect(field).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await field.fill("jakarta");
   await expect(field).toHaveValue("jakarta");
