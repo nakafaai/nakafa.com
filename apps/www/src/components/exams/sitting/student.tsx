@@ -33,7 +33,7 @@ import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
 import { SittingBody } from "@/components/exams/sitting/body";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
-import { roomEntryOf } from "@/components/exams/sitting/join";
+import { entersBySelf, roomEntryOf } from "@/components/exams/sitting/join";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
 import { SittingRetry } from "@/components/exams/sitting/retry";
@@ -83,11 +83,8 @@ export function StudentSitting({
   const tokenId = useId();
   // The entry waits for the server's answer: a second press would send a second device with the same token.
   const [entering, startEntering] = useTransition();
-  // The page enters by itself once, when the sitting has opened and the student's attempt still takes answers.
-  const enterable =
-    QueryResult.isSuccess(view) &&
-    view.value.sitting.state !== "scheduled" &&
-    (view.value.attempt === null || takesAnswers(view.value.attempt.state));
+  // The page enters by itself once, when the sitting has opened.
+  const enterable = QueryResult.isSuccess(view) && entersBySelf(view.value);
   // A sitting cancelled, or closed to the student, while its page is open keeps its exam's title above the refusal.
   const kept = useLastValue(view);
 

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import { roomEntryOf, roomJoinAddress } from "@/components/exams/sitting/join";
+import {
+  entersBySelf,
+  roomEntryOf,
+  roomJoinAddress,
+} from "@/components/exams/sitting/join";
 import { keepRoomCode, takeRoomCode } from "@/components/exams/sitting/scan";
 
 describe("roomJoinAddress", () => {
@@ -64,4 +68,27 @@ describe("roomEntryOf", () => {
         expect(yield* roomEntryOf("w17dbtag", "")).toEqual(Option.none());
       })
   );
+});
+
+describe("entersBySelf", () => {
+  it("enters once the sitting has opened, with no attempt or an active one", () => {
+    expect(entersBySelf({ attempt: null, sitting: { state: "open" } })).toBe(
+      true
+    );
+    expect(
+      entersBySelf({ attempt: { state: "locked" }, sitting: { state: "open" } })
+    ).toBe(true);
+  });
+
+  it("waits while the sitting is scheduled, and leaves a finished attempt to its results", () => {
+    expect(
+      entersBySelf({ attempt: null, sitting: { state: "scheduled" } })
+    ).toBe(false);
+    expect(
+      entersBySelf({
+        attempt: { state: "submitted" },
+        sitting: { state: "closed" },
+      })
+    ).toBe(false);
+  });
 });

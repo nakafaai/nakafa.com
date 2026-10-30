@@ -1,4 +1,9 @@
+import type {
+  HeldAttempt,
+  SittingView,
+} from "@repo/backend/confect/exams/sittings/contract";
 import { Effect, Option } from "effect";
+import { isActive } from "@/components/exams/sitting/attempt";
 import { readSittingDevice } from "@/components/exams/sitting/device";
 import { scannedToken, takeRoomCode } from "@/components/exams/sitting/scan";
 
@@ -33,3 +38,17 @@ export const roomEntryOf = Effect.fn("exams.sitting.join.entry")(function* (
   }
   return Option.orElse(scannedToken(hash), () => kept);
 });
+
+/**
+ * Whether a sitting's page enters by itself: the sitting has opened, and the student holds no attempt
+ * yet or one that is still active, so a finished attempt shows how it ended instead.
+ */
+export function entersBySelf(view: {
+  readonly attempt: Pick<typeof HeldAttempt.Type, "state"> | null;
+  readonly sitting: Pick<typeof SittingView.Type, "state">;
+}) {
+  return (
+    view.sitting.state !== "scheduled" &&
+    (view.attempt === null || isActive(view.attempt.state))
+  );
+}
