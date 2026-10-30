@@ -7,6 +7,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 
+/** The grid's card of the first question, whose name opens it and may add that it has no key yet. */
+const FIRST_CARD = /^Open question 1\b/;
+
 /** Whether the value an element shows fits inside it, uncut by an ellipsis. */
 function fitsWhole(element: Element) {
   const value = element.querySelector('[data-slot="select-value"]');
@@ -92,7 +95,7 @@ test("the teacher's paper shows each matching key's placeholder whole, a true or
 
   // A page's thumbnail in the grid lays its text out as the page does, from the start.
   await page.getByRole("button", { name: "Grid view" }).click();
-  const card = page.getByRole("button", { name: /^Open question 1\b/ });
+  const card = page.getByRole("button", { name: FIRST_CARD });
   await expect(card).toBeVisible();
   expect(await card.evaluate(thumbnailAlign)).toBe("start");
   await context.close();
