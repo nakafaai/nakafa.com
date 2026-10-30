@@ -28,7 +28,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
 export const NODE_RUNTIME_VERSION = "24.22.2";
 const CONTRACT_PACKAGE_VERSION = "1.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.5";
+export const EFFECT_COHORT_VERSION = "4.1.0";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
