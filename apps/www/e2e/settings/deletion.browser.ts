@@ -274,53 +274,54 @@ function watchDialogAlert() {
  * A refused deletion keeps its alert while the learner tries again and while
  * the dialog closes: the next answer replaces it, and it leaves with the dialog.
  */
-const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(
-  function* (page: Page, origin: string) {
-    yield* openSettings(page, origin);
-    yield* Effect.promise(() =>
-      page.route(DELETE_USER, (route) =>
-        route.fulfill({
-          json: {
-            code: "ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE",
-            message: "Refused by the test.",
-          },
-          status: 503,
-        })
-      )
-    );
-    yield* confirmDeletion(page);
-    const dialog = page.getByRole("dialog");
-    const confirm = dialog.getByRole("button", {
-      exact: true,
-      name: app.Auth["delete-account"],
-    });
-    yield* Effect.promise(async () => {
-      await expect(dialog.getByText(app.Auth["delete-account-error"])).toBeVisible(
-        { timeout: readinessTimeoutMilliseconds }
-      );
-      await expect(confirm).toBeEnabled();
-      await page.evaluate(watchDialogAlert);
+const verifyRefusalStays = Effect.fn("NakafaE2E.verifyRefusalStays")(function* (
+  page: Page,
+  origin: string
+) {
+  yield* openSettings(page, origin);
+  yield* Effect.promise(() =>
+    page.route(DELETE_USER, (route) =>
+      route.fulfill({
+        json: {
+          code: "ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE",
+          message: "Refused by the test.",
+        },
+        status: 503,
+      })
+    )
+  );
+  yield* confirmDeletion(page);
+  const dialog = page.getByRole("dialog");
+  const confirm = dialog.getByRole("button", {
+    exact: true,
+    name: app.Auth["delete-account"],
+  });
+  yield* Effect.promise(async () => {
+    await expect(
+      dialog.getByText(app.Auth["delete-account-error"])
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    await expect(confirm).toBeEnabled();
+    await page.evaluate(watchDialogAlert);
 
-      const retried = page.waitForResponse((response) =>
-        response.url().includes("/api/auth/delete-user")
-      );
-      await confirm.click();
-      await retried;
-      await expect(confirm).toBeEnabled({
-        timeout: readinessTimeoutMilliseconds,
-      });
-      await dialog
-        .getByRole("button", { exact: true, name: app.Common.cancel })
-        .click();
-      await expect(dialog).toHaveCount(0);
-      expect(
-        await page.evaluate(
-          () => Reflect.get(window, "nakafaDeletionAlert").missing
-        )
-      ).toBe(0);
+    const retried = page.waitForResponse((response) =>
+      response.url().includes("/api/auth/delete-user")
+    );
+    await confirm.click();
+    await retried;
+    await expect(confirm).toBeEnabled({
+      timeout: readinessTimeoutMilliseconds,
     });
-  }
-);
+    await dialog
+      .getByRole("button", { exact: true, name: app.Common.cancel })
+      .click();
+    await expect(dialog).toHaveCount(0);
+    expect(
+      await page.evaluate(
+        () => Reflect.get(window, "nakafaDeletionAlert").missing
+      )
+    ).toBe(0);
+  });
+});
 
 /** How long a finished deletion may take to reach the home page: it prepares, deletes and checks on the server. */
 const DELETION_MILLISECONDS = 60_000;
