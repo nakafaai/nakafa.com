@@ -8,10 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@repo/design-system/components/ui/toggle-group";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
 import { useTransition } from "react";
@@ -22,10 +18,10 @@ import { rememberPlayerMode } from "@/components/player/remember";
 
 /**
  * The view of the player in its header, beside the one primary action: the list
- * or one question at a time. From the small breakpoint it is a group of two
- * buttons, and on a phone a menu behind one icon button, so the header stays one
- * row. CSS picks the shape, so the first paint never changes it. A player with no
- * questions, such as a sitting whose paper failed to load, shows no view.
+ * or one question at a time, chosen from a menu behind one button that shows the
+ * current view's icon, at every width. So the header holds at most two buttons,
+ * the view and Finish. A player with no questions, such as a sitting whose paper
+ * failed to load, shows no view.
  */
 export function PlayerViewSwitch() {
   const shown = usePlayer((state) => state.keys.length > 0);
@@ -36,7 +32,6 @@ export function PlayerViewSwitch() {
 
   return (
     <div className="flex items-center" data-player-view="">
-      <PlayerViewGroup />
       <PlayerViewMenu />
     </div>
   );
@@ -73,27 +68,7 @@ function useChooseView() {
   };
 }
 
-/** The view as two buttons side by side, from the small breakpoint up. */
-function PlayerViewGroup() {
-  const t = useTranslations("Player");
-  const mode = usePlayer((state) => state.mode);
-  const onValueChange = useChooseView();
-
-  return (
-    <ToggleGroup
-      aria-label={t("mode")}
-      className="max-sm:hidden"
-      onValueChange={onValueChange}
-      value={mode}
-      variant="outline"
-    >
-      <ToggleGroupItem value="list">{t("mode-list")}</ToggleGroupItem>
-      <ToggleGroupItem value="single">{t("mode-single")}</ToggleGroupItem>
-    </ToggleGroup>
-  );
-}
-
-/** The view as a menu behind one icon button that shows the current view, on a phone. */
+/** The view's menu: its button shows the current view's icon, and each choice carries its own. */
 function PlayerViewMenu() {
   const t = useTranslations("Player");
   const mode = usePlayer((state) => state.mode);
@@ -105,7 +80,6 @@ function PlayerViewMenu() {
         render={
           <Button
             aria-label={t("mode")}
-            className="sm:hidden"
             size="icon"
             type="button"
             variant="outline"
