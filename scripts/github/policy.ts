@@ -49,9 +49,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
   {
     action: "astral-sh/setup-uv",
-    approvedSha: "07a047e608db84b3d8c06cd9a7c7dcc9c355c18e",
-    expectedInputs: { version: "0.13.5" },
-    expectedTag: "v10.3.2",
+    approvedSha: "68559e99cc807c1eb7e9238fd43a15bba460eec2",
+    expectedInputs: { version: "0.13.6" },
+    expectedTag: "v10.3.3",
     expectedUsages: 1,
     reason:
       "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys.",
@@ -65,19 +65,19 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
   {
     action: "actions/download-artifact",
-    approvedSha: "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
-    expectedTag: "v8.0.1",
+    approvedSha: "9000827ccba6bdab643e8b6fd33ac0654aef8333",
+    expectedTag: "v8.0.2",
     expectedUsages: 3,
     reason: "CLI publishing and verification download separated artifacts.",
   },
   {
     action: "actions/setup-node",
-    approvedSha: "820762786026740c76f36085b0efc47a31fe5020",
+    approvedSha: "949feb2413d6458794dcd2491c4babbbce0c15c1",
     expectedInputs: {
       "node-version": NODE_RUNTIME_VERSION,
       "package-manager-cache": "false",
     },
-    expectedTag: "v7.0.0",
+    expectedTag: "v7.1.0",
     expectedUsages: 4,
     reason:
       "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide.",

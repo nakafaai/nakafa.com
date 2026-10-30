@@ -32,20 +32,11 @@ import {
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
-import {
-  lazy,
-  type ReactNode,
-  Suspense,
-  useEffectEvent,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { lazy, type ReactNode, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { NinaAttach } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
-import { useEarlyPress } from "@/lib/press/replay";
 
 /**
  * The file tray and the attach button load with their upload code, which
@@ -65,10 +56,7 @@ interface Props {
   children?: ReactNode;
   className?: string;
   disabled?: boolean;
-  /**
-   * The attach button of a composer that takes no files: a visitor's press asks
-   * for sign-in. A press made before React took the page over is kept and runs it.
-   */
+  /** The attach button of a composer that takes no files: a visitor's press asks for sign-in. */
   onAttachRequest?: (() => void) | undefined;
   /** Runs on the first focus or input, so a composer can load what sending needs. */
   onEngage?: (() => void) | undefined;
@@ -98,22 +86,6 @@ export function NinaInput({
   const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
-  const attachPress = useEarlyPress<HTMLButtonElement>(() =>
-    onAttachRequest?.()
-  );
-  const field = useRef<HTMLTextAreaElement>(null);
-  // React hydrates the field without its value, so text typed before React took
-  // the page over stays in the field but not in the draft, and the next render
-  // would write the empty draft back. The draft takes it first.
-  const keepTyped = useEffectEvent(() => {
-    const typed = field.current?.value ?? "";
-    if (typed !== "" && text === "") {
-      setText(typed);
-    }
-  });
-  useLayoutEffect(() => {
-    keepTyped();
-  }, []);
   const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
   // While Nina answers, the button stops the reply and a press sends no text.
   const answering = status === "streaming";
@@ -189,7 +161,6 @@ export function NinaInput({
             );
           }}
           placeholder={t("text-placeholder")}
-          ref={field}
           value={text}
         />
         <InputGroupAddon
@@ -203,10 +174,10 @@ export function NinaInput({
           ) : null}
           {attachments ? null : (
             <InputGroupButton
-              {...attachPress}
               aria-label={t("attach-files")}
               className="rounded-full"
               disabled={disabled}
+              onClick={onAttachRequest}
               size="icon"
               type="button"
               variant="outline"

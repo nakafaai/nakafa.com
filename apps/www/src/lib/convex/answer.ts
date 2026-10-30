@@ -8,8 +8,8 @@ import { Deferred, Effect } from "effect";
  * the caller's scope, so the caller decides when it ends, and an interruption
  * that closes the scope releases it too.
  *
- * Confect cannot do this, because of three facts in the installed Convex 1.47.0
- * and Confect 10.3.1 packages. A reader's `useQuery` rethrows a failure that the
+ * Confect cannot do this, because of three facts in the installed Convex 1.48.0
+ * and Confect 10.4.1 packages. A reader's `useQuery` rethrows a failure that the
  * query does not declare while it renders (`@confect/react/dist/index.js`, lines
  * 27 to 33). A reader reads Convex's cached answer while it renders
  * (`convex/dist/esm/react/queries_observer.js`, lines 54 to 78). When the last

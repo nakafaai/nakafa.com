@@ -43,8 +43,7 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({ description: "Nakafa Quran passage options." });
 
-export type NakafaAgentQuranReferenceOptions = Schema.Codec.Encoded<
-  typeof NakafaAgentQuranReferenceOptionsSchema
->;
+export type NakafaAgentQuranReferenceOptions =
+  typeof NakafaAgentQuranReferenceOptionsSchema.Encoded;
 export type NakafaAgentQuranReferenceInput =
   typeof NakafaAgentQuranReferenceOptionsSchema.Type;
