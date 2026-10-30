@@ -33,7 +33,7 @@ function useFlagMutation() {
  * Sends one flag change, and resolves to the failure that the caller tells the student about, or to none when
  * the server took the change, so the caller shows its failures with one toast.
  */
-export function useMarkFlag() {
+function useMarkFlag() {
   const flag = useFlagMutation();
 
   return (input: FlagInput) =>
