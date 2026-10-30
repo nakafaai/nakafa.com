@@ -161,6 +161,7 @@ function SchoolAuditBody() {
       cell: (info) => <SchoolDateTime at={info.getValue()} />,
       header: t("audit-when"),
       id: "when",
+      meta: { align: "end" },
       sortFn: "basic",
     }),
     entryColumns.accessor(words.actor, {

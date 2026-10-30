@@ -3,7 +3,7 @@ import type { CellData, RowData, TableFeatures } from "@tanstack/react-table";
 declare module "@tanstack/react-table" {
   /**
    * How a Nakafa data table lays out one column. A column of badges stands in the middle of its cells, and a column of
-   * numbers or the row's menu at their end, its head with it; every other column starts at the start.
+   * numbers, of dates, or the row's menu at their end, its head with it; every other column starts at the start.
    */
   interface ColumnMeta<
     in out TFeatures extends TableFeatures,

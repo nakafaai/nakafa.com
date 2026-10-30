@@ -202,17 +202,15 @@ function SchoolPeriodTable({ unitId }: { unitId: UnitId }) {
       sortFn: "text",
     }),
     periodColumns.accessor((period) => period.start, {
-      cell: (info) => (
-        <span className="tabular-nums">
-          {format.dateTimeRange(
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.start)),
-            DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.end)),
-            { dateStyle: "medium", timeZone: "UTC" }
-          )}
-        </span>
-      ),
+      cell: (info) =>
+        format.dateTimeRange(
+          DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.start)),
+          DateTime.toDateUtc(DateTime.makeUnsafe(info.row.original.end)),
+          { dateStyle: "medium", timeZone: "UTC" }
+        ),
       header: t("period-dates"),
       id: "dates",
+      meta: { align: "end" },
       sortFn: "text",
     }),
     periodColumns.accessor((period) => period.status, {

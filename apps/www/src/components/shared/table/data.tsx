@@ -37,11 +37,14 @@ import { EmptyNina } from "@/components/state/empty";
 /** The arrow of a column sorted each way. */
 const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };
 
-/** Where a column's head and cells stand, as its meta says: at the start, in the middle for badges, or at the end. */
+/**
+ * Where a column's head and cells stand, as its meta says: at the start, in the middle for badges, or at the end, where
+ * numbers and dates take digits of one width so they line up from row to row.
+ */
 const columnAlign = cva("", {
   defaultVariants: { align: "start" },
   variants: {
-    align: { center: "text-center", end: "text-end", start: "" },
+    align: { center: "text-center", end: "text-end tabular-nums", start: "" },
   },
 });
 
