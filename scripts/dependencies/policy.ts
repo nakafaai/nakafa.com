@@ -25,7 +25,7 @@ export const PACKAGE_MANAGER = "bun@1.4.4";
  * not check out the repository cannot read the manifest, so it names the same
  * release and the workflow checks compare it with this value.
  */
-export const NODE_RUNTIME_VERSION = "24.22.2";
+export const NODE_RUNTIME_VERSION = "26.13.0";
 const CONTRACT_PACKAGE_VERSION = "1.0.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.5";

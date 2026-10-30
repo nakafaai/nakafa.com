@@ -113,8 +113,16 @@ export const REGISTRY_REVIEWS = [
     "8.1.0",
     "Ultracite 8.1 moves with Biome 2.6, as the Biome entry describes: it renames the class sort rule, sorts the class lists of cva variants, turns on the newly stable Biome rules that match its Oxlint presets, and formats YAML and SCSS. Its ESLint, Oxlint, Oxfmt and Zed changes do not apply to this Biome setup.",
   ],
-  ["@types/node@24", "24.19.2", "Declarations remain on the Node 24 line."],
-  ["node@24", "24.22.2", "The repository supports the Node 24 runtime line."],
+  [
+    "@types/node@24",
+    "24.19.2",
+    "Declarations stay on the Node 24 line while Convex runs the backend's Node actions on node.nodeVersion 24 (packages/backend/convex.json), so the types never offer an API that runtime lacks. They move to 26 with that runtime, once a dev deployment runs it.",
+  ],
+  [
+    "node@26",
+    "26.13.0",
+    "Node 26 is the Active LTS line since 28 October 2026, and the tooling, CI and devEngines run it. Convex Node actions stay on 24 until a dev deployment proves 26.",
+  ],
   [
     "react-doctor@latest",
     "0.9.18",

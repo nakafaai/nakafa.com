@@ -53,12 +53,12 @@ const SETUP_NODE_ACTION =
   "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1";
 const UPLOAD_ACTION =
   "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9";
-/** Digest of the decoded publish job after a complete OIDC boundary review, at Node 24.22.2 with setup-node v7.1.0 and download-artifact v8.0.2; the reviewed job at 24.21.0 differs only in those versions. */
+/** Digest of the decoded publish job after a complete OIDC boundary review, at Node 26.13.0 with setup-node v7.1.0 and download-artifact v8.0.2; the reviewed job at 24.21.0 differs only in those versions. */
 const TRUSTED_PUBLISH_SHA256 =
-  "156325d470fcc8a1dd9aa5c80f793286bfc138dec10c2a6b1279aeaf9eb69ad3";
-/** Digest of the decoded verification job after a complete execution review, at Node 24.22.2 with setup-node v7.1.0 and download-artifact v8.0.2; the reviewed job at 24.21.0 differs only in those versions. */
+  "9f12aa24f205148a93a6aecc39cac7faa6cf9975b3c1e8346288027c94914a72";
+/** Digest of the decoded verification job after a complete execution review, at Node 26.13.0 with setup-node v7.1.0 and download-artifact v8.0.2; the reviewed job at 24.21.0 differs only in those versions. */
 const TRUSTED_VERIFY_SHA256 =
-  "b63e17d3a2fe82d32ef9540d7fb2046c5e725440fd9e9b3c2596b7d0bf122f87";
+  "7814a90aa8bf323a8404a1d04d8e9d342d400c27ab0dad46155aa54dd1d6fbdb";
 const REQUIRED_BUILD_SOURCE = [
   "bun run test:scripts",
   "bun --filter @nakafa/cli typecheck",

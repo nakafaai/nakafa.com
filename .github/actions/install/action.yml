@@ -1,12 +1,12 @@
 name: Install dependencies
-description: Sets up Node 24.22.2 and Bun without a cache, then installs the workspace from its frozen lockfile. The calling job checks out the repository first, because GitHub reads a local action from the checked-out workspace.
+description: Sets up Node 26.13.0 and Bun without a cache, then installs the workspace from its frozen lockfile. The calling job checks out the repository first, because GitHub reads a local action from the checked-out workspace.
 runs:
   using: composite
   steps:
     - name: Setup Node
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
-        node-version: 24.22.2
+        node-version: 26.13.0
         package-manager-cache: false
 
     - name: Setup toolchain
