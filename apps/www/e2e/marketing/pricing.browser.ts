@@ -113,7 +113,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   yield* Effect.promise(() => subscriptionQuestion.click());
   yield* Effect.promise(() =>
     expect(page.locator("#faq")).toContainText(
-      "manage or cancel the subscription"
+      "manage or cancel Pro in the customer portal"
     )
   );
   yield* Effect.promise(() =>
