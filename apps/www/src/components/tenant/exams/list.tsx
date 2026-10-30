@@ -207,7 +207,6 @@ function ExamListRows({
       enableSorting: false,
       header: t("questions-column"),
       id: "questions",
-      meta: { align: "end" },
     }),
     examColumns.accessor((exam) => exam.createdAt, {
       cell: (info) => (
@@ -221,7 +220,6 @@ function ExamListRows({
       enableSorting: false,
       header: t("created-column"),
       id: "created",
-      meta: { align: "end" },
     }),
     examColumns.display({
       cell: (info) =>
