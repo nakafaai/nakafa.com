@@ -251,6 +251,16 @@ const STATIC_RUNNER_ALIASES = STATIC_RUNNER
     ]
   : [];
 
+/**
+ * TanStack Start's RSC plugin keeps every server dependency inside Vite
+ * (`ssr.noExternal: true`), so Vite reads the source map each one names. feed
+ * names a map that its package does not publish. The static runner, its only
+ * importer, runs in Node, so Node imports feed as it ships: a dependency listed
+ * in `ssr.external` stays external over `ssr.noExternal: true`.
+ * @see https://vite.dev/config/ssr-options#ssr-external
+ */
+const STATIC_RUNNER_EXTERNALS = STATIC_RUNNER ? ["feed"] : [];
+
 /** The Worker environments: `ssr` is the Worker entry and `rsc` its child. */
 const WORKER_ENVIRONMENTS = ["ssr", "rsc"];
 
@@ -360,6 +370,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       alias: [...NODE_ONLY_CONTRACT_ALIASES, ...STATIC_RUNNER_ALIASES],
       tsconfigPaths: true,
     },
+    ssr: { external: STATIC_RUNNER_EXTERNALS },
     plugins: [
       tanstackStart({
         // The default rules stay in both passes: the browser rejects `.server`
