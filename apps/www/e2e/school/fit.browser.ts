@@ -43,7 +43,7 @@ function headingLines(column: Element) {
   };
 }
 
-test("the teacher's paper shows each matching key's placeholder whole, a true or false table's headings on one line, and its thumbnails from the start", async ({
+test("the teacher's paper shows each matching key's placeholder whole, a true or false table's headings on one line, its thumbnails from the start, and a page's row in two lines on a phone", async ({
   baseURL,
   browser,
 }) => {
@@ -98,5 +98,23 @@ test("the teacher's paper shows each matching key's placeholder whole, a true or
   const card = page.getByRole("button", { name: FIRST_CARD });
   await expect(card).toBeVisible();
   expect(await card.evaluate(thumbnailAlign)).toBe("start");
+  await page.getByRole("button", { name: "Grid view" }).click();
+
+  // On a phone the page's row wraps only its name, type and mark, and its actions keep the row's end, so
+  // the row holds two lines and not three.
+  await page.setViewportSize({ height: 844, width: 390 });
+  const actions = page.getByRole("button", {
+    name: "More actions for question 1",
+  });
+  const title = page
+    .getByRole("heading", { exact: true, name: "Question 1" })
+    .first();
+  await expect(actions).toBeVisible();
+  const actionsBox = await actions.boundingBox();
+  const titleBox = await title.boundingBox();
+  expect(actionsBox?.x ?? 0).toBeGreaterThan(titleBox?.x ?? 0);
+  expect(actionsBox?.y ?? 0).toBeLessThan(
+    (titleBox?.y ?? 0) + (titleBox?.height ?? 0) * 2
+  );
   await context.close();
 });
