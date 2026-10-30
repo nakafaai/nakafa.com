@@ -60,9 +60,15 @@ export function UnitEditDialog({
   const setNpsn = useMutation(tenancy.units.setNpsn).withOptimisticUpdate(
     setNpsnChange
   );
-  const [timeZone, setTimeZone] = useState(unit.timeZone);
-  const [contentLanguage, setContentLanguage] = useState(unit.contentLanguage);
-  const [npsn, setNpsnText] = useState(unit.npsn ?? "");
+  // Only what the teacher picks or types is kept; until then each field shows what the school holds.
+  const [zoneChoice, setTimeZone] = useState<string | null>(null);
+  const [languageChoice, setContentLanguage] = useState<
+    typeof AppLocaleCodeSchema.Type | null
+  >(null);
+  const [npsnText, setNpsnText] = useState<string | null>(null);
+  const timeZone = zoneChoice ?? unit.timeZone;
+  const contentLanguage = languageChoice ?? unit.contentLanguage;
+  const npsn = npsnText ?? unit.npsn ?? "";
   const typed = npsn.trim();
   const localeChanged =
     timeZone !== unit.timeZone || contentLanguage !== unit.contentLanguage;
