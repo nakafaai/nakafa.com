@@ -84,8 +84,8 @@ for (const scheme of ["light", "dark"] as const) {
     page,
   }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    // Its highlight reads "follow from [the limit definition of the derivative](…)".
-    await page.goto(pinnedRoutes.derivative.en);
+    // Its highlight reads "relative to a [frame of reference](…)".
+    await page.goto(pinnedRoutes.relative.en);
     const link = page.locator("main strong a[href]").first();
     await expect(link).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await link.scrollIntoViewIfNeeded();
@@ -110,7 +110,8 @@ for (const scheme of ["light", "dark"] as const) {
       ).toBeGreaterThanOrEqual(AA);
     }
     await page
-      .locator("main p", { has: link })
+      .locator("main p")
+      .filter({ has: page.locator("strong a[href]") })
       .first()
       .screenshot({
         path: test.info().outputPath(`highlight-link-${scheme}.png`),
