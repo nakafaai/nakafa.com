@@ -7,11 +7,12 @@ import { Array as Arr, Crypto, Effect, Schema } from "effect";
 import { Base64Url, Hex } from "effect/encoding";
 
 /**
- * The seats one seed call seats: half of what the seed function takes, so a call stays well
- * inside the local backend's five-second limit on a busy machine. Each seat writes two Better
- * Auth rows, the app profile, a Person and a grant.
+ * The seats one seed call seats. Each seat makes three nested component calls (the Better Auth
+ * user, its app profile's link, and its session) beside the app profile, a Person, a grant and
+ * its journal entry, and the backend stops a mutation that spends too long in such calls: on
+ * 30 Oct, at a load average of 25, a call of twenty-five seats hit that system timeout.
  */
-const SEATS_PER_CALL = 25;
+const SEATS_PER_CALL = 10;
 
 /** How many seed calls run at once: each is a Convex CLI process of its own. */
 const SEED_CONCURRENCY = 4;

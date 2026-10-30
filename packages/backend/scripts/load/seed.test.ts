@@ -38,7 +38,7 @@ const plan = LoadPlan.make({
 
 describe("load seed", () => {
   it.effect(
-    "seeds the exam, then seats the students and two proctors a room in calls of twenty-five, keeping every token secret",
+    "seeds the exam, then seats the students and two proctors a room in calls of ten, keeping every token secret",
     () =>
       Effect.gen(function* () {
         const calls = MutableList.make<typeof Call.Type>();
@@ -74,11 +74,7 @@ describe("load seed", () => {
         expect(
           Arr.map(batches, (batch) => [batch.kind, batch.seats.length])
         ).toEqual([
-          ["student", 25],
-          ["student", 25],
-          ["student", 25],
-          ["student", 25],
-          ["student", 20],
+          ...Arr.replicate(["student", 10], 12),
           ["proctor", 4],
         ]);
         expect(
@@ -89,7 +85,7 @@ describe("load seed", () => {
           )
         ).toBe(true);
         expect(batches[0]?.seats[0]?.name).toBe("Siswa 0001");
-        expect(batches[5]?.seats[3]?.name).toBe("Pengawas 0004");
+        expect(batches[12]?.seats[3]?.name).toBe("Pengawas 0004");
         expect(
           Arr.dedupe(
             Arr.flatMap(batches, (batch) =>
