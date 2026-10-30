@@ -107,9 +107,7 @@ describe("keptAnswers", () => {
 
 describe("settleSent", () => {
   /** A final refusal in these tests: a stale answer. */
-  const isStale = Schema.is(
-    Schema.Struct({ _tag: Schema.Literal("StaleAnswer") })
-  );
+  const isStale = Schema.is(Schema.TaggedStruct("StaleAnswer", {}));
 
   /** Settles one send with a confirm that counts its runs, and returns the outcome and the count. */
   const settled = Effect.fn("test.keep.settled")(function* <E>(

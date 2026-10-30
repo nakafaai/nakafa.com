@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { TryoutResponseError } from "@repo/backend/confect/tryouts/response/spec";
 import { Cause, Effect, Schema } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import {
@@ -12,11 +13,8 @@ const PLACEMENT = Schema.decodeUnknownSync(Id("tryoutAttemptPlacements"))(
 );
 
 /** A refusal of the save that carries `code`, as the page decodes it. */
-const refusal = (code: "TRYOUT_RESPONSE_FAILED" | "TRYOUT_RESPONSE_STALE") => ({
-  _tag: "TryoutResponseError" as const,
-  code,
-  message: "Refused.",
-});
+const refusal = (code: "TRYOUT_RESPONSE_FAILED" | "TRYOUT_RESPONSE_STALE") =>
+  new TryoutResponseError({ code, message: "Refused." });
 
 describe("keptPicks", () => {
   it.effect(
