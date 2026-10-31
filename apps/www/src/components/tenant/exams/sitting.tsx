@@ -292,34 +292,33 @@ export function ScheduleSitting({
             </SelectContent>
           </Select>
         </Field>
-        {Arr.isReadonlyArrayNonEmpty(cohorts) ? (
-          <Field>
-            <FieldLabel htmlFor={`${id}-audience`}>{t("audience")}</FieldLabel>
-            <Select
-              items={audienceItems}
-              onValueChange={(key) => setAudience(key ?? UNIT_AUDIENCE)}
-              value={audience}
-            >
-              <SelectTrigger className="w-full" id={`${id}-audience`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Arr.map(audienceItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    <HugeIcons
-                      icon={
-                        item.value === UNIT_AUDIENCE
-                          ? Building03Icon
-                          : UserMultiple02Icon
-                      }
-                    />
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        ) : null}
+        <Field>
+          <FieldLabel htmlFor={`${id}-audience`}>{t("audience")}</FieldLabel>
+          <Select
+            disabled={!Arr.isReadonlyArrayNonEmpty(cohorts)}
+            items={audienceItems}
+            onValueChange={(key) => setAudience(key ?? UNIT_AUDIENCE)}
+            value={audience}
+          >
+            <SelectTrigger className="w-full" id={`${id}-audience`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Arr.map(audienceItems, (item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  <HugeIcons
+                    icon={
+                      item.value === UNIT_AUDIENCE
+                        ? Building03Icon
+                        : UserMultiple02Icon
+                    }
+                  />
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-room`}>{t("room")}</FieldLabel>
           <Input

@@ -50,7 +50,10 @@ export function PaneHeader({
   }
 
   return (
-    <header className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2">
+    <header
+      className="flex min-h-14 shrink-0 items-center gap-2 border-b px-4 py-2"
+      data-slot="pane-header"
+    >
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <h2 className="text-sm font-medium wrap-anywhere" dir="auto">
           {title}
