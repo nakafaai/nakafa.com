@@ -17,6 +17,7 @@ const messageNamespaceFlags = {
   Connectors: true,
   Contributor: true,
   DataTable: true,
+  Document: true,
   Editor: true,
   Exams: true,
   Faq: true,

@@ -225,8 +225,8 @@ function TenantSwitcher() {
  * the pages. Each page draws its one header, with the sidebar's trigger in it
  * (`SchoolHeader`), so the frame draws none. The exam editor draws its own frame,
  * so on its route the pages render alone. No app header stands above a school's
- * pages, so the frame sets its height to none, and a sticky row under a page's
- * header, such as the player's toolbar, sits right under that header. The
+ * pages, so the frame sets its height to none, and a page's sticky header, such
+ * as the player's, stands at the top of the page. The
  * pathname is read here, not in the shell, so the shell's context value does not
  * change on navigation.
  */
