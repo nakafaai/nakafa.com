@@ -29,7 +29,7 @@ export function NavUserGuest() {
         <VisitorConsentMenuItem />
       </GuestLearnMoreMenu>
       <SidebarMenuSeparator />
-      <SidebarMenuItem className="flex flex-col gap-3 px-2 py-1">
+      <SidebarMenuItem className="flex flex-col gap-3 px-2 py-1 group-data-[collapsible=icon]:px-0">
         <div className="grid gap-1 group-data-[collapsible=icon]:hidden">
           <p className="font-medium text-sm">{t("login-cta-title")}</p>
           <p className="text-muted-foreground text-sm leading-snug">

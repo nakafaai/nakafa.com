@@ -19,8 +19,8 @@ const TOGGLE = en.Common["toggle-sidebar"];
 
 /**
  * Every part of the shown sidebar that runs wider than its own box: the panel, its inner surface and each scroller
- * in it, as `part: scrollWidth > clientWidth`, followed by the elements that reach past the panel's edge. A tidy
- * sidebar has none, so it never scrolls sideways.
+ * in it, as `part: scrollWidth > clientWidth`, followed by the unclipped elements that cross the panel's inside
+ * edge, which name the cause. A tidy sidebar has none, so it never scrolls sideways.
  */
 function readSideways(page: Page) {
   return page.evaluate(() => {
@@ -40,7 +40,20 @@ function readSideways(page: Page) {
         )
       ),
     ];
-    const edge = shown.getBoundingClientRect().right;
+    // The inside edge of the panel, before its border, which nothing of it may cross.
+    const edge =
+      shown.getBoundingClientRect().left + shown.clientLeft + shown.clientWidth;
+    // An element inside a part that clips it shows nothing past that part, so only the unclipped ones are named.
+    const clipped = (element: HTMLElement) => {
+      let parent = element.parentElement;
+      while (parent !== null && parent !== shown) {
+        if (getComputedStyle(parent).overflowX !== "visible") {
+          return true;
+        }
+        parent = parent.parentElement;
+      }
+      return false;
+    };
     const wide = parts
       .filter((part) => part.scrollWidth !== part.clientWidth)
       .map(
@@ -48,7 +61,11 @@ function readSideways(page: Page) {
           `${part.dataset.slot}: ${part.scrollWidth} > ${part.clientWidth}`
       );
     const past = Array.from(shown.querySelectorAll<HTMLElement>("*"))
-      .filter((element) => element.getBoundingClientRect().right > edge + 0.5)
+      .filter(
+        (element) =>
+          element.getBoundingClientRect().right > edge + 0.5 &&
+          !clipped(element)
+      )
       .slice(0, 5)
       .map(
         (element) =>
