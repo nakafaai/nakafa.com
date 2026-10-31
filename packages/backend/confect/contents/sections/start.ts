@@ -1,6 +1,15 @@
 import refs from "@repo/backend/confect/_generated/refs";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
-import { Duration, Effect } from "effect";
+import { Config, Duration, Effect, Option, Schema } from "effect";
+
+/**
+ * `off` on a deployment that keeps no section index. A build pays the gateway for
+ * every text it has not embedded, and the dev deployment takes every release that
+ * production takes, for no learner: it paid as much as production.
+ */
+const SectionIndexSwitch = Config.option(
+  Config.schema(Schema.Literal("off"), "SECTION_INDEX")
+);
 
 /**
  * Starts the build of the section index for a release that has just become
@@ -10,6 +19,9 @@ import { Duration, Effect } from "effect";
  */
 export const startSectionBuild = Effect.fn("contents.sections.start")(
   function* (releaseId: string) {
+    if (Option.isSome(yield* SectionIndexSwitch.pipe(Effect.orDie))) {
+      return;
+    }
     const scheduler = yield* Scheduler;
     yield* scheduler.runAfter(
       Duration.millis(0),
