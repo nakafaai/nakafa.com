@@ -1,7 +1,7 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import type { InvoiceInput } from "@repo/pdf/invoice/contract";
+import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
 
 /** What each kind of payment bought, in the language of the invoice. */
 const PAYMENT_ITEMS = {

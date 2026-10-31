@@ -1,7 +1,7 @@
-import type { InvoiceInput } from "@repo/pdf/invoice/contract";
-import { INVOICE_COPY } from "@repo/pdf/invoice/copy";
-import { InvoiceDocument } from "@repo/pdf/invoice/document";
-import { renderPdf } from "@repo/pdf/render";
+import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
+import { INVOICE_COPY } from "@repo/backend/confect/pdf/invoice/copy";
+import { InvoiceDocument } from "@repo/backend/confect/pdf/invoice/document";
+import { renderPdf } from "@repo/backend/confect/pdf/render";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { createElement } from "react";

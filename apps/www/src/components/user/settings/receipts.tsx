@@ -226,6 +226,21 @@ function ReceiptsTable({ payments }: { payments: readonly Receipt[] }) {
       id: "date",
       sortFn: "basic",
     }),
+<<<<<<< HEAD
+=======
+    receiptColumns.accessor((payment) => providerNameOf(payment.rail), {
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () => (
+        <ColumnFilter
+          column="provider"
+          options={providers}
+          title={t("payment-via")}
+        />
+      ),
+      id: "provider",
+    }),
+>>>>>>> nabil/takumipdf
     receiptColumns.accessor(amountOf, {
       enableSorting: false,
       filterFn: "oneOf",

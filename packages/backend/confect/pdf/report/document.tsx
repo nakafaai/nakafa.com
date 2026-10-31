@@ -1,8 +1,8 @@
-import "takumi-pdf/primitives";
-import { Seal, Sheet } from "@repo/pdf/parts";
-import type { ReportInput } from "@repo/pdf/report/contract";
-import { REPORT_COPY } from "@repo/pdf/report/copy";
+import { Seal, Sheet } from "@repo/backend/confect/pdf/parts";
+import type { ReportInput } from "@repo/backend/confect/pdf/report/contract";
+import { REPORT_COPY } from "@repo/backend/confect/pdf/report/copy";
 import { Array as Arr, DateTime } from "effect";
+import type {} from "takumi-pdf/primitives";
 
 /**
  * One report card (ADR 0033, S5): the school, the student, the class group, the

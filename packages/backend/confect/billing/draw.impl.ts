@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import spec from "@repo/backend/confect/billing/draw.spec";
-import { drawInvoicePdf } from "@repo/pdf/invoice/draw";
+import { drawInvoicePdf } from "@repo/backend/confect/pdf/invoice/draw";
 import { Effect, Layer } from "effect";
 import { Base64 } from "effect/encoding";
 

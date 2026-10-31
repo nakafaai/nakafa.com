@@ -3,7 +3,7 @@ import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { InvoiceInput } from "@repo/pdf/invoice/contract";
+import { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
 import { Schema } from "effect";
 
 /** The buyer asked for an invoice Nakafa cannot give: another's, unpaid, or sold by another merchant. */

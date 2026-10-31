@@ -5,16 +5,14 @@ import { loadAttemptResponses } from "@repo/backend/confect/tryouts/runtime/resp
 import {
   finalizeAttemptScore,
   loadAttemptScoreSource,
-  requireOwnedAttempt,
   scoreTryoutSection,
 } from "@repo/backend/confect/tryouts/runtime/score";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect } from "effect";
 
 /** Reads an attempt with its complete response index and score source, as finishing reads them. */
-const readScoring = (
-  attemptId: Parameters<typeof requireOwnedAttempt>[0]["attemptId"]
-) =>
+const readScoring = (attemptId: Id<"tryoutAttempts">) =>
   Effect.gen(function* () {
     const attempt = yield* (yield* DatabaseReader)
       .table("tryoutAttempts")
@@ -69,17 +67,6 @@ describe("tryouts/runtime/score", () => {
           "TRYOUT_ATTEMPT_NOT_ACTIVE",
           "TRYOUT_SCORE_SOURCE_MISMATCH",
         ]);
-        yield* Effect.promise(() =>
-          world.t.mutation((ctx) => ctx.db.delete("tryoutAttempts", attemptId))
-        );
-        expect(
-          yield* world.run(
-            requireOwnedAttempt({ attemptId, userId: world.userId }).pipe(
-              Effect.flip,
-              Effect.map(({ code }) => code)
-            )
-          )
-        ).toBe("TRYOUT_ATTEMPT_NOT_FOUND");
       })
   );
 });

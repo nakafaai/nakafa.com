@@ -461,6 +461,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      changeSubject: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; subject: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
       create: FunctionReference<
         "mutation",
         "public",
@@ -16067,6 +16081,7 @@ export declare const internal: {
           { attemptId: Id<"examAttempts"> },
           null
         >;
+        sweep: FunctionReference<"mutation", "internal", {}, null>;
       };
     };
   };

@@ -14,7 +14,7 @@ import { DateTime, Effect } from "effect";
  * window is the blueprint's disconnect window of 75 seconds (blueprint 60-exam, section
  * "Kehadiran"), so a device that is still sending its records has time to send them.
  */
-const SUBMIT_DELAY_MS = 75_000;
+export const SUBMIT_DELAY_MS = 75_000;
 
 /** Schedules the opening of a sitting at its opening time. */
 export const scheduleOpen = Effect.fn("exams.sittings.timers.open")(function* (

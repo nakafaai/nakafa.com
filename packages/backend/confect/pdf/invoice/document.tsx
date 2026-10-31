@@ -1,9 +1,9 @@
-import "takumi-pdf/primitives";
-import type { InvoiceInput } from "@repo/pdf/invoice/contract";
-import { INVOICE_COPY } from "@repo/pdf/invoice/copy";
-import { Field, Sheet } from "@repo/pdf/parts";
-import { PDF_AUTHOR } from "@repo/pdf/render";
+import type { InvoiceInput } from "@repo/backend/confect/pdf/invoice/contract";
+import { INVOICE_COPY } from "@repo/backend/confect/pdf/invoice/copy";
+import { Field, Sheet } from "@repo/backend/confect/pdf/parts";
+import { PDF_AUTHOR } from "@repo/backend/confect/pdf/render";
 import { Array as Arr } from "effect";
+import type {} from "takumi-pdf/primitives";
 
 /** An invoice of Nakafa: who sells, who it bills, what it bills, and how it stands. */
 export function InvoiceDocument({

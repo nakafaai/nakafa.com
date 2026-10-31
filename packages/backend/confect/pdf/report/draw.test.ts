@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { drawReportPdf } from "@repo/pdf/report/draw";
+import { drawReportPdf } from "@repo/backend/confect/pdf/report/draw";
 import { DateTime, Effect } from "effect";
 
 /** A printable report with two subject lines, one judged by a band. */
@@ -22,6 +22,7 @@ const report = {
       value: 86,
     },
     { className: "Kimia X-1", kktp: "notReached" as const, value: 70 },
+    { className: "Biologi X-1", kktp: "reached" as const, value: 80 },
   ],
   verifyUrl: `https://nakafa.com/id/verify/${"a".repeat(64)}`,
 };
