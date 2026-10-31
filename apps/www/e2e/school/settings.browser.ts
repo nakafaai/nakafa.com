@@ -35,6 +35,33 @@ async function addCohort(page: Page, name: string) {
   await expect(page.getByRole("link", { name })).toBeVisible();
 }
 
+/**
+ * Adds the period `Semester 1` from the periods page and opens it, then reloads until the server holds it as the
+ * active period. A navigation right after Open could leave before the open reaches the server, and a unit with no
+ * active period keeps Add cohort disabled.
+ */
+async function openSemester(page: Page) {
+  const addPeriod = page
+    .locator("header")
+    .getByRole("button", { name: "Add period" });
+  await waitUntilTakenOver(addPeriod);
+  await addPeriod.click();
+  const periodDialog = page.getByRole("dialog");
+  await periodDialog.getByLabel("Name").fill("Semester 1");
+  await expect(periodDialog.locator('input[type="date"]')).toHaveCount(0);
+  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
+  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
+  await periodDialog.getByRole("button", { name: "Add period" }).click();
+  const periodRow = page.getByRole("row", { name: "Semester 1" });
+  await periodRow.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Open" }).click();
+  await expect(periodRow.getByText("Active")).toBeVisible();
+  await page.reload();
+  await expect(periodRow.getByText("Active")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+}
+
 test("an admin opens the profile and the periods of a school", async ({
   browser,
   baseURL,
@@ -160,21 +187,7 @@ test("an admin opens a period, then creates a cohort of it and edits its name an
 
   // A cohort belongs to the active period, so the admin opens a period first.
   await page.goto(address("/settings/periods"));
-  const addPeriod = page
-    .locator("header")
-    .getByRole("button", { name: "Add period" });
-  await waitUntilTakenOver(addPeriod);
-  await addPeriod.click();
-  const periodDialog = page.getByRole("dialog");
-  await periodDialog.getByLabel("Name").fill("Semester 1");
-  await expect(periodDialog.locator('input[type="date"]')).toHaveCount(0);
-  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
-  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
-  await periodDialog.getByRole("button", { name: "Add period" }).click();
-  const periodRow = page.getByRole("row", { name: "Semester 1" });
-  await periodRow.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Open" }).click();
-  await expect(periodRow.getByText("Active")).toBeVisible();
+  await openSemester(page);
 
   await page.goto(address("/settings/cohorts"));
   await expect(page).toHaveURL(address("/settings/cohorts"));
@@ -243,21 +256,7 @@ test("an admin places a student in a cohort, then moves the student to another",
   const page = await context.newPage();
 
   await page.goto(address("/settings/periods"));
-  const addPeriod = page
-    .locator("header")
-    .getByRole("button", { name: "Add period" });
-  await waitUntilTakenOver(addPeriod);
-  await addPeriod.click();
-  const periodDialog = page.getByRole("dialog");
-  await periodDialog.getByLabel("Name").fill("Semester 1");
-  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
-  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
-  await periodDialog.getByRole("button", { name: "Add period" }).click();
-  await page
-    .getByRole("row", { name: "Semester 1" })
-    .getByRole("button", { name: "More actions" })
-    .click();
-  await page.getByRole("menuitem", { name: "Open" }).click();
+  await openSemester(page);
 
   await page.goto(address("/settings/cohorts"));
   await addCohort(page, "7A");
