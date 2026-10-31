@@ -16,6 +16,8 @@ import {
   Npsn,
   PersonReason,
   TenantName,
+  UnitLevel,
+  UnitName,
 } from "@repo/backend/confect/tenancy/schema";
 import { SchoolSize } from "@repo/backend/confect/tenancy/start";
 import { Schema } from "effect";
@@ -128,6 +130,8 @@ export const unit = Kind.make("unit", "tenantUnits", {
       npsn: Npsn,
       type: Schema.Literal("unit.npsn.set"),
     }),
+    Schema.Struct({ name: UnitName, type: Schema.Literal("unit.name.set") }),
+    Schema.Struct({ level: UnitLevel, type: Schema.Literal("unit.level.set") }),
   ],
   published: ["unit.created"],
   relations: ["member"],

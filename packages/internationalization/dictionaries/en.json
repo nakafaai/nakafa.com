@@ -860,6 +860,12 @@
         },
         "npsn": {
           "set": "NPSN changed"
+        },
+        "name": {
+          "set": "Unit renamed"
+        },
+        "level": {
+          "set": "Unit level changed"
         }
       },
       "visit": {

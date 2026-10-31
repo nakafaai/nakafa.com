@@ -7611,6 +7611,21 @@ export declare const api: {
               | { type: "unit.archived" }
               | { type: "unit.unarchived" }
               | { npsn: string; type: "unit.npsn.set" }
+              | { name: string; type: "unit.name.set" }
+              | {
+                  level:
+                    | "paud"
+                    | "sd"
+                    | "mi"
+                    | "smp"
+                    | "mts"
+                    | "sma"
+                    | "ma"
+                    | "smk"
+                    | "slb"
+                    | "other";
+                  type: "unit.level.set";
+                }
               | {
                   minutes: number;
                   reason: "support" | "onboarding" | "incident";
@@ -10393,6 +10408,40 @@ export declare const api: {
           npsn: string | null;
           status: "active" | "archived";
           timeZone: string;
+        }
+      >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          slug: string;
+          unitId: Id<"tenantUnits">;
+        },
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
         }
       >;
       list: FunctionReference<
