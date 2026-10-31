@@ -32,7 +32,7 @@ import { Array as Arr, Effect, flow } from "effect";
 const PRO_CHECKOUT_OFFERS = ["pro.monthly", "pro.yearly"] as const;
 
 /** An offer the buyer's rail does not sell now. The learner sees the checkout failure, and the reason is logged. */
-function offerUnavailable(cause: { readonly message: string }) {
+export function offerUnavailable(cause: { readonly message: string }) {
   return Effect.logWarning("Pro offer is not sold to this buyer", {
     message: cause.message,
   }).pipe(
