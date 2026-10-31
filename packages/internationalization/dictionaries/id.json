@@ -1502,15 +1502,20 @@
       }
     },
     "size-title": "Berapa siswa di sekolahmu?",
-    "size-description": "Gratis untuk mulai, berapa pun jumlahnya.",
+    "size-description": "Gratis untuk mulai. Kami sarankan paket sesuai jumlahnya.",
     "size": {
       "s": "Di bawah 100",
       "m": "100 sampai 499",
       "l": "500 sampai 999",
       "xl": "1.000 atau lebih"
     },
+    "plan-free": "Paket Gratis, sampai {limit} siswa.",
+    "plan-school": "Paket School, bayar per siswa.",
+    "plan-founder": "Paket School, dibantu pendiri.",
     "founder-line": "Pendiri bisa membantu sekolah besar bersiap.",
     "founder-link": "Bicara dengan pendiri",
+    "link-copy": "Salin tautan",
+    "link-copied": "Tautan disalin",
     "consent": "Membuka sekolah berarti menyetujui <terms>Syarat Layanan</terms> dan <privacy>Kebijakan Privasi</privacy>.",
     "finish": "Buka sekolah",
     "required-error": "Pilih satu jawaban.",
