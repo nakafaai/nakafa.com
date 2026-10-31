@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 export function DrawerStage({ children }: { children: ReactNode }) {
   return (
     <div
-      className="empty:after:border-muted-foreground empty:after:fixed empty:after:start-1/2 empty:after:top-1/2 empty:after:size-6 empty:after:-translate-1/2 empty:after:animate-spin empty:after:rounded-full empty:after:border-2 empty:after:border-t-transparent empty:after:transition-opacity empty:after:delay-400 starting:empty:after:opacity-0"
+      className="empty:after:border-muted-foreground empty:after:fixed empty:after:inset-0 empty:after:m-auto empty:after:size-6 empty:after:animate-spin empty:after:rounded-full empty:after:border-2 empty:after:border-t-transparent empty:after:transition-opacity empty:after:delay-400 starting:empty:after:opacity-0"
       data-slot="drawer-stage"
     >
       {children}
