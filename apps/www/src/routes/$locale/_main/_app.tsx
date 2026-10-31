@@ -14,6 +14,7 @@ import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
  */
 const APP_NAMESPACES = [
   "Connectors",
+  "DataTable",
   "Editor",
   "Memory",
   "Subject",
