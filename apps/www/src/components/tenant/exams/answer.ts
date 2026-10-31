@@ -6,7 +6,14 @@ import {
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
 import { REASON_ID } from "@repo/backend/confect/exams/scoring";
-import { Array as Arr, Option, pipe, Schema, String as Str } from "effect";
+import {
+  Array as Arr,
+  Option,
+  pipe,
+  Result,
+  Schema,
+  String as Str,
+} from "effect";
 
 /** The choice interaction, which a single-answer and a complex multiple choice both hold. */
 export type Choice = Extract<Interaction, { kind: "choice" }>;
@@ -300,12 +307,12 @@ export const keyWithoutOption = (
   }
   const remaining = Arr.filterMap(key, (answer) => {
     if (!isChoiceKey(answer)) {
-      return Option.some(answer);
+      return Result.succeed(answer);
     }
     const correct = Arr.filter(answer.correct, (id) => id !== optionId);
     return Arr.isReadonlyArrayNonEmpty(correct)
-      ? Option.some({ ...answer, correct })
-      : Option.none();
+      ? Result.succeed({ ...answer, correct })
+      : Result.failVoid;
   });
   return Arr.isReadonlyArrayNonEmpty(remaining) ? remaining : null;
 };
