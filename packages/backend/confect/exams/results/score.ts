@@ -2,16 +2,16 @@ import { grade } from "@repo/backend/confect/assessment/grade";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import type { QuestionView } from "@repo/backend/confect/exams/question";
 import {
+  examResultValidator,
   gradeVerdict,
-  type Verdict,
 } from "@repo/backend/confect/exams/results/schema";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Struct } from "effect";
 
 /** What one answer scored: the whole points it earned, and the verdict they give. */
-interface Scored {
-  readonly points: number;
-  readonly verdict: Verdict;
-}
+const Scored = examResultValidator.mapFields(
+  Struct.pick(["points", "verdict"])
+);
+type Scored = typeof Scored.Type;
 
 /** An answer that waits for a person, which has earned nothing yet. */
 const WAITING: Scored = { points: 0, verdict: "pending" };
