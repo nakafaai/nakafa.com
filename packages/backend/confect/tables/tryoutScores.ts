@@ -24,6 +24,5 @@ export default Table.make(() =>
   })
 )
   .index("by_assessmentSnapshotId", ["assessmentSnapshotId"])
-  .index("by_scaleVersionId", ["scaleVersionId"])
   .index("by_tryoutAttemptId", ["tryoutAttemptId"])
   .index("by_userId_and_finalizedAt", ["userId", "finalizedAt"]);
