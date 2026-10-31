@@ -14,7 +14,7 @@ import {
   secondsLeft,
   takesAnswers,
 } from "@/components/exams/sitting/attempt";
-import { SittingBar } from "@/components/exams/sitting/bar";
+import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
 import { serverTime } from "@/components/exams/sitting/clock";
 import {
   isRetiredDevice,
@@ -48,11 +48,11 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
-import { PlayerViewSwitch } from "@/components/player/view";
 
 /**
- * The student's running attempt in the shared player: the school's header with the exam's name, the time
- * left, and the one primary action, then the paper with its navigator, its keys, and its view. A locked
+ * The student's running attempt in the shared player, full screen: the player's header with the way back,
+ * the exam's name, the time left, and the one primary action, then the paper with its navigator, its keys,
+ * and its view. A locked
  * attempt keeps the same header and navigator, and its paper reads only, with the lock's sentence above it.
  * The signals run while the attempt is active.
  */
@@ -93,12 +93,16 @@ export function StudentPlayer({
         attemptId={attempt.id}
         deviceId={deviceId}
         header={
-          <SittingBar examTitle={sitting.examTitle}>
-            <SittingTimer
-              clockOffset={clockOffset}
-              deadline={attempt.deadline}
-            />
-            <PlayerViewSwitch />
+          <PaperBar
+            back={<PaperBack />}
+            timer={
+              <SittingTimer
+                clockOffset={clockOffset}
+                deadline={attempt.deadline}
+              />
+            }
+            title={sitting.examTitle}
+          >
             <StudentFinish
               attempt={attempt}
               deviceId={deviceId}
@@ -106,7 +110,7 @@ export function StudentPlayer({
               sittingId={sittingId}
               slug={slug}
             />
-          </SittingBar>
+          </PaperBar>
         }
         locked={!takesAnswers(attempt.state)}
         mode={mode}
@@ -122,25 +126,28 @@ export function StudentPlayer({
 
   return (
     <PlayerProvider keys={[]} mode={mode}>
-      <SittingBar examTitle={sitting.examTitle}>
-        {isActive(attempt.state) ? (
-          <>
+      <PaperBar
+        back={<PaperBack />}
+        timer={
+          isActive(attempt.state) ? (
             <SittingTimer
               clockOffset={clockOffset}
               deadline={attempt.deadline}
             />
-            {retired ? null : (
-              <StudentFinish
-                attempt={attempt}
-                deviceId={deviceId}
-                paper={null}
-                sittingId={sittingId}
-                slug={slug}
-              />
-            )}
-          </>
+          ) : undefined
+        }
+        title={sitting.examTitle}
+      >
+        {isActive(attempt.state) && !retired ? (
+          <StudentFinish
+            attempt={attempt}
+            deviceId={deviceId}
+            paper={null}
+            sittingId={sittingId}
+            slug={slug}
+          />
         ) : null}
-      </SittingBar>
+      </PaperBar>
       <PlayerMain navigator={null}>
         {QueryResult.isFailure(paper)
           ? Option.match(sittingFailureMessage(paper.error), {

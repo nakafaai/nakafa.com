@@ -1835,7 +1835,6 @@
     "incorrect": "Incorrect",
     "reset": "Reset",
     "explanation": "Explanation",
-    "number-count": "Number {count}",
     "prompt": "Question",
     "reading": "Reading"
   },
@@ -1845,6 +1844,7 @@
     "controls": "Question controls",
     "previous-question": "Previous question",
     "next-question": "Next question",
+    "question": "Question {number}",
     "mode": "View",
     "mode-list": "List",
     "mode-single": "One question",

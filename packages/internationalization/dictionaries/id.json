@@ -1835,7 +1835,6 @@
     "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
-    "number-count": "Nomor {count}",
     "prompt": "Soal",
     "reading": "Bacaan"
   },
@@ -1845,6 +1844,7 @@
     "controls": "Kontrol soal",
     "previous-question": "Soal sebelumnya",
     "next-question": "Soal berikutnya",
+    "question": "Soal {number}",
     "mode": "Tampilan",
     "mode-list": "Daftar",
     "mode-single": "Satu soal",

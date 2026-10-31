@@ -17,11 +17,11 @@ const flagButton = cva(
  * Flags the current question to come back to it, or takes its flag off, when
  * the player shows one question at a time. The list flags each question on the
  * question itself (`PlayerQuestionFlag`), because the question at its reading
- * line is not always the one the learner reads. The button keeps one name and
- * one width, and says whether the question is flagged through its pressed
- * state. The question's flag changes at once, so a press never waits for the
- * server. In the list it keeps its place, hidden and inert, so the footer's
- * zones keep their widths and nothing moves when the view changes.
+ * line is not always the one the learner reads, so the list shows no flag here
+ * and the footer's centre holds the navigator opener alone, centred between
+ * previous and next. The button keeps one name and one width, and says whether
+ * the question is flagged through its pressed state. The question's flag
+ * changes at once, so a press never waits for the server.
  */
 export function PlayerFlag({
   locked,
@@ -40,14 +40,16 @@ export function PlayerFlag({
   const flagged = Option.exists(question, (candidate) => candidate.flagged);
   const single = usePlayer((state) => state.mode === "single");
 
+  if (!single) {
+    return null;
+  }
+
   return (
     <Button
-      aria-hidden={!single}
       aria-keyshortcuts="F"
       aria-pressed={flagged}
-      className={flagButton({ className: single ? undefined : "invisible" })}
+      className={flagButton()}
       disabled={locked || Option.isNone(question)}
-      inert={!single}
       onClick={() => Option.map(question, (candidate) => candidate.flag())}
       type="button"
       variant="outline"

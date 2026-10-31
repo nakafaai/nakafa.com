@@ -1835,7 +1835,6 @@
     "incorrect": "Falsch",
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
-    "number-count": "Nummer {count}",
     "prompt": "Aufgabe",
     "reading": "Lesetext"
   },
@@ -1845,6 +1844,7 @@
     "controls": "Aufgabensteuerung",
     "previous-question": "Vorherige Aufgabe",
     "next-question": "Nächste Aufgabe",
+    "question": "Frage {number}",
     "mode": "Ansicht",
     "mode-list": "Liste",
     "mode-single": "Eine Aufgabe",

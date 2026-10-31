@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { keptStorage } from "@/components/player/storage";
+import { ShellLocksContext } from "@/components/sidebar/locks";
 import {
   forgetPrepaintLock,
   PREPAINT_LOCK_ATTRIBUTE,
@@ -24,11 +25,6 @@ import {
   rememberPrepaintLock,
 } from "@/components/sidebar/prepaint";
 import { reportClientException } from "@/lib/analytics/client";
-
-/** Changes the count of visible pages that hold the nearest shell locked. */
-const ShellLocksContext = createContext<Dispatch<
-  SetStateAction<number>
-> | null>(null);
 
 /** Changes the count of visible page headers that title the nearest shell. */
 const ShellTitlesContext = createContext<Dispatch<

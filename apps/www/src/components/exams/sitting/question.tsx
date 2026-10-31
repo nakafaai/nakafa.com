@@ -11,7 +11,7 @@ import {
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import { useId, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslations } from "use-intl";
 import {
   keepResponse,
@@ -40,7 +40,13 @@ import {
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
-import { PlayerQuestion } from "@/components/player/question";
+import { readQuestionIds } from "@/components/player/ids";
+import {
+  PlayerQuestion,
+  PlayerQuestionAnswer,
+  PlayerQuestionHeader,
+  PlayerQuestionPrompt,
+} from "@/components/player/question";
 
 /**
  * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
@@ -63,8 +69,7 @@ export function SittingQuestion({
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const titleId = useId();
-  const articleId = useId();
+  const ids = readQuestionIds(question.number);
   const prompt = useQuery(exams.sittings.prompt, {
     deviceId,
     questionId: question.id,
@@ -152,8 +157,8 @@ export function SittingQuestion({
 
   return (
     <PlayerQuestion
-      id={articleId}
-      labelledBy={titleId}
+      id={ids.article}
+      labelledBy={ids.title}
       questionKey={question.id}
     >
       <PlayerQuestionFlag
@@ -162,11 +167,9 @@ export function SittingQuestion({
         onFlag={() => flagQuestion(question)}
         questionKey={question.id}
       />
-      <div className="grid gap-6">
-        <h2 className="font-medium" id={titleId}>
-          {t("question", { number: question.number })}
-        </h2>
-        <SittingPictures value={addresses}>
+      <PlayerQuestionHeader number={question.number} />
+      <SittingPictures value={addresses}>
+        <PlayerQuestionPrompt>
           {promptDocument === null && !QueryResult.isSuccess(prompt) ? (
             <PromptReserve />
           ) : null}
@@ -178,10 +181,12 @@ export function SittingQuestion({
               label={t("prompt-label")}
             />
           )}
+        </PlayerQuestionPrompt>
+        <PlayerQuestionAnswer>
           {Option.isSome(choice) ? (
             <SittingChoice
               choice={choice.value}
-              labelledBy={titleId}
+              labelledBy={ids.title}
               onChoose={onChoose}
               response={chosenOptions(question.response ?? NO_RESPONSE)}
             />
@@ -189,7 +194,7 @@ export function SittingQuestion({
           {Option.isSome(entry) ? (
             <SittingField
               entry={entry.value}
-              labelledBy={titleId}
+              labelledBy={ids.title}
               onKeep={(text) =>
                 keepResponse({
                   attemptId,
@@ -204,7 +209,7 @@ export function SittingQuestion({
           ) : null}
           {Option.isSome(pairing) ? (
             <SittingPairs
-              labelledBy={titleId}
+              labelledBy={ids.title}
               match={pairing.value}
               onPair={(pairs) => onChoose({ pairs })}
               pairs={madePairs(question.response ?? NO_RESPONSE)}
@@ -217,8 +222,8 @@ export function SittingQuestion({
               table={table.value}
             />
           ) : null}
-        </SittingPictures>
-      </div>
+        </PlayerQuestionAnswer>
+      </SittingPictures>
     </PlayerQuestion>
   );
 }

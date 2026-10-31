@@ -1,4 +1,6 @@
 import { Activity, type ReactNode } from "react";
+import { useTranslations } from "use-intl";
+import { readQuestionIds } from "@/components/player/ids";
 import { usePlayer } from "@/components/player/provider";
 
 /**
@@ -39,4 +41,52 @@ export function PlayerQuestion({
       </article>
     </Activity>
   );
+}
+
+/**
+ * The head of one question, the same wherever a question is answered or reviewed: its number in a circle
+ * at the start, which links to the question itself, and the question's actions at the end. The number
+ * names the question for a screen reader through its heading.
+ */
+export function PlayerQuestionHeader({
+  children,
+  number,
+}: {
+  /** The question's actions, at the end of the row. */
+  children?: ReactNode;
+  number: number;
+}) {
+  const t = useTranslations("Player");
+  const ids = readQuestionIds(number);
+
+  return (
+    <div className="@container flex items-center gap-4">
+      <a
+        className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
+        href={`#${ids.anchor}`}
+        id={ids.anchor}
+      >
+        <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+          <span className="font-mono text-xs tracking-tighter">{number}</span>
+          <h2 className="sr-only" id={ids.title}>
+            {t("question", { number })}
+          </h2>
+        </div>
+      </a>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The prompt of one question, under its head. The card holds every inset, so the document inside draws
+ * flush.
+ */
+export function PlayerQuestionPrompt({ children }: { children: ReactNode }) {
+  return <section className="my-6">{children}</section>;
+}
+
+/** The answer of one question, under its prompt: its options, or its fields. */
+export function PlayerQuestionAnswer({ children }: { children: ReactNode }) {
+  return <section className="my-8">{children}</section>;
 }

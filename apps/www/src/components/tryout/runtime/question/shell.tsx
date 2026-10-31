@@ -12,7 +12,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
+import { readQuestionIds } from "@/components/player/ids";
+import { PlayerQuestionHeader } from "@/components/player/question";
 
 interface TryoutQuestionShellProps {
   readonly children: ReactNode;
@@ -25,21 +26,21 @@ export function TryoutReviewQuestionShell({
   children,
   questionOrder,
 }: TryoutQuestionShellProps & { readonly action?: ReactNode }) {
-  const tTryouts = useTranslations("Tryouts");
-  const ids = getTryoutQuestionIds(questionOrder);
+  const tPlayer = useTranslations("Player");
+  const ids = readQuestionIds(questionOrder);
 
   return (
     <Collapsible>
       <article aria-labelledby={ids.title} id={ids.article}>
-        <TryoutQuestionHeader questionOrder={questionOrder}>
+        <PlayerQuestionHeader number={questionOrder}>
           <ButtonGroup
-            aria-label={tTryouts("number-count", { count: questionOrder })}
+            aria-label={tPlayer("question", { number: questionOrder })}
             className="shrink-0"
           >
             {action}
             <TryoutExplanationTrigger />
           </ButtonGroup>
-        </TryoutQuestionHeader>
+        </PlayerQuestionHeader>
         {children}
       </article>
     </Collapsible>
@@ -51,14 +52,14 @@ export function TryoutLockedQuestionShell({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
-  const ids = getTryoutQuestionIds(questionOrder);
+  const ids = readQuestionIds(questionOrder);
 
   return (
     <Collapsible defaultOpen disabled>
       <article aria-labelledby={ids.title} id={ids.article}>
-        <TryoutQuestionHeader questionOrder={questionOrder}>
+        <PlayerQuestionHeader number={questionOrder}>
           <TryoutExplanationTrigger />
-        </TryoutQuestionHeader>
+        </PlayerQuestionHeader>
         {children}
       </article>
     </Collapsible>
@@ -83,38 +84,6 @@ export function TryoutReviewQuestionExplanation({
         {children}
       </section>
     </CollapsiblePanel>
-  );
-}
-
-/** Composes the stable question anchor with an optional variant-owned action. */
-export function TryoutQuestionHeader({
-  children,
-  questionOrder,
-}: {
-  readonly children?: ReactNode;
-  readonly questionOrder: number;
-}) {
-  const tTryouts = useTranslations("Tryouts");
-  const ids = getTryoutQuestionIds(questionOrder);
-
-  return (
-    <div className="@container flex items-center gap-4">
-      <a
-        className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
-        href={`#${ids.anchor}`}
-        id={ids.anchor}
-      >
-        <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
-          <span className="font-mono text-xs tracking-tighter">
-            {questionOrder}
-          </span>
-          <h2 className="sr-only" id={ids.title}>
-            {tTryouts("number-count", { count: questionOrder })}
-          </h2>
-        </div>
-      </a>
-      {children}
-    </div>
   );
 }
 

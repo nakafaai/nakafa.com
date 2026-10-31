@@ -13,9 +13,10 @@ import { readNeighbor, readPosition } from "@/components/player/order";
 import { usePlayer } from "@/components/player/provider";
 
 /**
- * The controls under the questions in one row: previous at the start, the middle controls (the flag, and the
- * navigator opener below the large breakpoint) in the centre, and next at the end. The three zones
- * keep their places whatever the labels say, so nothing moves when next becomes review. It sticks to the
+ * The controls under the questions in one row: previous at the start, the middle controls (the flag of one
+ * question at a time, and the navigator opener below the large breakpoint) in the centre, and next at the
+ * end. The outer zones take equal widths, so the centre sits on the screen's middle by construction, and
+ * previous and next keep their places whatever the labels say, so nothing moves when next becomes review. It sticks to the
  * bottom of the screen, so a learner moves on without scrolling back. The list measures it through
  * `data-player-footer`, so the end of the list counts as reached once it clears the footer.
  */
