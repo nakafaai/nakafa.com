@@ -11,11 +11,11 @@ import {
   CheckoutOfferUnavailableWire,
   CheckoutSessionIoErrorWire,
   CheckoutUnavailable,
-  checkoutRequestInputValidator,
   InvalidCheckoutSuccessUrl,
   ProAlreadyHeldWire,
   proCheckoutRequestInputValidator,
   TopupRequiresPro,
+  topupCheckoutRequestInputValidator,
   XenditCheckoutErrorWire,
 } from "@repo/backend/confect/billing/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -54,7 +54,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicAction({
       name: "generateTopupCheckoutLink",
-      args: () => checkoutRequestInputValidator.fields,
+      args: () => topupCheckoutRequestInputValidator.fields,
       returns: () => sessionUrlValidator,
       error: () =>
         Schema.Union([
@@ -63,11 +63,13 @@ export default GroupSpec.make()
           InvalidCheckoutSuccessUrl,
           CheckoutSessionIoErrorWire,
           CheckoutUnavailable,
+          CheckoutOfferUnavailableWire,
           PolarCustomerErrorWire,
           PolarDuplicateEmailErrorWire,
           PolarCheckoutErrorWire,
           PolarUpdateErrorWire,
           TopupRequiresPro,
+          XenditCheckoutErrorWire,
         ]),
     }).middleware(Session)
   )

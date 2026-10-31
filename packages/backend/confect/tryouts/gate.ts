@@ -34,7 +34,10 @@ import { readVersion } from "@repo/backend/confect/tryouts/response/version";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
-import { loadSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
+import {
+  loadSectionAttempt,
+  startSectionAttempt,
+} from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, flow, Option, Schema } from "effect";
 
@@ -220,6 +223,26 @@ const loadSection = Effect.fn("tryouts.gate.loadSection")(function* (
   }));
 });
 
+/**
+ * The target of one section start: its attempt, then, only for its owner, the
+ * attempt itself. The section does not run yet, so the attempt's deadline bounds it
+ * and `startSectionAttempt` reads what the section's own rows say.
+ */
+const loadStarting = Effect.fn("tryouts.gate.loadStarting")(function* (
+  attemptId: Id<"tryoutAttempts">
+) {
+  const attempt = yield* loadAttempt(attemptId);
+  return Option.map(attempt, (loaded) => ({
+    attempt: attemptOf(loaded),
+    owner: loaded.userId,
+    section: Effect.succeedSome({
+      deadline: loaded.expiresAt,
+      live: Effect.succeed(loaded),
+      verify: Effect.void,
+    }),
+  }));
+});
+
 /** Ends one running section and scores it, the attempt too once every section ended. */
 const finishSection = Effect.fn("tryouts.gate.finishSection")(function* (
   live: Live,
@@ -323,6 +346,28 @@ export const tryoutGate = {
       flow(toTryoutFailure.answer, Effect.fail)
     ),
     Effect.catchDefect(flow(toTryoutResponseError, Effect.fail))
+  ),
+  /**
+   * Opens one section of the caller's attempt and starts its timer. Every way into
+   * a section passes here: the section's page, an entry that resumes an attempt,
+   * and the entry section of a new one.
+   */
+  startSection: Effect.fn("tryouts.gate.startSection")(
+    function* (owner: Id<"users">, target: SectionTarget) {
+      const { live, now } = yield* gate.admit(
+        rules.start,
+        owner,
+        Option.none(),
+        loadStarting(target.attemptId)
+      );
+      return yield* startSectionAttempt({
+        attempt: live,
+        now,
+        sectionKey: target.sectionKey,
+      });
+    },
+    Effect.catchTag("AttemptRefused", flow(toTryoutFailure.start, Effect.fail)),
+    Effect.catchDefect(flow(toTryoutRuntimeError, Effect.fail))
   ),
   /** Ends and scores the caller's running section. */
   finish: Effect.fn("tryouts.gate.finish")(
