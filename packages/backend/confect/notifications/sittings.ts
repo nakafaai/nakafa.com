@@ -1,5 +1,5 @@
 import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
   Scheduler,
@@ -51,7 +51,7 @@ export const scheduleSittingNotices = Effect.fn(
       )
   );
   return yield* Effect.forEach(runs, ({ at, notice }) =>
-    scheduler.runAt(at, refs.internal.notifications.sittings.run, {
+    scheduler.runAt(at, notificationsInternal.sittings.run, {
       cursor: null,
       notice,
       sittingId: sitting._id,

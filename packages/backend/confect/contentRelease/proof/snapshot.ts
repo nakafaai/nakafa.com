@@ -10,7 +10,7 @@ import {
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/verify";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { ReleaseRole } from "@repo/backend/confect/contentRelease/model";
@@ -35,7 +35,7 @@ const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
   function* (releaseId: string, family: ContentSnapshotKind) {
     const { runQuery } = yield* QueryRunner;
     const source = yield* runQuery(
-      refs.internal.contentRelease.snapshot.read.manifest,
+      contentReleaseInternal.snapshot.read.manifest,
       {
         family,
         releaseId,
@@ -69,7 +69,7 @@ function familyRows(releaseId: string, family: ContentSnapshotKind) {
   return Stream.paginate(-1, (afterBatchIndex) =>
     QueryRunner.pipe(
       Effect.flatMap(({ runQuery }) =>
-        runQuery(refs.internal.contentRelease.snapshot.read.rows, {
+        runQuery(contentReleaseInternal.snapshot.read.rows, {
           afterBatchIndex,
           family,
           releaseId,
@@ -101,12 +101,9 @@ const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
     if (baseId === null) {
       return null;
     }
-    const stored = yield* runQuery(
-      refs.internal.contentRelease.envelope.byRelease,
-      {
-        releaseId: baseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const stored = yield* runQuery(contentReleaseInternal.envelope.byRelease, {
+      releaseId: baseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     const base = yield* decodeReleaseJson(stored.releaseJson);
     if (base.manifestHash !== release.manifest.baseManifestHash) {
       return yield* releaseFail(

@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import type { compareInputValidator } from "@repo/backend/confect/contents/sections/compare.spec";
 import { embedBatch } from "@repo/backend/confect/contents/sections/embed";
@@ -31,7 +31,7 @@ const storedSections = Effect.fn("contents.sections.storedSections")(function* (
   const { runQuery } = yield* QueryRunner;
   return yield* Stream.runCollect(
     Stream.paginate<string | null, Stored>(null, (cursor) =>
-      runQuery(refs.internal.contents.sections.rows.page, {
+      runQuery(contentsInternal.sections.rows.page, {
         appLocale,
         cursor,
       }).pipe(

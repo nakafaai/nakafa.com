@@ -5,7 +5,7 @@ import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/dig
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -32,13 +32,10 @@ import { Effect, Schema } from "effect";
 const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {
     const { runQuery } = yield* QueryRunner;
-    const state = yield* runQuery(
-      refs.internal.contentRelease.proof.read.state,
-      {
-        manifestHash,
-        releaseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const state = yield* runQuery(contentReleaseInternal.proof.read.state, {
+      manifestHash,
+      releaseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
     const storedRelease = yield* decodeReleaseJson(state.releaseJson);
     const release = yield* verifySignedContentRelease(storedRelease).pipe(
       Effect.mapError(contractFailure)
@@ -68,7 +65,7 @@ const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
     let cursor = afterIndex;
     while (true) {
       const page = yield* runMutation(
-        refs.internal.contentRelease.verify.verifyItems,
+        contentReleaseInternal.verify.verifyItems,
         {
           afterIndex: cursor,
           releaseId,
@@ -89,7 +86,7 @@ const verifyRouteCatalog = Effect.fn("contentRelease.verifyRouteCatalog")(
     let cursor: null | string = null;
     while (true) {
       const page: RouteCatalogPage = yield* runQuery(
-        refs.internal.contentRelease.proof.routes.routes,
+        contentReleaseInternal.proof.routes.routes,
         {
           cursor,
           releaseId,
@@ -116,7 +113,7 @@ export const verifyArtifactBatchProgram = Effect.fn(
   const { runQuery } = yield* QueryRunner;
   const { renderer } = yield* loadProofIdentity(manifestHash, releaseId);
   const page = yield* runQuery(
-    refs.internal.contentRelease.proof.read.artifactBatch,
+    contentReleaseInternal.proof.read.artifactBatch,
     {
       batchIndex,
       releaseId,
@@ -225,7 +222,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
     const proofJson = yield* Schema.encodeEffect(JsonTextSchema)(proof).pipe(
       Effect.orDie
     );
-    yield* runMutation(refs.internal.contentRelease.proof.commit.commitProof, {
+    yield* runMutation(contentReleaseInternal.proof.commit.commitProof, {
       proofJson,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));
     return proof;

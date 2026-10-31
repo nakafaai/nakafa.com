@@ -1,5 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import examsPublic from "@repo/backend/confect/_generated/refs/exams";
 import type { SavedView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Step, StudentScript } from "@repo/backend/scripts/load/plan";
@@ -20,8 +20,8 @@ import {
   type Scope,
 } from "effect";
 
-const sittings = refs.public.exams.sittings;
-const { look } = refs.public.exams.screens;
+const sittings = examsPublic.sittings;
+const { look } = examsPublic.screens;
 
 /** A student whose entry the sitting refused, with the reason it gave. */
 class EntryRefused extends Schema.TaggedError<EntryRefused>()("EntryRefused", {

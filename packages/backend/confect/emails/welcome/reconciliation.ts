@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -38,8 +38,7 @@ const scheduleNextReconciliationPage = Effect.fn(
     const scheduler = yield* Scheduler;
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.emails.welcome.reconciliation
-        .reconcileWelcomeIntentLifecycle,
+      emailsInternal.welcome.reconciliation.reconcileWelcomeIntentLifecycle,
       {
         cursor: page.isDone ? null : page.continueCursor,
         phase: page.isDone ? "enqueued" : phase,

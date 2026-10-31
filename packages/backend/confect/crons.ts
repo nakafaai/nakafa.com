@@ -1,5 +1,20 @@
 import { CronJob, CronJobs } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
+import creditsInternal from "@repo/backend/confect/_generated/refs/credits.server";
+import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
+import guardiansInternal from "@repo/backend/confect/_generated/refs/guardians.server";
+import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
+import operatorsInternal from "@repo/backend/confect/_generated/refs/operators.server";
+import storageInternal from "@repo/backend/confect/_generated/refs/storage.server";
+import tenancyInternal from "@repo/backend/confect/_generated/refs/tenancy.server";
+import tryoutsInternal from "@repo/backend/confect/_generated/refs/tryouts.server";
 import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
@@ -9,7 +24,6 @@ import { PRUNE_INTERVAL } from "@repo/backend/confect/editor/prune";
 import { SWEEP_INTERVAL } from "@repo/backend/confect/nina/deadline";
 import { Cron, Duration } from "effect";
 
-const { internal } = refs;
 const BILLING_EVENT_CLEANUP_INTERVAL_HOURS = 24;
 const POLAR_RECONCILE_INTERVAL_HOURS = 24;
 const CONNECTOR_SYNC_INTERVAL_MINUTES = 10;
@@ -33,7 +47,7 @@ export default CronJobs.make()
     CronJob.make(
       "sync due connectors",
       Duration.minutes(CONNECTOR_SYNC_INTERVAL_MINUTES),
-      internal.connectors.sync.sweep,
+      connectorsInternal.sync.sweep,
       {}
     )
   )
@@ -41,7 +55,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep billing webhooks",
       Duration.minutes(BILLING_EVENT_SWEEP_INTERVAL_MINUTES),
-      internal.billing.events.sweep,
+      billingInternal.events.sweep,
       {}
     )
   )
@@ -49,7 +63,7 @@ export default CronJobs.make()
     CronJob.make(
       "reconcile Polar subscriptions",
       Duration.hours(POLAR_RECONCILE_INTERVAL_HOURS),
-      internal.billing.reconcile.run,
+      billingInternal.reconcile.run,
       { page: 1 }
     )
   )
@@ -57,7 +71,7 @@ export default CronJobs.make()
     CronJob.make(
       "delete expired billing webhooks",
       Duration.hours(BILLING_EVENT_CLEANUP_INTERVAL_HOURS),
-      internal.billing.events.cleanup,
+      billingInternal.events.cleanup,
       {}
     )
   )
@@ -65,7 +79,7 @@ export default CronJobs.make()
     CronJob.make(
       "reclaim unused Nina files",
       Duration.hours(24),
-      internal.storage.sweep,
+      storageInternal.sweep,
       {}
     )
   )
@@ -73,7 +87,7 @@ export default CronJobs.make()
     /** Deletes the situations Nina remembered whose end date has passed. */ CronJob.make(
       "expire ended Nina memories",
       Duration.hours(24),
-      internal.nina.memory.expire,
+      ninaInternal.memory.expire,
       {}
     )
   )
@@ -81,7 +95,7 @@ export default CronJobs.make()
     /** Settles Nina turns that stayed open past their deadline, so no chat stays busy. */ CronJob.make(
       "sweep stuck Nina turns",
       SWEEP_INTERVAL,
-      internal.nina.lifecycle.sweep,
+      ninaInternal.lifecycle.sweep,
       {}
     )
   )
@@ -89,7 +103,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep account deletion recovery",
       Duration.minutes(ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES),
-      internal.auth.deletion.recovery.sweepAccountDeletionRecovery,
+      authInternal.deletion.recovery.sweepAccountDeletionRecovery,
       {}
     )
   )
@@ -97,7 +111,7 @@ export default CronJobs.make()
     /** Removes expired opaque attempt artifacts after the retry window closes. */ CronJob.make(
       "sweep account deletion retention",
       Duration.hours(ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS),
-      internal.auth.deletion.sweepAccountDeletionRetention,
+      authInternal.deletion.sweepAccountDeletionRetention,
       {}
     )
   )
@@ -114,7 +128,7 @@ export default CronJobs.make()
         months: [],
         weekdays: [],
       }),
-      internal.credits.mutations.syncCreditResetPeriod,
+      creditsInternal.mutations.syncCreditResetPeriod,
       {
         plan: "free",
       }
@@ -133,7 +147,7 @@ export default CronJobs.make()
         months: [],
         weekdays: [],
       }),
-      internal.credits.mutations.syncCreditResetPeriod,
+      creditsInternal.mutations.syncCreditResetPeriod,
       {
         plan: "pro",
       }
@@ -146,7 +160,7 @@ export default CronJobs.make()
     CronJob.make(
       "reconcile credit reset periods",
       Duration.minutes(CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES),
-      internal.credits.mutations.syncAllCreditResetPeriods,
+      creditsInternal.mutations.syncAllCreditResetPeriods,
       {}
     )
   )
@@ -154,7 +168,7 @@ export default CronJobs.make()
     /** Recovers queued views whose immediate partition schedule was missed. */ CronJob.make(
       "schedule content analytics partitions",
       Duration.hours(CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS),
-      internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
+      contentsInternal.mutations.analytics.scheduleContentAnalyticsPartitions,
       {}
     )
   )
@@ -162,7 +176,7 @@ export default CronJobs.make()
     /** Compacts unreachable content release history in persisted bounded pages. */ CronJob.make(
       "compact content release history",
       Duration.minutes(CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES),
-      internal.contentRelease.compact.run,
+      contentReleaseInternal.compact.run,
       {}
     )
   )
@@ -173,7 +187,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep retained email delivery data",
       Duration.hours(EMAIL_RETENTION_SWEEP_INTERVAL_HOURS),
-      internal.emails.retention.cleanupRetainedEmailData,
+      emailsInternal.retention.cleanupRetainedEmailData,
       {}
     )
   )
@@ -187,7 +201,7 @@ export default CronJobs.make()
         months: [],
         weekdays: [1, 2, 3, 4, 5, 6],
       }),
-      internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
+      contentsInternal.mutations.popularity.scheduleLearningPopularityExpiries,
       {}
     )
   )
@@ -201,8 +215,7 @@ export default CronJobs.make()
         months: [],
         weekdays: [0],
       }),
-      internal.contents.mutations.popularity
-        .scheduleLearningPopularityRefreshes,
+      contentsInternal.mutations.popularity.scheduleLearningPopularityRefreshes,
       {}
     )
   )
@@ -225,7 +238,7 @@ export default CronJobs.make()
         months: [],
         weekdays: [],
       }),
-      internal.contents.mutations.popularity.pruneLearningPopularity,
+      contentsInternal.mutations.popularity.pruneLearningPopularity,
       {}
     )
   )
@@ -236,7 +249,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep try-out expiry",
       Duration.minutes(TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES),
-      internal.tryouts.mutations.expiry.sweep,
+      tryoutsInternal.mutations.expiry.sweep,
       {}
     )
   )
@@ -248,7 +261,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep invite expiry",
       Duration.hours(INVITE_EXPIRY_SWEEP_INTERVAL_HOURS),
-      internal.tenancy.expiry.sweep,
+      tenancyInternal.expiry.sweep,
       {}
     )
   )
@@ -260,7 +273,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep visit expiry",
       Duration.hours(VISIT_EXPIRY_SWEEP_INTERVAL_HOURS),
-      internal.operators.expiry.sweep,
+      operatorsInternal.expiry.sweep,
       {}
     )
   )
@@ -272,7 +285,7 @@ export default CronJobs.make()
     CronJob.make(
       "prune covered editor steps",
       PRUNE_INTERVAL,
-      internal.editor.prune.sweep,
+      editorInternal.prune.sweep,
       { cursor: null }
     )
   )
@@ -284,7 +297,7 @@ export default CronJobs.make()
     CronJob.make(
       "sweep inbox runs",
       Duration.minutes(INBOX_SWEEP_INTERVAL_MINUTES),
-      internal.notifications.consume.sweep,
+      notificationsInternal.consume.sweep,
       {}
     )
   )
@@ -293,7 +306,7 @@ export default CronJobs.make()
     CronJob.make(
       "delete expired guardian codes",
       Duration.hours(GUARDIAN_CODE_SWEEP_INTERVAL_HOURS),
-      internal.guardians.codes.sweep,
+      guardiansInternal.codes.sweep,
       {}
     )
   )
@@ -302,7 +315,7 @@ export default CronJobs.make()
     CronJob.make(
       "delete expired integration tokens",
       Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
-      internal.integrations.tokens.sweep,
+      integrationsInternal.tokens.sweep,
       {}
     )
   )
@@ -311,7 +324,7 @@ export default CronJobs.make()
     CronJob.make(
       "delete expired device authorizations",
       Duration.hours(INTEGRATION_TOKEN_SWEEP_INTERVAL_HOURS),
-      internal.integrations.devices.sweep,
+      integrationsInternal.devices.sweep,
       {}
     )
   );

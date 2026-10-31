@@ -6,7 +6,7 @@ import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
 } from "@repo/backend/client/quran/reference";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleasePublic from "@repo/backend/confect/_generated/refs/contentRelease";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
@@ -22,8 +22,8 @@ import {
 } from "@repo/contents/agent/schema/quran/input";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 
-const quranCatalogReference = refs.public.contentRelease.quran.surahs;
-const quranPassage = refs.public.contentRelease.quran.passage;
+const quranCatalogReference = contentReleasePublic.quran.surahs;
+const quranPassage = contentReleasePublic.quran.passage;
 
 /** Returns one bounded signed Quran reference with semantic source provenance. */
 export const getNakafaQuranReference = Effect.fn(

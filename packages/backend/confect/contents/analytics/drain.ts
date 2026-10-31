@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -123,8 +123,7 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
       yield* scheduler
         .runAfter(
           Duration.millis(0),
-          refs.internal.contents.mutations.analytics
-            .processContentAnalyticsPartition,
+          contentsInternal.mutations.analytics.processContentAnalyticsPartition,
           args
         )
         .pipe(Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail)));

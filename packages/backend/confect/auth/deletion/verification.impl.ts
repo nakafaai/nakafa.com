@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx as ActionCtxService,
@@ -84,8 +84,7 @@ const drainDeletedUserVerifications = FunctionImpl.make(
             )
           ),
         loadCursor: runQuery(
-          refs.internal.auth.deletion.verification
-            .loadDeletedUserVerificationCursor,
+          authInternal.deletion.verification.loadDeletedUserVerificationCursor,
           {
             userId: args.userId,
           }
@@ -95,7 +94,7 @@ const drainDeletedUserVerifications = FunctionImpl.make(
         ),
         saveCursor: (cursor) =>
           runMutation(
-            refs.internal.auth.deletion.verification
+            authInternal.deletion.verification
               .saveDeletedUserVerificationCursor,
             {
               cursor,

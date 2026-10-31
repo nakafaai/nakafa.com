@@ -1,6 +1,6 @@
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import analyticsInternal from "@repo/backend/confect/_generated/refs/analytics.server";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
 import {
   ProductAnalyticsCaptureError,
@@ -52,7 +52,7 @@ export const captureProductEvent = Effect.fn(
     yield* scheduler
       .runAfter(
         Duration.millis(0),
-        refs.internal.analytics.capture.deliverProductEvent,
+        analyticsInternal.capture.deliverProductEvent,
         {
           disableGeoip: true,
           distinctId,

@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -133,7 +133,7 @@ const applyPassPaid = Effect.fn("billing.xendit.session.passPaid")(function* (
     .pipe(Effect.orDie);
   yield* (yield* Scheduler).runAt(
     DateTime.makeUnsafe(Math.max(now, end - PASS_REMINDER_LEAD_MS)),
-    refs.internal.billing.reminder.delivery.deliver,
+    billingInternal.reminder.delivery.deliver,
     { grantId, locale: checkout.locale }
   );
   yield* scheduleProjection(account.owner);
@@ -196,7 +196,7 @@ const applyFirstMonthPaid = Effect.fn("billing.xendit.session.firstMonthPaid")(
     }
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.billing.xendit.renewal.open,
+      billingInternal.xendit.renewal.open,
       { locale: checkout.locale, subscriptionId }
     );
   }

@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   MutationRunner,
@@ -20,20 +20,17 @@ const sendWelcomeEmail = FunctionImpl.make(
     const { runQuery } = yield* QueryRunner;
     const { runMutation } = yield* MutationRunner;
     return yield* deliverWelcomeEmailProgram(
-      runQuery(refs.internal.emails.welcome.internal.readIntentInput, {
+      runQuery(emailsInternal.welcome.internal.readIntentInput, {
         intentId,
       }).pipe(
         Effect.mapError(toWelcomeIntentError),
         Effect.catchDefect(flow(toWelcomeIntentError, Effect.fail))
       ),
       (message) =>
-        runMutation(
-          refs.internal.emails.welcome.internal.enqueueRenderedWelcome,
-          {
-            intentId,
-            ...message,
-          }
-        ).pipe(
+        runMutation(emailsInternal.welcome.internal.enqueueRenderedWelcome, {
+          intentId,
+          ...message,
+        }).pipe(
           Effect.mapError(toWelcomeIntentError),
           Effect.catchDefect(flow(toWelcomeIntentError, Effect.fail))
         )

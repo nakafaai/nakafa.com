@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -159,8 +159,7 @@ export const schedulePopularityPartition = Effect.fn(
   const scheduler = yield* Scheduler;
   yield* scheduler.runAfter(
     Duration.zero,
-    refs.internal.contents.mutations.analytics
-      .scheduleContentAnalyticsPartition,
+    contentsInternal.mutations.analytics.scheduleContentAnalyticsPartition,
     {
       partition,
     }

@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
 import { Config, Duration, Effect, Option, Schema } from "effect";
 
@@ -25,7 +25,7 @@ export const startSectionBuild = Effect.fn("contents.sections.start")(
     const scheduler = yield* Scheduler;
     yield* scheduler.runAfter(
       Duration.millis(0),
-      refs.internal.contents.sections.build.run,
+      contentsInternal.sections.build.run,
       { releaseId }
     );
   }

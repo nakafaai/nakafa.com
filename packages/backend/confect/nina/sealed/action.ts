@@ -1,6 +1,6 @@
 import { vMessageDoc } from "@convex-dev/agent/validators";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import type { ThreadRead } from "@repo/backend/confect/nina/sealed/thread";
 import { parse } from "convex-helpers/validators";
@@ -22,7 +22,7 @@ export type ThreadPage = Effect.Success<
 export const readThreadFromAction = Effect.fn("nina.sealed.threadFromAction")(
   function* ({ owner, ...read }: ThreadRead) {
     const { runQuery: query } = yield* QueryRunner;
-    const result = yield* query(refs.internal.nina.sealed.thread, {
+    const result = yield* query(ninaInternal.sealed.thread, {
       owner,
       ...read,
     });
@@ -41,7 +41,7 @@ export const readThreadFromAction = Effect.fn("nina.sealed.threadFromAction")(
 export const readMessageFromAction = Effect.fn("nina.sealed.messageFromAction")(
   function* (owner: LearnerId, messageId: string) {
     const { runQuery: query } = yield* QueryRunner;
-    const row = yield* query(refs.internal.nina.sealed.message, {
+    const row = yield* query(ninaInternal.sealed.message, {
       messageId,
       owner,
     });

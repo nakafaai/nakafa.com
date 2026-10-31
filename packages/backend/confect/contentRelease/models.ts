@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -98,7 +98,7 @@ export const resumeModelBuild = Effect.fn("contentRelease.resumeModelBuild")(
         ? undefined
         : yield* scheduler.runAfter(
             Duration.millis(0),
-            refs.internal.contentRelease.models.resume,
+            contentReleaseInternal.models.resume,
             {
               generation,
               releaseId,
@@ -151,7 +151,7 @@ export const restartModelBuild = Effect.fn("contentRelease.restartModelBuild")(
     const syncGeneration = args.expectedGeneration + 1;
     const syncJobId = yield* scheduler.runAfter(
       Duration.millis(0),
-      refs.internal.contentRelease.models.resume,
+      contentReleaseInternal.models.resume,
       {
         generation: syncGeneration,
         releaseId: args.releaseId,

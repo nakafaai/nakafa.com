@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   MutationRunner,
   Scheduler,
@@ -52,7 +52,7 @@ const applyListed = Effect.fn("billing.reconcile.applyListed")(function* (
   const { runMutation } = yield* MutationRunner;
   const json = encodeJsonText(subscription);
   const first: PolarSubscriptionOutcome = yield* runMutation(
-    refs.internal.billing.reconcile.applySubscription,
+    billingInternal.reconcile.applySubscription,
     { subscription: json }
   ).pipe(Effect.orDie);
   if (typeof first === "string") {
@@ -74,7 +74,7 @@ const applyListed = Effect.fn("billing.reconcile.applyListed")(function* (
     return "unresolved" as const;
   }
   const second: PolarSubscriptionOutcome = yield* runMutation(
-    refs.internal.billing.reconcile.applySubscription,
+    billingInternal.reconcile.applySubscription,
     { subscription: json }
   ).pipe(Effect.orDie);
   return typeof second === "string" ? second : ("unresolved" as const);
@@ -114,7 +114,7 @@ export const reconcilePolarSubscriptions = Effect.fn("billing.reconcile.run")(
     if (page !== null) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.billing.reconcile.run,
+        billingInternal.reconcile.run,
         { page }
       );
     }
