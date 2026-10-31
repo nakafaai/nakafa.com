@@ -128,6 +128,7 @@ export const SentenceKeySchema = Schema.Literals([
   "SchoolSettings.cohort-edit-description",
   "SchoolSettings.invite-dialog-description",
   "SchoolSettings.invite-footer",
+  "SchoolSettings.login-rename-description",
   "SchoolSettings.members-empty-description",
   "SchoolSettings.period-edit-description",
   "SchoolSettings.person-rename-description",

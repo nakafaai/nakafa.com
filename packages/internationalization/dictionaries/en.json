@@ -889,6 +889,9 @@
       "roster": {
         "set": "Student record updated",
         "imported": "Students imported from Dapodik"
+      },
+      "login": {
+        "renamed": "Login name changed"
       }
     },
     "role-description": {
@@ -936,6 +939,9 @@
     "person-rename": "Rename",
     "person-rename-description": "The new name shows wherever the school lists this person.",
     "person-rename-save": "Save",
+    "login-rename": "Change login name",
+    "login-rename-description": "The student signs in with the new name and the same password.",
+    "login-rename-save": "Save",
     "invite-action": "Invite",
     "invites-footer": "Invite a person who has no account yet.",
     "invite-dialog-title": "Invite a person",

@@ -85,7 +85,7 @@ test("an owner adds a teacher by email and sees the invite in the members list, 
   await context.close();
 });
 
-test("an owner renames a teacher from the members and a student from the logins, and both names stay after a reload", async ({
+test("an owner renames a teacher from the members and a student from the logins, changes the student's login name, and every change stays after a reload", async ({
   browser,
   baseURL,
 }) => {
@@ -170,5 +170,28 @@ test("an owner renames a teacher from the members and a student from the logins,
   await expect(
     page.getByRole("row").filter({ hasText: `siswa-${run}` })
   ).toContainText("Murid Benar", { timeout: readinessTimeoutMilliseconds });
+
+  // Change login name starts from the login, and the row shows the new one at once and after a reload.
+  const loginMenu = page
+    .getByRole("row")
+    .filter({ hasText: "Murid Benar" })
+    .getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(loginMenu);
+  await loginMenu.click();
+  await page.getByRole("menuitem", { name: "Change login name" }).click();
+  const changeLogin = page.getByRole("dialog");
+  await expect(changeLogin.getByLabel("Login name")).toHaveValue(
+    `siswa-${run}`
+  );
+  await changeLogin.getByLabel("Login name").fill(`Murid-${run}`);
+  await changeLogin.getByRole("button", { name: "Save" }).click();
+  await expect(changeLogin).toBeHidden();
+  await expect(
+    page.getByRole("cell", { exact: true, name: `murid-${run}` })
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("cell", { exact: true, name: `murid-${run}` })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });

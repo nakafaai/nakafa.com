@@ -889,6 +889,9 @@
       "roster": {
         "set": "Schülerdaten aktualisiert",
         "imported": "Schüler aus Dapodik importiert"
+      },
+      "login": {
+        "renamed": "Anmeldename geändert"
       }
     },
     "role-description": {
@@ -936,6 +939,9 @@
     "person-rename": "Umbenennen",
     "person-rename-description": "Der neue Name erscheint überall, wo die Schule diese Person führt.",
     "person-rename-save": "Speichern",
+    "login-rename": "Anmeldenamen ändern",
+    "login-rename-description": "Die Person meldet sich mit dem neuen Namen und demselben Passwort an.",
+    "login-rename-save": "Speichern",
     "invite-action": "Einladen",
     "invites-footer": "Eine Person ohne Konto einladen.",
     "invite-dialog-title": "Person einladen",

@@ -7028,6 +7028,12 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; personId: Id<"tenantPeople">; slug: string },
+        string
+      >;
     };
   };
   integrations: {
@@ -7452,6 +7458,7 @@ export declare const api: {
               | { type: "person.released" }
               | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
+              | { type: "login.renamed" }
               | { cohort: Id<"tenantCohorts">; type: "person.placed" }
               | {
                   from: Id<"tenantCohorts">;
