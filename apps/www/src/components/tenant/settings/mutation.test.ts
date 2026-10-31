@@ -352,7 +352,7 @@ describe("components/tenant/settings/mutation", () => {
         deliveryId: delivery("absent").id,
       });
 
-      const shown = (args: typeof log) =>
+      const shown = (args: typeof log | typeof next) =>
         Option.getOrThrow(
           local.store.getQuery(integrations.webhooks.deliveries, args)
         ).page;

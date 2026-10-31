@@ -533,6 +533,7 @@
     "webhook-add": "Webhook erstellen",
     "webhook-add-description": "Ein Webhook meldet einem anderen System, wenn sich in dieser Schule etwas ändert.",
     "webhook-create": "Erstellen",
+    "webhook-save": "Speichern",
     "webhook-edit": "Bearbeiten",
     "webhook-edit-description": "Ändere, wohin er sendet und was er sendet.",
     "webhook-url": "Empfängeradresse",

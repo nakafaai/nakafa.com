@@ -57,7 +57,7 @@ type Change = Webhook["changes"][number];
 const decodeUrl = Schema.decodeOption(ReceiverUrl);
 
 /** Decodes a chosen list of changes, when it holds one. */
-const decodeChanges = Schema.decodeOption(WebhookChanges);
+const decodeChanges = Schema.decodeUnknownOption(WebhookChanges);
 
 /**
  * The fields of a webhook: where it posts, and the changes it carries, from those its
@@ -332,7 +332,7 @@ export function SchoolWebhookEditDialog({
             onClick={submit}
             type="button"
           >
-            {common("save")}
+            {t("webhook-save")}
           </Button>
         </>
       }

@@ -533,6 +533,7 @@
     "webhook-add": "Buat webhook",
     "webhook-add-description": "Webhook memberi tahu sistem lain saat ada perubahan di sekolah ini.",
     "webhook-create": "Buat",
+    "webhook-save": "Simpan",
     "webhook-edit": "Ubah",
     "webhook-edit-description": "Ubah alamat tujuan dan apa yang dikirim.",
     "webhook-url": "Alamat penerima",
