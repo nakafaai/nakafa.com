@@ -118,6 +118,15 @@ const student = FunctionImpl.make(
       kind: "unit",
       unitId: unit.value._id,
     }).pipe(Effect.orDie);
+    // The learner is over the age limit, so the consent gate leaves an acceptance run's forum open.
+    yield* (yield* DatabaseWriter)
+      .table("rosterEntries")
+      .insert({
+        personId: learner.value._id,
+        tenantId: tenant.value._id,
+        underAgeLimit: false,
+      })
+      .pipe(Effect.orDie);
     return null;
   })
 );

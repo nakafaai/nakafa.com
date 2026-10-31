@@ -1,11 +1,12 @@
 import type { GenericId } from "@confect/core";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ConsentRequired } from "@repo/backend/confect/guardians/errors";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   countsUnderAge,
   rosterEntryOf,
 } from "@repo/backend/confect/roster/entry";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /**
  * The consent gate of ADR 0034 (K2). A student under the age limit, or with no age
@@ -31,5 +32,13 @@ export const requireConsent = Effect.fn("guardians.gate.require")(function* (
     .pipe(Effect.orDie);
   if (Option.isNone(verified)) {
     return yield* new ConsentRequired();
+  }
+});
+
+/** The gate for whoever acts: a student needs consent, and a teacher or staff member does not. */
+export const requireOwnConsent = Effect.fn("guardians.gate.own")(function* () {
+  const { grants, person } = yield* Member;
+  if (Arr.some(grants, (grant) => grant.role.key === "student")) {
+    yield* requireConsent(person._id);
   }
 });

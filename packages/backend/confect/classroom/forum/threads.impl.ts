@@ -31,6 +31,7 @@ import {
   messageViews,
   schoolKeys,
 } from "@repo/backend/confect/classroom/forum/views";
+import { requireOwnConsent } from "@repo/backend/confect/guardians/gate";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -103,6 +104,7 @@ const open = FunctionImpl.make(
           .pipe(Effect.orDie)
       );
     }
+    yield* requireOwnConsent();
     if (!(yield* opensDiscussions(row, principal))) {
       return yield* new DiscussionsClosed();
     }
@@ -271,6 +273,7 @@ const reply = FunctionImpl.make(
       }
       return yield* messageView(sent.value);
     }
+    yield* requireOwnConsent();
     const checked = yield* checkMentions(row, mentions);
     const fields = { channelId: thread.channelId, classId: row._id, clientKey };
     const createdAt = yield* Clock.currentTimeMillis;

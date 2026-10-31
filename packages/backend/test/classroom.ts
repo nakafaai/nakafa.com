@@ -1,6 +1,9 @@
 import type { GenericId } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
@@ -163,6 +166,25 @@ export const writeClass = Effect.fn("test.classroom.writeClass")(function* (
   );
 });
 
+/** Marks the fixture's student over the age limit on the roster, so the consent gate lets them post (ADR 0034). */
+export const ofAge = (fixture: Fixture) =>
+  fixture.run(
+    Effect.gen(function* () {
+      const personId = fixture.people.student.personId;
+      const entry = yield* (yield* DatabaseReader)
+        .table("rosterEntries")
+        .index("by_personId", (query) => query.eq("personId", personId))
+        .first();
+      if (Option.isNone(entry)) {
+        yield* (yield* DatabaseWriter).table("rosterEntries").insert({
+          personId,
+          tenantId: fixture.tenants.nf,
+          underAgeLimit: false,
+        });
+      }
+    }).pipe(Effect.orDie)
+  );
+
 /** The fixture of a forum test: a school with its people and the key that seals its forum, as provisioning writes it. */
 export const keyedFixture = Effect.tap(tenancyFixture, (fixture) =>
   fixture.run(createTenantKey(fixture.tenants.nf))
@@ -188,6 +210,7 @@ export const forumClass = Effect.fn("test.classroom.forumClass")(function* (
       personId: fixture.people.student.personId,
       slug: nf,
     });
+    yield* ofAge(fixture);
   }
   const listed = yield* fixture
     .as("teacher")

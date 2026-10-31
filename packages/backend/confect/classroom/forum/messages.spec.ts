@@ -12,6 +12,7 @@ import {
   MessageText,
   MessageView,
 } from "@repo/backend/confect/classroom/forum/message";
+import { ConsentRequired } from "@repo/backend/confect/guardians/errors";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -52,7 +53,8 @@ export default GroupSpec.make()
         text: MessageText,
       }),
       returns: () => MessageView,
-      error: () => Schema.Union([AccessDenied, MentionRefused]),
+      error: () =>
+        Schema.Union([AccessDenied, ConsentRequired, MentionRefused]),
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(
