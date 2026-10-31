@@ -4056,6 +4056,7 @@ export declare const api: {
               | "truefalse"
               | "cause"
               | "short"
+              | "numeric"
               | "essay"
               | "match"
               | "table";
