@@ -3051,7 +3051,7 @@
     "offer-title": "Choose how to pay",
     "offer-description": "The monthly plan renews by itself, and a pass is paid once.",
     "offer-monthly": "Monthly",
-    "offer-monthly-method": "Renews monthly by e-wallet or card.",
+    "offer-monthly-method": "Renews monthly by card.",
     "offer-pass": "{months, number}-month pass",
     "offer-pass-method": "Paid once by QRIS, transfer or e-wallet.",
     "offer-continue": "Continue"

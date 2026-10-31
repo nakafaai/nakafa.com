@@ -1,5 +1,5 @@
 import { sha256Hex } from "@repo/utilities/digest";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Predicate, Schema } from "effect";
 
 /** The callback token of the request is not the deployment's token, so the request is not Xendit's. */
 export class XenditTokenRejected extends Schema.TaggedError<XenditTokenRejected>()(
@@ -7,14 +7,18 @@ export class XenditTokenRejected extends Schema.TaggedError<XenditTokenRejected>
   {}
 ) {}
 
-/** The envelope every Xendit webhook shares. The processor decodes `data` per event. */
+/**
+ * The envelope every Xendit webhook shares. The processor decodes `data` per
+ * event. A recurring plan names its payment session as null when it was opened on
+ * a saved token, as every Nakafa plan is.
+ */
 export const XenditWebhookEnvelope = Schema.Struct({
   event: Schema.String,
   business_id: Schema.String,
   created: Schema.DateTimeUtcFromString,
   data: Schema.Struct({
     id: Schema.optionalKey(Schema.String),
-    payment_session_id: Schema.optionalKey(Schema.String),
+    payment_session_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
     status: Schema.optionalKey(Schema.String),
     updated: Schema.optionalKey(Schema.String),
   }),
@@ -33,7 +37,10 @@ export type XenditWebhookEnvelope = typeof XenditWebhookEnvelope.Type;
 export const xenditDeliveryKey = Effect.fn("billing.xendit.deliveryKey")(
   function* (envelope: XenditWebhookEnvelope, body: string) {
     const { data } = envelope;
-    if (data.payment_session_id !== undefined && data.status !== undefined) {
+    if (
+      Predicate.isNotNullish(data.payment_session_id) &&
+      data.status !== undefined
+    ) {
       return Arr.join(
         [envelope.event, data.payment_session_id, data.status],
         ":"

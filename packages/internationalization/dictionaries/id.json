@@ -3051,7 +3051,7 @@
     "offer-title": "Pilih cara bayar",
     "offer-description": "Paket bulanan diperpanjang otomatis, dan pass dibayar sekali.",
     "offer-monthly": "Bulanan",
-    "offer-monthly-method": "Ditagih tiap bulan ke e-wallet atau kartu.",
+    "offer-monthly-method": "Ditagih tiap bulan ke kartu.",
     "offer-pass": "Pass {months} bulan",
     "offer-pass-method": "Sekali bayar via QRIS, transfer, e-wallet.",
     "offer-continue": "Lanjut"
