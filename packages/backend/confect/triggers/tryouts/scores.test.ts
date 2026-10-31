@@ -9,7 +9,6 @@ import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scor
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Struct } from "effect";
@@ -34,54 +33,49 @@ async function insertScoreGraph(ctx: MutationCtx) {
     name: "Try-out Score Trigger",
     plan: "free",
   });
-  const setIdentity = "tryout:set:indonesia:snbt:2027:id:set-1";
-  const tryoutSnapshotId = `sha256:${"1".repeat(64)}`;
-  const runtime = await ensureTestTryoutRuntimeBundle(
-    ctx,
-    tryoutSnapshotId,
-    "release-test-score-trigger"
-  );
+  const setIdentity = "indonesia/snbt/2027/set-1";
+  const assessmentSnapshotId = `sha256:${"1".repeat(64)}`;
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
+    appLocale: "id",
+    assessmentSnapshotId,
     attemptNumber: 2,
     completedAt: NOW,
     completedSectionKeys: [],
+    countryKey: "indonesia",
     countsForCompetition: false,
     endReason: "submitted",
+    examKey: "snbt",
     expiresAt: NOW + 86_400_000,
     lastActivityAt: NOW,
+    paper: { hash: `sha256:${"2".repeat(64)}`, id: "test-paper" },
+    profile: { hash: `sha256:${"3".repeat(64)}`, id: "test-profile" },
+    releaseId: "release-test-score-trigger",
     scoreStatus: "official",
-    scoringStrategy: "raw",
-    sectionSnapshots: [],
+    scoring: { kind: "raw" },
+    sections: [],
+    setIdentity,
+    setKey: "set-1",
+    setPublicPath: "try-out/indonesia/snbt/2027/set-1",
     startedAt: NOW - 60_000,
     status: "completed",
     totalCorrect: 8,
     totalQuestions: 10,
-    userId,
-    countryKey: "indonesia",
-    examKey: "snbt",
-    appLocale: "id",
-    setIdentity,
-    setKey: "set-1",
-    setPublicPath: "try-out/indonesia/snbt/2027/set-1",
-    snapshotReleaseId: "release-test-score-trigger",
     trackKey: "2027",
-    tryoutBundleHash: runtime.bundleHash,
-    tryoutBundleId: runtime.bundleId,
-    tryoutSnapshotId,
+    userId,
   });
   const scoreId = await ctx.db.insert("tryoutScores", {
+    assessmentSnapshotId,
     finalizedAt: NOW,
     publishedScore: 80,
     rawScore: 80,
     scoreStatus: "official",
     scoringStrategy: "raw",
+    setIdentity,
     totalCorrect: 8,
     totalQuestions: 10,
     tryoutAttemptId: attemptId,
-    tryoutSnapshotId,
-    setIdentity,
     userId,
   });
   const score = await ctx.db.get("tryoutScores", scoreId);

@@ -129,10 +129,7 @@ export default GroupSpec.make()
           Schema.Null,
           Schema.Struct({
             exam: publicTryoutExamValidator,
-            entrySection: Schema.Union([
-              publicTryoutSectionValidator,
-              Schema.Null,
-            ]),
+            entrySection: publicTryoutSectionValidator,
             set: publicTryoutSetValidator,
             sections: Schema.mutable(
               Schema.Array(publicTryoutSectionValidator)

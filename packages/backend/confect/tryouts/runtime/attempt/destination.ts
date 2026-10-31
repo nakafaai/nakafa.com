@@ -1,17 +1,17 @@
-import {
-  type AppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import {
-  readTryoutCatalogRowByIdentity,
-  readTryoutCatalogRowByPath,
-} from "@repo/backend/content/tryout/row";
+  readCatalogRow,
+  readCatalogSet,
+} from "@repo/backend/confect/tryouts/catalog/rows";
+import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
 import { Array as Arr, Effect, Option } from "effect";
 
-/** Finds a localized route inside the attempt's own retained snapshot. */
+/**
+ * Finds a localized route of an attempt inside the snapshot it started from: its set's, or one of its
+ * sections'. The attempt's own locale answers from its frozen routes; another locale reads the set's
+ * catalog rows in that locale, and a set the snapshot does not publish in it has no route there.
+ */
 export const readAttemptDestination = Effect.fn(
   "tryouts.attempt.readDestination"
 )(function* (
@@ -22,32 +22,40 @@ export const readAttemptDestination = Effect.fn(
   if (locale === attempt.appLocale) {
     return sectionKey === undefined
       ? attempt.setPublicPath
-      : (Option.getOrUndefined(
-          Arr.findFirst(
-            attempt.sectionSnapshots,
-            (section) => section.sectionKey === sectionKey
-          )
-        )?.publicPath ?? null);
+      : publicPathOf(attempt.sections, sectionKey);
   }
-  const identity = {
-    appLocale: AppLocaleSchema.make(locale),
-    countryKey: attempt.countryKey,
-    examKey: attempt.examKey,
-    setKey: attempt.setKey,
-    trackKey: attempt.trackKey,
-  };
-  const row = yield* readTryoutCatalogRowByIdentity(
-    attempt.tryoutSnapshotId,
-    tryoutCatalogNodeIdentity(
-      sectionKey === undefined
-        ? { ...identity, kind: "set" }
-        : { ...identity, kind: "section", sectionKey }
-    )
-  ).pipe(Effect.provide(tryoutLayer));
-  return row?.publicPath ?? null;
+  const found = yield* readCatalogSet(
+    attempt.assessmentSnapshotId,
+    attempt.setIdentity,
+    locale
+  );
+  if (Option.isNone(found)) {
+    return null;
+  }
+  const { sections, set } = found.value;
+  return sectionKey === undefined
+    ? set.publicPath
+    : publicPathOf(sections, sectionKey);
 });
 
-/** Matches either the frozen route or its verified localized sibling to one section. */
+/** The route of the section with a key, none when no section has it or the section shows no page. */
+function publicPathOf(
+  sections: readonly Pick<TryoutSection, "publicPath" | "sectionKey">[],
+  sectionKey: string
+) {
+  return Option.getOrNull(
+    Option.flatMap(
+      Arr.findFirst(sections, (section) => section.sectionKey === sectionKey),
+      (section) => Option.fromUndefinedOr(section.publicPath)
+    )
+  );
+}
+
+/**
+ * Matches a public path to one frozen section of an attempt: the frozen route itself, or the route of
+ * the same section of the same set in another locale of the attempt's snapshot. Any other path, or a
+ * path the snapshot does not hold, matches none.
+ */
 export const readAttemptSectionForPath = Effect.fn(
   "tryouts.attempt.readSectionForPath"
 )(function* (
@@ -55,34 +63,33 @@ export const readAttemptSectionForPath = Effect.fn(
   locale: AppLocaleCode,
   publicPath: string
 ) {
-  const frozen = Option.getOrUndefined(
-    Arr.findFirst(
-      attempt.sectionSnapshots,
-      (section) => section.publicPath === publicPath
-    )
+  const frozen = Arr.findFirst(
+    attempt.sections,
+    (section) => section.publicPath === publicPath
   );
-  if (frozen) {
-    return frozen;
+  if (Option.isSome(frozen)) {
+    return frozen.value;
   }
-  const row = yield* readTryoutCatalogRowByPath(attempt.tryoutSnapshotId, {
-    appLocale: locale,
-    publicPath,
-  }).pipe(Effect.provide(tryoutLayer));
+  const row = yield* readCatalogRow(
+    attempt.assessmentSnapshotId,
+    locale,
+    publicPath
+  );
   if (
-    row?.kind !== "section" ||
-    row.countryKey !== attempt.countryKey ||
-    row.examKey !== attempt.examKey ||
-    row.trackKey !== attempt.trackKey ||
-    row.setKey !== attempt.setKey
+    Option.isNone(row) ||
+    row.value.kind !== "section" ||
+    row.value.countryKey !== attempt.countryKey ||
+    row.value.examKey !== attempt.examKey ||
+    row.value.trackKey !== attempt.trackKey ||
+    row.value.setKey !== attempt.setKey
   ) {
     return null;
   }
-  return (
-    Option.getOrUndefined(
-      Arr.findFirst(
-        attempt.sectionSnapshots,
-        (section) => section.sectionKey === row.sectionKey
-      )
-    ) ?? null
+  const { sectionKey } = row.value;
+  return Option.getOrNull(
+    Arr.findFirst(
+      attempt.sections,
+      (section) => section.sectionKey === sectionKey
+    )
   );
 });

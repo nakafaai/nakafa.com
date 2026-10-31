@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { AttemptRefused } from "@repo/backend/confect/assessment/gate/refusal";
-import type { ResponseRejected } from "@repo/backend/confect/response/model";
 import { endings, refusals, rejections } from "@repo/backend/test/gate/cases";
 import {
   type Caller,
@@ -57,7 +56,8 @@ export function describeGate<
   fixture: {
     readonly seed: Effect.Effect<W>;
     readonly refusal: (write: Write, reason: Reason) => Failure;
-    readonly rejection: (reason: ResponseRejected["reason"]) => Failure;
+    /** The failure a selection that does not fit its question declares. */
+    readonly rejection: Failure;
     /** The failure an answer whose version is not newer than the question's latest write declares. */
     readonly stale: Failure;
     /** The failure a store failure masks to, cause kept, for each write. */
@@ -188,25 +188,25 @@ export function describeGate<
         })
     );
     it.effect(
-      "stores an incomplete answer without counting it as answered",
+      "counts an answer missing some of its parts as answered, never correct",
       () =>
         Effect.gen(function* () {
           const world = yield* fixture.seed;
           yield* world.answer("learner", "running", "incomplete", 1);
           expect(yield* world.observe).toEqual(
-            running(0, 0, Option.some("incorrect"), Option.some(1))
+            running(1, 0, Option.some("incorrect"), Option.some(1))
           );
         })
     );
     it.effect.each(rejections)(
-      "rejects a selection that does not belong ($pick)",
-      ({ pick, reason }) =>
+      "rejects a selection that does not fit ($pick)",
+      ({ pick }) =>
         Effect.gen(function* () {
           const world = yield* fixture.seed;
           yield* refused(
             world,
             world.answer("learner", "running", pick, 1),
-            fixture.rejection(reason)
+            fixture.rejection
           );
         })
     );

@@ -28,6 +28,7 @@ import type {
   HighlightProps,
   ListItemProps,
   ListProps,
+  OrderedListProps,
   PreProps,
   StrongProps,
   SubProps,
@@ -117,7 +118,7 @@ export function MdxHeading6(props: HeadingProps) {
 }
 
 /** Renders an ordered MDX list with readable vertical rhythm. */
-export function MdxOrderedList(props: ListProps) {
+export function MdxOrderedList(props: OrderedListProps) {
   return <ol className={listVariants({ kind: "ordered" })} {...props} />;
 }
 

@@ -7,12 +7,12 @@ import { tryoutSubmitFailureOf } from "@/components/tryout/runtime/response/stat
 
 /**
  * The try-out picks that the browser keeps until the server holds them, by placement, under one entry: a
- * placement belongs to one attempt, so its id names its pick alone. A cleared answer keeps no selection. A
+ * placement belongs to one attempt, so its id names its pick alone. A cleared answer keeps no response. A
  * pick leaves once the server confirms it or refuses it for good, so the entry holds only what a closed page
  * left unsent.
  */
 export const keptPicks = keptAnswers(
-  saveTryoutResponseArgsValidator.fields.selection
+  saveTryoutResponseArgsValidator.fields.response
 )("nakafa-tryout-kept");
 
 /**

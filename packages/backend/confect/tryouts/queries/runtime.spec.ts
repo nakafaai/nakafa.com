@@ -1,16 +1,13 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
-import {
-  TryoutResponseIntegrityError,
-  TryoutResponseSelectionError,
-} from "@repo/backend/confect/tryouts/response/spec";
+import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
-import { TryoutSelectorReadErrorWire } from "@repo/backend/confect/tryouts/runtime/ownership";
 import { tryoutRuntimeStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
 import { TryoutScoreReadError } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
@@ -31,8 +28,7 @@ export default GroupSpec.make()
           TryoutRuntimeErrorWire,
           TryoutScoreReadError,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
-          TryoutSelectorReadErrorWire,
+          ReleaseError,
         ]),
     }).middleware(Session)
   )
@@ -52,8 +48,7 @@ export default GroupSpec.make()
           TryoutRuntimeErrorWire,
           TryoutScoreReadError,
           TryoutResponseIntegrityError,
-          TryoutResponseSelectionError,
-          TryoutSelectorReadErrorWire,
+          ReleaseError,
         ]),
     }).middleware(Session)
   );

@@ -14,14 +14,17 @@ import { Array as Arr, Effect, Schema } from "effect";
 describe("contentRelease/assessment/facts", () => {
   it.effect("indexes every catalog row by its locale, route and set", () =>
     Effect.gen(function* () {
-      const { catalog, setIdentity } = yield* makeAssessmentSnapshot();
+      const { catalog, sets } = yield* makeAssessmentSnapshot();
+      const [set] = sets;
+      assert(set);
+      const setIdentity = set.identity;
       const english = Arr.filter(catalog, (row) => row.appLocale === "en");
       expect(
         Arr.map(english, (row) => assessmentRowFacts({ kind: "catalog", row }))
       ).toEqual([
         expect.objectContaining({
           appLocale: "en",
-          assetId: "asset:country",
+          assetId: "asset:en:tryout:country",
           kind: "catalog",
           order: 1,
           publicPath: "try-out/indonesia-en",
