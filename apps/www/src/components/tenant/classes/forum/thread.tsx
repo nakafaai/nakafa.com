@@ -94,6 +94,7 @@ export function ForumDiscussion({
             <ChannelScopeContext
               value={{
                 canManage,
+                canPost,
                 channelId: thread.channelId,
                 classId,
                 discussion: thread.discussion.number,

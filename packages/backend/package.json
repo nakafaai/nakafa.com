@@ -18,7 +18,6 @@
     "generate-schema": "JITI_FS_CACHE=false auth generate --config components/betterAuth/cli.config.ts --yes && mv schema.ts components/betterAuth/schema.ts && bunx --no-install --cwd ../.. ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
     "judgment:measure": "bun scripts/judgment/main.ts",
-    "knowledge:compare": "bun scripts/knowledge/main.ts",
     "load": "bun scripts/load/main.ts",
     "nina:gate": "bun scripts/nina/main.ts",
     "setup": "bun run codegen && convex dev --once",

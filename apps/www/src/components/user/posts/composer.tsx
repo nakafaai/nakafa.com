@@ -100,7 +100,8 @@ export function PostComposer({
 }
 
 /**
- * The composer before the client arrives: the same fields, disabled, with nothing
+ * The composer before the client arrives: the same fields, which take typing into
+ * the draft while only the post button waits, with nothing
  * to send. The server renders it, so the owner's first HTML keeps the composer.
  */
 export function PostComposerFrame({ profile }: { profile: PublicProfile }) {
@@ -142,7 +143,6 @@ function PostComposerFields() {
       <InputGroupTextarea
         aria-label={t("placeholder")}
         className="min-h-10 min-w-0 flex-1 px-0 py-2"
-        disabled={disabled}
         name="text"
         onChange={(event) => setText(event.target.value)}
         placeholder={t("placeholder")}

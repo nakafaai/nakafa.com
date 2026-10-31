@@ -88,19 +88,4 @@ export default GroupSpec.make()
     })
       .middleware(Session)
       .middleware(Atomic)
-  )
-  .addFunction(
-    FunctionSpec.publicMutation({
-      name: "syncUserInfoForChat",
-      args: () => ({}),
-      returns: () =>
-        Schema.Struct({
-          role: Schema.NullOr(userRoleValidator),
-          credits: Schema.Finite,
-          userId: IdSchema("users"),
-        }),
-      error: () => Schema.Union([AuthFailure, CreditStateError]),
-    })
-      .middleware(Session)
-      .middleware(Atomic)
   );

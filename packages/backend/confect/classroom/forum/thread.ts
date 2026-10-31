@@ -10,7 +10,7 @@ import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
 
 /** The most characters the title of a discussion may have. */
-const TITLE_MAX_LENGTH = 120;
+export const TITLE_MAX_LENGTH = 120;
 
 /** The title of a discussion as a member writes it: one trimmed line of 1 to 120 characters. */
 export const DiscussionTitle = Schema.String.check(
@@ -48,6 +48,12 @@ export const ThreadView = Schema.Struct({
   discussion: DiscussionView,
   id: Id("classroomThreads"),
   opening: MessageView,
+});
+
+/** One discussion as a class's list of threads shows it, with the channel it stands in. */
+export const ThreadRow = Schema.Struct({
+  channelId: Id("classroomChannels"),
+  discussion: DiscussionView,
 });
 
 /** The sealed field of a discussion's title, bound to the row that names it (ADR 0030). */

@@ -313,7 +313,7 @@ export const seedAttempt = (
     deviceId: string | null;
     person: GenericId.GenericId<"tenantPeople">;
     sittingId: GenericId.GenericId<"examSittings">;
-    state: "inProgress" | "locked" | "closing";
+    state: "inProgress" | "locked" | "closing" | "submitted";
   }
 ) =>
   fixture.run(

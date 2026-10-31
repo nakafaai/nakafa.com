@@ -8,10 +8,13 @@ import { localizeInternalHref } from "@repo/internationalization/src/href";
 import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { Effect } from "effect";
-import { useTransition } from "react";
+import { useEffect, useEffectEvent, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ProOfferDialog } from "@/components/billing/offers";
-import { usePricingButtonVariant } from "@/components/marketing/about/pricing/button";
+import {
+  usePricingButtonVariant,
+  usePricingPress,
+} from "@/components/marketing/about/pricing/button";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,
@@ -51,6 +54,7 @@ function BillingAction() {
   const isIdentityPending = useViewer((state) => state.isPending);
   const billing = useBillingNavigation();
   const [isAuthPending, startAuthTransition] = useTransition();
+  const { hold, isHeld, release } = usePricingPress();
 
   const overview = useQuery(
     billingRefs.queries.overview,
@@ -125,18 +129,29 @@ function BillingAction() {
   };
   const isPending = billing.isPending || isAuthPending;
   const isWaiting = isIdentityPending || !billingReady;
+  // The button rests on its own icon while the page reads the learner's plan. A press in that
+  // moment turns the icon into the loader and is answered once the read arrives.
+  const answerPress = useEffectEvent(() => {
+    release();
+    handleBilling();
+  });
+  useEffect(() => {
+    if (isHeld && !isWaiting) {
+      answerPress();
+    }
+  }, [isHeld, isWaiting]);
 
   return (
     <>
       <Button
         className="w-full"
-        disabled={isPending || isWaiting || !isActiveLocale(locale)}
-        onClick={handleBilling}
+        disabled={isPending || !isActiveLocale(locale)}
+        onClick={isWaiting ? hold : handleBilling}
         onFocus={warmBilling}
         onPointerEnter={warmBilling}
         variant={variant}
       >
-        <Spinner icon={Diamond02Icon} isLoading={isPending || isWaiting} />
+        <Spinner icon={Diamond02Icon} isLoading={isPending || isHeld} />
         {t("pro-cta")}
       </Button>
       <ProOfferDialog
