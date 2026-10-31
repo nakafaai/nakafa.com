@@ -70,6 +70,16 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await expect(row).toContainText("Pending");
   await saved(changes, readdressedBefore);
 
+  // The parent's name is corrected the same way, and the row shows it at once.
+  await row.getByRole("button", { name: "More actions" }).click();
+  await settings.getByRole("menuitem", { name: "Rename parent" }).click();
+  const naming = settings.getByRole("dialog");
+  await naming.getByRole("textbox", { name: "Name" }).fill("Ibu Uji Baru");
+  const renamedBefore = changes.sent;
+  await naming.getByRole("button", { name: "Save" }).click();
+  await expect(row).toContainText("Ibu Uji Baru");
+  await saved(changes, renamedBefore);
+
   const parent = await browser.newContext();
   const home = await parent.newPage();
   await home.goto(address("/parents"));

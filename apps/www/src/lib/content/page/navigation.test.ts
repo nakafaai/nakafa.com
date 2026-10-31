@@ -31,6 +31,7 @@ function makeGermanPage({
   title,
 }: {
   pageKey:
+    | "data-processing-agreement"
     | "developers"
     | "imprint"
     | "privacy-policy"
@@ -57,6 +58,11 @@ function makeGermanPage({
 }
 
 const germanPages = [
+  makeGermanPage({
+    pageKey: "data-processing-agreement",
+    publicPath: "data-processing-agreement",
+    title: "Auftragsverarbeitungsvertrag",
+  }),
   makeGermanPage({
     pageKey: "developers",
     publicPath: "developers",
@@ -110,12 +116,18 @@ describe("signed Page navigation", () => {
         const navigation = yield* readPageNavigation("de");
 
         expect(navigation).toEqual({
+          dataProcessingPath: "data-processing-agreement",
           developerItem: {
             publicPath: "developers",
             pageKey: "developers",
             title: "Entwicklerressourcen",
           },
           legalItems: [
+            {
+              publicPath: "data-processing-agreement",
+              pageKey: "data-processing-agreement",
+              title: "Auftragsverarbeitungsvertrag",
+            },
             {
               publicPath: "imprint",
               pageKey: "imprint",

@@ -9,6 +9,12 @@ import {
   AssetTypeRefused,
   MAX_ASSET_READS,
 } from "@repo/backend/confect/exams/asset";
+import {
+  AudioSizeRefused,
+  AudioType,
+  AudioTypeRefused,
+  PlayableMedia,
+} from "@repo/backend/confect/exams/media";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -67,6 +73,39 @@ export default GroupSpec.make()
     }).middleware(Session)
   )
   .addFunction(
+    FunctionSpec.publicAction({
+      name: "registerAudio",
+      args: () => ({
+        examId: Id("exams"),
+        slug: TenantSlug,
+        storageId: Id("_storage"),
+      }),
+      returns: () => Schema.Struct({ id: Id("examAudio") }),
+      error: () =>
+        Schema.Union([
+          AuthFailure,
+          AccessDenied,
+          AudioSizeRefused,
+          AudioTypeRefused,
+        ]),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "media",
+      args: () => ({
+        examId: Id("exams"),
+        questionId: Id("examQuestions"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Array(PlayableMedia),
+      error: () => AccessDenied,
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(ExamAccess, { action: "exam.view", arg: "examId" })
+  )
+  .addFunction(
     FunctionSpec.publicQuery({
       name: "urls",
       args: () => ({
@@ -96,6 +135,19 @@ export default GroupSpec.make()
         width: Schema.Int.check(Schema.isGreaterThan(0)),
       }),
       returns: () => Schema.Struct({ id: Id("examAssets") }),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "commitAudio",
+      args: () => ({
+        byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
+        contentType: AudioType,
+        examId: Id("exams"),
+        storageId: Id("_storage"),
+        userId: Id("users"),
+      }),
+      returns: () => Schema.Struct({ id: Id("examAudio") }),
     })
   )
   .addFunction(

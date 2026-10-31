@@ -92,7 +92,7 @@ export const answeredQuestion = (
 });
 
 /** The query that reads the exam of a mutation, which every exam mutation names. */
-const examQuery = (args: ExamQuery): ExamQuery => ({
+export const examQuery = (args: ExamQuery): ExamQuery => ({
   examId: args.examId,
   slug: args.slug,
 });
@@ -101,7 +101,7 @@ const examQuery = (args: ExamQuery): ExamQuery => ({
  * Applies a change to the exam the editor reads. A store that does not hold the exam
  * is left as it is, so the server's answer is the only one that can change it.
  */
-const changeExam = (
+export const changeExam = (
   localStore: LocalStore.OptimisticLocalStore,
   query: ExamQuery,
   change: (view: ExamView) => ExamView

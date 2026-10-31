@@ -14,6 +14,7 @@ const { hide, send } = refs.public.classroom.forum.messages;
 
 /** The general channel of every class, as the list shows it. */
 const general = {
+  archived: false,
   id: expect.any(String),
   kind: "general",
   last: null,

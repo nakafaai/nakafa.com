@@ -231,6 +231,9 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
   const listed = PaginatedQueryResult.isFailure(channels)
     ? []
     : channels.results;
+  const open = Option.flatMap(channelId, (id) =>
+    Arr.findFirst(listed, (channel) => channel.id === id)
+  );
   const path = classPath(
     view,
     {
@@ -243,15 +246,10 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
       slug,
       tasks: t("tabs-tasks"),
     },
-    Option.map(
-      Option.flatMap(channelId, (id) =>
-        Arr.findFirst(listed, (channel) => channel.id === id)
-      ),
-      (channel) => ({
-        id: channel.id,
-        label: channelLabel(channel, t("general-channel")),
-      })
-    ),
+    Option.map(open, (channel) => ({
+      id: channel.id,
+      label: channelLabel(channel, t("general-channel")),
+    })),
     QueryResult.isSuccess(task)
       ? Option.some(task.value.title)
       : Option.orElse(folder.name, () =>
@@ -268,7 +266,11 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
     <ClassHeaderProvider items={path} tab={view._tag} title={klass.name}>
       {/* The class fills the screen: the header and the tabs keep their height, and the body takes the rest. */}
       <div className="flex h-svh min-h-0 flex-col">
-        <ClassBody found={found} klass={klass} />
+        <ClassBody
+          archived={Option.exists(open, (channel) => channel.archived)}
+          found={found}
+          klass={klass}
+        />
       </div>
     </ClassHeaderProvider>
   );
@@ -283,16 +285,19 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
  * and its panes between its header and its body.
  */
 function ClassBody({
+  archived,
   found,
   klass,
 }: {
+  /** Whether the channel on the page is archived, so it takes nothing new. */
+  archived: boolean;
   found: Option.Option<Ref.Returns<typeof classroom.forum.threads.get>>;
   klass: Resolved;
 }) {
   const view = useClassView();
   const { slug } = useClassScope();
   const canManage = Arr.contains(klass.can, "forum.manage");
-  const canPost = Arr.contains(klass.can, "forum.post");
+  const canPost = Arr.contains(klass.can, "forum.post") && !archived;
   // A subject teacher, the one who posts announcements, may mention everyone (ADR 0025).
   const everyone = Arr.contains(klass.can, "post.publish");
 

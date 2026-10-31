@@ -19,6 +19,7 @@ const PageNavigationItemSchema = Schema.Struct({
 type PageNavigationItem = typeof PageNavigationItemSchema.Type;
 
 const PageNavigationSchema = Schema.Struct({
+  dataProcessingPath: Schema.String,
   developerItem: PageNavigationItemSchema,
   legalItems: Schema.Array(PageNavigationItemSchema),
   privacyPolicyPath: Schema.String,
@@ -41,6 +42,7 @@ export class PageNavigationMissingError extends Schema.TaggedError<PageNavigatio
   }
 ) {}
 
+const dataProcessingKey = PageKeySchema.make("data-processing-agreement");
 const developerKey = PageKeySchema.make("developers");
 const imprintKey = PageKeySchema.make("imprint");
 const privacyPolicyKey = PageKeySchema.make("privacy-policy");
@@ -76,12 +78,14 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
       })
     );
     const [
+      dataProcessingItem,
       developerItem,
       imprintItem,
       privacyPolicyItem,
       securityPolicyItem,
       termsOfServiceItem,
     ] = yield* Effect.all([
+      readRequiredPageItem(localeItems, dataProcessingKey, locale),
       readRequiredPageItem(localeItems, developerKey, locale),
       readRequiredPageItem(localeItems, imprintKey, locale),
       readRequiredPageItem(localeItems, privacyPolicyKey, locale),
@@ -89,8 +93,10 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
       readRequiredPageItem(localeItems, termsOfServiceKey, locale),
     ]);
     return {
+      dataProcessingPath: dataProcessingItem.publicPath,
       developerItem,
       legalItems: [
+        dataProcessingItem,
         imprintItem,
         privacyPolicyItem,
         securityPolicyItem,

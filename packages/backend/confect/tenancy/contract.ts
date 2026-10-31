@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
 /** The label of one signed document version, such as `2026-10` or `1.0`. */
-const DocumentVersion = Schema.String.check(
+export const DocumentVersion = Schema.String.check(
   Schema.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$/u)
 );
 
@@ -13,6 +13,12 @@ export const ContractModule = Schema.Literals([
   "grades",
   "reports",
 ]);
+
+/**
+ * The current version of the data processing agreement, the one a school accepts
+ * when it opens itself. It is the version label its page at Aksara publishes.
+ */
+export const DPA_VERSION = "2026-10";
 
 /**
  * What a school signed with Nakafa when it was opened, as the journal records
