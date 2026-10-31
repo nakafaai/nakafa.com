@@ -270,6 +270,45 @@ const verifySchoolsFirstFrame = Effect.fn("NakafaE2E.verifySchoolsFirstFrame")(
   }
 );
 
+/**
+ * A signed-in screen renders only in the browser, so its first HTML holds no page. Until the scripts
+ * arrive the empty stage draws its loader, and it goes with the first element React draws.
+ */
+test("a signed-in screen shows a loader until its scripts arrive", async ({
+  baseURL,
+  page,
+}) => {
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      const origin = yield* Effect.fromNullishOr(baseURL);
+      yield* seedAnalyticsConsent(page, "denied");
+      yield* signInLearner(page.context(), origin);
+      yield* Effect.promise(async () => {
+        const held = MutableList.make<Route>();
+        await page.route(SCRIPTS, (route) => {
+          MutableList.append(held, route);
+        });
+        await page.goto("/en/notifications", {
+          waitUntil: "domcontentloaded",
+        });
+        const stage = page.locator('[data-slot="drawer-stage"]');
+        const loaderContent = () =>
+          stage.evaluate(
+            (element) => getComputedStyle(element, "::after").content
+          );
+        await expect.poll(loaderContent).not.toBe("none");
+        for (const route of MutableList.toArray(held)) {
+          await route.continue();
+        }
+        await page.unroute(SCRIPTS);
+        await expect
+          .poll(loaderContent, { timeout: readinessTimeoutMilliseconds })
+          .toBe("none");
+      });
+    })
+  );
+});
+
 test.describe("the account menu's schools", () => {
   test("stand in the menu's first frame on a phone", async ({
     baseURL,
