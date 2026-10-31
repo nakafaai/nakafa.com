@@ -17075,12 +17075,7 @@ export declare const internal: {
           digest: string;
           key: string;
           period: string;
-          rows: Array<{
-            cohortName?: string;
-            name: string;
-            nisn: string;
-            underAgeLimit: boolean;
-          }>;
+          rows: Array<{ cohortName?: string; name: string; nisn: string }>;
         },
         | {
             outcome: "applied";
