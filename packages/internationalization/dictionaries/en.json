@@ -1076,9 +1076,6 @@
         "renamed": "Login name changed"
       },
       "insight": {
-        "dpia": {
-          "recorded": "Impact assessment recorded"
-        },
         "narrative": {
           "shared": "Narrative shared",
           "withdrawn": "Narrative taken back"
@@ -1259,13 +1256,7 @@
     "locale-description": "Where this school is, and the currency of its plan.",
     "locale-country": "Country",
     "locale-currency": "Currency",
-    "locale-footer": "Every change is recorded in the audit trail.",
-    "dpia-title": "Impact assessment",
-    "dpia-off": "None on record, so Insight is off.",
-    "dpia-on": "Version {version}, reviewed by {reviewer}, on {date}.",
-    "dpia-version": "Version",
-    "dpia-reviewer": "Reviewer",
-    "dpia-record": "Record"
+    "locale-footer": "Every change is recorded in the audit trail."
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -3572,16 +3563,14 @@
     "chance": "Chance of KKTP {kktp}",
     "chance-note": "This chance does not change a grade, and only teachers see it. It comes from the points above and is an initial estimate.",
     "empty": "Nothing to show yet",
-    "empty-description": "A question counts once it names a competency and its results are released.",
-    "off": "Insight is off",
-    "off-description": "It turns on when the school records its impact assessment in Settings.",
+    "empty-description": "Each released exam shows here.",
     "narrative-title": "Narrative for {student}",
     "narrative-description": "Your words about this student. Guardians read it only when you share it.",
     "narrative-save": "Save",
     "narrative-share": "Share with guardians",
     "narrative-withdraw": "Take back",
     "tags": "Competencies",
-    "tags-description": "Name the competency of each question. A question with none adds nothing to Insight.",
+    "tags-description": "Name the competency of each question. A question with none counts for its exam.",
     "exam": "Exam",
     "question": "Question {number}"
   }

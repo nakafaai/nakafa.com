@@ -293,11 +293,6 @@ describe("guardians/family narratives", () => {
           personId: fixture.people.student.personId,
           slug: nf,
         });
-      yield* fixture.as("admin").mutation(refs.public.insight.dpia.record, {
-        reviewer: "Bu Ratna",
-        slug: nf,
-        version: "2026-1",
-      });
       const names = {
         classId: made.id,
         personId: fixture.people.student.personId,

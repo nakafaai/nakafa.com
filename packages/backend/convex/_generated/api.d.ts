@@ -7426,20 +7426,6 @@ export declare const api: {
     };
   };
   insight: {
-    dpia: {
-      get: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        { recordedAt: number; reviewer: string; version: string } | null
-      >;
-      record: FunctionReference<
-        "mutation",
-        "public",
-        { reviewer: string; slug: string; version: string },
-        null
-      >;
-    };
     narratives: {
       share: FunctionReference<
         "mutation",
@@ -7631,7 +7617,6 @@ export declare const api: {
             | "guardian.list"
             | "insight.teach"
             | "insight.view"
-            | "insight.dpia"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -7762,7 +7747,6 @@ export declare const api: {
               | "guardian.list"
               | "insight.teach"
               | "insight.view"
-              | "insight.dpia"
               | "roster.manage"
               | "roster.view"
               | "roster.import"
@@ -7897,7 +7881,6 @@ export declare const api: {
             | "guardian.list"
             | "insight.teach"
             | "insight.view"
-            | "insight.dpia"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -8008,7 +7991,6 @@ export declare const api: {
             | "guardian.list"
             | "insight.teach"
             | "insight.view"
-            | "insight.dpia"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -8251,7 +8233,6 @@ export declare const api: {
               | "guardian.list"
               | "insight.teach"
               | "insight.view"
-              | "insight.dpia"
               | "roster.manage"
               | "roster.view"
               | "roster.import"
@@ -8657,7 +8638,6 @@ export declare const api: {
                   number: string;
                   type: "billing.invoice.paid";
                 }
-              | { type: "insight.dpia.recorded"; version: string }
               | { type: "unit.created" }
               | {
                   contentLanguage: "en" | "id" | "de";

@@ -82,7 +82,6 @@ export type GraduationsDoc = Document.Document<typeof schemaDefinition, "graduat
 export type GuardianCodesDoc = Document.Document<typeof schemaDefinition, "guardianCodes">;
 export type GuardianConsentsDoc = Document.Document<typeof schemaDefinition, "guardianConsents">;
 export type GuardianLinksDoc = Document.Document<typeof schemaDefinition, "guardianLinks">;
-export type InsightDpiasDoc = Document.Document<typeof schemaDefinition, "insightDpias">;
 export type InsightMasteryDoc = Document.Document<typeof schemaDefinition, "insightMastery">;
 export type InsightNarrativesDoc = Document.Document<typeof schemaDefinition, "insightNarratives">;
 export type InsightTagsDoc = Document.Document<typeof schemaDefinition, "insightTags">;
@@ -238,7 +237,6 @@ export interface Docs {
   guardianCodes: GuardianCodesDoc;
   guardianConsents: GuardianConsentsDoc;
   guardianLinks: GuardianLinksDoc;
-  insightDpias: InsightDpiasDoc;
   insightMastery: InsightMasteryDoc;
   insightNarratives: InsightNarrativesDoc;
   insightTags: InsightTagsDoc;

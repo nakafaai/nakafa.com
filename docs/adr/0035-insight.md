@@ -1,21 +1,20 @@
-# ADR 0035: Insight Predicts For Teachers Only, And Switches On Per School After A DPIA
+# ADR 0035: Insight Predicts For Teachers Only
 
 ## Status
 
 Accepted on 18 October 2026, by the orchestrator under the owner's standing
 instruction to decide, verify, and record. The owner's decisions K12, K14, K25,
-and K6 govern it, and counsel reviews the data protection impact assessment (K20)
-before the first school. Insight waits for the assessment engine switch (ADR 0031,
-wave B) and for the school grades of ADR 0033. The Implementation Status table at
-the end says which parts are live.
+and K6 govern it. The Implementation Status table at the end says which parts are
+live.
 
-Amended on 31 October 2026, by the orchestrator's instruction to build Insight and the
-owner's standing instruction to decide and record:
+Amended on 31 October 2026 by the owner's order that nothing waits on a third party:
 
-- **The competency key.** No Aksara item carries one yet, so a teacher names the competency
-  of each question of a school exam (`insightTags`). Nothing guesses it from the text, and a
-  question with none adds no observation. Aksara's CASE 1.1 keys replace the typed names when
-  they exist.
+- **Insight is on in every school.** No DPIA record, no counsel's review, and no refusal stand
+  before it. The gate below is gone.
+- **The competency key.** No Aksara item and no exam question carries one, so a teacher may
+  name the competency of a question (`insightTags`), and a question with none counts for its
+  exam, by the exam's title. Nothing guesses a competency from a question's text. Aksara's
+  CASE 1.1 keys replace these names when they exist.
 - **The rating.** A rating runs from 0 to 1. After an answer that earned `share` of the
   question's points, `rating` moves by `(share - rating) / min(count + 1, 10)`: a plain mean
   for the first ten answers, then a tenth of the way to the latest. One answer writes one
@@ -109,20 +108,6 @@ arrive as content.
 - Item difficulty and mastery do not decide a student's placement, promotion, or
   report. The teacher decides each of them (ADR 0033, Report cards).
 
-### The DPIA gate
-
-- Insight is off in a school until the school's DPIA is recorded. The DPIA record
-  holds its version, its date, the reviewer, and the modules it switches on, and
-  Settings shows it under Security, as the blueprint's DPIA card (ADR 0027 and the
-  settings structure of `apps/www/src/lib/settings/school.ts`).
-- The gate is a Condition in access (ADR 0012), so `insight.view` is refused with
-  its reason while no DPIA is recorded. It is not a flag in the UI. The UI reads
-  the refusal from the viewer's capabilities (GLOSSARY, Viewer capabilities).
-- Changing the DPIA is a journaled change. A school can relax its quiet hours only
-  as its DPIA allows (ADR 0027).
-- Nothing in the repository stores a DPIA today. S12 adds the record, and no
-  Insight screen ships before it.
-
 ### Retention
 
 - Mastery numbers are kept during the school year and deleted with the period
@@ -137,10 +122,8 @@ arrive as content.
 
 - Teachers see more than they did, and the explanation is always attached. A
   teacher can see why a forecast is what it is, and can reject it.
-- An Insight screen cannot appear in a school without a recorded DPIA, because the
-  refusal comes from the access layer, not from the page.
-- Competency keys from Aksara become a condition of mastery. Until they exist,
-  Insight is empty by design, and the empty state says so in one sentence.
+- Mastery starts from the first released exam, by the exam's title, and sharpens as
+  teachers name competencies and Aksara's keys arrive.
 
 ## Rejected Alternatives
 
@@ -160,7 +143,6 @@ arrive as content.
 - The forecast's acceptance threshold for the monthly test (owner, before S13).
 - The provider of Nina's narrative drafts, and whether the K6 gate applies to
   them. The blueprint does not state either.
-- The DPIA's review by counsel before the first school (K20).
 
 ## Implementation Status
 
@@ -171,6 +153,5 @@ arrive as content.
 | Competency tags typed by the teacher (`insightTags`) | Built |
 | Mastery rows (`insightMastery`), written when a sitting's results are released | Built |
 | Forecasts and their reasons, computed when read | Built, as an initial estimate; the monthly test is planned |
-| The DPIA record (`insightDpias`) and its refusal, `DpiaRequired`, in each Insight function | Built as a refusal in the functions rather than a Condition in access |
 | Insight screens for teachers and students, and teachers' narratives for guardians | Built |
 | Shared practice, Nina's narrative drafts, deletion with the period | Planned |

@@ -23,7 +23,6 @@ import { Array as Arr, Effect } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-const { get, record } = refs.public.insight.dpia;
 const { list, set } = refs.public.insight.tags;
 const { mine, ofClass } = refs.public.insight.reads;
 const narratives = refs.public.insight.narratives;
@@ -33,14 +32,6 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(TENANCY_NOW);
 });
-
-/** Records the school's impact assessment as its Admin. */
-const switchOn = (fixture: Fixture) =>
-  fixture.as("admin").mutation(record, {
-    reviewer: "Bu Ratna",
-    slug: nf,
-    version: "2026-1",
-  });
 
 /** A sitting of an exam of the school, with the student's attempt and the questions of its exam. */
 const sat = Effect.fn("test.insight.sat")(function* (fixture: Fixture) {
@@ -97,28 +88,11 @@ const scored = (
   );
 
 describe("insight", () => {
-  it.effect("stays off until the school records its impact assessment", () =>
+  it.effect("shows a student's own standing and keeps the class view from them", () =>
     Effect.gen(function* () {
       const fixture = yield* keyedFixture;
       const term = yield* period(fixture, fixture.units.smp);
       const forum = yield* forumClass(fixture, term.id, "X-1");
-      const refusal = { _tag: "DpiaRequired" };
-      expect(
-        yield* fixture
-          .as("teacher")
-          .query(ofClass, { classId: forum.classId, slug: nf })
-          .pipe(Effect.flip)
-      ).toMatchObject(refusal);
-      expect(
-        yield* fixture.as("student").query(mine, { slug: nf }).pipe(Effect.flip)
-      ).toMatchObject(refusal);
-      expect(yield* fixture.as("admin").query(get, { slug: nf })).toBeNull();
-      yield* switchOn(fixture);
-      expect(yield* fixture.as("admin").query(get, { slug: nf })).toEqual({
-        recordedAt: expect.any(Number),
-        reviewer: "Bu Ratna",
-        version: "2026-1",
-      });
       expect(yield* fixture.as("student").query(mine, { slug: nf })).toEqual(
         []
       );
@@ -132,11 +106,10 @@ describe("insight", () => {
   );
 
   it.effect(
-    "counts a released answer once for a tagged question, and nothing for an untagged one",
+    "counts a released answer for its named competency, and for its exam when it names none",
     () =>
       Effect.gen(function* () {
         const fixture = yield* keyedFixture;
-        yield* switchOn(fixture);
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "X-1");
         const made = yield* sat(fixture);
@@ -174,6 +147,15 @@ describe("insight", () => {
         expect(own).toMatchObject([
           { competency: "Gerak lurus", observations: 3 },
         ]);
+        yield* tag(null);
+        yield* scored(fixture, made, first, 1);
+        yield* fixture.internal.mutation(run, {
+          cursor: null,
+          sittingId: made.sittingId,
+        });
+        expect(yield* fixture.as("student").query(mine, { slug: nf })).toMatchObject(
+          [{ competency: "Gerak lurus" }, { competency: "Ujian Fisika" }]
+        );
         const seen = yield* teacher.query(ofClass, {
           classId: forum.classId,
           slug: nf,
@@ -196,7 +178,6 @@ describe("insight", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* keyedFixture;
-        yield* switchOn(fixture);
         const term = yield* period(fixture, fixture.units.smp);
         const forum = yield* forumClass(fixture, term.id, "X-1");
         const names = {

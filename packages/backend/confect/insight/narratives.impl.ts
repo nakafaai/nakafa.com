@@ -12,7 +12,6 @@ import {
 } from "@repo/backend/confect/classroom/authority";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { NarrativeMissing } from "@repo/backend/confect/insight/errors";
-import { requireDpia } from "@repo/backend/confect/insight/gate";
 import spec from "@repo/backend/confect/insight/narratives.spec";
 import { narrativeField } from "@repo/backend/confect/insight/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -44,7 +43,6 @@ const write = FunctionImpl.make(
   Effect.fn("insight.narratives.write")(function* ({ personId, text }) {
     const { person } = yield* Member;
     const row = yield* Class;
-    yield* requireDpia(row.tenantId);
     const fields = { classId: row._id, personId };
     const sealedText = yield* sealText(
       yield* schoolKeys(row.tenantId),

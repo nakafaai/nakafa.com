@@ -2,7 +2,6 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
-import { DpiaRequired } from "@repo/backend/confect/insight/errors";
 import { ClassInsight, SkillView } from "@repo/backend/confect/insight/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -21,7 +20,7 @@ export default GroupSpec.make()
       name: "ofClass",
       args: () => ({ classId: Id("classes"), slug: TenantSlug }),
       returns: () => ClassInsight,
-      error: () => Schema.Union([AccessDenied, DpiaRequired]),
+      error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "insight.view", arg: "classId" })
   )
   .addFunction(
@@ -29,6 +28,5 @@ export default GroupSpec.make()
       name: "mine",
       args: () => ({ slug: TenantSlug }),
       returns: () => Schema.Array(SkillView),
-      error: () => DpiaRequired,
     })
   );
