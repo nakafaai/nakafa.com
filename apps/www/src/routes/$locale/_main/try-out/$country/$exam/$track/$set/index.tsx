@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { ConvexIsland } from "@/components/providers/island";
-import { usePrepaintRelease } from "@/components/sidebar/lock";
+import { ShellLockCarry, usePrepaintRelease } from "@/components/sidebar/lock";
 import { AppNotFound } from "@/components/state/app";
 import { TryoutAttemptReview } from "@/components/tryout/review/screen";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
@@ -89,7 +89,12 @@ function TryoutSetLearner() {
     select: (context) => context.signedIn,
   });
   const learner = useLearnerSet({ page: route.page, search, signedIn });
-  return <TryoutSetView learner={learner} />;
+  return (
+    <>
+      <ShellLockCarry pending={learner.kind === "pending"} />
+      <TryoutSetView learner={learner} />
+    </>
+  );
 }
 
 /** Draws the set from the learner read: the attempt's page, or the catalog's while there is none. */
