@@ -50,14 +50,14 @@ function getPriceFormat(price: MonthlyPrice) {
 const LETTER_SYMBOL = /^(?<symbol>\p{L}+)\s*/u;
 
 /**
- * Writes one amount the same in every browser. Each engine ships its own locale
- * data: Node and Chrome put a no-break space after the rupiah's symbol and Safari
- * puts none, so a page prerendered by one and hydrated by the other fails hydration
- * and React renders it again from nothing. A symbol in letters always takes the
- * no-break space (Rp 79.000).
+ * Spaces a formatted price the same in every browser. Each engine ships its own
+ * locale data: Node and Chrome put a no-break space after the rupiah's symbol and
+ * Safari puts none, so a page prerendered by one and hydrated by the other fails
+ * hydration and React renders it again from nothing. A symbol in letters always
+ * takes the no-break space (Rp 79.000).
  */
-function writeAmount(formatter: Intl.NumberFormat, amount: number) {
-  return formatter.format(amount).replace(LETTER_SYMBOL, "$<symbol>\u00a0");
+export function spaceLetterSymbol(text: string) {
+  return text.replace(LETTER_SYMBOL, "$<symbol>\u00a0");
 }
 
 /** The currency symbol of a price, as its locale writes it. */
@@ -83,7 +83,7 @@ function makePricing<Currency extends PricingCurrency>(
 
   return {
     currency,
-    format: (amount: number) => writeAmount(formatter, amount),
+    format: (amount: number) => spaceLetterSymbol(formatter.format(amount)),
     price,
     symbol: symbolOf(formatter),
   };

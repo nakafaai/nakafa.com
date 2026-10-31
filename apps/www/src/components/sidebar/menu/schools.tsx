@@ -10,7 +10,7 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect } from "effect";
 import { type ReactNode, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { useLiveSession } from "@/components/providers/live";
+import { useAuthSession } from "@/components/auth/session";
 import { SchoolMark } from "@/components/tenant/mark";
 import {
   type KnownSchool,
@@ -44,7 +44,7 @@ function readKeptText() {
  * phone sheet too, which mounts its own menu each time it opens.
  */
 export function SidebarKnownSchoolItems() {
-  const sessionId = useLiveSession((state) => state.sessionId);
+  const sessionId = useAuthSession((session) => session.sessionId);
   const [text] = useState(readKeptText);
 
   return Arr.map(readKnownSchools(text, sessionId), (tenant) => (

@@ -6,6 +6,6 @@ import {
 
 /** The price of one top-up pack in one currency, in the digits and locale the pricing pages use for that currency. */
 export function topUpPriceText(currency: PricingCurrency) {
-  const { formatter, price } = getProMonthlyPricingFor(currency);
-  return formatter.format(topUpPrices[currency] / 10 ** price.fractionDigits);
+  const { format, price } = getProMonthlyPricingFor(currency);
+  return format(topUpPrices[currency] / 10 ** price.fractionDigits);
 }

@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
-  EARLY_PRESS_SCRIPT,
   PRESS_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
-} from "@/lib/press/prepaint";
+} from "@repo/design-system/hooks/use-press";
+import { EARLY_PRESS_SCRIPT } from "@/lib/press/prepaint";
 
 // The page runs the script once, from its head, before any control exists.
 new Function(EARLY_PRESS_SCRIPT)();

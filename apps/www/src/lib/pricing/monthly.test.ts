@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   getProMonthlyPricing,
   getProMonthlyPricingFor,
+  spaceLetterSymbol,
 } from "@/lib/pricing/monthly";
 
 /** The dollar sign that a USD price carries. */
@@ -34,13 +35,12 @@ describe("monthly pro price of a country", () => {
   });
 
   it("writes rupiah alike for an engine that puts no space after the symbol, as Safari does", () => {
-    const format = vi
-      .spyOn(Intl.NumberFormat.prototype, "format", "get")
-      .mockReturnValue(() => "Rp79.000");
+    expect(spaceLetterSymbol("Rp79.000")).toBe("Rp\u00a079.000");
+    expect(spaceLetterSymbol("Rp\u00a079.000")).toBe("Rp\u00a079.000");
+  });
 
-    expect(getProMonthlyPricingFor("IDR").format(79_000)).toBe(
-      "Rp\u00a079.000"
-    );
-    format.mockRestore();
+  it("leaves a price whose symbol is no word as its locale writes it", () => {
+    expect(spaceLetterSymbol("$8.99")).toBe("$8.99");
+    expect(spaceLetterSymbol("8,99\u00a0€")).toBe("8,99\u00a0€");
   });
 });

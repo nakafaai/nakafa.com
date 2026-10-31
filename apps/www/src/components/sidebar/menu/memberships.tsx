@@ -6,10 +6,11 @@ import { Array as Arr, Effect } from "effect";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useLiveSession } from "@/components/providers/live";
+import { useAuthSession } from "@/components/auth/session";
 import {
   SidebarKnownSchoolItems,
   SidebarSchoolMenuItem,
+  SidebarSchools,
 } from "@/components/sidebar/menu/schools";
 import { saveKnownSchools } from "@/lib/identity/schools";
 
@@ -29,7 +30,7 @@ export function SidebarMembershipItems() {
   const isAuthenticated = useConvexAuth(
     (auth) => auth.isAuthenticated && !auth.isLoading
   );
-  const sessionId = useLiveSession((state) => state.sessionId);
+  const sessionId = useAuthSession((session) => session.sessionId);
   const memberships = usePaginatedQuery(
     tenancy.memberships.list,
     isAuthenticated ? {} : "skip",
@@ -66,5 +67,18 @@ export function SidebarMembershipItems() {
         <Intersection onIntersect={() => memberships.loadMore(SCHOOL_PAGE)} />
       ) : null}
     </>
+  );
+}
+
+/** The whole group of schools, for a menu that loads it in one piece, as a school's switcher does. */
+export function SidebarMembershipGroup({
+  canOpenSchool,
+}: {
+  canOpenSchool: boolean;
+}) {
+  return (
+    <SidebarSchools canOpenSchool={canOpenSchool}>
+      <SidebarMembershipItems />
+    </SidebarSchools>
   );
 }
