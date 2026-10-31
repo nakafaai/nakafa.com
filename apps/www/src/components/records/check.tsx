@@ -21,7 +21,7 @@ export function ReportCheck({ answer }: { answer: CheckAnswer }) {
       <EntryShellBody>
         <Nina act="searching" label="" size={96} whole />
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="font-semibold text-xl">{t("unknown")}</h1>
+          <h1 className="text-xl font-semibold">{t("unknown")}</h1>
           <p className="text-muted-foreground">{t("unknown-description")}</p>
         </div>
       </EntryShellBody>
@@ -31,7 +31,7 @@ export function ReportCheck({ answer }: { answer: CheckAnswer }) {
     <EntryShellBody>
       <Nina act="waving" label="" size={96} whole />
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="font-semibold text-xl">{t(`locked-${answer.kind}`)}</h1>
+        <h1 className="text-xl font-semibold">{t(`locked-${answer.kind}`)}</h1>
         <p className="text-muted-foreground">
           {t(`locked-${answer.kind}-description`)}
         </p>

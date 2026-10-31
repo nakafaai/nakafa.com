@@ -39,7 +39,7 @@ export function ImportFileField({
       <FieldLabel htmlFor={id}>{t("import-label")}</FieldLabel>
       {file === null ? (
         <div
-          className="relative flex h-24 flex-col items-center justify-center gap-2 rounded-lg border bg-muted/40 px-4 text-center text-muted-foreground text-sm transition-colors hover:bg-muted has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-muted"
+          className="bg-muted/40 text-muted-foreground hover:bg-muted has-focus-visible:border-ring has-focus-visible:ring-ring/50 data-[dragging=true]:border-primary data-[dragging=true]:bg-muted relative flex h-24 flex-col items-center justify-center gap-2 rounded-lg border px-4 text-center text-sm transition-colors has-focus-visible:ring-3"
           data-dragging={dragging}
         >
           <HugeIcons aria-hidden="true" icon={FileUploadIcon} />

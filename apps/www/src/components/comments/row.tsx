@@ -9,6 +9,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { elementById } from "@repo/design-system/lib/element";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
@@ -262,7 +263,7 @@ export function ReplyingTo({
   const t = useTranslations("Comments");
   return (
     <a
-      className="flex min-w-0 items-center gap-1 text-muted-foreground text-xs transition-colors ease-out hover:text-foreground"
+      className="text-muted-foreground hover:text-foreground flex min-w-0 items-center gap-1 text-xs transition-colors ease-out"
       href={`#${parentId}`}
       onClick={(event) => scrollToComment(event, parentId)}
     >
@@ -278,7 +279,7 @@ function scrollToComment(
   commentId: Id<"comments">
 ) {
   event.preventDefault();
-  document.getElementById(commentId)?.scrollIntoView({
+  elementById(commentId)?.scrollIntoView({
     behavior: "smooth",
     block: "center",
   });

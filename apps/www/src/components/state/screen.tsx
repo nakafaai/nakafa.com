@@ -28,7 +28,7 @@ import { NINA_SIZE } from "@/components/state/size";
  * and actions stay, because this page may be the last that works.
  */
 export function Screen({ children }: { children: ReactNode }) {
-  return <Empty className="wrap-anywhere w-full p-0 md:p-0">{children}</Empty>;
+  return <Empty className="w-full p-0 wrap-anywhere md:p-0">{children}</Empty>;
 }
 
 /** The figure, the title, and the description of a full-page state. */

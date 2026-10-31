@@ -110,7 +110,7 @@ function TenantPaletteCommand({ onOpened }: { onOpened: () => void }) {
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <CommandEmpty className="text-center text-muted-foreground text-sm">
+        <CommandEmpty className="text-muted-foreground text-center text-sm">
           {t("search-empty")}
         </CommandEmpty>
         <CommandList>
@@ -162,7 +162,7 @@ function TenantPaletteRow({
         {item.label}
       </span>
       {item.place === undefined ? null : (
-        <span className="ms-auto shrink-0 text-muted-foreground text-xs">
+        <span className="text-muted-foreground ms-auto shrink-0 text-xs">
           {item.place}
         </span>
       )}

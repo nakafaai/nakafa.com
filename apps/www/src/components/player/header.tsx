@@ -44,7 +44,7 @@ export function PlayerHeaderEnd({ children }: { children: ReactNode }) {
 export function PlayerTitle({ children }: { children: string }) {
   return (
     <h1
-      className="min-w-0 flex-1 truncate font-medium text-base"
+      className="min-w-0 flex-1 truncate text-base font-medium"
       dir="auto"
       title={children}
     >

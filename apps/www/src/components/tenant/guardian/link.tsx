@@ -2,6 +2,7 @@ import { type PaginatedQueryItem, useMutation } from "@confect/react";
 import {
   CheckmarkBadge01Icon,
   MoreHorizontalIcon,
+  PencilEdit02Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons";
 import guardians from "@repo/backend/confect/_generated/refs/guardians";
@@ -18,18 +19,22 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
+import { GuardianLinkAddressDialog } from "@/components/tenant/guardian/address";
 import {
   revokeLinkChange,
   verifyLinkChange,
 } from "@/components/tenant/guardian/change";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { isDraft } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/guardian/link";
 
 /** One guardian link as the staff list shows it. */
 export type LinkItem = PaginatedQueryItem<typeof guardians.links.list>;
 
-/** The actions of a live link in its open pane: check by hand while it is pending, and end it. */
+/**
+ * The actions of a live link in its open pane: correct its email and check it by hand while it is pending, and end it.
+ */
 export function GuardianLinkActions({ link }: { link: LinkItem }) {
   const t = useTranslations("SchoolGuardians");
   const { slug } = useTenant();
@@ -38,6 +43,8 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
   );
   const [, startTransition] = useTransition();
   const [isRevoking, setIsRevoking] = useState(false);
+  // Each opening of the email dialog mounts it again, so it starts from the link as it is then.
+  const [readdressing, setReaddressing] = useState(0);
 
   return (
     <>
@@ -50,18 +57,31 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
         {t("link-revoke")}
       </Button>
       {link.status === "pending" ? (
-        <Button
-          onClick={() =>
-            startTransition(() =>
-              saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
-            )
-          }
-          type="button"
-        >
-          <HugeIcons icon={CheckmarkBadge01Icon} />
-          {t("link-verify")}
-        </Button>
+        <>
+          <Button
+            onClick={() => setReaddressing((count) => count + 1)}
+            type="button"
+            variant="outline"
+          >
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("link-readdress")}
+          </Button>
+          <Button
+            onClick={() =>
+              startTransition(() =>
+                saveSchool(() => verify({ linkId: link.id, slug }), SOURCE)
+              )
+            }
+            type="button"
+          >
+            <HugeIcons icon={CheckmarkBadge01Icon} />
+            {t("link-verify")}
+          </Button>
+        </>
       ) : null}
+      {readdressing === 0 ? null : (
+        <GuardianLinkAddressDialog key={readdressing} link={link} />
+      )}
       <GuardianLinkRevokeDialog
         link={link}
         open={isRevoking}
@@ -72,8 +92,9 @@ export function GuardianLinkActions({ link }: { link: LinkItem }) {
 }
 
 /**
- * A live link's row menu: check by hand while it is pending, and end it behind a
- * confirmation. An ended link has no menu, so its cell stays empty.
+ * A live link's row menu: correct its email and check it by hand while it is pending, and end it behind a
+ * confirmation. A link the server has not answered yet keeps its menu inert, and an ended link has no menu, so its
+ * cell stays empty.
  */
 export function GuardianLinkMenu({ link }: { link: LinkItem }) {
   const t = useTranslations("SchoolGuardians");
@@ -84,6 +105,8 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
   );
   const [, startTransition] = useTransition();
   const [isRevoking, setIsRevoking] = useState(false);
+  // Each opening of the email dialog mounts it again, so it starts from the link as it is then.
+  const [readdressing, setReaddressing] = useState(0);
 
   if (link.status !== "pending" && link.status !== "verified") {
     return null;
@@ -96,6 +119,7 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
           render={
             <Button
               aria-label={common("more-actions")}
+              inert={isDraft(link.id)}
               size="icon-sm"
               variant="ghost"
             >
@@ -106,6 +130,12 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
         <DropdownMenuContent align="end" className="w-48">
           {link.status === "pending" ? (
             <>
+              <DropdownMenuItem
+                onClick={() => setReaddressing((count) => count + 1)}
+              >
+                <HugeIcons icon={PencilEdit02Icon} />
+                {t("link-readdress")}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() =>
                   startTransition(() =>
@@ -128,6 +158,9 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      {readdressing === 0 ? null : (
+        <GuardianLinkAddressDialog key={readdressing} link={link} />
+      )}
       <GuardianLinkRevokeDialog
         link={link}
         open={isRevoking}

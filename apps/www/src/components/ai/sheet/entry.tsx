@@ -67,7 +67,7 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
       <div className="mx-auto sm:max-w-xs">
         <Button
           {...press}
-          className="pointer-events-auto w-full justify-between transition-transform duration-200 hover:scale-105 group-data-open/entry:pointer-events-none"
+          className="pointer-events-auto w-full justify-between transition-transform duration-200 group-data-open/entry:pointer-events-none hover:scale-105"
           onFocus={warm}
           onMouseEnter={warm}
           onPointerDown={warm}

@@ -40,7 +40,7 @@ afterAll(() => editor.destroy());
 
 /** Every run of space as one space, and none at either end. */
 function collapse(words: string) {
-  return Str.trim(Str.replaceAll(/\s+/g, " ")(words));
+  return Str.trim(Str.replaceAll(/\s+/gu, " ")(words));
 }
 
 /** The words the editor shows when it opens the stored Markdown. */

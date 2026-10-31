@@ -1,3 +1,4 @@
+import { elementById } from "@repo/design-system/lib/element";
 import type { Place } from "@repo/design-system/lib/toy/scatter";
 import { Option, Schema } from "effect";
 
@@ -32,7 +33,7 @@ export function within(part: string, anchor: Anchor): Place {
     ) {
       return Option.none();
     }
-    const element = document.getElementById(part);
+    const element = elementById(part);
     if (element === null) {
       return Option.none();
     }

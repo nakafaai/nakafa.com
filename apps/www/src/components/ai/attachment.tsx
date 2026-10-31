@@ -55,7 +55,7 @@ const documentVariants = cva("", {
     variant: {
       message: "max-w-64",
       preview:
-        "min-w-[min(100%,--spacing(40))] max-w-[min(100%,--spacing(64))] border-transparent bg-transparent has-[>a,>button]:hover:bg-transparent data-[state=error]:border-transparent",
+        "max-w-[min(100%,--spacing(64))] min-w-[min(100%,--spacing(40))] border-transparent bg-transparent has-[>a,>button]:hover:bg-transparent data-[state=error]:border-transparent",
     },
   },
   defaultVariants: { variant: "message" },

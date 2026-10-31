@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
 
 /** Inter's Latin face, which every page's text draws in. */
-const INTER_LATIN = /\/inter-latin-wght-normal[-.][^/]*\.woff2$/;
+const INTER_LATIN = /\/inter-latin-wght-normal[-.][^/]*\.woff2$/u;
 
 /**
  * The document asks for Inter's Latin face with itself, so the face arrives
@@ -23,7 +23,7 @@ for (const path of ["/en", "/id/kurikulum"]) {
       )
     );
     const requests = await page.evaluate((pattern) => {
-      const face = new RegExp(pattern);
+      const face = new RegExp(pattern, "u");
       return performance
         .getEntriesByType("resource")
         .filter((entry) => face.test(new URL(entry.name).pathname))

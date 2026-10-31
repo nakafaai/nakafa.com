@@ -47,7 +47,7 @@ const cardValue = cva("min-w-0 font-medium", {
   variants: {
     mono: {
       false: "break-words",
-      true: "whitespace-nowrap font-mono",
+      true: "font-mono whitespace-nowrap",
     },
   },
 });
@@ -77,7 +77,7 @@ export function SchoolCardDialog({
       description={t("card-code-description")}
       footer={
         <>
-          <p className="me-auto text-muted-foreground text-sm">
+          <p className="text-muted-foreground me-auto text-sm">
             {t("card-print-footer")}
           </p>
           <Button
@@ -165,7 +165,7 @@ function SchoolCardFace({ card }: { card: CardView }) {
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border p-4">
-      <p className="font-medium text-sm">{address}</p>
+      <p className="text-sm font-medium">{address}</p>
       <div className="flex items-start justify-between gap-4">
         <dl className="grid min-w-0 gap-3 text-sm">
           <CardField label={t("card-student")} value={card.name} />

@@ -80,7 +80,7 @@ function resolve(reference: string) {
 }
 
 /** The references the editor reads: a number of one to seven digits, in decimal or in hexadecimal, and four names. */
-const REFERENCE = /&(?:#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|amp|gt|lt|quot);/g;
+const REFERENCE = /&(?:#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|amp|gt|lt|quot);/gu;
 
 /**
  * Reads the references in text, in one pass, so that what a reference stands

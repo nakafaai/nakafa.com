@@ -6483,7 +6483,6 @@ export declare const api: {
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         {
           questions: Array<{
-            flagged: boolean;
             id: Id<"examQuestions">;
             interactions: Array<
               | {
@@ -6663,13 +6662,6 @@ export declare const api: {
                 }
             >;
             number: number;
-            response:
-              | Array<string>
-              | { text: string }
-              | { pairs: Array<{ source: string; target: string }> }
-              | { cells: Array<{ column: string; statement: string }> }
-              | null;
-            version: number | null;
           }>;
         }
       >;
@@ -6695,6 +6687,23 @@ export declare const api: {
           slug: string;
         },
         null
+      >;
+      saved: FunctionReference<
+        "query",
+        "public",
+        { deviceId: string; sittingId: Id<"examSittings">; slug: string },
+        {
+          answers: Array<{
+            question: Id<"examQuestions">;
+            response:
+              | Array<string>
+              | { text: string }
+              | { pairs: Array<{ source: string; target: string }> }
+              | { cells: Array<{ column: string; statement: string }> };
+            version: number;
+          }>;
+          flagged: Array<string>;
+        }
       >;
       signal: FunctionReference<
         "mutation",
@@ -6882,6 +6891,20 @@ export declare const api: {
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
+        }
+      >;
+      readdress: FunctionReference<
+        "mutation",
+        "public",
+        { email: string; linkId: Id<"guardianLinks">; slug: string },
+        {
+          email: string;
+          expiresAt: number;
+          guardian: { id: Id<"tenantPeople">; name: string };
+          id: Id<"guardianLinks">;
+          mismatches: number;
+          status: "pending" | "verified" | "expired" | "revoked" | "withdrawn";
+          student: { id: Id<"tenantPeople">; name: string };
         }
       >;
       revoke: FunctionReference<
@@ -7089,6 +7112,7 @@ export declare const api: {
             | "result.view"
             | "guardian.child"
             | "guardian.confirm"
+            | "guardian.readdress"
             | "guardian.revoke"
             | "guardian.verify"
             | "guardian.view"
@@ -7214,6 +7238,7 @@ export declare const api: {
               | "result.view"
               | "guardian.child"
               | "guardian.confirm"
+              | "guardian.readdress"
               | "guardian.revoke"
               | "guardian.verify"
               | "guardian.view"
@@ -7422,6 +7447,11 @@ export declare const api: {
                 }
               | { student: Id<"tenantPeople">; type: "guardian.withdrawn" }
               | { student: Id<"tenantPeople">; type: "guardian.revoked" }
+              | {
+                  guardian: Id<"tenantPeople">;
+                  student: Id<"tenantPeople">;
+                  type: "guardian.readdressed";
+                }
               | {
                   client: Id<"integrationClients">;
                   scope:
@@ -15289,6 +15319,59 @@ export declare const internal: {
       >;
     };
     seed: {
+      answers: FunctionReference<
+        "query",
+        "internal",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            attempt: Id<"examAttempts">;
+            question: Id<"examQuestions">;
+            response:
+              | Array<string>
+              | { text: string }
+              | { pairs: Array<{ source: string; target: string }> }
+              | { cells: Array<{ column: string; statement: string }> };
+            version: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      load: FunctionReference<
+        "mutation",
+        "internal",
+        { questions: number; rooms: number; slug: string },
+        {
+          examId: Id<"exams">;
+          sittings: Array<{
+            id: Id<"examSittings">;
+            room: string;
+            token: string;
+          }>;
+        }
+      >;
+      seats: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          kind: "student" | "proctor";
+          seats: Array<{ key: string; name: string; token: string }>;
+          slug: string;
+        },
+        null
+      >;
       sitting: FunctionReference<
         "mutation",
         "internal",
@@ -15296,6 +15379,7 @@ export declare const internal: {
           crowd?: number;
           email: string;
           essay?: boolean;
+          prose?: boolean;
           slug: string;
           upcoming?: boolean;
         },

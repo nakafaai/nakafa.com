@@ -127,7 +127,7 @@ function StudentResultsContent({
         <CardTitle>{t("student-finished")}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 text-sm">
-        <p className="font-semibold text-2xl tabular-nums">
+        <p className="text-2xl font-semibold tabular-nums">
           {t("student-score", { points, total })}
         </p>
         <ul aria-label={t("student-answers")} className="grid gap-3">

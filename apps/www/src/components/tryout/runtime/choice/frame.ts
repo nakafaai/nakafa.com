@@ -13,5 +13,5 @@ export const choiceFrame = (
 ) =>
   cn(
     buttonVariants({ variant }),
-    "h-auto min-w-0 whitespace-normal text-left font-normal text-base"
+    "h-auto min-w-0 text-left text-base font-normal whitespace-normal"
   );

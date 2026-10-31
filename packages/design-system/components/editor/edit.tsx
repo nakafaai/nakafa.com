@@ -111,7 +111,7 @@ function MathField({
     <div
       className={cn(
         fieldBoxVariants(),
-        "h-auto min-h-12 items-center gap-1 py-1 pe-1 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+        "focus-within:border-ring focus-within:ring-ring/50 h-auto min-h-12 items-center gap-1 py-1 pe-1 focus-within:ring-3"
       )}
     >
       <div className="min-w-0 flex-1" ref={host} />

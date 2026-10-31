@@ -1,7 +1,7 @@
 name: General Question
 description: Ask a question or request help
 title: "[QUESTION] "
-labels: ["question"]
+labels: [ "question" ]
 body:
   - type: textarea
     id: question

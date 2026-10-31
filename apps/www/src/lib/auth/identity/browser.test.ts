@@ -6,6 +6,7 @@ import {
   revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
+import type { reportClientException } from "@/lib/analytics/client";
 import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
 import {
   AccountSignOutFailed,
@@ -17,8 +18,6 @@ import { followAuthSession, releaseSession } from "@/lib/auth/session";
 
 const authClient = vi.hoisted(() => ({ signOut: vi.fn() }));
 vi.mock("@/lib/auth/client", () => ({ readAuthClient: () => authClient }));
-
-import type { reportClientException } from "@/lib/analytics/client";
 
 const reportClientExceptionMock = vi.hoisted(() =>
   vi.fn<typeof reportClientException>(() => Effect.void)

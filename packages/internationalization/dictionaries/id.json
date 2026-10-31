@@ -99,7 +99,7 @@
     "link-add-description": "Orang tua meminta kode masuk sendiri di halaman orang tua sekolah.",
     "links-empty": "Belum ada orang tua yang ditautkan.",
     "links-empty-description": "Tautkan email orang tua ke siswa agar mereka dapat masuk.",
-    "links-search": "Cari siswa atau email orang tua",
+    "links-search": "Cari siswa atau email",
     "student": "Siswa",
     "guardian-name": "Nama orang tua",
     "guardian-name-placeholder": "Nama lengkap orang tua",
@@ -111,6 +111,9 @@
     "status-withdrawn": "Ditarik",
     "status-mismatch": "Data tidak cocok",
     "link-verify": "Verifikasi manual",
+    "link-readdress": "Ubah email",
+    "link-readdress-description": "Tautan tetap dengan masa berlakunya. Orang tua meminta kode dengan email baru.",
+    "link-readdress-save": "Simpan email",
     "link-revoke": "Akhiri tautan",
     "link-revoke-title": "Akhiri tautan ini?",
     "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi.",
@@ -940,7 +943,8 @@
         "started": "Orang tua ditautkan",
         "linked": "Tautan orang tua terverifikasi",
         "withdrawn": "Persetujuan orang tua ditarik",
-        "revoked": "Tautan orang tua diakhiri"
+        "revoked": "Tautan orang tua diakhiri",
+        "readdressed": "Alamat tautan orang tua diperbaiki"
       },
       "roster": {
         "set": "Data siswa diperbarui",
@@ -975,7 +979,7 @@
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
     "logins-empty": "Belum ada kartu masuk yang diterbitkan.",
-    "logins-search": "Cari nama masuk atau siswa",
+    "logins-search": "Cari login atau siswa",
     "members-empty": "Belum ada anggota yang bergabung.",
     "members-empty-description": "Tambahkan guru atau admin di halaman undangan, atau tambahkan siswa.",
     "members-search": "Cari nama",
@@ -1931,7 +1935,7 @@
   "Utils": {
     "clear-search": "Hapus pencarian",
     "search-bar-placeholder": "Cari konten...",
-    "search-placeholder": "Temukan apa yang kamu inginkan...",
+    "search-placeholder": "Cari yang kamu mau...",
     "search-not-found": "Yah, nggak nemu apa-apa nih.",
     "search-loading": "Lagi nyari...",
     "search-help": "Ketik untuk mencari...",

@@ -77,7 +77,7 @@ function TaskDetails({ task }: { task: ClassTask }) {
 
   return (
     <section className="flex flex-col gap-3 rounded-xl border p-4">
-      <h2 className="wrap-anywhere font-semibold text-lg" dir="auto">
+      <h2 className="text-lg font-semibold wrap-anywhere" dir="auto">
         {task.title}
       </h2>
       <dl className="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-6">
@@ -100,7 +100,7 @@ function TaskDetails({ task }: { task: ClassTask }) {
           <TaskStanding task={task} />
         </dd>
       </dl>
-      <p className="wrap-anywhere whitespace-pre-wrap text-sm" dir="auto">
+      <p className="text-sm wrap-anywhere whitespace-pre-wrap" dir="auto">
         {task.text}
       </p>
     </section>
@@ -143,7 +143,7 @@ function HandIn({ task }: { task: ClassTask }) {
 
   return (
     <form action={handIn} className="flex flex-col gap-2">
-      <label className="font-medium text-sm" htmlFor={`${id}-work`}>
+      <label className="text-sm font-medium" htmlFor={`${id}-work`}>
         {t("task-work")}
       </label>
       <Textarea

@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
  * the body; the results screen starts at its top, as other school pages do.
  */
 const sittingBodyVariants = cva(
-  "wrap-anywhere mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col items-center p-6",
+  "mx-auto flex w-full max-w-7xl min-w-0 flex-1 flex-col items-center p-6 wrap-anywhere",
   {
     defaultVariants: { align: "center" },
     variants: { align: { center: "justify-center", top: "justify-start" } },

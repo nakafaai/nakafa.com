@@ -13,13 +13,13 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** How long the student was away, in minutes and seconds. */
-const AWAY_TEXT = /Away for (?:(\d+) min )?(\d+) s\./;
+const AWAY_TEXT = /Away for (?:(?<minutes>\d+) min )?(?<seconds>\d+) s\./u;
 
 /** The proctor's line for a student who left the exam. */
-const LEFT_TEXT = /^Left the exam for (?:\d+ min )?\d+ s$/;
+const LEFT_TEXT = /^Left the exam for (?:\d+ min )?\d+ s$/u;
 
 /** The proctor's line for a student whose device lost the network. */
-const LOST_TEXT = /^Lost the connection for (?:\d+ min )?\d+ s$/;
+const LOST_TEXT = /^Lost the connection for (?:\d+ min )?\d+ s$/u;
 
 /** The address of the student's sittings page. */
 const SITTINGS_ADDRESS = /\/sittings$/u;
@@ -28,7 +28,7 @@ const SITTINGS_ADDRESS = /\/sittings$/u;
 const LEARNER_NAME = "Acceptance Learner";
 
 /** The row of the first room of the seeded exam, which is open, in the rooms list. */
-const OPEN_ROOM_ROW = /Lab 2/;
+const OPEN_ROOM_ROW = /Lab 2/u;
 
 /** Students seated before the learner, more than one dashboard page of 100 holds. */
 const CROWD = 101;
@@ -205,7 +205,7 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 3");
   await scheduling.getByRole("button", { name: "Schedule" }).click();
   // Once the server saves the room, the editor goes to the exam's rooms, which list both rooms.
-  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`));
+  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`, "u"));
   await expect(
     proctor.getByRole("heading", { name: "Ujian Acceptance" })
   ).toBeVisible();
@@ -223,14 +223,14 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
 
   await rooms.getByRole("link", { name: "Lab 2" }).click();
   await proctor.waitForURL(
-    new RegExp(`/exams/${sitting.examId}/sittings/${sitting.sittingId}$`)
+    new RegExp(`/exams/${sitting.examId}/sittings/${sitting.sittingId}$`, "u")
   );
   // The dashboard's header path returns to the exam's rooms.
   await proctor
     .locator('[data-slot="page-header"]')
     .getByRole("link", { name: "Ujian Acceptance" })
     .click();
-  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`));
+  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`, "u"));
 
   const student = await studentContext.newPage();
   await student.goto(address("/"));

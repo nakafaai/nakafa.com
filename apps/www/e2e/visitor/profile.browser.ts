@@ -6,7 +6,7 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 
 const SESSION_READ = "/api/auth/get-session";
-const AUTH_URL = /\/auth/;
+const AUTH_URL = /\/auth/u;
 
 /**
  * A visitor's profile opens no WebSocket and sends no session read. Its first

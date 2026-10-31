@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { createVisualStore } from "@repo/design-system/components/visual/store";
+import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Duration, Effect } from "effect";
 
 /** The space the test card takes in the page, as its slot keeps it. */
@@ -36,7 +37,7 @@ function renderPage() {
 }
 
 function element(id: string) {
-  const found = document.getElementById(id);
+  const found = elementById(id);
   if (!found) {
     throw new Error(`The test page has no #${id}.`);
   }

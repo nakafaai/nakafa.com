@@ -108,7 +108,7 @@ export function SlashMenu({
   return (
     <ScrollArea
       aria-label={label}
-      className="z-50 max-h-72 w-64 rounded-lg border bg-popover text-popover-foreground shadow-md"
+      className="bg-popover text-popover-foreground z-50 max-h-72 w-64 rounded-lg border shadow-md"
       role="listbox"
       viewportClassName="p-1"
     >

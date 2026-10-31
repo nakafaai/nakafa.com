@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { staticCallKey } from "@/lib/static/key";
 
 /** A lower-case SHA-256 digest in hexadecimal. */
-const SHA_256_HEX = /^[0-9a-f]{64}$/;
+const SHA_256_HEX = /^[0-9a-f]{64}$/u;
 
 describe("lib/static/key", () => {
   it.effect(

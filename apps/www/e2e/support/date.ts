@@ -4,7 +4,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 const MONTH_LIMIT = 36;
 
 /** The calendar's button to the next month, by its accessible name. */
-const NEXT_MONTH = /next/i;
+const NEXT_MONTH = /next/iu;
 
 /**
  * Chooses one day, written as its day key such as `2027-07-01`, in a design-system date field: it

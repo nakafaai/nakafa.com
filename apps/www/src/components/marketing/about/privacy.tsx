@@ -13,10 +13,10 @@ export function Privacy() {
     <MarketingSection id="privacy" tone="dark">
       <div className="mx-auto grid w-full max-w-3xl justify-items-center gap-10 text-center">
         <div className="grid justify-items-center gap-3">
-          <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+          <h2 className="text-3xl tracking-tight text-balance sm:text-4xl">
             {t("privacy-title")}
           </h2>
-          <p className="max-w-xl text-pretty text-base">{t("privacy-lead")}</p>
+          <p className="max-w-xl text-base text-pretty">{t("privacy-lead")}</p>
         </div>
         <PrivacyRoom words={t("privacy-words")} />
       </div>

@@ -37,7 +37,7 @@ export function Signature({
     <svg
       aria-label={label}
       className={cn(
-        "h-auto w-50 fill-none stroke-3 stroke-foreground",
+        "stroke-foreground h-auto w-50 fill-none stroke-3",
         className
       )}
       role="img"

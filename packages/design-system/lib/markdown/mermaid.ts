@@ -1,23 +1,27 @@
 import { Array as Arr, MutableHashMap, Option } from "effect";
 
-const MERMAID_META_REGEX = /\b(title|description)=("[^"]*"|'[^']*'|[^\s]+)/g;
+const MERMAID_META_REGEX =
+  /\b(?<key>title|description)=(?<value>"[^"]*"|'[^']*'|[^\s]+)/gu;
 const MERMAID_SQUARE_LABEL_REGEX =
-  /(^|[^\w])([A-Za-z_][\w-]*)(\[)(?!\[|\(|\/|\\)([^\]\n]+)(\])/g;
+  /(?<prefix>^|[^\w])(?<id>[A-Za-z_][\w-]*)(?<open>\[)(?!\[|\(|\/|\\)(?<label>[^\]\n]+)(?<close>\])/gu;
 const MERMAID_ROUND_LABEL_REGEX =
-  /(^|[^\w])([A-Za-z_][\w-]*)(\()(?!\[|\()([^()\n]+)(\))/g;
-const MERMAID_EDGE_MATH_LABEL_REGEX = /(\|)([^|\n]*\$\$[^|\n]*)(\|)/g;
-const MERMAID_BACKTICK_DOLLAR_MATH_REGEX = /`\s*\$([^$\n]+)\$\s*`/g;
+  /(?<prefix>^|[^\w])(?<id>[A-Za-z_][\w-]*)(?<open>\()(?!\[|\()(?<label>[^()\n]+)(?<close>\))/gu;
+const MERMAID_EDGE_MATH_LABEL_REGEX =
+  /(?<open>\|)(?<label>[^|\n]*\$\$[^|\n]*)(?<close>\|)/gu;
+const MERMAID_BACKTICK_DOLLAR_MATH_REGEX = /`\s*\$(?<math>[^$\n]+)\$\s*`/gu;
 const MERMAID_BACKTICK_DOUBLE_DOLLAR_MATH_REGEX =
-  /`\s*\$\$([^$][\s\S]*?[^$]|\S)\$\$\s*`/g;
-const MERMAID_BACKTICK_PAREN_MATH_REGEX = /`\s*\\+\(([\s\S]*?)\\+\)\s*`/g;
-const MERMAID_MARKDOWN_INLINE_MATH_REGEX = /\\+\(([\s\S]*?)\\+\)/g;
-const MERMAID_MARKDOWN_DISPLAY_MATH_REGEX = /\\+\[([\s\S]*?)\\+\]/g;
-const MERMAID_SINGLE_DOLLAR_MATH_REGEX = /(^|[^$\\])\$([^$\n]+)\$(?!\$)/g;
-const LATEX_SIGNAL_PATTERN = /\\[a-zA-Z]+|\\[,;! ]/;
+  /`\s*\$\$(?<math>[^$][\s\S]*?[^$]|\S)\$\$\s*`/gu;
+const MERMAID_BACKTICK_PAREN_MATH_REGEX =
+  /`\s*\\+\((?<math>[\s\S]*?)\\+\)\s*`/gu;
+const MERMAID_MARKDOWN_INLINE_MATH_REGEX = /\\+\((?<math>[\s\S]*?)\\+\)/gu;
+const MERMAID_MARKDOWN_DISPLAY_MATH_REGEX = /\\+\[(?<math>[\s\S]*?)\\+\]/gu;
+const MERMAID_SINGLE_DOLLAR_MATH_REGEX =
+  /(?<prefix>^|[^$\\])\$(?<math>[^$\n]+)\$(?!\$)/gu;
+const LATEX_SIGNAL_PATTERN = /\\[a-zA-Z]+|\\[,;! ]/u;
 const MATH_SYMBOL_PATTERN = /[=^_{}<>≤≥√∞±×÷∑∫]/u;
 const MATH_OPERATOR_PATTERN = /(?:\d|\p{L})\s*(?:[+\-*/=<>])\s*(?:\d|\p{L})/u;
-const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/;
-const MERMAID_FLOWCHART_DECLARATION_REGEX = /^(flowchart|graph)\b/;
+const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/u;
+const MERMAID_FLOWCHART_DECLARATION_REGEX = /^(?:flowchart|graph)\b/u;
 
 /**
  * Reads diagram copy from a markdown code fence info string. A field the fence
@@ -33,7 +37,7 @@ export function readMermaidMetadata(meta?: string | null) {
     MutableHashMap.set(
       values,
       key,
-      rawValue.replace(/^["']|["']$/g, "").trim()
+      rawValue.replace(/^["']|["']$/gu, "").trim()
     );
   }
 

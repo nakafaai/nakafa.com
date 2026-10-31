@@ -11,7 +11,7 @@ import type { SiteIndexUrlBatch } from "@/scripts/indexing/manifest";
 
 const ELIGIBILITY_FETCH_CONCURRENCY = 8;
 const JSON_LD_SCRIPT_PATTERN =
-  /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/giu;
+  /<script[^>]+type=["']application\/ld\+json["'][^>]*>(?<body>[\s\S]*?)<\/script>/giu;
 const decodeStructuredDataJson = Schema.decodeUnknownEffect(JsonTextSchema);
 /** Builds the eligible Indexing API URL queue from sitemap and live JSON-LD. */
 export const getEligibleGoogleIndexingUrls = Effect.fn(

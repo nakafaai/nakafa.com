@@ -1,7 +1,3 @@
-const layerMock = vi.hoisted(() => vi.fn());
-
-// @vitest-environment node
-
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
@@ -19,6 +15,10 @@ import {
   testArticleProjection as projection,
   testArticleSourcePath as sourcePath,
 } from "@/test/content-article";
+
+const layerMock = vi.hoisted(() => vi.fn());
+
+// @vitest-environment node
 
 /** Reads one delivery that the test expects to exist. */
 const readArticleDelivery = (publicPath: string) =>

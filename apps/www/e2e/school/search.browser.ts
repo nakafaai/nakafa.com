@@ -11,9 +11,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The palette, named by its title. */
 const PALETTE = { name: "Search" } as const;
 /** The rows of the palette that the owner's test reads, each named first by its place. */
-const HOME_ROW = /^Home/;
-const AUDIT_ROW = /^Audit trail/;
-const MEMBERS_ROW = /^Members/;
+const HOME_ROW = /^Home/u;
+const AUDIT_ROW = /^Audit trail/u;
+const MEMBERS_ROW = /^Members/u;
 
 test("the owner's search finds a setting by its name and opens it", async ({
   browser,

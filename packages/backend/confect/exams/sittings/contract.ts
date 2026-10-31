@@ -198,24 +198,36 @@ export const SignalView = Schema.Struct({
 });
 
 /**
- * One question of a student's paper: its number in the exam, its interactions without any answer
- * key, and the response that the student saved, or `null` when none is saved yet. Its prompt is
- * read on its own, by `PromptView`, so the paper stays small.
+ * One question of a student's paper: its number in the exam and its interactions without any
+ * answer key. Its prompt is read on its own, by `PromptView`, and what the student saved for it
+ * by `SavedView`, so an answer never makes the paper read again.
  */
 const PaperQuestion = Schema.Struct({
-  /** Whether the learner flagged the question for review. */
-  flagged: Schema.Boolean,
   id: Id("examQuestions"),
   interactions: Schema.NonEmptyArray(InteractionSchema),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
-  response: Schema.NullOr(ExamResponse),
-  /** The version of the saved answer, which the next answer of this question numbers one above (ADR 0013). */
-  version: Schema.NullOr(Version),
 });
 
 /** The questions of a student's paper, in the order of the exam. */
 export const PaperView = Schema.Struct({
   questions: Schema.Array(PaperQuestion),
+});
+
+/**
+ * What a student saved on the paper of an attempt: each answered question's response with its
+ * version, which the next answer of that question numbers one above (ADR 0013), and the
+ * questions the student flagged for review. An answer or a flag reads this again, never the paper.
+ */
+export const SavedView = Schema.Struct({
+  answers: Schema.Array(
+    Schema.Struct({
+      question: Id("examQuestions"),
+      response: ExamResponse,
+      version: Version,
+    })
+  ),
+  /** The flagged questions, by the ID text that the assessment flags keep for every kind of paper. */
+  flagged: Schema.Array(Schema.String),
 });
 
 /**

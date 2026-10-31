@@ -17,7 +17,7 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 const ADMIN_GRANT = { person: "Acceptance Learner", role: "Admin" } as const;
 
 /** The Owner value of the Filter menu's Role group. */
-const OWNER_OPTION = /^Owner/;
+const OWNER_OPTION = /^Owner/u;
 
 test("an admin opens the profile and the periods of a school", async ({
   browser,
@@ -65,7 +65,7 @@ test("an admin opens the profile and the periods of a school", async ({
   await page.locator("header").getByRole("button", { name: "Export" }).click();
   const file = await download;
   expect(file.suggestedFilename()).toMatch(
-    new RegExp(`^audit-${school.slug}-\\d{4}-\\d{2}-\\d{2}\\.csv$`)
+    new RegExp(`^audit-${school.slug}-\\d{4}-\\d{2}-\\d{2}\\.csv$`, "u")
   );
   const csv = await Effect.runPromise(
     Effect.gen(function* () {

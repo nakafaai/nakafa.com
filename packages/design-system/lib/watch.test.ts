@@ -17,8 +17,9 @@ class ObserverStub {
     observers = Arr.append(observers, this);
   }
 
+  /** The stub watches nothing: the tests call the callback. */
   observe() {
-    // The stub watches nothing: the tests call the callback.
+    this.disconnected = false;
   }
 
   disconnect() {

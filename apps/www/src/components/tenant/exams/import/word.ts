@@ -100,7 +100,7 @@ const childrenNamed = (element: Element, name: string) =>
 
 /** The elements below an element, in document order. */
 const descendants = (element: Element) =>
-  Arr.fromIterable(element.getElementsByTagName("*"));
+  Arr.fromIterable(element.querySelectorAll("*"));
 
 /**
  * An equation as Office Math XML without its styling, which Nina turns into LaTeX. The parsed
@@ -274,7 +274,7 @@ const extensionOf = (name: string) =>
 /** The file behind each relationship of the main part, by its ID. */
 const targetsOf = (relations: Document) =>
   Arr.map(
-    Arr.fromIterable(relations.getElementsByTagName("Relationship")),
+    Arr.fromIterable(relations.querySelectorAll("Relationship")),
     (relation) => ({
       id: relation.getAttribute("Id") ?? "",
       target: relation.getAttribute("Target") ?? "",
@@ -394,7 +394,7 @@ const parsePart = (bytes: Uint8Array) =>
       strFromU8(bytes),
       "application/xml"
     );
-    if (document.getElementsByTagName("parsererror").length > 0) {
+    if (document.querySelector("parsererror") !== null) {
       return yield* new ImportFileRefused({ reason: "type" });
     }
     return document;
@@ -431,7 +431,7 @@ export const readWord = Effect.fn("exams.import.word")(function* (
   const declared = yield* parsePart(yield* partOf(parts, TYPES_PART));
   if (
     Arr.some(
-      Arr.fromIterable(declared.getElementsByTagName("*")),
+      Arr.fromIterable(declared.querySelectorAll("*")),
       (element) => element.getAttribute("ContentType") === MACRO_TYPE
     )
   ) {
