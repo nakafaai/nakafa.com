@@ -64,6 +64,7 @@ describe("roster/imports applySourced", () => {
         const second = yield* fixture.as("counselor").mutation(applySourced, {
           ...names,
           rows: [{ ...row, name: "Raka P." }],
+          source: "oneroster",
         });
 
         expect(first).toEqual({ added: 1, changed: 0, skipped: 0 });
