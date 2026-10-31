@@ -2147,7 +2147,6 @@
     "next-question": "Soal berikutnya",
     "question": "Soal {number}",
     "mode": "Tampilan",
-    "mode-current": "Tampilan, {view}",
     "mode-list": "Daftar",
     "mode-single": "Satu soal",
     "cell": "{state, select, answered {Soal {number}, terjawab} other {Soal {number}, belum dijawab}}",

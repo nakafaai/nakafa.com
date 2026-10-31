@@ -78,21 +78,14 @@ function PlayerViewMenu() {
   const t = useTranslations("Player");
   const mode = usePlayer((state) => state.mode);
   const onValueChange = useChooseView();
-  const view = t(mode === "single" ? "mode-single" : "mode-list");
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={t("mode-current", { view })}
-            type="button"
-            variant="outline"
-          />
-        }
-      >
+      <DropdownMenuTrigger render={<Button type="button" variant="outline" />}>
         <HugeIcons icon={mode === "single" ? File01Icon : ListViewIcon} />
-        <span className="max-sm:sr-only">{view}</span>
+        <span className="max-sm:sr-only">
+          {t(mode === "single" ? "mode-single" : "mode-list")}
+        </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup onValueChange={onValueChange} value={mode}>
