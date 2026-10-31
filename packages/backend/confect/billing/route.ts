@@ -84,6 +84,20 @@ function railUnderPasses(offer: BillingOfferKey) {
     : ("polar" as const);
 }
 
+/**
+ * Whether the offers of `currency` lead with the passes: rupiah under `passes`,
+ * where the monthly plan needs a card, so a buyer without one starts on an offer
+ * they can pay. A switch that names no rail keeps the catalog's order.
+ */
+export const passesLead = Effect.fn("billing.route.passesLead")(function* (
+  currency: BillingCurrency
+) {
+  const rail = yield* readIndonesiaRail.pipe(
+    Effect.catchTag("ConfigError", () => Effect.succeed("polar" as const))
+  );
+  return currency === "IDR" && rail === "passes";
+});
+
 /** The country Nakafa holds when it does not know the buyer's, because Polar decides it at checkout. */
 export const UNKNOWN_COUNTRY = "ZZ";
 
