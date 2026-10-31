@@ -52,7 +52,10 @@ vi.mock("@/components/tryout/route/token.server", () => ({
 vi.mock("@/lib/og/app", () => ({
   getAppSocialArtwork: catalog.getAppSocialArtwork,
 }));
-vi.mock("@/lib/seo/social", () => ({ getOgUrl: catalog.getOgUrl }));
+vi.mock("@/lib/seo/social", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/seo/social")>()),
+  getOgUrl: catalog.getOgUrl,
+}));
 vi.mock("@/lib/tryout/artwork", () => ({
   resolveTryoutExamArtwork: catalog.resolveTryoutExamArtwork,
 }));
@@ -88,7 +91,14 @@ const hub = {
   countries: [{ publicPath: COUNTRY, title: "Indonesia" }],
   sourceRevision: undefined,
 };
+/** The country's address in each locale, as the catalog resolves its node: its slug differs in German. */
+const ALTERNATES = [
+  { appLocale: "en", publicPath: COUNTRY },
+  { appLocale: "id", publicPath: COUNTRY },
+  { appLocale: "de", publicPath: "try-out/indonesien" },
+];
 const publishedRoute = {
+  alternates: ALTERNATES,
   canonicalPath: COUNTRY,
   description: "Country",
   publicPath: COUNTRY,
@@ -148,6 +158,12 @@ describe("readTryoutRouteHead", () => {
       });
 
       expect(Option.getOrThrow(head)).toEqual({
+        alternates: [
+          { href: `https://nakafa.com/en/${COUNTRY}`, hreflang: "en" },
+          { href: `https://nakafa.com/id/${COUNTRY}`, hreflang: "id" },
+          { href: "https://nakafa.com/de/try-out/indonesien", hreflang: "de" },
+          { href: `https://nakafa.com/en/${COUNTRY}`, hreflang: "x-default" },
+        ],
         canonicalPath: `/en/${COUNTRY}`,
         description: "Country",
         image: "og-url",
