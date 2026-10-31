@@ -10,17 +10,13 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 /** The end of an editor's address, which the try's address replaces. */
 const EDIT_SUFFIX = /\/edit$/u;
 
-/** The bottom of the school page's header and the top of the player's toolbar under it. */
-function rows() {
+/** The top of the player's header row, which is the school page's header. */
+function headerTop() {
   const header = document.querySelector('header[data-slot="page-header"]');
-  const toolbar = document.querySelector("[data-player-toolbar]");
-  return {
-    header: Math.round(header?.getBoundingClientRect().bottom ?? -1),
-    toolbar: Math.round(toolbar?.getBoundingClientRect().top ?? -1),
-  };
+  return Math.round(header?.getBoundingClientRect().top ?? -1);
 }
 
-test("on a phone the player's toolbar stands right under the school's header", async ({
+test("on a phone the player's header stands at the top of the school's page", async ({
   baseURL,
   browser,
 }) => {
@@ -44,14 +40,13 @@ test("on a phone the player's toolbar stands right under the school's header", a
     page.getByRole("textbox", { name: "Question 1 text" })
   ).toBeEditable({ timeout: readinessTimeoutMilliseconds });
 
-  // The school has no app header above its pages, so no gap opens between its header and the toolbar.
+  // The school has no app header above its pages, so no gap opens above the player's header.
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto(page.url().replace(EDIT_SUFFIX, "/try"));
-  await expect(page.locator("[data-player-toolbar]")).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
-  // A sticky toolbar placed below where it rests opens the gap at rest too, so the page's first paint shows it.
-  const placed = await page.evaluate(rows);
-  expect(placed.toolbar).toBe(placed.header);
+  await expect(
+    page.getByRole("button", { exact: true, name: "Finish" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  // A sticky header placed below where it rests opens the gap at rest too, so the page's first paint shows it.
+  expect(await page.evaluate(headerTop)).toBe(0);
   await context.close();
 });
