@@ -25,8 +25,8 @@ for (const viewport of [
     const page = await context.newPage();
     await page.goto(address("/classes/fisika-x-1"));
     await page
-      .getByRole("navigation", { name: "Class" })
-      .getByRole("link", { name: "People" })
+      .getByRole("tablist", { name: "Class" })
+      .getByRole("tab", { name: "People" })
       .click();
     await expect(
       page.getByRole("cell", { name: "Teacher" }).first()
