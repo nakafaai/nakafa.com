@@ -56,7 +56,8 @@ describe("exams/sittings schedule", () => {
         });
         expect(row.tokenHash).not.toBe(made.token);
         expect(row.tokenHash).not.toContain(made.token);
-        expect(row.jobs).toHaveLength(2);
+        // The opening, the closing, and the two notices of its students and their guardians.
+        expect(row.jobs).toHaveLength(4);
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change)).toContainEqual({
           type: "sitting.schedule",
