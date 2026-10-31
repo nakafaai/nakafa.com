@@ -1,42 +1,55 @@
 import { ClientOnly } from "@tanstack/react-router";
-import { type ComponentProps, lazy, Suspense } from "react";
+import { Effect } from "effect";
+import {
+  type ComponentProps,
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
 
 /**
- * One read-only assessment document. The editor brings its library with it, so the reader loads
- * when a question shows for the first time, and never on the server.
+ * One read-only assessment document. Its formulas are too heavy for the page's first JavaScript, so the
+ * reader loads apart from it, and never on the server.
  */
+const loadReader = () => import("@/components/exams/sitting/reader");
+
 const LazySittingDocument = lazy(() =>
-  import("@/components/exams/sitting/reader").then((module) => ({
-    default: module.SittingReader,
-  }))
+  loadReader().then((module) => ({ default: module.SittingReader }))
 );
 
 /**
- * A page-sized document keeps its height while the reader loads, so the question below it never moves. A
- * line-sized option has no reserved height, because its label is part of the option row.
+ * Whether a paper can draw its documents. The reader starts loading once the page is `wanted`, as soon as a
+ * student can enter, so the paper never waits for it. A reader that fails to load answers too, and the
+ * document that needs it reports it.
  */
+export function useReaderLoaded(wanted: boolean) {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!wanted) {
+      return;
+    }
+    Effect.runPromise(
+      Effect.tryPromise(loadReader).pipe(
+        Effect.ignore,
+        Effect.andThen(Effect.sync(() => setLoaded(true)))
+      )
+    );
+  }, [wanted]);
+
+  return loaded;
+}
+
+/** A document takes no room before its reader is ready: the paper shows once it can draw its first question. */
 export function SittingDocument(
   props: ComponentProps<typeof LazySittingDocument>
 ) {
   return (
-    <Suspense fallback={<DocumentReserve size={props.size} />}>
-      <ClientOnly fallback={<DocumentReserve size={props.size} />}>
+    <Suspense fallback={null}>
+      <ClientOnly fallback={null}>
         <LazySittingDocument {...props} />
       </ClientOnly>
     </Suspense>
   );
-}
-
-/** What a document keeps while its reader loads: a prompt's height for a page, nothing for a line. */
-function DocumentReserve({
-  size,
-}: {
-  size: ComponentProps<typeof LazySittingDocument>["size"];
-}) {
-  return size === "line" ? null : <PromptReserve />;
-}
-
-/** The space a prompt keeps before its reader is ready: empty and hidden from assistive technology. */
-export function PromptReserve() {
-  return <div aria-hidden className="min-h-32" />;
 }

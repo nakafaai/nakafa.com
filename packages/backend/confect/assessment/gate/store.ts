@@ -121,4 +121,6 @@ export interface Store<
   readonly section: (
     section: Section
   ) => Effect.Effect<Option.Option<Candidate<Live, E, R>>, E, R>;
+  /** How many milliseconds past the deadline an answer of this kind of attempt still counts (ADR 0013). */
+  readonly writeAllowance: number;
 }

@@ -9,9 +9,9 @@ import {
 } from "@repo/backend/confect/assessment/response";
 import { ClientOnly } from "@tanstack/react-router";
 import { Option, Record as Rec } from "effect";
-import { lazy, Suspense } from "react";
+import { lazy, type ReactNode, Suspense } from "react";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import { PromptReserve } from "@/components/exams/sitting/document";
+import { useReaderLoaded } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
 import { SittingPairs } from "@/components/exams/sitting/pairs";
 import {
@@ -45,6 +45,32 @@ const TryPrompt = lazy(() =>
     default: module.TryPrompt,
   }))
 );
+
+/**
+ * Keeps the paper out of sight until it can draw its first question, as a sitting's paper does: the reader
+ * has loaded, and the first prompt has answered, so no option moves when its prompt arrives.
+ */
+export function TryReveal({
+  children,
+  documentId,
+}: {
+  children: ReactNode;
+  /** The prompt of the first question. */
+  documentId: Question["prompt"] | undefined;
+}) {
+  const slug = useTrySlug();
+  const loaded = useReaderLoaded(true);
+  const reply = useQuery(
+    editors.documents.open,
+    documentId === undefined
+      ? "skip"
+      : { clientId: TRY_CLIENT, documentId, slug }
+  );
+  const waiting =
+    !loaded || (documentId !== undefined && QueryResult.isLoading(reply));
+
+  return <div className={waiting ? "invisible" : undefined}>{children}</div>;
+}
 
 /**
  * One question as a student meets it, in the player's own question article: its number, its prompt,
@@ -122,10 +148,10 @@ export function ExamTryQuestion({
 }
 
 /**
- * The prompt of one question. It keeps a prompt's height from the first draw until its reader is
- * ready, as a sitting's prompt does, so the options below it do not move while the document opens
- * and the reader loads. A prompt that does not open leaves no space, and one whose exam goes while
- * it is tried keeps the text it showed, as the paper keeps the exam's title and questions.
+ * The prompt of one question. The paper shows once its first prompt can draw, as a sitting's paper
+ * does, so the options below it do not move while the document opens and the reader loads. A prompt
+ * that does not open leaves no space, and one whose exam goes while it is tried keeps the text it
+ * showed, as the paper keeps the exam's title and questions.
  */
 function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
   const slug = useTrySlug();
@@ -137,11 +163,11 @@ function ExamTryPrompt({ documentId }: { documentId: Question["prompt"] }) {
   const opened = useLastValue(reply);
 
   if (Option.isNone(opened)) {
-    return QueryResult.isFailure(reply) ? null : <PromptReserve />;
+    return null;
   }
   return (
-    <Suspense fallback={<PromptReserve />}>
-      <ClientOnly fallback={<PromptReserve />}>
+    <Suspense fallback={null}>
+      <ClientOnly fallback={null}>
         <TryPrompt key={documentId} opened={opened.value} />
       </ClientOnly>
     </Suspense>
