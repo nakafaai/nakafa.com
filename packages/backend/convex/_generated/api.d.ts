@@ -1450,6 +1450,7 @@ export declare const api: {
           email: boolean;
           id: Id<"classroomPosts">;
           mine: boolean;
+          pinned: boolean;
           text: string;
         }
       >;
@@ -1479,11 +1480,39 @@ export declare const api: {
             email: boolean;
             id: Id<"classroomPosts">;
             mine: boolean;
+            pinned: boolean;
             text: string;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      pin: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          pinned: boolean;
+          postId: Id<"classroomPosts">;
+          slug: string;
+        },
+        null
+      >;
+      pinned: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          author: { id: Id<"tenantPeople">; name: string };
+          clientKey: string;
+          createdAt: number;
+          editedAt: number | null;
+          email: boolean;
+          id: Id<"classroomPosts">;
+          mine: boolean;
+          pinned: boolean;
+          text: string;
+        }>
       >;
       publish: FunctionReference<
         "mutation",
@@ -1503,6 +1532,7 @@ export declare const api: {
           email: boolean;
           id: Id<"classroomPosts">;
           mine: boolean;
+          pinned: boolean;
           text: string;
         }
       >;
