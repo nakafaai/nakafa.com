@@ -126,8 +126,9 @@ export function NumberKey({
 }) {
   const t = useTranslations("Exams");
   const id = useId();
-  // The tolerance the teacher chose, which the key takes once its distance is written.
-  const [kind, setKind] = useState<ToleranceKind>(setting.toleranceKind);
+  // A tolerance the teacher chose whose distance is not written yet, which the key takes once it is.
+  const [chosen, setChosen] = useState<ToleranceKind | null>(null);
+  const kind = chosen ?? setting.toleranceKind;
 
   /** Saves a setting the contract grades, or a blank number, which clears the key, and says whether it saved. */
   const save = (next: NumberSetting) => {
@@ -168,10 +169,12 @@ export function NumberKey({
             if (!isToleranceKind(value)) {
               return;
             }
-            setKind(value);
-            if (value === "exact") {
-              save({ ...setting, tolerance: "", toleranceKind: "exact" });
+            if (value !== "exact") {
+              setChosen(value);
+              return;
             }
+            setChosen(null);
+            save({ ...setting, tolerance: "", toleranceKind: "exact" });
           }}
           value={kind}
         >
@@ -196,9 +199,17 @@ export function NumberKey({
             id={`${id}-within`}
             inputMode="decimal"
             label={t("number-within-of", { number })}
-            onCommit={(tolerance) =>
-              save({ ...setting, tolerance, toleranceKind: kind })
-            }
+            onCommit={(tolerance) => {
+              const saved = save({
+                ...setting,
+                tolerance,
+                toleranceKind: kind,
+              });
+              if (saved) {
+                setChosen(null);
+              }
+              return saved;
+            }}
             placeholder={t("number-tolerance-placeholder")}
             refusal={t(
               kind === "relative"

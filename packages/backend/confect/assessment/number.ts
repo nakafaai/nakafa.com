@@ -20,8 +20,11 @@ const EASTERN_DIGIT = /[٠-٩۰-۹]/gu;
 /** The comma and the Arabic decimal separator ٫, either of which a learner may write for the decimal point. */
 const DECIMAL_SEPARATOR = /[,٫]/gu;
 
-/** The low four bits of a digit's code point, which are its value in both Arabic-Indic runs: U+0660 and U+06F0. */
-const DIGIT_BITS = 0xf;
+/** The code point of the Arabic-Indic zero ٠, from which each Arabic-Indic digit counts its value. */
+const ARABIC_INDIC_ZERO = 0x06_60;
+
+/** How far the Eastern Arabic-Indic digits ۰ to ۹ start after the Arabic-Indic ones, so both runs count alike. */
+const EASTERN_RUN = 0x90;
 
 /**
  * A typed number as the contract reads it, whatever script and separator the learner wrote it in: each
@@ -32,7 +35,9 @@ const DIGIT_BITS = 0xf;
  */
 export const numberText = (typed: string) =>
   typed
-    .replace(EASTERN_DIGIT, (digit) => String(digit.charCodeAt(0) & DIGIT_BITS))
+    .replace(EASTERN_DIGIT, (digit) =>
+      String((digit.charCodeAt(0) - ARABIC_INDIC_ZERO) % EASTERN_RUN)
+    )
     .replace(DECIMAL_SEPARATOR, ".");
 
 /**

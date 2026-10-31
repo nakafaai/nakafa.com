@@ -6,6 +6,7 @@ import {
   type NumericKey,
   numericKeyFits,
 } from "@repo/backend/confect/assessment/number";
+import type { QuestionView } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option, Schema, String as Str } from "effect";
 
 /** How far a student's number may stray from the key's: not at all, a fixed distance, or a share of the value. */
@@ -113,10 +114,7 @@ const keyFor = (
 export const withNumber = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
   setting: NumberSetting
-): {
-  readonly answers: Arr.NonEmptyReadonlyArray<Interaction>;
-  readonly key: Arr.NonEmptyReadonlyArray<InteractionKey> | null;
-} => {
+): Pick<QuestionView, "answers" | "key"> => {
   const unit = Str.trim(setting.unit);
   const next = Arr.map(
     answers,
