@@ -470,7 +470,11 @@ export default defineConfig(async ({ command, isPreview }) => {
       }),
       // No deployment pin route: a client that asks for a
       // chunk the deploy replaced reloads the document once.
-      rsc(),
+      // Each client module is its own group, so a page preloads only the
+      // client references it renders. The default groups every reference whose
+      // proxy shares a server chunk, and the renderer's manifest is one chunk:
+      // each lesson preloaded every visual it names, KaTeX among their imports.
+      rsc({ clientChunks: ({ normalizedId }) => normalizedId }),
       tailwindcss(),
       react(),
       babel({ presets: [reactCompilerPreset()] }),
