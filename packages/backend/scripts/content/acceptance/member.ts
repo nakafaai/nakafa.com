@@ -1,4 +1,7 @@
-import { openLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
+import {
+  openLearnerAccount,
+  type RunConvex,
+} from "@repo/backend/scripts/content/acceptance/account";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
@@ -19,6 +22,26 @@ const UserRows = Schema.fromJsonString(
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 export const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
+/** The app user of one Better Auth account, read from the local runtime. */
+export const appUserOf = Effect.fn("contentAcceptance.appUser")(function* <
+  E,
+  R,
+>(run: RunConvex<E, R>, authId: string) {
+  const users = yield* run("app users", [
+    "data",
+    "users",
+    "--format",
+    "jsonArray",
+    "--limit",
+    "1000",
+  ]).pipe(Effect.flatMap(Schema.decodeEffect(UserRows)));
+  const user = Arr.findFirst(users, (row) => row.authId === authId);
+  if (Option.isNone(user)) {
+    return yield* acceptanceRuntimeError("The new account has no app user.");
+  }
+  return user.value._id;
+});
+
 /**
  * Signs in the account that holds an address which a school's invite waits for.
  * The first sign-in creates the account with the address, so the invite is
@@ -36,24 +59,8 @@ export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
       sensitiveValues?: readonly string[]
     ) => runLocalConvex(runtime, operation, args, sensitiveValues);
     const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
-    const users = yield* run("app users", [
-      "data",
-      "users",
-      "--format",
-      "jsonArray",
-      "--limit",
-      "1000",
-    ]).pipe(Effect.flatMap(Schema.decodeEffect(UserRows)));
-    const member = Arr.findFirst(
-      users,
-      (user) => user.authId === account.userId
-    );
-    if (Option.isNone(member)) {
-      return yield* acceptanceRuntimeError(
-        "The new account has no app user to claim the school with."
-      );
-    }
-    yield* encodeArguments({ cursor: null, userId: member.value._id }).pipe(
+    const userId = yield* appUserOf(run, account.userId);
+    yield* encodeArguments({ cursor: null, userId }).pipe(
       Effect.flatMap((args) =>
         run("school claim", ["run", "tenancy/claims:run", args])
       )

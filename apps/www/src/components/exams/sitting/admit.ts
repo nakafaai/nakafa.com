@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { useMutation } from "@confect/react";
+import { NETWORK_RETRY_SCHEDULE } from "@repo/backend/client/network";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
@@ -113,6 +114,8 @@ export function useEnterSitting() {
     deviceId: typeof DeviceId.Type,
     onAdmission: (admission: Admission) => void
   ) {
+    // A failed call goes again with the same device, which the server admits to the same attempt. Each send
+    // reads its own time, because the clock's correction comes from the round trip that was answered.
     return Clock.currentTimeMillis.pipe(
       Effect.flatMap((sentAt) =>
         Effect.tryPromise(() =>
@@ -122,48 +125,52 @@ export function useEnterSitting() {
             slug: input.slug,
             token: input.token,
           })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.matchEffect({
-            onFailure: (error) => failureOf(error, onAdmission),
-            onSuccess: (outcome) => {
-              if (outcome.outcome === "refused") {
-                return Effect.sync(() => {
-                  onAdmission({
-                    _tag: "refused",
-                    message: entryRefusalMessage(outcome.reason),
-                  });
-                });
-              }
-              return Clock.currentTimeMillis.pipe(
-                Effect.flatMap((receivedAt) =>
-                  rememberSittingDevice(input.sittingId, deviceId).pipe(
-                    Effect.catchTag(
-                      "SittingDeviceStorageFailed",
-                      () => Effect.void
-                    ),
-                    Effect.andThen(
-                      Effect.sync(() => {
-                        onAdmission({
-                          _tag: "admitted",
-                          attemptId: outcome.attempt,
-                          clockOffset: serverClockOffset({
-                            receivedAt,
-                            sentAt,
-                            serverNow: outcome.serverNow,
-                          }),
-                          deviceId,
-                          state: outcome.state,
-                        });
-                      })
-                    )
-                  )
-                )
-              );
-            },
-          })
+        ).pipe(Effect.map((result) => ({ result, sentAt })))
+      ),
+      Effect.retry(NETWORK_RETRY_SCHEDULE),
+      Effect.flatMap(({ result, sentAt }) =>
+        Effect.fromResult(result).pipe(
+          Effect.map((outcome) => ({ outcome, sentAt }))
         )
-      )
+      ),
+      Effect.matchEffect({
+        onFailure: (error) => failureOf(error, onAdmission),
+        onSuccess: ({ outcome, sentAt }) => {
+          if (outcome.outcome === "refused") {
+            return Effect.sync(() => {
+              onAdmission({
+                _tag: "refused",
+                message: entryRefusalMessage(outcome.reason),
+              });
+            });
+          }
+          return Clock.currentTimeMillis.pipe(
+            Effect.flatMap((receivedAt) =>
+              rememberSittingDevice(input.sittingId, deviceId).pipe(
+                Effect.catchTag(
+                  "SittingDeviceStorageFailed",
+                  () => Effect.void
+                ),
+                Effect.andThen(
+                  Effect.sync(() => {
+                    onAdmission({
+                      _tag: "admitted",
+                      attemptId: outcome.attempt,
+                      clockOffset: serverClockOffset({
+                        receivedAt,
+                        sentAt,
+                        serverNow: outcome.serverNow,
+                      }),
+                      deviceId,
+                      state: outcome.state,
+                    });
+                  })
+                )
+              )
+            )
+          );
+        },
+      })
     );
   }
 

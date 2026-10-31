@@ -46,9 +46,7 @@ test("a teacher turns a question into a numeric answer, keys its number with a t
   await expect(
     page.getByRole("textbox", { name: "Question 1, option A" })
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("textbox", { name: "Number field" })
-  ).toBeVisible();
+  await expect(page.getByPlaceholder("Type a number")).toBeVisible();
 
   // The layer keeps a slip in its field with the reason, and saves the number the contract grades.
   const panel = page.getByRole("complementary", { name: "For teachers" });

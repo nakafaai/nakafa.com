@@ -61,7 +61,8 @@ const choiceCell = cva(
  * from the table's owner (`lib/prose.ts`): its frame, its header's cells, its body on the muted surface,
  * and its rows and cells with their rules. Each row is a radio group named by its statement, and each
  * radio by its column's header, so a screen reader reads the statement and the choice. Without `onMark`, or while `disabled`, the table is only read, as a review reads it, and a
- * statement with its key shows the key's column and a mark that misses it.
+ * statement with its key shows the key's column and a mark that misses it. Only its radios lock, so the exam
+ * editor draws this same table around the editors of its statements and columns, as the student meets it.
  */
 export function TryoutChoiceTable({
   columns,
@@ -89,9 +90,8 @@ export function TryoutChoiceTable({
       <fieldset
         aria-label={label ?? t("answer")}
         className={tableFrameVariants({ className: "m-0 min-w-0 p-0" })}
-        disabled={locked}
         style={{
-          gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns.length}, minmax(4.5rem, auto))`,
+          gridTemplateColumns: `auto minmax(0, 1fr) repeat(${columns.length}, minmax(min(4.5rem, calc(50% / ${columns.length})), auto))`,
         }}
       >
         <div className="col-span-full grid grid-cols-subgrid border-b">

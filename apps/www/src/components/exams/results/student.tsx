@@ -21,7 +21,8 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /**
  * The letters of the options that a student chose, the text the student typed, or the pairs the
- * student made, or a line that says the question was left unanswered.
+ * student made, or a line that says the question was left unanswered. The answer keeps its own
+ * direction and its line breaks inside the sentence, so an Arabic essay reads as it was typed.
  */
 function AnswerLine({
   question,
@@ -33,7 +34,10 @@ function AnswerLine({
   if (shown === "") {
     return t("student-no-answer");
   }
-  return t("student-answer", { answer: shown });
+  return t.rich("student-answer", {
+    answer: shown,
+    typed: (words) => <bdi className="whitespace-pre-wrap">{words}</bdi>,
+  });
 }
 
 /** One question of the student's result: its number and verdict, with the answer that the student chose beneath. */

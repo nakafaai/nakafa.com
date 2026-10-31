@@ -18,10 +18,19 @@ import { usePlayer } from "@/components/player/provider";
  * (`PlayerFlag`), and next at the end. The outer zones take equal widths, so the centre sits on the
  * screen's middle by construction, and previous and next keep their places whatever the labels say or the
  * view shows, so nothing moves when next becomes review or the view changes. It sticks to the
- * bottom of the screen, so a learner moves on without scrolling back. The list measures it through
- * `data-player-footer`, so the end of the list counts as reached once it clears the footer.
+ * bottom of the screen, so a learner moves on without scrolling back. A `note` that holds for the whole paper
+ * stands in the centre from the large breakpoint, and on its own line under the row below it, where the row
+ * has no room for words. The list measures the footer through `data-player-footer`, so the end of the list
+ * counts as reached once it clears the footer.
  */
-export function PlayerFooter({ children }: { children?: ReactNode }) {
+export function PlayerFooter({
+  children,
+  note,
+}: {
+  children?: ReactNode;
+  /** A line about the whole paper, such as a try's answers not being saved. */
+  note?: ReactNode;
+}) {
   const t = useTranslations("Player");
 
   return (
@@ -29,7 +38,7 @@ export function PlayerFooter({ children }: { children?: ReactNode }) {
       className="bg-background sticky bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom,0px)]"
       data-player-footer=""
     >
-      <fieldset className="mx-auto grid h-16 w-full max-w-7xl min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-0 px-4 sm:px-6">
+      <fieldset className="mx-auto grid min-h-16 w-full max-w-7xl min-w-0 grid-cols-[1fr_auto_1fr] grid-rows-[4rem] items-center gap-x-2 border-0 px-4 sm:px-6">
         <legend className="sr-only">{t("controls")}</legend>
         <div className="flex justify-start">
           <PlayerPrevious />
@@ -40,6 +49,11 @@ export function PlayerFooter({ children }: { children?: ReactNode }) {
         <div className="flex justify-end">
           <PlayerNext />
         </div>
+        {note === undefined ? null : (
+          <p className="text-muted-foreground col-span-full pb-2 text-center text-xs lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:pb-0 lg:text-sm">
+            {note}
+          </p>
+        )}
       </fieldset>
     </footer>
   );

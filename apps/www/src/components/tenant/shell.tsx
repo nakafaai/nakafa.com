@@ -56,6 +56,10 @@ import {
   useTenant,
   ViewerPreloadContext,
 } from "@/components/tenant/context";
+import {
+  CreatedExamsContext,
+  createCreatedExams,
+} from "@/components/tenant/exams/created";
 import type { HomeAccess } from "@/components/tenant/home/access";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
@@ -233,12 +237,14 @@ function TenantSwitcher() {
  * sidebar hides and ignores its toggles, so a student sees none of the school's
  * navigation while answering, and it returns unchanged when the page goes. The
  * pathname is read here, not in the shell, so the shell's context value does not
- * change on navigation.
+ * change on navigation. Leaving the frame for the editor mounts the pages anew, so the
+ * exam a create just answered with is held here, above both.
  */
 function TenantFrame({ children }: { children: ReactNode }) {
   const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit", {
     exact: true,
   });
+  const [created] = useState(createCreatedExams);
   const tCommon = useTranslations("Common");
   const locale = useLocale();
   const [locks, setLocks] = useState(0);
@@ -247,33 +253,37 @@ function TenantFrame({ children }: { children: ReactNode }) {
   const side = textDirection(locale) === "rtl" ? "right" : "left";
 
   if (isEditor) {
-    return children;
+    return (
+      <CreatedExamsContext value={created}>{children}</CreatedExamsContext>
+    );
   }
 
   return (
-    <ShellLocksContext value={setLocks}>
-      <SidebarProvider data-locked={locked ? "" : undefined} locked={locked}>
-        {/* Hidden rather than unmounted, so the learner's open or closed choice returns with it. */}
-        <div className="contents group-data-locked/sidebar-wrapper:hidden">
-          <Sidebar collapsible="icon" label={tCommon("sidebar")} side={side}>
-            <SidebarHeader className="border-b">
-              <SidebarMenu>
-                <TenantSwitcher />
-              </SidebarMenu>
-              <TenantSearch />
-            </SidebarHeader>
-            <SidebarContent>
-              <TenantNavigation />
-            </SidebarContent>
-            <SidebarToggle />
-            <TenantAccount />
-          </Sidebar>
-        </div>
-        <SidebarInset className="[--app-header-top:0rem]">
-          {children}
-        </SidebarInset>
-      </SidebarProvider>
-    </ShellLocksContext>
+    <CreatedExamsContext value={created}>
+      <ShellLocksContext value={setLocks}>
+        <SidebarProvider data-locked={locked ? "" : undefined} locked={locked}>
+          {/* Hidden rather than unmounted, so the learner's open or closed choice returns with it. */}
+          <div className="contents group-data-locked/sidebar-wrapper:hidden">
+            <Sidebar collapsible="icon" label={tCommon("sidebar")} side={side}>
+              <SidebarHeader className="border-b">
+                <SidebarMenu>
+                  <TenantSwitcher />
+                </SidebarMenu>
+                <TenantSearch />
+              </SidebarHeader>
+              <SidebarContent>
+                <TenantNavigation />
+              </SidebarContent>
+              <SidebarToggle />
+              <TenantAccount />
+            </Sidebar>
+          </div>
+          <SidebarInset className="[--app-header-top:0rem]">
+            {children}
+          </SidebarInset>
+        </SidebarProvider>
+      </ShellLocksContext>
+    </CreatedExamsContext>
   );
 }
 

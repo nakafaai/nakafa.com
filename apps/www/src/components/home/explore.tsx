@@ -3,6 +3,8 @@ import {
   AiMagicIcon,
   Atom02Icon,
   Books02Icon,
+  Mortarboard02Icon,
+  School01Icon,
   Target01Icon,
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
@@ -20,6 +22,7 @@ import {
   TargetLink,
   useCurrentLocale,
 } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 function SubjectIcon() {
@@ -95,11 +98,37 @@ function NinaIcon() {
   );
 }
 
+function SchoolIcon() {
+  return (
+    <div className="relative flex h-18 w-20 items-center justify-center">
+      <div className="bg-card relative flex h-14 w-16 flex-col gap-2 rounded-md border p-2.5 shadow-xs transition-transform ease-out group-hover:-translate-y-1">
+        <div className="grid grid-cols-3 gap-1">
+          <div className="bg-chart-4/30 h-2.5 rounded-xs" />
+          <div className="bg-chart-4/30 h-2.5 rounded-xs" />
+          <div className="bg-chart-4/30 h-2.5 rounded-xs" />
+          <div className="bg-muted h-2.5 rounded-xs" />
+          <div className="bg-chart-4/30 h-2.5 rounded-xs" />
+          <div className="bg-muted h-2.5 rounded-xs" />
+        </div>
+
+        <div className="border-card bg-chart-3 text-background absolute -right-2 bottom-1 flex size-5.5 items-center justify-center rounded-full border-2 shadow-xs transition-transform ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110">
+          <HugeIcons className="size-3" icon={Mortarboard02Icon} />
+        </div>
+
+        <div className="border-card bg-chart-4 text-background absolute -bottom-2 -left-2 flex size-9 items-center justify-center rounded-full border-2 shadow-xs transition-transform ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110">
+          <HugeIcons className="size-4.5" icon={School01Icon} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Renders the home exploration shortcuts from the same canonical route helpers
  * used by sidebar and sitemap navigation. Only the signed-in home mounts it, behind
  * the account gate and under the app's Convex provider, so it reads the learner's
- * preferences directly.
+ * preferences directly. The School card always leads to `/school`, which knows the
+ * account and goes on from there, so its link never changes under the reader.
  */
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
@@ -120,7 +149,7 @@ export function HomeExplore() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 md:gap-6">
         {Arr.map(items, (item) => (
           <ExploreCard
             key={item.id}
@@ -130,6 +159,12 @@ export function HomeExplore() {
             {exploreCards[item.id].icon}
           </ExploreCard>
         ))}
+        <ExploreCard
+          target={{ from: LOCALE_ROUTE, to: "/$locale/school" }}
+          title={tCommon("school")}
+        >
+          <SchoolIcon />
+        </ExploreCard>
       </div>
     </section>
   );
@@ -146,7 +181,7 @@ function ExploreCard({
 }) {
   return (
     <TargetLink className="group flex flex-col items-center gap-2" {...link}>
-      <div className="bg-card flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border">
+      <div className="bg-card flex aspect-[1/0.7] w-full items-center justify-center rounded-xl border sm:aspect-[1/0.95]">
         <div className="scale-75 sm:scale-100">{children}</div>
       </div>
       <h2 className="text-center text-sm sm:text-base">{title}</h2>
