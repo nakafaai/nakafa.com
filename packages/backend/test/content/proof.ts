@@ -168,10 +168,10 @@ export function insertProofRoute(ctx: MutationCtx, index: number) {
 /** Creates an authenticated empty manifest with every catalog proof bound. */
 export const testEmptyManifest = Effect.fn("test.content.emptyManifest")(
   function* (releaseId: ReleaseId) {
-    const items = yield* digestItems(releaseId, Stream.empty);
-    const projections = yield* digestProjections(releaseId, Stream.empty);
-    const rollback = yield* digestRollbackSnapshot(releaseId, Stream.empty);
-    const routes = yield* digestRoutes(releaseId, Stream.empty);
+    const items = yield* digestItems(Stream.empty);
+    const projections = yield* digestProjections(Stream.empty);
+    const rollback = yield* digestRollbackSnapshot(Stream.empty);
+    const routes = yield* digestRoutes(Stream.empty);
     const snapshots = inheritContentSnapshots(null);
     return ContentReleaseManifestSchema.make({
       activeAppLocales: ACTIVE_APP_LOCALES,

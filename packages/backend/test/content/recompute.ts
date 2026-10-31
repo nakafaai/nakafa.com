@@ -131,11 +131,9 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
     );
     const digests = yield* Effect.all({
       items: digestItems(
-        releaseId,
         Stream.fromIterable(Arr.map(entries, ({ item }) => item))
       ),
       projections: digestProjections(
-        releaseId,
         Stream.fromIterable(Arr.map(entries, ({ projection }) => projection))
       ),
       result: digestResultCatalog(
@@ -143,10 +141,9 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
         Stream.fromIterable(Arr.map(entries, ({ head }) => head))
       ),
       rollback: digestRollbackSnapshot(
-        releaseId,
         Stream.fromIterable(Arr.map(entries, ({ rollback }) => rollback))
       ),
-      routes: digestRoutes(releaseId, Stream.fromIterable(routes)),
+      routes: digestRoutes(Stream.fromIterable(routes)),
     });
     const emptyManifest = yield* testEmptyManifest(releaseId);
     const signed = yield* testSignedRelease(
