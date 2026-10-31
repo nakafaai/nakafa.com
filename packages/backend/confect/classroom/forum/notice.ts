@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
+import classroomInternal from "@repo/backend/confect/_generated/refs/classroom.server";
 import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
@@ -20,8 +21,9 @@ import { Array as Arr, Duration, Effect, Option } from "effect";
 
 /**
  * The mentions of a message, checked before it is written: each Person once, each
- * one an active Person who writes in the class now, and everyone only from a
- * subject teacher of the class (ADR 0025). Any other mention refuses the message.
+ * one an active Person who writes in the class now, everyone only from a subject
+ * teacher of the class, and Nina only in a school that turned her on (ADR 0025).
+ * Any other mention refuses the message.
  * It answers the mentions as they are stored and the Persons they name.
  */
 export const checkMentions = Effect.fn("classroom.forum.notice.check")(
@@ -33,6 +35,10 @@ export const checkMentions = Effect.fn("classroom.forum.notice.check")(
       (mention) => mention._tag === "everyone"
     );
     if (everyone && !(yield* subjectTeacherOf(row, principal))) {
+      return yield* new MentionRefused();
+    }
+    const nina = Arr.some(mentions, (mention) => mention._tag === "nina");
+    if (nina && !principal.tenant.policies.nina) {
       return yield* new MentionRefused();
     }
     const ids = Arr.dedupe(mentionedPeople(mentions));
@@ -58,11 +64,13 @@ export const checkMentions = Effect.fn("classroom.forum.notice.check")(
     );
     return {
       everyone,
+      nina,
       people,
-      stored: Arr.appendAll(
-        Arr.map(ids, (id) => ({ _tag: "person" as const, id })),
-        everyone ? [{ _tag: "everyone" as const }] : []
-      ),
+      stored: [
+        ...Arr.map(ids, (id) => ({ _tag: "person" as const, id })),
+        ...(everyone ? [{ _tag: "everyone" as const }] : []),
+        ...(nina ? [{ _tag: "nina" as const }] : []),
+      ],
     };
   }
 );
@@ -119,6 +127,13 @@ export const noticeMentions = Effect.fn("classroom.forum.notice.write")(
         }),
       { discard: true }
     );
+    if (checked.nina) {
+      yield* (yield* Scheduler).runAfter(
+        Duration.zero,
+        classroomInternal.forum.nina.reply,
+        { messageId }
+      );
+    }
     if (checked.everyone) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,

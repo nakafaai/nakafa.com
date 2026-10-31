@@ -1336,6 +1336,8 @@
     "post-email": "Also send by email",
     "mention-list": "People to mention",
     "mention-everyone": "Everyone in the class",
+    "mention-nina": "Nina, the AI assistant",
+    "nina-author": "Nina, AI assistant",
     "library-empty": "Nothing here yet",
     "library-empty-description": "The class's files and links show here, the newest first.",
     "library-add": "Add to library",

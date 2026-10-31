@@ -6,6 +6,7 @@ import type {
   TenantsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { NINA_NAME } from "@repo/backend/confect/classroom/forum/nina";
 import { mayIn, principalOf } from "@repo/backend/confect/classroom/roster";
 import type { ClassDetail } from "@repo/backend/confect/notifications/schema";
 import { Effect, Match, Option } from "effect";
@@ -144,6 +145,7 @@ const detailOf = Effect.fn("notifications.detail")(function* (
                   .pipe(Effect.option);
           return Option.map(part, (found) => ({
             ...found,
+            actor: message.value.nina === true ? NINA_NAME : found.actor,
             channelId: message.value.channelId,
             discussion: Option.match(thread, {
               onNone: () => null,

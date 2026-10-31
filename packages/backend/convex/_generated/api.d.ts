@@ -661,7 +661,7 @@ export declare const api: {
             text: string;
           },
           {
-            author: { id: Id<"tenantPeople">; name: string };
+            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -676,6 +676,7 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
+              | { _tag: "nina" }
             >;
             mine: boolean;
             text: string | null;
@@ -690,7 +691,7 @@ export declare const api: {
             slug: string;
           },
           {
-            author: { id: Id<"tenantPeople">; name: string };
+            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -705,6 +706,7 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
+              | { _tag: "nina" }
             >;
             mine: boolean;
             text: string | null;
@@ -730,7 +732,7 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
-              author: { id: Id<"tenantPeople">; name: string };
+              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -745,6 +747,7 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
+                | { _tag: "nina" }
               >;
               mine: boolean;
               text: string | null;
@@ -761,13 +764,15 @@ export declare const api: {
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
-              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+              | { _tag: "person"; id: Id<"tenantPeople"> }
+              | { _tag: "everyone" }
+              | { _tag: "nina" }
             >;
             slug: string;
             text: string;
           },
           {
-            author: { id: Id<"tenantPeople">; name: string };
+            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -782,6 +787,7 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
+              | { _tag: "nina" }
             >;
             mine: boolean;
             text: string | null;
@@ -839,7 +845,7 @@ export declare const api: {
             };
             id: Id<"classroomThreads">;
             opening: {
-              author: { id: Id<"tenantPeople">; name: string };
+              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -854,6 +860,7 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
+                | { _tag: "nina" }
               >;
               mine: boolean;
               text: string | null;
@@ -868,7 +875,9 @@ export declare const api: {
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
-              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+              | { _tag: "person"; id: Id<"tenantPeople"> }
+              | { _tag: "everyone" }
+              | { _tag: "nina" }
             >;
             slug: string;
             text: string;
@@ -885,7 +894,7 @@ export declare const api: {
             };
             id: Id<"classroomThreads">;
             opening: {
-              author: { id: Id<"tenantPeople">; name: string };
+              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -900,6 +909,7 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
+                | { _tag: "nina" }
               >;
               mine: boolean;
               text: string | null;
@@ -937,7 +947,7 @@ export declare const api: {
             continueCursor: string;
             isDone: boolean;
             page: Array<{
-              author: { id: Id<"tenantPeople">; name: string };
+              author: { id: Id<"tenantPeople">; name: string; nina: boolean };
               clientKey: string;
               createdAt: number;
               discussion: {
@@ -952,6 +962,7 @@ export declare const api: {
               mentions: Array<
                 | { _tag: "person"; id: Id<"tenantPeople">; name: string }
                 | { _tag: "everyone" }
+                | { _tag: "nina" }
               >;
               mine: boolean;
               text: string | null;
@@ -967,14 +978,16 @@ export declare const api: {
             classId: Id<"classes">;
             clientKey: string;
             mentions: Array<
-              { _tag: "person"; id: Id<"tenantPeople"> } | { _tag: "everyone" }
+              | { _tag: "person"; id: Id<"tenantPeople"> }
+              | { _tag: "everyone" }
+              | { _tag: "nina" }
             >;
             number: number;
             slug: string;
             text: string;
           },
           {
-            author: { id: Id<"tenantPeople">; name: string };
+            author: { id: Id<"tenantPeople">; name: string; nina: boolean };
             clientKey: string;
             createdAt: number;
             discussion: {
@@ -989,6 +1002,7 @@ export declare const api: {
             mentions: Array<
               | { _tag: "person"; id: Id<"tenantPeople">; name: string }
               | { _tag: "everyone" }
+              | { _tag: "nina" }
             >;
             mine: boolean;
             text: string | null;
@@ -14000,6 +14014,31 @@ export declare const internal: {
   };
   classroom: {
     forum: {
+      nina: {
+        begin: FunctionReference<
+          "mutation",
+          "internal",
+          { messageId: Id<"classroomMessages"> },
+          {
+            className: string;
+            history: Array<{ author: string; text: string }>;
+            locale: "en" | "id" | "de";
+            question: string;
+          } | null
+        >;
+        finish: FunctionReference<
+          "mutation",
+          "internal",
+          { answer: string | null; messageId: Id<"classroomMessages"> },
+          null
+        >;
+        reply: FunctionReference<
+          "action",
+          "internal",
+          { messageId: Id<"classroomMessages"> },
+          null
+        >;
+      };
       seed: {
         history: FunctionReference<
           "mutation",
