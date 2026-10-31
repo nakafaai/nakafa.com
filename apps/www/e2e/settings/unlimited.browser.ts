@@ -25,9 +25,9 @@ import {
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
+  drawsInPlace,
+  drawsInPlaceAtLargeText,
   firstRow,
-  hydratesInPlace,
-  hydratesInPlaceAtLargeText,
   isHydrated,
   reachesRows,
 } from "@/e2e/support/window";
@@ -251,8 +251,8 @@ const clearsEverything = Effect.fn("NakafaE2E.clearsEverything")(function* (
 
 /**
  * Signs a synthetic learner in and walks a list of more memories than one
- * page: it writes them, checks that the server's rows stand in the same places
- * once React has taken them over, also at a larger text size, searches every
+ * page: it writes them, checks that the rows a new load draws first stand in
+ * the same places once it has settled, also at a larger text size, searches every
  * page, scrolls to the end, walks the rows with the keyboard, rewrites the
  * oldest, keeps an editor open through a change of the search, and deletes
  * everything.
@@ -265,8 +265,8 @@ const verifyLongList = Effect.fn("NakafaE2E.verifyLongList")(function* (
   const changes = yield* openMemoryPage(page, baseURL);
 
   yield* writeLongList(page, changes);
-  yield* hydratesInPlace(page);
-  yield* hydratesInPlaceAtLargeText(page);
+  yield* drawsInPlace(page);
+  yield* drawsInPlaceAtLargeText(page);
   yield* searchesEveryPage(page, changes);
   yield* scrollsToOldest(page, changes);
   yield* reachesRows(page);

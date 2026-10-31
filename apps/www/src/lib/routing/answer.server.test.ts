@@ -39,6 +39,7 @@ vi.mock("@/lib/routing/rendered", async () => {
   const routerPath = (url: URL) => routeRewrite.input({ url }).pathname;
   return {
     isBareRoutePath: (url: URL) => isBarePath(routerPath(url), templates),
+    isBrowserRoutePath: (url: URL) => routerPath(url) === "/en/home",
     isRenderedRoutePath: (url: URL) =>
       !release.hasStaticRelease || isRenderedPath(routerPath(url), templates),
   };
@@ -175,24 +176,21 @@ describe("decisions before the router", () => {
       })
   );
 
-  it.effect("moves a trailing slash before the router", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/articles/belajar/");
+  it.effect(
+    "moves a trailing slash and a non-public spelling before the router",
+    () =>
+      Effect.gen(function* () {
+        for (const [address, location] of [
+          ["/en/articles/belajar/", "/en/articles/belajar"],
+          ["/en/curricula/x", "/en/curriculum/x"],
+        ] as const) {
+          const { handle, response } = yield* served(address);
 
-      expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en/articles/belajar");
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("moves a non-public spelling before the router", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/curricula/x");
-
-      expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en/curriculum/x");
-      expect(handle).not.toHaveBeenCalled();
-    })
+          expect(response.status).toBe(308);
+          expect(response.headers.get("location")).toBe(location);
+          expect(handle).not.toHaveBeenCalled();
+        }
+      })
   );
 
   it.effect("moves a migrated address before the router", () =>
@@ -308,6 +306,17 @@ describe("decisions before the router", () => {
         expect(assets.fetch).not.toHaveBeenCalled();
         expect(handle).toHaveBeenCalledTimes(1);
       })
+  );
+
+  it.effect("answers a browser-only page with the shell, before any read", () =>
+    Effect.gen(function* () {
+      assets.fetch.mockResolvedValue(new Response("shell"));
+      const { handle, response } = yield* served("/en/home");
+      expect(response.status).toBe(200);
+      expect(yield* Effect.promise(() => response.text())).toBe("shell");
+      expect(handle).not.toHaveBeenCalled();
+      expect(retired.read).not.toHaveBeenCalled();
+    })
   );
 
   it.effect("renders a locale path that a Worker route template names", () =>

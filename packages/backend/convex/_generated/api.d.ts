@@ -3794,37 +3794,6 @@ export declare const api: {
         },
         { id: Id<"exams"> }
       >;
-      home: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        {
-          live: Array<{
-            closesAt: number;
-            cohortId: Id<"tenantCohorts"> | null;
-            examId: Id<"exams">;
-            examTitle: string;
-            id: Id<"examSittings">;
-            opensAt: number;
-            room: string;
-            state: "scheduled" | "open" | "closed";
-            timeZone: string;
-            unitId: Id<"tenantUnits">;
-          }>;
-          next: Array<{
-            closesAt: number;
-            cohortId: Id<"tenantCohorts"> | null;
-            examId: Id<"exams">;
-            examTitle: string;
-            id: Id<"examSittings">;
-            opensAt: number;
-            room: string;
-            state: "scheduled" | "open" | "closed";
-            timeZone: string;
-            unitId: Id<"tenantUnits">;
-          }>;
-        }
-      >;
       list: FunctionReference<
         "query",
         "public",
@@ -5820,6 +5789,7 @@ export declare const api: {
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
+              optionScript: "arabic" | "latin";
               points: number;
               response:
                 | Array<string>
@@ -5828,6 +5798,7 @@ export declare const api: {
                 | { cells: Array<{ column: string; statement: string }> };
               sourceIds: Array<string>;
               targetIds: Array<string>;
+              targetScript: "arabic" | "latin";
               verdict: "correct" | "incorrect" | "partial" | "pending";
             }>;
           } | null
@@ -5926,6 +5897,7 @@ export declare const api: {
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
+              optionScript: "arabic" | "latin";
               points: number;
               response:
                 | Array<string>
@@ -5934,6 +5906,7 @@ export declare const api: {
                 | { cells: Array<{ column: string; statement: string }> };
               sourceIds: Array<string>;
               targetIds: Array<string>;
+              targetScript: "arabic" | "latin";
               verdict: "correct" | "incorrect" | "partial" | "pending";
             }>;
           } | null
@@ -5948,9 +5921,11 @@ export declare const api: {
               id: Id<"examQuestions">;
               number: number;
               optionIds: Array<string>;
+              optionScript: "arabic" | "latin";
               points: number;
               sourceIds: Array<string>;
               targetIds: Array<string>;
+              targetScript: "arabic" | "latin";
             }>;
             releasedAt: number | null;
             sitting: {
@@ -6717,6 +6692,7 @@ export declare const api: {
             | "secondTab"
             | "disconnect"
             | "return";
+          since?: number;
           slug: string;
         },
         null

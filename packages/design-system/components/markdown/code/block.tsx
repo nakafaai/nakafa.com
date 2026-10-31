@@ -17,16 +17,24 @@ import {
 } from "@repo/design-system/components/code-block/header";
 import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
 import { blockGapVariants } from "@repo/design-system/lib/prose";
-import { Array as Arr, String as Str } from "effect";
+import { Array as Arr, Schema, String as Str } from "effect";
+
+/** The line count of a code block's first source, which its height stands in for while the browser skips it. */
+const CodeLinesStyleSchema = Schema.Struct({ "--code-lines": Schema.Finite });
+
+type CodeLinesStyle = React.CSSProperties & typeof CodeLinesStyleSchema.Type;
 
 /** Composes authored MDX code sources into Nakafa's tabbed code block. */
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
+  const style: CodeLinesStyle = {
+    "--code-lines": Arr.length(Str.split(data[0].code, "\n")),
+  };
   return (
     <CodeBlock
       className={blockGapVariants({ className: "content-auto-code" })}
       data={data}
       defaultValue={data[0].language}
-      style={{ "--code-lines": Arr.length(Str.split(data[0].code, "\n")) }}
+      style={style}
     >
       <CodeBlockHeader>
         <CodeBlockFiles>

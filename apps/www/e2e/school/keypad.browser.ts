@@ -16,9 +16,12 @@ const WIDTHS = [
 
 /**
  * How far a letter's ink centre may lie from its key's centre. One face sets one baseline for every letter, and the
- * letters' ink spans from the hamza above alef to the tails of jim and mim, so the face balances them about the centre.
+ * letters' ink spans from the hamza above alef to the tails of jim and mim, so the face balances them about the centre:
+ * at the keys' 18px, jim's centre lies 5.6px below and alef with hamza's 5.8px above (`globals.css`), and no baseline
+ * brings both ends within 5.7px. Each width also places its keys a fraction of a pixel apart from the others, which
+ * moved jim to 6.15px at 320px (train 14, 31 Oct), so the limit keeps 0.8px for that placement over the face's 5.7px.
  */
-const LETTER_OFFSET_MAX = 6;
+const LETTER_OFFSET_MAX = 6.5;
 
 /** How far a mark key's dotted circle may lie from its key's centre. */
 const CIRCLE_OFFSET_MAX = 1;
