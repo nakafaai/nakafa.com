@@ -476,6 +476,7 @@
     "template-cause": "Cause and effect",
     "template-reason": "Answer and reason",
     "reason-title": "Reason",
+    "reason-option": "Reason {letter}",
     "reason-of": "Question {number}, reason {letter}",
     "reason-add": "Add reason",
     "reason-key": "Reason key",
