@@ -120,7 +120,7 @@ export function PaginationContent({ pagination, className }: Props) {
 
   return (
     <nav
-      aria-label="Pagination navigation"
+      aria-label={t("page-navigation")}
       className={cn("mt-10 pt-10 [article:empty~&]:hidden", className)}
     >
       <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">

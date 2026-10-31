@@ -1630,6 +1630,7 @@
     "classification": "Education"
   },
   "Common": {
+    "page-navigation": "Pagination navigation",
     "contributor-description": "This person helps build Nakafa.",
     "undo": "Undo",
     "arabic-fatha": "Fatha",
