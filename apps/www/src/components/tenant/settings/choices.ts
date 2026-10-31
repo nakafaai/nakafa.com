@@ -13,6 +13,16 @@ import {
   NotebookIcon,
   PencilIcon,
   RulerIcon,
+  UserAccountIcon,
+  UserCheck01Icon,
+  UserCircleIcon,
+  UserEdit01Icon,
+  UserIcon,
+  UserLove01Icon,
+  UserSettings01Icon,
+  UserShield01Icon,
+  UserSquareIcon,
+  UserStar01Icon,
 } from "@hugeicons/core-free-icons";
 import {
   COHORT_GRADE_MAX,
@@ -63,6 +73,20 @@ export const GRADE_ICONS = [
   MicroscopeIcon,
   BookOpen01Icon,
   Mortarboard01Icon,
+] as const;
+
+/** The icons of the people in a filter of names, such as the audit's Who or the library's Added by: one of a person for each. */
+export const PERSON_ICONS = [
+  UserIcon,
+  UserCircleIcon,
+  UserSquareIcon,
+  UserStar01Icon,
+  UserAccountIcon,
+  UserCheck01Icon,
+  UserEdit01Icon,
+  UserLove01Icon,
+  UserSettings01Icon,
+  UserShield01Icon,
 ] as const;
 
 /** The school year that a grade choice holds, if the choice holds one the schema accepts. */

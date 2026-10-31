@@ -1,0 +1,318 @@
+import {
+  ArrowTurnBackwardIcon,
+  Home01Icon,
+  UnfoldMoreIcon,
+} from "@hugeicons/core-free-icons";
+import type {
+  TenantProfile,
+  ViewerAccount,
+} from "@repo/backend/confect/tenancy/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import {
+  Sidebar,
+  SidebarInset,
+} from "@repo/design-system/components/ui/sidebar-shell";
+import { textDirection } from "@repo/internationalization/src/direction";
+import { SITE_ORIGIN } from "@repo/seo/origin";
+import { ClientOnly } from "@tanstack/react-router";
+import { Effect, Option } from "effect";
+import {
+  createContext,
+  lazy,
+  type ReactNode,
+  Suspense,
+  use,
+  useTransition,
+} from "react";
+import { useLocale, useTranslations } from "use-intl";
+import { Authenticated } from "@/components/auth/gate";
+import { AccountMenu } from "@/components/sidebar/menu/account";
+import { useMenuWarm } from "@/components/sidebar/menu/warm";
+import { SidebarToggle } from "@/components/sidebar/toggle";
+import { TenantAccountItems } from "@/components/tenant/account";
+import {
+  TenantContext,
+  type TenantValue,
+  useTenant,
+  ViewerPreloadContext,
+} from "@/components/tenant/context";
+import type { HomeAccess } from "@/components/tenant/home/access";
+import { SchoolMark } from "@/components/tenant/mark";
+import { TenantNavigation } from "@/components/tenant/navigation";
+import { TenantSearch } from "@/components/tenant/search";
+import { signOutSchoolAccount } from "@/components/tenant/signout";
+import { Link, useRouteMatched } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
+
+import type { SchoolViewer } from "@/lib/tenant/frame";
+
+/**
+ * The schools of the viewer, which the school switcher lists. The list loads when the
+ * switcher opens, as the account menu of Nakafa loads its own.
+ */
+const SidebarSchoolMenuItems = lazy(() =>
+  import("@/components/sidebar/menu/schools").then((module) => ({
+    default: module.SidebarSchoolMenuItems,
+  }))
+);
+
+/**
+ * Signs out of the school, then returns to the school address, which shows the
+ * sign-in surface. A failed sign-out shows its message and keeps the page. The
+ * promise settles when the sign-out does, so the account waits for it.
+ */
+function signOutOfSchool() {
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const destination = yield* signOutSchoolAccount();
+      if (destination === "home") {
+        window.location.assign("/");
+      }
+    })
+  );
+}
+
+/** The viewer's account and name in the school, which the shell provides to the account at the sidebar's foot. */
+const ViewerAccountContext = createContext<{
+  account: typeof ViewerAccount.Type;
+  name: string;
+} | null>(null);
+
+/** Reads the viewer's account. It throws outside the shell, which always provides it. */
+function useViewerAccount() {
+  const viewer = use(ViewerAccountContext);
+  if (viewer === null) {
+    throw new Error("useViewerAccount must be used within TenantShell");
+  }
+  return viewer;
+}
+
+/**
+ * The account button at the foot of the school's sidebar: the viewer's round
+ * avatar, the viewer's name in the school, and the role, with the account menu.
+ * The school layout's gate reads the account before the page commits, so the footer
+ * has no pending state of its own. A sign-out makes the account inert until it settles, so a
+ * second press signs out once. The role line is left out for a viewer with no grant.
+ */
+function TenantAccount() {
+  const { account, name } = useViewerAccount();
+  const { role } = useTenant();
+  const t = useTranslations("School");
+  const [isSigningOut, startSigningOut] = useTransition();
+
+  return (
+    <SidebarFooter className="border-t">
+      <div inert={isSigningOut}>
+        <SidebarMenu>
+          <AccountMenu
+            account={{
+              mascot: account.mascot,
+              photo: account.image,
+            }}
+            description={Option.match(role, {
+              onNone: () => undefined,
+              onSome: (value) => t(`role.${value}`),
+            })}
+            name={name}
+            onSignOut={() => startSigningOut(() => signOutOfSchool())}
+          >
+            <TenantAccountItems username={account.username} />
+          </AccountMenu>
+        </SidebarMenu>
+      </div>
+    </SidebarFooter>
+  );
+}
+
+/**
+ * The school switcher at the top of the sidebar: the school's mark and name open the
+ * viewer's schools, with the school's home and the way back to Nakafa beneath them.
+ * The schools mount once the reader shows intent on the switcher, as the account
+ * menu's do, so the menu opens with them in place.
+ */
+function TenantSwitcher() {
+  const t = useTranslations("School");
+  const locale = useLocale();
+  const tenant = useTenant();
+  const { warm, warmed } = useMenuWarm();
+
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <SidebarMenuButton
+              className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+              onFocus={warm}
+              onPointerDown={warm}
+              onPointerEnter={warm}
+              size="lg"
+            >
+              <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
+              <div className="grid min-w-0 flex-1 text-start text-sm leading-tight">
+                <span className="truncate font-medium" dir="auto">
+                  {tenant.name}
+                </span>
+              </div>
+              <HugeIcons className="ms-auto" icon={UnfoldMoreIcon} />
+            </SidebarMenuButton>
+          }
+        />
+        <DropdownMenuContent
+          align="start"
+          className="min-w-56"
+          keepMounted
+          sideOffset={4}
+        >
+          {warmed ? (
+            <Suspense fallback={null}>
+              <ClientOnly fallback={null}>
+                <Authenticated>
+                  <SidebarSchoolMenuItems canOpenSchool={false} />
+                </Authenticated>
+              </ClientOnly>
+            </Suspense>
+          ) : null}
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              render={
+                <Link
+                  activeOptions={EXACT_ACTIVE_OPTIONS}
+                  params={{ slug: tenant.slug }}
+                  to="/school/$slug"
+                >
+                  <HugeIcons icon={Home01Icon} />
+                  {t("home")}
+                </Link>
+              }
+            />
+            <DropdownMenuItem
+              render={
+                <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+                  <HugeIcons icon={ArrowTurnBackwardIcon} />
+                  {t("back-to-learning")}
+                </a>
+              }
+            />
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
+}
+
+/**
+ * The frame of a school's pages: the sidebar with the school's mark and name at its
+ * top, the sidebar groups of the viewer, and the viewer's account at its foot, beside
+ * the pages. Each page draws its one header, with the sidebar's trigger in it
+ * (`SchoolHeader`), so the frame draws none. The exam editor draws its own frame,
+ * so on its route the pages render alone. No app header stands above a school's
+ * pages, so the frame sets its height to none, and a page's sticky header, such
+ * as the player's, stands at the top of the page. The
+ * pathname is read here, not in the shell, so the shell's context value does not
+ * change on navigation.
+ */
+function TenantFrame({ children }: { children: ReactNode }) {
+  const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit", {
+    exact: true,
+  });
+  const tCommon = useTranslations("Common");
+  const locale = useLocale();
+  // The sidebar sits at the start edge of the page: left for every left-to-right language.
+  const side = textDirection(locale) === "rtl" ? "right" : "left";
+
+  if (isEditor) {
+    return children;
+  }
+
+  return (
+    <SidebarProvider>
+      <Sidebar collapsible="icon" label={tCommon("sidebar")} side={side}>
+        <SidebarHeader className="border-b">
+          <SidebarMenu>
+            <TenantSwitcher />
+          </SidebarMenu>
+          <TenantSearch />
+        </SidebarHeader>
+        <SidebarContent>
+          <TenantNavigation />
+        </SidebarContent>
+        <SidebarToggle />
+        <TenantAccount />
+      </Sidebar>
+      <SidebarInset className="[--app-header-top:0rem]">
+        {children}
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+/**
+ * The shell of a school: its mark and name at the top of the sidebar, the
+ * sidebar groups of the signed-in viewer, and the viewer's account at the foot.
+ * The school layout admits only members, so every item here is open to any
+ * member of the school.
+ */
+export function TenantShell({
+  account,
+  canManage,
+  canOpenExams,
+  canOpenReports,
+  children,
+  home,
+  personName,
+  profile,
+  role,
+  viewer,
+}: {
+  account: typeof ViewerAccount.Type;
+  canManage: boolean;
+  canOpenExams: boolean;
+  canOpenReports: boolean;
+  children: ReactNode;
+  home: HomeAccess;
+  personName: string;
+  profile: typeof TenantProfile.Type;
+  role: TenantValue["role"];
+  viewer: SchoolViewer;
+}) {
+  return (
+    <ViewerPreloadContext value={viewer}>
+      <TenantContext
+        value={{
+          canManage,
+          canOpenExams,
+          canOpenReports,
+          logo: profile.logo,
+          mascot: profile.mascot,
+          home,
+          name: profile.name,
+          role,
+          slug: profile.slug,
+        }}
+      >
+        <ViewerAccountContext value={{ account, name: personName }}>
+          <TenantFrame>{children}</TenantFrame>
+        </ViewerAccountContext>
+      </TenantContext>
+    </ViewerPreloadContext>
+  );
+}

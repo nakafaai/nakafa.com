@@ -17,6 +17,9 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** The address of the Exams page, where a member lands. */
+const EXAMS_ADDRESS = /\/exams$/u;
+
 /** The phone and the desktop widths that the mixed text is drawn at. */
 const VIEWPORTS = [
   { name: "390", height: 844, width: 390 },
@@ -162,7 +165,7 @@ async function expectMixedQuestionAt(
   const home = await ownerContext.newPage();
   await home.setViewportSize(viewport);
   await home.goto(address("/"));
-  await home.waitForURL(/\/exams$/u);
+  await home.waitForURL(EXAMS_ADDRESS);
   await expect(home.getByRole("heading", { level: 1 })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

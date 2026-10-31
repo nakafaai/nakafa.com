@@ -5,6 +5,9 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { hostAddress } from "@/e2e/support/school";
 
+/** The address of the Exams page, where a member lands. */
+const EXAMS_ADDRESS = /\/exams$/u;
+
 test("a new account opens its own school in five questions and lands in it as its Owner", async ({
   baseURL,
   browser,
@@ -95,7 +98,7 @@ test("a new account opens its own school in five questions and lands in it as it
   );
   await page.reload();
   // The new Owner lands on the exams, the Owner's main page, with its one action.
-  await page.waitForURL(/\/exams$/u);
+  await page.waitForURL(EXAMS_ADDRESS);
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
   // The tab names the school.
   await expect(page).toHaveTitle(new RegExp(name));

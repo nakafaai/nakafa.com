@@ -12,6 +12,18 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** How long the student was away, in minutes and seconds. */
+const AWAY_TEXT = /Away for (?:(\d+) min )?(\d+) s\./;
+
+/** The proctor's line for a student who left the exam. */
+const LEFT_TEXT = /^Left the exam for (?:\d+ min )?\d+ s$/;
+
+/** The proctor's line for a student whose device lost the network. */
+const LOST_TEXT = /^Lost the connection for (?:\d+ min )?\d+ s$/;
+
+/** The address of the student's sittings page. */
+const SITTINGS_ADDRESS = /\/sittings$/u;
+
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
 
@@ -88,9 +100,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect(seat).toHaveAttribute("data-frame", "away");
   // The away seat counts the time since the student left, each second, where a present seat shows its last activity.
   const awaySeconds = async () => {
-    const away = (await seat.textContent())?.match(
-      /Away for (?:(\d+) min )?(\d+) s\./
-    );
+    const away = (await seat.textContent())?.match(AWAY_TEXT);
     return away === null || away === undefined
       ? -1
       : Number(away[1] ?? 0) * 60 + Number(away[2]);
@@ -100,9 +110,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect.poll(awaySeconds).toBeGreaterThan(firstReading);
   await seat.click();
   // The panel counts the same exit on, until the student comes back.
-  await expect(
-    proctor.getByText(/^Left the exam for (?:\d+ min )?\d+ s$/)
-  ).toBeVisible();
+  await expect(proctor.getByText(LEFT_TEXT)).toBeVisible();
 
   const dialog = proctor.getByRole("dialog");
 
@@ -141,9 +149,9 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   // with the moment it went offline, so the proctor's panel tells how long the student was offline.
   await studentContext.setOffline(true);
   await studentContext.setOffline(false);
-  await expect(
-    proctor.getByText(/^Lost the connection for (?:\d+ min )?\d+ s$/)
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(proctor.getByText(LOST_TEXT)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   await closeSitting(proctor);
   // The close moves the attempt to closing, and the student's screen says so at once; the
@@ -228,7 +236,7 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   await student.goto(address("/"));
   // The school's root opens the student's own exams. They draw once Convex holds the session and the student's
   // sittings answer: the open exam comes first, and its Start enters the sitting.
-  await student.waitForURL(/\/sittings$/u);
+  await student.waitForURL(SITTINGS_ADDRESS);
   await expect(
     student
       .getByRole("table")

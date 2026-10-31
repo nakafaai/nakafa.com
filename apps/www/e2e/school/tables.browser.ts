@@ -10,17 +10,24 @@ import {
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** The column width of a settings section, which its table shares with its cards. */
-const COLUMN_WIDTH = 768;
-/** The page's gutter around the card of a table page. */
+/** The page's gutter around the card of a table page, the same as the header row's. */
 const GUTTER = 16;
 
-/** Reads where the card sits against the viewport and whether the page scrolls sideways. */
+/**
+ * Reads where the card sits against the viewport and the header's page-width row, and whether the page scrolls
+ * sideways.
+ */
 function readCard(card: Locator) {
   return card.evaluate((element) => {
     const box = element.getBoundingClientRect();
+    const row = document
+      .querySelector('[data-slot="page-header"] > div')
+      ?.getBoundingClientRect();
     return {
       bottom: box.bottom,
+      left: box.left,
+      rowLeft: row?.left ?? Number.NaN,
+      rowWidth: row?.width ?? Number.NaN,
       sideways:
         document.documentElement.scrollWidth >
         document.documentElement.clientWidth,
@@ -37,7 +44,7 @@ for (const viewport of [
   test.describe(`a School table page at ${viewport.width}px`, () => {
     test.use({ viewport });
 
-    test("holds its list in one card at the settings column width that fills the body under the header", async ({
+    test("holds its list in one card at the page width of the header's row that fills the body under the header", async ({
       browser,
       baseURL,
     }) => {
@@ -58,7 +65,13 @@ for (const viewport of [
 
       const placed = await readCard(card);
       expect(placed.sideways).toBe(false);
-      expect(placed.width).toBeLessThanOrEqual(COLUMN_WIDTH);
+      // The card's edges meet the header row's gutter, so it lines up with the path and the actions above it.
+      expect(
+        Math.abs(placed.left - (placed.rowLeft + GUTTER))
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(placed.width - (placed.rowWidth - 2 * GUTTER))
+      ).toBeLessThanOrEqual(1);
       // A short list still fills the body: the card reaches the gutter above the screen's bottom.
       expect(placed.bottom).toBeGreaterThanOrEqual(
         placed.viewport - GUTTER - 1

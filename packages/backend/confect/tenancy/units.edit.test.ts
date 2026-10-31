@@ -68,6 +68,16 @@ describe("tenancy/units edit", () => {
         expect(yield* fixture.run(journal)).toMatchObject([
           { change: { level: "mts", type: "unit.level.set" } },
         ]);
+        yield* owner.mutation(edit, {
+          level: "mts",
+          name: "MTs Nakafa",
+          slug: nf,
+          unitId: fixture.units.smp,
+        });
+        expect(yield* fixture.run(journal)).toMatchObject([
+          { change: { level: "mts", type: "unit.level.set" } },
+          { change: { name: "MTs Nakafa", type: "unit.name.set" } },
+        ]);
       })
   );
 
