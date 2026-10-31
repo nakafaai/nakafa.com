@@ -11,5 +11,5 @@ gone. The home page now loads each section's code as the reader nears it, while
 its HTML stays whole for readers and crawlers. Nina, the toys, the particles and
 the analytics SDK wait until the page has its reader. Lesson code is highlighted
 when the lesson is built, so its colours are there at first paint and the browser
-loads no highlighter. School logos are a tenth of their weight, security.txt and
-the agent catalog are published, and sign-in can be found in search.
+loads no highlighter. School logos weigh a sixth of what they did, security.txt
+and the agent catalog are published, and sign-in can be found in search.

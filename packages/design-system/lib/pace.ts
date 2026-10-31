@@ -7,8 +7,8 @@ const REST_PER_WORK = 7;
 /**
  * Keeps one decorative loop to its share of the main thread on any device. A
  * fast device draws a frame in under two milliseconds, so it draws every frame.
- * A slow phone takes twenty, so it draws seven times a second, and the reader's
- * scroll and press always find the thread free. The pace is measured and never
+ * A slow phone takes twenty, so it draws about six times a second, and the
+ * reader's scroll and press find the thread free. The pace is measured and never
  * guessed from a device's name: a phone that is busy with something else slows
  * the loop down too. A page whose loops took every frame never went idle on a
  * slow phone at all.

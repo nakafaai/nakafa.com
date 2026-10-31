@@ -8,7 +8,7 @@ Accepted on 31 October 2026.
 
 The owner saw the production home page red on a phone-sized Lighthouse run while a default run on this Mac scored 98. Both were true, and the Mac's number was the wrong one.
 
-Default Lighthouse multiplies CPU by 4 and assumes a machine of about benchmark index 1,000. The Mac measures 3,500, so 4x here is a fast phone. Measured on production `/id`, 31 October 2026:
+Default Lighthouse slows the CPU by 4. This Mac measures a benchmark index of 3,204 to 3,716, so a 4x run here scored 98 while a 12x run reproduced the red the owner saw. Measured on production `/id`, 31 October 2026:
 
 | Run | Score | Blocking time | Main thread |
 | --- | --- | --- | --- |
@@ -18,10 +18,10 @@ Default Lighthouse multiplies CPU by 4 and assumes a machine of about benchmark 
 
 Four causes held that main thread:
 
-- One rule, `html:has([data-slot="drawer-popup"][data-open])`, made the root answer for every node in the document. Each inserted node restyled about 3,100 elements: 24 full recalculations in one load, 16 of them while hydrating.
+- One rule, `html:has([data-slot="drawer-popup"][data-open])`, made the root answer for every node in the document, so an inserted node could restyle all 3,291 elements: 24 full recalculations and 109,795 elements restyled in one load at 4x. Without the rule the same bytes took 4 and 26,928.
 - Decoration ran on every frame for good. Nina's life and the particles took 26.6 s of the 32.8 s, so the page never reached a quiet window on a slow CPU.
 - Hydration paid for the whole page: 393 scripts and 1.2 MB of JavaScript, 275 of those scripts under 2 KB decoded, for sections the reader had not reached.
-- Lessons ran Shiki in the browser after the first paint: a 290 KB chunk, a long task, and code that changed colour on screen.
+- Lessons ran Shiki in the browser after the first paint, so code changed colour on screen.
 
 ## Decision
 
@@ -39,6 +39,6 @@ D6. What the build can draw, the build draws. Lesson code is highlighted in `Cod
 
 ## Consequences
 
-Positive: every page lost the recalculations, the home page's first JavaScript no longer grows with its sections, and a slow phone stays responsive after load.
+Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.
 
 Negative: a press on a section that is still loading its code is lost until the section hydrates, which the near-screen margin makes rare; a link still navigates. Toys and Nina wait for a gesture or six seconds. An end-to-end spec that waits for a far section to hydrate has to walk down the page.

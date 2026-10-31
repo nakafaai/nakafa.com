@@ -33,7 +33,6 @@ import {
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const APP_ORIGIN = "https://nakafa.com";
-const CLASS_SEPARATOR_PATTERN = /\s+/u;
 const DOCUMENT_TITLE_PATTERN = /<h1[\s>]/u;
 const DOCUMENT_SECTION_PATTERN = /<h2[\s>]/u;
 const STORED_DEVICE_PATTERN = /^".+"$/u;
@@ -167,41 +166,19 @@ const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
   }
 );
 
-/** Proves one page's screen-reader dates match its structured data. */
+/** Proves one page's visible dates match its structured data. */
 const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
   function* (
     page: Page,
     route: LocalizedContentRoute,
     structuredDates: PublicationDates
   ) {
-    // Screen-reader prose stays accessible; pending streamed copies do not.
+    // The byline stays visible; pending streamed copies do not.
     const dateBlock = page
       .getByRole("paragraph")
       .filter({ has: page.locator("time[datetime]") });
     yield* Effect.promise(() => expect(dateBlock).toHaveCount(1));
-    const style = yield* Effect.promise(() =>
-      dateBlock.evaluate((element) => {
-        const computed = getComputedStyle(element);
-        return {
-          className: element.className,
-          height: computed.height,
-          overflow: computed.overflow,
-          position: computed.position,
-          width: computed.width,
-        };
-      })
-    );
-    yield* Effect.sync(() => {
-      expect(style.className.split(CLASS_SEPARATOR_PATTERN)).toContain(
-        "sr-only"
-      );
-      expect(style).toMatchObject({
-        height: "1px",
-        overflow: "hidden",
-        position: "absolute",
-        width: "1px",
-      });
-    });
+    yield* Effect.promise(() => expect(dateBlock).toBeVisible());
 
     const rawTimeDates = yield* Effect.promise(() =>
       dateBlock
