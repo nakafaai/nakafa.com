@@ -8,6 +8,7 @@ export const InboxTopic = Schema.Literals([
   "classes",
   "forum",
   "school",
+  "comments",
 ]);
 
 /** The topic of what happened: anything of a class that is not its forum is the class's. */
@@ -15,6 +16,7 @@ const topicOf = Match.type<ListNotification["changeType"]>().pipe(
   Match.when("forum.mentioned", () => "forum"),
   Match.whenOr("exam.reminder", "exam.starting", () => "exams"),
   Match.when("person.invited", () => "school"),
+  Match.when("comment.replied", () => "comments"),
   Match.orElse(() => "classes")
 );
 

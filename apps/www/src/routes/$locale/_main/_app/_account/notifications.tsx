@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsHeader } from "@/components/notifications/header";
+import { ACCOUNT_INBOX } from "@/components/notifications/inbox";
 import { NotificationsList } from "@/components/notifications/list";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -35,7 +36,7 @@ function NotificationsPage() {
         <NotificationsHeader first={page} />
         <LayoutContent className="flex flex-col gap-6 py-6">
           <NotificationsClockContext value={clock}>
-            <NotificationsList first={page} slug={undefined} />
+            <NotificationsList first={page} scope={ACCOUNT_INBOX} />
           </NotificationsClockContext>
         </LayoutContent>
       </LayoutMaterialContent>

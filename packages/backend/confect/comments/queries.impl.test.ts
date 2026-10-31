@@ -290,4 +290,39 @@ describe("comments/queries", () => {
       page: [],
     });
   });
+
+  it("reads one comment with its author, and nothing once it is deleted", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { reply, session } = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now,
+        suffix: "one-comment",
+      });
+      return {
+        reply: await ctx.db.insert("comments", {
+          likeCount: 0,
+          replyCount: 0,
+          slug: "articles/example",
+          text: "One comment",
+          userId: user.userId,
+        }),
+        session: user,
+      };
+    });
+    const getComment = Ref.getFunctionReference(
+      refs.public.comments.queries.getComment
+    );
+    const reader = t.withIdentity({
+      subject: session.authUserId,
+      sessionId: session.sessionId,
+    });
+
+    expect(await reader.query(getComment, { commentId: reply })).toMatchObject({
+      liked: false,
+      text: "One comment",
+      user: { name: expect.any(String) },
+    });
+    await t.run((ctx) => ctx.db.delete(reply));
+    expect(await reader.query(getComment, { commentId: reply })).toBeNull();
+  });
 });

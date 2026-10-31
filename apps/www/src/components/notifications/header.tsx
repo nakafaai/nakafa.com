@@ -1,6 +1,7 @@
 import type { Option } from "effect";
 import { useTranslations } from "use-intl";
 import {
+  ACCOUNT_INBOX,
   type InboxFirstPage,
   useInbox,
 } from "@/components/notifications/inbox";
@@ -18,13 +19,14 @@ export function NotificationsHeader({
   first: Option.Option<InboxFirstPage>;
 }) {
   const t = useTranslations("Notifications");
-  const { rows } = useInbox(first, undefined);
+  const { rows } = useInbox(first, ACCOUNT_INBOX);
   const tCommon = useTranslations("Common");
 
   return (
     <BreadcrumbHeader
       value={{
-        action: rows.length > 0 ? <MarkAllRead slug={undefined} /> : undefined,
+        action:
+          rows.length > 0 ? <MarkAllRead scope={ACCOUNT_INBOX} /> : undefined,
         home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],

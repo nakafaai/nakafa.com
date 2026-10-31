@@ -14,6 +14,7 @@ describe("notifications/topic", () => {
     ["assignment.published", "classes", "forum"],
     ["announcement.posted", "classes", "school"],
     ["grade.released", "classes", "exams"],
+    ["comment.replied", "comments", "school"],
   ] as const)("files %s under %s and not under %s", (change, topic, other) => {
     expect(inTopic(change, topic)).toBe(true);
     expect(inTopic(change, other)).toBe(false);

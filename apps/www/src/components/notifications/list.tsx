@@ -1,4 +1,3 @@
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   ToggleGroup,
@@ -9,6 +8,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   type InboxFirstPage,
+  type InboxScope,
   useInbox,
 } from "@/components/notifications/inbox";
 import { PushOffer } from "@/components/notifications/push";
@@ -27,14 +27,14 @@ import { FeedEmpty, FeedNotice } from "@/components/user/feed";
  */
 export function NotificationsList({
   first,
-  slug,
+  scope,
 }: {
   first: Option.Option<InboxFirstPage>;
-  /** The one school whose rows show; every school's without it. */
-  slug: TenantSlug | undefined;
+  /** Which rows show: one school's, or every school's and the account's own. */
+  scope: InboxScope;
 }) {
   const t = useTranslations("Notifications");
-  const { empty, failed, loadMore, ready, rows } = useInbox(first, slug);
+  const { empty, failed, loadMore, ready, rows } = useInbox(first, scope);
   const [topic, setTopic] = useState<typeof InboxTopic.Type>("all");
   const shown = Arr.filter(rows, (row) => inTopic(row.changeType, topic));
 
@@ -46,7 +46,9 @@ export function NotificationsList({
         </FeedNotice>
       )}
       {empty && <FeedEmpty>{t("empty")}</FeedEmpty>}
-      {empty ? null : <InboxTopics onChoose={setTopic} topic={topic} />}
+      {empty ? null : (
+        <InboxTopics onChoose={setTopic} scope={scope} topic={topic} />
+      )}
       {!empty && Arr.isReadonlyArrayEmpty(shown) && (
         <FeedEmpty>{t("topic-empty")}</FeedEmpty>
       )}
@@ -72,9 +74,11 @@ export function NotificationsList({
 /** The topics of the inbox: pressing the chosen one again keeps it, so one is always chosen. */
 function InboxTopics({
   onChoose,
+  scope,
   topic,
 }: {
   onChoose: (topic: typeof InboxTopic.Type) => void;
+  scope: InboxScope;
   topic: typeof InboxTopic.Type;
 }) {
   const t = useTranslations("Notifications");
@@ -94,6 +98,11 @@ function InboxTopics({
       variant="outline"
     >
       <ToggleGroupItem value="all">{t("topic-all")}</ToggleGroupItem>
+      {scope.personal === true ? (
+        <ToggleGroupItem value="comments">
+          {t("topic-comments")}
+        </ToggleGroupItem>
+      ) : null}
       <ToggleGroupItem value="exams">{t("topic-exams")}</ToggleGroupItem>
       <ToggleGroupItem value="classes">{t("topic-classes")}</ToggleGroupItem>
       <ToggleGroupItem value="forum">{t("topic-forum")}</ToggleGroupItem>

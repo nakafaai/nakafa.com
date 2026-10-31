@@ -1,18 +1,18 @@
 import { useMutation } from "@confect/react";
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
+import type { InboxScope } from "@/components/notifications/inbox";
 import { markAllReadInLists } from "@/components/notifications/mutation";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * The inbox's one action: it marks every row read, the loaded ones at once, or only
- * the rows of the school that `slug` names. It is in the header from the first paint
+ * The inbox's one action: it marks every row of its scope read, the loaded ones at
+ * once. It is in the header from the first paint
  * and final, so the header never changes while the inbox loads; with no unread row it
  * marks nothing.
  * Its icon and its words show, or on a phone its icon alone, named for assistive
@@ -20,12 +20,7 @@ import { reportClientException } from "@/lib/analytics/client";
  * the server marks every unread row, and the inbox loads them read. A refusal by the
  * server rolls the change back and shows the shared error toast.
  */
-export function MarkAllRead({
-  slug,
-}: {
-  /** The one school whose rows it marks; every school's without it. */
-  slug: TenantSlug | undefined;
-}) {
+export function MarkAllRead({ scope }: { scope: InboxScope }) {
   const t = useTranslations("Notifications");
   const readAll = useMutation(notifications.inbox.readAll).withOptimisticUpdate(
     markAllReadInLists
@@ -35,9 +30,7 @@ export function MarkAllRead({
     <Button
       onClick={() =>
         Effect.runPromise(
-          Effect.tryPromise(() =>
-            readAll(slug === undefined ? {} : { slug })
-          ).pipe(
+          Effect.tryPromise(() => readAll(scope)).pipe(
             Effect.flatMap(Effect.fromResult),
             Effect.catch((error) =>
               reportClientException(error, {

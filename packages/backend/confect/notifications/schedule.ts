@@ -19,6 +19,44 @@ import {
   Option,
 } from "effect";
 
+/** The zone of an account's notices: an account keeps none, and Nakafa's learners are in Indonesia. */
+const ACCOUNT_TIME_ZONE = "Asia/Jakarta";
+
+/**
+ * Schedules the send of one row's push: at the end of quiet hours on the clock of
+ * `timeZone` for a student inside them, and at once for everyone else.
+ */
+const scheduleSend = Effect.fn("notifications.schedule.send")(function* (
+  notificationId: GenericId.GenericId<"notifications">,
+  student: boolean,
+  timeZone: string
+) {
+  const scheduler = yield* Scheduler;
+  const send = notificationsInternal.deliver.send;
+  const zone = namedTimeZone(timeZone);
+  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
+  const held =
+    student && Option.isSome(zone)
+      ? quietHoursEnd(now, zone.value)
+      : Option.none();
+  if (Option.isSome(held)) {
+    yield* scheduler.runAt(held.value, send, { notificationId });
+    return;
+  }
+  yield* scheduler.runAfter(Duration.zero, send, { notificationId });
+});
+
+/** The first browser that an account subscribed, if any did. */
+const firstSubscription = Effect.fn("notifications.schedule.subscribed")(
+  function* (userId: GenericId.GenericId<"users">) {
+    return yield* (yield* DatabaseReader)
+      .table("pushSubscriptions")
+      .index("by_userId", (query) => query.eq("userId", userId))
+      .first()
+      .pipe(Effect.orDie);
+  }
+);
+
 /**
  * Schedules the push of one new inbox row (ADR 0027). A recipient without an
  * account, or whose account has no browser subscribed, gets none, so nothing is
@@ -35,32 +73,41 @@ export const schedulePush = Effect.fn("notifications.schedule.push")(function* (
   if (person.account.state !== "claimed") {
     return;
   }
-  const reader = yield* DatabaseReader;
-  const userId = person.account.userId;
-  const subscribed = yield* reader
-    .table("pushSubscriptions")
-    .index("by_userId", (query) => query.eq("userId", userId))
-    .first()
-    .pipe(Effect.orDie);
-  if (Option.isNone(subscribed)) {
+  if (Option.isNone(yield* firstSubscription(person.account.userId))) {
     return;
   }
-  const scheduler = yield* Scheduler;
-  const send = notificationsInternal.deliver.send;
-  const student = Arr.some(grants, (grant) => grant.role.key === "student");
-  const unit = yield* reader
+  const unit = yield* (yield* DatabaseReader)
     .table("tenantUnits")
     .get(unitId)
     .pipe(Effect.orDie);
-  const zone = namedTimeZone(unit.timeZone);
-  const now = DateTime.makeUnsafe(yield* Clock.currentTimeMillis);
-  const held =
-    student && Option.isSome(zone)
-      ? quietHoursEnd(now, zone.value)
-      : Option.none();
-  if (Option.isSome(held)) {
-    yield* scheduler.runAt(held.value, send, { notificationId });
+  yield* scheduleSend(
+    notificationId,
+    Arr.some(grants, (grant) => grant.role.key === "student"),
+    unit.timeZone
+  );
+});
+
+/**
+ * Schedules the push of one new row of an account, which no school holds. An
+ * account with no browser subscribed gets none. A student's quiet hours run on the
+ * clock of Indonesia, because an account keeps no zone of its own.
+ */
+export const scheduleAccountPush = Effect.fn(
+  "notifications.schedule.accountPush"
+)(function* (
+  notificationId: GenericId.GenericId<"notifications">,
+  userId: GenericId.GenericId<"users">
+) {
+  if (Option.isNone(yield* firstSubscription(userId))) {
     return;
   }
-  yield* scheduler.runAfter(Duration.zero, send, { notificationId });
+  const user = yield* (yield* DatabaseReader)
+    .table("users")
+    .get(userId)
+    .pipe(Effect.orDie);
+  yield* scheduleSend(
+    notificationId,
+    user.role === "student",
+    ACCOUNT_TIME_ZONE
+  );
 });

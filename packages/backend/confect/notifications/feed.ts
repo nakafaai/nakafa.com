@@ -1,3 +1,4 @@
+import type { GenericId } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { partsOf } from "@repo/backend/confect/notifications/detail";
@@ -6,7 +7,12 @@ import {
   HELD_SCHOOL_LIMIT,
   type HeldSchool,
 } from "@repo/backend/confect/notifications/held";
-import { notificationView } from "@repo/backend/confect/notifications/schema";
+import { replyNotice } from "@repo/backend/confect/notifications/reply";
+import {
+  isAccountRow,
+  isSchoolRow,
+  notificationView,
+} from "@repo/backend/confect/notifications/schema";
 import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import { Array as Arr, Effect, Option, Order, pipe, Schema } from "effect";
 
@@ -77,13 +83,49 @@ const streamOf = Effect.fn("notifications.feed.stream")(function* (
     .pipe(
       Effect.orDie,
       Effect.map((rows) =>
-        Arr.map(rows, (row) => ({ held: school, row, school: profile }))
+        Arr.map(Arr.filter(rows, isSchoolRow), (row) => ({
+          row,
+          view: Effect.map(
+            partsOf(row, school.person, school.tenant),
+            (parts) => notificationView(row, profile, parts)
+          ),
+        }))
       )
     );
 });
 
-/** A row with the school it belongs to, as the merged list holds it. */
-type Candidate = Effect.Success<ReturnType<typeof streamOf>>[number];
+/** The newest rows addressed to an account itself after the cursor, read as a school's are. */
+const accountStream = Effect.fn("notifications.feed.account")(function* (
+  userId: GenericId.GenericId<"users">,
+  cursor: FeedCursor | null,
+  readAhead: number
+) {
+  return yield* (yield* DatabaseReader)
+    .table("notifications")
+    .index(
+      "by_recipientUserId_and_createdAt",
+      (query) =>
+        cursor === null
+          ? query.eq("recipientUserId", userId)
+          : query.eq("recipientUserId", userId).lte("createdAt", cursor.at),
+      "desc"
+    )
+    .take(readAhead)
+    .pipe(
+      Effect.orDie,
+      Effect.map((rows) =>
+        Arr.map(Arr.filter(rows, isAccountRow), (row) => ({
+          row,
+          view: replyNotice(row),
+        }))
+      )
+    );
+});
+
+/** A row with what shows it, as the merged list holds it. */
+type Candidate =
+  | Effect.Success<ReturnType<typeof accountStream>>[number]
+  | Effect.Success<ReturnType<typeof streamOf>>[number];
 
 /** Whether an earlier page already showed this row. */
 const isShown = (cursor: FeedCursor | null, row: Candidate["row"]) =>
@@ -93,7 +135,8 @@ const isShown = (cursor: FeedCursor | null, row: Candidate["row"]) =>
 
 /**
  * One page of the inbox list: the newest rows of every school the account holds,
- * merged into one order by creation time, newest first. Rows that share a creation
+ * and of the account itself when `account` names it, merged into one order by
+ * creation time, newest first. Rows that share a creation
  * time keep the order of the index, which breaks ties by the newest insert, so every
  * page size shows the same order. Rows that tie on both keep the order of their
  * school. Each class row carries the detail its source gives its recipient now.
@@ -104,6 +147,7 @@ const isShown = (cursor: FeedCursor | null, row: Candidate["row"]) =>
  */
 export const feedPage = Effect.fn("notifications.feed.page")(function* (
   schools: readonly HeldSchool[],
+  account: Option.Option<GenericId.GenericId<"users">>,
   cursor: FeedCursor | null,
   numItems: number
 ) {
@@ -113,8 +157,12 @@ export const feedPage = Effect.fn("notifications.feed.page")(function* (
     (school) => streamOf(school, cursor, readAhead),
     { concurrency: "unbounded" }
   );
+  const own = yield* Option.match(account, {
+    onNone: () => Effect.succeed([]),
+    onSome: (userId) => accountStream(userId, cursor, readAhead),
+  });
   const sorted = pipe(
-    Arr.flatten(streams),
+    Arr.appendAll(Arr.flatten(streams), own),
     Arr.filter((candidate) => !isShown(cursor, candidate.row)),
     Arr.sortBy(
       Order.mapInput(
@@ -148,11 +196,6 @@ export const feedPage = Effect.fn("notifications.feed.page")(function* (
   return {
     continueCursor,
     isDone: ahead.length <= numItems,
-    page: yield* Effect.forEach(rows, (candidate) =>
-      Effect.map(
-        partsOf(candidate.row, candidate.held.person, candidate.held.tenant),
-        (parts) => notificationView(candidate.row, candidate.school, parts)
-      )
-    ),
+    page: yield* Effect.forEach(rows, (candidate) => candidate.view),
   };
 });
