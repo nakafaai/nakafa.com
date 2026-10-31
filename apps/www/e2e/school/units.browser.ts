@@ -7,11 +7,17 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The NPSN the owner gives the school's first unit. */
 const NPSN = "20104321";
 
+/** The name the owner gives the school's first unit. */
+const NAME = "SMK Nakafa Kejuruan";
+
+/** A level the acceptance school does not hold, as an Indonesian school names it. */
+const LEVEL = /^SMK$/u;
+
 for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`the owner keeps the schools in one table, edits one from its row menu, and archives and restores it, at ${viewport.width} px`, async ({
+  test(`the owner keeps the schools in one table, edits its name, level and NPSN from its row menu, and archives and restores it, at ${viewport.width} px`, async ({
     baseURL,
     browser,
   }) => {
@@ -34,15 +40,20 @@ for (const viewport of [
     await expect(row.getByText("Active", { exact: true })).toBeVisible();
     await expect(page.locator('[data-slot="card"]')).toHaveCount(0);
 
-    // Edit stores the NPSN, and the row shows it at once.
+    // Edit stores the name, the level and the NPSN, and the row shows them at once.
     const menu = row.getByRole("button", { name: "More actions" });
     await waitUntilTakenOver(menu);
     await menu.click();
     await page.getByRole("menuitem", { name: "Edit" }).click();
     const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox", { name: "Name" }).fill(NAME);
+    await dialog.getByRole("combobox", { name: "Level" }).click();
+    await page.getByRole("option", { name: LEVEL }).click();
     await dialog.getByRole("textbox", { name: "NPSN" }).fill(NPSN);
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toBeHidden();
+    await expect(row.getByText(NAME, { exact: true })).toBeVisible();
+    await expect(row.getByText("SMK", { exact: true })).toBeVisible();
     await expect(row.getByText(NPSN, { exact: true })).toBeVisible();
 
     // Archive asks first, then the row reads as archived and its menu offers Restore alone.
@@ -58,15 +69,17 @@ for (const viewport of [
     await page.getByRole("menuitem", { name: "Restore" }).click();
     await expect(row.getByText("Active", { exact: true })).toBeVisible();
 
-    // The server kept the NPSN.
+    // The server kept the name, the level and the NPSN.
     await page.reload();
-    await expect(
-      page
-        .locator('[data-slot="table-card"]')
-        .getByRole("row")
-        .nth(1)
-        .getByText(NPSN, { exact: true })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    const kept = page
+      .locator('[data-slot="table-card"]')
+      .getByRole("row")
+      .nth(1);
+    await expect(kept.getByText(NPSN, { exact: true })).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(kept.getByText(NAME, { exact: true })).toBeVisible();
+    await expect(kept.getByText("SMK", { exact: true })).toBeVisible();
     await context.close();
   });
 }

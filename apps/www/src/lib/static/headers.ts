@@ -1,8 +1,10 @@
 import { LOCALES } from "@repo/internationalization/src/locale";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
 // The Vite config imports this module, and only package imports resolve there.
 import { LLMS_CACHE_CONTROL } from "#www/src/lib/llms/cache";
-import { SCHOOL_SHELL_PATH } from "#www/src/lib/routing/school/shell";
+import { LLMS_MARKDOWN_MEDIA_TYPE } from "#www/src/lib/llms/routes";
+import { SHELL_PATH } from "#www/src/lib/routing/shell";
 import type { HeaderRule, WwwHeader } from "#www/src/lib/security/headers";
 
 /** A sitemap and a feed may live on a CDN for a day, and a stale copy is served while the next one renders. */
@@ -25,7 +27,18 @@ const RSS_HEADERS: readonly WwwHeader[] = [
 
 const LLMS_HEADERS: readonly WwwHeader[] = [
   { key: "Cache-Control", value: LLMS_CACHE_CONTROL },
-  { key: "Content-Type", value: "text/markdown; charset=utf-8" },
+  { key: "Content-Type", value: LLMS_MARKDOWN_MEDIA_TYPE },
+];
+
+/**
+ * The Markdown twin of a page at `/<page>.md` names its page as the canonical
+ * address, so a search engine that reads the twin keeps the page and folds the
+ * twin into it. The splat holds the page's path without the leading slash, and
+ * the link joins the discovery links of the page rule.
+ */
+const MARKDOWN_TWIN_HEADERS: readonly WwwHeader[] = [
+  { key: "Content-Type", value: LLMS_MARKDOWN_MEDIA_TYPE },
+  { key: "Link", value: `<${SITE_ORIGIN}/:splat>; rel="canonical"` },
 ];
 
 const MANIFEST_HEADERS: readonly WwwHeader[] = [
@@ -58,11 +71,12 @@ const SOCIAL_IMAGE_RULES: readonly HeaderRule[] = Arr.map(
 );
 
 /**
- * The School shell answers every page of a school host through the Worker, which
- * marks it unindexed (ADR 0038). The same file is also an asset at its own
- * address on every host, where nothing links to it, so it says the same there.
+ * The browser shell answers every page of a school host and every signed-in
+ * screen through the Worker, which marks it unindexed (ADR 0038). The same file
+ * is also an asset at its own address on every host, where nothing links to it,
+ * so it says the same there.
  */
-const SCHOOL_SHELL_HEADERS: readonly WwwHeader[] = [
+const SHELL_HEADERS: readonly WwwHeader[] = [
   { key: "X-Robots-Tag", value: "noindex" },
 ];
 
@@ -108,8 +122,9 @@ export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/sitemap/*", headers: SITEMAP_HEADERS },
   { path: "/rss.xml", headers: RSS_HEADERS },
   { path: "/llms.txt", headers: LLMS_HEADERS },
+  { path: "/*.md", headers: MARKDOWN_TWIN_HEADERS },
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
   { path: "/_data/*", headers: STATIC_ANSWER_HEADERS },
-  { path: SCHOOL_SHELL_PATH, headers: SCHOOL_SHELL_HEADERS },
+  { path: SHELL_PATH, headers: SHELL_HEADERS },
   ...SOCIAL_IMAGE_RULES,
 ];

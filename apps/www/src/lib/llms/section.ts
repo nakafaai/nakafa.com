@@ -2,8 +2,8 @@ import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import {
-  BASE_URL,
   type LlmsSection,
+  llmsRouteUrl,
   SECTION_LABELS,
 } from "@/lib/llms/constants";
 import { readMaterialLlmsInventory } from "@/lib/llms/content/material";
@@ -146,7 +146,7 @@ function buildSectionPageMapLines({
     return [];
   }
 
-  const pagePath = `${BASE_URL}/llms/${locale}/${section}/page`;
+  const pagePath = llmsRouteUrl(`/llms/${locale}/${section}/page`);
   const lastPage = pageCount - 1;
   const lastPageLines =
     lastPage > 0

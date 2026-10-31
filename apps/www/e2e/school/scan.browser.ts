@@ -96,7 +96,7 @@ test("a signed-out student who scans the room's code signs in over the room and 
     name: "Sign in with a username",
   });
   await waitUntilTakenOver(username);
-  await expect(username).toHaveAttribute("href", `${room}?masuk=username`);
+  await expect(username).toHaveAttribute("href", `${room}?sign-in=username`);
 
   // A sign-in returns this tab to the room without its code, which waited in the tab.
   await scanner.addCookies(session);

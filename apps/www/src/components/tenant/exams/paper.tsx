@@ -1,5 +1,9 @@
 import { Alert02Icon, ListPlusIcon } from "@hugeicons/core-free-icons";
 import {
+  letterScript,
+  optionLetter,
+} from "@repo/backend/confect/exams/letters";
+import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
   fixedOptions,
@@ -18,7 +22,6 @@ import {
   entryOf,
   keyWithoutOption,
   type OptionLabel,
-  optionLetter,
   withOptionAdded,
   withOptionLabel,
   withOptionRemoved,
@@ -286,6 +289,10 @@ function LivePaper({
   const locked = useExamLocked();
   const { displayed, saveAnswers } = editing;
   const choice = Option.getOrNull(choiceOf(displayed.answers));
+  // The options are named in the script of their labels: أ, ب, ج for a set written in Arabic.
+  const script = letterScript(
+    choice === null ? [] : Arr.map(choice.options, (option) => option.label)
+  );
   const match = Option.getOrNull(matchOf(displayed.answers));
   const table = Option.getOrNull(tableOf(displayed.answers));
   // The label the server holds for an option. Its editor starts from that label, and a label the server does not
@@ -385,14 +392,14 @@ function LivePaper({
                 )
               }
               removeName={t("option-remove-of", {
-                letter: optionLetter(index),
+                letter: optionLetter(index, script),
                 number,
               })}
             >
-              <PaperOption letter={optionLetter(index)}>
+              <PaperOption letter={optionLetter(index, script)}>
                 <ExamDocument
                   label={t("option-of", {
-                    letter: optionLetter(index),
+                    letter: optionLetter(index, script),
                     number,
                   })}
                   placeholder={t("option-placeholder")}
