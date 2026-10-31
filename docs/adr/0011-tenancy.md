@@ -348,7 +348,9 @@ Operators open tenants with `operators/tenants:open` from the console at
 `/operators` in the main app, which runs the same Effect as the internal
 `tenancy/provision:open` and journals each write under the operator actor (ADR
 0016), which a school sees as Nakafa staff. The journal
-retention that the data processing agreement states is not stored yet. The
+retention that the data processing agreement states is not stored yet. A school
+that opens itself accepts the current version of that agreement in the same
+transaction, and the journal records it as `tenant.dpa.accepted`. The
 operator also suspends and reactivates a tenant, both idempotently. A suspended
 tenant stays readable and refuses every write except the transitions that ADR
 0012 exempts (Decisions), such as the operator's reactivation.

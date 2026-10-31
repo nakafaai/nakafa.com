@@ -980,6 +980,9 @@
       },
       "tenant": {
         "provisioned": "Schule eröffnet",
+        "dpa": {
+          "accepted": "Auftragsverarbeitungsvertrag angenommen"
+        },
         "founded": "Schule gegründet",
         "locale": {
           "set": "Land und Währung geändert"
@@ -1635,7 +1638,7 @@
     "founder-link": "Mit dem Gründer sprechen",
     "link-copy": "Link kopieren",
     "link-copied": "Link kopiert",
-    "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy>.",
+    "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms>, die <privacy>Datenschutzerklärung</privacy> und Version {version} des <dpa>Auftragsverarbeitungsvertrags</dpa>.",
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort.",
     "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",

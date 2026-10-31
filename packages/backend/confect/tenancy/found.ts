@@ -19,6 +19,7 @@ import {
   personAuthority,
   tenantAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { DPA_VERSION } from "@repo/backend/confect/tenancy/contract";
 import { accountPersonName } from "@repo/backend/confect/tenancy/create";
 import { FoundingRefused } from "@repo/backend/confect/tenancy/errors";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
@@ -129,8 +130,9 @@ const checkOpening = Effect.fn("tenancy.found.check")(function* (
  * the Owner role and the role the founder chose, one unit for each level, and
  * each unit's active period for the school year now running in its country.
  * Every write is journaled under the founder's Person, as the operator's
- * opening journals under the system. The account's draft is removed, and the
- * answer names the school's own address, where the founder goes next.
+ * opening journals under the system, and the journal records the version of the
+ * data processing agreement the opening accepts. The account's draft is removed,
+ * and the answer names the school's own address, where the founder goes next.
  */
 export const foundSchool = Effect.fn("tenancy.found")(function* (
   user: UsersDoc,
@@ -180,11 +182,18 @@ export const foundSchool = Effect.fn("tenancy.found")(function* (
     .get(ownerId)
     .pipe(Effect.orDie);
   const actor = personActor(owner);
-  yield* tenantAuthority.record(
-    actor,
-    yield* reader.table("tenants").get(tenantId).pipe(Effect.orDie),
-    { size: args.size, type: "tenant.founded" }
-  );
+  const tenant = yield* reader
+    .table("tenants")
+    .get(tenantId)
+    .pipe(Effect.orDie);
+  yield* tenantAuthority.record(actor, tenant, {
+    size: args.size,
+    type: "tenant.founded",
+  });
+  yield* tenantAuthority.record(actor, tenant, {
+    dpaVersion: DPA_VERSION,
+    type: "tenant.dpa.accepted",
+  });
   yield* personAuthority.record(actor, owner, { type: "person.created" });
   yield* personAuthority.record(actor, owner, {
     method: "founder",
