@@ -61,9 +61,7 @@ test("an admin previews a Dapodik file, imports its students into the active per
   await openPeriodWithCohort(page, address, "7A");
 
   await page.goto(address("/settings/roster"));
-  await expect(
-    page.getByText("Import the students from Dapodik.")
-  ).toBeVisible();
+  await expect(page.getByText("Import the students.")).toBeVisible();
   await waitUntilTakenOver(
     page.locator("header").getByRole("button", { name: "Import" })
   );
@@ -72,7 +70,7 @@ test("an admin previews a Dapodik file, imports its students into the active per
   await chooseFile(page, await sheetFile("kelas.xlsx", [["Kelas"], ["7A"]]));
   await expect(page.getByText("This file cannot be imported.")).toBeVisible();
   await expect(
-    page.getByText("The file has no Nama and NISN columns.")
+    page.getByText("The file does not have the columns of a student list.")
   ).toBeVisible();
 
   await chooseFile(page, await sheetFile("daftar_pd.xlsx", DAPODIK));
@@ -100,9 +98,7 @@ test("an admin previews a Dapodik file, imports its students into the active per
     .getByRole("button", { name: "Import students" })
     .click();
   await expect(page.getByText("The students are in the roster.")).toBeVisible();
-  await expect(
-    page.getByText("Import the students from Dapodik.")
-  ).toBeVisible();
+  await expect(page.getByText("Import the students.")).toBeVisible();
 
   const download = page.waitForEvent("download");
   await page
