@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
+  DocumentIds,
 } from "@repo/backend/confect/_generated/services";
 import { classAuthority } from "@repo/backend/confect/classroom/authority";
 import {
