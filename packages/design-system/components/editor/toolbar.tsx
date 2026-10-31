@@ -171,7 +171,9 @@ function EditorBar({
 }) {
   const { editor } = useCurrentEditor();
   const row = useRef<HTMLDivElement>(null);
-  const [wrapped, setWrapped] = useState<readonly (typeof WrappedGroup.Type)[]>([]);
+  const [wrapped, setWrapped] = useState<readonly (typeof WrappedGroup.Type)[]>(
+    []
+  );
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

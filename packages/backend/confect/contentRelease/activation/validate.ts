@@ -141,8 +141,6 @@ export const validateRecovery = Effect.fn(
   const active = state?.activeReleaseId
     ? yield* loadRelease(state.activeReleaseId)
     : undefined;
-  if (active) {
-  }
   if (
     !(state && active) ||
     release.role !== "recovery" ||
