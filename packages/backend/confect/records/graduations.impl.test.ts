@@ -195,7 +195,8 @@ describe("records/graduations", () => {
         expect(
           yield* fixture.anonymous.mutation(checks.report, { hash })
         ).toEqual({
-          approvedAt: TENANCY_NOW,
+          // Issued after the report's print ran the scheduled jobs, which move the fake clock.
+          approvedAt: expect.any(Number),
           kind: "letter",
           outcome: "locked",
           period: "Ganjil 2026/2027",
