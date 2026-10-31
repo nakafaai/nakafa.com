@@ -18,7 +18,7 @@ export const editorBar = cva("flex items-center gap-1.5 border-b px-2 py-1.5");
  * its controls gather in the middle, over the page the writer edits.
  */
 export const editorRow = cva(
-  "relative flex h-8 min-w-0 flex-1 flex-wrap content-start items-center gap-x-1.5 overflow-hidden",
+  "relative flex h-8 min-w-0 flex-1 flex-wrap content-start items-center gap-x-0.5 overflow-hidden",
   {
     defaultVariants: { align: "start" },
     variants: {

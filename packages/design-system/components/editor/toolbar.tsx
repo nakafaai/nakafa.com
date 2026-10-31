@@ -28,7 +28,7 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { EditorContext, useCurrentEditor } from "@tiptap/react";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   type ComponentProps,
   type ReactNode,
@@ -44,39 +44,115 @@ interface EditorGroup {
   readonly tools: ReactNode;
 }
 
-/**
- * Reads which groups the row has no room for. The row keeps one line and lets
- * the groups that do not fit wrap below it, out of sight.
- */
-function readWrapped(row: HTMLElement) {
-  return Arr.flatMap(Arr.fromIterable(row.children), (group) =>
-    group instanceof HTMLElement &&
-    group.offsetTop >= row.clientHeight &&
-    group.dataset.group !== undefined
-      ? [group.dataset.group]
-      : []
-  );
+/** A group of the bar that the row has no room for in full: its name, and how many of its controls still show. */
+interface WrappedGroup {
+  readonly name: string;
+  readonly shown: number;
 }
 
 /**
- * One group of controls. A line stands before every group but the first, and a
- * group the row has no room for keeps its place out of sight.
+ * Reads how much of one group the row has room for. The row keeps one line and lets each control that does not
+ * fit wrap below it, out of sight, so the row fills to its end and only what truly has no room leaves it. The line
+ * before a group goes with the group's first control, so no line stands alone at the row's end. A wrapped part is
+ * marked, which takes it out of reach while it keeps its place in the row.
  */
-function BarGroup(props: Omit<ComponentProps<"div">, "className">) {
+function readGroup(row: HTMLElement, group: HTMLElement) {
+  const parts = Arr.filter(
+    Arr.fromIterable(group.children),
+    (part) => part instanceof HTMLElement
+  );
+  const wrapped = Arr.findFirstIndex(
+    parts,
+    (part) => part.offsetTop >= row.clientHeight
+  );
+  const cut = Option.match(wrapped, {
+    onNone: () => parts.length,
+    onSome: (index) => (index <= 1 ? 0 : index),
+  });
+  Arr.forEach(parts, (part, index) =>
+    part.toggleAttribute("data-wrapped", index >= cut)
+  );
+
+  return cut === parts.length || group.dataset.group === undefined
+    ? []
+    : [{ name: group.dataset.group, shown: Math.max(cut - 1, 0) }];
+}
+
+/** The groups the row cut, as one text, so a row that cut the same controls keeps its list. */
+function groupsKey(groups: readonly WrappedGroup[]) {
+  return Arr.join(
+    Arr.map(groups, ({ name, shown }) => `${name}:${shown}`),
+    " "
+  );
+}
+
+/** The line that sets a group of controls off from the one before it. */
+function BarLine({ className }: { className?: string }) {
   return (
-    <div
-      className="before:bg-border flex shrink-0 items-center gap-0.5 before:me-1 before:h-5 before:w-px first:before:hidden data-wrapped:invisible"
-      {...props}
+    <span
+      aria-hidden="true"
+      className={cn("bg-border h-5 w-px shrink-0", className)}
     />
   );
 }
 
 /**
+ * One group of controls in the row: a line, except before the first group, and its controls. The group draws no box
+ * of its own, so each control wraps alone and a wrapped one keeps its place out of sight.
+ */
+function BarGroup({
+  children,
+  name,
+}: {
+  children: ReactNode;
+  /** The name the row reads the group by. */
+  name: string;
+}) {
+  return (
+    <div
+      className="group/bar contents *:data-wrapped:invisible"
+      data-group={name}
+    >
+      <BarLine className="mx-0.5 group-first/bar:hidden" />
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The controls of one group that the row has no room for. The group draws the whole of its controls, so the ones the
+ * row still shows are put out of sight here, and the menu never repeats the row.
+ */
+function WrappedTools({
+  children,
+  shown,
+}: {
+  children: ReactNode;
+  /** How many of the group's first controls the row still shows. */
+  shown: number;
+}) {
+  return (
+    <div
+      className="flex items-center gap-0.5"
+      ref={(element) => {
+        Arr.forEach(Arr.fromIterable(element?.children ?? []), (tool, index) =>
+          tool.toggleAttribute("hidden", index < shown)
+        );
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
  * The one-line bar of controls above an editor, which it reads through `useCurrentEditor`.
- * The groups that do not fit the width move behind a last control that opens them, so the
- * line never wraps and never scrolls. They close when a control there has acted and the
- * caret is back in the text. A control that opens its own choices, such as the link field,
- * keeps them open until the writer has chosen. Until the editor exists, every control waits.
+ * Every control the width has room for stays in the row, and only the ones that truly do not
+ * fit move behind a last control that opens them, so a writer never opens a menu for a control
+ * that had room, and the line never wraps and never scrolls. They close when a control there
+ * has acted and the caret is back in the text. A control that opens its own choices, such as
+ * the link field, keeps them open until the writer has chosen. Until the editor exists, every
+ * control waits.
  */
 function EditorBar({
   align,
@@ -95,7 +171,7 @@ function EditorBar({
 }) {
   const { editor } = useCurrentEditor();
   const row = useRef<HTMLDivElement>(null);
-  const [wrapped, setWrapped] = useState<readonly string[]>([]);
+  const [wrapped, setWrapped] = useState<readonly WrappedGroup[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -124,10 +200,12 @@ function EditorBar({
 
     /** Keeps the list it has when the same groups are still out of sight. */
     function measure(target: HTMLElement) {
-      const next = readWrapped(target);
+      const next = Arr.flatMap(Arr.fromIterable(target.children), (group) =>
+        group instanceof HTMLElement ? readGroup(target, group) : []
+      );
 
       setWrapped((current) =>
-        Arr.join(current, " ") === Arr.join(next, " ") ? current : next
+        groupsKey(current) === groupsKey(next) ? current : next
       );
     }
 
@@ -147,17 +225,14 @@ function EditorBar({
     >
       <div className={editorRow({ align })} ref={row}>
         {Arr.map(groups, ({ name, tools }) => (
-          <BarGroup
-            data-group={name}
-            data-wrapped={Arr.contains(wrapped, name) ? "" : undefined}
-            key={name}
-          >
+          <BarGroup key={name} name={name}>
             {tools}
           </BarGroup>
         ))}
       </div>
       {Arr.isReadonlyArrayNonEmpty(wrapped) ? (
-        <BarGroup>
+        <>
+          <BarLine />
           <Popover onOpenChange={setOpen} open={open}>
             <ToolHint label={more}>
               <PopoverTrigger
@@ -182,17 +257,22 @@ function EditorBar({
                 closed === "keyboard" ? true : (editor?.view.dom ?? true)
               }
             >
-              {Arr.map(
-                Arr.filter(groups, ({ name }) => Arr.contains(wrapped, name)),
-                ({ name, tools }) => (
-                  <div className="flex items-center gap-0.5" key={name}>
-                    {tools}
-                  </div>
+              {Arr.map(groups, ({ name, tools }) =>
+                Option.match(
+                  Arr.findFirst(wrapped, (group) => group.name === name),
+                  {
+                    onNone: () => null,
+                    onSome: ({ shown }) => (
+                      <WrappedTools key={name} shown={shown}>
+                        {tools}
+                      </WrappedTools>
+                    ),
+                  }
                 )
               )}
             </PopoverContent>
           </Popover>
-        </BarGroup>
+        </>
       ) : null}
     </div>
   );
