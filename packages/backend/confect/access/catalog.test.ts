@@ -201,6 +201,10 @@ describe("access/catalog", () => {
           "promotion.undone",
           "integration.created",
           "integration.rotated",
+      "integration.webhook.changed",
+      "integration.webhook.created",
+      "integration.webhook.revoked",
+      "integration.webhook.rotated",
           "integration.revoked",
           "integration.authorized",
           "integration.changed",
@@ -304,13 +308,17 @@ describe("access/catalog", () => {
     expect(undeclared).toEqual([]);
   });
 
-  it("lists every published change as a webhook change", () => {
+  it("offers only published changes to a webhook", () => {
+    const published = Arr.flatMap(
+      entries,
+      (entry): readonly string[] => entry.published
+    );
     expect(
-      Arr.sort(
-        Arr.flatMap(entries, (entry): readonly string[] => entry.published),
-        Order.String
+      Arr.filter(
+        WebhookChange.literals,
+        (change) => !Arr.contains(published, change)
       )
-    ).toEqual(WebhookChange.literals);
+    ).toEqual([]);
   });
 
   it("joins tenant actions from the tenant kind and every extension of it", () => {

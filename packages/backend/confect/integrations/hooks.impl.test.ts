@@ -122,6 +122,18 @@ const jobsOf = (fixture: Fixture, name: string) =>
       )
     );
 
+/** A webhook's journal cursor, which leaves the test's transaction as its plain row. */
+const cursorRow = (
+  fixture: Fixture,
+  webhookId: GenericId.GenericId<"integrationWebhooks">
+) =>
+  fixture.run(
+    Effect.map(
+      cursorOf(webhookId, fixture.tenants.nf, null),
+      Option.getOrNull
+    )
+  );
+
 /** Reads one attempt's state. */
 const stateOf = (fixture: Fixture, deliveryId: DeliveryId) =>
   fixture.run(
@@ -157,10 +169,8 @@ describe("integrations/hooks run", () => {
           entryId: carried,
           state: { status: "due" },
         });
-        const cursor = yield* fixture.run(
-          cursorOf(webhookId, fixture.tenants.nf, null)
-        );
-        expect(Option.getOrThrow(cursor).pending).toBe(false);
+        const cursor = yield* cursorRow(fixture, webhookId);
+        expect(cursor?.pending).toBe(false);
         expect(yield* jobsOf(fixture, ":deliver")).toHaveLength(1);
       })
   );
@@ -177,11 +187,10 @@ describe("integrations/hooks run", () => {
 
       yield* fixture.internal.mutation(run, { webhookId });
 
-      expect(yield* attempts(fixture, webhookId)).toHaveLength(49);
-      const cursor = yield* fixture.run(
-        cursorOf(webhookId, fixture.tenants.nf, null)
-      );
-      expect(Option.getOrThrow(cursor).pending).toBe(true);
+      // The page of 50 begins with the three changes that set the webhook up, which it does not carry.
+      expect(yield* attempts(fixture, webhookId)).toHaveLength(47);
+      const cursor = yield* cursorRow(fixture, webhookId);
+      expect(cursor?.pending).toBe(true);
       expect(yield* jobsOf(fixture, ":run")).toHaveLength(1);
     })
   );
@@ -208,6 +217,9 @@ describe("integrations/hooks sweep", () => {
       const fixture = yield* tenancyFixture;
       const { webhookId } = yield* seeded(fixture);
 
+      // The first run reads the changes that set the webhook up.
+      vi.advanceTimersByTime(Duration.toMillis(Duration.seconds(6)));
+      yield* fixture.internal.mutation(run, { webhookId });
       yield* fixture.internal.mutation(sweep, { cursor: null });
       expect(yield* jobsOf(fixture, ":run")).toEqual([]);
 
@@ -241,14 +253,12 @@ describe("integrations/hooks sweep", () => {
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const { webhookId } = yield* seeded(fixture);
-      const cursor = yield* fixture.run(
-        cursorOf(webhookId, fixture.tenants.nf, null)
-      );
+      const cursor = yield* cursorRow(fixture, webhookId);
       yield* fixture.run(
         Effect.flatMap(DatabaseWriter, (writer) =>
           writer
             .table("journalCursors")
-            .delete(Option.getOrThrow(cursor)._id)
+            .delete(Option.getOrThrow(Option.fromNullOr(cursor))._id)
             .pipe(Effect.orDie)
         )
       );

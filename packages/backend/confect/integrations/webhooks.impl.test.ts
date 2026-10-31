@@ -109,9 +109,12 @@ describe("integrations/webhooks create", () => {
         expect(opened).toBe(webhook.secret);
 
         const cursor = yield* fixture.run(
-          cursorOf(webhook.id, fixture.tenants.nf, null)
+          Effect.map(
+            cursorOf(webhook.id, fixture.tenants.nf, null),
+            Option.getOrNull
+          )
         );
-        expect(Option.getOrThrow(cursor)).toMatchObject({
+        expect(cursor).toMatchObject({
           changeType: null,
           handled: [],
           pending: false,
@@ -314,9 +317,12 @@ describe("integrations/webhooks revoke", () => {
         const row = yield* fixture.run(stored(webhook.id));
         expect(row).toMatchObject({ secret: null, status: "revoked" });
         const cursor = yield* fixture.run(
-          cursorOf(webhook.id, fixture.tenants.nf, null)
+          Effect.map(
+            cursorOf(webhook.id, fixture.tenants.nf, null),
+            Option.getOrNull
+          )
         );
-        expect(Option.isNone(cursor)).toBe(true);
+        expect(cursor).toBeNull();
         const entries = yield* fixture.run(journal);
         expect(
           Arr.filter(
