@@ -18,12 +18,12 @@ import { useRouteFailure } from "@/components/state/localized";
 import { Stage } from "@/components/state/stage";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
+import { loadEntryForm } from "@/components/tenant/forms";
 import { TenantMissing } from "@/components/tenant/missing";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
-import { loadEntryForm } from "@/components/tenant/username";
 import { type AuthLegalLinks, authLegalLinks } from "@/lib/auth/legal";
 import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 import { readStaticData } from "@/lib/static/data";
@@ -142,12 +142,16 @@ export const Route = createFileRoute("/school/$slug")({
     if (frame.school._tag === "Refused") {
       throw notFound();
     }
-    if (frame.school._tag === "Visitor") {
+    // A visitor's entry paints with its form, and so does the username form that an outsider's card
+    // way opens while its account signs out; an outsider never sees the parent's form.
+    if (frame.school._tag === "Visitor" || frame.school._tag === "Outsider") {
       await loadEntryForm({
-        guardian: Arr.some(
-          matches,
-          (match) => match.routeId === "/school/$slug/parents"
-        ),
+        guardian:
+          frame.school._tag === "Visitor" &&
+          Arr.some(
+            matches,
+            (match) => match.routeId === "/school/$slug/parents"
+          ),
         signIn: search["sign-in"],
       });
     }

@@ -4,7 +4,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import {
   getRouteApi,
-  lazyRouteComponent,
   useLocation,
   useMatchRoute,
 } from "@tanstack/react-router";
@@ -13,52 +12,12 @@ import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
 import { keepRoomCode } from "@/components/exams/sitting/scan";
+import { TenantGuardianSignIn, TenantLogin } from "@/components/tenant/forms";
 import { signInReturn } from "@/components/tenant/resume";
 import { Link } from "@/lib/routing/link";
 
 /** The school layout's route, whose validated search holds the `sign-in` address. */
 const schoolRoute = getRouteApi("/school/$slug");
-
-/**
- * The school username form. Its code stays out of the entry's first JavaScript, and loads before the
- * entry commits at the address that opens it (`loadEntryForm`).
- */
-const TenantLogin = lazyRouteComponent(
-  () => import("@/components/tenant/login"),
-  "TenantLogin"
-);
-
-/**
- * A parent's email code form (ADR 0034). Its code stays out of the entry's first JavaScript, and loads
- * before the entry commits at the parent address (`loadEntryForm`).
- */
-const TenantGuardianSignIn = lazyRouteComponent(
-  () => import("@/components/tenant/guardian/signin"),
-  "TenantGuardianSignIn"
-);
-
-/**
- * Loads the code of the form that a visitor's entry address opens: the parent's code form at the
- * parent address, the username form at `?sign-in=username`. The school layout awaits it before the
- * entry commits, so the entry paints with its form in place, and a form that arrived later would move
- * the centred title and legal notice. A press on the username link waits for it with the Google
- * buttons still in place.
- */
-export async function loadEntryForm({
-  guardian,
-  signIn,
-}: {
-  guardian: boolean;
-  signIn: "username" | undefined;
-}) {
-  if (guardian) {
-    await TenantGuardianSignIn.preload?.();
-    return;
-  }
-  if (signIn === "username") {
-    await TenantLogin.preload?.();
-  }
-}
 
 /** Whether the visitor is on the parent address, `/parents`, whose sign-in is the email code. */
 function useGuardianAddress() {
