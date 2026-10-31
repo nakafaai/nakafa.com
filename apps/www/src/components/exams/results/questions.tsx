@@ -271,7 +271,7 @@ function AnswerList({
             <TableRow key={answer.attemptId}>
               <TableCell>{answer.name}</TableCell>
               <TableCell className="min-w-56 wrap-break-word">
-                <span className="block whitespace-pre-wrap">
+                <span className="block whitespace-pre-wrap" dir="auto">
                   {responseText(question, answer.response)}
                 </span>
               </TableCell>
