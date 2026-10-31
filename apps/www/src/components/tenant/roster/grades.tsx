@@ -13,7 +13,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
@@ -25,16 +25,24 @@ type CohortChoice = Ref.Returns<typeof tenancy.cohorts.list>[number];
 /**
  * The Dapodik export of report data (ADR 0033, S6): a menu of the period's active class groups,
  * each of which saves its locked report cards as a workbook to paste into the template Dapodik
- * downloads for that class group and subject. The writer loads only when a file is asked for.
+ * downloads for that class group and subject. It stands in the header from the first paint and
+ * waits, disabled, while the period is read or when the unit has none. The writer loads only when
+ * a file is asked for.
  */
 export function RosterGradesExport({
-  periodId,
+  period,
 }: {
-  periodId: GenericId.GenericId<"tenantPeriods">;
+  period: Option.Option<GenericId.GenericId<"tenantPeriods">>;
 }) {
   const t = useTranslations("SchoolRoster");
   const { slug } = useTenant();
-  const cohorts = useQuery(tenancy.cohorts.list, { periodId, slug });
+  const cohorts = useQuery(
+    tenancy.cohorts.list,
+    Option.match(period, {
+      onNone: () => "skip" as const,
+      onSome: (periodId) => ({ periodId, slug }),
+    })
+  );
   const [isExporting, startExporting] = useTransition();
   const active = QueryResult.isSuccess(cohorts)
     ? Arr.filter(cohorts.value, (cohort) => cohort.status === "active")

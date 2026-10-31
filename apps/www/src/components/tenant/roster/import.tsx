@@ -348,7 +348,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
             )}
             {t("export")}
           </Button>
-          <RosterGradesExport periodId={periodId} />
+          <RosterGradesExport period={period} />
           <Button
             disabled={isReading || Option.isNone(period)}
             onClick={() => input.current?.click()}
