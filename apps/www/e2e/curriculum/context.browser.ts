@@ -1,38 +1,24 @@
-import { expect, type Request, test } from "@playwright/test";
-import { Deferred, Effect, MutableList } from "effect";
+import { expect, test } from "@playwright/test";
+import { Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const MATERIAL_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
-const MATERIAL_NODE =
-  "class-11-mathematics-function-composition-inverse-function";
-const MATERIAL_CONTEXT = `merdeka~${MATERIAL_NODE}`;
+const MATERIAL_CONTEXT =
+  "merdeka~class-11-mathematics-function-composition-inverse-function";
 const CONTEXTUAL_MATERIAL_HREF = `${MATERIAL_PATH}?ctx=${MATERIAL_CONTEXT}`;
 const MATERIAL_TITLE_PATTERN = /^Function Concept\b/u;
-
-/** The path of the Convex query that verifies a lesson's placement. */
-const PLACEMENT_QUERY = "contentRelease/program:context";
-
-/** Whether a request is the lesson's Convex query of the placement that its address names. */
-const isPlacementRead = (request: Request) => {
-  const body = request.postData() ?? "";
-  return (
-    request.method() === "POST" &&
-    body.includes(`"${PLACEMENT_QUERY}"`) &&
-    body.includes(MATERIAL_NODE)
-  );
-};
+const CLASS_PATH = "/curriculum/merdeka/class-11";
 
 /**
- * Proves the lesson keeps its verified curriculum placement without polluting
- * SEO. The static lesson is readable before the placement arrives, the browser
- * asks Convex for it once, with no server function and without first missing a
- * static answer that no build writes, and the lesson's own link then carries it
- * while the title and the first section stay where they were.
+ * Proves the lesson keeps its curriculum place without polluting SEO. The place
+ * is in the static page, so its path stands before any page script runs, the browser
+ * asks Convex for nothing and calls no server function, and hydrating moves nothing
+ * while the lesson's own link takes the place too.
  */
-test("material sidebar preserves verified curriculum context", async ({
+test("a lesson shows its curriculum path from its static page, with no read", async ({
   baseURL,
   browser,
 }) => {
@@ -52,8 +38,12 @@ test("material sidebar preserves verified curriculum context", async ({
           const missedAnswers = MutableList.make<string>();
           const serverFunctions = MutableList.make<string>();
           page.on("request", (request) => {
-            if (new URL(request.url()).pathname.startsWith("/_serverFn/")) {
+            const { pathname } = new URL(request.url());
+            if (pathname.startsWith("/_serverFn/")) {
               MutableList.append(serverFunctions, request.url());
+            }
+            if (pathname === "/api/query") {
+              MutableList.append(reads, request.postData() ?? "");
             }
           });
           page.on("response", (response) => {
@@ -64,63 +54,36 @@ test("material sidebar preserves verified curriculum context", async ({
               MutableList.append(missedAnswers, response.url());
             }
           });
-          const released = yield* Deferred.make<void>();
-          const services = yield* Effect.context<never>();
-          // The placement waits until the lesson has been read, as it would on
-          // a slow connection, so nothing it changes can move the lesson first.
-          yield* Effect.promise(() =>
-            page.route(
-              (url) => url.pathname === "/api/query",
-              (route) => {
-                if (!isPlacementRead(route.request())) {
-                  return route.continue();
-                }
-                MutableList.append(reads, route.request().url());
-                return Effect.runPromiseWith(services)(
-                  Deferred.await(released).pipe(
-                    Effect.andThen(() => Effect.promise(() => route.continue()))
-                  )
-                );
-              }
-            )
-          );
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
               yield* seedAnalyticsConsent(page, "denied");
+              // With no script the page is what the first paint draws.
+              yield* Effect.promise(() =>
+                page.route("**/*.js", (route) => route.abort())
+              );
               const response = yield* Effect.promise(() =>
                 page.goto(CONTEXTUAL_MATERIAL_HREF, {
                   waitUntil: "domcontentloaded",
                 })
               );
               yield* Effect.sync(() => expect(response?.status()).toBe(200));
-
-              // The full lesson must be readable before its placement arrives,
-              // while the breadcrumb path waits hidden in its row, so it paints
-              // only in its final form.
+              const path = page.getByRole("navigation", {
+                name: "Breadcrumb",
+                exact: true,
+              });
+              const classLink = path.locator(`a[href$="${CLASS_PATH}"]`);
+              yield* Effect.promise(() => expect(classLink).toBeVisible());
               const title = page.getByRole("heading", { level: 1 });
-              const opening = page.getByRole("heading", { level: 2 }).first();
-              const path = page
-                .getByRole("navigation", { name: "Breadcrumb", exact: true })
-                .getByRole("link")
-                .last();
-              yield* Effect.promise(() => expect(title).toBeVisible());
-              yield* Effect.promise(() => expect(opening).toBeVisible());
-              yield* Effect.promise(() => expect(path).toBeHidden());
-              yield* Effect.promise(() =>
-                page.evaluate(() => document.fonts.ready.then(() => undefined))
-              );
               const titleBefore = yield* Effect.promise(() =>
                 title.boundingBox()
               );
-              const openingBefore = yield* Effect.promise(() =>
-                opening.boundingBox()
-              );
+
+              yield* Effect.promise(() => page.unroute("**/*.js"));
               yield* Effect.promise(() =>
-                expect.poll(() => reads.length).toBeGreaterThan(0)
+                page.goto(CONTEXTUAL_MATERIAL_HREF, { waitUntil: "load" })
               );
-              yield* Deferred.succeed(released, undefined);
-              yield* Effect.promise(() => expect(path).toBeVisible());
+              yield* Effect.promise(() => expect(classLink).toBeVisible());
 
               const canonical = page.locator('link[rel="canonical"]');
               yield* Effect.promise(() => expect(canonical).toHaveCount(1));
@@ -147,20 +110,18 @@ test("material sidebar preserves verified curriculum context", async ({
                   })
                   .toStrictEqual([MATERIAL_PATH, MATERIAL_CONTEXT])
               );
-              yield* Effect.sync(() => {
-                expect(reads.length).toBe(1);
-                expect(MutableList.toArray(missedAnswers)).toEqual([]);
-                expect(MutableList.toArray(serverFunctions)).toEqual([]);
-              });
               const titleAfter = yield* Effect.promise(() =>
                 title.boundingBox()
               );
-              const openingAfter = yield* Effect.promise(() =>
-                opening.boundingBox()
-              );
               yield* Effect.sync(() => {
+                expect(
+                  MutableList.toArray(reads).filter((body) =>
+                    body.includes("contentRelease/program")
+                  )
+                ).toEqual([]);
+                expect(MutableList.toArray(missedAnswers)).toEqual([]);
+                expect(MutableList.toArray(serverFunctions)).toEqual([]);
                 expect(titleAfter).toEqual(titleBefore);
-                expect(openingAfter).toEqual(openingBefore);
               });
             })
           );

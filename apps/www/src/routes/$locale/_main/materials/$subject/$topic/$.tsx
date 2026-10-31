@@ -41,12 +41,12 @@ import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
+import { readPublishedMaterialPlacements } from "@/lib/content/material/context";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
 import {
   toMaterialHref,
   toMaterialNavigationPage,
 } from "@/lib/content/material/navigation";
-import { readLessonPlacementOnce } from "@/lib/content/material/placement";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
@@ -135,6 +135,7 @@ const readMaterial = createServerFn({ method: "GET" })
             },
             locale,
             metadata: published.metadata,
+            placements: yield* readPublishedMaterialPlacements(locale, route),
             navigation: toMaterialNavigationPage({
               kind: "published",
               route,
@@ -165,12 +166,9 @@ export const Route = createFileRoute(
   "/$locale/_main/materials/$subject/$topic/$"
 )({
   validateSearch: Schema.toStandardSchemaV1(MaterialSearch),
-  // In the browser the loader reads the placement that the address's `ctx` hint
-  // names before a client navigation commits, and names the hint it read for, so
-  // the provider can tell whether it belongs to the address (the match is keyed
-  // by the lesson's path alone). The prerender reads none: the static page cannot
-  // see the query.
-  loader: async ({ location, params }) => {
+  // The build writes every curriculum place of the lesson into its page, so the
+  // address's `ctx` hint picks one in the browser with nothing to read.
+  loader: async ({ params }) => {
     const lesson = Arr.filter(
       (params._splat ?? "").split("/"),
       (segment) => segment !== ""
@@ -181,7 +179,7 @@ export const Route = createFileRoute(
       subject: params.subject,
       topic: params.topic,
     });
-    const page = Match.value(read).pipe(
+    return Match.value(read).pipe(
       Match.tagsExhaustive({
         Found: ({ page: found }) => found,
         NotFound: () => {
@@ -189,23 +187,6 @@ export const Route = createFileRoute(
         },
       })
     );
-    const ctx = Option.getOrUndefined(
-      Option.flatMapNullishOr(
-        Schema.decodeOption(MaterialSearch)(location.search),
-        (search) => search.ctx
-      )
-    );
-    if (import.meta.env.SSR) {
-      return { ...page, placement: null, placementHint: null };
-    }
-    const placement = await Effect.runPromise(
-      readLessonPlacementOnce({
-        ctx,
-        locale: params.locale,
-        page: page.navigation,
-      })
-    );
-    return { ...page, placement, placementHint: ctx ?? "" };
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
@@ -252,10 +233,8 @@ function MaterialPage() {
     <MaterialPlacementProvider
       hint={ctx}
       key={`${route.publicPath}?${ctx ?? ""}`}
-      locale={page.locale}
       page={page.navigation}
-      placement={page.placement}
-      placementHint={page.placementHint}
+      placements={page.placements}
     >
       <LayoutMaterial>
         <ContentViewTracker
@@ -268,13 +247,7 @@ function MaterialPage() {
         <SidebarRightProvider>
           <LayoutMaterialContent>
             <ContentHeader
-              breadcrumb={
-                // Hidden in its row while the root's prepaint script marks the
-                // placement pending, so the path shows only in its final form.
-                <div className="contents [html[data-placement=pending]_&]:invisible">
-                  <MaterialBreadcrumb title={metadata.title} />
-                </div>
-              }
+              breadcrumb={<MaterialBreadcrumb title={metadata.title} />}
             >
               <OpenContent
                 content={page.content}

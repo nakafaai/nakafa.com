@@ -27,13 +27,12 @@ const programRouteValidator = Schema.Struct({
   snapshotId: Schema.Union([Schema.String, Schema.Null]),
   sourceRevision: Schema.Union([Schema.String, Schema.Null]),
 });
-const programContextValidator = Schema.Struct({
+const programPlacementValidator = Schema.Struct({
   ancestorJson: Schema.mutable(Schema.Array(Schema.String)),
-  groupJson: Schema.Union([Schema.String, Schema.Null]),
-  managed: Schema.Boolean,
-  mappingJson: Schema.Union([Schema.String, Schema.Null]),
-  parentJson: Schema.Union([Schema.String, Schema.Null]),
-  resolvedCanonicalPath: Schema.Union([Schema.String, Schema.Null]),
+  groupJson: Schema.String,
+  mappingJson: Schema.String,
+  parentJson: Schema.String,
+  resolvedCanonicalPath: Schema.String,
 });
 const programPathValidator = Schema.Struct({
   managed: Schema.Boolean,
@@ -85,20 +84,15 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicQuery({
-      name: "context",
+      name: "placements",
       args: () => ({
-        expectedActiveReleaseId: Schema.optionalKey(
-          Schema.Union([Schema.String, Schema.Null])
-        ),
         appLocale: appLocaleValidator,
         contentKey: Schema.String,
         materialKey: Schema.String,
-        nodeKey: Schema.String,
         parentPath: Schema.String,
-        programKey: Schema.String,
         publicPath: Schema.String,
       }),
-      returns: () => programContextValidator,
+      returns: () => Schema.mutable(Schema.Array(programPlacementValidator)),
       error: () => ReleaseError,
     })
   )

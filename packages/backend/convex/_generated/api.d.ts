@@ -2525,32 +2525,29 @@ export declare const api: {
           sourceRevision: string | null;
         }
       >;
-      context: FunctionReference<
-        "query",
-        "public",
-        {
-          appLocale: "en" | "id" | "de";
-          contentKey: string;
-          expectedActiveReleaseId?: string | null;
-          materialKey: string;
-          nodeKey: string;
-          parentPath: string;
-          programKey: string;
-          publicPath: string;
-        },
-        {
-          groupJson: string | null;
-          managed: boolean;
-          mappingJson: string | null;
-          parentJson: string | null;
-          resolvedCanonicalPath: string | null;
-        }
-      >;
       path: FunctionReference<
         "query",
         "public",
         { appLocale: "en" | "id" | "de"; publicPath: string },
         { managed: boolean; routeJson: string | null }
+      >;
+      placements: FunctionReference<
+        "query",
+        "public",
+        {
+          appLocale: "en" | "id" | "de";
+          contentKey: string;
+          materialKey: string;
+          parentPath: string;
+          publicPath: string;
+        },
+        Array<{
+          ancestorJson: Array<string>;
+          groupJson: string;
+          mappingJson: string;
+          parentJson: string;
+          resolvedCanonicalPath: string;
+        }>
       >;
       route: FunctionReference<
         "query",
