@@ -78,8 +78,8 @@ export const recordPayment = Effect.fn("billing.payments.record")(function* (
   } satisfies PaymentRecorded;
 });
 
-/** The most payments the settings list: the newest of a learner's personal accounts. */
-const RECENT_PAYMENT_LIMIT = 12;
+/** The most payments the history lists: ten years of monthly renewals, the newest of a learner's personal accounts. */
+const PAYMENT_HISTORY_LIMIT = 120;
 
 /**
  * The newest payments a learner made on their personal accounts that went
@@ -100,7 +100,7 @@ export const readRecentPayments = Effect.fn("billing.payments.readRecent")(
           (query) => query.eq("accountId", account._id),
           "desc"
         )
-        .take(RECENT_PAYMENT_LIMIT)
+        .take(PAYMENT_HISTORY_LIMIT)
         .pipe(Effect.orDie)
     );
     const succeeded = Arr.filter(
@@ -114,7 +114,7 @@ export const readRecentPayments = Effect.fn("billing.payments.readRecent")(
         (payment: (typeof succeeded)[number]) => payment.paidAt
       )
     );
-    return Arr.map(Arr.take(newest, RECENT_PAYMENT_LIMIT), (payment) => ({
+    return Arr.map(Arr.take(newest, PAYMENT_HISTORY_LIMIT), (payment) => ({
       amount: payment.amount,
       currency: payment.currency,
       kind: payment.kind,
