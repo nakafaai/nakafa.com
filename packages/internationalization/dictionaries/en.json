@@ -111,6 +111,9 @@
     "status-withdrawn": "Withdrawn",
     "status-mismatch": "Details do not match",
     "link-verify": "Verify by hand",
+    "link-readdress": "Change email",
+    "link-readdress-description": "The link keeps its term. The parent asks for a code with the new email.",
+    "link-readdress-save": "Save email",
     "link-revoke": "End link",
     "link-revoke-title": "End this link?",
     "link-revoke-description": "The parent can no longer see the child's records.",
@@ -929,7 +932,8 @@
         "started": "Parent linked",
         "linked": "Parent link verified",
         "withdrawn": "Parent consent withdrawn",
-        "revoked": "Parent link ended"
+        "revoked": "Parent link ended",
+        "readdressed": "Parent link address corrected"
       },
       "roster": {
         "set": "Student record updated",
