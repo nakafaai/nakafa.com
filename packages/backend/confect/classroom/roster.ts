@@ -32,6 +32,17 @@ export const mayIn = (
     Effect.catchTag("AccessDenied", () => Effect.succeed(false))
   );
 
+/** The subject teachers of a class, at most ROSTER_LIMIT. */
+export const classTeachers = Effect.fn("classroom.roster.teachers")(function* (
+  row: ClassesDoc
+) {
+  return yield* (yield* DatabaseReader)
+    .table("classTeachers")
+    .index("by_classId_and_personId", (query) => query.eq("classId", row._id))
+    .take(ROSTER_LIMIT)
+    .pipe(Effect.orDie);
+});
+
 /**
  * The Persons who write in a class's forum now: the students placed in its
  * cohort and its subject teachers, active, each once, and each still holding the
@@ -48,11 +59,7 @@ export const classRoster = Effect.fn("classroom.roster.read")(function* (
     )
     .take(ROSTER_LIMIT)
     .pipe(Effect.orDie);
-  const teaching = yield* reader
-    .table("classTeachers")
-    .index("by_classId_and_personId", (query) => query.eq("classId", row._id))
-    .take(ROSTER_LIMIT)
-    .pipe(Effect.orDie);
+  const teaching = yield* classTeachers(row);
   const tenant = yield* reader
     .table("tenants")
     .get(row.tenantId)

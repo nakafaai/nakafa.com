@@ -18,6 +18,7 @@ const PathRoot = Schema.Struct({
   grades: Schema.String,
   library: Schema.String,
   name: Schema.String,
+  people: Schema.String,
   slug: TenantSlug,
   tasks: Schema.String,
 });
@@ -32,7 +33,7 @@ const PathChannel = Schema.Struct({
  * The path of a class page after the school's home, the page itself last: the class alone on its
  * home; the class and the forum on the channel list; the forum and the channel on a channel; the
  * channel and the discussion's number and title on a discussion; the class and the tasks on the task
- * list; the class and the library on the library; the tasks and the task's title on a task; and the class and the gradebook on
+ * list; the class and the library or its people on those tabs; the tasks and the task's title on a task; and the class and the gradebook on
  * the gradebook. A name that is not known yet is left out, so
  * the path never shows a placeholder. `leaf` is the last name: the discussion's, the folder's or the task's.
  */
@@ -89,6 +90,7 @@ export const classPath = (
       },
       ...last,
     ],
+    people: () => [klass, { label: root.people }],
     grades: () => [klass, { label: root.grades }],
     tasks: () => [klass, { label: root.tasks }],
     task: () => [

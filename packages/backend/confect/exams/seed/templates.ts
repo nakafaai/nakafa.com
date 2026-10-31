@@ -3,16 +3,18 @@ import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import {
   choiceAnswers,
-  choiceLimit,
-  encodeAnswers,
-  encodeKey,
   matchAnswers,
-  NEW_QUESTION_POINTS,
   numericAnswers,
-  QuestionTemplate,
   shortAnswers,
   tableAnswers,
   textLabel,
+} from "@repo/backend/confect/exams/blank";
+import {
+  choiceLimit,
+  encodeAnswers,
+  encodeKey,
+  NEW_QUESTION_POINTS,
+  QuestionTemplate,
 } from "@repo/backend/confect/exams/question";
 import {
   placeSeeded,

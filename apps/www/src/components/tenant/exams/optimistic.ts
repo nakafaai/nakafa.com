@@ -9,6 +9,7 @@ import {
   type ScoringKind,
   scoringPoints,
   scoringRule,
+  templatePoints,
 } from "@repo/backend/confect/exams/scoring";
 import { asTemplate } from "@repo/backend/confect/exams/template";
 import { Array as Arr, Option } from "effect";
@@ -144,8 +145,8 @@ export const removeUpdate: OptimisticUpdate<typeof exams.questions.remove> = (
 
 /**
  * The exam with one question in another template: its answers and key converted as the server converts
- * them, with the labels of the options the template fixes (`asTemplate`), and its revision one higher, as
- * the server raises it.
+ * them, with the labels of the options the template fixes (`asTemplate`), its points and its revision raised
+ * as the server raises them.
  */
 const templatedQuestion = (
   view: ExamView,
@@ -166,6 +167,7 @@ const templatedQuestion = (
             question.key,
             change.labels
           ),
+          points: templatePoints(question.points, change.template),
           revision: question.revision + 1,
           template: change.template,
         }

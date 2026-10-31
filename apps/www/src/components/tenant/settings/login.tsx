@@ -1,14 +1,17 @@
 import { useMutation } from "@confect/react";
 import identity from "@repo/backend/confect/_generated/refs/identity";
+import { LoginName } from "@repo/backend/confect/identity/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
@@ -44,17 +47,23 @@ export function LoginRenameDialog({
   // The field holds what the admin typed, and the login's own name until they type.
   const [typed, setLoginName] = useState<string | null>(null);
   const loginName = typed ?? login.loginName;
-  const next = loginName.trim().toLowerCase();
-  const canSave = next !== "" && next !== login.loginName;
+  const next = Schema.decodeOption(LoginName)(loginName.trim().toLowerCase());
+  const problem = loginName.trim() !== "" && Option.isNone(next);
+  const canSave = Option.exists(next, (name) => name !== login.loginName);
 
   const save = () => {
-    if (!canSave) {
+    if (Option.isNone(next) || !canSave) {
       return;
     }
     setOpen(false);
     startTransition(() =>
       saveSchool(
-        () => rename({ loginName: next, personId: login.person.id, slug }),
+        () =>
+          rename({
+            loginName: next.value,
+            personId: login.person.id,
+            slug,
+          }),
         SOURCE
       )
     );
@@ -87,12 +96,14 @@ export function LoginRenameDialog({
             {t("card-login-name")}
           </FieldLabel>
           <Input
+            aria-invalid={problem}
             id={`${id}-login`}
             onChange={(event) => setLoginName(event.target.value)}
             placeholder={t("card-login-name-placeholder")}
             value={loginName}
           />
           <FieldDescription>{t("student-login-rule")}</FieldDescription>
+          <FieldError>{problem ? t("student-login-rule") : null}</FieldError>
         </Field>
       </FieldGroup>
     </ResponsiveDialog>

@@ -2,18 +2,15 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import { keyFits } from "@repo/backend/confect/assessment/key";
+import { keyPartsFit } from "@repo/backend/confect/assessment/key";
 import { ensureRowSize } from "@repo/backend/confect/editor/document";
 import {
   AnswersDoNotFit,
   KeyDoesNotFit,
   RevisionStale,
 } from "@repo/backend/confect/exams/errors";
-import {
-  answersFit,
-  encodeAnswers,
-  encodeKey,
-} from "@repo/backend/confect/exams/question";
+import { answersFit } from "@repo/backend/confect/exams/fits";
+import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
 import { type Array as Arr, Clock, Effect } from "effect";
 
 /**
@@ -39,7 +36,7 @@ export const answerQuestion = Effect.fn("exams.question.answer")(function* (
   if (!answersFit(question.template, edit.answers)) {
     return yield* new AnswersDoNotFit();
   }
-  if (edit.key !== null && !keyFits(edit.answers, edit.key)) {
+  if (edit.key !== null && !keyPartsFit(edit.answers, edit.key)) {
     return yield* new KeyDoesNotFit();
   }
   const at = yield* Clock.currentTimeMillis;

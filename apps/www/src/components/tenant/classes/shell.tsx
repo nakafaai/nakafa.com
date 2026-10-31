@@ -33,6 +33,7 @@ import { LibraryList } from "@/components/tenant/classes/library/list";
 import { LibraryScope } from "@/components/tenant/classes/library/scope";
 import { ClassMissingBody } from "@/components/tenant/classes/missing";
 import { classPath } from "@/components/tenant/classes/path";
+import { PeopleList } from "@/components/tenant/classes/people";
 import {
   ClassScopeContext,
   useClassScope,
@@ -238,6 +239,7 @@ function ResolvedClass({ klass }: { klass: Resolved }) {
       grades: t("tabs-grades"),
       library: t("tabs-library"),
       name: klass.name,
+      people: t("tabs-people"),
       slug,
       tasks: t("tabs-tasks"),
     },
@@ -361,6 +363,9 @@ function ClassBody({
   }
   if (view._tag === "tasks") {
     return <TaskList />;
+  }
+  if (view._tag === "people") {
+    return <PeopleList />;
   }
   if (view._tag === "grades") {
     return (
