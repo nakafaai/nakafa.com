@@ -2,7 +2,7 @@ import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
@@ -21,6 +21,7 @@ import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
+import { TryoutContentContext } from "@/components/tryout/content/context";
 import { TryoutArticles } from "@/components/tryout/player/articles";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { useTryoutFlag } from "@/components/tryout/player/flag";
@@ -37,8 +38,8 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
  * title, the timer, and Finish; the questions beside the navigator; and the
  * footer with previous, the flag, the navigator opener below the large
  * breakpoint, and next. The header, the navigator, and the footer render from
- * the live runtime at once; only the question bodies wait for the signed
- * content.
+ * the live runtime at once; only the question bodies wait for their document
+ * reader.
  */
 export function TryoutPlayer({
   finish,
@@ -64,8 +65,11 @@ export function TryoutPlayer({
   const answer = useTryoutResponseSubmit();
   const flag = useTryoutFlag();
   useResendKeptPicks({ locked, questions: runtime.questions });
+  // The bodies hold each question's interaction, which a number key picks from.
+  const bodies = use(TryoutContentContext)?.bodies ?? [];
   const questions = projectTryoutQuestions({
     answer,
+    bodies,
     flag,
     questions: runtime.questions,
   });

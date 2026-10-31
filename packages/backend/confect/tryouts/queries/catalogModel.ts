@@ -1,9 +1,9 @@
 import {
-  TryoutScoringSchema,
-  TryoutTrackKindSchema,
-  TryoutVisibilitySchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+  SectionVisibilitySchema,
+  TrackKindSchema,
+} from "@nakafa/aksara-contracts/assessment/catalog";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
+import { tryoutScoringStrategyValidator } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
 export const publicTryoutCountryValidator = Schema.Struct({
   countryCode: Schema.String,
@@ -20,7 +20,6 @@ export const publicTryoutExamValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
   examKey: tryoutRouteKeyValidator,
   publicPath: Schema.String,
-  scoringStrategy: TryoutScoringSchema,
   title: Schema.String,
 });
 export const publicTryoutSetValidator = Schema.Struct({
@@ -28,24 +27,20 @@ export const publicTryoutSetValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
   examKey: tryoutRouteKeyValidator,
   publicPath: Schema.String,
-  readyQuestionCount: Schema.Finite,
-  readyVisibleSectionCount: Schema.Finite,
-  scoringStrategy: TryoutScoringSchema,
+  questionCount: Schema.Finite,
+  scoringStrategy: tryoutScoringStrategyValidator,
   sectionCount: Schema.Finite,
   setKey: tryoutRouteKeyValidator,
   title: Schema.String,
-  totalQuestionCount: Schema.Finite,
   trackKey: tryoutRouteKeyValidator,
   visibleSectionCount: Schema.Finite,
 });
 export const publicTryoutTrackValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
   publicPath: Schema.String,
-  readyQuestionCount: Schema.Finite,
-  readyVisibleSectionCount: Schema.Finite,
   title: Schema.String,
   trackKey: tryoutRouteKeyValidator,
-  trackKind: TryoutTrackKindSchema,
+  trackKind: TrackKindSchema,
 });
 export const publicTryoutSectionValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
@@ -54,5 +49,5 @@ export const publicTryoutSectionValidator = Schema.Struct({
   sectionKey: tryoutRouteKeyValidator,
   timeLimitSeconds: Schema.Finite,
   title: Schema.String,
-  visibility: TryoutVisibilitySchema,
+  visibility: SectionVisibilitySchema,
 });

@@ -270,6 +270,14 @@ has exactly one owner.
   `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`,
   `tryoutScores`, `tryoutPlacements`, `tryoutCatalog`, `tryoutRuntimeBundles`,
   and `tryoutSetProgress`) are removed in the cutover change.
+- The cutover reads Aksara contracts 2.0.0, whose release manifest selects an
+  `assessment` snapshot where 1.x selected a `tryout` one, so no stored 1.x
+  release can be read after the deploy. The cutover is therefore a genesis:
+  right before the deploy, and only after the owner approves it, an operator
+  clears the stored content release state and the retired try-out tables with
+  the Convex CLI, and Aksara then publishes a genesis 2.0 release with no base.
+  This is the one approved exception to the reset rule below, which otherwise
+  preserves signed snapshot state. No reset function ships.
 - Every sitting answer and every try-out answer takes its `version` as a required
   argument. A stored answer without a version is bad data and is deleted.
 - The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
@@ -337,5 +345,5 @@ has exactly one owner.
 | Player tool registry | Planned, program wave B |
 | Grading queue and Nina suggestions | Planned, program wave B, after K6 passes |
 | School exam drafts: the tables `exams` and `examQuestions` and the functions of `confect/exams`, with single-answer choice questions only | In code and tested in convex-test, not live. An exam takes changes while a sitting of it is scheduled and while it runs, and a student's paper follows them (owner, 30 Oct 2026). The first sitting that finishes freezes it: the transaction that closes the sitting, by the proctor or at its closing time, sets `exams.frozenAt`, and from then on every question change and every step pushed to a question's prompt document is refused as `ExamFrozen`, so each result scores the paper its students sat. The editor of a frozen exam opens read-only. An exam that has any sitting, scheduled, running or finished, is not deleted (`ExamInUse`), and cancelling a room that has not opened leaves the exam as it was. An answer or a key whose complete row reaches one document's limit is refused as `DocumentTooLarge` before the write, the same rule as for an item version above. Each later question template adds its member to `QuestionTemplate` in `confect/exams/question.ts`. |
-| The answer-key fit check of a school exam (`keyFits` in `confect/exams/key.ts`) | In code and tested. `@nakafa/aksara-contracts` 0.49.0 has no check that a key names this question's options (`hasPlacedInteractions`, `hasFittingRules`, and `ItemKeySchema` do not cover it), so the exam functions carry one. |
+| The answer-key fit check of a school exam (`keyFits` in `confect/assessment/key.ts`) | In code and tested. `@nakafa/aksara-contracts` 0.49.0 has no check that a key names this question's options (`hasPlacedInteractions`, `hasFittingRules`, and `ItemKeySchema` do not cover it), so the exam functions carry one. |
 | The school exam editor page and its client mount of the sync loop | Not built. The first caller of `confect/exams` and of the document functions of ADR 0028. |

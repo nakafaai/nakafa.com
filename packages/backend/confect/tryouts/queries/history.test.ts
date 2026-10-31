@@ -1,254 +1,130 @@
-import { describe, expect, it } from "@effect/vitest";
+import { Ref } from "@confect/core";
+import { assert, describe, expect, it } from "@effect/vitest";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { FIXTURE_TRACK } from "@repo/backend/test/assessment/snapshot";
 import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
-import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
-import {
-  activateRenamedTryoutStartSource,
-  activateTryoutStartSource,
-  TRYOUT_START_COUNTRY,
-  TRYOUT_START_EXAM,
-  TRYOUT_START_SET,
-  TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout/source";
-import { Array as Arr, Option } from "effect";
+  TRYOUT_NOW,
+  type TryoutWorld,
+  tryoutWorld,
+} from "@repo/backend/test/tryout/world";
+import { Array as Arr, Effect, Struct } from "effect";
 
-const NOW = Date.UTC(2026, 6, 12, 12, 0, 0);
-const SET_PATH = "try-out/indonesia/tka/matematika-wajib/set-1";
+const identity = { ...FIXTURE_TRACK, locale: "id" as const, setKey: "set-1" };
 
-/** Inserts one terminal raw attempt and its immutable score snapshot. */
-async function insertHistoryAttempt(
-  ctx: MutationCtx,
-  args: {
-    attemptNumber: number;
-    publishedScore: number;
-    setIdentity: string;
-    startedAt: number;
-    tryoutSnapshotId: string;
-    userId: Id<"users">;
-  }
-) {
-  const runtime = await ensureTestTryoutRuntimeBundle(
-    ctx,
-    args.tryoutSnapshotId
-  );
-  const attemptId = await ctx.db.insert("tryoutAttempts", {
-    accessEndsAt: args.startedAt + 3_600_000,
-    accessSourceKind: "free",
-    attemptNumber: args.attemptNumber,
-    completedAt: args.startedAt + 1000,
-    completedSectionKeys: [],
-    countsForCompetition: false,
-    endReason: "submitted",
-    expiresAt: args.startedAt + 3_600_000,
-    lastActivityAt: args.startedAt + 1000,
-    scoreStatus: "official",
-    scoringStrategy: "raw",
-    sectionSnapshots: [],
-    startedAt: args.startedAt,
-    status: "completed",
-    totalCorrect: args.publishedScore / 10,
-    totalQuestions: 10,
-    userId: args.userId,
-    countryKey: TRYOUT_START_COUNTRY,
-    examKey: TRYOUT_START_EXAM,
-    appLocale: "id",
-    setIdentity: args.setIdentity,
-    setKey: TRYOUT_START_SET,
-    setPublicPath: SET_PATH,
-    snapshotReleaseId: TEST_RELEASE_ID,
-    trackKey: TRYOUT_START_TRACK,
-    tryoutBundleHash: runtime.bundleHash,
-    tryoutBundleId: runtime.bundleId,
-    tryoutSnapshotId: args.tryoutSnapshotId,
-  });
-
-  await ctx.db.insert("tryoutScores", {
-    finalizedAt: args.startedAt + 1000,
-    publishedScore: args.publishedScore,
-    rawScore: args.publishedScore,
-    scoreStatus: "official",
-    scoringStrategy: "raw",
-    totalCorrect: args.publishedScore / 10,
-    totalQuestions: 10,
-    tryoutAttemptId: attemptId,
-    tryoutSnapshotId: args.tryoutSnapshotId,
-    setIdentity: args.setIdentity,
-    userId: args.userId,
-  });
-
-  return attemptId;
-}
-
-describe("tryouts/queries/history", () => {
-  it("keeps immutable identity history after a public route rename", async () => {
-    vi.setSystemTime(NOW);
-
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-history",
-      });
-      const source = await activateTryoutStartSource(ctx, "visible");
-      const firstAttemptId = await insertHistoryAttempt(ctx, {
-        attemptNumber: 1,
-        publishedScore: 0,
-        setIdentity: source.setIdentity,
-        startedAt: NOW - 20_000,
-        tryoutSnapshotId: source.snapshotId,
-        userId: identity.userId,
-      });
-      const secondAttemptId = await insertHistoryAttempt(ctx, {
-        attemptNumber: 2,
-        publishedScore: 90,
-        setIdentity: source.setIdentity,
-        startedAt: NOW - 10_000,
-        tryoutSnapshotId: source.snapshotId,
-        userId: identity.userId,
-      });
-      return { firstAttemptId, identity, secondAttemptId };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    await t.mutation((ctx) => activateRenamedTryoutStartSource(ctx));
-
-    const history = await authed.query(api.tryouts.queries.history.bySet, {
-      countryKey: TRYOUT_START_COUNTRY,
-      examKey: TRYOUT_START_EXAM,
-      locale: "id",
-      paginationOpts: { cursor: null, numItems: 25 },
-      setKey: TRYOUT_START_SET,
-      trackKey: TRYOUT_START_TRACK,
-    });
-
-    expect(history.isDone).toBe(true);
-    expect(history.page).toEqual([
-      expect.objectContaining({
-        attemptId: seeded.secondAttemptId,
-        attemptNumber: 2,
-        score: expect.objectContaining({ publishedScore: 90 }),
-        status: "completed",
-      }),
-      expect.objectContaining({
-        attemptId: seeded.firstAttemptId,
-        attemptNumber: 1,
-        score: expect.objectContaining({ publishedScore: 0 }),
-        status: "completed",
-      }),
-    ]);
-  });
-
-  it("keeps missing immutable set identities isolated", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-history-missing",
-      });
-      await activateTryoutStartSource(ctx, "visible");
-      return user;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    const identityHistory = await authed.query(
-      api.tryouts.queries.history.bySet,
-      {
-        countryKey: TRYOUT_START_COUNTRY,
-        examKey: TRYOUT_START_EXAM,
-        locale: "id",
-        paginationOpts: { cursor: null, numItems: 25 },
-        setKey: "missing",
-        trackKey: TRYOUT_START_TRACK,
-      }
-    );
-
-    expect(identityHistory).toMatchObject({ isDone: true, page: [] });
-  });
-
-  it("limits identity page reads to twenty-five attempts", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-history-cap",
-      });
-      const source = await activateTryoutStartSource(ctx, "visible");
-
-      for (let attemptNumber = 1; attemptNumber <= 26; attemptNumber += 1) {
-        await insertHistoryAttempt(ctx, {
-          attemptNumber,
-          publishedScore: attemptNumber,
-          setIdentity: source.setIdentity,
-          startedAt: NOW + attemptNumber,
-          tryoutSnapshotId: source.snapshotId,
-          userId: identity.userId,
-        });
-      }
-
-      return identity;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.sessionId,
-      subject: seeded.authUserId,
-    });
-
-    const identityHistory = await authed.query(
-      api.tryouts.queries.history.bySet,
-      {
-        countryKey: TRYOUT_START_COUNTRY,
-        examKey: TRYOUT_START_EXAM,
-        locale: "id",
-        paginationOpts: { cursor: null, numItems: 100 },
-        setKey: TRYOUT_START_SET,
-        trackKey: TRYOUT_START_TRACK,
-      }
-    );
-
-    expect(identityHistory.isDone).toBe(false);
-    expect(identityHistory.page).toHaveLength(25);
-    expect(
-      Option.getOrUndefined(Arr.head(identityHistory.page))?.attemptNumber
-    ).toBe(26);
-  });
-
-  it("rejects malformed authored set identity keys", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-history-invalid",
+/**
+ * Turns the learner's started attempt into `count` finished attempts of the set, each with a raw
+ * score equal to its number, started one millisecond apart.
+ */
+const seedHistory = (world: TryoutWorld, count: number) =>
+  Effect.gen(function* () {
+    const { attemptId } = yield* world.start();
+    return yield* Effect.promise(() =>
+      world.t.mutation(async (ctx) => {
+        const template = await ctx.db.get("tryoutAttempts", attemptId);
+        assert.ok(template, "Expected the started attempt.");
+        await ctx.db.delete("tryoutAttempts", attemptId);
+        return Promise.all(
+          Arr.map(Arr.range(1, count), async (attemptNumber) => {
+            const startedAt = TRYOUT_NOW + attemptNumber;
+            const id = await ctx.db.insert("tryoutAttempts", {
+              ...Struct.omit(template, ["_creationTime", "_id"]),
+              attemptNumber,
+              completedAt: startedAt + 1000,
+              endReason: "submitted",
+              startedAt,
+              status: "completed",
+            });
+            await ctx.db.insert("tryoutScores", {
+              assessmentSnapshotId: template.assessmentSnapshotId,
+              finalizedAt: startedAt + 1000,
+              publishedScore: attemptNumber,
+              rawScore: attemptNumber,
+              scoreStatus: "official",
+              scoringStrategy: "raw",
+              setIdentity: template.setIdentity,
+              totalCorrect: 0,
+              totalQuestions: template.totalQuestions,
+              tryoutAttemptId: id,
+              userId: template.userId,
+            });
+            return id;
+          })
+        );
       })
     );
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    for (const setKey of ["Set-1", "set\0one", "s".repeat(129)]) {
-      await expect(
-        authed.query(api.tryouts.queries.history.bySet, {
-          countryKey: TRYOUT_START_COUNTRY,
-          examKey: TRYOUT_START_EXAM,
-          locale: "id",
-          paginationOpts: { cursor: null, numItems: 25 },
-          setKey,
-          trackKey: TRYOUT_START_TRACK,
-        })
-      ).rejects.toMatchObject({
-        data: { code: "TRYOUT_ROUTE_INVALID" },
-      });
-    }
   });
+
+describe("tryouts/queries/history", () => {
+  it.effect(
+    "lists a set's attempts newest first with their scores, after a later release renames its route",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const [first, second] = yield* seedHistory(world, 2);
+        yield* world.release({ renamed: true });
+        const history = yield* world.learner.query(
+          tryouts.queries.history.bySet,
+          { ...identity, paginationOpts: { cursor: null, numItems: 25 } }
+        );
+        expect(history.isDone).toBe(true);
+        expect(history.page).toEqual([
+          expect.objectContaining({
+            attemptId: second,
+            attemptNumber: 2,
+            score: expect.objectContaining({ publishedScore: 2 }),
+            status: "completed",
+          }),
+          expect.objectContaining({
+            attemptId: first,
+            attemptNumber: 1,
+            score: expect.objectContaining({ publishedScore: 1 }),
+            status: "completed",
+          }),
+        ]);
+      })
+  );
+
+  it.effect(
+    "keeps another set's history apart, and reads at most twenty-five attempts a page",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        yield* seedHistory(world, 26);
+        expect(
+          yield* world.learner.query(tryouts.queries.history.bySet, {
+            ...identity,
+            paginationOpts: { cursor: null, numItems: 25 },
+            setKey: "missing",
+          })
+        ).toMatchObject({ isDone: true, page: [] });
+        const page = yield* world.learner.query(tryouts.queries.history.bySet, {
+          ...identity,
+          paginationOpts: { cursor: null, numItems: 100 },
+        });
+        expect(page.isDone).toBe(false);
+        expect(page.page).toHaveLength(25);
+        expect(page.page[0]?.attemptNumber).toBe(26);
+      })
+  );
+
+  it.effect("refuses malformed set keys", () =>
+    Effect.gen(function* () {
+      const world = yield* tryoutWorld();
+      for (const setKey of ["Set-1", "set\0one", "s".repeat(129)]) {
+        const refused = yield* Effect.tryPromise(() =>
+          world.learnerConvex.query(
+            Ref.getFunctionReference(tryouts.queries.history.bySet),
+            {
+              ...identity,
+              paginationOpts: { cursor: null, numItems: 25 },
+              setKey,
+            }
+          )
+        ).pipe(Effect.asVoid, Effect.flip);
+        expect(refused.cause).toMatchObject({
+          data: { code: "TRYOUT_ROUTE_INVALID" },
+        });
+      }
+    })
+  );
 });

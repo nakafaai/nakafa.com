@@ -1,4 +1,4 @@
-import { TryoutVisibilitySchema } from "@nakafa/aksara-contracts/tryout/spec";
+import { SectionVisibilitySchema } from "@nakafa/aksara-contracts/assessment/catalog";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -13,14 +13,14 @@ import {
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
-import { requireSectionSnapshot } from "@repo/backend/confect/tryouts/runtime/placement";
+import { requireSection } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Duration, Effect, flow, Option, Schema } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 const InternalEntrySectionSchema = Schema.Struct({
   sectionKey: Schema.String,
-  visibility: TryoutVisibilitySchema,
+  visibility: SectionVisibilitySchema,
 });
 type InternalEntrySection = typeof InternalEntrySectionSchema.Type;
 const startSectionResult = Object.freeze({
@@ -83,14 +83,11 @@ export const startSectionAttempt = Effect.fn(
       message: "Try-out section already finished.",
     });
   }
-  const currentAttempt = yield* requireNoParallelSectionTimer(args);
-  const snapshot = yield* requireSectionSnapshot(
-    currentAttempt,
-    args.sectionKey
-  );
+  yield* requireNoParallelSectionTimer(args);
+  const frozen = yield* requireSection(args.attempt, args.sectionKey);
   const expiresAt = Math.min(
-    args.now + snapshot.timeLimitSeconds * 1000,
-    currentAttempt.expiresAt
+    args.now + frozen.timeLimitSeconds * 1000,
+    args.attempt.expiresAt
   );
   const sectionAttemptId = yield* writer
     .table("tryoutSectionAttempts")
@@ -101,27 +98,20 @@ export const startSectionAttempt = Effect.fn(
       endReason: null,
       expiresAt,
       lastActivityAt: args.now,
-      sectionIdentity: snapshot.sectionIdentity,
-      sectionKey: snapshot.sectionKey,
-      sectionOrder: snapshot.sectionOrder,
+      sectionKey: frozen.sectionKey,
+      sectionOrder: frozen.sectionOrder,
       startedAt: args.now,
       status: "in-progress",
-      totalQuestions: snapshot.questionCount,
-      tryoutAttemptId: currentAttempt._id,
+      totalQuestions: frozen.questionCount,
+      tryoutAttemptId: args.attempt._id,
     })
-    .pipe(
-      Effect.mapError(toTryoutRuntimeError),
-      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
-    );
+    .pipe(Effect.orDie);
   yield* writer
     .table("tryoutAttempts")
-    .patch(currentAttempt._id, {
+    .patch(args.attempt._id, {
       lastActivityAt: args.now,
     })
-    .pipe(
-      Effect.mapError(toTryoutRuntimeError),
-      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
-    );
+    .pipe(Effect.orDie);
   yield* scheduler
     .runAfter(
       Duration.millis(Math.max(0, expiresAt - args.now)),
@@ -144,13 +134,17 @@ export const loadSectionAttempt = Effect.fn(
     .table("tryoutSectionAttempts")
     .get("by_tryoutAttemptId_and_sectionKey", args.attemptId, args.sectionKey)
     .pipe(
-      Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.mapError(toTryoutRuntimeError),
-      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
+      Effect.catchTags({
+        DocumentDecodeError: Effect.die,
+        GetByIndexFailure: () => Effect.succeed(null),
+      })
     );
 });
 
-/** Rejects or expires any other in-progress section timer. */
+/**
+ * Rejects or expires any other in-progress section timer. Expiring one never ends the attempt, as the
+ * section about to start is still open.
+ */
 const requireNoParallelSectionTimer = Effect.fn(
   "tryouts.runtime.requireNoParallelSectionTimer"
 )(function* (args: {
@@ -158,7 +152,6 @@ const requireNoParallelSectionTimer = Effect.fn(
   now: number;
   sectionKey: string;
 }) {
-  const database = yield* DatabaseReader;
   const sections = yield* loadAttemptSections(args.attempt);
   for (const section of sections) {
     if (section.status !== "in-progress") {
@@ -178,18 +171,4 @@ const requireNoParallelSectionTimer = Effect.fn(
       message: "Another try-out section is already in progress.",
     });
   }
-  const currentAttempt = yield* database
-    .table("tryoutAttempts")
-    .get(args.attempt._id)
-    .pipe(
-      Effect.mapError(toTryoutRuntimeError),
-      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
-    );
-  if (currentAttempt.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
-      code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-      message: "Try-out attempt is not active.",
-    });
-  }
-  return currentAttempt;
 });

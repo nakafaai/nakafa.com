@@ -9,7 +9,6 @@ import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { completedReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import type { recoveryLookupValidator } from "@repo/backend/confect/contentRelease/recovery.spec";
-import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
 import { Effect } from "effect";
 
 /** Exact stored recovery result returned to the authenticated Node verifier. */
@@ -74,10 +73,6 @@ export const lookupProgram = Effect.fn("contentRelease.recoveryLookup")(
     }
     const candidate = yield* loadRelease(releaseId);
     const signed = yield* validateRecoveryRelation(candidate, recovery);
-    yield* findReleaseTryoutRuntime(
-      signed.recovery,
-      recovery.tryoutRuntimeBundleHash
-    );
     return {
       kind: "completed",
       value: {

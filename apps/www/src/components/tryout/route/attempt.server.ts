@@ -9,7 +9,6 @@ import {
   readTryoutSetAttemptPage,
   readTryoutSetPage,
 } from "@/components/tryout/catalog/source.server";
-import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
 import { readCurrentTryoutSet } from "@/components/tryout/route/current";
 import { readAddressIntent } from "@/components/tryout/route/intent";
@@ -22,8 +21,6 @@ import {
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import {
   readAttemptContent,
-  readAttemptReview,
-  readPreviewRoute,
   readRetainedHead,
 } from "@/components/tryout/route/surface.server";
 import { readRequestToken } from "@/components/tryout/route/token.server";
@@ -92,14 +89,6 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
         intent.value.view
       );
     }
-    const preview = yield* readTryoutQuestionPreview(locale, setPath);
-    if (Option.isSome(preview)) {
-      return yield* readPreviewRoute({
-        locale,
-        preview: preview.value,
-        publicPath: setPath,
-      });
-    }
     const [page, head] = yield* Effect.all(
       [
         readTryoutSetPage(locale, setPath),
@@ -129,9 +118,6 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     const content = Option.isSome(attempt)
       ? yield* readAttemptContent({ attempt: attempt.value })
       : Option.none();
-    const review = Option.isSome(attempt)
-      ? yield* readAttemptReview({ attempt: attempt.value, locale })
-      : Option.none();
     const restartTarget = Option.match(attempt, {
       onNone: () => createTryoutSetRestartTarget(page),
       onSome: (value) => Option.fromNullishOr(value.restartTarget),
@@ -147,7 +133,6 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
         onSome: (value) => value.page,
       }),
       restartTarget: Option.getOrNull(restartTarget),
-      review: Option.getOrUndefined(review),
       route,
       view: intent.value.view,
     };
@@ -210,12 +195,6 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
       now: yield* Clock.currentTimeMillis,
       page: attempt.page,
       restartTarget: Option.getOrNull(restartTarget),
-      review: Option.getOrUndefined(
-        yield* readAttemptReview({
-          attempt,
-          locale: input.locale,
-        })
-      ),
       route: input.route,
       view,
     };

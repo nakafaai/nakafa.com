@@ -36,7 +36,7 @@ const readLatestTryout = Effect.fn("nina.memory.profile.tryout")(function* (
     .index("by_tryoutAttemptId_and_sectionOrder", (index) =>
       index.eq("tryoutAttemptId", attempt._id)
     )
-    .take(attempt.sectionSnapshots.length)
+    .take(attempt.sections.length)
     .pipe(Effect.orDie);
   return {
     correct: score.totalCorrect,

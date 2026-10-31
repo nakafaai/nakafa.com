@@ -1,60 +1,58 @@
 import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
 import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
-import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
-import { TryoutSource } from "@repo/backend/content/tryout/source";
+import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
+import {
+  readCatalogByAsset,
+  readCatalogEntry,
+} from "@repo/backend/confect/tryouts/catalog/rows";
 import { Effect, Option } from "effect";
 
-/** Resolves one exact public try-out entry from its active signed hierarchy. */
+/** Reads the stored catalog rows one reference names: the row at its route, or the rows of its asset. */
+const readReferenceEntries = Effect.fn(
+  "contentRelease.readTryoutReferenceRows"
+)(function* (snapshotId: string, input: ActiveContentReferenceInput) {
+  if (input.kind === "route") {
+    return Option.toArray(
+      yield* readCatalogEntry(snapshotId, input.appLocale, input.publicPath)
+    );
+  }
+  return yield* readCatalogByAsset(
+    snapshotId,
+    input.appLocale,
+    input.contentId
+  );
+});
+
+/**
+ * Resolves one public try-out entry of the active release that a reference names, as a search
+ * document. A reference that names no public row has none, and one that names two is a collision.
+ */
 export const readTryoutReference = Effect.fn(
   "contentRelease.readTryoutReference"
 )(function* (input: ActiveContentReferenceInput) {
-  const owner = yield* findTryoutOwner();
-  if (Option.isNone(owner)) {
-    return null;
-  }
-  const { snapshotId } = owner.value;
-  const rows = yield* readTryoutReferenceRows(snapshotId, input);
-  if (rows.length > 1) {
+  const { snapshotId } = yield* loadActiveAssessment();
+  const entries = yield* readReferenceEntries(snapshotId, input);
+  if (entries.length > 1) {
     return yield* identityCollision("try-out");
   }
-  const stored = rows[0];
-  if (!stored) {
+  const [entry] = entries;
+  const publicPath = entry?.row.publicPath;
+  if (entry === undefined || publicPath === undefined) {
     return null;
   }
-  const row = yield* verifyTryoutCatalog(stored, snapshotId);
-  if (!row.publicPath) {
-    return null;
-  }
+  const { row } = entry;
   return buildContentSearchDocument({
     ...row.graph,
-    contentHash: stored.rowHash,
-    ...(row.description === undefined
-      ? {}
-      : {
-          description: row.description,
-        }),
+    contentHash: entry.rowHash,
+    ...(row.description === undefined ? {} : { description: row.description }),
     hasMarkdownSource: false,
     locale: input.publicLocale,
-    route: row.publicPath,
+    route: publicPath,
     section: "tryout",
-    sourcePath: row.publicPath,
-    syncedAt: stored.index,
+    sourcePath: publicPath,
+    syncedAt: entry.index,
     text: "",
     title: row.title,
   });
-});
-
-/** Selects exact public try-out candidates under one immutable snapshot. */
-const readTryoutReferenceRows = Effect.fn(
-  "contentRelease.readTryoutReferenceRows"
-)(function* (snapshotId: string, input: ActiveContentReferenceInput) {
-  const source = yield* TryoutSource;
-  if (input.kind === "route") {
-    return Option.toArray(
-      yield* source.path(snapshotId, input.appLocale, input.publicPath)
-    );
-  }
-  return yield* source.asset(snapshotId, input.appLocale, input.contentId, 2);
 });

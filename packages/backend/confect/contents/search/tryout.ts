@@ -13,7 +13,6 @@ import {
   getRouteSearchText,
 } from "@repo/backend/confect/contents/search/terms";
 import { findTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { Array as Arr, Effect, Option, Order, pipe } from "effect";
 
@@ -22,7 +21,7 @@ type TryoutCatalog = Option.Option.Value<
   Effect.Success<ReturnType<typeof findTryoutCatalog>>
 >;
 type TryoutCatalogEntry = TryoutCatalog["entries"][number];
-/** Reads public Tryout search documents from its active signed hierarchy. */
+/** Reads the public try-out search documents of the active catalog. */
 export const readSignedTryoutSearchDocuments = Effect.fn(
   "contents.search.readSignedTryoutDocuments"
 )(function* (
@@ -37,9 +36,7 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
   if (scanLimit === 0) {
     return [];
   }
-  const catalog = yield* findTryoutCatalog(args.locale).pipe(
-    Effect.provide(tryoutLayer)
-  );
+  const catalog = yield* findTryoutCatalog(args.locale);
   if (Option.isNone(catalog)) {
     return [];
   }

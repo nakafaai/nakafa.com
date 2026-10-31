@@ -195,7 +195,7 @@ export function PreviewProse({
 }
 
 /** The label of one option drawn without an editor, at the size an option's editor takes. */
-function OptionSketch({ label }: { label: OptionLabel }) {
+export function OptionSketch({ label }: { label: OptionLabel }) {
   const doc = useMemo(
     () => Option.some(Node.fromJSON(assessmentSchema, label)),
     [label]
@@ -277,11 +277,11 @@ function TableSketch({
   columns: readonly { readonly id: string; readonly label: OptionLabel }[];
   statements: readonly { readonly id: string; readonly label: OptionLabel }[];
 }) {
-  const t = useTranslations("Exams");
+  const t = useTranslations("Tryouts");
 
   return (
     <PaperTable columns={columns.length}>
-      <PaperTableHead heading={t("match-statements")}>
+      <PaperTableHead heading={t("statement")}>
         {Arr.map(columns, (column) => (
           <PaperTableHeader key={column.id}>
             <OptionSketch label={column.label} />
@@ -298,12 +298,7 @@ function TableSketch({
             <OptionSketch label={statement.label} />
           </PaperTableStatement>
           {Arr.map(columns, (column) => (
-            <PaperTableMark key={column.id}>
-              <span
-                aria-hidden
-                className="size-4 rounded-full border border-input bg-background shadow-xs"
-              />
-            </PaperTableMark>
+            <PaperTableMark key={column.id} />
           ))}
         </div>
       ))}
@@ -428,7 +423,7 @@ export function QuestionPreview({
     <div className="absolute inset-0 overflow-hidden" ref={ref}>
       <div
         aria-hidden
-        className="pointer-events-none w-4/1 origin-top-left scale-25 p-4"
+        className="pointer-events-none w-4/1 origin-top-left scale-25 p-4 text-start"
         inert
       >
         <QuestionPaper>

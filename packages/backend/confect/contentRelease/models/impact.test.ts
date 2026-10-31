@@ -28,10 +28,5 @@ describe("contentRelease/models/impact", () => {
       material: false,
       search: false,
     });
-    expect(getReadModelImpact(familyScope("question"))).toEqual({
-      article: false,
-      material: false,
-      search: false,
-    });
   });
 });

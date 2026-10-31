@@ -2,13 +2,13 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { keyFits } from "@repo/backend/confect/assessment/key";
 import { ensureRowSize } from "@repo/backend/confect/editor/document";
 import {
   AnswersDoNotFit,
   KeyDoesNotFit,
   RevisionStale,
 } from "@repo/backend/confect/exams/errors";
-import { keyFits } from "@repo/backend/confect/exams/key";
 import {
   answersFit,
   encodeAnswers,

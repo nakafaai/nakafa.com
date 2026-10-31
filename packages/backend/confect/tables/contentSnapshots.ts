@@ -12,9 +12,7 @@ export default Table.make(() =>
         Schema.Literal("bucket"),
         Schema.Literal("quran"),
         Schema.Literal("quran-search"),
-        Schema.Literal("runtime"),
-        Schema.Literal("catalog"),
-        Schema.Literal("placement"),
+        Schema.Literal("assessment"),
       ])
     ),
     cleanupRetryAt: Schema.optionalKey(Schema.Finite),

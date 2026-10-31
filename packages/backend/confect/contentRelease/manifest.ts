@@ -205,7 +205,6 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     stagedSnapshotRows: 0,
     stagedUpserts: 0,
     status: "staging",
-    tryoutRuntimeRequired: true,
     updatedAt: now,
   } satisfies WithoutSystemFields<Docs["contentReleases"]>;
   yield* ensureDocumentSize(`Content release ${row.releaseId}`, row);
