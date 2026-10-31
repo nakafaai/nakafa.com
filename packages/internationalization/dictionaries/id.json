@@ -452,7 +452,7 @@
     "signals-empty-title": "Belum ada peristiwa",
     "student-start": "Mulai ujian",
     "import-label": "Soal dari berkas",
-    "import-description": "Opsional: Nina menaruh soal dari berkas Word atau PDF ke ujian.",
+    "import-description": "Opsional. Nina menaruh soal dari berkas Word atau PDF ke ujian.",
     "import-action": "Impor",
     "import-title": "Impor soal",
     "import-dialog-description": "Nina menaruh soal dari berkas Word atau PDF di akhir ujian ini.",
