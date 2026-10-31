@@ -1,8 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { AnswerRow } from "@repo/backend/confect/exams/results/contract";
-import { Schema } from "effect";
-import { gradedAttempt, gradedPage } from "@/components/exams/results/graded";
+import { Option, Schema } from "effect";
+import {
+  gradedAttempt,
+  gradedPage,
+  typedPoints,
+} from "@/components/exams/results/graded";
 
 const attemptId = Schema.decodeUnknownSync(Id("examAttempts"));
 
@@ -73,5 +77,20 @@ describe("components/exams/results graded", () => {
         { ...result.questions[1], earned: 3, verdict: "partial" },
       ],
     });
+  });
+});
+
+describe("typedPoints", () => {
+  it("takes a whole number from none to the question's points", () => {
+    expect(typedPoints("0", 4)).toEqual(Option.some(0));
+    expect(typedPoints(" 4 ", 4)).toEqual(Option.some(4));
+  });
+
+  it("takes nothing else, so the field keeps it for the teacher to correct", () => {
+    expect(typedPoints("5", 4)).toEqual(Option.none());
+    expect(typedPoints("-1", 4)).toEqual(Option.none());
+    expect(typedPoints("1.5", 4)).toEqual(Option.none());
+    expect(typedPoints("x", 4)).toEqual(Option.none());
+    expect(typedPoints("  ", 4)).toEqual(Option.none());
   });
 });

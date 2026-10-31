@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import { useMissedPress } from "@repo/design-system/hooks/use-press";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
@@ -131,7 +132,11 @@ export function Sidebar({
   );
 }
 
-/** Renders the button that toggles the nearest sidebar. */
+/**
+ * Renders the button that toggles the nearest sidebar. It is in the page's HTML and it is a
+ * phone's way into the navigation, so a press before React takes the page over opens the
+ * sidebar once React mounts the button, and a slow phone never shows a dead button.
+ */
 export function SidebarTrigger({
   className,
   onClick,
@@ -148,6 +153,7 @@ export function SidebarTrigger({
   const open = useSidebar((sidebar) => sidebar.open);
   const openMobile = useSidebar((sidebar) => sidebar.openMobile);
   const toggleSidebar = useSidebar((sidebar) => sidebar.toggleSidebar);
+  const press = useMissedPress<HTMLButtonElement>(toggleSidebar);
 
   if (isLocked) {
     return null;
@@ -155,12 +161,14 @@ export function SidebarTrigger({
 
   return (
     <Button
+      {...press}
       aria-expanded={isMobile ? openMobile : open}
       aria-label={label}
       className={cn("size-7", className)}
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       onClick={(event) => {
+        press.onClick();
         onClick?.(event);
         toggleSidebar();
       }}

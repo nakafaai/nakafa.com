@@ -74,6 +74,7 @@ describe("billing/xendit/plans", () => {
           currency: "IDR",
           customer_id: "cust-1",
           failed_cycle_action: "STOP",
+          notification_channels: ["EMAIL"],
           immediate_payment: false,
           payment_tokens: [{ payment_token_id: "pt-1", rank: 1 }],
           reference_id: "subscription-1",

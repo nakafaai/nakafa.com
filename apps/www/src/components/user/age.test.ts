@@ -10,6 +10,9 @@ describe("user/age", () => {
     [60_000, "1m ago"],
     [2 * 3_600_000, "2h ago"],
     [3 * 86_400_000, "3d ago"],
+    [45 * 86_400_000, "last mo."],
+    [90 * 86_400_000, "3mo ago"],
+    [800 * 86_400_000, "2y ago"],
   ])("writes a post %i milliseconds old as %j", (elapsed, text) => {
     expect(formatShortAge(NOW - elapsed, NOW, "en")).toBe(text);
   });

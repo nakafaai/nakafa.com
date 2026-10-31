@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Option } from "effect";
-import { parse as yamlParse } from "yaml";
+import { Yaml } from "effect/encoding";
 import {
   GITHUB_ACTION_REVIEWS,
   type GithubActionUse,
@@ -23,7 +23,7 @@ const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
 const parseWorkflow = Effect.fn("GithubPolicyTest.parseWorkflow")(
   (source: string) =>
     Effect.try({
-      try: (): unknown => yamlParse(source),
+      try: () => Yaml.parse(source),
       catch: (cause) => String(cause),
     })
 );

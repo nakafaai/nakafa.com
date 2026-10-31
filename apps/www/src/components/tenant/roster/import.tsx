@@ -146,7 +146,7 @@ function RosterImportOfUnit({ unitId }: { unitId: UnitId }) {
               variant="outline"
             >
               <HugeIcons icon={Cancel01Icon} />
-              {t("cancel")}
+              <span className="max-sm:sr-only">{t("cancel")}</span>
             </Button>
             <Button
               disabled={

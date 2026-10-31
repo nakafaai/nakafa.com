@@ -27,11 +27,14 @@ const OPTIONS = [
   { letter: "D", text: "7" },
 ];
 
-/** The schedule dialog's message for the two added questions, which have no correct answer yet: numbers 2 and 3. */
-/** The footer names the first question that still needs its key, in the words of its type. */
-const MISSING_KEYS_MESSAGE = "Mark the correct answer of question 2.";
+/**
+ * The schedule dialog's message for the two added questions, numbers 2 and 3, whose options show nothing yet.
+ * The footer names the first question that is not ready, in the words of its type.
+ */
+const UNREADY_MESSAGE =
+  "Write every option of question 2, or remove the empty ones.";
 
-test("a teacher creates an exam, adds questions, writes one, and finds it all when the editor opens again, with the dot on a question without a key", async ({
+test("a teacher creates an exam, adds questions, writes one, and finds it all when the editor opens again, with the mark on each question that is not ready", async ({
   browser,
   baseURL,
 }) => {
@@ -143,8 +146,9 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
     timeout: readinessTimeoutMilliseconds,
   });
 
-  // The two added questions have no key, so each shows its warning, and the first does not.
-  await expect(reopened.getByText("No key yet")).toHaveCount(2);
+  // The two added questions have no words in their options yet, so each shows its mark, and the first does not.
+  await expect(reopened.getByText("Empty option")).toHaveCount(2);
+  await expect(reopened.getByText("No key yet")).toHaveCount(0);
 
   // A page far from the view draws its document from what the server holds.
   await expect(
@@ -161,11 +165,11 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
       .getByRole("button", { name: KEY_OF_FIRST_QUESTION })
   ).toHaveCount(OPTIONS.length);
 
-  // A question without a key keeps the exam from being scheduled: the dialog names the keys,
+  // A question that is not ready keeps the exam from being scheduled: the dialog names the first one,
   // and its submit stays off.
   await reopened.getByRole("button", { name: "Schedule" }).click();
   const scheduling = reopened.getByRole("dialog");
-  await expect(scheduling.getByText(MISSING_KEYS_MESSAGE)).toBeVisible({
+  await expect(scheduling.getByText(UNREADY_MESSAGE)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(

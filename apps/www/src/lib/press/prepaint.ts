@@ -1,8 +1,7 @@
-/** Marks a control drawn on the server whose press must not be lost before React takes the page over. */
-export const PRESS_ATTRIBUTE = "data-press";
-
-/** Set by the pre-paint script on such a control when it is pressed, until React replays the press. */
-export const PRESSED_ATTRIBUTE = "data-pressed";
+import {
+  PRESS_ATTRIBUTE,
+  PRESSED_ATTRIBUTE,
+} from "@repo/design-system/hooks/use-press";
 
 /**
  * Keeps a press that lands before React takes the page over. A static page

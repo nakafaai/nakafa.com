@@ -1,7 +1,4 @@
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -9,25 +6,21 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
-import type { Mascot } from "@repo/mascot/code";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect } from "effect";
+import { type ReactNode, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { useAuthSession } from "@/components/auth/session";
 import { SchoolMark } from "@/components/tenant/mark";
+import {
+  type KnownSchool,
+  loadKnownSchoolsText,
+  readKnownSchools,
+} from "@/lib/identity/schools";
 import { schoolOrigin } from "@/lib/routing/school/host";
 
 /** One school of the account menu: its mark and its name, as a link to the school's own address. */
-function SidebarSchoolMenuItem({
-  tenant,
-}: {
-  tenant: {
-    logo?: string;
-    mascot: typeof Mascot.Type;
-    name: string;
-    slug: TenantSlug;
-  };
-}) {
+export function SidebarSchoolMenuItem({ tenant }: { tenant: KnownSchool }) {
   return (
     <DropdownMenuItem
       render={(props) => (
@@ -40,8 +33,24 @@ function SidebarSchoolMenuItem({
   );
 }
 
-/** How many schools the account menu loads at a time: the first page, then each page as the list reaches its end. */
-const SCHOOL_PAGE = 20;
+/** Reads the schools the browser kept, as their stored text. */
+function readKeptText() {
+  return Effect.runSync(loadKnownSchoolsText());
+}
+
+/**
+ * The schools the browser kept for this session, as the menu last drew them.
+ * Storage answers at once, so these rows stand in the menu's first frame, on the
+ * phone sheet too, which mounts its own menu each time it opens.
+ */
+export function SidebarKnownSchoolItems() {
+  const sessionId = useAuthSession((session) => session.sessionId);
+  const [text] = useState(readKeptText);
+
+  return Arr.map(readKnownSchools(text, sessionId), (tenant) => (
+    <SidebarSchoolMenuItem key={tenant.slug} tenant={tenant} />
+  ));
+}
 
 /**
  * The item that opens a new school: the questionnaire on the main site, named
@@ -64,49 +73,30 @@ function SidebarStartSchoolMenuItem() {
 }
 
 /**
- * The account's group of schools in its menu, under the heading "Your schools": one
- * link for each school, then the item that opens a new one when the account may
- * open a school (a school login account may not). The group is shown only when the
- * account has a school or may open one, so an account with neither sees no empty
- * heading. The menu loads this part, and with it the school contracts, once the
- * menu warms, so no page carries them in its first JavaScript. A failed read shows
- * one disabled line, so the group is never silently empty. The next page loads as
- * the end of the list comes into view.
+ * The account's group of schools in its menu, under the heading "Your schools":
+ * the caller's rows of schools, then the item that opens a new one when the
+ * account may open a school (a school login account may not). The heading and that
+ * item need no data, so the group stands from the menu's first frame. It takes no
+ * room while it holds no item, so an account with neither a school nor the right
+ * to open one sees no empty heading.
  */
-export function SidebarSchoolMenuItems({
+export function SidebarSchools({
   canOpenSchool,
+  children,
 }: {
   canOpenSchool: boolean;
+  children: ReactNode;
 }) {
   const t = useTranslations("Common");
-  const memberships = usePaginatedQuery(
-    tenancy.memberships.list,
-    {},
-    { initialNumItems: SCHOOL_PAGE }
-  );
-  const isFailed = PaginatedQueryResult.isFailure(memberships);
-
-  if (!(isFailed || canOpenSchool) && memberships.results.length === 0) {
-    return null;
-  }
 
   return (
-    <>
+    <div className="contents not-has-[[role=menuitem]]:hidden">
       <DropdownMenuGroup>
         <DropdownMenuLabel>{t("your-schools")}</DropdownMenuLabel>
-        {isFailed ? (
-          <DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>
-        ) : (
-          Arr.map(memberships.results, ({ tenant }) => (
-            <SidebarSchoolMenuItem key={tenant.slug} tenant={tenant} />
-          ))
-        )}
-        {PaginatedQueryResult.isCanLoadMore(memberships) ? (
-          <Intersection onIntersect={() => memberships.loadMore(SCHOOL_PAGE)} />
-        ) : null}
+        {children}
         {canOpenSchool ? <SidebarStartSchoolMenuItem /> : null}
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
-    </>
+    </div>
   );
 }

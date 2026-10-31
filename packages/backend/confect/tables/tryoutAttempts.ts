@@ -55,15 +55,9 @@ export default Table.make(() =>
     endReason: Schema.Union([EndReason, Schema.Null]),
   })
 )
-  .index("by_scaleVersionId", ["scaleVersionId"])
   .index("by_status_and_expiresAt", ["status", "expiresAt"])
   .index("by_assessmentSnapshotId", ["assessmentSnapshotId"])
   .index("by_userId_and_startedAt", ["userId", "startedAt"])
-  .index("by_userId_and_status_and_expiresAt", [
-    "userId",
-    "status",
-    "expiresAt",
-  ])
   .index("by_userId_and_set_and_startedAt", [
     "userId",
     "countryKey",
@@ -87,10 +81,4 @@ export default Table.make(() =>
     "trackKey",
     "setKey",
     "status",
-  ])
-  .index("by_setIdentity_and_scoreStatus_and_status_and_startedAt", [
-    "setIdentity",
-    "scoreStatus",
-    "status",
-    "startedAt",
   ]);

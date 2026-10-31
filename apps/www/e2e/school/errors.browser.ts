@@ -1,6 +1,9 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, test } from "@playwright/test";
+import { EXAM_TITLE_MAX_LENGTH } from "@repo/backend/confect/exams/exam";
 import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
+import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /**
  * The narrowest field of the School: one in a drawer on a 320px phone, the screen less the drawer
@@ -127,7 +130,7 @@ function overflowing({
   width: number;
 }) {
   const line = document.createElement("div");
-  line.className = "min-h-5 font-normal text-destructive text-sm";
+  line.className = "font-normal leading-normal text-destructive text-sm";
   line.style.width = `${width}px`;
   document.body.append(line);
   const long = texts.filter((entry) => {
@@ -142,6 +145,49 @@ function overflowing({
   line.remove();
   return long.map((entry) => `${entry.label}: ${entry.text}`);
 }
+
+/** A field's height, and how far down it the line under its control starts: its error, or else its description. */
+function lineOf(field: Element) {
+  const line = Array.from(
+    field.querySelectorAll(
+      '[data-slot="field-description"], [data-slot="field-error"]'
+    )
+  ).find((part) => part.getBoundingClientRect().height > 0);
+  const box = field.getBoundingClientRect();
+  return {
+    height: box.height,
+    top: (line?.getBoundingClientRect().top ?? box.top) - box.top,
+  };
+}
+
+test("a field typed past its limit keeps its height, with the error on its description's line", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext({
+    viewport: { height: 860, width: 320 },
+  });
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  const create = page.getByRole("button", { name: "Create exam" }).first();
+  await waitUntilTakenOver(create);
+  await create.click();
+  const field = page.getByRole("dialog").locator('[data-slot="field"]').first();
+  const description = field.locator('[data-slot="field-description"]');
+  await expect(description).toBeVisible();
+  await expect(field.locator('[data-slot="field-error"]')).toBeHidden();
+
+  const idle = await field.evaluate(lineOf);
+  await field.getByRole("textbox").fill("a".repeat(EXAM_TITLE_MAX_LENGTH + 1));
+  await expect(field.getByRole("alert")).toBeVisible();
+  await expect(description).toBeHidden();
+  expect(await field.evaluate(lineOf)).toEqual(idle);
+});
 
 test("every School field's error fits its one line in every language at the narrowest field", async ({
   page,

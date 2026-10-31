@@ -16,7 +16,9 @@ import { SittingFilter } from "@/components/exams/sitting/seat";
 /**
  * The seats' filters, as the row under the room's header: all students, the ones that need
  * attention, and the finished ones, each with its icon and always in view, so a proctor sees and
- * switches the view of a live sitting in one press. Pressing the chosen filter again keeps it.
+ * switches the view of a live sitting in one press. On a phone the row spans the width with its words
+ * alone, each as wide as it needs, so "Needs attention" stays inside its border. Pressing the chosen
+ * filter again keeps it.
  */
 export function SittingFilterRow() {
   const t = useTranslations("Exams");
@@ -27,6 +29,7 @@ export function SittingFilterRow() {
     <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 md:px-6">
       <ToggleGroup
         aria-label={t("filter-label")}
+        className="max-sm:w-full max-sm:auto-cols-auto"
         onValueChange={(value) =>
           Option.match(Schema.decodeUnknownOption(SittingFilter)(value), {
             onNone: () => undefined,
@@ -38,15 +41,27 @@ export function SittingFilterRow() {
         variant="outline"
       >
         <ToggleGroupItem value="all">
-          <HugeIcons aria-hidden="true" icon={UserGroupIcon} />
+          <HugeIcons
+            aria-hidden="true"
+            className="max-sm:hidden"
+            icon={UserGroupIcon}
+          />
           {t("filter-all")}
         </ToggleGroupItem>
         <ToggleGroupItem value="needsAttention">
-          <HugeIcons aria-hidden="true" icon={Alert02Icon} />
+          <HugeIcons
+            aria-hidden="true"
+            className="max-sm:hidden"
+            icon={Alert02Icon}
+          />
           {t("filter-needs-attention")}
         </ToggleGroupItem>
         <ToggleGroupItem value="finished">
-          <HugeIcons aria-hidden="true" icon={CheckmarkCircle02Icon} />
+          <HugeIcons
+            aria-hidden="true"
+            className="max-sm:hidden"
+            icon={CheckmarkCircle02Icon}
+          />
           {t("filter-finished")}
         </ToggleGroupItem>
       </ToggleGroup>

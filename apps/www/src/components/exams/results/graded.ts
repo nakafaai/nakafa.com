@@ -3,7 +3,21 @@ import type {
   AttemptResult,
 } from "@repo/backend/confect/exams/results/contract";
 import { gradeVerdict } from "@repo/backend/confect/exams/results/schema";
-import { Array as Arr, Number as Num } from "effect";
+import { Array as Arr, Number as Num, Option, String as Str } from "effect";
+
+/**
+ * The points a teacher typed for an answer: a whole number from none to the question's `most`, or none for
+ * anything else, which the field keeps on screen for the teacher to correct.
+ */
+export const typedPoints = (typed: string, most: number) => {
+  const points = Number(typed);
+  return !Str.isEmpty(Str.trim(typed)) &&
+    Number.isInteger(points) &&
+    points >= 0 &&
+    points <= most
+    ? Option.some(points)
+    : Option.none<number>();
+};
 
 /**
  * The answers of a question's page once the teacher grades one of them: that student's answer earns

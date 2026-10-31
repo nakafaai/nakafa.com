@@ -1,26 +1,14 @@
 import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
 import type { OpenedDocument } from "@repo/backend/confect/editor/view";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { readDocument, settleSteps } from "@/lib/editor/settle";
 
 /**
- * The version of a document's head: the version of its last step, or the snapshot's version when
- * no step follows the snapshot. Stored steps keep their order and never change, so one head
- * version names one state of the document. A reader keyed by it remounts for every change of the
- * document, and it may remount for a skipped step too, which changes nothing it shows.
- */
-const headVersion = (opened: typeof OpenedDocument.Type) =>
-  Option.match(Arr.last(opened.steps), {
-    onNone: () => opened.snapshot.version,
-    onSome: (step) => step.version,
-  });
-
-/**
  * The prompt of a question as a student reads it: the snapshot that the editor opened, with the
  * steps after it applied by the rule that the server's fold uses (ADR 0028). The document is the
- * folded JSON value, which the reader takes as it is, and `key` is its head version. A snapshot
- * that the schema refuses fails with `SyncFailed`.
+ * folded JSON value, which the reader takes as it is. A snapshot that the schema refuses fails with
+ * `SyncFailed`.
  */
 const foldPrompt = Effect.fn("exams.try.fold")(function* (
   opened: typeof OpenedDocument.Type
@@ -31,7 +19,7 @@ const foldPrompt = Effect.fn("exams.try.fold")(function* (
   );
   const settled = yield* settleSteps(assessmentSchema, document, opened.steps);
   const folded: unknown = settled.doc.toJSON();
-  return { document: folded, key: headVersion(opened) };
+  return folded;
 });
 
 /**

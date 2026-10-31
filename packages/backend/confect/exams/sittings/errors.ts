@@ -1,3 +1,4 @@
+import { QuestionGap } from "@repo/backend/confect/exams/parts";
 import { refusal } from "@repo/backend/confect/tenancy/errors";
 import { Schema } from "effect";
 
@@ -126,16 +127,21 @@ export class RoomOpened extends Schema.TaggedError<RoomOpened>()(
 ) {}
 
 /**
- * An exam with questions that have no answer key that fits them. `questions` holds the
- * order number of each such question, counted from one.
+ * An exam with questions that are not ready to be sat (`questionGap`): a part that shows nothing, or no answer
+ * key that fits. `questions` holds each such question by its order number, counted from one, with its gap.
  */
-export class KeysMissing extends Schema.TaggedError<KeysMissing>()(
-  "KeysMissing",
+export class QuestionsUnready extends Schema.TaggedError<QuestionsUnready>()(
+  "QuestionsUnready",
   {
     ...refusal(
-      "KEYS_MISSING",
-      "Mark the correct answer of every question before you schedule the exam."
+      "QUESTIONS_UNREADY",
+      "Finish every question before you schedule the exam."
     ),
-    questions: Schema.Array(Schema.Int.check(Schema.isGreaterThan(0))),
+    questions: Schema.Array(
+      Schema.Struct({
+        gap: QuestionGap,
+        number: Schema.Int.check(Schema.isGreaterThan(0)),
+      })
+    ),
   }
 ) {}

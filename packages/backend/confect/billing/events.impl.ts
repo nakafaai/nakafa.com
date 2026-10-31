@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/confect/billing/events";
 import spec from "@repo/backend/confect/billing/events.spec";
 import {
-  listUnprocessedPolar,
+  listUnprocessed as listUnprocessedEvents,
   sweepEvents,
 } from "@repo/backend/confect/billing/sweep";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
@@ -55,7 +55,7 @@ const listUnprocessed = FunctionImpl.make(
   spec,
   "listUnprocessed",
   Effect.fn("billing.events.impl.listUnprocessed")(function* (args) {
-    return yield* listUnprocessedPolar(args);
+    return yield* listUnprocessedEvents(args);
   })
 );
 

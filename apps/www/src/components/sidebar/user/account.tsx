@@ -13,13 +13,12 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
-import { ClientOnly, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Effect, Result } from "effect";
 import { lazy, Suspense, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
-import { Authenticated } from "@/components/auth/gate";
 import { useLiveSession } from "@/components/providers/live";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import {
@@ -32,6 +31,10 @@ import {
   SidebarLanguageSubmenu,
   SidebarThemeSubmenu,
 } from "@/components/sidebar/menu/preference";
+import {
+  SidebarKnownSchoolItems,
+  SidebarSchools,
+} from "@/components/sidebar/menu/schools";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import type { CurrentUser } from "@/lib/identity/client";
 import { saveKnownAccount } from "@/lib/identity/known";
@@ -40,12 +43,12 @@ import { useCurrentLocale } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
- * The account's schools, loaded when the menu warms: the list brings the school
- * contracts with it, which no page needs at first paint.
+ * The account's live schools, loaded when the menu warms: the list brings the
+ * school contracts with it, which no page needs at first paint.
  */
-const SidebarSchoolMenuItems = lazy(() =>
-  import("@/components/sidebar/menu/schools").then((module) => ({
-    default: module.SidebarSchoolMenuItems,
+const SidebarMembershipItems = lazy(() =>
+  import("@/components/sidebar/menu/memberships").then((module) => ({
+    default: module.SidebarMembershipItems,
   }))
 );
 
@@ -107,16 +110,11 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
-      {/* The schools are the account's own, so they are read only once Convex holds its session. */}
-      <Suspense fallback={null}>
-        <ClientOnly fallback={null}>
-          <Authenticated>
-            <SidebarSchoolMenuItems
-              canOpenSchool={!isLoginAddress(user.authUser.email)}
-            />
-          </Authenticated>
-        </ClientOnly>
-      </Suspense>
+      <SidebarSchools canOpenSchool={!isLoginAddress(user.authUser.email)}>
+        <Suspense fallback={<SidebarKnownSchoolItems />}>
+          <SidebarMembershipItems />
+        </Suspense>
+      </SidebarSchools>
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem onClick={() => navigate(profileTarget(username))}>

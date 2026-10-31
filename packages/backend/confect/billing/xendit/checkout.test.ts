@@ -113,6 +113,7 @@ describe("billing/xendit/checkout requests", () => {
       proSessionRequest({ ...base, locale: "id", offer: "pro.monthly" })
     ).toMatchObject({
       allow_save_payment_method: "FORCED",
+      allowed_payment_channels: ["CARDS"],
       amount: 79_000,
       description: "Nakafa Pro, diperpanjang setiap bulan",
       locale: "id",
@@ -156,6 +157,7 @@ describe("billing/xendit/checkout", () => {
         expect(vi.mocked(createSession).mock.calls[0]?.[0]).toMatchObject({
           amount: 79_000,
           allow_save_payment_method: "FORCED",
+          allowed_payment_channels: ["CARDS"],
           customer_id: "cust-1",
           session_type: "PAY",
           success_return_url: request.successUrl,

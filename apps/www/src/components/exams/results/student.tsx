@@ -88,7 +88,10 @@ export function StudentResults({
   );
 }
 
-/** The student's own result once it is in: the card of a submitted attempt, or nothing while it loads. */
+/**
+ * The student's own result once it is in. The attempt is finished whatever the read answers, so the card says so
+ * while the read waits, as for a student who finished offline, and the score fills in when it is released.
+ */
 function StudentResultsContent({
   sittingId,
   slug,
@@ -106,10 +109,7 @@ function StudentResultsContent({
   if (QueryResult.isFailure(result)) {
     throw result.error;
   }
-  if (!QueryResult.isSuccess(result)) {
-    return null;
-  }
-  if (result.value === null) {
+  if (!QueryResult.isSuccess(result) || result.value === null) {
     return (
       <CardSection>
         <CardHeader>

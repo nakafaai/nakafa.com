@@ -60,7 +60,7 @@ export function SchoolHeader({
         {hasSidebar ? (
           <>
             <SidebarTrigger
-              className="-ms-1 shrink-0 lg:hidden"
+              className="-ms-2 size-9 shrink-0 lg:hidden"
               label={tCommon("toggle-sidebar")}
             />
             <Separator className="me-1 h-4 lg:hidden" orientation="vertical" />

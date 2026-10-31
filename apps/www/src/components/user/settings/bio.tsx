@@ -5,11 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Result } from "effect";
@@ -26,7 +22,8 @@ import type { CurrentUser } from "@/lib/identity/client";
 
 /**
  * Renders the bio card: a few lines about the account. A bio that is too long
- * says so in words, and Save waits until it fits.
+ * says so in the footer's sentence, so the card holds its height, and Save
+ * waits until it fits.
  */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -89,12 +86,12 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               placeholder={t("bio-placeholder")}
               value={typed}
             />
-            <FieldError className="max-w-md">
-              {fits ? null : t("bio-too-long")}
-            </FieldError>
           </Field>
         </CardContent>
-        <CardSectionFooter hint={t("bio-footer")} tone="muted">
+        <CardSectionFooter
+          hint={t(fits ? "bio-footer" : "bio-too-long")}
+          tone={fits ? "muted" : "destructive"}
+        >
           <SettingsSave disabled={!canSave} />
         </CardSectionFooter>
       </CardSection>

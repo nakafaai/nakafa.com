@@ -4,7 +4,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { createTranslator } from "use-intl/core";
 import {
-  currencySymbol,
   drinkKey,
   getProPricingDisplay,
 } from "@/components/marketing/about/pricing/display";
@@ -12,9 +11,9 @@ import { getProMonthlyPricingFor } from "@/lib/pricing/monthly";
 
 describe("marketing/about/pricing-display", () => {
   it("names each price by the currency symbol of its own locale", () => {
-    expect(currencySymbol(getProMonthlyPricingFor("EUR").formatter)).toBe("€");
-    expect(currencySymbol(getProMonthlyPricingFor("IDR").formatter)).toBe("Rp");
-    expect(currencySymbol(getProMonthlyPricingFor("USD").formatter)).toBe("$");
+    expect(getProMonthlyPricingFor("EUR").symbol).toBe("€");
+    expect(getProMonthlyPricingFor("IDR").symbol).toBe("Rp");
+    expect(getProMonthlyPricingFor("USD").symbol).toBe("$");
   });
 
   it("gives each English drink the form that agrees with its count", async () => {
@@ -49,9 +48,9 @@ describe("marketing/about/pricing-display", () => {
   it("formats Indonesian pricing in rupiah", () => {
     const price = getProPricingDisplay("IDR");
 
-    expect(price.free.text.replace(/\s+/gu, " ")).toBe("Rp 0");
-    expect(price.pro.text.replace(/\s+/gu, " ")).toBe("Rp 79.000");
-    expect(price.proYearly.text.replace(/\s+/gu, " ")).toBe("Rp 790.000");
+    expect(price.free.text).toBe("Rp\u00a00");
+    expect(price.pro.text).toBe("Rp\u00a079.000");
+    expect(price.proYearly.text).toBe("Rp\u00a0790.000");
   });
 
   it("formats euro pricing in the German locale", () => {

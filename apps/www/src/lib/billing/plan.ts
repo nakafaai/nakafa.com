@@ -115,7 +115,7 @@ export function formatCount(count: number, locale: string) {
  */
 export function formatMinorAmount(amount: number, currency: BillingCurrency) {
   const pricing = getProMonthlyPricingFor(currency);
-  return pricing.formatter.format(amount / 10 ** pricing.price.fractionDigits);
+  return pricing.format(amount / 10 ** pricing.price.fractionDigits);
 }
 
 /**

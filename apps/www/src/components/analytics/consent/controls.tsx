@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -90,11 +89,11 @@ export function AnalyticsConsentControls({
               <CardTitle>{t("title")}</CardTitle>
               <CardDescription>{t("prompt-description")}</CardDescription>
             </CardHeader>
-            <ScrollArea className="flex-1">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <CardContent>
                 <ConsentDetails error={consent.error} />
               </CardContent>
-            </ScrollArea>
+            </div>
             <CardSectionFooter hint={t("prompt-footer")}>
               <CardSectionActions>
                 <ConsentActions

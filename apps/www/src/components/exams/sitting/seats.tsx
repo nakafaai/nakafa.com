@@ -34,7 +34,7 @@ import {
 import { useSittingClock } from "@/components/exams/sitting/timer";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { schoolTimeText } from "@/components/tenant/settings/clock";
 import { Link } from "@/lib/routing/link";
 
 /** The proctor's dashboard, whose address holds the seat the proctor selected. */
@@ -309,7 +309,7 @@ function SeatLink({
             onNone: () =>
               t("seat-last-activity", {
                 time:
-                  schoolDateTimeText({
+                  schoolTimeText({
                     at: lastActivityOf(
                       attempt,
                       QueryResult.isSuccess(answered) ? answered.value : null

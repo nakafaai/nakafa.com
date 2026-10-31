@@ -57,4 +57,22 @@ describe("projectTryQuestions", () => {
     ]);
     expect(store.getState().responses).toEqual({ q1: ["option-2"] });
   });
+
+  it("picks among the options the paper shows, so a digit key never chooses an empty one", () => {
+    const store = createExamTry();
+    // The second option is still empty, so the paper shows the first and the third as its two options.
+    const [gapped] = choiceAnswers([
+      textLabel("144"),
+      { content: [{ type: "paragraph" }], type: "doc" },
+      textLabel("124"),
+    ]);
+    const [only] = projectTryQuestions({
+      questions: [question("q1", [gapped])],
+      try: store.getState(),
+    });
+
+    expect(only?.pick(1)).toBe(true);
+    expect(only?.pick(2)).toBe(false);
+    expect(store.getState().responses).toEqual({ q1: ["option-3"] });
+  });
 });

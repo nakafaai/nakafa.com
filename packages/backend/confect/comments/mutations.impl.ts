@@ -81,7 +81,7 @@ const addComment = FunctionImpl.make(
           : {
               parentId: parentComment._id,
               replyToUserId: parentComment.userId,
-              threadId: yield* threadOf(parentComment),
+              threadId: threadOf(parentComment),
             }),
         likeCount: 0,
         replyCount: 0,

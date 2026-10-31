@@ -21,12 +21,8 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -44,7 +40,6 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
-import { TryoutScoreNote } from "@/components/tryout/score/status";
 import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
@@ -124,7 +119,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   const tCommon = useTranslations("Common");
   const firstAttempt = Arr.head(value.attempts);
 
-  if (Option.isNone(firstAttempt) || value.attempts.length < 2) {
+  if (Option.isNone(firstAttempt)) {
     return null;
   }
 
@@ -238,10 +233,10 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
 }
 
 /**
- * Renders the card of the page's finished attempt, first on its page: a title that says the try-out is
- * finished, one sentence on how it ended, and the picker of the set's attempt history; then its metrics and
- * the metrics the caller composed after them; then how far its score is settled. Choosing an attempt opens
- * that attempt's own page, so the score and the review always belong to one attempt.
+ * Renders the card of the page's finished attempt, first on its page: its metrics, then the metrics the caller
+ * composed after them. The page already shows that the attempt is over, so the card says nothing about it. A set
+ * tried more than once has the picker of its attempts in the footer. Choosing an attempt opens that attempt's own
+ * page, so the score and the review always belong to one attempt.
  */
 export function TryoutAttemptResults({
   children,
@@ -249,7 +244,6 @@ export function TryoutAttemptResults({
 }: TryoutAttemptResultsProps & { children?: ReactNode }) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const navigate = useNavigate();
-  const t = useTranslations("Tryouts");
   const history = usePaginatedQuery(
     tryouts.queries.history.bySet,
     isAuthenticated ? value.identity : "skip",
@@ -262,18 +256,14 @@ export function TryoutAttemptResults({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>
-          <h2>{t("finished-title")}</h2>
-        </CardTitle>
-        <CardDescription>
-          {t(
-            value.attempt.status === "expired"
-              ? "finished-expired-description"
-              : "finished-description"
-          )}
-        </CardDescription>
-        <CardAction>
+      <CardContent className="[--number-flow-mask-height:0.125em]">
+        {PaginatedQueryResult.isFailure(history) && <DataFailure />}
+        <TryoutScoreMetrics score={value.attempt.score}>
+          {children}
+        </TryoutScoreMetrics>
+      </CardContent>
+      {attempts.length > 1 ? (
+        <CardFooter>
           <TryoutAttemptHistory
             value={{
               attempts,
@@ -292,17 +282,8 @@ export function TryoutAttemptResults({
               selectedAttemptId: value.attempt.attemptId,
             }}
           />
-        </CardAction>
-      </CardHeader>
-      <CardContent className="[--number-flow-mask-height:0.125em]">
-        {PaginatedQueryResult.isFailure(history) && <DataFailure />}
-        <TryoutScoreMetrics score={value.attempt.score}>
-          {children}
-        </TryoutScoreMetrics>
-      </CardContent>
-      <CardFooter>
-        <TryoutScoreNote score={value.attempt.score} />
-      </CardFooter>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }

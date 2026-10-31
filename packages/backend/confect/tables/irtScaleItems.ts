@@ -17,5 +17,4 @@ export default Table.make(() =>
   })
 )
   .index("by_calibrationRunId", ["calibrationRunId"])
-  .index("by_calibrationStatus", ["calibrationStatus"])
   .index("by_scaleVersionId_and_family", ["scaleVersionId", "family"]);
