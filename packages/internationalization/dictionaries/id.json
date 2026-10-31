@@ -1156,7 +1156,8 @@
         "import": "Impor siswa"
       },
       "grade": {
-        "export": "Baca nilai yang dirilis"
+        "export": "Baca nilai yang dirilis",
+        "import": "Memasukkan draf nilai"
       },
       "guardian": {
         "view": "Lihat tautan orang tua"

@@ -7,6 +7,7 @@ import { Array as Arr, Schema } from "effect";
 export const IntegrationAction = Schema.Literals([
   "cohort.view",
   "grade.export",
+  "grade.import",
   "guardian.view",
   "period.view",
   "person.view",

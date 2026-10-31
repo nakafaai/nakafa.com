@@ -105,6 +105,7 @@ describe("access/catalog", () => {
     expect(Arr.sort(Arr.dedupe(opened), Order.String)).toEqual([
       "cohort.view",
       "grade.export",
+      "grade.import",
       "guardian.view",
       "period.view",
       "person.view",

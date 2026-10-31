@@ -3,7 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { createClient, type Fixture } from "@repo/backend/test/api";
-import { cohort, nf, period } from "@repo/backend/test/classroom";
+import { cohort, forumClass, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool } from "@repo/backend/test/guardians";
 import {
   journal,
@@ -12,7 +12,7 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
 
-const { importRoster, sweep } = refs.internal.integrations.writes;
+const { enterGrade, importRoster, sweep } = refs.internal.integrations.writes;
 const clients = refs.public.integrations.clients;
 const DIGEST = "a".repeat(64);
 const ROW = {
@@ -43,6 +43,93 @@ const seeded = Effect.fn("test.writes.seeded")(function* (fixture: Fixture) {
       rows: [ROW],
     },
   };
+});
+
+describe("integrations/writes enterGrade", () => {
+  /** A class with the school's student placed in it, and a client that enters its grades. */
+  const graded = Effect.fn("test.writes.graded")(function* (fixture: Fixture) {
+    yield* asStaffSchool(fixture);
+    const term = yield* period(fixture, fixture.units.smp);
+    const forum = yield* forumClass(fixture, term.id, "X-1");
+    const client = yield* createClient(fixture, ["grade.import"]);
+    return {
+      classId: forum.classId,
+      clientId: client.id,
+      personId: fixture.people.student.personId,
+      value: 88,
+    };
+  });
+
+  it.effect("writes a draft a teacher still releases, and a retry leaves one", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const entry = yield* graded(fixture);
+
+      const first = yield* fixture.internal.mutation(enterGrade, entry);
+      expect(first).toMatchObject({
+        grade: { value: 88 },
+        outcome: "entered",
+      });
+      yield* fixture.internal.mutation(enterGrade, { ...entry, value: 90 });
+      const rows = yield* fixture.run(
+        Effect.flatMap(DatabaseReader, (reader) =>
+          reader
+            .table("classGrades")
+            .index("by_creation_time")
+            .take(5)
+            .pipe(Effect.orDie)
+        )
+      );
+      expect(rows).toMatchObject([{ state: "draft", value: 90 }]);
+    })
+  );
+
+  it.effect("refuses a student outside the class and a released grade", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const entry = yield* graded(fixture);
+
+      expect(
+        yield* fixture.internal.mutation(enterGrade, {
+          ...entry,
+          personId: fixture.people.teacher.personId,
+        })
+      ).toEqual({ outcome: "notPlaced" });
+
+      yield* fixture.internal.mutation(enterGrade, entry);
+      const draft = yield* fixture.run(
+        Effect.flatMap(DatabaseReader, (reader) =>
+          reader
+            .table("classGrades")
+            .index("by_creation_time")
+            .first()
+            .pipe(Effect.map(Option.getOrThrow), Effect.orDie)
+        )
+      );
+      yield* fixture.as("teacher").mutation(refs.public.records.grades.release, {
+        gradeId: draft._id,
+        slug: nf,
+      });
+      expect(yield* fixture.internal.mutation(enterGrade, entry)).toEqual({
+        outcome: "released",
+      });
+    })
+  );
+
+  it.effect("answers forbidden for a list, a class, or an ID it does not open", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const entry = yield* graded(fixture);
+      const without = yield* createClient(fixture, ["period.view"]);
+      const write = (changed: Partial<typeof entry>) =>
+        fixture.internal.mutation(enterGrade, { ...entry, ...changed });
+      const refused = { outcome: "forbidden" };
+
+      expect(yield* write({ clientId: without.id })).toEqual(refused);
+      expect(yield* write({ classId: "not-an-id" })).toEqual(refused);
+      expect(yield* write({ personId: "not-an-id" })).toEqual(refused);
+    })
+  );
 });
 
 describe("integrations/writes importRoster", () => {

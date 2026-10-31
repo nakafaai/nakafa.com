@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { IdempotencyKey } from "@repo/backend/confect/integrations/schema";
+import { GradeValue } from "@repo/backend/confect/records/scheme";
 import {
   IMPORT_BATCH,
   ImportRow,
@@ -13,6 +14,17 @@ export const WriteAnswer = Schema.Union([
   Schema.Struct({ outcome: Schema.Literal("applied"), summary: ImportSummary }),
   Schema.Struct({ outcome: Schema.Literal("forbidden") }),
   Schema.Struct({ outcome: Schema.Literal("conflict") }),
+]);
+
+/** What a grade entry answers: its draft, a refusal of what the client may not do, or what the grade's state refuses. */
+export const GradeAnswer = Schema.Union([
+  Schema.Struct({
+    grade: Schema.Struct({ id: Schema.String, value: GradeValue }),
+    outcome: Schema.Literal("entered"),
+  }),
+  Schema.Struct({ outcome: Schema.Literal("forbidden") }),
+  Schema.Struct({ outcome: Schema.Literal("notPlaced") }),
+  Schema.Struct({ outcome: Schema.Literal("released") }),
 ]);
 
 /**
@@ -32,6 +44,18 @@ export default GroupSpec.make()
         rows: Schema.Array(ImportRow).check(Schema.isMaxLength(IMPORT_BATCH)),
       }),
       returns: () => WriteAnswer,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "enterGrade",
+      args: () => ({
+        classId: Schema.String,
+        clientId: Id("integrationClients"),
+        personId: Schema.String,
+        value: GradeValue,
+      }),
+      returns: () => GradeAnswer,
     })
   )
   .addFunction(

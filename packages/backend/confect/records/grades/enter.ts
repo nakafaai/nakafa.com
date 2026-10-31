@@ -1,4 +1,6 @@
+import type { GenericId } from "@confect/core";
 import { FunctionImpl } from "@confect/server";
+import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -23,14 +25,15 @@ import { Clock, Effect, Option } from "effect";
  * draft that stands. The student must be placed in the class's cohort in its
  * period, and a released grade is refused, because no entry changes it. The draft
  * is judged by the scheme in force at this entry, and it names that version. A
- * draft is not journaled, because only a release is (ADR 0016).
+ * draft is not journaled, because only a release is (ADR 0016). A teacher and a
+ * school's client both write through it.
  */
-export const enter = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "enter",
-  Effect.fn("records.grades.enter")(function* ({ personId, value }) {
-    const row = yield* Class;
+export const draftGrade = Effect.fn("records.grades.draft")(
+  function* (
+    row: ClassesDoc,
+    personId: GenericId.GenericId<"tenantPeople">,
+    value: typeof gradeValidator.Type.value
+  ) {
     const placement = yield* placementOf(row.periodId, personId);
     if (!Option.exists(placement, (found) => found.cohortId === row.cohortId)) {
       return yield* new GradeNotPlaced();
@@ -75,5 +78,15 @@ export const enter = FunctionImpl.make(
       { _id: gradeId, classId: row._id, personId, state: "draft", value },
       scheme
     );
+  }
+);
+
+/** The subject teacher's entry of a draft in the allowed class. */
+export const enter = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "enter",
+  Effect.fn("records.grades.enter")(function* ({ personId, value }) {
+    return yield* draftGrade(yield* Class, personId, value);
   })
 );

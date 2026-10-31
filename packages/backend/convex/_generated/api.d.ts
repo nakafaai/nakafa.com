@@ -568,6 +568,7 @@ export declare const api: {
             | "task.manage"
             | "task.submit"
             | "grade.enter"
+            | "grade.import"
             | "grade.list"
             | "insight.teach"
             | "insight.view"
@@ -7605,6 +7606,7 @@ export declare const api: {
             | "class.create"
             | "class.list"
             | "grade.enter"
+            | "grade.import"
             | "grade.list"
             | "scheme.manage"
             | "scheme.view"
@@ -7736,6 +7738,7 @@ export declare const api: {
               | "class.create"
               | "class.list"
               | "grade.enter"
+              | "grade.import"
               | "grade.list"
               | "scheme.manage"
               | "scheme.view"
@@ -7871,6 +7874,7 @@ export declare const api: {
             | "class.create"
             | "class.list"
             | "grade.enter"
+            | "grade.import"
             | "grade.list"
             | "scheme.manage"
             | "scheme.view"
@@ -7982,6 +7986,7 @@ export declare const api: {
             | "class.create"
             | "class.list"
             | "grade.enter"
+            | "grade.import"
             | "grade.list"
             | "scheme.manage"
             | "scheme.view"
@@ -8225,6 +8230,7 @@ export declare const api: {
               | "class.create"
               | "class.list"
               | "grade.enter"
+              | "grade.import"
               | "grade.list"
               | "scheme.manage"
               | "scheme.view"
@@ -16838,6 +16844,20 @@ export declare const internal: {
       sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
     writes: {
+      enterGrade: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          classId: string;
+          clientId: Id<"integrationClients">;
+          personId: string;
+          value: number;
+        },
+        | { grade: { id: string; value: number }; outcome: "entered" }
+        | { outcome: "forbidden" }
+        | { outcome: "notPlaced" }
+        | { outcome: "released" }
+      >;
       importRoster: FunctionReference<
         "mutation",
         "internal",

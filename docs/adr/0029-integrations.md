@@ -691,3 +691,11 @@ A request carries `nakafa-signature: t=<seconds>,v1=<hex>`, `nakafa-event`,
   npm registry on 13 October 2026.
 - ADR 0006, 0009, 0011, 0012, 0015, 0016, 0020, 0026, 0027, 0028, 0030, and
   0031.
+
+## Amendment: Writes, 31 October 2026
+
+A client enters a student's draft grade through `POST /grades` on REST and
+`school_enter_grade` on MCP, under the `grade.import` action, which only the
+integration role holds. It writes through the teacher's own path (`draftGrade`), so a
+teacher still reads and releases the grade, a released grade stays as it is, and the
+same value twice leaves one draft, which is why this write needs no idempotency key.

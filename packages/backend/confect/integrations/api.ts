@@ -230,6 +230,19 @@ export const ApiChange = Schema.Struct({
   type: Schema.String,
 });
 
+/** One draft grade a school's own system enters for a teacher to release. */
+export const ApiGradeEntry = Schema.Struct({
+  classId: Schema.String,
+  personId: Schema.String,
+  value: Schema.Finite.check(Schema.isBetween({ maximum: 100, minimum: 0 })),
+});
+
+/** The draft an entry wrote. */
+export const ApiGradeDraft = Schema.Struct({
+  id: Schema.String,
+  value: Schema.Finite,
+});
+
 /** One student of a roster import, as a school's own system sends it. */
 export const ApiRosterRow = Schema.Struct({
   cohortName: Schema.optionalKey(Schema.String),
@@ -325,7 +338,8 @@ class RecordsGroup extends HttpApiGroup.make("records")
 
 /**
  * The Dapodik bridge: a school's own system sends the students of one period, and they join
- * the roster as a file import does. Every POST carries an `Idempotency-Key` (ADR 0029).
+ * the roster as a file import does, with an `Idempotency-Key` (ADR 0029). It also enters a
+ * student's draft grade, which a teacher still releases.
  */
 class ImportsGroup extends HttpApiGroup.make("imports")
   .add(
@@ -334,6 +348,13 @@ class ImportsGroup extends HttpApiGroup.make("imports")
       headers: { "idempotency-key": Schema.String },
       payload: ApiRosterImport,
       success: ApiImportSummary,
+    })
+  )
+  .add(
+    HttpApiEndpoint.post("grade", "/grades", {
+      error: [...ROSTER_ERRORS, SchoolApiConflict],
+      payload: ApiGradeEntry,
+      success: ApiGradeDraft,
     })
   )
   .middleware(SchoolApiBearer) {}
