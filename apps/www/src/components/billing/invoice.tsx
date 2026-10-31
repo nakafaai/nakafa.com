@@ -1,4 +1,3 @@
-import { Download04Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
@@ -63,18 +62,14 @@ export function RowAction({
 }
 
 /** Asks for one invoice, saves the file, and says so in a toast when it cannot be drawn. */
-export function InvoiceDownload({
-  label,
-  request,
-}: {
-  label: string;
-  request: () => Promise<
-    Result.Result<{ readonly base64: string; readonly name: string }, unknown>
-  >;
-}) {
+export function useInvoiceDownload() {
   const [isPending, startTransition] = useTransition();
 
-  const handleDownload = () => {
+  const download = (
+    request: () => Promise<
+      Result.Result<{ readonly base64: string; readonly name: string }, unknown>
+    >
+  ) => {
     startTransition(() =>
       Effect.runPromise(
         Effect.tryPromise(request).pipe(
@@ -97,12 +92,5 @@ export function InvoiceDownload({
     );
   };
 
-  return (
-    <RowAction
-      icon={Download04Icon}
-      isPending={isPending}
-      label={label}
-      onClick={handleDownload}
-    />
-  );
+  return { download, isPending };
 }

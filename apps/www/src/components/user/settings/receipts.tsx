@@ -2,6 +2,7 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useAction, useQuery } from "@confect/react";
 import {
   Coins01Icon,
+  Download04Icon,
   Invoice01Icon,
   LinkSquare02Icon,
   Money01Icon,
@@ -13,7 +14,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { InvoiceDownload, RowAction } from "@/components/billing/invoice";
+import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
 import { HeadAlignContext } from "@/components/shared/table/align";
 import { ColumnFilter } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
@@ -71,15 +72,18 @@ export function Receipts() {
 function InvoiceAction({ payment }: { payment: Receipt }) {
   const t = useTranslations("Auth");
   const locale = useLocale();
-  const download = useAction(billingRefs.receipts.download);
+  const draw = useAction(billingRefs.receipts.download);
+  const { download, isPending } = useInvoiceDownload();
 
   if (!isActiveLocale(locale)) {
     return null;
   }
   return (
-    <InvoiceDownload
+    <RowAction
+      icon={Download04Icon}
+      isPending={isPending}
       label={t("payment-download")}
-      request={() => download({ locale, paymentId: payment.id })}
+      onClick={() => download(() => draw({ locale, paymentId: payment.id }))}
     />
   );
 }

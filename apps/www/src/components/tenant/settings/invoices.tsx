@@ -3,6 +3,7 @@ import {
   Cancel01Icon,
   CheckmarkBadge01Icon,
   CreditCardIcon,
+  Download04Icon,
   Edit02Icon,
   Invoice01Icon,
   Mail01Icon,
@@ -33,7 +34,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";
-import { InvoiceDownload } from "@/components/billing/invoice";
+import { RowAction, useInvoiceDownload } from "@/components/billing/invoice";
 import {
   CardSection,
   CardSectionFooter,
@@ -164,15 +165,20 @@ function SchoolInvoiceDownload({
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
   const { slug } = useTenant();
-  const download = useAction(billing.receipts.school);
+  const draw = useAction(billing.receipts.school);
+  const { download, isPending } = useInvoiceDownload();
 
   if (invoice.number === "" || !isActiveLocale(locale)) {
     return null;
   }
   return (
-    <InvoiceDownload
+    <RowAction
+      icon={Download04Icon}
+      isPending={isPending}
       label={t("invoice-download")}
-      request={() => download({ locale, number: invoice.number, slug })}
+      onClick={() =>
+        download(() => draw({ locale, number: invoice.number, slug }))
+      }
     />
   );
 }
