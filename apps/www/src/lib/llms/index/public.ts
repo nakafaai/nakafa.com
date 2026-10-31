@@ -9,6 +9,7 @@ import type { Locale } from "use-intl";
 import {
   BASE_URL,
   type LlmsSection,
+  llmsRouteUrl,
   SECTION_LABELS,
 } from "@/lib/llms/constants";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
@@ -62,7 +63,7 @@ export function getPublicLlmsSectionIndexLines(locale: Locale) {
   return Arr.map(
     getPublicLlmsSectionIndexes(locale),
     (index) =>
-      `- [${index.label}](${BASE_URL}/${locale}/${index.prefix}/llms.txt): ${localeLabel} ${index.label.toLowerCase()}.`
+      `- [${index.label}](${llmsRouteUrl(`/${locale}/${index.prefix}/llms.txt`)}): ${localeLabel} ${index.label.toLowerCase()}.`
   );
 }
 
@@ -158,5 +159,5 @@ function getProjectedPublicLlmsSectionIndex({
 /** Formats one locale aggregate link for the root index. */
 function formatLocaleIndexLine(locale: Locale) {
   const localeLabel = getLocaleLabel(locale);
-  return `- [${localeLabel} content index](${BASE_URL}/${locale}/llms.txt): ${localeLabel} starter pages and nested public-prefix indexes.`;
+  return `- [${localeLabel} content index](${llmsRouteUrl(`/${locale}/llms.txt`)}): ${localeLabel} starter pages and nested public-prefix indexes.`;
 }

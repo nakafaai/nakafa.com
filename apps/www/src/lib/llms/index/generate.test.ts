@@ -108,7 +108,7 @@ describe("llms indexes", () => {
         "try-out",
         "quran",
       ]) {
-        expect(text).toContain(`${BASE_URL}/en/${prefix}/llms.txt`);
+        expect(text).toContain(`${BASE_URL}/llms.mdx/en/${prefix}/llms.txt`);
       }
       expect(text).toContain(`${BASE_URL}/en/search`);
       expect(text).toContain(`- [${articleEntry.title}](${articleEntry.href})`);
@@ -138,16 +138,16 @@ describe("llms indexes", () => {
 
         expect(sectionIndex).toContain("# Nakafa English Articles Pages");
         expect(sectionIndex).toContain(
-          `${BASE_URL}/llms/en/articles/page/0/llms.txt`
+          `${BASE_URL}/llms.mdx/llms/en/articles/page/0/llms.txt`
         );
         expect(sectionIndex).toContain(
-          `${BASE_URL}/llms/en/articles/page/2/llms.txt`
+          `${BASE_URL}/llms.mdx/llms/en/articles/page/2/llms.txt`
         );
         expect(sectionIndex).toContain(
-          `${BASE_URL}/llms/en/articles/page/{page}/llms.txt`
+          `${BASE_URL}/llms.mdx/llms/en/articles/page/{page}/llms.txt`
         );
         expect(sectionIndex).not.toContain(
-          `${BASE_URL}/llms/en/articles/page/1/llms.txt`
+          `${BASE_URL}/llms.mdx/llms/en/articles/page/1/llms.txt`
         );
         expect(sectionIndex).toContain("250 English articles routes");
         expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
@@ -168,7 +168,9 @@ describe("llms indexes", () => {
 
       expect(text).toContain("42 English articles routes");
       expect(text).toContain("2 bounded published partitions");
-      expect(text).toContain(`${BASE_URL}/llms/en/articles/page/1/llms.txt`);
+      expect(text).toContain(
+        `${BASE_URL}/llms.mdx/llms/en/articles/page/1/llms.txt`
+      );
     })
   );
 
@@ -178,7 +180,7 @@ describe("llms indexes", () => {
         yield* getLlmsSectionIndexText("llms/en/material");
 
       expect(singlePageIndex).toContain(
-        `${BASE_URL}/llms/en/material/page/0/llms.txt`
+        `${BASE_URL}/llms.mdx/llms/en/material/page/0/llms.txt`
       );
       expect(singlePageIndex).not.toContain("last bounded route-catalog page");
 
