@@ -191,7 +191,15 @@ export declare const api: {
   };
   billing: {
     polar: {
-      school: {
+      receipts: {
+      download: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; paymentId: Id<"billingPayments"> },
+        { base64: string; name: string }
+      >;
+    };
+    school: {
         checkout: FunctionReference<
           "action",
           "public",
@@ -221,6 +229,7 @@ export declare const api: {
             } | null;
             resetAt: number;
           };
+          hasPayments: boolean;
           pass: { endsAt: number } | null;
           plan: "free" | "pro";
           subscription: {
@@ -249,6 +258,7 @@ export declare const api: {
         Array<{
           amount: number;
           currency: "EUR" | "IDR" | "USD";
+          id: Id<"billingPayments">;
           kind: "cycle" | "pass" | "invoice" | "credits";
           paidAt: number;
           rail: "polar" | "xendit";
@@ -13218,6 +13228,24 @@ export declare const internal: {
         }>
       >;
     };
+    draw: {
+      invoice: FunctionReference<
+        "action",
+        "internal",
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        },
+        string
+      >;
+    };
     events: {
       apply: FunctionReference<
         "mutation",
@@ -13318,6 +13346,28 @@ export declare const internal: {
           } | null
         >;
       };
+    };
+    receipts: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        {
+          locale: "en" | "id" | "de";
+          paymentId: Id<"billingPayments">;
+          userId: Id<"users">;
+        },
+        {
+          buyer: { email: string | null; name: string };
+          dueOn: string | null;
+          issuedOn: string;
+          lines: Array<{ amount: string; description: string }>;
+          locale: "en" | "id" | "de";
+          number: string;
+          paidWith: string | null;
+          status: "open" | "paid" | "void";
+          total: string;
+        } | null
+      >;
     };
     topup: {
       refundWithoutPro: FunctionReference<

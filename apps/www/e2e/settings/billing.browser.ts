@@ -83,7 +83,7 @@ test("a pass holder sees when the pass ends, finds the receipt in Payments, and 
         await page.goto(SUBSCRIPTIONS);
         await expect(page.getByText("Your Pro pass runs until")).toBeVisible();
         await picture(page, "pass");
-        const payments = page.getByRole("button", { name: "Payments" });
+        const payments = page.getByRole("button", { name: "View" });
         await waitUntilTakenOver(payments);
         await payments.click();
         const receipts = page.getByRole("dialog", { name: "Payments" });
@@ -92,7 +92,7 @@ test("a pass holder sees when the pass ends, finds the receipt in Payments, and 
         await pictureDialog(page, "payments");
         await receipts.getByRole("button", { name: "Close" }).last().click();
         await expect(receipts).toBeHidden();
-        const extend = page.getByRole("button", { name: "Extend Pro" });
+        const extend = page.getByRole("button", { name: "Extend" });
         await waitUntilTakenOver(extend);
         await extend.click();
         const dialog = page.getByRole("dialog", { name: "Choose how to pay" });
@@ -118,14 +118,14 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
         await page.goto(SUBSCRIPTIONS);
         await expect(page.getByText("Xendit", { exact: true })).toBeVisible();
         await picture(page, "subscribed");
-        const payments = page.getByRole("button", { name: "Payments" });
+        const payments = page.getByRole("button", { name: "View" });
         await waitUntilTakenOver(payments);
         await payments.click();
         const receipts = page.getByRole("dialog", { name: "Payments" });
         await expect(receipts.getByText("Pro subscription")).toBeVisible();
         await receipts.getByRole("button", { name: "Close" }).last().click();
         await expect(receipts).toBeHidden();
-        const cancel = page.getByRole("button", { name: "Cancel plan" });
+        const cancel = page.getByRole("button", { name: "Cancel" });
         await waitUntilTakenOver(cancel);
         await cancel.click();
         const dialog = page.getByRole("dialog", { name: "Cancel Pro?" });
@@ -134,7 +134,9 @@ test("a Xendit subscriber cancels the plan in the settings, and it ends with its
         ).toBeVisible();
         await pictureDialog(page, "cancel");
         await page.setViewportSize({ height: 900, width: 1440 });
-        await dialog.getByRole("button", { name: "Cancel plan" }).click();
+        await dialog
+          .getByRole("button", { name: "Cancel", exact: true })
+          .click();
         await expect(
           page.getByText("Nothing is charged after this period.")
         ).toBeVisible();

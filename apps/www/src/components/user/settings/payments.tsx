@@ -1,5 +1,10 @@
 import { Invoice01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
@@ -12,8 +17,13 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { lazy, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
+import {
+  CardSection,
+  CardSectionActions,
+  CardSectionFooter,
+} from "@/components/shared/card/section";
 
-/** The receipts table's code, which the first intent on Payments loads, so the sheet opens on its table. */
+/** The receipts table's code, which the first intent on the card's action loads, so the sheet opens on its table. */
 const Receipts = lazy(() =>
   import("@/components/user/settings/receipts").then((module) => ({
     default: module.Receipts,
@@ -21,30 +31,38 @@ const Receipts = lazy(() =>
 );
 
 /**
- * The plan card's Payments action: a sheet of the learner's whole payment
- * history, which grows with every renewal and filters by each column.
+ * The payments card: its one action opens a sheet of the learner's whole payment
+ * history, which grows with every renewal, filters by each column, and hands over
+ * the invoice of each payment.
  */
-export function PlanPayments() {
+export function UserSettingsPayments() {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
   const [isActivated, setIsActivated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <>
-      <Button
-        onClick={() => {
-          setIsActivated(true);
-          setIsOpen(true);
-        }}
-        onFocus={() => setIsActivated(true)}
-        onPointerEnter={() => setIsActivated(true)}
-        type="button"
-        variant="outline"
-      >
-        <HugeIcons icon={Invoice01Icon} />
-        {t("payments")}
-      </Button>
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{t("payments")}</CardTitle>
+        <CardDescription>{t("payments-card-description")}</CardDescription>
+      </CardHeader>
+      <CardSectionFooter hint={t("payments-footer")}>
+        <CardSectionActions>
+          <Button
+            onClick={() => {
+              setIsActivated(true);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsActivated(true)}
+            onPointerEnter={() => setIsActivated(true)}
+            type="button"
+          >
+            <HugeIcons icon={Invoice01Icon} />
+            {t("payments-view")}
+          </Button>
+        </CardSectionActions>
+      </CardSectionFooter>
       <Sheet onOpenChange={setIsOpen} open={isOpen}>
         <SheetContent className="w-full max-w-none sm:max-w-2xl">
           <SheetHeader>
@@ -67,6 +85,6 @@ export function PlanPayments() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
-    </>
+    </CardSection>
   );
 }
