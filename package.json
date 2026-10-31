@@ -76,6 +76,7 @@
     "lint": "bun run effect:source:check && bun run check && ultracite check && turbo run lint --filter=cas",
     "prepare": "effect-tsgo patch --typescript --no-oxlint",
     "security:audit": "bash scripts/osv apps/cas/uv.lock",
+    "seo:audit": "bunx squirrelscan@latest audit https://nakafa.com --level surface --format llm",
     "start": "turbo run start",
     "test": "bun run check && bun run test:scripts && turbo run test",
     "test:scripts": "bun run typecheck:scripts && vitest run --config scripts/vitest.config.mts",

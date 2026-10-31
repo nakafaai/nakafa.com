@@ -50,7 +50,8 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
     if (loaderData === undefined) {
       return {};
     }
-    const { book, breadcrumbs, description, locale, surah, title } = loaderData;
+    const { book, breadcrumbs, description, locale, meaning, surah, title } =
+      loaderData;
     return toRouterHead(
       createSeoHead({
         canonicalPath: `/${locale}/quran/${surah}`,
@@ -64,7 +65,6 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
         jsonLd: [
           ...makeBreadcrumbNodes(breadcrumbs),
           makeBookNode({
-            author: { "@type": "Person", name: "Allah" },
             description: book.description,
             inLanguage: locale,
             name: book.name,
@@ -74,7 +74,8 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
           }),
         ],
         locale,
-        parts: [title],
+        // The name is the same in every language, and its meaning tells them apart.
+        parts: [title, meaning.text],
         type: "book",
       })
     );
