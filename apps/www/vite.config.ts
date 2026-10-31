@@ -27,7 +27,7 @@ import {
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
 import { renderRobotsTxt } from "#www/src/lib/seo/robots";
-import { PRERENDER_HEADER } from "#www/src/lib/static/calls";
+import { PRERENDER_HEADERS } from "#www/src/lib/static/calls";
 import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
 import { PrerenderedPagesJson } from "#www/src/lib/static/prerender";
 import { workerEnvironment, workerSettings } from "#www/worker";
@@ -466,7 +466,7 @@ export default defineConfig(async ({ command, isPreview }) => {
           failOnError: true,
           // The Worker records each page's server function calls, which
           // writeStaticAnswers turns into static files.
-          headers: { [PRERENDER_HEADER]: "1" },
+          headers: PRERENDER_HEADERS,
         },
       }),
       // No deployment pin route: a client that asks for a
