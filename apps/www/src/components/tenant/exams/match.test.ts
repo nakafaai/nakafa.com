@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
-import { matchAnswers, textLabel } from "@repo/backend/confect/exams/question";
+import { matchAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { Array as Arr, Option } from "effect";
 import { emptyLabel } from "@/components/tenant/exams/answer";
 import {

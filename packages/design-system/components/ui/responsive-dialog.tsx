@@ -18,7 +18,6 @@ import {
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
@@ -100,11 +99,7 @@ export function ResponsiveDialog({
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
         {hasBody ? <DrawerPanel>{children}</DrawerPanel> : null}
-        {!!footer && (
-          <DrawerFooter className={cn(!hasBody && "pt-4")}>
-            {footer}
-          </DrawerFooter>
-        )}
+        {!!footer && <DrawerFooter>{footer}</DrawerFooter>}
       </DrawerContent>
     </Drawer>
   );

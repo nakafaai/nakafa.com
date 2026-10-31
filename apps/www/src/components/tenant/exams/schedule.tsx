@@ -2,9 +2,9 @@ import { QueryResult } from "@confect/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ClientOnly } from "@tanstack/react-router";
+import { ClientOnly, lazyRouteComponent } from "@tanstack/react-router";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
-import { type ComponentProps, lazy, Suspense, useState } from "react";
+import { type ComponentProps, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
 import {
@@ -14,14 +14,16 @@ import {
 import { nextQuarter } from "@/components/tenant/exams/time";
 
 /**
- * The dialog that schedules a sitting. It loads on the first opening, so the editor's first page
- * does not carry the scheduling code.
+ * The dialog that schedules a sitting. Its code stays out of the editor's first page, and loads
+ * when the viewer reaches for the button, so a press opens the dialog at once.
  */
-const ScheduleSitting = lazy(() =>
-  import("@/components/tenant/exams/sitting").then((module) => ({
-    default: module.ScheduleSitting,
-  }))
+const ScheduleSitting = lazyRouteComponent(
+  () => import("@/components/tenant/exams/sitting"),
+  "ScheduleSitting"
 );
+
+/** Loads the dialog's code ahead of the press. */
+const loadSchedule = () => ScheduleSitting.preload?.();
 
 /**
  * The next whole quarter hour on the clock of a unit, as a `datetime-local` value. None when the
@@ -58,7 +60,11 @@ export function ScheduleExam() {
   return (
     <>
       {Arr.isReadonlyArrayNonEmpty(units) ? (
-        <ScheduleButton onClick={open} />
+        <ScheduleButton
+          onClick={open}
+          onFocus={loadSchedule}
+          onPointerEnter={loadSchedule}
+        />
       ) : null}
       {openings === 0 ? null : (
         <Suspense fallback={null}>
@@ -95,7 +101,10 @@ function useSchedulingUnits() {
 
 /** Schedule, its icon and its words, the words for screen readers alone on a phone. */
 function ScheduleButton(
-  props: Pick<ComponentProps<typeof Button>, "disabled" | "onClick">
+  props: Pick<
+    ComponentProps<typeof Button>,
+    "disabled" | "onClick" | "onFocus" | "onPointerEnter"
+  >
 ) {
   const t = useTranslations("Exams");
 

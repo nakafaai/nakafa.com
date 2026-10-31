@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { PaperBack, PaperBar } from "@/components/exams/sitting/bar";
-import { ReadRecovery } from "@/components/exams/sitting/boundary";
 import { useSittingMode } from "@/components/exams/sitting/mode";
+import { SittingRetry } from "@/components/exams/sitting/retry";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerProvider } from "@/components/player/provider";
+import { ReadRecovery } from "@/components/tenant/read/recovery";
 
 /**
  * The paper's frame around every screen of a sitting that holds no paper: its entry, its waiting, its outcome,
@@ -50,5 +51,9 @@ export function SittingRecovery({
 }: {
   readonly children: ReactNode;
 }) {
-  return <ReadRecovery frame={PaperHold}>{children}</ReadRecovery>;
+  return (
+    <ReadRecovery frame={PaperHold} retry={SittingRetry}>
+      {children}
+    </ReadRecovery>
+  );
 }

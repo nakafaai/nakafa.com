@@ -148,6 +148,7 @@ function GuardianSignInForm() {
               value={email}
             />
             <FieldDescription>{t("email-description")}</FieldDescription>
+            <FieldError>{message}</FieldError>
           </Field>
         ) : (
           <Field>
@@ -164,10 +165,10 @@ function GuardianSignInForm() {
             <FieldDescription>
               {t("code-description", { email: sentTo })}
             </FieldDescription>
+            <FieldError>{message}</FieldError>
           </Field>
         )}
       </FieldGroup>
-      <FieldError>{message}</FieldError>
       <div className="flex w-full flex-col gap-3">
         <Button
           aria-busy={isPending || undefined}

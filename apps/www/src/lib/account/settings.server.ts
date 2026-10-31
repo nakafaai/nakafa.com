@@ -1,11 +1,13 @@
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import billing from "@repo/backend/confect/_generated/refs/billing";
+import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect } from "effect";
 import { createTranslator } from "use-intl/core";
+import { CONNECTION_PAGE_SIZE } from "@/components/connectors/optimistic";
 import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import {
   accountHandler,
@@ -124,11 +126,24 @@ export const memoryScreenHandler = accountHandler(
     })
 );
 
-/** Connector settings: the page head; the page reads its connections live. */
+/** Connector settings: the first connections, what the deployment offers, and the head. */
 export const connectorsScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
-      yield* admitAccount(locale);
+      const token = yield* admitAccount(locale);
+      const [first, offered] = yield* Effect.all(
+        [
+          readRequired(
+            connectors.connections.listOwn,
+            {
+              paginationOpts: { cursor: null, numItems: CONNECTION_PAGE_SIZE },
+            },
+            token
+          ),
+          readRequired(connectors.google.offered, {}, token),
+        ],
+        { concurrency: "unbounded" }
+      );
       const t = createTranslator({
         locale,
         messages: yield* messagesFor(locale),
@@ -141,7 +156,7 @@ export const connectorsScreenHandler = accountHandler(
         locale,
         title: t("connectors"),
       };
-      return { seo };
+      return { first, offered, seo };
     })
 );
 
