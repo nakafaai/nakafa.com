@@ -13,7 +13,7 @@ import {
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option } from "effect";
@@ -32,6 +32,7 @@ import {
   TableSearch,
 } from "@/components/shared/table/toolbar";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   PeriodDialog,
@@ -118,14 +119,16 @@ function SchoolPeriodsContent() {
       actions={
         unit === undefined ? undefined : (
           <>
-            {units.length > 1 ? (
-              <SchoolUnitChoice
-                onChoose={setChosenUnit}
-                unitId={unit.id}
-                units={units}
-              />
-            ) : null}
-            <TableSearch placeholder={t("periods-search")} />
+            <ButtonGroup>
+              {units.length > 1 ? (
+                <SchoolUnitChoice
+                  onChoose={setChosenUnit}
+                  unitId={unit.id}
+                  units={units}
+                />
+              ) : null}
+              <TableSearch placeholder={t("periods-search")} />
+            </ButtonGroup>
             <SchoolPeriodAdd unitId={unit.id} />
           </>
         )
@@ -265,9 +268,7 @@ function SchoolPeriodAdd({ unitId }: { unitId: UnitId }) {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} type="button">
-        {t("period-add")}
-      </Button>
+      <SchoolHeaderAdd label={t("period-add")} onClick={() => setOpen(true)} />
       <PeriodDialog
         description={t("period-add-footer")}
         fields={NEW_PERIOD}

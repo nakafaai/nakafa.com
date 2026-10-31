@@ -22,6 +22,7 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** A call that did not complete at all: the network failed, or the call was rejected before the server answered. */
@@ -122,7 +123,7 @@ export function AddChannel({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{t("add-channel")}</Button>
+      <SchoolHeaderAdd label={t("add-channel")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
         description={t("add-channel-description")}
         footer={

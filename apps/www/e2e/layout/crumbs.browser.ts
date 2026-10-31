@@ -8,6 +8,17 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 // breadcrumb names only the lesson and never does.
 test.use({ viewport: { height: 844, width: 390 } });
 
+test("every breadcrumb item is a link, the current page included", async ({
+  page,
+}) => {
+  await page.goto(pinnedRoutes.article.en);
+  const path = page.getByRole("navigation", { name: "breadcrumb" });
+  const current = path.locator('[aria-current="page"]');
+  await expect(current).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(current).toHaveAttribute("href", /./u);
+  await expect(path.getByRole("button", { name: "More" })).toBeVisible();
+});
+
 test("every folded breadcrumb item carries its icon", async ({ page }) => {
   await page.goto(pinnedRoutes.article.en);
   const more = page
