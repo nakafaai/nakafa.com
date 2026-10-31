@@ -6,4 +6,5 @@ export const copy = registeredFunctions.copy;
 export const move = registeredFunctions.move;
 export const points = registeredFunctions.points;
 export const remove = registeredFunctions.remove;
+export const scoring = registeredFunctions.scoring;
 export const template = registeredFunctions.template;
