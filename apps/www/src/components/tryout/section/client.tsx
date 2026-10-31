@@ -271,7 +271,6 @@ function ResolvedTryoutSectionPage({
           value={{
             score: actionAttempt?.section?.score ?? null,
             section: page.section,
-            sectionStatus,
           }}
         />
         <TryoutSectionReview runtimeState={runtimeState}>

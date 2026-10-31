@@ -102,7 +102,6 @@ function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
         value={{
           score: null,
           section: value.entrySection,
-          sectionStatus: null,
         }}
       />
     );
