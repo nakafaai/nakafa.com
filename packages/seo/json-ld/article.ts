@@ -6,6 +6,7 @@ import {
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
+import { CONTENT_LICENSE_URL } from "@repo/seo/license";
 import { Array as Arr, Option, Schema } from "effect";
 
 const SCHEMA_ORG = "https://schema.org";
@@ -52,6 +53,8 @@ const ArticleSchema = withPublicationDates({
   headline: TextSchema,
   image: SiteUrlSchema,
   inLanguage: AppLocaleCodeSchema,
+  isAccessibleForFree: Schema.Literal(true),
+  license: Schema.Literal(CONTENT_LICENSE_URL),
   publisher: PublisherSchema,
   url: SiteUrlSchema,
 });
@@ -150,6 +153,8 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
         ? {}
         : { description: input.description }),
       inLanguage: input.locale,
+      isAccessibleForFree: true,
+      license: CONTENT_LICENSE_URL,
       datePublished: input.dates.datePublished,
       ...(input.dates.dateModified === undefined
         ? {}
@@ -175,4 +180,36 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
       })),
     },
   ];
+}
+
+/**
+ * The lesson as a learning resource, a node of its own at the Article's address:
+ * Google reads the Article, and an answer service reads what a lesson teaches and
+ * in which language, who wrote it, and that it is free to read and cite.
+ *
+ * @see https://schema.org/LearningResource
+ */
+export function makeLearningResourceNode(input: ArticleJsonLdInput) {
+  return {
+    "@context": SCHEMA_ORG,
+    "@type": "LearningResource",
+    url: toSiteUrl(input.path),
+    name: input.headline,
+    ...(input.description === undefined
+      ? {}
+      : { description: input.description }),
+    inLanguage: input.locale,
+    learningResourceType: "lesson",
+    isAccessibleForFree: true,
+    license: CONTENT_LICENSE_URL,
+    datePublished: input.dates.datePublished,
+    ...(input.dates.dateModified === undefined
+      ? {}
+      : { dateModified: input.dates.dateModified }),
+    author: Arr.map(input.authors, ({ name }) => ({
+      "@type": "Person",
+      name,
+    })),
+    provider: { "@id": ORGANIZATION_ID },
+  };
 }

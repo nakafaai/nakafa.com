@@ -36,6 +36,7 @@ export type PublishedMarkdownInput = typeof PublishedMarkdownInputSchema.Type;
 
 /** Builds agent markdown from reviewed MDX and immutable Git provenance. */
 const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
+  citation,
   description,
   appLocale,
   publicPath,
@@ -44,6 +45,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   sourceRevision,
   title,
 }: {
+  citation: Parameters<typeof buildHeader>[0]["citation"];
   description: string;
   appLocale: AppLocale;
   publicPath: string;
@@ -63,6 +65,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   return Arr.join(
     [
       ...buildHeader({
+        ...(citation === undefined ? {} : { citation }),
         description,
         ...(source === undefined ? {} : { source }),
         title,
@@ -73,6 +76,21 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
     "\n"
   );
 });
+
+/** The citation of a lesson or an article, which name their authors and dates; a page names neither. */
+function readCitation(metadata: {
+  readonly authors?: readonly { readonly name: string }[];
+  readonly dateModified?: string | undefined;
+  readonly datePublished?: string;
+}) {
+  return metadata.authors === undefined || metadata.datePublished === undefined
+    ? undefined
+    : {
+        authors: Arr.map(metadata.authors, ({ name }) => name),
+        dateModified: metadata.dateModified,
+        datePublished: metadata.datePublished,
+      };
+}
 
 /**
  * What Convex answered for one body: its signed projection and its raw source
@@ -120,6 +138,7 @@ export const readPublishedText = Effect.fn("www.llms.published.read")(
       page: decodePublishedPage,
     }[input.family](source.projection, input);
     return yield* buildPublishedText({
+      citation: readCitation(projection.metadata),
       description: getMdxDescription(projection.metadata),
       appLocale: input.appLocale,
       publicPath: projection.publicPath,

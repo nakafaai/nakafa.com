@@ -1,6 +1,7 @@
+import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@repo/seo/license";
 import { LLMS_TEXT_PATH } from "@repo/site/discovery";
 import { cleanSlug } from "@repo/utilities/slug";
-import { Array as Arr, Option, pipe } from "effect";
+import { Array as Arr, Option, pipe, String as Str } from "effect";
 import {
   BASE_URL,
   ENGLISH_LANGUAGE_NAMES,
@@ -26,13 +27,38 @@ export function getLlmsMarkdownPath({
   return `/${locale}/${cleanSlug(publicPath.trim())}.md`;
 }
 
+/** The authors and dates of a page, which a citation of it names. */
+interface MarkdownCitation {
+  readonly authors: readonly string[];
+  readonly dateModified?: string | undefined;
+  readonly datePublished: string;
+}
+
+/** The lines that tell an answer service whose page it read and how to cite it. */
+function citationLines(
+  citation: MarkdownCitation,
+  title: string,
+  url: string
+) {
+  const authors = Arr.join(citation.authors, ", ");
+  return [
+    `Author: ${authors}`,
+    `Published: ${citation.datePublished}`,
+    ...(citation.dateModified ? [`Updated: ${citation.dateModified}`] : []),
+    `License: ${CONTENT_LICENSE_NAME} (${CONTENT_LICENSE_URL})`,
+    `Cite as: ${authors}, "${title}", Nakafa, ${url}`,
+  ];
+}
+
 /** Builds the common markdown header used by page-level llms output. */
 export function buildHeader({
+  citation,
   description,
   source,
   title,
   url,
 }: {
+  citation?: MarkdownCitation;
   description: string;
   source?: string;
   title: string;
@@ -45,12 +71,18 @@ export function buildHeader({
     "",
     `URL: ${url}`,
     ...(source ? [`Source: ${source}`] : []),
+    ...(citation ? citationLines(citation, title, url) : []),
     "",
     description,
     "",
     "---",
     "",
   ];
+}
+
+/** The title that a Markdown twin opens with, which `buildHeader` writes on its first line. */
+export function readTwinTitle(text: string) {
+  return Str.replace(/^# /u, "")(Arr.headNonEmpty(Str.split(text, "\n")));
 }
 
 /** Returns one stable agent-facing description from authored MDX metadata. */

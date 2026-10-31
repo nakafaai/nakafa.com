@@ -3,7 +3,10 @@ import { getHeadings } from "@repo/contents/toc";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
-import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
+import {
+  makeArticleJsonLd,
+  makeLearningResourceNode,
+} from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
@@ -212,6 +215,16 @@ export const Route = createFileRoute(
     const { alternates, canonicalPath, headMetadata, locale, route } =
       loaderData;
     const metadata = loaderData.metadata;
+    const article = {
+      authors: metadata.authors,
+      dates: metadata,
+      description: headMetadata.description,
+      headline: headMetadata.title,
+      image: getOgUrl(route.appLocale, route.publicPath),
+      locale,
+      path: route.href,
+      trail: [{ name: loaderData.labels.home, path: `/${locale}` }],
+    };
     return toRouterHead(
       createSeoHead({
         alternates,
@@ -219,18 +232,7 @@ export const Route = createFileRoute(
         description: headMetadata.description,
         image: getOgUrl(route.appLocale, route.publicPath),
         indexable: true,
-        jsonLd: [
-          makeArticleJsonLd({
-            authors: metadata.authors,
-            dates: metadata,
-            description: headMetadata.description,
-            headline: headMetadata.title,
-            image: getOgUrl(route.appLocale, route.publicPath),
-            locale,
-            path: route.href,
-            trail: [{ name: loaderData.labels.home, path: `/${locale}` }],
-          }),
-        ],
+        jsonLd: [makeArticleJsonLd(article), makeLearningResourceNode(article)],
         locale,
         parts: [headMetadata.title],
         type: "article",
