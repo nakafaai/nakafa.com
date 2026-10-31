@@ -5,7 +5,7 @@ import type contentRelease from "@repo/backend/confect/_generated/refs/contentRe
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { toAnchorSlug } from "@repo/utilities/slug";
 
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { Locale } from "use-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -19,6 +19,17 @@ export type PublishedMaterialIdentity = Pick<
 export type PublishedMaterialContext = Readonly<
   NonNullable<Effect.Success<ReturnType<typeof decodePublishedMaterialContext>>>
 >;
+
+/** A curriculum route as the published context decodes it. */
+type ContextRoute = Effect.Success<ReturnType<typeof decodeCurriculumJson>>;
+
+/** Checks that every ancestor is the parent of the next, down to the card list. */
+function leadsDownTo(ancestors: readonly ContextRoute[], parent: ContextRoute) {
+  return Arr.every(
+    Arr.zip(ancestors, Arr.append(Arr.drop(ancestors, 1), parent)),
+    ([ancestor, next]) => next.parentPath === ancestor.publicPath
+  );
+}
 
 /** Verifies the public query result before it can affect learner navigation. */
 export const decodePublishedMaterialContext = Effect.fn(
@@ -55,12 +66,22 @@ export const decodePublishedMaterialContext = Effect.fn(
       publicPath: material.publicPath,
     });
   }
-  const [group, mapping, parent] = yield* Effect.all([
+  const [ancestors, group, mapping, parent] = yield* Effect.all([
+    Effect.forEach(result.ancestorJson, (row) =>
+      decodeCurriculumJson(row, locale, "materials")
+    ),
     decodeCurriculumJson(result.groupJson, locale, "materials"),
     decodeCurriculumJson(result.mappingJson, locale, material.publicPath),
     decodeCurriculumJson(result.parentJson, locale, "materials"),
   ]);
   if (
+    !leadsDownTo(ancestors, parent) ||
+    Arr.some(
+      ancestors,
+      (ancestor) =>
+        ancestor.appLocale !== appLocale ||
+        ancestor.programKey !== context.programKey
+    ) ||
     group.appLocale !== appLocale ||
     group.nodeKey !== context.nodeKey ||
     group.programKey !== context.programKey ||
@@ -86,6 +107,7 @@ export const decodePublishedMaterialContext = Effect.fn(
   }
   const label = group.materialCardTitle ?? group.title;
   return {
+    ancestors,
     context,
     group,
     hash: toAnchorSlug(label),

@@ -7,12 +7,7 @@ import {
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -65,11 +60,10 @@ function GrantedPlanCard() {
   const tPricing = useTranslations("Pricing");
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{tPricing("pro-title")}</CardTitle>
-        <CardDescription>{t("plan-granted-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t("plan-granted-description")}
+      title={tPricing("pro-title")}
+    >
       <CardSectionFooter hint={t("plan-granted-footer")} />
     </CardSection>
   );
@@ -99,15 +93,12 @@ function PassPlanCard({ endsAt }: { endsAt: number }) {
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{tPricing("pro-title")}</CardTitle>
-        <CardDescription>
-          {t("plan-pass-description", {
-            date: formatBillingDate(endsAt, locale),
-          })}
-        </CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t("plan-pass-description", {
+        date: formatBillingDate(endsAt, locale),
+      })}
+      title={tPricing("pro-title")}
+    >
       <CardSectionFooter hint={t("plan-pass-footer")}>
         <CardSectionActions>
           <Button
@@ -150,13 +141,10 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{tPricing("pro-title")}</CardTitle>
-        <CardDescription>
-          {t(subscribedDescriptionKey({ ending, pastDue }))}
-        </CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t(subscribedDescriptionKey({ ending, pastDue }))}
+      title={tPricing("pro-title")}
+    >
       <CardContent>
         <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-3 text-sm whitespace-nowrap">
           <dt className="text-muted-foreground">{t("period-start")}</dt>

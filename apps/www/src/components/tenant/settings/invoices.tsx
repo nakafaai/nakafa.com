@@ -11,12 +11,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,11 +67,10 @@ export function SchoolInvoicesCard({
   const locale = useLocale();
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("billing-invoices")}</CardTitle>
-        <CardDescription>{t("billing-invoices-description")}</CardDescription>
-      </CardHeader>
+    <CardSection
+      description={t("billing-invoices-description")}
+      title={t("billing-invoices")}
+    >
       {Arr.isReadonlyArrayNonEmpty(overview.invoices) ? (
         <CardContent>
           <TableFrame>

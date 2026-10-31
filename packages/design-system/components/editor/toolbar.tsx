@@ -321,6 +321,8 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
 interface DocumentToolbarProps {
   /** The editor the controls act on, or none while there is none, so every control waits. */
   editor: DocumentEditorInstance | null;
+  /** The caller's own control beside the document's blocks, such as a figure's. */
+  extra?: ReactNode;
   /** The names a writer hears and sees for each control of the document toolbar. */
   labels: ComponentProps<typeof DocumentInsert>["labels"] &
     ComponentProps<typeof DocumentLists>["labels"] &
@@ -342,7 +344,11 @@ interface DocumentToolbarProps {
  * contract. It is drawn by its caller, outside the document, and acts on the editor it reads
  * through `useCurrentEditor`.
  */
-export function DocumentToolbar({ editor, labels }: DocumentToolbarProps) {
+export function DocumentToolbar({
+  editor,
+  extra,
+  labels,
+}: DocumentToolbarProps) {
   return (
     <EditorContext value={{ editor }}>
       <EditorBar
@@ -353,6 +359,7 @@ export function DocumentToolbar({ editor, labels }: DocumentToolbarProps) {
           { name: "marks", tools: <DocumentMarks labels={labels} /> },
           { name: "lists", tools: <DocumentLists labels={labels} /> },
           { name: "insert", tools: <DocumentInsert labels={labels} /> },
+          ...(extra === undefined ? [] : [{ name: "extra", tools: extra }]),
           { name: "table", tools: <DocumentTable labels={labels} /> },
           {
             name: "arabic",

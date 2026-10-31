@@ -13,8 +13,10 @@ import { makeProgramContextRuntimeSource } from "@/test/content/program-context"
 import { previewProjection } from "@/test/content-preview";
 import {
   testCurriculumRowJson,
+  testProgramClass,
   testProgramContexts,
   testProgramGroups,
+  testProgramRoot,
   testProgramSubject,
 } from "@/test/content-program";
 
@@ -30,6 +32,10 @@ const [mapping] = Schema.decodeUnknownSync(
   Schema.Tuple([CurriculumRouteSchema])
 )(testProgramContexts);
 const publishedContext = {
+  ancestorJson: [
+    testCurriculumRowJson(testProgramRoot),
+    testCurriculumRowJson(testProgramClass),
+  ],
   groupJson: testCurriculumRowJson(group),
   managed: true,
   mappingJson: testCurriculumRowJson(mapping),
@@ -170,6 +176,20 @@ describe("published material context", () => {
           label: published?.label,
           parent: { publicPath: testProgramSubject.publicPath },
           resolvedCanonicalPath: publishedContext.resolvedCanonicalPath,
+          trail: [
+            {
+              label: testProgramRoot.title,
+              publicPath: testProgramRoot.publicPath,
+            },
+            {
+              label: testProgramClass.title,
+              publicPath: testProgramClass.publicPath,
+            },
+            {
+              label: testProgramSubject.title,
+              publicPath: testProgramSubject.publicPath,
+            },
+          ],
         });
       })
   );
@@ -177,6 +197,7 @@ describe("published material context", () => {
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(
         Effect.succeed({
+          ancestorJson: [],
           groupJson: null,
           managed: true,
           mappingJson: null,

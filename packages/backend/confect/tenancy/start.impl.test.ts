@@ -169,6 +169,7 @@ describe("tenancy/start", () => {
         );
         expect(rows.entries).toEqual([
           "tenant.founded",
+          "tenant.dpa.accepted",
           "person.created",
           "person.claimed",
           "grant.created",

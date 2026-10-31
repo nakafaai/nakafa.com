@@ -1,12 +1,7 @@
 import { Coins01Icon } from "@hugeicons/core-free-icons";
 import { TOP_UP_PACK_CREDITS } from "@repo/backend/confect/credits/constants";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Meter } from "@repo/design-system/components/ui/meter";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
@@ -66,11 +61,7 @@ export function UserSettingsCredits({
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("credits")}</CardTitle>
-        <CardDescription>{t("credits-description")}</CardDescription>
-      </CardHeader>
+    <CardSection description={t("credits-description")} title={t("credits")}>
       <CardContent className="grid gap-6">
         <CreditUsage
           period={t(creditPeriodKey(overview))}

@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type CurriculumRouteModel,
-  isRenderableCurriculumView,
   readRuntimeCurriculumBreadcrumbs,
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
@@ -200,10 +199,6 @@ describe("signed curriculum runtime", () => {
       sourceRevision: revision,
     } satisfies CurriculumRouteModel;
 
-    expect(isRenderableCurriculumView(testProgramRoot)).toBe(true);
-    expect(
-      isRenderableCurriculumView({ ...testProgramRoot, sitemap: false })
-    ).toBe(false);
     expect(
       readRuntimeCurriculumToc(model, "Every subject of Kurikulum Merdeka.")
     ).toEqual({

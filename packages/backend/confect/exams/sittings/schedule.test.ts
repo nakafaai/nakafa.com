@@ -3,11 +3,10 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import { snapshotOf } from "@repo/backend/confect/editor/store";
+import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import {
-  choiceAnswers,
   EMPTY_PROMPT_TEXT,
   encodeAnswers,
-  textLabel,
 } from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
