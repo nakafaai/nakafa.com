@@ -16,6 +16,7 @@ import {
   verifyPublicContentDelivery,
 } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/site/keys";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
 import {
@@ -23,6 +24,7 @@ import {
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
+import { readContentStore } from "@/lib/content/store/read";
 
 const PublishedContentRouteInputSchema = Schema.Struct({
   appLocale: AppLocaleSchema,
@@ -88,14 +90,19 @@ export const readCurrentPublishedContent = Effect.fn(
         key: "CONTENT_READ_TOKEN",
       }),
   });
-  const found = yield* readPublicContent(
-    {
-      siteUrl: env.VITE_CONVEX_SITE_URL,
-      token: runtimeKeys.CONTENT_READ_TOKEN,
-    },
-    request,
-    liveRenderer
-  );
+  const found = yield* readContentStore({
+    kind: "content.public",
+    load: readPublicContent(
+      {
+        siteUrl: env.VITE_CONVEX_SITE_URL,
+        token: runtimeKeys.CONTENT_READ_TOKEN,
+      },
+      request,
+      liveRenderer
+    ),
+    parts: [input.appLocale, input.publicPath, encodeJsonText(liveRenderer)],
+    schema: PublicContentRuntimeFoundSchema,
+  });
   const data: PublishedContentData = {
     activeReleaseId: found.activeReleaseId,
     artifact: found.artifact,
