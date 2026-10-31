@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { newChoiceAnswers } from "@repo/backend/confect/exams/question";
+import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { Array as Arr, Option, Schema } from "effect";
 import type {
   PaperQuestion,
