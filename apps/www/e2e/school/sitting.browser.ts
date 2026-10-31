@@ -164,7 +164,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await proctorContext.close();
 });
 
-test("a proctor lists the rooms of an exam and opens one from the list, and a student finds the open room on the school home", async ({
+test("a proctor lists the rooms of an exam and opens one from the list, and a student finds the open room in their exams", async ({
   baseURL,
   browser,
 }) => {
@@ -225,11 +225,12 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
 
   const student = await studentContext.newPage();
   await student.goto(address("/"));
-  // The home draws once Convex holds the session and the student's sittings answer. The open exam comes first in the
-  // student's exams, and its Start enters the sitting.
+  // The school's root opens the student's own exams. They draw once Convex holds the session and the student's
+  // sittings answer: the open exam comes first, and its Start enters the sitting.
+  await student.waitForURL(/\/sittings$/u);
   await expect(
     student
-      .getByRole("region", { name: "Exams", exact: true })
+      .getByRole("table")
       .getByRole("link", { name: "Start exam", exact: true })
   ).toHaveAttribute(
     "href",
