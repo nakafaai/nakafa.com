@@ -8,12 +8,7 @@ import {
   withLocalBackend,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
-import {
-  isPortOccupied,
-  occupyPort,
-  ticking,
-  versionServiceError,
-} from "@repo/backend/test/acceptance";
+import { isPortOccupied, occupyPort } from "@repo/backend/test/acceptance";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Deferred,
@@ -40,11 +35,26 @@ const services = Layer.mergeAll(
   Layer.succeed(FetchHttpClient.Fetch, fetcher)
 );
 
+/** The deployment `convex init` saved. The backend answers with its name. */
+const LOCAL_DEPLOYMENT = {
+  adminKey: "local-admin-key",
+  backendVersion: "precompiled-test",
+  deploymentName: "owned",
+  instanceSecret: "local-instance-secret",
+  ports: { cloud: 43_310, site: 43_311 },
+};
+
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({
     prefix: "acceptance-process-test-",
   });
+  const state = `${directory}/.convex/local/default`;
+  yield* fs.makeDirectory(state, { recursive: true });
+  yield* fs.writeFileString(
+    `${state}/config.json`,
+    JSON.stringify(LOCAL_DEPLOYMENT)
+  );
   const runtime: LocalRuntime = {
     analytics: "http://127.0.0.1:43312",
     app: "http://localhost:3000",
@@ -61,13 +71,14 @@ const fixture = Effect.gen(function* () {
   return { fs, runtime };
 });
 
+const isDeploy = (command: ChildProcess.Command) =>
+  command._tag === "StandardCommand" && command.args.includes("deploy");
+
 const spawner = Effect.fn("ProcessTest.spawner")(function* (
   options: {
+    /** The exit code of the one `convex deploy`, which succeeds unless a test says otherwise. */
+    deployExit?: number;
     exit?: Effect.Effect<ChildProcessSpawner.ExitCode>;
-    /** Output of the first spawn, which exits before it becomes ready; later spawns are healthy. */
-    failFirst?: string;
-    /** When set, the output is written here before the spawn returns, so readiness reads it. */
-    log?: string;
     output?: string;
     running?: Effect.Effect<boolean>;
   } = {}
@@ -78,7 +89,6 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
   const temporaryRoots = MutableList.make<string>();
   const service = ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
-      const failure = commands.length === 0 ? options.failFirst : undefined;
       MutableList.append(commands, command);
       const root =
         command._tag === "StandardCommand"
@@ -94,25 +104,19 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
           release(present);
         }).pipe(Effect.orDie)
       );
-      const output = failure ?? options.output ?? "Convex functions ready!";
-      if (options.log !== undefined) {
-        yield* fs.writeFileString(options.log, output);
-      }
+      const deploying = isDeploy(command);
       return ChildProcessSpawner.makeHandle({
-        all:
-          options.log === undefined
-            ? Stream.succeed(new TextEncoder().encode(output))
-            : Stream.empty,
-        exitCode:
-          failure === undefined
-            ? (options.exit ?? Effect.never)
-            : Effect.succeed(ChildProcessSpawner.ExitCode(1)),
+        all: deploying
+          ? Stream.empty
+          : Stream.succeed(new TextEncoder().encode(options.output ?? "")),
+        exitCode: deploying
+          ? Effect.succeed(
+              ChildProcessSpawner.ExitCode(options.deployExit ?? 0)
+            )
+          : (options.exit ?? Effect.never),
         getInputFd: () => Sink.drain,
         getOutputFd: () => Stream.empty,
-        isRunning:
-          failure === undefined
-            ? (options.running ?? Effect.succeed(true))
-            : Effect.succeed(false),
+        isRunning: options.running ?? Effect.succeed(true),
         kill: () => Effect.void,
         pid: ChildProcessSpawner.ProcessId(1),
         stderr: Stream.empty,
@@ -156,33 +160,71 @@ describe("application process ownership", () => {
           Effect.exit
         );
         expect(result._tag).toBe(outcome === "success" ? "Success" : "Failure");
-        // The temporary root outlives the process group, then leaves with it.
-        expect(child.release).toHaveBeenCalledExactlyOnceWith(true);
+        // The temporary root outlives both process groups, then leaves with them.
+        expect(child.release.mock.calls).toEqual([[true], [true]]);
         expect(
           (yield* fs.stat(`${runtime.directory}/convex.log`)).mode % 0o1000
         ).toBe(0o600);
+        const environment = {
+          ...localConvexEnvironment,
+          AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
+          AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
+          DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
+          FUNRUN_ISOLATE_ACTIVE_THREADS: String(navigator.hardwareConcurrency),
+          ISOLATE_ANALYZE_USER_TIMEOUT_SECONDS: "30",
+          TMPDIR: expect.stringContaining(
+            `${path.dirname(runtime.directory)}/convex-`
+          ),
+        };
+        const state = `${runtime.backend}/.convex/local/default`;
+        const environmentFile = `${runtime.backend}/deploy.env`;
         expect(MutableList.toArray(child.commands)).toEqual([
           expect.objectContaining({
+            args: [
+              "--port",
+              "43310",
+              "--site-proxy-port",
+              "43311",
+              "--instance-name",
+              LOCAL_DEPLOYMENT.deploymentName,
+              "--instance-secret",
+              LOCAL_DEPLOYMENT.instanceSecret,
+              "--local-storage",
+              `${state}/convex_local_storage`,
+              "--local-log-sink",
+              `${runtime.directory}/functions.log`,
+              "--disable-beacon",
+              `${state}/convex_local_backend.sqlite3`,
+            ],
+            command: expect.stringContaining(
+              `/.cache/convex/binaries/${LOCAL_DEPLOYMENT.backendVersion}/convex-local-backend`
+            ),
             options: expect.objectContaining({
               cwd: runtime.backend,
-              env: {
-                ...localConvexEnvironment,
-                AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
-                AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
-                CONVEX_LOCAL_BACKEND_STARTUP_TIMEOUT_SECS: "120",
-                DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
-                FUNRUN_ISOLATE_ACTIVE_THREADS: String(
-                  navigator.hardwareConcurrency
-                ),
-                ISOLATE_ANALYZE_USER_TIMEOUT_SECONDS: "30",
-                TMPDIR: expect.stringContaining(
-                  `${path.dirname(runtime.directory)}/convex-`
-                ),
-              },
+              env: environment,
+            }),
+          }),
+          expect.objectContaining({
+            args: [
+              "node_modules/convex/bin/main.js",
+              "deploy",
+              "--typecheck",
+              "disable",
+              "--skip-large-indexes-check",
+              "--env-file",
+              environmentFile,
+            ],
+            options: expect.objectContaining({
+              cwd: path.resolve(runtime.directory, "../../packages/backend"),
+              env: environment,
             }),
           }),
         ]);
-        expect(child.temporaryRoots).toHaveLength(1);
+        expect(yield* fs.readFileString(environmentFile)).toBe(
+          `CONVEX_SELF_HOSTED_URL=${runtime.query}\nCONVEX_SELF_HOSTED_ADMIN_KEY=${LOCAL_DEPLOYMENT.adminKey}\n`
+        );
+        expect((yield* fs.stat(environmentFile)).mode % 0o1000).toBe(0o600);
+        expect(child.temporaryRoots).toHaveLength(2);
         for (const root of MutableList.toArray(child.temporaryRoots)) {
           expect(yield* fs.exists(root)).toBe(false);
         }
@@ -209,7 +251,7 @@ describe("application process ownership", () => {
             child.service
           )
         );
-        expect(MutableList.toArray(child.commands)).toEqual([
+        expect(MutableList.toArray(child.commands)[0]).toEqual(
           expect.objectContaining({
             options: expect.objectContaining({
               env: expect.objectContaining({
@@ -218,8 +260,8 @@ describe("application process ownership", () => {
                 APPLICATION_MAX_CONCURRENT_V8_ACTIONS: "512",
               }),
             }),
-          }),
-        ]);
+          })
+        );
       }).pipe(Effect.provide(services))
   );
 
@@ -229,7 +271,7 @@ describe("application process ownership", () => {
       Effect.gen(function* () {
         const { runtime } = yield* fixture;
         const child = yield* spawner({
-          output: `${"Convex functions ready!\n".repeat(300)}\u001B[31mStaging rejected: missing publication owner\u001B[0m ${runtime.publicationToken}`,
+          output: `${"Local backend listening\n".repeat(300)}\u001B[31mStaging rejected: missing publication owner\u001B[0m ${runtime.publicationToken}`,
         });
         const messages = MutableList.make<string>();
         const logger = Logger.make(({ message }) =>
@@ -258,7 +300,7 @@ describe("application process ownership", () => {
         expect(logged[0]).not.toContain(runtime.publicationToken);
         expect(logged[0]).not.toContain("\u001B");
         expect(logged[0]?.length).toBeLessThanOrEqual(2040);
-        expect(child.release).toHaveBeenCalledOnce();
+        expect(child.release).toHaveBeenCalledTimes(2);
       }).pipe(Effect.provide(services))
   );
 
@@ -295,7 +337,7 @@ describe("application process ownership", () => {
             )
           ).toBe(original);
           expect(MutableList.toArray(messages)).toEqual([]);
-          expect(child.release).toHaveBeenCalledOnce();
+          expect(child.release).toHaveBeenCalledTimes(2);
         }).pipe(Effect.provide(services))
     );
   }
@@ -323,18 +365,17 @@ describe("application process ownership", () => {
       }).pipe(Effect.provide(services))
   );
 
-  for (const failure of ["exited", "request", "during"] as const) {
+  for (const failure of ["exited", "deploy", "during"] as const) {
     it.live(`reports a typed local backend failure: ${failure}`, () =>
       Effect.gen(function* () {
         const { runtime } = yield* fixture;
         const child = yield* spawner({
+          deployExit: failure === "deploy" ? 1 : 0,
           exit: Effect.succeed(ChildProcessSpawner.ExitCode(7)),
           running: Effect.succeed(failure !== "exited"),
         });
         fetcher.mockImplementation(() =>
-          failure === "request"
-            ? Promise.reject(new Error("connection refused"))
-            : Promise.resolve(new Response("owned"))
+          Promise.resolve(new Response("owned"))
         );
         const error = yield* withLocalBackend(runtime, Effect.never).pipe(
           Effect.provideService(
@@ -345,37 +386,74 @@ describe("application process ownership", () => {
         );
         const messages = {
           exited: "before readiness",
-          request: "readiness request",
+          deploy: "deploy exited with code 1",
           during: "during the application",
         };
         expect(error).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message: expect.stringContaining(messages[failure]),
         });
-        expect(child.release).toHaveBeenCalledOnce();
+        expect(child.release).toHaveBeenCalledTimes(
+          failure === "exited" ? 1 : 2
+        );
       }).pipe(Effect.provide(services))
     );
   }
 
+  it.live("keeps the admin key out of a failed deploy's message", () =>
+    Effect.gen(function* () {
+      const { runtime } = yield* fixture;
+      const child = yield* spawner({
+        deployExit: 1,
+        output: `The push failed for ${LOCAL_DEPLOYMENT.adminKey}`,
+      });
+      fetcher.mockImplementation(() => Promise.resolve(new Response("owned")));
+      const error = yield* withLocalBackend(runtime, Effect.void).pipe(
+        Effect.provideService(
+          ChildProcessSpawner.ChildProcessSpawner,
+          child.service
+        ),
+        Effect.flip
+      );
+      expect(error.message).toContain("The push failed for [redacted]");
+    }).pipe(Effect.provide(services))
+  );
+
+  it.live(
+    "waits through a refused connection until its own backend answers",
+    () =>
+      Effect.gen(function* () {
+        const { runtime } = yield* fixture;
+        const child = yield* spawner();
+        const refused = new Error("connection refused");
+        fetcher
+          .mockRejectedValueOnce(refused)
+          .mockImplementation(() => Promise.resolve(new Response("owned")));
+        yield* withLocalBackend(runtime, Effect.void).pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          )
+        );
+        expect(fetcher).toHaveBeenCalledTimes(2);
+        expect(child.commands).toHaveLength(2);
+      }).pipe(Effect.provide(services))
+  );
+
   it.effect("bounds backend readiness and releases the child on timeout", () =>
     Effect.gen(function* () {
-      const { fs, runtime } = yield* fixture;
-      const readinessLog = yield* Deferred.make<string>();
-      const child = yield* spawner({ output: "" });
-      const request = vi.fn();
+      const { runtime } = yield* fixture;
+      const asked = yield* Deferred.make<void>();
+      const child = yield* spawner();
       const application = vi.fn<() => void>();
-      fetcher.mockImplementation(request);
+      fetcher.mockImplementation(() => {
+        Deferred.doneUnsafe(asked, Effect.void);
+        return Promise.resolve(new Response("another backend"));
+      });
       const fiber = yield* withLocalBackend(
         runtime,
         Effect.sync(application)
       ).pipe(
-        Effect.provideService(FileSystem.FileSystem, {
-          ...fs,
-          readFileString: (path) =>
-            fs
-              .readFileString(path)
-              .pipe(Effect.tap((log) => Deferred.succeed(readinessLog, log))),
-        }),
         Effect.provideService(
           ChildProcessSpawner.ChildProcessSpawner,
           child.service
@@ -383,7 +461,7 @@ describe("application process ownership", () => {
         Effect.flip,
         Effect.forkChild
       );
-      expect(yield* Deferred.await(readinessLog)).toBe("");
+      yield* Deferred.await(asked);
       // A push that outlasts four minutes on a busy machine still gets its start.
       yield* TestClock.adjust("9 minutes");
       expect(fiber.pollUnsafe()).toBeUndefined();
@@ -392,35 +470,9 @@ describe("application process ownership", () => {
         _tag: "AcceptanceRuntimeError",
         message: expect.stringContaining("did not become ready"),
       });
-      expect(request).not.toHaveBeenCalled();
       expect(application).not.toHaveBeenCalled();
+      expect(child.commands).toHaveLength(1);
       expect(child.release).toHaveBeenCalledOnce();
-    }).pipe(Effect.provide(services))
-  );
-
-  it.effect("retries a start answered with a 500 once, then starts clean", () =>
-    Effect.gen(function* () {
-      const { fs, runtime } = yield* fixture;
-      const log = `${runtime.directory}/convex.log`;
-      const child = yield* spawner({
-        failFirst: versionServiceError(500),
-        log,
-      });
-      fetcher.mockImplementation(() => Promise.resolve(new Response("owned")));
-      const result = yield* ticking(
-        withLocalBackend(runtime, Effect.void).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            child.service
-          ),
-          Effect.result
-        )
-      );
-      expect(result._tag).toBe("Success");
-      expect(MutableList.toArray(child.commands)).toHaveLength(2);
-      for (const root of MutableList.toArray(child.temporaryRoots)) {
-        expect(yield* fs.exists(root)).toBe(false);
-      }
     }).pipe(Effect.provide(services))
   );
 });
