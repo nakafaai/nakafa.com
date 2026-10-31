@@ -11,6 +11,7 @@ import {
   period,
 } from "@repo/backend/test/classroom";
 import { openClass, sat, scored } from "@repo/backend/test/insight";
+import { keyedExam } from "@repo/backend/test/sittings";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -118,7 +119,8 @@ describe("insight", () => {
   it.effect("names no competency for a question of another exam", () =>
     Effect.gen(function* () {
       const fixture = yield* keyedFixture;
-      const made = yield* sat(fixture);
+      const forum = yield* openClass(fixture);
+      const made = yield* sat(fixture, forum.classId);
       const elsewhere = yield* keyedExam(fixture, "Ujian Lain");
       const exam = yield* fixture.run(
         Effect.flatMap(DatabaseReader, (reader) =>
