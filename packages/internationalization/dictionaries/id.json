@@ -36,7 +36,7 @@
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Kata sandimu",
     "card-code-label": "Kode kartu",
-    "card-hint": "Tidak punya alamat Google? Masuk dengan username sekolah dan kartu dari admin.",
+    "card-hint": "Tanpa alamat Google, masuk dengan username sekolah dan kartu dari admin.",
     "card-code-placeholder": "Masuk pertama atau kartu baru",
     "card-expired": "Minta kartu baru ke guru atau admin, karena kartu ini sudah kedaluwarsa.",
     "card-invalid": "Username atau kode kartu tidak cocok.",
@@ -452,7 +452,7 @@
     "signals-empty-title": "Belum ada peristiwa",
     "student-start": "Mulai ujian",
     "import-label": "Soal dari berkas",
-    "import-description": "Opsional: Nina menaruh soal dari berkas Word atau PDF ke ujian.",
+    "import-description": "Opsional, Nina menaruh soal dari berkas Word atau PDF ke ujian.",
     "import-action": "Impor",
     "import-title": "Impor soal",
     "import-dialog-description": "Nina menaruh soal dari berkas Word atau PDF di akhir ujian ini.",
@@ -1109,7 +1109,7 @@
     "no-unit-description": "Pulihkan atau tambahkan unit dulu, karena periode dan kelompok berada di dalam unit.",
     "no-unit-action": "Buka unit",
     "cohorts-no-period-action": "Buka periode",
-    "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
+    "student-login-rule": "Pakai 3 sampai 32 karakter, yaitu a-z, 0-9, titik, garis bawah, atau strip.",
     "policy-domains-invalid": "Periksa domain ini: {domains}, lalu tulis masing-masing di baris sendiri.",
     "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri.",
     "device-title": "Hubungkan perangkat",
@@ -1120,7 +1120,7 @@
     "grading": "Penilaian",
     "grading-description": "Versi skema penilaian sekolah. Setiap nilai tetap memakai versi saat ia dimasukkan.",
     "grading-empty": "Belum ada versi tersimpan.",
-    "grading-empty-description": "Nilai memakai skema bawaan: KKTP {kktp}, tanpa predikat.",
+    "grading-empty-description": "Nilai memakai skema bawaan dengan KKTP {kktp}, tanpa predikat.",
     "grading-search": "Cari predikat",
     "grading-new": "Versi baru",
     "grading-new-description": "Versi ini menilai setiap nilai yang dimasukkan mulai sekarang. Nilai sebelumnya tetap memakai versinya.",
@@ -2153,7 +2153,7 @@
     "animal-shuffle": "Acak hewan",
     "username": "Username",
     "username-placeholder": "budi_santoso",
-    "username-description": "Alamatmu di Nakafa: {address}.",
+    "username-description": "Alamatmu di Nakafa adalah {address}.",
     "username-footer": "Alamat lama berhenti berfungsi saat kamu menyimpan.",
     "username-available": "Bisa dipakai.",
     "username-characters": "Hanya a-z, 0-9, dan garis bawah.",
@@ -2739,7 +2739,7 @@
     },
     "school-refusal-login-name-refused": {
       "title": "Nama login ini tidak diizinkan.",
-      "description": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip."
+      "description": "Pakai 3 sampai 32 karakter, yaitu a-z, 0-9, titik, garis bawah, atau strip."
     },
     "school-refusal-login-name-taken": {
       "title": "Nama login ini sudah dipakai.",

@@ -36,7 +36,7 @@
     "username-placeholder": "ayu.lestari",
     "password-placeholder": "Dein Passwort",
     "card-code-label": "Kartencode",
-    "card-hint": "Keine Google-Adresse? Melde dich mit dem Schul-Benutzernamen und der Karte von deinem Admin an.",
+    "card-hint": "Ohne Google-Adresse meldest du dich mit dem Schul-Benutzernamen und der Karte von deinem Admin an.",
     "card-code-placeholder": "Erste Anmeldung oder neue Karte",
     "card-expired": "Bitte deine Lehrkraft oder einen Admin um eine neue Karte, denn diese ist abgelaufen.",
     "card-invalid": "Benutzername oder Kartencode stimmen nicht.",
@@ -452,7 +452,7 @@
     "signals-empty-title": "Noch kein Ereignis",
     "student-start": "Prüfung starten",
     "import-label": "Fragen aus einer Datei",
-    "import-description": "Optional: Nina setzt die Fragen einer Word- oder PDF-Datei in die Prüfung.",
+    "import-description": "Optional, Nina setzt die Fragen einer Word- oder PDF-Datei in die Prüfung.",
     "import-action": "Importieren",
     "import-title": "Fragen importieren",
     "import-dialog-description": "Nina setzt die Fragen einer Word- oder PDF-Datei ans Ende dieser Prüfung.",
@@ -1001,7 +1001,7 @@
       "integration": "Liest die Daten der Schule über die Aktionen seines Clients."
     },
     "roles-overview": "Was jede Rolle darf",
-    "roles-overview-description": "Nur Inhaber:innen vergeben die Rollen Inhaber:in und Admin.",
+    "roles-overview-description": "Nur Inhaber vergeben die Rollen Inhaber und Admin.",
     "roles-overview-footer": "Eine Person kann mehrere Rollen haben.",
     "secret-copy": "Kopieren",
     "unit-npsn": "NPSN",
@@ -1109,7 +1109,7 @@
     "no-unit-description": "Stelle zuerst eine Einheit wieder her oder lege eine an, denn Perioden und Kohorten gehören zu ihr.",
     "no-unit-action": "Einheiten öffnen",
     "cohorts-no-period-action": "Perioden öffnen",
-    "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
+    "student-login-rule": "Nutze 3 bis 32 Zeichen, a bis z, 0 bis 9, Punkt, Unterstrich oder Bindestrich.",
     "policy-domains-invalid": "Prüfe diese Domains: {domains}, und schreibe jede in eine eigene Zeile.",
     "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile.",
     "device-title": "Gerät verbinden",
@@ -1120,7 +1120,7 @@
     "grading": "Bewertung",
     "grading-description": "Die Versionen des Bewertungsschemas der Schule. Jede Note behält die Version, unter der sie eingetragen wurde.",
     "grading-empty": "Noch keine Version gespeichert.",
-    "grading-empty-description": "Noten nutzen das eingebaute Schema: KKTP {kktp}, ohne Stufen.",
+    "grading-empty-description": "Noten nutzen das eingebaute Schema mit KKTP {kktp} und ohne Stufen.",
     "grading-search": "Stufe suchen",
     "grading-new": "Neue Version",
     "grading-new-description": "Sie bewertet jede Note, die ab jetzt eingetragen wird. Frühere Noten behalten ihre Version.",
@@ -2153,7 +2153,7 @@
     "animal-shuffle": "Tier würfeln",
     "username": "Benutzername",
     "username-placeholder": "lena_schmidt",
-    "username-description": "Deine Adresse bei Nakafa: {address}.",
+    "username-description": "Deine Adresse bei Nakafa ist {address}.",
     "username-footer": "Die alte Adresse gilt nach dem Speichern nicht mehr.",
     "username-available": "Verfügbar.",
     "username-characters": "Nur a-z, 0-9 und Unterstriche.",
@@ -2739,7 +2739,7 @@
     },
     "school-refusal-login-name-refused": {
       "title": "Dieser Anmeldename ist ungültig.",
-      "description": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, _ oder -."
+      "description": "Nutze 3 bis 32 Zeichen, a bis z, 0 bis 9, Punkt, Unterstrich oder Bindestrich."
     },
     "school-refusal-login-name-taken": {
       "title": "Diesen Anmeldenamen gibt es schon.",
