@@ -48,8 +48,8 @@ export const headingTextVariants = cva(
   }
 );
 
-/** A list, numbered or bulleted, with room between its items. */
-export const listVariants = cva("my-4 space-y-4 ps-8 last:mb-0", {
+/** A list, numbered or bulleted, with room between its items; each item keeps the room for its marker. */
+export const listVariants = cva("my-4 space-y-4 last:mb-0", {
   variants: {
     kind: {
       bullet: "list-disc",
@@ -58,10 +58,18 @@ export const listVariants = cva("my-4 space-y-4 ps-8 last:mb-0", {
   },
 });
 
-/** One item of a list, whose first paragraph sits on the marker's line. */
+/**
+ * One item of a list, whose first paragraph sits on the marker's line. The item owns the room for its marker,
+ * its margin on its start side, so an item in Arabic keeps that room on the right and its neighbour in Latin on
+ * the left. It sets `text-start` itself, because WebKit aligns the text of a list item with the direction of its
+ * list and not its own.
+ */
 export const listItemVariants = cva(
-  "max-w-xl text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+  "ms-8 max-w-xl text-pretty ps-1 text-start leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
 );
+
+/** A superscript or a subscript, at the annotation size. */
+export const scriptVariants = cva("text-sm");
 
 /** A quotation, on the muted callout surface. */
 export const quoteVariants = cva(
@@ -84,6 +92,9 @@ export const tableFrameVariants = cva(
 
 /** A row of a table, with a rule under every row but the last. */
 export const tableRowVariants = cva("border-b last:border-b-0");
+
+/** A table, whose header row ends on a rule when a body follows it. */
+export const tableVariants = cva("has-[tbody]:[&_thead]:border-b");
 
 /**
  * A heading cell of a table, on the header's stronger muted surface, its words aligned to the start of the
