@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/acceptance/lookup";
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
+import { paragraphsDocument } from "@repo/backend/confect/exams/seed/prompt";
 import {
   ownerUserId,
   seedQuestion,
@@ -63,7 +64,7 @@ export const seedLoad = Effect.fn("exams.seed.load")(function* (args: {
       seedQuestion(
         { _id: examId, questions: placed, scope, tenantId: tenant._id },
         Option.getOrNull(Arr.last(placed)),
-        [`Soal ${number}.`]
+        paragraphsDocument([`Soal ${number}.`])
       ).pipe(Effect.map((id) => Arr.append(placed, id)))
   );
   const exam = yield* (yield* DatabaseReader)

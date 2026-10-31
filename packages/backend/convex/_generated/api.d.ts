@@ -15151,6 +15151,7 @@ export declare const internal: {
           crowd?: number;
           email: string;
           essay?: boolean;
+          prose?: boolean;
           slug: string;
           upcoming?: boolean;
         },
