@@ -10,7 +10,6 @@ import {
   compactionIdentity,
   insertCompaction,
   insertCompletedRelease,
-  markBootstrap,
   seedCompactionHistory,
 } from "@repo/backend/test/content/compact";
 import {
@@ -234,50 +233,6 @@ describe("contentRelease/compact/state", () => {
         active: releases[4],
         nextSequence: 6,
       });
-      await insertCompaction(ctx, { compactedFloor: 1 });
-    });
-    expect(await compact(t)).toMatchObject({
-      complete: false,
-      cycle: {
-        floor: 2,
-        from: 1,
-        phase: "heads",
-      },
-    });
-  });
-  it("does not keep a release below the bootstrap floor inside the retention window", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      const retained = compactionIdentity(1);
-      const bootstrap = compactionIdentity(2);
-      const active = compactionIdentity(3);
-      await insertCompletedRelease(ctx, retained, undefined, NOW);
-      await insertCompletedRelease(
-        ctx,
-        bootstrap,
-        undefined,
-        COMPACTION_OLD_TIME
-      );
-      await markBootstrap(ctx, bootstrap);
-      await insertCompletedRelease(ctx, active, bootstrap, COMPACTION_OLD_TIME);
-      await insertTestState(ctx, { active, nextSequence: 4 });
-    });
-    expect(await compact(t)).toMatchObject({
-      complete: false,
-      cycle: {
-        floor: 2,
-      },
-    });
-  });
-  it("starts a cycle when a bootstrap floor passes the completed floor inside retention", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      const retired = compactionIdentity(1);
-      const bootstrap = compactionIdentity(2);
-      await insertCompletedRelease(ctx, retired, undefined, NOW);
-      await insertCompletedRelease(ctx, bootstrap, undefined, NOW);
-      await markBootstrap(ctx, bootstrap);
-      await insertTestState(ctx, { active: bootstrap, nextSequence: 3 });
       await insertCompaction(ctx, { compactedFloor: 1 });
     });
     expect(await compact(t)).toMatchObject({

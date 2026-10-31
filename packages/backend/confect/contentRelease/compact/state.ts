@@ -9,10 +9,7 @@ import {
   isSequence,
   readCycle,
 } from "@repo/backend/confect/contentRelease/compact/cycle";
-import {
-  loadHistoryFloor,
-  protectedFloor,
-} from "@repo/backend/confect/contentRelease/compact/protected";
+import { protectedFloor } from "@repo/backend/confect/contentRelease/compact/protected";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { ensureState } from "@repo/backend/confect/contentRelease/model";
 import {
@@ -73,8 +70,7 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
     const writer = yield* DatabaseWriter;
     const compaction = yield* ensureCompactionRow();
     const { compactedFloor } = compaction;
-    const historyFloor = yield* loadHistoryFloor();
-    if (yield* isCompactionIdle(compaction, historyFloor)) {
+    if (yield* isCompactionIdle(compaction)) {
       return {
         complete: true,
         floor: compactedFloor,
@@ -100,12 +96,8 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
         cycle: existing,
       } as const;
     }
-    const ceiling = yield* protectedFloor(state, historyFloor);
-    // The retention window never keeps a release below the history floor.
-    const floor = yield* retainedFloor(
-      Math.max(compactedFloor, historyFloor),
-      ceiling
-    );
+    const ceiling = yield* protectedFloor(state);
+    const floor = yield* retainedFloor(compactedFloor, ceiling);
     if (floor <= compactedFloor) {
       return {
         complete: true,

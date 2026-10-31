@@ -57,7 +57,6 @@ type TestReleaseEnvelope = typeof TestReleaseEnvelopeSchema.Type;
 
 const TestReleaseOptionsSchema = Schema.Struct({
   ...TestReleaseEnvelopeSchema.fields,
-  bootstrap: Schema.optional(Schema.Boolean),
   ownership: Schema.Struct({
     base: Schema.Array(ContentFamilySchema),
     result: Schema.Array(ContentFamilySchema),
@@ -139,7 +138,6 @@ export async function insertZeroRelease(
   };
   await ctx.db.insert("contentReleases", {
     ...testStoredReachability(releaseJson),
-    ...(options.bootstrap ? { bootstrap: true } : {}),
     ...(aborted
       ? { abortedAt: now, abortedRows: 0, abortingAt: now }
       : {

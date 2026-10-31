@@ -77,9 +77,7 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
         `Content release ${release.releaseId} lost its exact protected base.`
       );
     }
-    // A bootstrap replaced the retired generation its base names, so that base
-    // is never protected and never loaded.
-    if (baseId === null || baseHash === null || release.bootstrap === true) {
+    if (baseId === null || baseHash === null) {
       return [sequence];
     }
     const base = yield* loadRelease(baseId);
@@ -99,39 +97,14 @@ const protectedRelease = Effect.fn("contentRelease.protectedRelease")(
   }
 );
 
-/**
- * Reads the sequence of the latest completed bootstrap, the floor of history. A
- * bootstrap replaces the retired generation with no retained inverse, so no
- * protection rule keeps anything below it. Zero means no bootstrap has completed,
- * which leaves every floor comparison a no-op.
- */
-export const loadHistoryFloor = Effect.fn("contentRelease.loadHistoryFloor")(
-  function* () {
-    const database = yield* DatabaseReader;
-    const bootstrap = yield* database
-      .table("contentReleases")
-      .index(
-        "by_bootstrap_and_status_and_sequence",
-        (query) => query.eq("bootstrap", true).eq("status", "completed"),
-        "desc"
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie);
-    return bootstrap?.sequence ?? 0;
-  }
-);
-
-/**
- * Protects all stored history from the floor upward when one reachability fact
- * is unprovable.
- */
+/** Protects all stored history when one reachability fact is unprovable. */
 const earliestStoredSequence = Effect.fn(
   "contentRelease.earliestStoredSequence"
-)(function* (state: Docs["contentState"], historyFloor: number) {
+)(function* (state: Docs["contentState"]) {
   const database = yield* DatabaseReader;
   const earliest = yield* database
     .table("contentReleases")
-    .index("by_sequence", (query) => query.gte("sequence", historyFloor))
+    .index("by_sequence")
     .first()
     .pipe(Effect.map(Option.getOrNull), Effect.orDie);
   return earliest?.sequence ?? state.nextSequence;
@@ -139,7 +112,7 @@ const earliestStoredSequence = Effect.fn(
 
 /** Computes the earliest sequence protected by slots and known-good history. */
 export const protectedFloor = Effect.fn("contentRelease.protectedFloor")(
-  function* (state: Docs["contentState"], historyFloor: number) {
+  function* (state: Docs["contentState"]) {
     const database = yield* DatabaseReader;
     const slots = yield* Effect.all([
       slotIdentity(
@@ -185,23 +158,14 @@ export const protectedFloor = Effect.fn("contentRelease.protectedFloor")(
       )
       .take(2)
       .pipe(Effect.orDie);
-    const completedAboveFloor = Arr.filter(
-      completed,
-      (release) => release.sequence >= historyFloor
-    );
-    const completedSequences = yield* Effect.forEach(
-      completedAboveFloor,
-      (release) => protectedRelease(release)
+    const completedSequences = yield* Effect.forEach(completed, (release) =>
+      protectedRelease(release)
     );
     const entries = Arr.appendAll(slotSequences, completedSequences);
     if (!Arr.every(entries, Predicate.isNotNull)) {
-      return yield* earliestStoredSequence(state, historyFloor);
+      return yield* earliestStoredSequence(state);
     }
-    // A base below the floor is retired history, so it never lowers the floor.
-    const sequences = Arr.filter(
-      Arr.flatten(entries),
-      (sequence) => sequence >= historyFloor
-    );
+    const sequences = Arr.flatten(entries);
     return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
   }
 );

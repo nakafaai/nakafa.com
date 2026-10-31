@@ -266,15 +266,3 @@ export function compact(t: TestConvex<typeof schema>) {
     )
   );
 }
-
-/** Marks one stored completed release as the bootstrap that replaced the retired generation. */
-export async function markBootstrap(ctx: MutationCtx, identity: TestIdentity) {
-  const release = await ctx.db
-    .query("contentReleases")
-    .withIndex("by_releaseId", (query) =>
-      query.eq("releaseId", identity.releaseId)
-    )
-    .unique();
-  assert.ok(release, `Expected release ${identity.releaseId}.`);
-  await ctx.db.patch("contentReleases", release._id, { bootstrap: true });
-}
