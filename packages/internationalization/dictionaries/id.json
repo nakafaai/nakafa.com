@@ -381,6 +381,8 @@
     "rooms-opens": "Dibuka",
     "rooms-closes": "Ditutup",
     "rooms-state": "Status",
+    "rooms-seats": "Kursi",
+    "rooms-seats-summary": "{working} mengerjakan, {away} keluar, {offline} terputus, {locked} terkunci, {finished} selesai.",
     "room-state-scheduled": "Terjadwal",
     "room-state-open": "Berlangsung",
     "room-state-closed": "Selesai",

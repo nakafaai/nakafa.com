@@ -381,6 +381,8 @@
     "rooms-opens": "Opens",
     "rooms-closes": "Closes",
     "rooms-state": "State",
+    "rooms-seats": "Seats",
+    "rooms-seats-summary": "{working} working, {away} away, {offline} offline, {locked} locked, {finished} finished.",
     "room-state-scheduled": "Scheduled",
     "room-state-open": "Open",
     "room-state-closed": "Closed",

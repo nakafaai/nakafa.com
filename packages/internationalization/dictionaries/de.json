@@ -381,6 +381,8 @@
     "rooms-opens": "Beginn",
     "rooms-closes": "Ende",
     "rooms-state": "Status",
+    "rooms-seats": "Plätze",
+    "rooms-seats-summary": "{working} arbeiten, {away} abwesend, {offline} getrennt, {locked} gesperrt, {finished} fertig.",
     "room-state-scheduled": "Geplant",
     "room-state-open": "Offen",
     "room-state-closed": "Geschlossen",

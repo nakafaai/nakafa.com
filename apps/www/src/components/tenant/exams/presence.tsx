@@ -12,17 +12,12 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Data, Effect, Fiber } from "effect";
-import { useEffect } from "react";
+import { Array as Arr, Effect } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { sentAction } from "@/components/tenant/exams/action";
-import { makeHeartbeat } from "@/components/tenant/exams/heartbeat";
+import { useHeartbeat } from "@/components/tenant/exams/beat";
 import { useExam } from "@/components/tenant/exams/provider";
-import { reportClientException } from "@/lib/analytics/client";
-
-/** Where the presence of the editor reports its failures. */
-const SOURCE = "components/tenant/exams/presence";
 
 /** The most avatars the row shows before it counts the rest in one more circle. */
 const SHOWN_EDITORS = 3;
@@ -31,11 +26,6 @@ const SHOWN_EDITORS = 3;
 const presenceTrigger = cva(
   "focus-visible:ring-ring/50 rounded-full outline-none focus-visible:ring-3"
 );
-
-/** A leave that did not reach the server. */
-class LeaveFailed extends Data.TaggedError("LeaveFailed")<{
-  readonly cause: unknown;
-}> {}
 
 /** One other teacher in the exam's editor. */
 type Editor = typeof ExamEditor.Type;
@@ -69,66 +59,20 @@ export function ExamPresence() {
   return <PresenceRow editors={editors.value} />;
 }
 
-/**
- * Keeps this editor in the exam's room while `isOpen` holds: it joins at once, beats every
- * interval while the tab shows, joins again a moment after the tab shows once a beat found it hidden, and
- * leaves when the page goes away or the editor closes (`makeHeartbeat`). A failure is reported,
- * and the row keeps what the room last said.
- */
+/** Keeps this editor in the exam's room while `isOpen` holds. A failure is reported, and the row keeps what the room last said. */
 function useExamHeartbeat(isOpen: boolean) {
   const { exam, slug } = useExam();
   const join = useMutation(exams.presence.join);
-  const leave = useMutation(exams.presence.leave);
   const examId = exam.id;
 
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-    const report = (error: unknown) =>
-      reportClientException(error, { source: SOURCE });
-    const heartbeat = Effect.runSync(
-      makeHeartbeat({
-        isVisible: () => document.visibilityState === "visible",
-        join: (session) =>
-          sentAction(() => join({ examId, session, slug })).pipe(
-            Effect.map((joined) => joined.token)
-          ),
-        leave: (token) =>
-          Effect.tryPromise({
-            catch: (cause) => new LeaveFailed({ cause }),
-            try: () => leave({ token }),
-          }).pipe(Effect.asVoid, Effect.catch(report)),
-      })
-    );
-    const running = Effect.runFork(heartbeat.run.pipe(Effect.catch(report)));
-
-    function onVisibility() {
-      if (document.visibilityState === "visible") {
-        Effect.runFork(heartbeat.returned.pipe(Effect.catch(report)));
-      }
-    }
-
-    function onPageHide() {
-      Effect.runFork(heartbeat.leave);
-    }
-
-    function onPageShow(event: PageTransitionEvent) {
-      if (event.persisted) {
-        Effect.runFork(heartbeat.returned.pipe(Effect.catch(report)));
-      }
-    }
-
-    document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("pagehide", onPageHide);
-    window.addEventListener("pageshow", onPageShow);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("pagehide", onPageHide);
-      window.removeEventListener("pageshow", onPageShow);
-      Effect.runFork(Fiber.interrupt(running));
-    };
-  }, [examId, isOpen, join, leave, slug]);
+  useHeartbeat({
+    isOpen,
+    join: (session) =>
+      sentAction(() => join({ examId, session, slug })).pipe(
+        Effect.map((joined) => joined.token)
+      ),
+    source: "components/tenant/exams/presence",
+  });
 }
 
 /**

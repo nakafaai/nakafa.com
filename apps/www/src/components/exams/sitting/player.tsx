@@ -1,9 +1,9 @@
 import type { GenericId } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { runSittingCall } from "@/components/exams/sitting/actions";
@@ -51,6 +51,8 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
+import { sentAction } from "@/components/tenant/exams/action";
+import { useHeartbeat } from "@/components/tenant/exams/beat";
 
 /** The error of a query that failed, or none while it loads or once it answered. */
 function failureOf<A, E>(result: QueryResult.QueryResult<A, E>) {
@@ -91,6 +93,16 @@ export function StudentPlayer({
     deviceId,
     enabled: isActive(attempt.state),
     slug,
+  });
+  // A beat keeps the attempt present in its room, so the proctor reads a lost connection while it lasts.
+  const beat = useMutation(exams.screens.beat);
+  useHeartbeat({
+    isOpen: isActive(attempt.state),
+    join: (session) =>
+      sentAction(() =>
+        beat({ attemptId: attempt.id, deviceId, session, slug })
+      ).pipe(Effect.map((present) => present.token)),
+    source: "components/exams/sitting/player",
   });
 
   // The paper's questions and what the student saved on them are read apart, so an answer reads again only the latter.
