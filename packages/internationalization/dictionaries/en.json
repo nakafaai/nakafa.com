@@ -594,7 +594,12 @@
     "cell-hint": "Give every statement one column.",
     "room-move": "Reschedule",
     "room-move-description": "Its students and token stay, and its notices go out again.",
-    "room-move-save": "Save"
+    "room-move-save": "Save",
+    "results-question-description": "How the class answered this question.",
+    "student-finished-description": "Your score shows here once it is released.",
+    "student-results-description": "Your score and your answers.",
+    "student-closed-description": "It takes no more answers.",
+    "student-locked-description": "It takes no answers for now."
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -1218,7 +1223,8 @@
     "locale-description": "Where this school is, and the currency of its plan.",
     "locale-country": "Country",
     "locale-currency": "Currency",
-    "locale-footer": "Every change is recorded in the audit trail."
+    "locale-footer": "Every change is recorded in the audit trail.",
+    "homeroom-description": "One teacher leads each cohort."
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -2336,7 +2342,10 @@
     "payment-credits": "Nina credits",
     "payment-cycle": "Pro subscription",
     "payment-invoice": "Invoice",
-    "payment-pass": "Pro pass"
+    "payment-pass": "Pro pass",
+    "role-description": "How you use Nakafa.",
+    "curriculum-description": "The curriculum you study.",
+    "username-about": "Your address on Nakafa."
   },
   "Editor": {
     "arabic": "Arabic keyboard",
@@ -2425,7 +2434,9 @@
     "placeholder": "Write what Nina should remember",
     "title": "Title",
     "untitled": "Untitled",
-    "count": "{count, number} / {limit, number}"
+    "count": "{count, number} / {limit, number}",
+    "saved-title": "Saved memories",
+    "saved-description": "Search, edit or remove what Nina keeps."
   },
   "Toast": {
     "chat-deleted": {

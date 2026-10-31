@@ -1,10 +1,5 @@
 import { readBio, tidyBio } from "@repo/backend/confect/users/bio";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -67,11 +62,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
         }
       }}
     >
-      <CardSection>
-        <CardHeader>
-          <CardTitle>{t("bio")}</CardTitle>
-          <CardDescription>{t("bio-description")}</CardDescription>
-        </CardHeader>
+      <CardSection description={t("bio-description")} title={t("bio")}>
         <CardContent>
           <Field data-invalid={!fits}>
             <FieldLabel className="sr-only" htmlFor="user-settings-bio">

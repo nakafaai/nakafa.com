@@ -594,7 +594,12 @@
     "cell-hint": "Beri setiap pernyataan satu kolom.",
     "room-move": "Jadwalkan ulang",
     "room-move-description": "Siswa dan tokennya tetap, dan pengingatnya dikirim lagi.",
-    "room-move-save": "Simpan"
+    "room-move-save": "Simpan",
+    "results-question-description": "Cara kelas menjawab soal ini.",
+    "student-finished-description": "Skormu tampil di sini setelah dirilis.",
+    "student-results-description": "Skor dan jawabanmu.",
+    "student-closed-description": "Ujian ini tidak menerima jawaban lagi.",
+    "student-locked-description": "Percobaan ini belum menerima jawaban."
   },
   "SchoolSettings": {
     "student-add-name-placeholder": "Ayu Lestari",
@@ -1218,7 +1223,8 @@
     "locale-description": "Lokasi sekolah ini dan mata uang paketnya.",
     "locale-country": "Negara",
     "locale-currency": "Mata uang",
-    "locale-footer": "Setiap perubahan tercatat di jejak audit."
+    "locale-footer": "Setiap perubahan tercatat di jejak audit.",
+    "homeroom-description": "Satu guru memimpin setiap rombel."
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -2336,7 +2342,10 @@
     "payment-credits": "Kredit Nina",
     "payment-cycle": "Langganan Pro",
     "payment-invoice": "Tagihan",
-    "payment-pass": "Pass Pro"
+    "payment-pass": "Pass Pro",
+    "role-description": "Caramu memakai Nakafa.",
+    "curriculum-description": "Kurikulum yang kamu pelajari.",
+    "username-about": "Alamatmu di Nakafa."
   },
   "Editor": {
     "arabic": "Papan ketik Arab",
@@ -2425,7 +2434,9 @@
     "placeholder": "Tulis yang perlu Nina ingat",
     "title": "Judul",
     "untitled": "Tanpa judul",
-    "count": "{count, number} / {limit, number}"
+    "count": "{count, number} / {limit, number}",
+    "saved-title": "Memori tersimpan",
+    "saved-description": "Cari, ubah, atau hapus yang Nina simpan."
   },
   "Toast": {
     "chat-deleted": {

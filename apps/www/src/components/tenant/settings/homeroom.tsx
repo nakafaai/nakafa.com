@@ -2,11 +2,7 @@ import { useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Field,
   FieldGroup,
@@ -85,10 +81,10 @@ export function SchoolHomeroomCard({
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("homeroom-title")}</CardTitle>
-      </CardHeader>
+    <CardSection
+      description={t("homeroom-description")}
+      title={t("homeroom-title")}
+    >
       <CardContent>
         <FieldGroup>
           <Field>
