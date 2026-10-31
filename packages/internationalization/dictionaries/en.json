@@ -127,6 +127,8 @@
     "export": "Export",
     "export-grades": "Export grades",
     "export-grades-label": "Report grades of a class group",
+    "export-grades-loading": "Loading class groups",
+    "export-grades-no-period": "No active period yet.",
     "export-grades-empty": "No class group in this period.",
     "file-label": "Dapodik student list",
     "empty": "Import the students from Dapodik.",
@@ -2792,6 +2794,10 @@
     "school-refusal-scheme-not-later": {
       "title": "A newer version is already stored.",
       "description": "Reload the page to see it, then save yours."
+    },
+    "school-roster-no-period": {
+      "title": "No active period yet.",
+      "description": "Open a period for this unit first."
     }
   },
   "Ai": {

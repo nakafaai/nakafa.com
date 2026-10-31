@@ -127,6 +127,8 @@
     "export": "Ekspor",
     "export-grades": "Ekspor nilai",
     "export-grades-label": "Nilai rapor satu rombel",
+    "export-grades-loading": "Memuat rombel",
+    "export-grades-no-period": "Belum ada periode aktif.",
     "export-grades-empty": "Belum ada rombel di periode ini.",
     "file-label": "Daftar peserta didik Dapodik",
     "empty": "Impor siswa dari Dapodik.",
@@ -2792,6 +2794,10 @@
     "school-refusal-scheme-not-later": {
       "title": "Ada versi yang lebih baru.",
       "description": "Muat ulang halaman untuk melihatnya, lalu simpan versimu."
+    },
+    "school-roster-no-period": {
+      "title": "Belum ada periode aktif.",
+      "description": "Buka periode untuk satuan ini dulu."
     }
   },
   "Ai": {

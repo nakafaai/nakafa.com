@@ -127,6 +127,8 @@
     "export": "Exportieren",
     "export-grades": "Noten exportieren",
     "export-grades-label": "Zeugnisnoten einer Klasse",
+    "export-grades-loading": "Klassen werden geladen",
+    "export-grades-no-period": "Noch kein aktiver Zeitraum.",
     "export-grades-empty": "Keine Klasse in diesem Zeitraum.",
     "file-label": "Schülerliste aus Dapodik",
     "empty": "Importiere die Schüler aus Dapodik.",
@@ -2792,6 +2794,10 @@
     "school-refusal-scheme-not-later": {
       "title": "Es gibt schon eine neuere Version.",
       "description": "Lade die Seite neu, um sie zu sehen, und speichere dann deine."
+    },
+    "school-roster-no-period": {
+      "title": "Noch kein aktiver Zeitraum.",
+      "description": "Öffne zuerst einen Zeitraum für diese Einheit."
     }
   },
   "Ai": {

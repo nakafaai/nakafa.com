@@ -34,6 +34,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-report-closed.description",
     title: "school-refusal-report-closed.title",
   },
+  RosterPeriodMissing: {
+    description: "school-roster-no-period.description",
+    title: "school-roster-no-period.title",
+  },
   ReportNotPlaced: {
     description: "school-refusal-report-not-placed.description",
     title: "school-refusal-report-not-placed.title",
