@@ -26,7 +26,7 @@ import { PaperLockProvider } from "@/components/exams/sitting/lock";
 import { SittingLook } from "@/components/exams/sitting/look";
 import { useFlagQuestion } from "@/components/exams/sitting/mark";
 import { useSittingMode } from "@/components/exams/sitting/mode";
-import type { PaperValue } from "@/components/exams/sitting/paper";
+import { mergePaper, type PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
 import {
   projectSittingCells,
@@ -83,11 +83,18 @@ export function StudentPlayer({
     slug,
   });
 
-  const paper = useQuery(
-    exams.sittings.paper,
-    isActive(attempt.state) ? { deviceId, sittingId, slug } : "skip"
-  );
-  if (QueryResult.isSuccess(paper) && isActive(attempt.state)) {
+  // The paper's questions and what the student saved on them are read apart, so an answer reads again only the latter.
+  const paperArgs = isActive(attempt.state)
+    ? { deviceId, sittingId, slug }
+    : "skip";
+  const paperResult = useQuery(exams.sittings.paper, paperArgs);
+  const savedResult = useQuery(exams.sittings.saved, paperArgs);
+  if (
+    QueryResult.isSuccess(paperResult) &&
+    QueryResult.isSuccess(savedResult) &&
+    isActive(attempt.state)
+  ) {
+    const paper = mergePaper(paperResult.value, savedResult.value);
     return (
       <RunningPaper
         attemptId={attempt.id}
@@ -102,7 +109,7 @@ export function StudentPlayer({
             <StudentFinish
               attempt={attempt}
               deviceId={deviceId}
-              paper={paper.value}
+              paper={paper}
               sittingId={sittingId}
               slug={slug}
             />
@@ -110,15 +117,21 @@ export function StudentPlayer({
         }
         locked={!takesAnswers(attempt.state)}
         mode={mode}
-        paper={paper.value}
+        paper={paper}
         sittingId={sittingId}
         slug={slug}
       />
     );
   }
 
+  // Both reads pass the same gate, so either one's refusal is the attempt's.
+  const failure = QueryResult.isFailure(paperResult)
+    ? Option.some(paperResult.error)
+    : QueryResult.isFailure(savedResult)
+      ? Option.some(savedResult.error)
+      : Option.none();
   // A retired device holds the attempt no more, so its bar keeps the time and offers no Finish.
-  const retired = QueryResult.isFailure(paper) && isRetiredDevice(paper.error);
+  const retired = Option.exists(failure, isRetiredDevice);
 
   return (
     <PlayerProvider keys={[]} mode={mode}>
@@ -142,12 +155,14 @@ export function StudentPlayer({
         ) : null}
       </SittingBar>
       <PlayerMain navigator={null}>
-        {QueryResult.isFailure(paper)
-          ? Option.match(sittingFailureMessage(paper.error), {
-              onNone: () => <SittingRetry error={paper.error} />,
+        {Option.match(failure, {
+          onNone: () => null,
+          onSome: (error) =>
+            Option.match(sittingFailureMessage(error), {
+              onNone: () => <SittingRetry error={error} />,
               onSome: (message) => <p>{t(message)}</p>,
-            })
-          : null}
+            }),
+        })}
       </PlayerMain>
     </PlayerProvider>
   );
