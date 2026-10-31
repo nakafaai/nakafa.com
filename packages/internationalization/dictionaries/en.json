@@ -1783,7 +1783,7 @@
           "description": "Support your child."
         }
       },
-      "region-title": "Where do you study?",
+      "region-title": "Which country are you in?",
       "region-description": "This sets your language and curriculum.",
       "region": {
         "indonesia": {
