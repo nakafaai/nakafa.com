@@ -1,5 +1,5 @@
 import { Array as Arr } from "effect";
-import qrcode from "qrcode-generator";
+import { encode } from "uqr";
 
 /**
  * The QR code of a text as an SVG path: one unit square for each dark module, with the module
@@ -7,14 +7,11 @@ import qrcode from "qrcode-generator";
  * caller chose to put in it: a login card's code, or the address that opens a room.
  */
 export function qrSquares(text: string) {
-  const qr = qrcode(0, "M");
-  qr.addData(text);
-  qr.make();
-  const size = qr.getModuleCount();
+  const { data, size } = encode(text, { border: 0, ecc: "M" });
   const columns = Arr.makeBy(size, (column) => column);
   const squaresIn = (row: number) =>
     Arr.map(
-      Arr.filter(columns, (column) => qr.isDark(row, column)),
+      Arr.filter(columns, (column) => data[row]?.[column]),
       (column) => `M${column} ${row}h1v1h-1z`
     );
   const path = Arr.join(
