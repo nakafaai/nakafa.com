@@ -76,7 +76,7 @@ below).
 | Google Calendar | Upcoming events, for Nina and the home page | A Google account | Built for Nina; the home page planned |
 | Gmail | Email context | A teacher or a staff member, never a student | Planned, after the security assessment |
 | Dapodik XLSX | A file the school chooses. Only the columns listed below are read, in the browser. | A school in Indonesia | Built |
-| OneRoster CSV | A roster file that the school uploads. ADR 0029 owns the standard and lists what the import reads. | A school in any country | Planned |
+| OneRoster CSV | A roster file that the school uploads. ADR 0029 owns the standard and lists what the import reads. | A school in any country | Built |
 
 - Dapodik has no official data API (K13). K13 has the owner send two written
   requests to the Ministry, one to become a partner for sign-in and one for the
@@ -513,7 +513,8 @@ section says why.
 | A standalone workpool for connectors, and the cap on the pages of each school in it | The cap is built: a sweep every 10 minutes takes at most 50 due connections and at most 5 of one owner, leases each for 15 minutes, and schedules its run 2 seconds apart; a source that changed is read again in 30 minutes, a quiet one in 3 hours. The runs use the scheduler until the pool is declared, which needs the component's code generated against a deployment. |
 | Workspace guide in the setup flow | Planned |
 | Dapodik XLSX import and export (`confect/roster`, `components/tenant/roster`), read and written in the browser; see the amendment above | Built |
-| The server-side file checks for an uploaded file (the OneRoster CSV import of ADR 0029) | Planned |
+| The roster import of a linked Classroom course (`connectors/classroom:importRoster`), through the roster's own apply: each student by Google's user ID, placed in the class group of the linked class and left unclaimed. The match to an account waits for the Classroom member ID gate. | Built |
+| The OneRoster CSV import, read and written in the browser as the Dapodik file is, so no file reaches the server | Built |
 
 ## References
 

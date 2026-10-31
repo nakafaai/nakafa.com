@@ -9,7 +9,7 @@ import {
   rosterEntryOf,
   schoolKeys,
 } from "@repo/backend/confect/roster/entry";
-import { applyRow } from "@repo/backend/confect/roster/import";
+import { applyRow, applySourcedRow } from "@repo/backend/confect/roster/import";
 import spec from "@repo/backend/confect/roster/imports.spec";
 import type {
   ImportSummary,
@@ -23,10 +23,31 @@ import {
 } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
+/** Journals one batch on the period as `roster.imported` with its counts, and answers them. */
+const journalBatch = Effect.fn("roster.imports.journal")(function* (
+  source: "classroom" | "dapodik" | "oneroster",
+  outcomes: readonly string[]
+) {
+  const { person: actor } = yield* Member;
+  const period = yield* Period;
+  const count = (outcome: string) =>
+    Arr.length(Arr.filter(outcomes, (found) => found === outcome));
+  const summary: typeof ImportSummary.Type = {
+    added: count("added"),
+    changed: count("changed"),
+    skipped: count("skipped"),
+  };
+  yield* periodAuthority.record(personActor(actor), period, {
+    ...summary,
+    source,
+    type: "roster.imported",
+  });
+  return summary;
+});
+
 /**
- * Applies one batch of rows in one transaction: a batch that fails writes nothing, and a
- * retry of the same file adds no duplicate, because each NISN names its student. The batch
- * is journaled on the period as `roster.imported` with its counts.
+ * Applies one batch of Dapodik rows in one transaction: a batch that fails writes nothing, and
+ * a retry of the same file adds no duplicate, because each NISN names its student.
  */
 const apply = FunctionImpl.make(
   databaseSchema,
@@ -39,19 +60,26 @@ const apply = FunctionImpl.make(
     const outcomes = yield* Effect.forEach(rows, (row) =>
       applyRow(personActor(actor), period, keys, row)
     );
-    const count = (outcome: string) =>
-      Arr.length(Arr.filter(outcomes, (found) => found === outcome));
-    const summary: typeof ImportSummary.Type = {
-      added: count("added"),
-      changed: count("changed"),
-      skipped: count("skipped"),
-    };
-    yield* periodAuthority.record(personActor(actor), period, {
-      ...summary,
-      source: "dapodik",
-      type: "roster.imported",
-    });
-    return summary;
+    return yield* journalBatch("dapodik", outcomes);
+  })
+);
+
+/**
+ * Applies one batch of OneRoster or Classroom rows in one transaction: a retry adds no
+ * duplicate, because each source identity names its student.
+ */
+const applySourced = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "applySourced",
+  Effect.fn("roster.imports.applySourced")(function* ({ rows, source }) {
+    const { person: actor } = yield* Member;
+    const period = yield* Period;
+    const keys = yield* schoolKeys(period.tenantId);
+    const outcomes = yield* Effect.forEach(rows, (row) =>
+      applySourcedRow(personActor(actor), period, keys, row)
+    );
+    return yield* journalBatch(source, outcomes);
   })
 );
 
@@ -107,6 +135,7 @@ const list = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(apply),
+  Layer.provide(applySourced),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(periodAccess),

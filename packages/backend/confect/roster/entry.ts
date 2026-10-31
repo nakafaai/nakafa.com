@@ -30,6 +30,9 @@ import { Effect, Option, Schema } from "effect";
  */
 const NISN_BLIND = { field: "nisn", table: "rosterEntries" };
 
+/** The field a source's identity is blinded in, which names no row for the same reason. */
+const SOURCED_BLIND = { field: "sourcedId", table: "rosterEntries" };
+
 /**
  * The keys of a student's school. A school without keys is a defect in its data (ADR 0030).
  * Deriving them is the costly part of every NISN step, so each function reads them once and
@@ -67,6 +70,41 @@ export const blindNisn = Effect.fn("roster.entry.blind")(function* (
   nisn: typeof Nisn.Type
 ) {
   return yield* blindText(keys, NISN_BLIND, nisn).pipe(Effect.orDie);
+});
+
+/** The blind of a source's identity under the school key, which a stored row is compared by. */
+export const blindSourcedId = Effect.fn("roster.entry.blindSourced")(function* (
+  keys: TenantKeys,
+  sourcedId: string
+) {
+  return yield* blindText(keys, SOURCED_BLIND, sourcedId).pipe(Effect.orDie);
+});
+
+/**
+ * Names a student's row by the blind of the identity a file gave them, and creates the row
+ * when the school wrote none, which leaves the age flag unset.
+ */
+export const writeSourcedId = Effect.fn("roster.entry.sourced")(function* (
+  keys: TenantKeys,
+  person: TenantPeopleDoc,
+  sourcedId: string
+) {
+  const blind = yield* blindSourcedId(keys, sourcedId);
+  const writer = yield* DatabaseWriter;
+  const existing = yield* rosterEntryOf(person._id);
+  yield* Option.match(existing, {
+    onNone: () =>
+      writer.table("rosterEntries").insert({
+        personId: person._id,
+        sourcedId: blind,
+        tenantId: person.tenantId,
+      }),
+    onSome: (entry) =>
+      writer
+        .table("rosterEntries")
+        .patch(entry._id, { sourcedId: blind })
+        .pipe(Effect.as(entry._id)),
+  }).pipe(Effect.orDie);
 });
 
 /** The view of a roster row that staff read: whether a NISN is on file, and the age flag. */
@@ -111,9 +149,11 @@ export const writeRosterEntry = Effect.fn("roster.entry.write")(function* (
         return { blind, sealed };
       }).pipe(Effect.orDie),
   });
+  const sourcedId = Option.getOrUndefined(existing)?.sourcedId;
   const row: typeof rosterEntryValidator.Type = {
     ...(nisn === undefined ? {} : { nisn }),
     personId: person._id,
+    ...(sourcedId === undefined ? {} : { sourcedId }),
     tenantId: person.tenantId,
     underAgeLimit: facts.underAgeLimit,
   };

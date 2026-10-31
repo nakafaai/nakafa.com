@@ -1584,6 +1584,12 @@ export declare const api: {
   connectors: {
     classroom: {
       canImport: FunctionReference<"query", "public", { slug: string }, {}>;
+      importRoster: FunctionReference<
+        "action",
+        "public",
+        { courseId: string; slug: string },
+        { added: number; changed: number; skipped: number }
+      >;
       link: FunctionReference<
         "mutation",
         "public",
@@ -8188,7 +8194,7 @@ export declare const api: {
                   added: number;
                   changed: number;
                   skipped: number;
-                  source: "dapodik";
+                  source: "classroom" | "dapodik" | "oneroster";
                   type: "roster.imported";
                 }
               | { type: "person.created" }
@@ -10030,6 +10036,17 @@ export declare const api: {
             underAgeLimit: boolean;
           }>;
           slug: string;
+        },
+        { added: number; changed: number; skipped: number }
+      >;
+      applySourced: FunctionReference<
+        "mutation",
+        "public",
+        {
+          periodId: Id<"tenantPeriods">;
+          rows: Array<{ cohortName?: string; name: string; sourcedId: string }>;
+          slug: string;
+          source: "classroom" | "oneroster";
         },
         { added: number; changed: number; skipped: number }
       >;
@@ -13771,6 +13788,12 @@ export declare const internal: {
         "internal",
         { connectionId: Id<"connectorConnections"> },
         Array<{ courseId: string }>
+      >;
+      place: FunctionReference<
+        "query",
+        "internal",
+        { classId: Id<"classes"> },
+        { cohortName: string; periodId: Id<"tenantPeriods"> }
       >;
       storeWork: FunctionReference<
         "mutation",

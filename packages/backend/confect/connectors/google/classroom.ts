@@ -171,8 +171,20 @@ export const courseWork = (accessToken: string, courseId: string) =>
     )
   );
 
-/** How many students one course has, up to `CLASSROOM_PAGE`. */
-export const courseStudents = (accessToken: string, courseId: string) =>
+/** One student of a course as Google answers it: the user ID, and the name when the scope shows it. */
+const StudentAnswer = Schema.Struct({
+  profile: Schema.optionalKey(
+    Schema.Struct({
+      name: Schema.optionalKey(
+        Schema.Struct({ fullName: Schema.optionalKey(Schema.String) })
+      ),
+    })
+  ),
+  userId: Schema.NonEmptyString,
+});
+
+/** The students of one course, up to `CLASSROOM_PAGE`, by Google's user ID. */
+const readStudents = (accessToken: string, courseId: string) =>
   readClassroom(
     accessToken,
     `courses/${encodeURIComponent(courseId)}/students`,
@@ -181,11 +193,30 @@ export const courseStudents = (accessToken: string, courseId: string) =>
     Effect.flatMap(
       decoded(
         Schema.Struct({
-          students: Schema.optionalKey(
-            Schema.Array(Schema.Struct({ userId: Schema.NonEmptyString }))
-          ),
+          students: Schema.optionalKey(Schema.Array(StudentAnswer)),
         })
       )
     ),
-    Effect.map((answer) => (answer.students ?? []).length)
+    Effect.map((answer) => answer.students ?? [])
+  );
+
+/** How many students one course has, up to `CLASSROOM_PAGE`. */
+export const courseStudents = (accessToken: string, courseId: string) =>
+  Effect.map(readStudents(accessToken, courseId), Arr.length);
+
+/**
+ * The students of one course with their names, for a roster import. A student whose profile
+ * shows no name stays out, because a school cannot place a Person it cannot name. The user
+ * ID is the identity, and an email never matches a member (ADR 0015).
+ */
+export const courseRoster = (accessToken: string, courseId: string) =>
+  Effect.map(readStudents(accessToken, courseId), (students) =>
+    Arr.getSomes(
+      Arr.map(students, (student) =>
+        Option.map(
+          Option.fromNullishOr(student.profile?.name?.fullName),
+          (name) => ({ name, userId: student.userId })
+        )
+      )
+    )
   );

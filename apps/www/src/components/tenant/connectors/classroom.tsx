@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactNode, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -38,6 +39,9 @@ import {
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import { useTenant } from "@/components/tenant/context";
+import { saveSchool } from "@/components/tenant/settings/save";
+
+const SOURCE = "components/tenant/connectors/classroom";
 
 /** What a preview answers: the school's classes, its connection, and the courses it teaches. */
 type Preview = NonNullable<Ref.Returns<typeof connectors.classroom.preview>>;
@@ -134,6 +138,7 @@ function CourseTable({
               <TableHead className={columnAlign()}>
                 {t("course-class")}
               </TableHead>
+              <TableHead className={columnAlign()} />
             </TableRow>
           </TableHeader>
           <TableBody>{children}</TableBody>
@@ -236,6 +241,39 @@ function CourseRow({
           </SelectContent>
         </Select>
       </TableCell>
+      <TableCell className={columnAlign()}>
+        {course.classId === null ? null : (
+          <CourseRosterImport courseId={course.courseId} />
+        )}
+      </TableCell>
     </TableRow>
+  );
+}
+
+/** Imports the students of a linked course into the class group of its class. */
+function CourseRosterImport({ courseId }: { courseId: string }) {
+  const t = useTranslations("Connectors");
+  const { slug } = useTenant();
+  const importRoster = useAction(connectors.classroom.importRoster);
+  const [isImporting, startImporting] = useTransition();
+
+  return (
+    <Button
+      disabled={isImporting}
+      onClick={() =>
+        startImporting(() =>
+          saveSchool(
+            () => importRoster({ courseId, slug }),
+            SOURCE,
+            () => toast.success({ title: "school-roster-imported.title" })
+          )
+        )
+      }
+      size="sm"
+      type="button"
+      variant="outline"
+    >
+      {t("course-import")}
+    </Button>
   );
 }
