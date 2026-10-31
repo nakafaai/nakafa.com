@@ -163,9 +163,15 @@ const signsOutOfAChat = Effect.fn("NakafaE2E.signsOutOfAChat")(function* (
     );
     const member = page.locator('[data-account="member"]').first();
     await member.getByRole("button").first().click();
-    await page
-      .getByRole("menuitem", { name: app.Auth.logout, exact: true })
-      .click();
+    const signOut = page.getByRole("menuitem", {
+      exact: true,
+      name: app.Auth.logout,
+    });
+    await signOut.click();
+    // The server holds its answer, so the press shows its loader meanwhile.
+    await expect(signOut.locator('[data-slot="spinner"]')).toHaveClass(
+      /animate-spin/u
+    );
     await page.waitForURL((url) => url.pathname === "/en", {
       waitUntil: "load",
     });
