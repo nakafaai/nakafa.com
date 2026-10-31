@@ -3,7 +3,7 @@ import type {
   TenantGrantsDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
   Scheduler,
@@ -46,7 +46,7 @@ export const schedulePush = Effect.fn("notifications.schedule.push")(function* (
     return;
   }
   const scheduler = yield* Scheduler;
-  const send = refs.internal.notifications.deliver.send;
+  const send = notificationsInternal.deliver.send;
   const student = Arr.some(grants, (grant) => grant.role.key === "student");
   const unit = yield* reader
     .table("tenantUnits")

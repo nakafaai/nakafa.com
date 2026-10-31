@@ -1,5 +1,5 @@
 import { NinaFileType } from "@repo/backend/client/nina/uploads";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import type { ModelMessage } from "ai";
 import { Array as Arr, Schema } from "effect";
 
@@ -30,5 +30,5 @@ const carriesDocument = (message: ModelMessage) =>
  */
 export const answerRunFor = (message: ModelMessage) =>
   carriesDocument(message)
-    ? refs.internal.nina.documents.run
-    : refs.internal.nina.response.run;
+    ? ninaInternal.documents.run
+    : ninaInternal.response.run;

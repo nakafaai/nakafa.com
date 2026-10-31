@@ -9,7 +9,6 @@ import {
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { UnitStatus } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useState } from "react";
@@ -24,6 +23,7 @@ import {
   TableFiltersProvider,
   TableSearch,
 } from "@/components/shared/table/toolbar";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolUnitCreateDialog } from "@/components/tenant/settings/create";
 import { UNIT_ICONS } from "@/components/tenant/settings/scope";
@@ -58,9 +58,10 @@ export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
         actions={
           <>
             <TableSearch placeholder={t("units-search")} />
-            <Button onClick={() => setIsAdding(true)} type="button">
-              {t("unit-add")}
-            </Button>
+            <SchoolHeaderAdd
+              label={t("unit-add")}
+              onClick={() => setIsAdding(true)}
+            />
           </>
         }
       >

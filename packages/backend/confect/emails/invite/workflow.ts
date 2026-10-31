@@ -4,7 +4,7 @@ import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { workflow } from "@repo/backend/confect/workflow";
 import { type ObjectType, v } from "convex/values";
@@ -32,21 +32,19 @@ export async function runInviteEmailDelivery(
   args: InviteEmailWorkflowArgs
 ): Promise<null> {
   const input = await step.runQuery(
-    Ref.getFunctionReference(refs.internal.emails.invite.internal.readInput),
+    Ref.getFunctionReference(emailsInternal.invite.internal.readInput),
     { inviteId: args.inviteId, locale: args.locale }
   );
   if (input === null) {
     return null;
   }
   const message = await step.runAction(
-    Ref.getFunctionReference(refs.internal.emails.invite.delivery.render),
+    Ref.getFunctionReference(emailsInternal.invite.delivery.render),
     input,
     { retry: true }
   );
   await step.runMutation(
-    Ref.getFunctionReference(
-      refs.internal.emails.invite.internal.enqueueRendered
-    ),
+    Ref.getFunctionReference(emailsInternal.invite.internal.enqueueRendered),
     { inviteId: args.inviteId, requestedAt: args.requestedAt, ...message }
   );
   return null;
@@ -77,13 +75,13 @@ export const startInviteEmail = Effect.fn("emails.invite.start")(function* (
     workflow.start(
       ctx,
       Ref.getFunctionReference(
-        refs.internal.emails.invite.workflow.deliverInviteEmail
+        emailsInternal.invite.workflow.deliverInviteEmail
       ),
       { inviteId, locale, requestedAt },
       {
         context: { inviteId },
         onComplete: Ref.getFunctionReference(
-          refs.internal.emails.invite.workflow.finishInviteEmail
+          emailsInternal.invite.workflow.finishInviteEmail
         ),
         startAsync: true,
       }

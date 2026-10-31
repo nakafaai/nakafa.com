@@ -1,12 +1,12 @@
 import { postHogProxyKeys } from "@repo/analytics/keys";
 import { agentTrustKeys, convexSiteServerKeys } from "@repo/backend/keys";
+import { CONTENT_LICENSE_URL } from "@repo/seo/license";
 import {
   createLoopbackConnectSources,
   createSecurityHeaders,
 } from "@repo/site";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Option, Result, Schema } from "effect";
-import { CONTENT_LICENSE_URL } from "#www/src/lib/seo/license";
 
 const WwwHeaderSchema = Schema.Struct({
   key: Schema.String,

@@ -11,6 +11,7 @@ import { marked } from "@repo/design-system/components/nina/mark";
 import { paint, sameFigure } from "@repo/design-system/components/nina/paint";
 import { Picture } from "@repo/design-system/components/ui/picture";
 import { usePageSettled } from "@repo/design-system/components/ui/settled";
+import { createFramePace } from "@repo/design-system/lib/pace";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { scene } from "@repo/mascot/nina/figure";
 import {
@@ -204,20 +205,26 @@ function Alive() {
       life.current = start(latest(), draw);
       holding.current = view(life.current, latest()).holds;
     }
+    const pace = createFramePace();
+    let waited = 0;
     const measure = () => {
-      where.current = root.current?.getBoundingClientRect();
+      if (pace.isDue(performance.now())) {
+        where.current = root.current?.getBoundingClientRect();
+      }
     };
     const advance = ({ delta }: FrameData) => {
       const current = life.current;
       const at = pointer.current;
-      if (current === undefined) {
+      const startedAt = performance.now();
+      waited += delta;
+      if (current === undefined || !pace.isDue(startedAt)) {
         return;
       }
       const asked = latest();
       const next = step(
         current,
         asked,
-        Math.min(0.05, delta / 1000 || 0.016),
+        Math.min(0.05, waited / 1000 || 0.016),
         at !== undefined && where.current !== undefined
           ? gazeAt(at, where.current)
           : [0, 0],
@@ -244,6 +251,8 @@ function Alive() {
           ?.animate(POP, { duration: 180, easing: POP_EASE });
       }
       holding.current = seen.holds;
+      waited = 0;
+      pace.rest(startedAt, performance.now());
     };
     frame.read(measure, true);
     frame.render(advance, true);

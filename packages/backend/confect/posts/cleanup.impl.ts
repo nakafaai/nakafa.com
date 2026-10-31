@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import postsInternal from "@repo/backend/confect/_generated/refs/posts.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
@@ -19,7 +19,7 @@ const cleanupDeletedPost = FunctionImpl.make(
     }
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.posts.cleanup.cleanupDeletedPost,
+      postsInternal.cleanup.cleanupDeletedPost,
       args
     );
     return null;

@@ -95,7 +95,6 @@ describe("makeBookNode", () => {
   it("describes one Quran surah as a free EBook", () => {
     expect(
       makeBookNode({
-        author: { "@type": "Person", name: "Allah" },
         description: "The Opening",
         inLanguage: "en",
         name: "Al-Fatihah",

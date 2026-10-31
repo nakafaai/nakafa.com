@@ -5,6 +5,7 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   Array as Arr,
   Clock,
+  DateTime,
   Effect,
   FileSystem,
   Option,
@@ -12,6 +13,7 @@ import {
   Schema,
 } from "effect";
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
+import { readTwinTitle } from "@/lib/llms/format";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 import { readOgCopy } from "@/lib/og/copy.server";
 import { staticPagePath } from "@/lib/routing/prerendered";
@@ -19,6 +21,7 @@ import {
   readSubjectMap,
   SubjectLocaleSchema,
 } from "@/lib/routing/public/subject";
+import { renderSecurityTxt, SECURITY_TXT_PATH } from "@/lib/security/txt";
 import { readRssText } from "@/lib/seo/feed";
 import { readManifestText } from "@/lib/seo/manifest";
 import { readSitemapFiles } from "@/lib/sitemap/files";
@@ -81,6 +84,13 @@ function splitPagePath(page: string) {
   return { cleanSlug: Arr.join(segments, "/"), locale };
 }
 
+/** A page with a Markdown twin, and the title that llms.txt names it by. */
+const MarkdownTwinSchema = Schema.Struct({
+  page: Schema.String,
+  title: Schema.String,
+});
+type MarkdownTwin = typeof MarkdownTwinSchema.Type;
+
 /** The media type that a page's Markdown twin is linked with, which only the build writes. */
 const MARKDOWN_TYPE = 'type="text/markdown"';
 
@@ -107,7 +117,7 @@ const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
     yield* getLlmsMarkdownText({ cleanSlug, locale: appLocale })
   );
   if (Option.isNone(text)) {
-    return Option.none<string>();
+    return Option.none<MarkdownTwin>();
   }
   yield* writeArtifact(outDir, `${page.slice(1)}.md`, text.value);
 
@@ -125,12 +135,15 @@ const writeMarkdownTwin = Effect.fn("www.static.markdownTwin")(function* (
     htmlFile,
     `${parts[0]}${markdownTwinLink(page)}</head>${parts[1]}`
   );
-  return Option.some(page);
+  return Option.some({ page, title: readTwinTitle(text.value) });
 });
 
-/** Lists the Markdown twins in llms.txt after the index, so one file names every twin. */
-function buildLlmsText(twins: readonly string[]) {
-  const lines = Arr.map(twins, (page) => `- ${SITE_ORIGIN}${page}.md`);
+/** Lists the Markdown twins in llms.txt after the index, each by its title, so one file names every twin. */
+function buildLlmsText(twins: readonly MarkdownTwin[]) {
+  const lines = Arr.map(
+    twins,
+    ({ page, title }) => `- [${title}](${SITE_ORIGIN}${page}.md)`
+  );
   return `${buildRootLlmsIndexText()}\n## Markdown pages\n\n${Arr.join(lines, "\n")}\n`;
 }
 
@@ -139,7 +152,7 @@ function buildLlmsText(twins: readonly string[]) {
  * that redirect each locale's retired subject lessons to their successors.
  */
 const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
-  twins: readonly string[]
+  twins: readonly MarkdownTwin[]
 ) {
   const sitemap = yield* readSitemapFiles();
   const subjects = yield* Effect.forEach(
@@ -148,10 +161,12 @@ const readTextArtifacts = Effect.fn("www.static.textArtifacts")(function* (
   );
   const rss = yield* readRssText();
   const manifest = yield* readManifestText();
+  const now = yield* DateTime.now;
   const rest: readonly TextArtifact[] = [
     { path: "rss.xml", text: rss },
     { path: "llms.txt", text: buildLlmsText(twins) },
     { path: "manifest.webmanifest", text: manifest },
+    { path: SECURITY_TXT_PATH, text: renderSecurityTxt(now) },
   ];
   return [...sitemap, ...subjects, ...rest];
 });

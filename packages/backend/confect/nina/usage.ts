@@ -1,6 +1,6 @@
 import type { ProviderMetadata, UsageHandler } from "@convex-dev/agent";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import { NinaUsage } from "@repo/backend/confect/nina/contract/usage";
 import { Effect, Schema } from "effect";
@@ -30,7 +30,7 @@ export const createUsageHandler = Effect.fn("nina.usage.handler")(function* (
         ...reportedCost(event.providerMetadata),
       }).pipe(
         Effect.flatMap((usage) =>
-          mutate(refs.internal.nina.usage.record, { turnId, usage })
+          mutate(ninaInternal.usage.record, { turnId, usage })
         ),
         Effect.asVoid
       )

@@ -1,5 +1,5 @@
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import triggersInternal from "@repo/backend/confect/_generated/refs/triggers.server";
 import {
   DatabaseReader,
   MutationCtx,
@@ -60,7 +60,7 @@ export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
     );
     yield* scheduler.runAfter(
       Duration.millis(0),
-      refs.internal.triggers.chats.cleanup.cleanupDeletedChat,
+      triggersInternal.chats.cleanup.cleanupDeletedChat,
       {
         chatId: change.id,
       }

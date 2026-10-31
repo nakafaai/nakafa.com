@@ -2,7 +2,7 @@ import type {
   ExamQuestionsDoc,
   ExamsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
 import {
   DatabaseWriter,
   Scheduler,
@@ -27,13 +27,9 @@ export const dropQuestion = Effect.fn("exams.question.drop")(function* (
   yield* Effect.forEach(
     [question.prompt, question.rubric, question.explanation],
     (documentId) =>
-      scheduler.runAfter(
-        Duration.zero,
-        refs.internal.editor.deletion.document,
-        {
-          documentId,
-        }
-      ),
+      scheduler.runAfter(Duration.zero, editorInternal.deletion.document, {
+        documentId,
+      }),
     { discard: true }
   );
 });

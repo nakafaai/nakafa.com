@@ -10,6 +10,7 @@ import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { ClassStatus } from "@repo/backend/confect/classroom/class";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -124,14 +125,16 @@ function ClassesActions() {
 
   return (
     <>
-      {chosen !== null && chosen.units.length > 1 ? (
-        <SchoolUnitChoice
-          onChoose={chosen.onChoose}
-          unitId={chosen.unit.id}
-          units={chosen.units}
-        />
-      ) : null}
-      <TableSearch placeholder={t("classes-search")} />
+      <ButtonGroup>
+        {chosen !== null && chosen.units.length > 1 ? (
+          <SchoolUnitChoice
+            onChoose={chosen.onChoose}
+            unitId={chosen.unit.id}
+            units={chosen.units}
+          />
+        ) : null}
+        <TableSearch placeholder={t("classes-search")} />
+      </ButtonGroup>
       <WithAction action="class.create">
         <SchoolClassAdd
           active={active}

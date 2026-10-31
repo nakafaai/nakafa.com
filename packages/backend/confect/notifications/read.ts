@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -49,7 +49,7 @@ export const markPersonRead = Effect.fn("notifications.read.person")(function* (
   if (!page.isDone) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.notifications.read.run,
+      notificationsInternal.read.run,
       { cursor: page.continueCursor, personId, readAt }
     );
   }

@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import billingInternal from "@repo/backend/confect/_generated/refs/billing.server";
 import {
   DatabaseReader,
   MutationRunner,
@@ -60,14 +60,14 @@ export const sweepEvents = Effect.fn("billing.events.sweep")(function* (
 ) {
   const { runQuery } = yield* QueryRunner;
   const { runMutation } = yield* MutationRunner;
-  const due = yield* runQuery(refs.internal.billing.events.listUnprocessed, {
+  const due = yield* runQuery(billingInternal.events.listUnprocessed, {
     receivedFrom: now - BILLING_EVENT_SWEEP_MAX_AGE_MS,
     receivedBefore: now - BILLING_EVENT_SWEEP_MIN_AGE_MS,
     limit: BILLING_EVENT_SWEEP_BATCH,
   }).pipe(Effect.orDie);
   for (const event of due) {
     const exit = yield* Effect.exit(
-      runMutation(refs.internal.billing.events.apply, {
+      runMutation(billingInternal.events.apply, {
         eventId: event.eventId,
       })
     );
@@ -81,15 +81,12 @@ export const sweepEvents = Effect.fn("billing.events.sweep")(function* (
       );
     }
   }
-  const givenUp = yield* runQuery(
-    refs.internal.billing.events.listUnprocessed,
-    {
-      receivedFrom:
-        now - BILLING_EVENT_SWEEP_MAX_AGE_MS - BILLING_EVENT_SWEEP_INTERVAL_MS,
-      receivedBefore: now - BILLING_EVENT_SWEEP_MAX_AGE_MS,
-      limit: BILLING_EVENT_SWEEP_BATCH,
-    }
-  ).pipe(Effect.orDie);
+  const givenUp = yield* runQuery(billingInternal.events.listUnprocessed, {
+    receivedFrom:
+      now - BILLING_EVENT_SWEEP_MAX_AGE_MS - BILLING_EVENT_SWEEP_INTERVAL_MS,
+    receivedBefore: now - BILLING_EVENT_SWEEP_MAX_AGE_MS,
+    limit: BILLING_EVENT_SWEEP_BATCH,
+  }).pipe(Effect.orDie);
   for (const event of givenUp) {
     yield* Effect.logError("Billing webhook gave up after the sweep window", {
       key: event.key,

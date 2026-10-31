@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import triggersInternal from "@repo/backend/confect/_generated/refs/triggers.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -45,7 +45,7 @@ const cleanupDeletedChat = FunctionImpl.make(
     const scheduler = yield* Scheduler;
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.triggers.chats.cleanup.cleanupDeletedChat,
+      triggersInternal.chats.cleanup.cleanupDeletedChat,
       args
     );
     return null;

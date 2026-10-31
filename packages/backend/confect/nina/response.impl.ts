@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
 import schema from "@repo/backend/confect/_generated/schema";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
@@ -19,7 +19,7 @@ const present = FunctionImpl.make(
   "present",
   Effect.fn("nina.response.present")(function* (args) {
     const turn = yield* (yield* QueryRunner)
-      .runQuery(refs.internal.nina.lifecycle.presentation, args)
+      .runQuery(ninaInternal.lifecycle.presentation, args)
       .pipe(Effect.orDie);
     if (!turn) {
       return null;

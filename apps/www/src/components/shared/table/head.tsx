@@ -19,8 +19,12 @@ import {
 import type { Column, RowData } from "@tanstack/react-table";
 import { cva } from "class-variance-authority";
 import { Option } from "effect";
-import type { ComponentProps, ReactElement } from "react";
+import { type ComponentProps, type ReactElement, use } from "react";
 import { useTranslations } from "use-intl";
+import {
+  type HeadAlign,
+  HeadAlignContext,
+} from "@/components/shared/table/align";
 import { chosenDays, dayRangeOf } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { useTableFilters } from "@/components/shared/table/toolbar";
@@ -53,19 +57,21 @@ const headButton = cva(
  */
 export function TableHeadButton({
   active = false,
-  align = "center",
+  align,
   children,
   icon,
   ...props
 }: Omit<ComponentProps<typeof Button>, "className" | "size" | "variant"> & {
   readonly active?: boolean;
-  readonly align?: "center" | "end" | "start";
+  readonly align?: typeof HeadAlign.Type;
   readonly icon: IconSvgElement;
 }) {
+  const placed = use(HeadAlignContext);
+
   return (
     <Button
       {...props}
-      className={headButton({ active, align })}
+      className={headButton({ active, align: align ?? placed })}
       size="sm"
       type="button"
       variant="ghost"

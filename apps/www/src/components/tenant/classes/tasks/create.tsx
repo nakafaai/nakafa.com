@@ -17,6 +17,7 @@ import {
   EMPTY_DRAFT,
 } from "@/components/tenant/classes/tasks/draft";
 import { TaskFields } from "@/components/tenant/classes/tasks/fields";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 
 /**
  * Publishes a task to the class: its title, what it asks, its deadline in the browser's own time,
@@ -50,7 +51,7 @@ export function NewTask() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{t("task-new")}</Button>
+      <SchoolHeaderAdd label={t("task-new")} onClick={() => setOpen(true)} />
       <ResponsiveDialog
         description={t("task-new-description")}
         footer={

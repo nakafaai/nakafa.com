@@ -2,7 +2,7 @@ import {
   decodeAgentInput,
   decodeAgentOutput,
 } from "@repo/backend/agent/decode";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsPublic from "@repo/backend/confect/_generated/refs/contents";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
@@ -12,7 +12,7 @@ import {
 } from "@repo/contents/agent/schema/search";
 import { Effect } from "effect";
 
-const searchReference = refs.public.contents.queries.search.search;
+const searchReference = contentsPublic.queries.search.search;
 
 /** Searches the signed Nakafa read model without a network hop. */
 export const searchNakafaContent = Effect.fn("agent.searchNakafaContent")(

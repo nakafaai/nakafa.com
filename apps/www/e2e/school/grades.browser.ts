@@ -61,10 +61,11 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
   await expect(row).toContainText("Not entered", {
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page.getByRole("link", { name: "Grades" })).toHaveAttribute(
-    "aria-current",
-    "page"
-  );
+  await expect(
+    page
+      .getByRole("navigation", { name: "Class" })
+      .getByRole("link", { name: "Grades" })
+  ).toHaveAttribute("aria-current", "page");
 
   // A typed value shows at once as the draft, judged by the school's scheme.
   const field = row.getByRole("textbox", {

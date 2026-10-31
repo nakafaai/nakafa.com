@@ -32,6 +32,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
+import { SchoolHeaderAdd } from "@/components/tenant/header";
 import {
   moveStudentChange,
   placeStudentChange,
@@ -93,9 +94,10 @@ export function SchoolPlacementAdd({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} type="button">
-        {t("placement-add")}
-      </Button>
+      <SchoolHeaderAdd
+        label={t("placement-add")}
+        onClick={() => setIsOpen(true)}
+      />
       <ResponsiveDialog
         description={
           status === "archived"

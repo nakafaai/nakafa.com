@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import connectorsPublic from "@repo/backend/confect/_generated/refs/connectors";
+import connectorsInternal from "@repo/backend/confect/_generated/refs/connectors.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -150,7 +151,7 @@ const preview = FunctionImpl.make(
       yield* requireAuth();
       const { runQuery } = yield* QueryRunner;
       const { runMutation } = yield* MutationRunner;
-      yield* runQuery(refs.public.connectors.classroom.canImport, {
+      yield* runQuery(connectorsPublic.classroom.canImport, {
         slug,
       }).pipe(
         Effect.catchTag("NotMember", () =>
@@ -159,7 +160,7 @@ const preview = FunctionImpl.make(
           )
         )
       );
-      const found = yield* runQuery(refs.internal.connectors.classroom.target, {
+      const found = yield* runQuery(connectorsInternal.classroom.target, {
         slug,
       }).pipe(Effect.orDie);
       if (found === null) {
@@ -196,7 +197,7 @@ const preview = FunctionImpl.make(
         Effect.provide(FetchClient),
         Effect.tapError((failure) =>
           failure.reason === "revoked"
-            ? runMutation(refs.internal.connectors.sync.reconnect, {
+            ? runMutation(connectorsInternal.sync.reconnect, {
                 connectionId: found.connectionId,
               }).pipe(Effect.orDie)
             : Effect.void
@@ -279,7 +280,7 @@ const link = FunctionImpl.make(
       .patch(connectionId, { nextSyncAt: yield* Clock.currentTimeMillis })
       .pipe(Effect.orDie);
     yield* (yield* Scheduler)
-      .runAfter(Duration.zero, refs.internal.connectors.sync.run, {
+      .runAfter(Duration.zero, connectorsInternal.sync.run, {
         connectionId,
       })
       .pipe(Effect.orDie);

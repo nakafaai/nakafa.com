@@ -1,5 +1,5 @@
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -36,7 +36,7 @@ const lessonsStep = Effect.fn("contents.sections.lessonsStep")(function* (
   missing: number
 ) {
   const { runQuery } = yield* QueryRunner;
-  const page = yield* runQuery(refs.internal.contents.sections.rows.lessons, {
+  const page = yield* runQuery(contentsInternal.sections.rows.lessons, {
     cursor,
     ...(releaseId === undefined ? {} : { releaseId }),
   }).pipe(Effect.catchTag("SchemaError", Effect.die));
@@ -66,7 +66,7 @@ const quranStep = Effect.fn("contents.sections.quranStep")(function* (
   missing: number
 ) {
   const { runQuery } = yield* QueryRunner;
-  const page = yield* runQuery(refs.internal.contents.sections.rows.surah, {
+  const page = yield* runQuery(contentsInternal.sections.rows.surah, {
     surah,
     ...(releaseId === undefined ? {} : { releaseId }),
   }).pipe(Effect.catchTag("SchemaError", Effect.die));
@@ -113,10 +113,10 @@ const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
     return STALE;
   }
   const { runMutation } = yield* MutationRunner;
-  const pruned = yield* runMutation(
-    refs.internal.contents.sections.rows.prune,
-    { cursor, releaseId }
-  ).pipe(Effect.catchTag("SchemaError", Effect.die));
+  const pruned = yield* runMutation(contentsInternal.sections.rows.prune, {
+    cursor,
+    releaseId,
+  }).pipe(Effect.catchTag("SchemaError", Effect.die));
   if (pruned.stale) {
     return STALE;
   }
@@ -135,10 +135,11 @@ const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
       stale: false,
     };
   }
-  const finished = yield* runMutation(
-    refs.internal.contents.sections.rows.finish,
-    { missing, model: embeddingModelId, releaseId }
-  ).pipe(Effect.catchTag("SchemaError", Effect.die));
+  const finished = yield* runMutation(contentsInternal.sections.rows.finish, {
+    missing,
+    model: embeddingModelId,
+    releaseId,
+  }).pipe(Effect.catchTag("SchemaError", Effect.die));
   return {
     ...NOTHING,
     next: null,
@@ -182,7 +183,7 @@ export const runStep = Effect.fn("contents.sections.run")(
     if (outcome.next !== null) {
       yield* scheduler.runAfter(
         Duration.millis(0),
-        refs.internal.contents.sections.build.run,
+        contentsInternal.sections.build.run,
         outcome.next
       );
     }

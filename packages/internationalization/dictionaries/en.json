@@ -1557,15 +1557,20 @@
       }
     },
     "size-title": "How many students do you have?",
-    "size-description": "Free to start, whatever the size.",
+    "size-description": "Free to start. We suggest a plan for your size.",
     "size": {
       "s": "Under 100",
       "m": "100 to 499",
       "l": "500 to 999",
       "xl": "1,000 or more"
     },
+    "plan-free": "Free plan, up to {limit} students.",
+    "plan-school": "School plan, paid per student.",
+    "plan-founder": "School plan, with the founder's help.",
     "founder-line": "The founder can help a large school set up.",
     "founder-link": "Talk to the founder",
+    "link-copy": "Copy link",
+    "link-copied": "Link copied",
     "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
     "finish": "Open school",
     "required-error": "Choose an answer.",

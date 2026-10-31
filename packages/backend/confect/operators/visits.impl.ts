@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import operatorsInternal from "@repo/backend/confect/_generated/refs/operators.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -182,7 +182,7 @@ const approve = FunctionImpl.make(
     });
     yield* (yield* Scheduler).runAt(
       DateTime.makeUnsafe(expiresAt),
-      refs.internal.operators.expiry.visit,
+      operatorsInternal.expiry.visit,
       { visitId }
     );
     return viewOf(approved);

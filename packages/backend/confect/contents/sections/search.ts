@@ -1,4 +1,4 @@
-import refs from "@repo/backend/confect/_generated/refs";
+import contentsInternal from "@repo/backend/confect/_generated/refs/contents.server";
 import {
   QueryRunner,
   VectorSearch,
@@ -33,7 +33,7 @@ export const searchSections = Effect.fn("contents.sections.search")(
   function* (input: typeof searchInputValidator.Type) {
     const { runQuery } = yield* QueryRunner;
     const ready = yield* runQuery(
-      refs.internal.contents.sections.state.ready,
+      contentsInternal.sections.state.ready,
       {}
     ).pipe(Effect.catchTag("SchemaError", Effect.die));
     if (!ready) {
@@ -60,7 +60,7 @@ export const searchSections = Effect.fn("contents.sections.search")(
         })
       )
     );
-    return yield* runQuery(refs.internal.contents.sections.hits.resolve, {
+    return yield* runQuery(contentsInternal.sections.hits.resolve, {
       ids: Arr.map(found, ({ _id }) => _id),
       limit: input.limit ?? SEARCH_DEFAULT_LIMIT,
       locale: input.locale,

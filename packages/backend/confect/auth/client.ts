@@ -3,7 +3,7 @@ import type { AuthFunctions } from "@convex-dev/better-auth";
 import { createClient, type Triggers } from "@convex-dev/better-auth";
 import authSchema from "@repo/backend/components/betterAuth/schema";
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseWriter,
@@ -139,14 +139,14 @@ const scheduleDeletion = Effect.fn("auth.lifecycle.scheduleDeletion")(
     const scheduler = yield* Scheduler;
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
+      authInternal.deletion.workflow.finalizeDeletedUserCleanup,
       {
         authId: authUser._id,
       }
     );
     yield* scheduler.runAfter(
       Duration.millis(ACCOUNT_DELETION_RECOVERY_DELAY_MS),
-      refs.internal.auth.deletion.workflow.finalizeDeletedUserCleanup,
+      authInternal.deletion.workflow.finalizeDeletedUserCleanup,
       {
         authId: authUser._id,
       }

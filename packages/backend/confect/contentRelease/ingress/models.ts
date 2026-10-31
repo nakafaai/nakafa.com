@@ -1,6 +1,6 @@
 "use node";
 
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import {
   MutationRunner,
   QueryRunner,
@@ -43,12 +43,12 @@ export const modelBuildCoordinatorLayer = Layer.effect(
     const { runQuery } = yield* QueryRunner;
     return ModelBuildCoordinator.of({
       restart: Effect.fn("contentRelease.restartModelBuild")((args) =>
-        runMutation(refs.internal.contentRelease.models.restart, args).pipe(
+        runMutation(contentReleaseInternal.models.restart, args).pipe(
           Effect.catchTag("SchemaError", Effect.die)
         )
       ),
       status: Effect.fn("contentRelease.readModelBuild")((releaseId) =>
-        runQuery(refs.internal.contentRelease.models.status, {
+        runQuery(contentReleaseInternal.models.status, {
           releaseId,
         }).pipe(Effect.catchTag("SchemaError", Effect.die))
       ),

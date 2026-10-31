@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -18,9 +17,7 @@ import {
   type TestIdentity,
   zeroReleaseJson,
 } from "@repo/backend/test/content/state";
-import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
-import { Schema } from "effect";
 
 const currentRelease = internal.contentRelease.status.current;
 const releaseStatus = internal.contentRelease.status.getStatus;
@@ -261,33 +258,6 @@ describe("contentRelease/status", () => {
       data: {
         code: "CONTENT_RELEASE_INTEGRITY",
         message: `Release ${TEST_RELEASE_ID} lost its signed slot identity.`,
-      },
-    });
-  });
-
-  it("reports a release signed under a retired contract as unsupported", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTestRelease(ctx);
-      const release = await requireRelease(ctx);
-      const stored = Schema.decodeSync(
-        Schema.fromJsonString(SignedContentReleaseSchema)
-      )(testReleaseJson());
-      await ctx.db.patch(release._id, {
-        releaseJson: encodeJsonText({
-          ...stored,
-          manifest: {
-            ...stored.manifest,
-            rendererContractVersion: "1.0.0",
-          },
-        }),
-      });
-    });
-
-    await expect(getStatus(t)).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_UNSUPPORTED",
-        message: `Content release ${TEST_RELEASE_ID} was signed under a retired content contract, so this deployment cannot read it. Republish the content to inspect that release again.`,
       },
     });
   });

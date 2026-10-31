@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -112,7 +112,7 @@ export const noticeMentions = Effect.fn("classroom.forum.notice.write")(
     if (checked.everyone) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
-        refs.internal.notifications.fanout.run,
+        notificationsInternal.fanout.run,
         {
           cursor: null,
           phase: "students",

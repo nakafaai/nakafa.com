@@ -1,7 +1,7 @@
 import { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { components } from "@repo/backend/confect/_generated/components";
-import refs from "@repo/backend/confect/_generated/refs";
+import storageInternal from "@repo/backend/confect/_generated/refs/storage.server";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -59,7 +59,7 @@ export const sweepStorage = Effect.fn("storage.sweep")(function* () {
   if (!done) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.storage.sweep,
+      storageInternal.sweep,
       {}
     );
   }

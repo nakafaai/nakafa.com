@@ -442,16 +442,15 @@
 }
 
 @media (width < 48rem) {
-  html[data-drawer-stage]:has([data-slot="drawer-popup"][data-open]) {
+  html[data-drawer-open] {
     background-color: black;
   }
 
-  html[data-drawer-stage]:has([data-slot="drawer-popup"][data-open]) body {
+  html[data-drawer-open] body {
     background-color: transparent;
   }
 
-  html[data-drawer-stage]:has([data-slot="drawer-popup"][data-open])
-    [data-slot="drawer-stage"] {
+  html[data-drawer-open] [data-slot="drawer-stage"] {
     clip-path: inset(
       var(--drawer-stage-scroll, 0px) 0
         calc(100% - var(--drawer-stage-scroll, 0px) - 100svh) round

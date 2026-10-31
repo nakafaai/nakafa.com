@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
+import emailsInternal from "@repo/backend/confect/_generated/refs/emails.server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionRunner,
@@ -124,21 +124,18 @@ const send = FunctionImpl.make(
     const { runQuery } = yield* QueryRunner;
     const { runAction } = yield* ActionRunner;
     const { runMutation } = yield* MutationRunner;
-    const found = yield* runQuery(
-      refs.internal.emails.notice.internal.readInput,
-      {
-        postId,
-        recipients,
-      }
-    ).pipe(Effect.orDie);
+    const found = yield* runQuery(emailsInternal.notice.internal.readInput, {
+      postId,
+      recipients,
+    }).pipe(Effect.orDie);
     if (found === null || Arr.isReadonlyArrayEmpty(found.addresses)) {
       return null;
     }
     const message = yield* runAction(
-      refs.internal.emails.notice.delivery.render,
+      emailsInternal.notice.delivery.render,
       found.input
     ).pipe(Effect.orDie);
-    yield* runMutation(refs.internal.emails.notice.internal.enqueue, {
+    yield* runMutation(emailsInternal.notice.internal.enqueue, {
       ...message,
       addresses: found.addresses,
       postId,

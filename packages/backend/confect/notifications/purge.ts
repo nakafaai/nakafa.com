@@ -1,5 +1,5 @@
 import type { GenericId } from "@confect/core";
-import refs from "@repo/backend/confect/_generated/refs";
+import notificationsInternal from "@repo/backend/confect/_generated/refs/notifications.server";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -49,7 +49,7 @@ export const purgeInbox = Effect.fn("notifications.purge.inbox")(function* (
   if (yield* deletePage(personId, PURGE_PAGE_SIZE)) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
-      refs.internal.notifications.purge.run,
+      notificationsInternal.purge.run,
       { personId }
     );
   }

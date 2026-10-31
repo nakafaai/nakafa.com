@@ -18,7 +18,7 @@ import type {
   PublicationRollbackRequest,
   PublicationRoutePageRequest,
 } from "@nakafa/aksara-contracts/transport/request";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   ReleaseError,
@@ -187,7 +187,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         request.limit - records.length
       );
       const source = yield* runQuery(
-        refs.internal.contentRelease.rollback.prepareRollback,
+        contentReleaseInternal.rollback.prepareRollback,
         {
           afterIndex,
           limit,
@@ -252,7 +252,7 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
         request.limit - records.length
       );
       const source = yield* runQuery(
-        refs.internal.contentRelease.rollback.prepareRoutes,
+        contentReleaseInternal.rollback.prepareRoutes,
         {
           afterIndex,
           limit,
