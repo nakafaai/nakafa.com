@@ -37,6 +37,7 @@ export const ViewerView = Schema.Struct({
     kind: PersonKind,
     name: PersonName,
   }),
+  reach: Schema.Array(Schema.String),
   tenant: TenantProfile.mapFields(
     Struct.assign({ id: Id("tenants"), ...TenantSettings.fields })
   ),

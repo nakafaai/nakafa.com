@@ -38,7 +38,8 @@ function readPathLocale(segments: readonly string[]) {
 /**
  * Whether a path points into the school tree, with or without a locale in front.
  * Only a school host reaches that tree, so a main host answers such a path with
- * not found. The start page of an account is the one exception.
+ * not found. An account's two pages are the exceptions: the School entry at
+ * `/<locale>/school`, and the start page.
  */
 export function isSchoolTreePath(pathname: string): boolean {
   const segments = pathSegments(pathname);
@@ -47,10 +48,11 @@ export function isSchoolTreePath(pathname: string): boolean {
   if (!Option.contains(readSegment(segments, school), SCHOOL_SEGMENT)) {
     return false;
   }
-  return !(
+  const isEntry = startsWithLocale && segments.length === school + 1;
+  const isStart =
     segments.length === school + 2 &&
-    Option.contains(readSegment(segments, school + 1), SCHOOL_START_SEGMENT)
-  );
+    Option.contains(readSegment(segments, school + 1), SCHOOL_START_SEGMENT);
+  return !(isEntry || isStart);
 }
 
 /** The hostname that the `host` header names, without its port, or none when the header names no host. */

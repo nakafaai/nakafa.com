@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   readTryoutSectionPage: vi.fn(),
 }));
 
+vi.mock("@repo/internationalization/src/translator", () => ({
+  readServerTranslator: () => Promise.resolve((key: string) => key),
+}));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSectionPage: mocks.readTryoutSectionPage,
 }));
@@ -34,8 +37,10 @@ const address = {
   track: "2027",
 } as const;
 const catalogSection = {
+  exam: { title: "SNBT" },
   section: { publicPath: SECTION, title: "Section 1" },
-  set: { publicPath: SET },
+  set: { publicPath: SET, title: "Set 1" },
+  track: { title: "Year 2027" },
 };
 
 beforeEach(() => {
@@ -50,7 +55,11 @@ describe("readTryoutSectionRoute", () => {
     () =>
       Effect.gen(function* () {
         expect(yield* readTryoutSectionRoute(address)).toMatchObject({
-          head,
+          head: {
+            ...head,
+            description: "section-metadata-description",
+            title: ["Section 1", "Set 1", "SNBT Year 2027"],
+          },
           kind: "catalog",
           page: catalogSection,
           route: address,
@@ -62,6 +71,24 @@ describe("readTryoutSectionRoute", () => {
           SECTION
         );
       })
+  );
+
+  it.effect("keeps the description a section was published with", () =>
+    Effect.gen(function* () {
+      mocks.readTryoutSectionPage.mockReturnValueOnce(
+        Effect.succeed({
+          ...catalogSection,
+          section: {
+            ...catalogSection.section,
+            description: "Written for this section.",
+          },
+        })
+      );
+
+      expect(yield* readTryoutSectionRoute(address)).toMatchObject({
+        head: { description: "Written for this section." },
+      });
+    })
   );
 
   it.effect(

@@ -1,11 +1,11 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
+  Certificate01Icon,
   CheckmarkBadge01Icon,
   CircleIcon,
   Download04Icon,
   IdentityCardIcon,
-  Loading03Icon,
   MoreHorizontalIcon,
   SquareLock02Icon,
   UserCheck01Icon,
@@ -55,13 +55,6 @@ export type GraduationLine = Ref.Returns<
 /** How many students one page of the list loads, and each page after it. */
 const PAGE_SIZE = 50;
 
-/** The state of a line's SKL with its icon, in the list, its filter, and the open student. */
-const LETTER_ICONS = {
-  issued: Loading03Icon,
-  locked: SquareLock02Icon,
-  none: CircleIcon,
-};
-
 /** The look of each readiness value: ready, or the fact that is missing, which reads as a warning. */
 const READY_LOOKS = {
   decision: { icon: CheckmarkBadge01Icon, tone: "warning" },
@@ -80,6 +73,13 @@ const readinessOf = (line: GraduationLine) =>
 
 /** The state of a line's SKL: none yet, or the state it is in. */
 const letterStateOf = (line: GraduationLine) => line.letter?.state ?? "none";
+
+/** The state of a line's SKL with its look, in the list and its filter. */
+const LETTER_LOOKS = {
+  issued: { icon: Certificate01Icon, tone: "info" },
+  locked: { icon: SquareLock02Icon, tone: "success" },
+  none: { icon: CircleIcon, tone: "neutral" },
+} as const satisfies Record<ReturnType<typeof letterStateOf>, StatusLook>;
 
 /** The sort value of a student without transcript data: below every average, which is 0 or more. */
 const NO_AVERAGE = -1;
@@ -186,10 +186,10 @@ function CohortGraduationBody() {
     }),
     lineColumns.accessor(letterStateOf, {
       cell: (info) => (
-        <span className="flex items-center gap-2">
-          <HugeIcons icon={LETTER_ICONS[info.getValue()]} />
-          {t(`letter-${info.getValue()}`)}
-        </span>
+        <TableStatus
+          {...LETTER_LOOKS[info.getValue()]}
+          label={t(`letter-${info.getValue()}`)}
+        />
       ),
       enableSorting: false,
       filterFn: "oneOf",
@@ -197,7 +197,7 @@ function CohortGraduationBody() {
         <ColumnFilter
           column="letter"
           options={Arr.map(["none", "issued", "locked"] as const, (state) => ({
-            icon: LETTER_ICONS[state],
+            icon: LETTER_LOOKS[state].icon,
             label: t(`letter-${state}`),
             value: state,
           }))}

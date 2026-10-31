@@ -1,4 +1,5 @@
 import type { Locale } from "@repo/internationalization/src/locale";
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Clock, Effect, Option } from "effect";
 import { readTryoutSetPage } from "@/components/tryout/catalog/source.server";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
@@ -27,7 +28,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
       track: input.track,
     };
     const setPath = getTryoutHref(route).slice(1);
-    const [page, head] = yield* Effect.all(
+    const [page, head, tTryouts] = yield* Effect.all(
       [
         readTryoutSetPage(input.locale, setPath),
         readTryoutRouteHead({
@@ -35,14 +36,25 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
           locale: input.locale,
           publicPath: setPath,
         }),
+        Effect.promise(() =>
+          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+        ),
       ],
       { concurrency: "unbounded" }
     );
     if (!page || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
+    const exam = `${page.exam.title} ${page.track.title}`;
     return {
-      head: head.value,
+      // Every exam has a Set 1, so the page names its exam too.
+      head: {
+        ...head.value,
+        description:
+          page.set.description ??
+          tTryouts("set-metadata-description", { exam, set: page.set.title }),
+        title: [page.set.title, exam],
+      },
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
       page,

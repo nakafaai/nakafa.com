@@ -88,33 +88,12 @@ describe("createSEOTitle", () => {
       expect(result).toBe(`${part1} - ${part2} - Nakafa`);
     });
 
-    it("truncates first part smartly when it exceeds limit", () => {
-      // MAX_LENGTH = 55, overhead = 9, so max first part = 46
-      const veryLong = "This is a very long title that exceeds the limit";
-      const result = createSEOTitle([veryLong]);
-      // Should truncate at last space before 46 chars
-      expect(result.length).toBeLessThanOrEqual(55);
-      expect(result).toContain("Nakafa");
-      expect(result).not.toBe(`${veryLong} - Nakafa`);
-    });
+    it("keeps a first part whole, alone, when it leaves no room for the site name", () => {
+      const analytical = "Vector Addition and Subtraction with Analytical Method";
+      const graphical = "Vector Addition and Subtraction with Graphical Method";
 
-    it("truncates first part at word boundary", () => {
-      // Create a string where word boundary exists before limit
-      const longPart = `Short Word AnotherWord ${"X".repeat(50)}`;
-      const result = createSEOTitle([longPart]);
-      // Should truncate at last space, not mid-word
-      expect(result.length).toBeLessThanOrEqual(55);
-      // The truncated part should not end mid-word
-      const truncatedPart = result.replace(" - Nakafa", "");
-      expect(truncatedPart.endsWith("X")).toBe(false);
-    });
-
-    it("handles parts that would exactly hit the limit", () => {
-      // 49 + " - " + 6 = 58 chars (over 55, should be truncated)
-      const part = "A".repeat(49);
-      const result = createSEOTitle([part]);
-      // Should be truncated to fit within limit
-      expect(result.length).toBeLessThanOrEqual(55);
+      expect(createSEOTitle([analytical, "Vector"])).toBe(analytical);
+      expect(createSEOTitle([graphical, "Vector"])).toBe(graphical);
     });
   });
 
@@ -188,11 +167,8 @@ describe("createSEOTitle", () => {
       const longTitle =
         "This is a very long article title that might exceed the optimal length";
       const result = createSEOTitle([longTitle, "Category"]);
-      // Long title should be truncated to fit within limit
-      expect(result.length).toBeLessThanOrEqual(55);
-      expect(result).toContain("Nakafa");
-      // Should contain start of the title (most important part)
-      expect(result).toContain("This is a very long article");
+      // A search result shortens it by itself, and the page keeps its whole name.
+      expect(result).toBe(longTitle);
     });
 
     it("handles missing metadata gracefully", () => {
@@ -235,9 +211,8 @@ describe("createSEOTitle", () => {
     it("handles very long site name", () => {
       const longSiteName = "A".repeat(50);
       const result = createSEOTitle(["Hello"], longSiteName);
-      // With long site name, first part may be truncated to fit limit
-      expect(result.length).toBeLessThanOrEqual(55);
-      expect(result).toContain(longSiteName);
+      // The part stays whole, so it stands without a site name that leaves it no room.
+      expect(result).toBe("Hello");
     });
 
     it("truncates site name when it exceeds MAX_LENGTH (Devin AI bug fix)", () => {
@@ -245,10 +220,8 @@ describe("createSEOTitle", () => {
       const veryLongSiteName =
         "Very Long Site Name That Exceeds The Maximum Length";
       const result = createSEOTitle(["Hello"], veryLongSiteName);
-      // Result should never exceed MAX_LENGTH
-      expect(result.length).toBeLessThanOrEqual(55);
-      // Should contain truncated site name
-      expect(result).toContain("Very Long Site Name");
+      // Such a name leaves the part no room, so the part stands without it.
+      expect(result).toBe("Hello");
     });
 
     it("returns truncated site name only when siteName exceeds MAX_LENGTH and no parts", () => {

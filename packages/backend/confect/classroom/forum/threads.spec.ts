@@ -26,9 +26,9 @@ import { Schema } from "effect";
  * The numbered discussions of a class's forum (ADR 0025). A member of the class
  * or a subject teacher opens one in a channel with a title and a first message,
  * and replies in it; a student opens one only while the school lets students
- * open discussions. Whoever reads the forum reads a discussion by its number and
- * its replies, newest first. A discussion of another class is refused as a
- * missing object.
+ * open discussions. Whoever opened a discussion, or a subject teacher, renames
+ * it. Whoever reads the forum reads a discussion by its number and its replies,
+ * newest first. A discussion of another class is refused as a missing object.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -48,6 +48,19 @@ export default GroupSpec.make()
       returns: () => ThreadView,
       error: () =>
         Schema.Union([AccessDenied, DiscussionsClosed, MentionRefused]),
+    }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "rename",
+      args: () => ({
+        classId: Id("classes"),
+        number: DiscussionNumber,
+        slug: TenantSlug,
+        title: DiscussionTitle,
+      }),
+      returns: () => Schema.Null,
+      error: () => AccessDenied,
     }).middleware(ClassAccess, { action: "forum.post", arg: "classId" })
   )
   .addFunction(

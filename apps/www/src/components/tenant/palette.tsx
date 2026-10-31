@@ -34,7 +34,7 @@ import { useTenant } from "@/components/tenant/context";
 import { settingsSectionIcons } from "@/components/tenant/settings/icons";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
-import { schoolSettingsGroups } from "@/lib/settings/school";
+import { openSettingsGroups } from "@/lib/settings/school";
 
 /** One place of the school the palette opens: a page, a class or a section of the settings. */
 interface PaletteItem {
@@ -172,18 +172,12 @@ function TenantPaletteRow({
 
 /**
  * The palette's groups for this viewer, in the sidebar's order: the school's pages the
- * viewer may open, the viewer's classes once they are read, and the settings for a
- * viewer who may manage the school.
+ * viewer may open, the viewer's classes once they are read, and the settings sections the
+ * viewer opens.
  */
 function usePaletteGroups(): readonly PaletteGroup[] {
-  const {
-    canManage,
-    canOpenExams,
-    canOpenGraduation,
-    canOpenReports,
-    role,
-    slug,
-  } = useTenant();
+  const { canOpenExams, canOpenGraduation, canOpenReports, reach, role, slug } =
+    useTenant();
   const classes = useMyClasses();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
@@ -286,20 +280,18 @@ function usePaletteGroups(): readonly PaletteGroup[] {
       },
     })
   );
-  const settingsItems = canManage
-    ? Arr.flatMap(schoolSettingsGroups(slug), (group) =>
-        Arr.map(
-          group.sections,
-          (section): PaletteItem => ({
-            icon: { hugeicon: settingsSectionIcons[section.labelKey] },
-            key: `settings:${section.labelKey}`,
-            label: tSettings(section.labelKey),
-            place: tSettings(group.key),
-            target: section.target,
-          })
-        )
-      )
-    : [];
+  const settingsItems = Arr.flatMap(openSettingsGroups(slug, reach), (group) =>
+    Arr.map(
+      group.sections,
+      (section): PaletteItem => ({
+        icon: { hugeicon: settingsSectionIcons[section.labelKey] },
+        key: `settings:${section.labelKey}`,
+        label: tSettings(section.labelKey),
+        place: tSettings(group.key),
+        target: section.target,
+      })
+    )
+  );
 
   return Arr.filter(
     [

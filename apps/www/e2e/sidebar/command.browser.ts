@@ -45,3 +45,36 @@ test("the shell's search command lists the subjects with their names", async ({
   ).toBeVisible();
   expect(MutableList.toArray(missing)).toEqual([]);
 });
+
+/**
+ * Search lives in the phone's sidebar. The sheet steps aside for the palette, so
+ * the row a learner picks opens on the page instead of behind the sidebar.
+ */
+test("a row picked in the phone's search opens with the sidebar out of the way", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 844, width: 390 });
+  await page.goto(LESSON_PATH);
+  const trigger = page.getByRole("button", { name: "Toggle Sidebar" }).first();
+  await expect(trigger).toBeVisible();
+  await expect
+    .poll(() =>
+      trigger.evaluate((node) =>
+        Object.keys(node).some((key) => key.startsWith("__reactProps$"))
+      )
+    )
+    .toBe(true);
+  await trigger.click();
+  const sidebar = page.getByRole("dialog", { name: "Sidebar" });
+  await sidebar.getByRole("button", { name: SEARCH }).click();
+
+  const palette = page.getByRole("dialog", { name: "Search" });
+  await expect(palette.getByRole("combobox")).toBeFocused();
+  await expect(sidebar).toBeHidden();
+
+  await palette.getByRole("option").first().click();
+  await expect(page).not.toHaveURL(new RegExp(`${LESSON_PATH}$`, "u"));
+  await expect(palette).toBeHidden();
+  await expect(sidebar).toBeHidden();
+  await expect(page.locator("h1").first()).toBeVisible();
+});

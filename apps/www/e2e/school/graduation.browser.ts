@@ -130,13 +130,14 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
   await page.goto(address("/settings/roster"));
   const exportGrades = page
     .locator("header")
-    .getByRole("button", { name: "Export grades" });
+    .getByRole("button", { exact: true, name: "Export" });
   await expect(exportGrades).toBeEnabled({
     timeout: readinessTimeoutMilliseconds,
   });
   await waitUntilTakenOver(exportGrades);
   const ledger = page.waitForEvent("download");
   await exportGrades.click();
+  await page.getByRole("menuitem", { name: "Report grades" }).click();
   await page.getByRole("menuitem", { name: graduation.cohort }).click();
   expect((await ledger).suggestedFilename()).toBe(
     `dapodik-nilai-${Str.toLowerCase(graduation.cohort)}.xlsx`

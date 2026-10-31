@@ -35,6 +35,7 @@ import {
   PaneHeader,
 } from "@/components/shared/pane";
 import { usePanes } from "@/components/shared/panes";
+import { columnAlign } from "@/components/shared/table/align";
 import { TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
@@ -122,19 +123,26 @@ function ReportDetailBody({ reportId }: { reportId: Id<"reportCards"> }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("subject")}</TableHead>
-                  <TableHead className="text-end">{t("grade")}</TableHead>
-                  <TableHead>{t("result")}</TableHead>
+                  <TableHead className={columnAlign({ align: "start" })}>
+                    {t("subject")}
+                  </TableHead>
+                  <TableHead className={columnAlign()}>{t("grade")}</TableHead>
+                  <TableHead className={columnAlign()}>{t("result")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {Arr.map(report.subjects, (subject) => (
                   <TableRow key={subject.className}>
-                    <TableCell dir="auto">{subject.className}</TableCell>
-                    <TableCell className="text-end tabular-nums">
+                    <TableCell
+                      className={columnAlign({ align: "start" })}
+                      dir="auto"
+                    >
+                      {subject.className}
+                    </TableCell>
+                    <TableCell className={columnAlign()}>
                       {subject.value}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className={columnAlign()}>
                       {subject.band ?? t(`kktp-${subject.kktp}`)}
                     </TableCell>
                   </TableRow>

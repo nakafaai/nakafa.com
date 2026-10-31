@@ -46,6 +46,28 @@ export declare const api: {
         },
         Id<"tenantGrants">
       >;
+      change: FunctionReference<
+        "mutation",
+        "public",
+        {
+          grantId: Id<"tenantGrants">;
+          role:
+            | "owner"
+            | "admin"
+            | "principal"
+            | "deputy"
+            | "teacher"
+            | "counselor"
+            | "staff"
+            | "student"
+            | "guardian"
+            | "proctor"
+            | "auditor"
+            | "integration";
+          slug: string;
+        },
+        Id<"tenantGrants">
+      >;
       list: FunctionReference<
         "query",
         "public",
@@ -313,7 +335,11 @@ export declare const api: {
       generateTopupCheckoutLink: FunctionReference<
         "action",
         "public",
-        { locale: "en" | "id" | "de"; successUrl: string },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          locale: "en" | "id" | "de";
+          successUrl: string;
+        },
         { url: string }
       >;
     };
@@ -415,6 +441,20 @@ export declare const api: {
         "mutation",
         "public",
         { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      changeSubject: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; subject: string },
         {
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
@@ -595,6 +635,17 @@ export declare const api: {
             pageStatus?: "SplitRecommended" | "SplitRequired" | null;
             splitCursor?: string | null;
           }
+        >;
+        rename: FunctionReference<
+          "mutation",
+          "public",
+          {
+            channelId: Id<"classroomChannels">;
+            classId: Id<"classes">;
+            name: string;
+            slug: string;
+          },
+          null
         >;
       };
       messages: {
@@ -853,6 +904,17 @@ export declare const api: {
             };
           }
         >;
+        rename: FunctionReference<
+          "mutation",
+          "public",
+          {
+            classId: Id<"classes">;
+            number: number;
+            slug: string;
+            title: string;
+          },
+          null
+        >;
         replies: FunctionReference<
           "query",
           "public",
@@ -959,6 +1021,18 @@ export declare const api: {
         "public",
         { classId: Id<"classes">; slug: string },
         { authorId: Id<"tenantPeople"> }
+      >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          address: string | null;
+          classId: Id<"classes">;
+          itemId: Id<"classroomLibrary">;
+          slug: string;
+          title: string;
+        },
+        null
       >;
       importDrive: FunctionReference<
         "action",
@@ -7586,6 +7660,229 @@ export declare const api: {
         { clientId: Id<"integrationClients">; slug: string },
         { id: Id<"integrationClients">; secret: string }
       >;
+      update: FunctionReference<
+        "mutation",
+        "public",
+        {
+          actions: Array<
+            | "audit.view"
+            | "tenant.manage"
+            | "tenant.view"
+            | "unit.manage"
+            | "unit.view"
+            | "card.issue"
+            | "person.invite"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "cohort.view"
+            | "promotion.apply"
+            | "promotion.approve"
+            | "promotion.prepare"
+            | "promotion.view"
+            | "grant.revoke"
+            | "grant.view"
+            | "integration.manage"
+            | "integration.view"
+            | "connection.manage"
+            | "connection.view"
+            | "class.manage"
+            | "class.view"
+            | "forum.manage"
+            | "forum.post"
+            | "forum.read"
+            | "library.manage"
+            | "post.publish"
+            | "task.manage"
+            | "task.submit"
+            | "grade.release"
+            | "grade.view"
+            | "report.approve"
+            | "report.complete"
+            | "report.view"
+            | "visit.end"
+            | "document.edit"
+            | "document.view"
+            | "exam.edit"
+            | "exam.rooms"
+            | "exam.view"
+            | "sitting.proctor"
+            | "sitting.schedule"
+            | "sitting.view"
+            | "result.grade"
+            | "result.release"
+            | "result.view"
+            | "guardian.child"
+            | "guardian.confirm"
+            | "guardian.readdress"
+            | "guardian.revoke"
+            | "guardian.verify"
+            | "guardian.view"
+            | "guardian.withdraw"
+            | "invite.view"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "grant.manage"
+            | "owner.manage"
+            | "grant.manage"
+            | "integration.manage"
+            | "integration.view"
+            | "integration.manage"
+            | "connection.create"
+            | "connection.view"
+            | "class.create"
+            | "class.list"
+            | "grade.enter"
+            | "grade.list"
+            | "scheme.manage"
+            | "scheme.view"
+            | "report.list"
+            | "report.write"
+            | "graduation.issue"
+            | "graduation.view"
+            | "report.export"
+            | "graduation.decide"
+            | "report.open"
+            | "graduation.open"
+            | "visit.approve"
+            | "document.edit"
+            | "document.edit"
+            | "exam.edit"
+            | "exam.rooms"
+            | "exam.view"
+            | "exam.edit"
+            | "exam.rooms"
+            | "exam.view"
+            | "billing.manage"
+            | "billing.view"
+            | "guardian.link"
+            | "guardian.list"
+            | "roster.manage"
+            | "roster.view"
+            | "roster.import"
+          >;
+          clientId: Id<"integrationClients">;
+          name: string;
+          slug: string;
+        },
+        {
+          actions: Array<
+            | "audit.view"
+            | "tenant.manage"
+            | "tenant.view"
+            | "unit.manage"
+            | "unit.view"
+            | "card.issue"
+            | "person.invite"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "cohort.view"
+            | "promotion.apply"
+            | "promotion.approve"
+            | "promotion.prepare"
+            | "promotion.view"
+            | "grant.revoke"
+            | "grant.view"
+            | "integration.manage"
+            | "integration.view"
+            | "connection.manage"
+            | "connection.view"
+            | "class.manage"
+            | "class.view"
+            | "forum.manage"
+            | "forum.post"
+            | "forum.read"
+            | "library.manage"
+            | "post.publish"
+            | "task.manage"
+            | "task.submit"
+            | "grade.release"
+            | "grade.view"
+            | "report.approve"
+            | "report.complete"
+            | "report.view"
+            | "visit.end"
+            | "document.edit"
+            | "document.view"
+            | "exam.edit"
+            | "exam.rooms"
+            | "exam.view"
+            | "sitting.proctor"
+            | "sitting.schedule"
+            | "sitting.view"
+            | "result.grade"
+            | "result.release"
+            | "result.view"
+            | "guardian.child"
+            | "guardian.confirm"
+            | "guardian.readdress"
+            | "guardian.revoke"
+            | "guardian.verify"
+            | "guardian.view"
+            | "guardian.withdraw"
+            | "invite.view"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "grant.manage"
+            | "owner.manage"
+            | "grant.manage"
+            | "integration.manage"
+            | "integration.view"
+            | "integration.manage"
+            | "connection.create"
+            | "connection.view"
+            | "class.create"
+            | "class.list"
+            | "grade.enter"
+            | "grade.list"
+            | "scheme.manage"
+            | "scheme.view"
+            | "report.list"
+            | "report.write"
+            | "graduation.issue"
+            | "graduation.view"
+            | "report.export"
+            | "graduation.decide"
+            | "report.open"
+            | "graduation.open"
+            | "visit.approve"
+            | "document.edit"
+            | "document.edit"
+            | "exam.edit"
+            | "exam.rooms"
+            | "exam.view"
+            | "exam.edit"
+            | "exam.rooms"
+            | "exam.view"
+            | "billing.manage"
+            | "billing.view"
+            | "guardian.link"
+            | "guardian.list"
+            | "roster.manage"
+            | "roster.view"
+            | "roster.import"
+          >;
+          createdAt: number;
+          id: Id<"integrationClients">;
+          name: string;
+          revokedAt: number | null;
+          rotatedAt: number;
+          scope:
+            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          status: "active" | "revoked";
+        }
+      >;
     };
     devices: {
       authorize: FunctionReference<
@@ -9841,6 +10138,38 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      readdress: FunctionReference<
+        "mutation",
+        "public",
+        {
+          email: string;
+          inviteId: Id<"tenantInvites">;
+          locale: "en" | "id" | "de";
+          slug: string;
+        },
+        {
+          email: string;
+          expiresAt: number;
+          id: Id<"tenantInvites">;
+          name: string;
+          personId: Id<"tenantPeople">;
+          roles: Array<
+            | "owner"
+            | "admin"
+            | "principal"
+            | "deputy"
+            | "teacher"
+            | "counselor"
+            | "staff"
+            | "student"
+            | "guardian"
+            | "proctor"
+            | "auditor"
+            | "integration"
+          >;
+          status: "expired" | "pending";
+        }
+      >;
       resend: FunctionReference<
         "mutation",
         "public",
@@ -11123,6 +11452,7 @@ export declare const api: {
             kind: "member" | "operator";
             name: string;
           };
+          reach: Array<string>;
           tenant: {
             country: string;
             currency: string;
@@ -13130,7 +13460,12 @@ export declare const internal: {
                   };
                 };
             locale: "en" | "id" | "de";
-            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            offer:
+              | "pro.monthly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup";
             session: { expiresAt: number; sessionId: string; url: string };
             userId: Id<"users">;
           },
@@ -13140,7 +13475,12 @@ export declare const internal: {
           "mutation",
           "internal",
           {
-            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            offer:
+              | "pro.monthly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup";
             userId: Id<"users">;
           },
           {
@@ -15691,6 +16031,7 @@ export declare const internal: {
           { attemptId: Id<"examAttempts"> },
           null
         >;
+        sweep: FunctionReference<"mutation", "internal", {}, null>;
       };
     };
   };

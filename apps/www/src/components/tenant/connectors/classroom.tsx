@@ -30,6 +30,7 @@ import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { columnAlign } from "@/components/shared/table/align";
 import { TableFrame } from "@/components/shared/table/frame";
 import {
   forumCall,
@@ -122,11 +123,17 @@ function CourseTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("course")}</TableHead>
-              <TableHead className="hidden sm:table-cell">
+              <TableHead className={columnAlign({ align: "start" })}>
+                {t("course")}
+              </TableHead>
+              <TableHead
+                className={columnAlign({ className: "hidden sm:table-cell" })}
+              >
                 {t("course-students")}
               </TableHead>
-              <TableHead>{t("course-class")}</TableHead>
+              <TableHead className={columnAlign()}>
+                {t("course-class")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>{children}</TableBody>
@@ -193,15 +200,22 @@ function CourseRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium" dir="auto">
+      <TableCell
+        className={columnAlign({ align: "start", className: "font-medium" })}
+        dir="auto"
+      >
         {course.section === null
           ? course.name
           : t("course-name", { name: course.name, section: course.section })}
       </TableCell>
-      <TableCell className="text-muted-foreground hidden sm:table-cell">
+      <TableCell
+        className={columnAlign({
+          className: "text-muted-foreground hidden sm:table-cell",
+        })}
+      >
         {course.students}
       </TableCell>
-      <TableCell>
+      <TableCell className={columnAlign()}>
         <Select
           items={items}
           onValueChange={pick}

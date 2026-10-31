@@ -6,7 +6,7 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PRICING_PATH = "/en/pricing";
 /** What the observer records when the page opens a socket. */
@@ -79,7 +79,7 @@ test("a learner changes route groups without a refused query", async ({
               yield* Effect.promise(() =>
                 expect
                   .poll(() => run(Effect.map(frames, hasPlan)), {
-                    timeout: readinessTimeoutMilliseconds,
+                    timeout: revealTimeoutMilliseconds,
                   })
                   .toBe(true)
               );
@@ -93,7 +93,7 @@ test("a learner changes route groups without a refused query", async ({
               yield* Effect.promise(() =>
                 expect
                   .poll(() => run(Effect.map(frames, hasSecondToken)), {
-                    timeout: readinessTimeoutMilliseconds,
+                    timeout: revealTimeoutMilliseconds,
                   })
                   .toBe(true)
               );

@@ -1,4 +1,3 @@
-import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -6,6 +5,7 @@ import {
   useQuranInterpretationSelection,
   useQuranInterpretationState,
 } from "@/components/shared/quran/interpretation/context";
+import { QuranInterpretationIcon } from "@/components/shared/quran/interpretation/icon";
 
 /** Renders one tafsir trigger backed by the shared request controller. */
 export function QuranInterpretationButton({
@@ -31,7 +31,7 @@ export function QuranInterpretationButton({
       type="button"
       variant="outline"
     >
-      <Spinner aria-hidden="true" icon={BookOpen02Icon} isLoading={isLoading} />
+      {isLoading ? <Spinner aria-hidden="true" /> : <QuranInterpretationIcon />}
     </Button>
   );
 }
@@ -53,7 +53,7 @@ export function QuranInterpretationLink({
       rel="noreferrer"
       target="_blank"
     >
-      <Spinner aria-hidden="true" icon={BookOpen02Icon} isLoading={false} />
+      <QuranInterpretationIcon />
     </a>
   );
 }

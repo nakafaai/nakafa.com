@@ -77,6 +77,7 @@ const VIEWER: SchoolViewer = {
     kind: "member",
     name: "Ayu",
   },
+  reach: [],
   tenant: Schema.decodeUnknownSync(TenantView)({
     country: "ID",
     currency: "IDR",

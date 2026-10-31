@@ -1,7 +1,12 @@
 const TITLE_LENGTH = 55;
 const TITLE_SEPARATOR = " - ";
 
-/** Fits prioritized title parts and the site name within the app's title budget. */
+/**
+ * Fits prioritized title parts and the site name within the app's title budget.
+ * The first part stays whole, and stands alone when it leaves no room for the site
+ * name: two lessons named alike up to their last word would read the same if it
+ * were cut, and a search result shortens a long title by itself.
+ */
 export function createSEOTitle(
   parts: readonly (string | undefined)[],
   siteName = "Nakafa"
@@ -19,7 +24,10 @@ export function createSEOTitle(
       continue;
     }
     if (!title) {
-      title = truncateAtWordBoundary(text, contentLength);
+      if (text.length > contentLength) {
+        return text;
+      }
+      title = text;
       continue;
     }
 
@@ -33,7 +41,7 @@ export function createSEOTitle(
   return title ? `${title}${TITLE_SEPARATOR}${site}` : site;
 }
 
-/** Keeps complete trailing words when a title segment exceeds its budget. */
+/** Keeps complete trailing words when the site name exceeds the budget. */
 function truncateAtWordBoundary(text: string, length: number) {
   if (text.length <= length) {
     return text;

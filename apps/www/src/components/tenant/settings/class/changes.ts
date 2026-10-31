@@ -119,6 +119,13 @@ export const renameClassChange: OptimisticUpdate<
   changeClass(localStore, classId, (row) => ({ ...row, name }));
 };
 
+/** Shows a classroom's new subject at once. The server settles whether its name follows. */
+export const changeClassSubject: OptimisticUpdate<
+  typeof classroom.classes.changeSubject
+> = (localStore, { classId, subject }) => {
+  changeClass(localStore, classId, (row) => ({ ...row, subject }));
+};
+
 /** Shows a classroom as archived at once. */
 export const archiveClassChange: OptimisticUpdate<
   typeof classroom.classes.archive
