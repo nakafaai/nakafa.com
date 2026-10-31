@@ -158,8 +158,7 @@ const enterGrade = FunctionImpl.make(
         outcome: "entered" as const,
       })),
       Effect.catchTags({
-        GradeNotPlaced: () =>
-          Effect.succeed({ outcome: "notPlaced" as const }),
+        GradeNotPlaced: () => Effect.succeed({ outcome: "notPlaced" as const }),
         GradeReleased: () => Effect.succeed({ outcome: "released" as const }),
       })
     );

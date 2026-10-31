@@ -60,28 +60,30 @@ describe("integrations/writes enterGrade", () => {
     };
   });
 
-  it.effect("writes a draft a teacher still releases, and a retry leaves one", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const entry = yield* graded(fixture);
+  it.effect(
+    "writes a draft a teacher still releases, and a retry leaves one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const entry = yield* graded(fixture);
 
-      const first = yield* fixture.internal.mutation(enterGrade, entry);
-      expect(first).toMatchObject({
-        grade: { value: 88 },
-        outcome: "entered",
-      });
-      yield* fixture.internal.mutation(enterGrade, { ...entry, value: 90 });
-      const rows = yield* fixture.run(
-        Effect.flatMap(DatabaseReader, (reader) =>
-          reader
-            .table("classGrades")
-            .index("by_creation_time")
-            .take(5)
-            .pipe(Effect.orDie)
-        )
-      );
-      expect(rows).toMatchObject([{ state: "draft", value: 90 }]);
-    })
+        const first = yield* fixture.internal.mutation(enterGrade, entry);
+        expect(first).toMatchObject({
+          grade: { value: 88 },
+          outcome: "entered",
+        });
+        yield* fixture.internal.mutation(enterGrade, { ...entry, value: 90 });
+        const rows = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("classGrades")
+              .index("by_creation_time")
+              .take(5)
+              .pipe(Effect.orDie)
+          )
+        );
+        expect(rows).toMatchObject([{ state: "draft", value: 90 }]);
+      })
   );
 
   it.effect("refuses a student outside the class and a released grade", () =>
@@ -106,29 +108,33 @@ describe("integrations/writes enterGrade", () => {
             .pipe(Effect.map(Option.getOrThrow), Effect.orDie)
         )
       );
-      yield* fixture.as("teacher").mutation(refs.public.records.grades.release, {
-        gradeId: draft._id,
-        slug: nf,
-      });
+      yield* fixture
+        .as("teacher")
+        .mutation(refs.public.records.grades.release, {
+          gradeId: draft._id,
+          slug: nf,
+        });
       expect(yield* fixture.internal.mutation(enterGrade, entry)).toEqual({
         outcome: "released",
       });
     })
   );
 
-  it.effect("answers forbidden for a list, a class, or an ID it does not open", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const entry = yield* graded(fixture);
-      const without = yield* createClient(fixture, ["period.view"]);
-      const write = (changed: Partial<typeof entry>) =>
-        fixture.internal.mutation(enterGrade, { ...entry, ...changed });
-      const refused = { outcome: "forbidden" };
+  it.effect(
+    "answers forbidden for a list, a class, or an ID it does not open",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const entry = yield* graded(fixture);
+        const without = yield* createClient(fixture, ["period.view"]);
+        const write = (changed: Partial<typeof entry>) =>
+          fixture.internal.mutation(enterGrade, { ...entry, ...changed });
+        const refused = { outcome: "forbidden" };
 
-      expect(yield* write({ clientId: without.id })).toEqual(refused);
-      expect(yield* write({ classId: "not-an-id" })).toEqual(refused);
-      expect(yield* write({ personId: "not-an-id" })).toEqual(refused);
-    })
+        expect(yield* write({ clientId: without.id })).toEqual(refused);
+        expect(yield* write({ classId: "not-an-id" })).toEqual(refused);
+        expect(yield* write({ personId: "not-an-id" })).toEqual(refused);
+      })
   );
 });
 
