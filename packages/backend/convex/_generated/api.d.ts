@@ -340,9 +340,7 @@ export declare const api: {
       >;
     };
     xendit: {
-      cancel: {
-        cancelPlan: FunctionReference<"mutation", "public", {}, null>;
-      };
+      cancel: { cancelPlan: FunctionReference<"mutation", "public", {}, null> };
     };
   };
   chats: {
@@ -8013,6 +8011,10 @@ export declare const api: {
                 }
               | {
                   client: Id<"integrationClients">;
+                  type: "integration.changed";
+                }
+              | {
+                  client: Id<"integrationClients">;
                   type: "integration.rotated";
                 }
               | {
@@ -8195,6 +8197,7 @@ export declare const api: {
                   type: "tenant.policy.set";
                 }
               | { name: string; type: "tenant.name.set" }
+              | { type: "tenant.setup.finished" }
               | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
@@ -11155,6 +11158,15 @@ export declare const api: {
         }
       >;
     };
+    setup: {
+      finish: FunctionReference<"mutation", "public", { slug: string }, null>;
+      state: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        { cohort: boolean; exam: boolean; period: boolean; student: boolean }
+      >;
+    };
     start: {
       address: FunctionReference<
         "query",
@@ -11449,6 +11461,7 @@ export declare const api: {
               ninaDailyCredits?: number;
               studentThreads: boolean;
             };
+            setupDone: boolean;
             slug: string;
             status: "active" | "suspended";
           };
@@ -12628,12 +12641,6 @@ export declare const api: {
         }
       >;
       updateBio: FunctionReference<"mutation", "public", { bio: string }, null>;
-      updateUsername: FunctionReference<
-        "mutation",
-        "public",
-        { username: string },
-        null
-      >;
       updateUserName: FunctionReference<
         "mutation",
         "public",
@@ -12644,6 +12651,12 @@ export declare const api: {
         "mutation",
         "public",
         { role: "teacher" | "student" | "parent" },
+        null
+      >;
+      updateUsername: FunctionReference<
+        "mutation",
+        "public",
+        { username: string },
         null
       >;
     };
@@ -15587,9 +15600,7 @@ export declare const internal: {
             }
         >;
       };
-      state: {
-        ready: FunctionReference<"query", "internal", {}, boolean>;
-      };
+      state: { ready: FunctionReference<"query", "internal", {}, boolean> };
     };
   };
   credits: {
@@ -17576,9 +17587,7 @@ export declare const internal: {
     };
   };
   vault: {
-    keys: {
-      rewrap: FunctionReference<"mutation", "internal", {}, number>;
-    };
+    keys: { rewrap: FunctionReference<"mutation", "internal", {}, number> };
   };
 };
 
