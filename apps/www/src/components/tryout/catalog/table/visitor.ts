@@ -1,4 +1,4 @@
-import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/page";
+import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import {
   listArgsValidator,
   trackSetPageValidator,
