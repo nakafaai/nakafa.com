@@ -5,6 +5,7 @@ import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
   ScoreOutOfRange,
   TaskClosed,
+  TaskPointsFixed,
 } from "@repo/backend/confect/classroom/errors";
 import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import {
@@ -27,8 +28,8 @@ const classArgs = { classId: Id("classes"), slug: TenantSlug };
 
 /**
  * The tasks of a class (ADR 0025). Whoever reads the class reads its tasks by
- * deadline and each one by its address. A subject teacher publishes a task, moves
- * its deadline, reads the work handed in, and gives it points. A member of the
+ * deadline and each one by its address. A subject teacher publishes a task, edits
+ * it, reads the work handed in, and gives it points. A member of the
  * class hands work in, and hands it in again until the deadline, or after it when
  * the task takes late work. A task of another class is refused as a missing
  * object.
@@ -73,14 +74,18 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
-      name: "reschedule",
+      name: "edit",
       args: () => ({
         ...classArgs,
         deadline: Schema.Finite,
+        latePolicy: LatePolicy,
+        points: TaskPoints,
         task: TaskAddress,
+        text: TaskText,
+        title: TaskTitle,
       }),
       returns: () => TaskView,
-      error: () => AccessDenied,
+      error: () => Schema.Union([AccessDenied, TaskPointsFixed]),
     }).middleware(ClassAccess, { action: "task.manage", arg: "classId" })
   )
   .addFunction(

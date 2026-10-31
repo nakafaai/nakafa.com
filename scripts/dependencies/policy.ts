@@ -159,7 +159,7 @@ function exactCohortHolds(
 }
 
 /**
- * Six transitive overrides in the root `package.json` hold a version for a reason
+ * Eight transitive overrides in the root `package.json` hold a version for a reason
  * that no manifest states. `seroval` 1.7.5 and `seroval-plugins` 1.7.6 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
@@ -176,8 +176,12 @@ function exactCohortHolds(
  * through @mrleebo/prisma-ast ^0.13.1, and `auth` 1.7 moves to prisma-ast ^0.16 on
  * chevrotain 12. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
  * micromark-extension-math 3.1.0, its latest release, declares: every 0.16 release is
- * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. The other transitive versions
- * come from their dependents' own ranges.
+ * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. `glob` 14.0.3 and `minimatch`
+ * 11.0.3 replace the 13.0.6 and 10.2.6 that GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249
+ * affect: react-email declares glob ^13.0.6, and the root sigstore reaches glob through
+ * make-fetch-happen's cacache and minimatch through tuf-js's @tufjs/models, so one copy of
+ * each serves every dependent. The other transitive versions come from their
+ * dependents' own ranges.
  */
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {

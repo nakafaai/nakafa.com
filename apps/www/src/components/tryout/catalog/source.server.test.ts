@@ -18,9 +18,7 @@ import {
   readTryoutExamPage,
   readTryoutHubPage,
   readTryoutMetadata,
-  readTryoutSectionAttemptPage,
   readTryoutSectionPage,
-  readTryoutSetAttemptPage,
   readTryoutSetList,
   readTryoutSetPage,
   readTryoutTrackPage,
@@ -283,58 +281,6 @@ describe("immutable try-out application catalog", () => {
         expect(
           yield* readTryoutCountryPage("en", COUNTRY("en")).pipe(Effect.flip)
         ).toMatchObject({ _tag: "TryoutCatalogReadError" });
-      })
-  );
-  it.effect(
-    "keeps absent attempt overlays and transport failures distinct",
-    () =>
-      Effect.gen(function* () {
-        const request = {
-          kind: "retained",
-          attemptId: "missing-attempt",
-          locale: "en",
-          publicPath: SET("en"),
-        } as const;
-        fetchQueryMock.mockReturnValue(Effect.succeed(null));
-        expect(
-          yield* readTryoutSetAttemptPage("technical-token", request)
-        ).toBeNull();
-        expect(
-          yield* readTryoutSectionAttemptPage("technical-token", {
-            ...request,
-            publicPath: SECTION("en"),
-          })
-        ).toBeNull();
-        fetchQueryMock.mockReturnValue(
-          Effect.fail(
-            new HttpClient.HttpClientError({
-              cause: new Error("Transport unavailable"),
-            })
-          )
-        );
-        expect(
-          yield* readTryoutSetAttemptPage("technical-token", request).pipe(
-            Effect.flip
-          )
-        ).toMatchObject({
-          _tag: "TryoutCatalogReadError",
-          cause: {
-            _tag: "HttpClientError",
-            cause: { message: "Transport unavailable" },
-          },
-        });
-        expect(
-          yield* readTryoutSectionAttemptPage("technical-token", {
-            ...request,
-            publicPath: SECTION("en"),
-          }).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "TryoutCatalogReadError",
-          cause: {
-            _tag: "HttpClientError",
-            cause: { message: "Transport unavailable" },
-          },
-        });
       })
   );
 });

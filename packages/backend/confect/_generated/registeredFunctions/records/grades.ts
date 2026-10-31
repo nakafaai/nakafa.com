@@ -12,4 +12,5 @@ export default {
 ["sheet"]: RegisteredConvexFunction.register({ ...definitions["sheet"], handler: forward(definitions["sheet"].handler) }),
 ["scheme"]: RegisteredConvexFunction.register({ ...definitions["scheme"], handler: forward(definitions["scheme"].handler) }),
 ["mine"]: RegisteredConvexFunction.register({ ...definitions["mine"], handler: forward(definitions["mine"].handler) }),
+["own"]: RegisteredConvexFunction.register({ ...definitions["own"], handler: forward(definitions["own"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../records/grades.spec")["default"]>;

@@ -2,7 +2,7 @@ import {
   setDirectionValidator,
   setFilterValidator,
   setSortValidator,
-} from "@repo/backend/confect/tryouts/sets/spec";
+} from "@repo/backend/confect/tryouts/sets/query";
 import { Effect, Schema } from "effect";
 
 const DEFAULT_STATUS: typeof setFilterValidator.Type = "all";

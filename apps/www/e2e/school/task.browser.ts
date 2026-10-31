@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
 import {
   createSchool,
@@ -46,7 +47,7 @@ for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test(`a subject teacher publishes a task, finds it in the class's tasks, and opens its page, at ${viewport.width} px`, async ({
+  test(`a subject teacher publishes a task, finds it in the class's tasks, opens its page, and edits it from the header, at ${viewport.width} px`, async ({
     browser,
     baseURL,
   }) => {
@@ -58,6 +59,7 @@ for (const viewport of [
       signInClassTeacher(context, school.slug, address("/"))
     );
     const page = await context.newPage();
+    const changes = await Effect.runPromise(trackChanges(page, []));
     await page.goto(address("/classes/fisika-x-1/tasks"));
     await expect(page.getByText("No task yet")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -78,6 +80,34 @@ for (const viewport of [
     await expect(
       page.getByRole("navigation", { name: "breadcrumb" })
     ).toContainText("Latihan Gerak Lurus");
+
+    // Edit task in the header opens the task as it stands, saves only a change, and keeps the task's address.
+    const edit = page
+      .locator("header")
+      .getByRole("button", { name: "Edit task" });
+    await waitUntilTakenOver(edit);
+    await edit.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("textbox", { name: "Title" })).toHaveValue(
+      "Latihan Gerak Lurus"
+    );
+    await expect(dialog.getByRole("button", { name: "Save" })).toBeDisabled();
+    await dialog
+      .getByRole("textbox", { name: "What to do" })
+      .fill("Kerjakan soal 1 sampai 5.");
+    const editedBefore = changes.sent;
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(
+      page.getByRole("main").getByText("Kerjakan soal 1 sampai 5.")
+    ).toBeVisible();
+    // The server keeps the edit once it answered: a reload drops a change still on its way.
+    await saved(changes, editedBefore);
+    await page.reload();
+    await page.waitForURL(TASK_PATH);
+    await expect(page.getByText("Kerjakan soal 1 sampai 5.")).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
     await context.close();
   });
 }

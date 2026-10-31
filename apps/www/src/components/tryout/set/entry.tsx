@@ -1,7 +1,6 @@
 import { type ReactNode, Suspense } from "react";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerDigits } from "@/components/player/timer";
-import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import {
@@ -180,7 +179,5 @@ function TryoutEntryReview({
   if (runtimeState.kind !== "review") {
     return null;
   }
-  return (
-    <Suspense fallback={null}>{children ?? <TryoutContentRefresh />}</Suspense>
-  );
+  return <Suspense fallback={null}>{children}</Suspense>;
 }

@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { Class } from "@repo/backend/confect/classroom/access";
 import {
   classAccess,
@@ -17,6 +18,7 @@ import {
 import { create } from "@repo/backend/confect/classroom/classes/create";
 import { mine } from "@repo/backend/confect/classroom/classes/mine";
 import { resolve } from "@repo/backend/confect/classroom/classes/resolve";
+import { restore } from "@repo/backend/confect/classroom/classes/restore";
 import spec from "@repo/backend/confect/classroom/classes.spec";
 import { ClassNameTaken } from "@repo/backend/confect/classroom/errors";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -130,6 +132,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(rename),
   Layer.provide(archive),
+  Layer.provide(restore),
   Layer.provide(get),
   Layer.provide(list),
   Layer.provide(mine),
@@ -139,5 +142,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(cohortAccess),
   Layer.provide(periodAccess),
   Layer.provide(classAccess),
+  Layer.provide(tenantAccess),
   GroupImpl.finalize
 );

@@ -1,38 +1,10 @@
 import { useMutation } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import {
-  LatePolicy,
-  TaskPoints,
-  TaskText,
-  TaskTitle,
-} from "@repo/backend/confect/classroom/tasks/task";
 import { Button } from "@repo/design-system/components/ui/button";
-import { DateTimePicker } from "@repo/design-system/components/ui/date";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
-import {
-  NumberField,
-  NumberFieldDecrement,
-  NumberFieldGroup,
-  NumberFieldIncrement,
-  NumberFieldInput,
-} from "@repo/design-system/components/ui/number";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
-import { useId, useState } from "react";
+import { Effect, Option } from "effect";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   forumCall,
@@ -40,7 +12,11 @@ import {
   toastForumFailure,
 } from "@/components/tenant/classes/forum/call";
 import { useClassScope } from "@/components/tenant/classes/scope";
-import { deadlineOf } from "@/components/tenant/classes/tasks/deadline";
+import {
+  checkedDraft,
+  EMPTY_DRAFT,
+} from "@/components/tenant/classes/tasks/draft";
+import { TaskFields } from "@/components/tenant/classes/tasks/fields";
 
 /**
  * Publishes a task to the class: its title, what it asks, its deadline in the browser's own time,
@@ -53,55 +29,18 @@ export function NewTask() {
   const { classId, slug } = useClassScope();
   const publish = useMutation(classroom.tasks.publish);
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [points, setPoints] = useState<number | null>(100);
-  const [latePolicy, setLatePolicy] =
-    useState<typeof LatePolicy.Type>("accept");
-  const id = useId();
-  const policies = Arr.map(LatePolicy.literals, (policy) => ({
-    label: t(`task-late-${policy}`),
-    value: policy,
-  }));
-  const heading = Str.trim(title);
-  const body = Str.trim(text);
-  const due = deadlineOf(deadline);
-  const worth = Option.filter(Option.fromNullOr(points), Schema.is(TaskPoints));
-  const ready =
-    Schema.is(TaskTitle)(heading) &&
-    Schema.is(TaskText)(body) &&
-    Option.isSome(due) &&
-    Option.isSome(worth);
+  const [draft, setDraft] = useState(EMPTY_DRAFT);
+  const checked = checkedDraft(draft);
 
   const submit = () => {
-    if (!(ready && Option.isSome(due) && Option.isSome(worth))) {
+    if (Option.isNone(checked)) {
       return;
     }
     setOpen(false);
     runForumCall(
       Effect.flatMap(randomUuid, (clientKey) =>
-        forumCall(() =>
-          publish({
-            classId,
-            clientKey,
-            deadline: due.value,
-            latePolicy,
-            points: worth.value,
-            slug,
-            text: body,
-            title: heading,
-          })
-        )
-      ).pipe(
-        Effect.tap(() =>
-          Effect.sync(() => {
-            setTitle("");
-            setText("");
-            setDeadline("");
-          })
-        )
-      ),
+        forumCall(() => publish({ ...checked.value, classId, clientKey, slug }))
+      ).pipe(Effect.tap(() => Effect.sync(() => setDraft(EMPTY_DRAFT)))),
       () => {
         setOpen(true);
         toastForumFailure();
@@ -119,7 +58,7 @@ export function NewTask() {
             <Button onClick={() => setOpen(false)} variant="outline">
               {common("cancel")}
             </Button>
-            <Button disabled={!ready} onClick={submit}>
+            <Button disabled={Option.isNone(checked)} onClick={submit}>
               {t("task-publish")}
             </Button>
           </>
@@ -128,85 +67,7 @@ export function NewTask() {
         setOpen={setOpen}
         title={t("task-new")}
       >
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-title`}>{t("task-title")}</FieldLabel>
-            <Input
-              dir="auto"
-              id={`${id}-title`}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder={t("task-title-placeholder")}
-              value={title}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-text`}>{t("task-text")}</FieldLabel>
-            <Textarea
-              className="min-h-28"
-              dir="auto"
-              id={`${id}-text`}
-              onChange={(event) => setText(event.target.value)}
-              placeholder={t("task-text-placeholder")}
-              value={text}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-deadline`}>
-              {t("task-deadline")}
-            </FieldLabel>
-            <DateTimePicker
-              dayPlaceholder={t("task-day-placeholder")}
-              id={`${id}-deadline`}
-              onValueChange={setDeadline}
-              timePlaceholder={t("task-time-placeholder")}
-              value={deadline}
-            />
-          </Field>
-          <div className="grid gap-7 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor={`${id}-points`}>
-                {t("task-points")}
-              </FieldLabel>
-              <NumberField
-                id={`${id}-points`}
-                max={1000}
-                min={0}
-                onValueChange={setPoints}
-                value={points}
-              >
-                <NumberFieldGroup>
-                  <NumberFieldDecrement />
-                  <NumberFieldInput />
-                  <NumberFieldIncrement />
-                </NumberFieldGroup>
-              </NumberField>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={`${id}-late`}>{t("task-late")}</FieldLabel>
-              <Select
-                items={policies}
-                onValueChange={(value) =>
-                  Option.map(
-                    Schema.decodeUnknownOption(LatePolicy)(value),
-                    setLatePolicy
-                  )
-                }
-                value={latePolicy}
-              >
-                <SelectTrigger className="w-full" id={`${id}-late`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Arr.map(policies, (policy) => (
-                    <SelectItem key={policy.value} value={policy.value}>
-                      {policy.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </div>
-        </FieldGroup>
+        <TaskFields draft={draft} onChange={setDraft} pointsFixed={false} />
       </ResponsiveDialog>
     </>
   );
