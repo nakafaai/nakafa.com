@@ -187,9 +187,12 @@ only, each at its own address (ADR 0026).
   its Google issuer and subject, never by its email address. The one exception
   is an invite claim (ADR 0011), which matches the verified email of an account
   to the address of an invite once, to bind a Person. Google sign-in, on the main site and from the school host's
-  login page, and the domain check are live. The belajar.id match is planned:
-  it needs the hosted domain and address forms that belajar.id accounts carry,
-  measured on a pilot school's accounts.
+  login page, and the domain check are live. belajar.id is the ministry's
+  Workspace, which gives each level and role its own subdomain, such as
+  `guru.sma.belajar.id`, so a listed `belajar.id` stands for all of its subdomains.
+  Every other domain matches as written. The owner decided on 31 October 2026 not to
+  wait for a pilot school's accounts: the published forms are enough, and the match
+  covers any subdomain, so a form not yet seen passes too.
 - **Username.** A school issues a username that is unique within the school. It
   is stored in the school's login table and maps to a Better Auth username that
   is unique within the cell, because each cell holds its own Better Auth rows
