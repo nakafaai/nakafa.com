@@ -1,6 +1,9 @@
 import { expect, type Page } from "@playwright/test";
+import { Effect } from "effect";
 import writeXlsxFile from "write-excel-file/node";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The XLSX type that Dapodik exports. */
@@ -17,12 +20,17 @@ export const sheetFile = async (
   name,
 });
 
-/** Opens one period, then adds one cohort of grade 7 to it, as the school's Owner. */
+/**
+ * Opens one period, then adds one cohort of grade 7 to it, as the school's Owner, on a page that has not loaded
+ * yet. Each change is answered before the page leaves, since a navigation drops a change still on its way, and the
+ * cohort is read back after a reload, so a caller builds on a cohort the server holds.
+ */
 export async function openPeriodWithCohort(
   page: Page,
   address: (path: string) => string,
   cohort: string
 ) {
+  const changes = await Effect.runPromise(trackChanges(page, []));
   await page.goto(address("/settings/periods"));
   const addPeriod = page
     .locator("header")
@@ -36,8 +44,10 @@ export async function openPeriodWithCohort(
   await periodDialog.getByRole("button", { name: "Add period" }).click();
   const periodRow = page.getByRole("row", { name: "Semester 1" });
   await periodRow.getByRole("button", { name: "More actions" }).click();
+  const openedBefore = changes.sent;
   await page.getByRole("menuitem", { name: "Open" }).click();
   await expect(periodRow.getByText("Active")).toBeVisible();
+  await saved(changes, openedBefore);
 
   await page.goto(address("/settings/cohorts"));
   const addCohort = page
@@ -49,8 +59,14 @@ export async function openPeriodWithCohort(
   await cohortDialog.getByLabel("Name").fill(cohort);
   await cohortDialog.getByRole("combobox", { name: "Grade" }).click();
   await page.getByRole("option", { exact: true, name: "7" }).click();
+  const addedBefore = changes.sent;
   await cohortDialog.getByRole("button", { name: "Add cohort" }).click();
   await expect(page.getByRole("link", { name: cohort })).toBeVisible();
+  await saved(changes, addedBefore);
+  await page.reload();
+  await expect(page.getByRole("link", { name: cohort })).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 }
 
 /** Chooses `file` through the page's Import button, the way the Admin does. */
