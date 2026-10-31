@@ -9,6 +9,27 @@ before the first school. Insight waits for the assessment engine switch (ADR 003
 wave B) and for the school grades of ADR 0033. The Implementation Status table at
 the end says which parts are live.
 
+Amended on 31 October 2026, by the orchestrator's instruction to build Insight and the
+owner's standing instruction to decide and record:
+
+- **The competency key.** No Aksara item carries one yet, so a teacher names the competency
+  of each question of a school exam (`insightTags`). Nothing guesses it from the text, and a
+  question with none adds no observation. Aksara's CASE 1.1 keys replace the typed names when
+  they exist.
+- **The rating.** A rating runs from 0 to 1. After an answer that earned `share` of the
+  question's points, `rating` moves by `(share - rating) / min(count + 1, 10)`: a plain mean
+  for the first ten answers, then a tenth of the way to the latest. One answer writes one
+  row. Releasing a sitting's results runs the observations, so a teacher's scored essays
+  count, and a release happens once, so an answer counts once.
+- **The forecast.** The chance of reaching the KKTP is the share above it of a Beta
+  distribution with a uniform prior, updated by the points earned and lost, through its
+  normal approximation. Its reason is those points, shown beside it. It is labelled an
+  initial estimate until the monthly test exists; that test's threshold is a Brier score of
+  0.25, what an even guess scores, so a model must beat a coin.
+- **Narratives.** A teacher writes them for now. Nina's draft waits for its provider. The
+  teacher's share is enough for a guardian to read one; the student's own share in the
+  blueprint waits for shared practice.
+
 ## Context
 
 The blueprint's Insight section shows, for each student, the mastery of each
@@ -147,7 +168,9 @@ arrive as content.
 | --- | --- |
 | The decisions in this ADR | Recorded by S0 |
 | Competency keys in Aksara content (CASE 1.1 mapping) | Planned, Aksara work first |
-| Mastery rows (`mastery`) | Planned, S12 |
-| Forecast rows and their reasons | Planned, S13 |
-| The DPIA record and its Condition in access | Planned, S12 |
-| Insight screens, shared practice, and narratives | Planned, S14 |
+| Competency tags typed by the teacher (`insightTags`) | Built |
+| Mastery rows (`insightMastery`), written when a sitting's results are released | Built |
+| Forecasts and their reasons, computed when read | Built, as an initial estimate; the monthly test is planned |
+| The DPIA record (`insightDpias`) and its refusal, `DpiaRequired`, in each Insight function | Built as a refusal in the functions rather than a Condition in access |
+| Insight screens for teachers and students, and teachers' narratives for guardians | Built |
+| Shared practice, Nina's narrative drafts, deletion with the period | Planned |

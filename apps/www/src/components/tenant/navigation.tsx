@@ -1,4 +1,5 @@
 import {
+  Analytics01Icon,
   Certificate01Icon,
   ChartBarLineIcon,
   MortarboardIcon,
@@ -64,6 +65,7 @@ function TenantSchoolGroups() {
   const matchRoute = useMatchRoute();
   const tExams = useTranslations("Exams");
   const tGrades = useTranslations("SchoolGrades");
+  const tInsight = useTranslations("SchoolInsight");
   const tNotifications = useTranslations("Notifications");
   const tGraduation = useTranslations("SchoolGraduation");
   const tReports = useTranslations("SchoolReports");
@@ -139,6 +141,23 @@ function TenantSchoolGroups() {
             </SidebarMenuItem>
           </>
         ) : null}
+        {Option.contains(role, "guardian") ? null : (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={
+                matchRoute({
+                  params: { slug },
+                  to: "/school/$slug/insight",
+                }) !== false
+              }
+              render={<Link params={{ slug }} to="/school/$slug/insight" />}
+              tooltip={tInsight("title")}
+            >
+              <HugeIcons icon={Analytics01Icon} />
+              <span className="truncate">{tInsight("title")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
         {canOpenExams ? (
           <SidebarMenuItem>
             <SidebarMenuButton

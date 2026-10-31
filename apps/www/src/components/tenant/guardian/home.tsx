@@ -267,6 +267,10 @@ function GuardianGrades({ child }: { child: ChildItem }) {
     linkId: child.linkId,
     slug,
   });
+  const narratives = useQuery(guardians.family.narratives, {
+    linkId: child.linkId,
+    slug,
+  });
   const withdraw = useMutation(guardians.family.withdraw).withOptimisticUpdate(
     withdrawChange
   );
@@ -279,6 +283,18 @@ function GuardianGrades({ child }: { child: ChildItem }) {
         {QueryResult.isSuccess(grades) ? (
           <GuardianGradeTable grades={grades.value} />
         ) : null}
+        {QueryResult.isSuccess(narratives)
+          ? Arr.map(narratives.value, (narrative) => (
+              <div className="flex flex-col gap-1" key={narrative.id}>
+                <p className="text-sm font-medium" dir="auto">
+                  {narrative.className}
+                </p>
+                <p className="text-sm whitespace-pre-wrap" dir="auto">
+                  {narrative.text}
+                </p>
+              </div>
+            ))
+          : null}
       </PaneBody>
       <PaneFooter>
         <Button

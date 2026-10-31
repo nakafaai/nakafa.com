@@ -982,6 +982,15 @@
       },
       "login": {
         "renamed": "Nama login diubah"
+      },
+      "insight": {
+        "dpia": {
+          "recorded": "Penilaian dampak dicatat"
+        },
+        "narrative": {
+          "shared": "Narasi dibagikan",
+          "withdrawn": "Narasi ditarik"
+        }
       }
     },
     "role-description": {
@@ -1146,7 +1155,13 @@
     "locale-description": "Lokasi sekolah ini dan mata uang paketnya.",
     "locale-country": "Negara",
     "locale-currency": "Mata uang",
-    "locale-footer": "Setiap perubahan tercatat di jejak audit."
+    "locale-footer": "Setiap perubahan tercatat di jejak audit.",
+    "dpia-title": "Penilaian dampak",
+    "dpia-off": "Belum tercatat, jadi Insight belum aktif.",
+    "dpia-on": "Versi {version}, ditinjau {reviewer}, pada {date}.",
+    "dpia-version": "Versi",
+    "dpia-reviewer": "Peninjau",
+    "dpia-record": "Catat"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -3431,5 +3446,31 @@
     "period": "Periode",
     "approved": "Disetujui pada",
     "issued": "Diterbitkan pada"
+  },
+  "SchoolInsight": {
+    "title": "Insight",
+    "class": "Kelas",
+    "pick": "Pilih kelas",
+    "pick-description": "Capaian tiap siswa tampil di sini.",
+    "competency": "Kompetensi",
+    "mastery": "Penguasaan",
+    "evidence": "Bukti",
+    "evidence-points": "{earned} dari {possible} poin",
+    "student": "Siswa",
+    "chance": "Peluang KKTP {kktp}",
+    "chance-note": "Peluang ini tidak mengubah nilai dan hanya tampil untuk guru. Angkanya berasal dari poin di atas dan masih estimasi awal.",
+    "empty": "Belum ada yang ditampilkan",
+    "empty-description": "Sebuah soal terhitung setelah menyebut kompetensi dan hasilnya dirilis.",
+    "off": "Insight belum aktif",
+    "off-description": "Insight aktif setelah sekolah mencatat penilaian dampak di Pengaturan.",
+    "narrative-title": "Narasi untuk {student}",
+    "narrative-description": "Tulisanmu tentang siswa ini. Orang tua hanya membacanya setelah kamu bagikan.",
+    "narrative-save": "Simpan",
+    "narrative-share": "Bagikan ke orang tua",
+    "narrative-withdraw": "Tarik kembali",
+    "tags": "Kompetensi",
+    "tags-description": "Sebutkan kompetensi tiap soal. Soal tanpa kompetensi tidak masuk Insight.",
+    "exam": "Ujian",
+    "question": "Soal {number}"
   }
 }

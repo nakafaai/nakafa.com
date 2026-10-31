@@ -551,6 +551,8 @@ export declare const api: {
             | "task.submit"
             | "grade.enter"
             | "grade.list"
+            | "insight.teach"
+            | "insight.view"
           >;
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
@@ -7176,6 +7178,12 @@ export declare const api: {
           value: number;
         }>
       >;
+      narratives: FunctionReference<
+        "query",
+        "public",
+        { linkId: Id<"guardianLinks">; slug: string },
+        Array<{ className: string; id: Id<"insightNarratives">; text: string }>
+      >;
       withdraw: FunctionReference<
         "mutation",
         "public",
@@ -7382,6 +7390,105 @@ export declare const api: {
       >;
     };
   };
+  insight: {
+    dpia: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        { recordedAt: number; reviewer: string; version: string } | null
+      >;
+      record: FunctionReference<
+        "mutation",
+        "public",
+        { reviewer: string; slug: string; version: string },
+        null
+      >;
+    };
+    narratives: {
+      share: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
+        null
+      >;
+      withdraw: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
+        null
+      >;
+      write: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          personId: Id<"tenantPeople">;
+          slug: string;
+          text: string;
+        },
+        null
+      >;
+    };
+    reads: {
+      mine: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          competency: string;
+          earned: number;
+          observations: number;
+          possible: number;
+          rating: number;
+        }>
+      >;
+      ofClass: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          kktp: number;
+          students: Array<{
+            id: Id<"tenantPeople">;
+            name: string;
+            narrative: { shared: boolean; text: string } | null;
+            skills: Array<{
+              chance: number;
+              competency: string;
+              earned: number;
+              observations: number;
+              possible: number;
+              rating: number;
+            }>;
+          }>;
+        }
+      >;
+    };
+    tags: {
+      list: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        Array<{
+          competency: string | null;
+          id: Id<"examQuestions">;
+          number: number;
+        }>
+      >;
+      set: FunctionReference<
+        "mutation",
+        "public",
+        {
+          competency: string | null;
+          examId: Id<"exams">;
+          questionId: Id<"examQuestions">;
+          slug: string;
+        },
+        null
+      >;
+    };
+  };
   integrations: {
     clients: {
       create: FunctionReference<
@@ -7486,6 +7593,9 @@ export declare const api: {
             | "billing.view"
             | "guardian.link"
             | "guardian.list"
+            | "insight.teach"
+            | "insight.view"
+            | "insight.dpia"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -7613,6 +7723,9 @@ export declare const api: {
               | "billing.view"
               | "guardian.link"
               | "guardian.list"
+              | "insight.teach"
+              | "insight.view"
+              | "insight.dpia"
               | "roster.manage"
               | "roster.view"
               | "roster.import"
@@ -7744,6 +7857,9 @@ export declare const api: {
             | "billing.view"
             | "guardian.link"
             | "guardian.list"
+            | "insight.teach"
+            | "insight.view"
+            | "insight.dpia"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -7851,6 +7967,9 @@ export declare const api: {
             | "billing.view"
             | "guardian.link"
             | "guardian.list"
+            | "insight.teach"
+            | "insight.view"
+            | "insight.dpia"
             | "roster.manage"
             | "roster.view"
             | "roster.import"
@@ -7927,6 +8046,8 @@ export declare const api: {
                   type: "assignment.deadlineChanged";
                 }
               | { task: Id<"classroomTasks">; type: "assignment.edited" }
+              | { type: "insight.narrative.shared" }
+              | { type: "insight.narrative.withdrawn" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { grade: number; type: "cohort.grade.set" }
@@ -8010,6 +8131,10 @@ export declare const api: {
                     | { kind: "tenant" }
                     | { kind: "unit"; unitId: Id<"tenantUnits"> };
                   type: "integration.created";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.changed";
                 }
               | {
                   client: Id<"integrationClients">;
@@ -8209,6 +8334,7 @@ export declare const api: {
                   number: string;
                   type: "billing.invoice.paid";
                 }
+              | { type: "insight.dpia.recorded"; version: string }
               | { type: "unit.created" }
               | {
                   contentLanguage: "en" | "id" | "de";
@@ -16040,6 +16166,16 @@ export declare const internal: {
         "internal",
         { slug: string },
         { code: string; loginName: string }
+      >;
+    };
+  };
+  insight: {
+    observe: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; sittingId: Id<"examSittings"> },
+        null
       >;
     };
   };
