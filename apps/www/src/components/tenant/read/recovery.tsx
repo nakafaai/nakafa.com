@@ -24,7 +24,7 @@ const STEADY_MILLISECONDS = 60_000;
 export function ReadRecovery({
   children,
   frame: Frame,
-  resetKeys,
+  resetKeys = [],
   retry: Retry,
 }: {
   readonly children: ReactNode;
@@ -55,7 +55,7 @@ export function ReadRecovery({
         steady.clear();
         steady.start();
       }}
-      resetKeys={resetKeys === undefined ? undefined : [...resetKeys]}
+      resetKeys={[...resetKeys]}
     >
       {children}
     </ErrorBoundary>
