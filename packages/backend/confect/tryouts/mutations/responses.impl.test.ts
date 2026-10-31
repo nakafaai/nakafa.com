@@ -1,5 +1,5 @@
 import { Ref } from "@confect/core";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -141,6 +141,14 @@ it.each([
 );
 
 describe("tryouts/mutations/responses outcomes", () => {
+  // The fixtures seed the attempt at the try-out clock, and each answer comes
+  // later. convex-test runs a mutation after the commits before it, so the
+  // clock is set before the seed instead of moving back after it.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(TRYOUT_TEST_NOW);
+  });
+
   it.effect(
     "reads a response stored before outcomes from its correctness flag",
     () =>

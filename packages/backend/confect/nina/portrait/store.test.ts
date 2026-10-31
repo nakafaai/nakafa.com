@@ -9,6 +9,12 @@ import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 9, 12, 12);
 const HOUR = 3_600_000;
+/**
+ * When a request whose time a test reads comes, after a portrait the test
+ * seeded: Convex runs each mutation after the commits before it, so the
+ * request has a moment of its own.
+ */
+const ACTED_AT = NOW + 1000;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -79,20 +85,22 @@ describe("a request for a portrait build", () => {
   it("is not closed for a day by a request that no build answered", async () => {
     const f = await createPortraitTest();
     await f.seedPortrait({ scheduledAt: NOW - HOUR });
+    vi.setSystemTime(ACTED_AT);
     await ask(f);
     expect(await f.scheduled()).toHaveLength(1);
     expect(await f.rows()).toEqual([
-      expect.objectContaining({ scheduledAt: NOW }),
+      expect.objectContaining({ scheduledAt: ACTED_AT }),
     ]);
   });
 
   it("keeps the text and what it has read when a memory is only added", async () => {
     const f = await createPortraitTest();
     await f.seedPortrait({ text: "Kelas 12.", through: 7 });
+    vi.setSystemTime(ACTED_AT);
     await ask(f);
     expect(await f.portrait()).toBe("Kelas 12.");
     expect(await f.rows()).toEqual([
-      expect.objectContaining({ scheduledAt: NOW, through: 7 }),
+      expect.objectContaining({ scheduledAt: ACTED_AT, through: 7 }),
     ]);
     expect(await f.scheduled()).toHaveLength(1);
   });
@@ -105,9 +113,10 @@ describe("a request for a portrait build", () => {
       text: "Kelas 12.",
       through: 7,
     });
+    vi.setSystemTime(ACTED_AT);
     await ask(f, { reset: true });
     const [row] = await f.rows();
-    expect(row).toMatchObject({ scheduledAt: NOW, through: 0 });
+    expect(row).toMatchObject({ scheduledAt: ACTED_AT, through: 0 });
     expect(row).not.toHaveProperty("text");
     // The day of the last build goes with the text, so the request after a
     // build that found memory paused asks again.

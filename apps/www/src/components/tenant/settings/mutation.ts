@@ -240,6 +240,14 @@ export const setUnitLocaleChange: OptimisticUpdate<
   }));
 };
 
+/** Shows the new name and level of a unit at once, in the viewer and the unit list. */
+export const editUnitChange: OptimisticUpdate<typeof tenancy.units.edit> = (
+  localStore,
+  { level, name, slug, unitId }
+) => {
+  changeUnit(localStore, slug, unitId, (unit) => ({ ...unit, level, name }));
+};
+
 /** Shows a unit as archived at once. */
 export const archiveUnitChange: OptimisticUpdate<
   typeof tenancy.units.archive

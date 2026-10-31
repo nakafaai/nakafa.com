@@ -3,6 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import {
+  actedAt,
   scheduledJobs,
   slugOf,
   TENANCY_NOW,
@@ -323,7 +324,11 @@ describe("connectors/google", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const student = fixture.as("student");
-        const finishWith = (connector: "calendar" | "drive", scope: string) =>
+        const finishWith = (
+          connector: "calendar" | "drive",
+          scope: string,
+          at: number
+        ) =>
           Effect.gen(function* () {
             const started = yield* student.mutation(google.startPersonal, {
               connector,
@@ -333,6 +338,7 @@ describe("connectors/google", () => {
             fetcher.mockResolvedValueOnce(
               granted(`${connector}-subject`, [scope])
             );
+            vi.setSystemTime(at);
             yield* student.action(google.finish, {
               code: "code",
               state: stateOf(started.url),
@@ -340,15 +346,16 @@ describe("connectors/google", () => {
           });
         yield* finishWith(
           "calendar",
-          "https://www.googleapis.com/auth/calendar.events.readonly"
+          "https://www.googleapis.com/auth/calendar.events.readonly",
+          actedAt(0)
         );
-        yield* finishWith("drive", DRIVE);
+        yield* finishWith("drive", DRIVE, actedAt(1));
         const listed = yield* student.query(listOwn, firstPage);
         expect(
           Arr.map(listed.page, (row) => [row.connector, row.nextSyncAt])
         ).toEqual([
           ["drive", null],
-          ["calendar", TENANCY_NOW],
+          ["calendar", actedAt(0)],
         ]);
         const runs = Arr.filter(yield* fixture.run(scheduledJobs), (job) =>
           job.name.includes("sync")
