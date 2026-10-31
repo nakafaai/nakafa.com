@@ -26,7 +26,7 @@ import {
 } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
-const { enter, lock, dashboard, close } = refs.public.exams.sittings;
+const { cancel, enter, lock, dashboard, close } = refs.public.exams.sittings;
 
 /** The reason of the proctor's locks in these tests: one of the six codes. */
 const RULE_BREAK: typeof ReasonCode.Type = "rule-break";
@@ -180,7 +180,7 @@ describe("exams/sittings authority", () => {
   );
 
   it.effect(
-    "lets a Proctor of the sitting's unit lock an attempt and read the dashboard, and refuses the Proctor the exam itself",
+    "lets a Proctor of the sitting's unit lock an attempt and read the dashboard, and refuses the Proctor the room's schedule and the exam itself",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -202,6 +202,15 @@ describe("exams/sittings authority", () => {
         });
         const page = yield* proctor.query(dashboard, pageArgs(made.id));
         expect(page.attempts.page).toHaveLength(1);
+        expect(page.can).toEqual(["sitting.proctor", "sitting.view"]);
+        // Moving or cancelling the room changes the students' dates, so it stays with those who schedule the exam.
+        const cancelled = yield* proctor
+          .mutation(cancel, { sittingId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(cancelled).toMatchObject({
+          _tag: "AccessDenied",
+          reason: "role",
+        });
         const sitting = yield* sittingRow(fixture, made.id);
         const refused = yield* proctor
           .query(refs.public.exams.exams.open, {

@@ -21,7 +21,10 @@ const NOT_FOUND = "We can't find this page";
 /** The name of the seeded exam's open room, which its rooms list links. */
 const ROOM = "Lab 2";
 
-test("a person whose only role is Proctor runs a room end to end, and is refused the exam's editor, its list and its results", async ({
+/** The row of the seeded exam's room for tomorrow, which is still scheduled. */
+const UPCOMING_ROW = /Lab 3/u;
+
+test("a person whose only role is Proctor runs a room end to end, and is refused moving or cancelling a room, the exam's editor, its list and its results", async ({
   baseURL,
   browser,
 }) => {
@@ -57,7 +60,10 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
       slug: school.slug,
     })
   );
-  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  // The seed also schedules a room of the exam for tomorrow, which only those who schedule the exam move or cancel.
+  const sitting = await Effect.runPromise(
+    seedSitting(school.slug, learner, 0, "upcoming")
+  );
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
   await waitUntilTakenOver(
@@ -71,9 +77,23 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
     student.getByRole("heading", { name: "Question 1" })
   ).toBeVisible();
 
-  // The Proctor finds the room in the exam's rooms and opens it.
+  // The Proctor finds the rooms of the exam, and moves and cancels none of them.
   const proctor = await proctorContext.newPage();
   await proctor.goto(address(`/exams/${sitting.examId}`));
+  const upcoming = proctor.getByRole("row", { name: UPCOMING_ROW });
+  await expect(upcoming).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  const menu = upcoming.getByRole("button", { name: "More actions" });
+  await waitUntilTakenOver(menu);
+  await menu.click();
+  await expect(
+    proctor.getByRole("menuitem", { name: "Reschedule" })
+  ).toBeDisabled();
+  await expect(
+    proctor.getByRole("menuitem", { name: "Cancel room" })
+  ).toBeDisabled();
+  await proctor.keyboard.press("Escape");
+
+  // The Proctor opens the room that is open now.
   const roomLink = proctor
     .getByRole("table")
     .getByRole("link", { exact: true, name: ROOM });

@@ -6,8 +6,9 @@ import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect } from "effect";
 
 /**
- * The room a change names, with the member who asks for it, once the change is allowed: only the Person who
- * scheduled the room, or an Admin, changes it, and only before it opens, because a room that has opened, or
+ * The room a change names, with the member who asks for it, once the change is allowed: the caller holds
+ * `sitting.schedule`, which the access middleware decides, and only the Person who scheduled the room, or an
+ * Admin, changes it, and only before it opens, because a room that has opened, or
  * closed, keeps its students' sitting as it was.
  */
 export const changeableRoom = Effect.fn("exams.sittings.changeable")(
@@ -21,7 +22,7 @@ export const changeableRoom = Effect.fn("exams.sittings.changeable")(
     );
     if (!(isScheduler || isAdmin)) {
       return yield* new AccessDenied({
-        action: "sitting.proctor",
+        action: "sitting.schedule",
         reason: "role",
       });
     }

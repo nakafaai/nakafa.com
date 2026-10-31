@@ -176,7 +176,10 @@ The school roles also hold these actions:
 - The Proctor runs the exam rooms of the scope the grant covers: it finds them
   through the exam's rooms (`exam.rooms`), reads their dashboards
   (`sitting.view`), and takes every proctor action of them (`sitting.proctor`).
-  It writes no exam, reads no result or grade, and changes no setting.
+  It does not move or cancel a room (`sitting.schedule`), which changes the
+  students' dates and sends them notices, so that stays with the roles that
+  schedule the exam. It writes no exam, reads no result or grade, and changes
+  no setting.
 - The Admin creates, opens, and archives the periods of the school
   (`period.manage`); creates, renames, and archives its cohorts, and places and
   moves people in them (`cohort.manage`); and creates, renames, and removes its

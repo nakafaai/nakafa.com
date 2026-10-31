@@ -20,7 +20,7 @@ describe("exams/kinds", () => {
     ).toEqual(["admin", "principal", "deputy", "teacher", "proctor"]);
   });
 
-  it("grants the Proctor the rooms and their proctoring, and no exam, grade or setting", () => {
+  it("grants the Proctor the rooms and their proctoring, and no schedule, exam, grade or setting", () => {
     expect(
       Arr.filter(
         ["exam.rooms", "sitting.proctor", "sitting.view"] as const,
@@ -36,11 +36,18 @@ describe("exams/kinds", () => {
           "result.grade",
           "result.release",
           "result.view",
+          "sitting.schedule",
           "tenant.manage",
         ] as const,
         (action) => opensTo(action, "proctor")
       )
     ).toEqual([]);
+  });
+
+  it("leaves moving and cancelling a room to the roles that schedule the exam, the Admin and the Teacher", () => {
+    expect(
+      Arr.filter(RuleRole.literals, (role) => opensTo("sitting.schedule", role))
+    ).toEqual(["admin", "teacher"]);
   });
 
   it("names exam.view as a capability of the tenant and of a unit, so the viewer reads it on both", () => {
