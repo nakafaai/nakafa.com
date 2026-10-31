@@ -17608,13 +17608,21 @@ export declare const internal: {
     };
   };
   records: {
-    letters: {
-      draw: FunctionReference<
+    draw: {
+      letter: FunctionReference<
         "action",
         "internal",
         { letterId: Id<"graduationLetters"> },
         null
       >;
+      report: FunctionReference<
+        "action",
+        "internal",
+        { reportId: Id<"reportCards"> },
+        null
+      >;
+    };
+    letters: {
       lock: FunctionReference<
         "mutation",
         "internal",
@@ -17647,12 +17655,6 @@ export declare const internal: {
       >;
     };
     prints: {
-      draw: FunctionReference<
-        "action",
-        "internal",
-        { reportId: Id<"reportCards"> },
-        null
-      >;
       lock: FunctionReference<
         "mutation",
         "internal",
