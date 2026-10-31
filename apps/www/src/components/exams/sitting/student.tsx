@@ -16,7 +16,6 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Effect, Option } from "effect";
 import {
   type FormEvent,
-  type ReactNode,
   useCallback,
   useEffect,
   useId,
@@ -40,12 +39,10 @@ import { SittingBody } from "@/components/exams/sitting/body";
 import { useReaderLoaded } from "@/components/exams/sitting/document";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
 import { entersBySelf, roomEntryOf } from "@/components/exams/sitting/join";
-import { useSittingMode } from "@/components/exams/sitting/mode";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
+import { PaperFrame } from "@/components/exams/sitting/recovery";
 import { SittingRetry } from "@/components/exams/sitting/retry";
-import { PlayerMain } from "@/components/player/frame";
-import { PlayerProvider } from "@/components/player/provider";
 import {
   CardSection,
   CardSectionActions,
@@ -148,9 +145,9 @@ export function StudentSitting({
   // A paused read, as while Convex confirms the session again, keeps its last answer, so a running paper stays.
   if (Option.isNone(kept)) {
     return joining ? (
-      <JoiningPaper>
+      <PaperFrame>
         <PaperBar back={<PaperBack />} title={t("sitting")} />
-      </JoiningPaper>
+      </PaperFrame>
     ) : (
       <SittingBar examTitle={t("sitting")} />
     );
@@ -168,9 +165,9 @@ export function StudentSitting({
   }
   if (joining && enterable) {
     return (
-      <JoiningPaper>
+      <PaperFrame>
         <PaperBar back={<PaperBack />} title={sitting.examTitle} />
-      </JoiningPaper>
+      </PaperFrame>
     );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
@@ -227,18 +224,6 @@ export function StudentSitting({
         </form>
       </SittingBody>
     </>
-  );
-}
-
-/** The paper's frame while the page enters by itself: full screen from the first frame, under its bar, with the paper to come. */
-function JoiningPaper({ children }: { readonly children: ReactNode }) {
-  const mode = useSittingMode();
-
-  return (
-    <PlayerProvider keys={[]} mode={mode}>
-      {children}
-      <PlayerMain navigator={null}>{null}</PlayerMain>
-    </PlayerProvider>
   );
 }
 

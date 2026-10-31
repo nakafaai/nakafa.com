@@ -338,6 +338,8 @@
     "release-action": "Release results",
     "released": "Released",
     "student-finished": "You finished this exam.",
+    "student-closed-title": "This exam is closed.",
+    "student-locked-title": "This attempt is locked.",
     "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
     "student-answer": "Your answer: {answer}",

@@ -5,6 +5,7 @@ import {
   ARTICLE_MARKS,
   articleProse,
   drawArticleProse,
+  drawDocument,
 } from "@repo/design-system/components/editor/prose";
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import {
@@ -226,5 +227,36 @@ describe("drawArticleProse", () => {
     expect(card?.className).toBe(mathBlockVariants());
     expect(card?.firstElementChild?.className).toBe(mathScrollVariants());
     expect(card?.querySelector(".katex-display")).not.toBeNull();
+  });
+});
+
+describe("drawDocument", () => {
+  /** The document of an editor, drawn into a new element without it. */
+  const drawn = (content: string, paragraphs: boolean) => {
+    const editor = openEditor(paragraphs);
+    editor.commands.setContent(content);
+    const root = document.createElement("div");
+    drawDocument(root, editor.state.doc, paragraphs);
+    return root;
+  };
+
+  it("draws a prompt with the article's paragraphs, each block in the direction of its words", () => {
+    const root = drawn(
+      "<p>Soal</p><table><tbody><tr><td><p>sel</p></td></tr></tbody></table>",
+      true
+    );
+    const [paragraph, cell] = root.querySelectorAll("p");
+
+    expect(paragraph?.className).toBe(paragraphVariants());
+    expect(paragraph?.getAttribute("dir")).toBe("auto");
+    expect(cell?.className).toBe("");
+  });
+
+  it("leaves an option's paragraph as a line, and gives an empty paragraph its height", () => {
+    const line = drawn("<p>Pilihan</p>", false).querySelector("p");
+    const empty = drawn("<p></p>", false).querySelector("p");
+
+    expect(line?.className).toBe("");
+    expect(empty?.querySelector("br")).not.toBeNull();
   });
 });

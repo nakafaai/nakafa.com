@@ -11,7 +11,7 @@ import {
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import { type ReactNode, useMemo } from "react";
+import { memo, type ReactNode, useMemo } from "react";
 import {
   keepResponse,
   useChooseAnswer,
@@ -93,10 +93,11 @@ export function PaperReveal({
  * One question of the paper: its number, its prompt as the editor holds it now, and its options or its
  * answer line. The player's footer flags the current question. A choice or a typed answer is kept in the
  * browser before it is sent, so a reload
- * or a closed tab sends it again. The prompt waits while the server folds the editor's steps, and the
+ * or a closed tab sends it again. It draws again only when the paper's merge gives it a new question, so an
+ * answer redraws its own question. The prompt waits while the server folds the editor's steps, and the
  * query runs again when the fold is written, so a prompt that is not ready shows nothing yet.
  */
-export function SittingQuestion({
+export const SittingQuestion = memo(function SittingQuestion({
   attemptId,
   deviceId,
   question,
@@ -258,4 +259,4 @@ export function SittingQuestion({
       </SittingPictures>
     </PlayerQuestion>
   );
-}
+});
