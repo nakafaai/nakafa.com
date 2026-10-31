@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import {
+  isReasonOption,
   labelText,
   letterScript,
   optionLetter,
+  optionPlace,
 } from "@repo/backend/confect/exams/letters";
 import { Array as Arr } from "effect";
 
@@ -90,5 +92,16 @@ describe("the letter of an option", () => {
   it("names an option of an Arabic set past the abjad as a Latin set names its place", () => {
     expect(optionLetter(28, "arabic")).toBe(optionLetter(28, "latin"));
     expect(optionLetter(27, "arabic")).toBe("غ");
+  });
+
+  it("counts a two-tier question's reasons from the start again, and every other option by its place", () => {
+    const ids = ["option-1", "option-2", "reason-1", "reason-2"];
+
+    expect(Arr.map(ids, (_, index) => optionPlace(ids, index))).toEqual([
+      0, 1, 0, 1,
+    ]);
+    expect(optionPlace(["option-1", "option-2"], 1)).toBe(1);
+    expect(isReasonOption("reason-1")).toBe(true);
+    expect(isReasonOption("option-1")).toBe(false);
   });
 });

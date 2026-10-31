@@ -8,7 +8,7 @@ import {
 import { Schema } from "effect";
 
 /** What one attempt sends, or why it sends nothing. */
-export const PreparedDelivery = Schema.Union([
+const PreparedDelivery = Schema.Union([
   Schema.Struct({
     attempt: Schema.Finite,
     body: Schema.String,

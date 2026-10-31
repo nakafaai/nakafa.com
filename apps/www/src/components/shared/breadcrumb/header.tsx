@@ -72,16 +72,18 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
  * shows Home, a menu of the middle items, and the nearest `visibleItemCount` items. On a
  * phone a path of two items or more keeps only its last item beside one menu that holds
  * Home and every item before it, so the page's name stays readable next to the page's
- * actions.
+ * actions. A path that `unfolds` shows every item in a frame row of 42rem or wider, whose
+ * `@container` the header sets, and only its last item truncates. CSS alone folds it, so
+ * the first paint already has its final shape.
  */
 export function BreadcrumbHeaderPath({
-  children,
   home,
   homeLabel,
   items,
+  unfolds = false,
   visibleItemCount = 2,
 }: Pick<BreadcrumbHeaderValue, "home" | "homeLabel" | "items"> & {
-  children?: ReactNode;
+  unfolds?: boolean;
   visibleItemCount?: 1 | 2;
 }) {
   const tCommon = useTranslations("Common");
@@ -111,20 +113,35 @@ export function BreadcrumbHeaderPath({
         </BreadcrumbItem>
         {hiddenItems.length > 0 && (
           <>
-            <BreadcrumbSeparator className="shrink-0 max-sm:hidden" />
-            <BreadcrumbMenu className="max-sm:hidden" items={hiddenItems} />
+            <BreadcrumbSeparator
+              className={cn("shrink-0 max-sm:hidden", unfolds && "@2xl:hidden")}
+            />
+            <BreadcrumbMenu
+              className={cn("max-sm:hidden", unfolds && "@2xl:hidden")}
+              items={hiddenItems}
+            />
           </>
         )}
+        {unfolds &&
+          Arr.map(hiddenItems, (item) => (
+            <BreadcrumbHeaderSegment
+              className="hidden shrink-0 @2xl:inline-flex"
+              item={item}
+              key={`${item.label}:unfolded`}
+            />
+          ))}
         {Arr.map(visibleItems, (item, index) => (
           <BreadcrumbHeaderSegment
             className={cn(
-              foldsOnPhone && index < visibleItems.length - 1 && "max-sm:hidden"
+              foldsOnPhone &&
+                index < visibleItems.length - 1 &&
+                "max-sm:hidden",
+              unfolds && index < visibleItems.length - 1 && "@2xl:shrink-0"
             )}
             item={item}
             key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
           />
         ))}
-        {children}
       </BreadcrumbList>
     </Breadcrumb>
   );
@@ -166,7 +183,7 @@ export function BreadcrumbHeaderFold({
  * is a link: the current page's links to itself and keeps its search, and it reads as the
  * current page. A `className` applies to both, so a path can hide a segment whole.
  */
-export function BreadcrumbHeaderSegment({
+function BreadcrumbHeaderSegment({
   className,
   item,
 }: {

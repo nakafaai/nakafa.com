@@ -50,11 +50,11 @@ for (const viewport of [
       "openid https://www.googleapis.com/auth/calendar.events.readonly"
     );
     expect(first.searchParams.get("redirect_uri")).toBe(
-      `${site}/api/connectors/google/callback`
+      `${site}/api/connectors/callback`
     );
     const state = first.searchParams.get("state") ?? "";
     await page.goto(
-      `${site}/api/connectors/google/callback?state=${state}&code=not-a-code`
+      `${site}/api/connectors/callback?state=${state}&code=not-a-code`
     );
     await page.waitForURL(REFUSED, {
       timeout: readinessTimeoutMilliseconds,
@@ -64,7 +64,7 @@ for (const viewport of [
     await page.goto(`${site}/en/user/settings/connectors`);
     const second = await startConnect();
     await page.goto(
-      `${site}/api/connectors/google/callback?state=${second.searchParams.get("state") ?? ""}&error=access_denied`
+      `${site}/api/connectors/callback?state=${second.searchParams.get("state") ?? ""}&error=access_denied`
     );
     await page.waitForURL(CANCELLED);
     await expect(page.getByRole("alert")).toHaveCount(0);
@@ -72,7 +72,7 @@ for (const viewport of [
 
     // A replayed code goes home, and the root answers in the reader's language, English here.
     await page.goto(
-      `${site}/api/connectors/google/callback?state=${state}&code=again`
+      `${site}/api/connectors/callback?state=${state}&code=again`
     );
     await page.waitForURL(`${site}/en`);
     await context.close();

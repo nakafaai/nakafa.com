@@ -17,7 +17,7 @@ import { Array as Arr, Effect, Option } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-const { enter, mine, release, sheet } = refs.public.records.grades;
+const { enter, release, sheet } = refs.public.records.grades;
 const schemes = refs.public.records.schemes;
 const placements = refs.public.tenancy.placements;
 
@@ -282,52 +282,6 @@ describe("records/grades release", () => {
   );
 });
 
-describe("records/grades reads by a student", () => {
-  it.effect(
-    "lets a student read their own released grade, and nothing of a classmate",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { classId, cohortId } = yield* setup(fixture);
-        const mate = yield* classmate(fixture, cohortId);
-        const own = yield* draft(
-          fixture,
-          classId,
-          fixture.people.student.personId,
-          70
-        );
-        yield* draft(fixture, classId, mate, 40);
-        expect(
-          yield* fixture.as("student").query(mine, { classId, slug: nf })
-        ).toEqual([]);
-        yield* releaseBy(fixture, own.id);
-        const readOwn = yield* fixture
-          .as("student")
-          .query(mine, { classId, slug: nf });
-        expect(readOwn).toMatchObject([
-          { id: own.id, state: "released", value: 70 },
-        ]);
-        expect(
-          yield* fixture.as("teacher").query(mine, { classId, slug: nf })
-        ).toEqual([]);
-      })
-  );
-
-  it.effect("refuses a student the grades of a class in another cohort", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { periodId } = yield* setup(fixture);
-      const x2 = yield* cohort(fixture, periodId, "X-2");
-      const other = yield* classOf(fixture, x2.id, "Fisika");
-      const refused = yield* fixture
-        .as("student")
-        .query(mine, { classId: other.id, slug: nf })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject(denied("role"));
-    })
-  );
-});
-
 describe("records/grades tenant isolation", () => {
   it.effect("refuses a class and a grade of another school by their IDs", () =>
     Effect.gen(function* () {
@@ -403,13 +357,8 @@ describe("records/grades tenant isolation", () => {
           .as("admin")
           .query(sheet, { ...firstPage, classId: foreign.classId, slug: nf })
           .pipe(Effect.flip),
-        fixture
-          .as("admin")
-          .query(mine, { classId: foreign.classId, slug: nf })
-          .pipe(Effect.flip),
       ]);
       expect(failures).toMatchObject([
-        denied("resource"),
         denied("resource"),
         denied("resource"),
         denied("resource"),

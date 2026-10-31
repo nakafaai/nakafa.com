@@ -205,7 +205,7 @@ export const initializeLocalRuntime = Effect.fn(
   const identity = yield* createLocalSigningIdentity(directory);
   const backend = `${directory}/backend`;
   yield* fs.makeDirectory(backend, { mode: 0o700 });
-  // Convex owns this open configuration. Preserve its fields and use the real source path for component identity.
+  // Convex owns this open configuration. Preserve its fields and point at the real source, so `init` scaffolds nothing here.
   const config = yield* fs
     .readFileString(`${root}/packages/backend/convex.json`)
     .pipe(

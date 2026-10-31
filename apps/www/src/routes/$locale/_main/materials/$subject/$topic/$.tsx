@@ -17,7 +17,6 @@ import { DeferredComments } from "@/components/comments/deferred";
 import { ContentByline } from "@/components/content/byline";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
-import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/frame";
@@ -53,7 +52,6 @@ import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
-import { HOME_TARGET } from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
@@ -274,13 +272,7 @@ function MaterialPage() {
                 // Hidden in its row while the root's prepaint script marks the
                 // placement pending, so the path shows only in its final form.
                 <div className="contents [html[data-placement=pending]_&]:invisible">
-                  <BreadcrumbHeaderPath
-                    home={HOME_TARGET}
-                    homeLabel={labels.home}
-                    items={[]}
-                  >
-                    <MaterialBreadcrumb title={metadata.title} />
-                  </BreadcrumbHeaderPath>
+                  <MaterialBreadcrumb title={metadata.title} />
                 </div>
               }
             >

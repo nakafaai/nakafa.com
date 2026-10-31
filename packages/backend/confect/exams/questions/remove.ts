@@ -4,25 +4,51 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import editorInternal from "@repo/backend/confect/_generated/refs/editor.server";
 import {
+  DatabaseReader,
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { ExamEmpty } from "@repo/backend/confect/exams/errors";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect, Option } from "effect";
+
+/** Deletes a reading once no question holds it. A reading stays while another question reads it. */
+export const dropReading = Effect.fn("exams.question.drop.reading")(function* (
+  reading: ExamQuestionsDoc["reading"]
+) {
+  if (reading === undefined) {
+    return;
+  }
+  const holder = yield* (yield* DatabaseReader)
+    .table("examQuestions")
+    .index("by_reading", (query) => query.eq("reading", reading))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isNone(holder)) {
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      editorInternal.deletion.document,
+      { documentId: reading }
+    );
+  }
+});
 
 /**
  * Deletes one question's row. Each document the question owns, its prompt, rubric, and
- * explanation, is deleted by the one owner of document deletion, which works through the
+ * explanation, and its reading when no other question holds it (`dropReading`), is deleted by the one owner of document deletion, which works through the
  * document's rows in pages, each in a scheduled call of its own, so this transaction stays
  * small whatever the documents' history (ADR 0028). The exam's order is the caller's to keep.
  */
 export const dropQuestion = Effect.fn("exams.question.drop")(function* (
-  question: Pick<ExamQuestionsDoc, "_id" | "explanation" | "prompt" | "rubric">
+  question: Pick<
+    ExamQuestionsDoc,
+    "_id" | "explanation" | "prompt" | "reading" | "rubric"
+  >
 ) {
   yield* (yield* DatabaseWriter)
     .table("examQuestions")
     .delete(question._id)
     .pipe(Effect.orDie);
+  yield* dropReading(question.reading);
   const scheduler = yield* Scheduler;
   yield* Effect.forEach(
     [question.prompt, question.rubric, question.explanation],

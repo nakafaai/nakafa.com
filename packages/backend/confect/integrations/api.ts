@@ -244,7 +244,7 @@ export const ApiGradeDraft = Schema.Struct({
 });
 
 /** One student of a roster import, as a school's own system sends it. */
-export const ApiRosterRow = Schema.Struct({
+const ApiRosterRow = Schema.Struct({
   cohortName: Schema.optionalKey(Schema.String),
   name: Schema.String,
   nisn: Schema.String,

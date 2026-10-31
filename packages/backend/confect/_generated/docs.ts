@@ -73,6 +73,7 @@ export type EditorStepsDoc = Document.Document<typeof schemaDefinition, "editorS
 export type ExamAnswersDoc = Document.Document<typeof schemaDefinition, "examAnswers">;
 export type ExamAssetsDoc = Document.Document<typeof schemaDefinition, "examAssets">;
 export type ExamAttemptsDoc = Document.Document<typeof schemaDefinition, "examAttempts">;
+export type ExamAudioDoc = Document.Document<typeof schemaDefinition, "examAudio">;
 export type ExamQuestionsDoc = Document.Document<typeof schemaDefinition, "examQuestions">;
 export type ExamResultsDoc = Document.Document<typeof schemaDefinition, "examResults">;
 export type ExamScreensDoc = Document.Document<typeof schemaDefinition, "examScreens">;
@@ -231,6 +232,7 @@ export interface Docs {
   examAnswers: ExamAnswersDoc;
   examAssets: ExamAssetsDoc;
   examAttempts: ExamAttemptsDoc;
+  examAudio: ExamAudioDoc;
   examQuestions: ExamQuestionsDoc;
   examResults: ExamResultsDoc;
   examScreens: ExamScreensDoc;

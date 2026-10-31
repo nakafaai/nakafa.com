@@ -7,6 +7,9 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { Array as Arr, Option } from "effect";
 
+/** How many of the account's connections the page reads. */
+export const CONNECTION_PAGE_SIZE = 20;
+
 /** One connection as its owner's list shows it. */
 export type Connection = Ref.Returns<
   typeof connectors.connections.listOwn

@@ -1,11 +1,14 @@
 import { NodeSocketServer } from "@effect/platform-node";
 import {
+  deployFunctions,
+  LocalDeploymentJson,
+} from "@repo/backend/scripts/content/acceptance/deployment";
+import {
   acceptanceRuntimeError,
-  retryVersionServiceStart,
   sanitizeAcceptanceCommandError,
 } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { Effect, Exit, FileSystem, Schedule, Scope, Stream } from "effect";
+import { Config, Effect, FileSystem, Schedule, Schema, Stream } from "effect";
 import { HttpClient } from "effect/http";
 import { ChildProcess } from "effect/process";
 
@@ -74,17 +77,13 @@ export const assertLocalPortsFree = Effect.fn(
  * and the backend analyzes the pushed modules within four seconds: on a busy
  * machine the analysis outlasts them and the push fails ("Loading the pushed
  * modules encountered the following error: Function execution timed out
- * (maximum duration: 4s)"), so the local analysis gets thirty. The Convex CLI
- * waits thirty seconds for the backend's own process to answer before it
- * pushes, which a swapping machine also outlasts, so it waits two minutes.
- * A cloud deployment keeps its own limits for every real deploy.
+ * (maximum duration: 4s)"), so the local analysis gets thirty. A cloud
+ * deployment keeps its own limits for every real deploy.
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/concurrency_limiter.rs
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/timeout.rs
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/common/src/knobs.rs
- * @see https://github.com/get-convex/convex-js/blob/main/src/cli/lib/localDeployment/run.ts
  */
 const localBackendEnvironment = {
-  CONVEX_LOCAL_BACKEND_STARTUP_TIMEOUT_SECS: "120",
   DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
   FUNRUN_ISOLATE_ACTIVE_THREADS: String(navigator.hardwareConcurrency),
   ISOLATE_ANALYZE_USER_TIMEOUT_SECONDS: "30",
@@ -128,7 +127,17 @@ export const makeConvexTemporaryRoot = Effect.fn(
   return yield* fileSystem.makeTempDirectoryScoped({ prefix: "convex-" });
 });
 
-/** Starts the local backend in the scope it is given and returns it once it answers. */
+/**
+ * Runs the backend binary that `convex init` downloaded, on the state it saved, and pushes the
+ * functions once from `packages/backend`. `convex dev` cannot do either from the runtime's folder:
+ * it marks a package external only when `<cwd>/node_modules/<name>` is the same path the importer
+ * resolves, so from here it bundles the PDF renderer, whose engine no bundle can load. From the
+ * package it would select this deployment by erasing `CONVEX_DEPLOYMENT` from that checkout's
+ * `.env.local`. `convex deploy` writes no such file, and it pushes as production does.
+ * @see https://github.com/get-convex/convex-js/blob/main/src/bundler/external.ts
+ * @see https://github.com/get-convex/convex-js/blob/main/src/cli/lib/localDeployment/run.ts
+ * @see https://github.com/get-convex/convex-js/blob/main/src/cli/configure.ts
+ */
 const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
   function* (
     runtime: LocalRuntime,
@@ -137,29 +146,42 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
   ) {
     const fileSystem = yield* FileSystem.FileSystem;
     yield* fileSystem.writeFileString(logPath, "", { mode: 0o600 });
-    const temporaryRoot = yield* makeConvexTemporaryRoot();
+    const state = `${runtime.backend}/.convex/local/default`;
+    const deployment = yield* fileSystem
+      .readFileString(`${state}/config.json`)
+      .pipe(Effect.flatMap(Schema.decodeEffect(LocalDeploymentJson)));
+    const home = yield* Config.schema(Schema.NonEmptyString, "HOME").pipe(
+      Effect.orDie
+    );
+    const environment = {
+      ...localConvexEnvironment,
+      ...localBackendEnvironment,
+      ...concurrency,
+      AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
+      AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
+      TMPDIR: yield* makeConvexTemporaryRoot(),
+    };
     const child = yield* ChildProcess.make(
-      process.execPath,
+      `${home}/.cache/convex/binaries/${deployment.backendVersion}/convex-local-backend`,
       [
-        "node_modules/convex/bin/main.js",
-        "dev",
-        "--codegen",
-        "enable",
-        "--typecheck",
-        "disable",
-        "--tail-logs",
-        "always",
+        "--port",
+        String(deployment.ports.cloud),
+        "--site-proxy-port",
+        String(deployment.ports.site),
+        "--instance-name",
+        deployment.deploymentName,
+        "--instance-secret",
+        deployment.instanceSecret,
+        "--local-storage",
+        `${state}/convex_local_storage`,
+        "--local-log-sink",
+        `${runtime.directory}/functions.log`,
+        "--disable-beacon",
+        `${state}/convex_local_backend.sqlite3`,
       ],
       {
         cwd: runtime.backend,
-        env: {
-          ...localConvexEnvironment,
-          ...localBackendEnvironment,
-          ...concurrency,
-          AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
-          AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
-          TMPDIR: temporaryRoot,
-        },
+        env: environment,
         extendEnv: true,
         forceKillAfter: "5 seconds",
         stdin: "ignore",
@@ -180,17 +202,11 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
           `The local Convex process exited before readiness: ${detail}`
         );
       }
-      const log = yield* fileSystem.readFileString(logPath);
-      if (!log.includes("Convex functions ready!")) {
-        return false;
-      }
       return yield* client.get(`${runtime.query}/instance_name`).pipe(
-        Effect.map(
-          (response) => response.status >= 200 && response.status < 300
-        ),
-        Effect.mapError(() =>
-          acceptanceRuntimeError("The local Convex readiness request failed.")
-        )
+        Effect.flatMap((response) => response.text),
+        Effect.map((name) => name === deployment.deploymentName),
+        // The backend refuses connections until it listens.
+        Effect.orElseSucceed(() => false)
       );
     });
     yield* ready().pipe(
@@ -198,6 +214,9 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
         while: (value) => !value,
         schedule: Schedule.spaced("1 second"),
       }),
+      Effect.andThen(
+        deployFunctions(runtime, deployment, environment, logPath)
+      ),
       Effect.timeoutOrElse({
         duration: BACKEND_READY_TIMEOUT,
         orElse: () =>
@@ -209,21 +228,6 @@ const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
     return child;
   }
 );
-
-/** A failed start releases its own scope before a retry; a started backend keeps it. */
-const startLocalBackendAttempt = Effect.fn(
-  "contentAcceptance.startLocalBackendAttempt"
-)(function* (
-  runtime: LocalRuntime,
-  logPath: string,
-  concurrency: Partial<typeof PRODUCTION_CONCURRENCY>
-) {
-  const attempt = yield* Scope.fork(yield* Effect.scope);
-  return yield* startLocalBackend(runtime, logPath, concurrency).pipe(
-    Effect.provideService(Scope.Scope, attempt),
-    Effect.onExitIf(Exit.isFailure, (exit) => Scope.close(attempt, exit))
-  );
-});
 
 /**
  * Refreshes Convex bindings and owns the local backend through application acceptance. The
@@ -240,9 +244,7 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
     yield* assertLocalPortsFree(runtime);
     const fileSystem = yield* FileSystem.FileSystem;
     const logPath = `${runtime.directory}/convex.log`;
-    const child = yield* retryVersionServiceStart(
-      startLocalBackendAttempt(runtime, logPath, concurrency)
-    );
+    const child = yield* startLocalBackend(runtime, logPath, concurrency);
     return yield* Effect.raceFirst(
       program,
       child.exitCode.pipe(

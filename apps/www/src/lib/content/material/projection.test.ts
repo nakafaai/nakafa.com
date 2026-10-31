@@ -1,7 +1,9 @@
 import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 
 import { Effect, Schema } from "effect";
@@ -9,8 +11,10 @@ import { decodePublishedMaterialContext } from "@/lib/content/material/projectio
 import { previewProjection } from "@/test/content-preview";
 import {
   testCurriculumRowJson,
+  testProgramClass,
   testProgramContexts,
   testProgramGroups,
+  testProgramRoot,
   testProgramSubject,
 } from "@/test/content-program";
 
@@ -22,6 +26,10 @@ const [mapping] = Schema.decodeUnknownSync(
 )(testProgramContexts);
 const context = { nodeKey: group.nodeKey, programKey: group.programKey };
 const result = {
+  ancestorJson: [
+    testCurriculumRowJson(testProgramRoot),
+    testCurriculumRowJson(testProgramClass),
+  ],
   groupJson: testCurriculumRowJson(group),
   managed: true,
   mappingJson: testCurriculumRowJson(mapping),
@@ -59,6 +67,7 @@ describe("published material context projection", () => {
           previewProjection,
           context,
           {
+            ancestorJson: [],
             groupJson: null,
             managed: true,
             mappingJson: null,
@@ -136,6 +145,39 @@ describe("published material context projection", () => {
           ...group,
           nodeKey: `${group.nodeKey}-other`,
         }),
+      },
+    ],
+    [
+      "foreign ancestor",
+      {
+        ...result,
+        ancestorJson: [
+          testCurriculumRowJson({
+            ...testProgramRoot,
+            programKey: LearningProgramKeySchema.make("other-program"),
+          }),
+          testCurriculumRowJson(testProgramClass),
+        ],
+      },
+    ],
+    [
+      "ancestor of another locale",
+      {
+        ...result,
+        ancestorJson: [
+          testCurriculumRowJson({
+            ...testProgramRoot,
+            appLocale: AppLocaleSchema.make("id"),
+          }),
+          testCurriculumRowJson(testProgramClass),
+        ],
+      },
+    ],
+    [
+      "broken ancestor chain",
+      {
+        ...result,
+        ancestorJson: [testCurriculumRowJson(testProgramRoot)],
       },
     ],
     [

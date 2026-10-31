@@ -5,6 +5,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { QuestionTag } from "@repo/backend/confect/insight/schema";
 import {
   forumClass,
   keyedFixture,
@@ -87,22 +88,28 @@ const scored = (
     ).pipe(Effect.asVoid, Effect.orDie)
   );
 
+/** Whether no question of an exam names a competency. */
+const untagged = (tags: readonly (typeof QuestionTag.Type)[]) =>
+  Arr.every(tags, (found) => found.competency === null);
+
 describe("insight", () => {
-  it.effect("shows a student's own standing and keeps the class view from them", () =>
-    Effect.gen(function* () {
-      const fixture = yield* keyedFixture;
-      const term = yield* period(fixture, fixture.units.smp);
-      const forum = yield* forumClass(fixture, term.id, "X-1");
-      expect(yield* fixture.as("student").query(mine, { slug: nf })).toEqual(
-        []
-      );
-      expect(
-        yield* fixture
-          .as("student")
-          .query(ofClass, { classId: forum.classId, slug: nf })
-          .pipe(Effect.flip)
-      ).toMatchObject({ _tag: "AccessDenied" });
-    })
+  it.effect(
+    "shows a student's own standing and keeps the class view from them",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        expect(yield* fixture.as("student").query(mine, { slug: nf })).toEqual(
+          []
+        );
+        expect(
+          yield* fixture
+            .as("student")
+            .query(ofClass, { classId: forum.classId, slug: nf })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied" });
+      })
   );
 
   it.effect(
@@ -153,9 +160,12 @@ describe("insight", () => {
           cursor: null,
           sittingId: made.sittingId,
         });
-        expect(yield* fixture.as("student").query(mine, { slug: nf })).toMatchObject(
-          [{ competency: "Gerak lurus" }, { competency: "Ujian Fisika" }]
-        );
+        expect(
+          yield* fixture.as("student").query(mine, { slug: nf })
+        ).toMatchObject([
+          { competency: "Gerak lurus" },
+          { competency: "Ujian Fisika" },
+        ]);
         const seen = yield* teacher.query(ofClass, {
           classId: forum.classId,
           slug: nf,
@@ -167,9 +177,7 @@ describe("insight", () => {
         yield* tag(null);
         expect(
           yield* teacher.query(list, { examId: made.examId, slug: nf })
-        ).toSatisfy((tags: readonly { competency: string | null }[]) =>
-          Arr.every(tags, (found) => found.competency === null)
-        );
+        ).toSatisfy(untagged);
       })
   );
 
@@ -192,9 +200,7 @@ describe("insight", () => {
       });
       expect(
         yield* teacher.query(list, { examId: made.examId, slug: nf })
-      ).toSatisfy((tags: readonly { competency: string | null }[]) =>
-        Arr.every(tags, (found) => found.competency === null)
-      );
+      ).toSatisfy(untagged);
     })
   );
 

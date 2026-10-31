@@ -23,7 +23,7 @@ const { listOwn, listSchool } = refs.public.connectors.connections;
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 
 /** The callback of the local site, which a start must name. */
-const CALLBACK = "http://localhost:3000/api/connectors/google/callback";
+const CALLBACK = "http://localhost:3000/api/connectors/callback";
 
 /** The page of an account's own connectors, which a personal connect returns to. */
 const OWN_PAGE = "/user/settings/connectors";
@@ -71,6 +71,7 @@ describe("connectors/google", () => {
     fetcher.mockReset();
     vi.stubEnv("SITE_URL", "http://localhost:3000");
     vi.stubEnv("GOOGLE_CONNECTORS", "drive, calendar,unknown,classroom,drive");
+    vi.stubEnv("GOOGLE_PICKER_API_KEY", "picker-key");
     vi.stubEnv(
       "GOOGLE_CONNECTOR_CLIENT_ID",
       "client.apps.googleusercontent.com"
@@ -103,6 +104,11 @@ describe("connectors/google", () => {
             })
             .pipe(Effect.flip)
         ).toMatchObject({ _tag: "ConnectorOff" });
+        vi.stubEnv("GOOGLE_PICKER_API_KEY", undefined);
+        expect(yield* student.query(google.offered, {})).toEqual([
+          "calendar",
+          "classroom",
+        ]);
         vi.stubEnv("GOOGLE_CONNECTORS", undefined);
         expect(yield* student.query(google.offered, {})).toEqual([]);
         expect(

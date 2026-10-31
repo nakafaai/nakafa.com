@@ -390,16 +390,12 @@ const enterGrade = Effect.fn("integrations.routes.enterGrade")(function* (
 });
 
 /** The sheet of one export for the request's client, or the refusal of a read it may not make. */
-const exportSheet = (request: {
-  readonly params: { readonly dataset: typeof ExportDataset.Type };
-  readonly query: { readonly period?: string | undefined };
-}) =>
+const exportSheet = (
+  dataset: typeof ExportDataset.Type,
+  period: string | undefined
+) =>
   Effect.gen(function* () {
-    const sheet = yield* readExport(
-      yield* callerId,
-      request.params.dataset,
-      request.query.period
-    );
+    const sheet = yield* readExport(yield* callerId, dataset, period);
     return yield* Effect.fromOption(sheet).pipe(Effect.mapError(forbidden));
   });
 
@@ -422,9 +418,14 @@ const exportsHandlers = HttpApiBuilder.group(
   "exports",
   Effect.fn(function* (handlers) {
     return handlers
-      .handle("csv", (request) => Effect.map(exportSheet(request), encodeCsv))
+      .handle("csv", ({ params, query }) =>
+        Effect.map(exportSheet(params.dataset, query.period), encodeCsv)
+      )
       .handle("xlsx", (request) =>
-        Effect.flatMap(exportSheet(request), encodeXlsx)
+        Effect.flatMap(
+          exportSheet(request.params.dataset, request.query.period),
+          encodeXlsx
+        )
       );
   })
 );

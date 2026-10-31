@@ -39,32 +39,16 @@ describe("program and material owner coherence", () => {
             });
           })
         );
-        const [catalog, page] = yield* Effect.promise(() =>
-          Promise.all([
-            t.query(api.contentRelease.program.catalog, {
-              appLocale: "en",
-            }),
-            t.query(api.contentRelease.program.page, {
-              appLocale: "en",
-              expectedManifestHash: "old",
-              expectedReleaseId: "old",
-              paginationOpts: {
-                cursor: "old",
-                numItems: 2,
-              },
-            }),
-          ])
+        const catalog = yield* Effect.promise(() =>
+          t.query(api.contentRelease.program.catalog, {
+            appLocale: "en",
+          })
         );
         expect(catalog).toMatchObject({
           managed: false,
           snapshotId: data.snapshotId,
           programJson: [],
           routeJson: [],
-        });
-        expect(page).toMatchObject({
-          managed: false,
-          snapshotId: data.snapshotId,
-          stale: true,
         });
       })
   );

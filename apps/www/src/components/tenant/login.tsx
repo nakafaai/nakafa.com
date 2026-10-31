@@ -4,6 +4,7 @@ import identity from "@repo/backend/confect/_generated/refs/identity";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -99,9 +100,10 @@ function TenantLoginForm() {
       className="flex w-full max-w-sm flex-col gap-6"
       onSubmit={handleSubmit}
     >
-      <p className="text-muted-foreground text-center text-sm">
+      <FieldDescription className="text-center">
         {t("card-hint")}
-      </p>
+      </FieldDescription>
+      <FieldError className="text-center">{message}</FieldError>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor={`${id}-username`}>
@@ -141,7 +143,6 @@ function TenantLoginForm() {
           />
         </Field>
       </FieldGroup>
-      <FieldError>{message}</FieldError>
       <Button
         aria-busy={isPending || undefined}
         className="w-full"
