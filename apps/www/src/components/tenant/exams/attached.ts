@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import type { OptimisticUpdate } from "@confect/react";
 import type exams from "@repo/backend/confect/_generated/refs/exams";
-import { Array as Arr, Option, Result } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   changeExam,
   type ExamView,
@@ -19,14 +19,16 @@ export const sharedReadings = (
   questionId: QuestionId
 ) =>
   Arr.dedupeWith(
-    Arr.filterMap(questions, (question, index) =>
+    Arr.flatMap(questions, (question, index) =>
       question.reading === null || question.id === questionId
-        ? Result.failVoid
-        : Result.succeed({
-            number: index + 1,
-            reading: question.reading,
-            source: question.id,
-          })
+        ? []
+        : [
+            {
+              number: index + 1,
+              reading: question.reading,
+              source: question.id,
+            },
+          ]
     ),
     (first, second) => first.reading === second.reading
   );
