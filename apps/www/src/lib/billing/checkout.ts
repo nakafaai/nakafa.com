@@ -234,6 +234,7 @@ export function useBillingNavigation() {
       runBillingRequest(
         Effect.tryPromise(() =>
           createTopupCheckout({
+            currency: readShownCurrency(document.documentElement),
             locale,
             successUrl: checkoutReturnUrl(window.location.href),
           })

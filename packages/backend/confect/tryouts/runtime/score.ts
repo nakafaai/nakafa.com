@@ -1,10 +1,7 @@
 import { ScoringStrategySchema } from "@nakafa/aksara-contracts/assessment/scoring";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
   type EndReason,
   statusOf,
@@ -91,31 +88,6 @@ export const loadSectionScoreSource = Effect.fn(
   }
   const irt = yield* loadSectionIrtSource(args);
   return irtScoreSource(args.attempt, irt);
-});
-
-/** Loads one owned attempt or rejects it before mutating runtime rows. */
-export const requireOwnedAttempt = Effect.fn(
-  "tryouts.runtime.requireOwnedAttempt"
-)(function* (args: {
-  attemptId: TryoutAttempt["_id"];
-  userId: TryoutAttempt["userId"];
-}) {
-  const attempt = yield* (yield* DatabaseReader)
-    .table("tryoutAttempts")
-    .get(args.attemptId)
-    .pipe(
-      Effect.catchTags({
-        DocumentDecodeError: Effect.die,
-        GetByIdFailure: () => Effect.succeed(null),
-      })
-    );
-  if (!attempt || attempt.userId !== args.userId) {
-    return yield* new TryoutAttemptStateError({
-      code: "TRYOUT_ATTEMPT_NOT_FOUND",
-      message: "Try-out attempt not found.",
-    });
-  }
-  return attempt;
 });
 
 /** Counts answered questions and correct grades for a section or attempt. */

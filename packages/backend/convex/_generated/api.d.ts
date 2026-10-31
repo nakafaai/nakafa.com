@@ -335,7 +335,11 @@ export declare const api: {
       generateTopupCheckoutLink: FunctionReference<
         "action",
         "public",
-        { locale: "en" | "id" | "de"; successUrl: string },
+        {
+          currency: "EUR" | "IDR" | "USD";
+          locale: "en" | "id" | "de";
+          successUrl: string;
+        },
         { url: string }
       >;
     };
@@ -437,6 +441,20 @@ export declare const api: {
         "mutation",
         "public",
         { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      changeSubject: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string; subject: string },
         {
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
@@ -13442,7 +13460,12 @@ export declare const internal: {
                   };
                 };
             locale: "en" | "id" | "de";
-            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            offer:
+              | "pro.monthly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup";
             session: { expiresAt: number; sessionId: string; url: string };
             userId: Id<"users">;
           },
@@ -13452,7 +13475,12 @@ export declare const internal: {
           "mutation",
           "internal",
           {
-            offer: "pro.monthly" | "pro.pass.1" | "pro.pass.3" | "pro.pass.12";
+            offer:
+              | "pro.monthly"
+              | "pro.pass.1"
+              | "pro.pass.3"
+              | "pro.pass.12"
+              | "pro.topup";
             userId: Id<"users">;
           },
           {
@@ -16003,6 +16031,7 @@ export declare const internal: {
           { attemptId: Id<"examAttempts"> },
           null
         >;
+        sweep: FunctionReference<"mutation", "internal", {}, null>;
       };
     };
   };

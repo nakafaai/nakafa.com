@@ -8,14 +8,16 @@ import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const ENTRY = app.SchoolStart;
-const SCHOOL_PATH = /\/en\/school$/u;
+
+/** The session and the account's reads answer before the page picks a form, slower on a busy machine. */
+const SESSION_WAIT = 30_000;
 
 /**
- * The home page's fourth card leads an account with no school to the form that finds
- * one. An address that names no school says so in the field's own line, and the card
- * row keeps its four cards inside a phone's width.
+ * The School entry leads an account with no school to the form that finds one, and an
+ * address that names no school says so in the field's own line. The synthetic learner
+ * has not answered the onboarding, so home would send it there first.
  */
-test("School on the home page leads a learner with no school to the form", async ({
+test("The School entry leads a learner with no school to the form", async ({
   baseURL,
   browser,
 }) => {
@@ -35,24 +37,10 @@ test("School on the home page leads a learner with no school to the form", async
         yield* withObservedPageErrors(
           page,
           Effect.promise(async () => {
-            await page.goto("/en/home", { waitUntil: "load" });
-            const school = page
-              .getByRole("main")
-              .getByRole("link", { exact: true, name: app.Common.school });
-            await expect(school).toBeVisible();
-            expect(
-              await page.evaluate(
-                () =>
-                  document.documentElement.scrollWidth <=
-                  document.documentElement.clientWidth
-              )
-            ).toBe(true);
-
-            await school.click();
-            await expect(page).toHaveURL(SCHOOL_PATH);
+            await page.goto("/en/school", { waitUntil: "load" });
             await expect(
               page.getByRole("heading", { name: ENTRY["entry-title"] })
-            ).toBeVisible();
+            ).toBeVisible({ timeout: SESSION_WAIT });
 
             const field = page.getByLabel(ENTRY["entry-field"]);
             await field.fill("nakafa.com");

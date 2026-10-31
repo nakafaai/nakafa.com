@@ -6,6 +6,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import {
   archiveClassChange,
   assignTeacherChange,
+  changeClassSubject,
   createClassChange,
   removeTeacherChange,
   renameClassChange,
@@ -185,6 +186,15 @@ describe("components/tenant/settings/class/changes", () => {
     expect(Arr.map(pageAt(local, term), (row) => row.status)).toEqual([
       "active",
       "active",
+    ]);
+    changeClassSubject(local.store, {
+      classId: physics,
+      slug,
+      subject: "IPA",
+    });
+    expect(Arr.map(pageAt(local, term), (row) => row.subject)).toEqual([
+      "Biologi",
+      "IPA",
     ]);
   });
 
