@@ -1,5 +1,5 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import type { BrowserContext } from "@playwright/test";
+import { type BrowserContext, expect, type Page } from "@playwright/test";
 import {
   CardFixture,
   ForumFixture,
@@ -8,7 +8,7 @@ import {
   SessionCookie,
   SittingFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
-import { Effect, FileSystem, Schema } from "effect";
+import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { addSessionCookie } from "@/e2e/support/context";
 
@@ -278,3 +278,49 @@ export function hostAddress(
   address.hostname = hostname;
   return address.href;
 }
+
+/**
+ * Finishes the questionnaire on its last question and lands on the new school's host. The school
+ * shows at once, then its own address opens. The page opens that host at SITE_URL's port. A verify
+ * run may serve the site on another port, where that navigation commits the browser's error page,
+ * so this waits for the page's own navigation to commit, on either, before it opens the host at the
+ * port this run serves. The account's session then reaches the school's host as it does in
+ * production.
+ */
+export const finishSchoolStart = Effect.fn("NakafaE2E.finishSchoolStart")(
+  function* (
+    page: Page,
+    baseURL: string | undefined,
+    school: Record<"name" | "slug", string>
+  ) {
+    const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
+    yield* Effect.tryPromise(async () => {
+      const opened = page.waitForEvent("framenavigated", {
+        predicate: (frame) => {
+          const url = new URL(frame.url());
+          return (
+            frame === page.mainFrame() &&
+            (url.hostname === `${school.slug}.localhost` ||
+              url.protocol === "chrome-error:")
+          );
+        },
+        timeout: 0,
+      });
+      await page.getByRole("button", { name: "Open school" }).click();
+      await expect(page.getByText(school.name, { exact: true })).toBeVisible();
+      await opened;
+      await page.goto(schoolHome);
+      const cookies = await page.context().cookies(String(baseURL));
+      await page.context().addCookies(
+        Arr.map(cookies, (cookie) => ({
+          httpOnly: cookie.httpOnly,
+          name: cookie.name,
+          sameSite: cookie.sameSite,
+          url: schoolHome,
+          value: cookie.value,
+        }))
+      );
+      await page.reload();
+    });
+  }
+);

@@ -1502,15 +1502,20 @@
       }
     },
     "size-title": "Wie viele Schüler habt ihr?",
-    "size-description": "Kostenlos starten, egal wie groß.",
+    "size-description": "Kostenlos starten. Wir empfehlen einen Tarif für deine Größe.",
     "size": {
       "s": "Unter 100",
       "m": "100 bis 499",
       "l": "500 bis 999",
       "xl": "1.000 oder mehr"
     },
+    "plan-free": "Tarif Free, bis {limit} Schüler.",
+    "plan-school": "Tarif School, pro Schüler bezahlt.",
+    "plan-founder": "Tarif School, mit Hilfe des Gründers.",
     "founder-line": "Der Gründer hilft großen Schulen beim Start.",
     "founder-link": "Mit dem Gründer sprechen",
+    "link-copy": "Link kopieren",
+    "link-copied": "Link kopiert",
     "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy>.",
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort.",

@@ -1,19 +1,55 @@
-import { School01Icon } from "@hugeicons/core-free-icons";
+import {
+  Copy01Icon,
+  School01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
+import { useClipboard } from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import type { Mascot } from "@repo/mascot/code";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import { Link } from "@/lib/routing/link";
 
+/** How long the band says the link is copied, in milliseconds. */
+const COPIED_MILLISECONDS = 1500;
+
+/**
+ * Copies the one link a new school opens from, its full address on the main site,
+ * so it can be sent to anyone who runs a school (K43).
+ */
+function SchoolLinkCopy() {
+  const t = useTranslations("SchoolStart");
+  const locale = useLocale();
+  const clipboard = useClipboard({ timeout: COPIED_MILLISECONDS });
+
+  return (
+    <button
+      className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium underline-offset-4 hover:underline"
+      onClick={() =>
+        clipboard.copy(new URL(`/${locale}/school/new`, SITE_ORIGIN).href)
+      }
+      type="button"
+    >
+      <HugeIcons
+        className="size-4"
+        icon={clipboard.copied ? Tick01Icon : Copy01Icon}
+      />
+      {t(clipboard.copied ? "link-copied" : "link-copy")}
+    </button>
+  );
+}
+
 /**
  * The school part: a dark band with rounded corners, the words for a whole
- * school, the link that opens one, the founder's address for a school that
- * wants help, and one class of different animals in a row. The page gives the
- * class, a slice of its own cast, so no animal appears twice.
+ * school, the link that opens one with a control that copies it, the founder's
+ * address for a school that wants help, and one class of different animals in a
+ * row. The page gives the class, a slice of its own cast, so no animal appears
+ * twice.
  */
 export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
   const t = useTranslations("Landing");
@@ -49,6 +85,7 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
               >
                 {tStart("founder-link")}
               </a>
+              <SchoolLinkCopy />
             </div>
           </div>
           <ul

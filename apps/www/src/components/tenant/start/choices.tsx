@@ -4,6 +4,7 @@ import {
   TeacherIcon,
   UserSettings01Icon,
 } from "@hugeicons/core-free-icons";
+import { SCHOOL_FREE_STUDENTS } from "@repo/backend/confect/billing/catalog";
 import {
   SchoolSize,
   StartCountry,
@@ -157,10 +158,33 @@ export function StartRoleQuestion() {
 /** The sizes for which the founder is offered help to set up. */
 const LARGE_SIZES: readonly (typeof SchoolSize.Type)[] = ["l", "xl"];
 
+/** The plan suggested to each size past the free limit. */
+const PAID_PLANS = {
+  l: "plan-school",
+  m: "plan-school",
+  xl: "plan-founder",
+} as const;
+
+/** One size of school with the plan suggested for it on the line under it. */
+function StartSizeOption({ size }: { size: typeof SchoolSize.Type }) {
+  const t = useTranslations("SchoolStart");
+
+  return (
+    <StartOption
+      description={
+        size === "s"
+          ? t("plan-free", { limit: SCHOOL_FREE_STUDENTS })
+          : t(PAID_PLANS[size])
+      }
+      title={t(`size.${size}`)}
+    />
+  );
+}
+
 /**
- * The last question: how many students the school has. A large school is
- * offered the founder's help without waiting for it, and the question ends with
- * what opening the school accepts.
+ * The last question: how many students the school has. Each size names the plan
+ * suggested for it, a large school is offered the founder's help without waiting
+ * for it, and the question ends with what opening the school accepts.
  */
 export function StartSizeQuestion() {
   const t = useTranslations("SchoolStart");
@@ -184,7 +208,7 @@ export function StartSizeQuestion() {
             }}
             value={size}
           >
-            <StartOption title={t(`size.${size}`)} />
+            <StartSizeOption size={size} />
           </QuestionnaireChoice>
         ))}
       </QuestionnaireChoices>
