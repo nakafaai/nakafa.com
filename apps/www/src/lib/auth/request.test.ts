@@ -349,7 +349,8 @@ describe("authFetch", () => {
   });
 
   it.each([
-    ["a write to the session route", AUTH_URL, { method: "POST" }],
+    ["a session refresh", AUTH_URL, { method: "POST" }],
+    ["a write to another route", TOKEN_URL, { method: "POST" }],
     ["a read of another route", TOKEN_URL, { method: "GET" }],
     ["a request that names no method", AUTH_URL, undefined],
   ])("answers %s once, whatever its status", async (_name, input, init) => {
@@ -358,6 +359,47 @@ describe("authFetch", () => {
     const response = await authFetch(input, init);
 
     expect(response.status).toBe(500);
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("lets one tab refresh the session at a time, so the second finds it fresh", async () => {
+    let held: Promise<unknown> = Promise.resolve();
+    vi.stubGlobal("navigator", {
+      locks: {
+        request: (_name: string, send: () => Promise<Response>) => {
+          const turn = held.then(send);
+          held = turn;
+          return turn;
+        },
+      },
+    });
+    const { promise: answer, resolve: answerFirstTab } =
+      Promise.withResolvers<Response>();
+    fetcher
+      .mockReturnValueOnce(answer)
+      .mockResolvedValueOnce(new Response("fresh"));
+
+    const firstTab = authFetch(AUTH_URL, { method: "POST" });
+    const secondTab = authFetch(AUTH_URL, { method: "POST" });
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledOnce());
+    answerFirstTab(new Response("refreshed"));
+
+    await expect(firstTab.then((first) => first.text())).resolves.toBe(
+      "refreshed"
+    );
+    await expect(secondTab.then((second) => second.text())).resolves.toBe(
+      "fresh"
+    );
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends a session refresh at once from a browser without Web Locks", async () => {
+    vi.stubGlobal("navigator", {});
+    fetcher.mockResolvedValueOnce(new Response("refreshed"));
+
+    const response = await authFetch(AUTH_URL, { method: "POST" });
+
+    expect(response.status).toBe(200);
     expect(fetcher).toHaveBeenCalledOnce();
   });
 });

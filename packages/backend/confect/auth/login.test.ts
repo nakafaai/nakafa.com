@@ -14,6 +14,7 @@ import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
   Context,
+  Duration,
   Effect,
   Layer,
   Option,
@@ -31,6 +32,16 @@ const WRONG_PASSWORD = "wrong password here";
 const SECOND_ADDRESS = Schema.decodeSync(Email)("kedua@example.com");
 /** The session cookie that a successful sign-in sets on the school host: its name, and a value. */
 const SESSION_COOKIE_PATTERN = /^better-auth\.session_token=[^;]+;/u;
+
+/** How long before its end a session is due for its refresh: the seven days it lasts, less the one day it keeps. */
+const SIX_DAYS = Duration.toMillis(Duration.days(6));
+/** Better Auth's answer about one session, with what the session read decides. */
+const SessionAnswer = Schema.fromJsonString(
+  Schema.Struct({
+    needsRefresh: Schema.optionalKey(Schema.Boolean),
+    session: Schema.Struct({ expiresAt: Schema.Finite }),
+  })
+);
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
@@ -124,6 +135,50 @@ describe("auth/login username sign-in", () => {
             SESSION_COOKIE_PATTERN
           );
         })
+    );
+
+    it.effect(
+      "writes a session due for its refresh on the browser's refresh alone, never on a read",
+      () =>
+        Effect.gen(function* () {
+          const shared = (yield* RedeemedSchool).school;
+          const signedIn = yield* signInOn(shared, {
+            password: PASSWORD,
+            username: "guru.baru",
+          });
+          const cookie = signedIn.headers.getSetCookie().join("; ");
+          const session = (method: "GET" | "POST") =>
+            Effect.gen(function* () {
+              const response = yield* Effect.promise(() =>
+                shared.fetch("/api/auth/get-session", {
+                  headers: {
+                    cookie,
+                    origin: `http://${SCHOOL_HOST}`,
+                    "x-forwarded-host": SCHOOL_HOST,
+                  },
+                  method,
+                })
+              );
+              const text = yield* Effect.promise(() => response.text());
+              return yield* Schema.decodeEffect(SessionAnswer)(text);
+            });
+          const first = yield* session("GET");
+          vi.useFakeTimers({ toFake: ["Date"] });
+          vi.setSystemTime(first.session.expiresAt - SIX_DAYS);
+
+          const due = yield* session("GET");
+          const refreshed = yield* session("POST");
+          const fresh = yield* session("GET");
+
+          expect(first.needsRefresh).toBe(false);
+          expect(due.needsRefresh).toBe(true);
+          expect(due.session.expiresAt).toBe(first.session.expiresAt);
+          expect(refreshed.session.expiresAt).toBeGreaterThan(
+            first.session.expiresAt
+          );
+          expect(fresh.needsRefresh).toBe(false);
+          expect(fresh.session.expiresAt).toBe(refreshed.session.expiresAt);
+        }).pipe(Effect.ensuring(Effect.sync(() => vi.useRealTimers())))
     );
 
     it.effect(
