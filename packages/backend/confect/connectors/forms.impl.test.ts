@@ -25,7 +25,7 @@ const googleWith = (form: object) =>
     Promise.resolve(
       String(url).startsWith("https://forms.googleapis.com/")
         ? json(200, form)
-        : json(200, { access_token: "access-1", expires_in: 3600 })
+        : json(200, { access_token: "access-1", expires_in: 3600, scope: "" })
     )
   );
 
@@ -96,7 +96,9 @@ describe("connectors/forms", () => {
 
       expect(
         yield* fixture.as("student").action(questions, { formId: "form-1" })
-      ).toMatchObject([{ answer: null, options: ["3", "4"], prompt: "2 + 2?" }]);
+      ).toMatchObject([
+        { answer: null, options: ["3", "4"], prompt: "2 + 2?" },
+      ]);
     })
   );
 

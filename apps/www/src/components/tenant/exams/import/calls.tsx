@@ -6,10 +6,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect } from "effect";
 import { useLocale } from "use-intl";
 import { pickFromDrive } from "@/components/tenant/classes/library/add";
-import {
-  FORM_TYPE,
-  importForm,
-} from "@/components/tenant/exams/import/form";
+import { FORM_TYPE, importForm } from "@/components/tenant/exams/import/form";
 import { importIntoExam } from "@/components/tenant/exams/import/start";
 
 /**

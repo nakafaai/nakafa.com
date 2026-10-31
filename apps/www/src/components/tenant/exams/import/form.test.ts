@@ -79,15 +79,17 @@ describe("importForm", () => {
     })
   );
 
-  it.effect("does nothing when the Picker closes, and fails without Drive", () =>
-    Effect.gen(function* () {
-      const closed = calls();
-      yield* importForm({ ...closed, pick: Effect.succeedNone });
-      expect(closed.read).not.toHaveBeenCalled();
-      const missing = yield* Effect.flip(
-        importForm(calls({ questions: null }))
-      );
-      expect(missing._tag).toBe("FormDriveMissing");
-    })
+  it.effect(
+    "does nothing when the Picker closes, and fails without Drive",
+    () =>
+      Effect.gen(function* () {
+        const closed = calls();
+        yield* importForm({ ...closed, pick: Effect.succeedNone });
+        expect(closed.read).not.toHaveBeenCalled();
+        const missing = yield* Effect.flip(
+          importForm(calls({ questions: null }))
+        );
+        expect(missing._tag).toBe("FormDriveMissing");
+      })
   );
 });

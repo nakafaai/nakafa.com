@@ -57,9 +57,7 @@ const placedOf = (
     onNone: () => [],
     onSome: (found) =>
       Arr.getSomes(
-        Arr.map(found.options, (option) =>
-          Option.fromUndefinedOr(option.value)
-        )
+        Arr.map(found.options, (option) => Option.fromUndefinedOr(option.value))
       ),
   });
   const key = Arr.head(question.grading?.correctAnswers?.answers ?? []);
