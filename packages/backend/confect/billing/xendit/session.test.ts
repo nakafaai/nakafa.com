@@ -214,9 +214,11 @@ describe("billing/xendit/session", () => {
     expect(result.outcome).toBe("applied");
     expect(result.payments).toMatchObject([{ kind: "credits" }]);
     expect(result.lots).toHaveLength(0);
-    expect(
-      result.scheduled.filter((job) => job.name.includes("refundWithoutPro"))
-    ).toHaveLength(0);
+    expect(result.scheduled).not.toContainEqual(
+      expect.objectContaining({
+        name: expect.stringContaining("refundWithoutPro"),
+      })
+    );
   });
 
   it("starts the monthly plan when its first month is paid: the subscription runs until its first renewal, the payment is its first cycle, Pro is granted, and its plan opens on the saved channel", async () => {

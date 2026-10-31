@@ -85,7 +85,7 @@ export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
 const checkoutSessionIoErrorCode = "CHECKOUT_SESSION_IO_FAILED";
 
 /** The learner's checkout request: the locale the page runs in, and where Polar returns the learner. */
-export const checkoutRequestInputValidator = Schema.Struct({
+const checkoutRequestInputValidator = Schema.Struct({
   locale: checkoutLocaleValidator,
   successUrl: Schema.String,
 });
