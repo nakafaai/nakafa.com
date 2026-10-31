@@ -29,6 +29,10 @@ import {
 const readPublicContentMock = vi.hoisted(() => vi.fn());
 const verifyPublicContentDeliveryMock = vi.hoisted(() => vi.fn());
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
+/** The content store on a miss: it runs the load it was given. */
+const storeReadMock = vi.hoisted(() =>
+  vi.fn(({ load }: { readonly load: unknown }) => load)
+);
 const runtimeEnv = vi.hoisted(() => ({
   VITE_CONVEX_SITE_URL: "https://production.convex.site",
 }));
@@ -72,6 +76,9 @@ vi.mock("@repo/backend/client/content/public", () => ({
 }));
 vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
+}));
+vi.mock("@/lib/content/store/read", () => ({
+  readContentStore: storeReadMock,
 }));
 vi.mock("@/env", () => ({
   env: runtimeEnv,

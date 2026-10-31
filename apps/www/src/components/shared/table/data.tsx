@@ -125,10 +125,7 @@ export function DataTable<TData extends RowData>({
               {Arr.map(row.getAllCells(), (cell, index) => (
                 <TableCell
                   className={columnAlign({
-                    align: placeOf(
-                      index,
-                      cell.column.columnDef.meta?.align === "menu"
-                    ),
+                    align: placeOf(index, cell.column.columnDef.meta?.align),
                   })}
                   key={cell.id}
                 >
@@ -191,7 +188,8 @@ function DataTableHead<TData extends RowData>({
   const t = useTranslations("DataTable");
   const chosen = useTableFilters((state) => state.chosen);
   const column = header.column;
-  const place = placeOf(index, column.columnDef.meta?.align === "menu");
+  const place = placeOf(index, column.columnDef.meta?.align);
+  const headAlign = place === "menu" ? "center" : place;
   const sorted = column.getIsSorted() || "none";
   const days = chosenDays(chosen, column.id);
 
@@ -217,7 +215,7 @@ function DataTableHead<TData extends RowData>({
           trigger={
             <TableHeadButton
               active={sorted !== "none" || Option.isSome(days)}
-              align={place === "start" ? "start" : "center"}
+              align={headAlign}
               icon={sorted === "none" ? Calendar03Icon : sortIcons[sorted]}
             >
               {children}
@@ -238,7 +236,7 @@ function DataTableHead<TData extends RowData>({
           render={
             <TableHeadButton
               active={sorted !== "none"}
-              align={place === "start" ? "start" : "center"}
+              align={headAlign}
               icon={sortIcons[sorted]}
             >
               {children}

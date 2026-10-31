@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   hostAddress,
@@ -87,5 +88,66 @@ test("a student who reloads a running paper meets the paper and never the token 
 
   // The reloaded document never showed the token field: the page entered by itself behind the paper's frame.
   await expect(student.locator("html")).not.toHaveAttribute(ENTRY_SEEN, "");
+  await studentContext.close();
+});
+
+test("a server failure of a paper's read keeps the student in the paper's frame, and the paper comes back by itself", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `recover-${school.slug}@acceptance.example.test`;
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  // The seed opens the sitting in the school's first active unit, which the school has once its Owner signed in.
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  await ownerContext.close();
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+
+  const student = await studentContext.newPage();
+  const changes = await Effect.runPromise(trackChanges(student, []));
+  await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await waitUntilTakenOver(
+    student.getByRole("button", { name: "Enter sitting" })
+  );
+  await student
+    .getByPlaceholder("Enter the token from your proctor")
+    .fill(sitting.token);
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  const option = student
+    .getByRole("article", { name: "Question 1" })
+    .getByRole("radio")
+    .first();
+  await expect(option).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+
+  // The next read of what the student saved fails with a failure that names no refusal, as a function that ran
+  // out of time does, so the paper leaves and the frame stays.
+  changes.failQuery("exams/sittings:saved", "ServerBroke");
+  await option.click();
+  await expect(student.getByRole("article")).toHaveCount(0, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(
+    student.getByRole("heading", { name: "Something broke" })
+  ).toHaveCount(0);
+
+  // The server answers again, and the paper is back with the student's answer, with no press.
+  changes.recoverQuery();
+  await expect(
+    student
+      .getByRole("article", { name: "Question 1" })
+      .getByRole("radio")
+      .first()
+  ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
   await studentContext.close();
 });

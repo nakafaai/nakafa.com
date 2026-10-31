@@ -45,6 +45,19 @@ D8. A build reads the active release once in bulk, renders every public URL, wri
 
 D9. Workers Free only (amended 30 Oct 2026: Workers Paid with a CPU cap on every Worker, ADR 0037 decision 10; static first stays because it is the faster design). No backward compatibility, no legacy path and no temporary function. Effect v4 and Confect v10 as AGENTS.md states. 100% per-file coverage. Browser suites run on a production build.
 
+## Reads across deploys
+
+Added 31 October 2026. Convex's usage API measured about 0.45 GB of Database I/O per
+build (0.08 GB a day when nothing deploys, 2 GB to 11 GB on a day of merges). D8's one
+bulk read was never built: a build reads each page once, through the content store, in
+three processes that share nothing. A release never changes, so a deploy keeps those
+reads. `deploy.yml` restores `.cache/reads` for the active release and the code behind
+the reads, and serves it on loopback (`scripts/static/store.ts`), because the
+prerender's Worker has no file system. The content store asks it on a miss and hands it
+every release-keyed entry (`lasting`), never the active pointer. Only a deploy sets
+`NAKAFA_BUILD_STORE`, and `deployedWorkerBindings` never binds it. A store failure is a
+miss, so the build reads Convex.
+
 ## Phase A as implemented
 
 - **Page list.** `apps/www/src/lib/static/pages.ts` selects the public paths of the

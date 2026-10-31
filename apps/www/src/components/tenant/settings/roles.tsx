@@ -3,6 +3,7 @@ import { BookOpen01Icon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -50,16 +51,18 @@ export function SchoolRolesSettings() {
       <SettingsTablePage
         actions={
           <>
-            <TableSearch placeholder={t("roles-search")} />
-            {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
-            <Button
-              onClick={() => setIsGuiding(true)}
-              type="button"
-              variant="outline"
-            >
-              <HugeIcons icon={BookOpen01Icon} />
-              <span className="max-sm:sr-only">{t("roles-guide")}</span>
-            </Button>
+            <ButtonGroup>
+              <TableSearch placeholder={t("roles-search")} />
+              {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
+              <Button
+                onClick={() => setIsGuiding(true)}
+                type="button"
+                variant="outline"
+              >
+                <HugeIcons icon={BookOpen01Icon} />
+                <span className="max-sm:sr-only">{t("roles-guide")}</span>
+              </Button>
+            </ButtonGroup>
             <Button onClick={() => setIsGiving(true)} type="button">
               {t("roles-assign")}
             </Button>

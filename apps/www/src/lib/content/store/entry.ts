@@ -3,6 +3,7 @@ import "@tanstack/react-start/server-only";
 import { sha256Hex } from "@repo/utilities/digest";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Cause, Clock, Duration, Effect, Option, Schema } from "effect";
+import { readBuildEntry, writeBuildEntry } from "@/lib/content/store/build";
 import { makeMemoryStore } from "@/lib/content/store/memory";
 
 /** The digest of a key failed, or a value could not be encoded, so the store cannot answer. */
@@ -95,10 +96,13 @@ const checkStoreLimit = Effect.fn("www.content.store.limit")(function* (
 
 /**
  * Reads one stored value. A missing or expired entry and an entry that does not
- * decode are all a miss, so the caller loads the value again.
+ * decode are all a miss, so the caller loads the value again. A `lasting` entry
+ * belongs to one release, which never changes, so while a deploy builds, the
+ * deploy's read store answers what this isolate does not hold.
  */
 export const readStoreEntry = Effect.fn("www.content.store.readEntry")(
   function* <A, I>(input: {
+    readonly lasting?: boolean;
     readonly parts: readonly string[];
     readonly schema: Schema.Codec<A, I, never, never>;
   }) {
@@ -112,7 +116,11 @@ export const readStoreEntry = Effect.fn("www.content.store.readEntry")(
       return Option.none<A>();
     }
     const now = yield* Clock.currentTimeMillis;
-    const stored = runtimeCache.get(key.value, now);
+    const kept = runtimeCache.get(key.value, now);
+    const stored =
+      Option.isNone(kept) && input.lasting
+        ? yield* readBuildEntry(key.value)
+        : kept;
     return Option.flatMap(stored, (value) =>
       Schema.decodeUnknownOption(makeEntryCodec(input.schema))(value)
     ).pipe(Option.map(({ value }) => value));
@@ -126,6 +134,7 @@ export const readStoreEntry = Effect.fn("www.content.store.readEntry")(
  */
 export const writeStoreEntry = Effect.fn("www.content.store.writeEntry")(
   function* <A, I>(input: {
+    readonly lasting?: boolean;
     readonly parts: readonly string[];
     readonly schema: Schema.Codec<A, I, never, never>;
     readonly tags: readonly string[];
@@ -149,6 +158,9 @@ export const writeStoreEntry = Effect.fn("www.content.store.writeEntry")(
         now,
         tags: input.tags,
       });
+      if (input.lasting) {
+        yield* writeBuildEntry(key, entry);
+      }
     });
     yield* write.pipe(
       Effect.catchTags({
