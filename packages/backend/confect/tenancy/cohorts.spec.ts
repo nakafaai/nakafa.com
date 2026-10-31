@@ -102,9 +102,10 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicMutation({
-      name: "rename",
+      name: "edit",
       args: () => ({
         cohortId: Id("tenantCohorts"),
+        grade: CohortGrade,
         name: CohortName,
         slug: TenantSlug,
       }),

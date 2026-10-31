@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   LoginExists,
+  LoginMissing,
   type LoginNameRefusal,
   LoginNameTaken,
 } from "@repo/backend/confect/identity/errors";
@@ -14,7 +15,7 @@ import {
   LOGIN_NAME_PATTERN,
 } from "@repo/backend/confect/identity/schema";
 import { isMisleadingName } from "@repo/backend/confect/users/reserved";
-import { Effect, Option, pipe, Result, String as Str } from "effect";
+import { Effect, Option, pipe, Result, String as Str, Struct } from "effect";
 
 /**
  * Reads a login name as a person typed it: spaces around it drop and capitals
@@ -55,6 +56,21 @@ export const loginOf = Effect.fn("identity.logins.of")(function* (
     );
 });
 
+/** Whether a Person of the school already holds the login name: one indexed read. */
+const isLoginNameTaken = Effect.fn("identity.logins.taken")(function* (
+  person: TenantPeopleDoc,
+  name: string
+) {
+  const holder = yield* (yield* DatabaseReader)
+    .table("schoolLogins")
+    .index("by_tenantId_and_name", (query) =>
+      query.eq("tenantId", person.tenantId).eq("name", name)
+    )
+    .first()
+    .pipe(Effect.orDie);
+  return Option.isSome(holder);
+});
+
 /**
  * Gives one Person the school's login name, once. A name belongs to one Person
  * of its school, and a Person holds one name, so the two checks are the only
@@ -68,18 +84,43 @@ export const claimLoginName = Effect.fn("identity.logins.claim")(function* (
   if (Option.isSome(yield* loginOf(person._id))) {
     return yield* new LoginExists();
   }
-  const taken = yield* (yield* DatabaseReader)
-    .table("schoolLogins")
-    .index("by_tenantId_and_name", (query) =>
-      query.eq("tenantId", person.tenantId).eq("name", name)
-    )
-    .first()
-    .pipe(Effect.orDie);
-  if (Option.isSome(taken)) {
+  if (yield* isLoginNameTaken(person, name)) {
     return yield* new LoginNameTaken();
   }
   yield* (yield* DatabaseWriter)
     .table("schoolLogins")
     .insert({ name, personId: person._id, tenantId: person.tenantId })
     .pipe(Effect.orDie);
+});
+
+/**
+ * Gives the school login of one Person a new name, which no other Person of its school holds. A Person without a
+ * login has none to rename. The row keeps its ID and its creation time, so the list keeps its issue time, and the
+ * account and its password stay as they are. Answers whether the name changed: a name the login already holds
+ * writes nothing.
+ */
+export const renameLoginName = Effect.fn("identity.logins.rename")(function* (
+  person: TenantPeopleDoc,
+  name: string
+) {
+  const login = yield* loginOf(person._id);
+  if (Option.isNone(login)) {
+    return yield* new LoginMissing();
+  }
+  if (login.value.name === name) {
+    return false;
+  }
+  if (yield* isLoginNameTaken(person, name)) {
+    return yield* new LoginNameTaken();
+  }
+  yield* (yield* DatabaseWriter)
+    .table("schoolLogins")
+    .replace(
+      login.value._id,
+      Struct.assign(Struct.omit(login.value, ["_creationTime", "_id"]), {
+        name,
+      })
+    )
+    .pipe(Effect.orDie);
+  return true;
 });

@@ -1,7 +1,7 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
 
-/** The query switch that opens a school's username form, `?masuk=username`. */
-const USERNAME_FORM = "masuk";
+/** The query switch that opens a school's username form, `?sign-in=username`. */
+const USERNAME_FORM = "sign-in";
 
 /**
  * Where a sign-in on a school host resumes: the page the visitor is on, with the rest of its query,

@@ -67,7 +67,7 @@ export const homeScreenHandler = accountHandler(
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}`,
         description: t("description"),
-        indexable: true,
+        indexable: false,
         locale,
         title: t("title"),
       };
@@ -100,7 +100,7 @@ export const chatIndexScreenHandler = accountHandler(
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}/chat`,
         description: t("new-chat-description"),
-        indexable: true,
+        indexable: false,
         locale,
         title: t("new-chat-title"),
       };
@@ -169,7 +169,7 @@ export const searchScreenHandler = accountHandler(
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}/search`,
         description: t("search-description"),
-        indexable: true,
+        indexable: false,
         locale,
         title: t("search-title"),
       };

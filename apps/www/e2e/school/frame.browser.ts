@@ -108,7 +108,7 @@ test("a student's results start at the top of the sitting body, which caps at th
     .getByRole("dialog")
     .getByRole("button", { exact: true, name: "Finish" })
     .click();
-  const done = page.getByText("Your answers are in.");
+  const done = page.getByText("You finished this exam.");
   await expect(done).toBeVisible();
 
   const body = page.locator('[data-slot="sitting-body"]');

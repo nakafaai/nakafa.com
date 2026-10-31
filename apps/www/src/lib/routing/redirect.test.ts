@@ -78,6 +78,28 @@ describe("readBareRedirect", () => {
     expect(found.headers.get("vary")).toBe("Accept-Language, Cookie");
   });
 
+  it("opens a bare address in the locale that its first segment spells, with a 308 that no request header changes", () => {
+    for (const [address, location] of [
+      [
+        "https://nakafa.com/materi/ai-ds/pemrograman-ai/fungsi-print?ctx=a",
+        "/id/materi/ai-ds/pemrograman-ai/fungsi-print?ctx=a",
+      ],
+      [
+        "https://nakafa.com/subjects/ai-ds/ai-programming/numbers",
+        "/en/subjects/ai-ds/ai-programming/numbers",
+      ],
+      ["https://nakafa.com/lehrplaene", "/de/lehrplaene"],
+    ] as const) {
+      const found = Option.getOrThrow(
+        readBareRedirect(request(address, "fr-FR"))
+      );
+
+      expect(found.status).toBe(308);
+      expect(found.headers.get("location")).toBe(location);
+      expect(found.headers.get("vary")).toBeNull();
+    }
+  });
+
   it("opens a bare page address in English when the visitor names no served language", () => {
     expect(
       Option.getOrThrow(

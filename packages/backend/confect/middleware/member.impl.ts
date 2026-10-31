@@ -25,7 +25,7 @@ const SlugArgs = Schema.Struct({ slug: TenantSlug });
  * and an operator whose operator access was revoked, get `NotMember`: the grants
  * of such a visit stop at once, whatever their term.
  */
-export const resolveMember = Effect.fn("tenancy.member.resolve")(function* (
+const resolveMember = Effect.fn("tenancy.member.resolve")(function* (
   tenant: TenantsDoc,
   userId: UsersDoc["_id"]
 ) {
