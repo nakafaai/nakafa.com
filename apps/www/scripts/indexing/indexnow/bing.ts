@@ -19,7 +19,7 @@ const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 const BING_SUBMIT_ENDPOINT =
   "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";
 const BING_PLACEHOLDER_API_KEY = "YOUR_BING_WEBMASTER_API_KEY";
-const QUOTA_REMAINING_REGEX = /Quota remaining for today: (\d+)/u;
+const QUOTA_REMAINING_REGEX = /Quota remaining for today: (?<remaining>\d+)/u;
 const QUOTA_EXCEEDED_REGEX = /exceeded your daily url submission quota/iu;
 const BingQuotaMessageSchema = Schema.Struct({
   Message: Schema.String,

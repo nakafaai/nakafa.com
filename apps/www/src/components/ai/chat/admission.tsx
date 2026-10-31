@@ -2,7 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, Deferred, Effect } from "effect";
 import {
   type ComponentProps,
   useEffect,
@@ -80,11 +80,15 @@ export function useChatAdmission({
     shownNow.current = shown;
   });
   const viewerId = gate.viewerId;
-  // A send pressed before the viewer is known waits for the viewer, so no
-  // composer is disabled before the learner acts and no early send is lost.
-  // The composer shows the send as waiting until the viewer is known.
-  const [waiting, setWaiting] = useState(false);
-  const held = useRef<PromptInputMessage | null>(null);
+  // A send pressed before Convex confirms the viewer shows at once, as every
+  // send does, and waits here for the viewer: its words, who sent them, and the
+  // answer the composer waits for. It goes out from the render that knows the
+  // viewer, so it sends with that render's session and surface.
+  const held = useRef<{
+    answer: Deferred.Deferred<boolean>;
+    draft: Parameters<typeof send>[0] & { text: string };
+    submittedBy: ReturnType<typeof session.getState>["userId"];
+  } | null>(null);
   // The prompt stays until the admission is refused, or until the surface that
   // shows it hides or ends, so the composer waits for the chat it opens.
   const busy = admitting || prompt !== null;
@@ -103,47 +107,37 @@ export function useChatAdmission({
     };
   }, [viewerId]);
 
-  function admitPrompt(message: PromptInputMessage) {
-    // Any send that comes here ends the wait for the viewer. One that comes
-    // while the viewer is still unknown is held again below.
-    setWaiting(false);
-    const query = message.text?.trim();
-    if (!query || busy) {
-      return false;
-    }
-    if (gate.pending) {
-      held.current = message;
-      setWaiting(true);
-      return false;
-    }
-    if (!gate.admit()) {
-      return false;
-    }
-    const draft = { ...message, text: query };
+  /**
+   * Takes a prompt back. Its words go back to the composer wherever the learner
+   * has gone meanwhile, ahead of anything typed since, so they are never lost.
+   * Another account that has signed in since does not get them.
+   */
+  function takeBack(
+    text: string,
+    submittedBy: ReturnType<typeof session.getState>["userId"]
+  ) {
+    setPrompt(null);
+    setText((typed) =>
+      restoreRefusedText({
+        refused: text,
+        sentBy: submittedBy,
+        signedInAs: session.getState().userId,
+        typed,
+      })
+    );
+    return false;
+  }
+
+  /** Sends a prompt, and opens its chat once the server admits it. */
+  function sendDraft(
+    draft: Parameters<typeof send>[0] & { text: string },
+    submittedBy: ReturnType<typeof session.getState>["userId"]
+  ) {
     const submittedFrom = activation.current;
-    const submittedBy = session.getState().userId;
-    // No async transition holds the admission. React makes every transition that
-    // starts while one is pending wait for its end, the navigation to another
-    // chat included, so the learner could not leave until the answer came back.
-    // The text goes first: if the store refuses the write, no prompt is left on its way.
-    setText("");
-    setPrompt({ text: draft.text, files: draft.files ?? [] });
     return send(draft)
       .then((receipt) => {
         if (!receipt) {
-          // The words go back to the composer wherever the learner has gone
-          // meanwhile, ahead of anything typed since, so a refusal never loses
-          // them. Another account that has signed in since does not get them.
-          setPrompt(null);
-          setText((typed) =>
-            restoreRefusedText({
-              refused: query,
-              sentBy: submittedBy,
-              signedInAs: session.getState().userId,
-              typed,
-            })
-          );
-          return false;
+          return takeBack(draft.text, submittedBy);
         }
         if (activation.current !== submittedFrom || !shownNow.current) {
           // The learner left, or closed the surface, before the answer came back.
@@ -183,24 +177,64 @@ export function useChatAdmission({
       });
   }
 
-  /** Admits a send the learner pressed, unless one is already held for the viewer. */
+  /** Admits a send the learner pressed, or a prompt a page asked. */
   function submit(message: PromptInputMessage) {
-    if (waiting) {
+    const query = message.text?.trim();
+    if (!query || busy) {
       return false;
     }
-    return admitPrompt(message);
+    if (!(gate.pending || gate.admit())) {
+      return false;
+    }
+    const draft = { ...message, text: query };
+    const submittedBy = session.getState().userId;
+    // No async transition holds the admission. React makes every transition that
+    // starts while one is pending wait for its end, the navigation to another
+    // chat included, so the learner could not leave until the answer came back.
+    // The text goes first: if the store refuses the write, no prompt is left on its way.
+    setText("");
+    setPrompt({ text: draft.text, files: draft.files ?? [] });
+    if (!gate.pending) {
+      return sendDraft(draft, submittedBy);
+    }
+    const answer = Deferred.makeUnsafe<boolean>();
+    held.current = { answer, draft, submittedBy };
+    return Effect.runPromise(Deferred.await(answer));
   }
 
   /**
-   * Admits the send held for the viewer, or sends it to sign-in, once the viewer
-   * is known. It reads the viewer, the surface and the draft as they are then. A
-   * composer that left meanwhile drops the send, and its words stay in the draft.
+   * Sends the send held for the viewer once the viewer is known, from this
+   * render, or gives its words back and opens sign-in for a session that has
+   * signed out.
    */
   const admitHeld = useEffectEvent(() => {
-    const message = held.current;
+    const entry = held.current;
     held.current = null;
-    if (message !== null) {
-      admitPrompt(message);
+    if (entry === null) {
+      return;
+    }
+    if (!gate.admit()) {
+      Deferred.doneUnsafe(
+        entry.answer,
+        Effect.succeed(takeBack(entry.draft.text, entry.submittedBy))
+      );
+      return;
+    }
+    sendDraft(entry.draft, entry.submittedBy).then(
+      (admitted) => Deferred.doneUnsafe(entry.answer, Effect.succeed(admitted)),
+      (defect: unknown) => Deferred.doneUnsafe(entry.answer, Effect.die(defect))
+    );
+  });
+
+  /** Gives the held send's words back to the composer's draft, and sends nothing. */
+  const dropHeld = useEffectEvent(() => {
+    const entry = held.current;
+    held.current = null;
+    if (entry !== null) {
+      Deferred.doneUnsafe(
+        entry.answer,
+        Effect.succeed(takeBack(entry.draft.text, entry.submittedBy))
+      );
     }
   });
 
@@ -210,5 +244,8 @@ export function useChatAdmission({
     }
   }, [gate.pending]);
 
-  return { disabled: busy || waiting, prompt, promptId, submit };
+  // A surface that ends or hides before the viewer is known sends nothing.
+  useEffect(() => () => dropHeld(), []);
+
+  return { disabled: busy, prompt, promptId, submit };
 }

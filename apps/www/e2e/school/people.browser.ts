@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -11,7 +12,7 @@ const WIDTHS = [
 ] as const;
 
 /** The shape of a card code: Crockford base32 in two groups of five. */
-const CARD_CODE = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/;
+const CARD_CODE = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/u;
 
 test("an owner adds a teacher by email and sees the invite in the members list, and adds a student with the first card", async ({
   browser,
@@ -97,6 +98,7 @@ test("an owner renames a teacher from the members and a student from the logins,
   });
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   const run = school.slug.slice(0, 8);
 
   await page.goto(address("/settings/invites"));
@@ -110,12 +112,15 @@ test("an owner renames a teacher from the members and a student from the logins,
   await invite
     .getByLabel("Email", { exact: true })
     .fill(`guru.${run}@harapan.example.test`);
+  const invitedBefore = changes.sent;
   await invite.getByRole("button", { exact: true, name: "Invite" }).click();
   await expect(
     page.getByRole("cell", { exact: true, name: "Guru Salah Ketik" })
   ).toBeVisible();
 
-  // Rename starts from the name the member has, and the row shows the new one at once.
+  // Rename starts from the name the member has, and the row shows the new one at once. Each step leaves the page
+  // once the server answered its change, since a navigation drops a change still on its way.
+  await saved(changes, invitedBefore);
   await page.goto(address("/settings/members"));
   const teacherRow = page
     .getByRole("row")
@@ -129,11 +134,13 @@ test("an owner renames a teacher from the members and a student from the logins,
     "Guru Salah Ketik"
   );
   await renameTeacher.getByLabel("Name").fill("Guru Benar");
+  const teacherBefore = changes.sent;
   await renameTeacher.getByRole("button", { name: "Save" }).click();
   await expect(renameTeacher).toBeHidden();
   await expect(
     page.getByRole("cell", { exact: true, name: "Guru Benar" })
   ).toBeVisible();
+  await saved(changes, teacherBefore);
   await page.reload();
   await expect(
     page.getByRole("cell", { exact: true, name: "Guru Benar" })
@@ -161,11 +168,13 @@ test("an owner renames a teacher from the members and a student from the logins,
   await page.getByRole("menuitem", { name: "Rename" }).click();
   const renameStudent = page.getByRole("dialog");
   await renameStudent.getByLabel("Name").fill("Murid Benar");
+  const studentBefore = changes.sent;
   await renameStudent.getByRole("button", { name: "Save" }).click();
   await expect(renameStudent).toBeHidden();
   await expect(
     page.getByRole("row").filter({ hasText: `siswa-${run}` })
   ).toContainText("Murid Benar");
+  await saved(changes, studentBefore);
   await page.reload();
   await expect(
     page.getByRole("row").filter({ hasText: `siswa-${run}` })
@@ -184,11 +193,13 @@ test("an owner renames a teacher from the members and a student from the logins,
     `siswa-${run}`
   );
   await changeLogin.getByLabel("Login name").fill(`Murid-${run}`);
+  const loginBefore = changes.sent;
   await changeLogin.getByRole("button", { name: "Save" }).click();
   await expect(changeLogin).toBeHidden();
   await expect(
     page.getByRole("cell", { exact: true, name: `murid-${run}` })
   ).toBeVisible();
+  await saved(changes, loginBefore);
   await page.reload();
   await expect(
     page.getByRole("cell", { exact: true, name: `murid-${run}` })

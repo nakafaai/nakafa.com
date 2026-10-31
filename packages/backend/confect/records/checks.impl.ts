@@ -29,10 +29,67 @@ const limits = new RateLimiter(components.agentRateLimiter, LIMITS);
 /** The one answer of a hash that names no locked report, and of a check past the limit. */
 const UNKNOWN: typeof VerifyAnswer.Type = { outcome: "unknown" };
 
+/** The answer of a locked report card's hash, if the hash names one. */
+const reportAnswer = Effect.fn("records.checks.reportAnswer")(function* (
+  hash: string
+) {
+  const reader = yield* DatabaseReader;
+  const found = yield* reader
+    .table("reportCards")
+    .index("by_hash", (query) => query.eq("hash", hash))
+    .first()
+    .pipe(Effect.orDie);
+  if (
+    Option.isNone(found) ||
+    found.value.state !== "locked" ||
+    found.value.approvedAt === undefined
+  ) {
+    return Option.none<typeof VerifyAnswer.Type>();
+  }
+  const [tenant, period] = yield* Effect.all([
+    reader.table("tenants").get(found.value.tenantId).pipe(Effect.orDie),
+    reader.table("tenantPeriods").get(found.value.periodId).pipe(Effect.orDie),
+  ]);
+  return Option.some<typeof VerifyAnswer.Type>({
+    approvedAt: found.value.approvedAt,
+    kind: "report",
+    outcome: "locked",
+    period: period.name,
+    school: tenant.name,
+  });
+});
+
+/** The answer of a locked SKL's hash, if the hash names one: its unit, its period, and its issue. */
+const letterAnswer = Effect.fn("records.checks.letterAnswer")(function* (
+  hash: string
+) {
+  const reader = yield* DatabaseReader;
+  const found = yield* reader
+    .table("graduationLetters")
+    .index("by_hash", (query) => query.eq("hash", hash))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isNone(found) || found.value.state !== "locked") {
+    return Option.none<typeof VerifyAnswer.Type>();
+  }
+  const [unit, period] = yield* Effect.all([
+    reader.table("tenantUnits").get(found.value.unitId).pipe(Effect.orDie),
+    reader.table("tenantPeriods").get(found.value.periodId).pipe(Effect.orDie),
+  ]);
+  return Option.some<typeof VerifyAnswer.Type>({
+    approvedAt: found.value.issuedAt,
+    kind: "letter",
+    outcome: "locked",
+    period: period.name,
+    school: unit.name,
+  });
+});
+
 /**
- * Checks a report hash from its QR code (ADR 0033, S5): a locked report answers its
- * school, the kind of document, its period, and its approval date, and nothing about
- * its student. Any other hash, and a check past the limit, answers unknown.
+ * Checks a hash from a QR code (ADR 0033, S5 and S6): a locked report card answers its school,
+ * the kind of document, its period, and its approval date, and a locked SKL its unit, its kind,
+ * its period, and its issue date, and nothing about the student. Any other hash, and a check
+ * past the limit, answers unknown.
  */
 const report = FunctionImpl.make(
   databaseSchema,
@@ -46,38 +103,15 @@ const report = FunctionImpl.make(
     if (!quota.ok) {
       return UNKNOWN;
     }
-    const reader = yield* DatabaseReader;
-    const found = yield* reader
-      .table("reportCards")
-      .index("by_hash", (query) => query.eq("hash", hash))
-      .first()
-      .pipe(Effect.orDie);
-    if (
-      Option.isNone(found) ||
-      found.value.state !== "locked" ||
-      found.value.approvedAt === undefined
-    ) {
-      return UNKNOWN;
+    const answer = yield* reportAnswer(hash);
+    if (Option.isSome(answer)) {
+      return answer.value;
     }
-    const [tenant, period] = yield* Effect.all([
-      reader.table("tenants").get(found.value.tenantId).pipe(Effect.orDie),
-      reader
-        .table("tenantPeriods")
-        .get(found.value.periodId)
-        .pipe(Effect.orDie),
-    ]);
-    const answer: typeof VerifyAnswer.Type = {
-      approvedAt: found.value.approvedAt,
-      kind: "report",
-      outcome: "locked",
-      period: period.name,
-      school: tenant.name,
-    };
-    return answer;
+    return Option.getOrElse(yield* letterAnswer(hash), () => UNKNOWN);
   })
 );
 
-/** The public checks of report hashes. */
+/** The public checks of report card and SKL hashes. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(report),
   GroupImpl.finalize

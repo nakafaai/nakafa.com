@@ -1,14 +1,18 @@
 import { Array as Arr, Result } from "effect";
 import { use } from "react";
 import { PlayerQuestionFlag } from "@/components/player/flag";
-import { PlayerQuestion } from "@/components/player/question";
+import { readQuestionIds } from "@/components/player/ids";
+import {
+  PlayerQuestion,
+  PlayerQuestionAnswer,
+  PlayerQuestionHeader,
+  PlayerQuestionPrompt,
+} from "@/components/player/question";
 import { PlayerQuestions } from "@/components/player/questions";
 import { joinTryoutBodies } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
 import { useTryoutFlag } from "@/components/tryout/player/flag";
 import { TryoutQuestionBody } from "@/components/tryout/runtime/question/body";
-import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
-import { TryoutQuestionHeader } from "@/components/tryout/runtime/question/shell";
 import { TryoutResponse } from "@/components/tryout/runtime/response/input";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
@@ -39,7 +43,7 @@ export function TryoutArticles({
   return (
     <PlayerQuestions>
       {Arr.map(joined, ({ body, question }) => {
-        const ids = getTryoutQuestionIds(question.questionOrder);
+        const ids = readQuestionIds(question.questionOrder);
 
         return (
           <PlayerQuestion
@@ -54,15 +58,15 @@ export function TryoutArticles({
               onFlag={() => flag(question, !question.flagged)}
               questionKey={question.placementId}
             />
-            <TryoutQuestionHeader questionOrder={question.questionOrder} />
-            <section className="my-6">
+            <PlayerQuestionHeader number={question.questionOrder} />
+            <PlayerQuestionPrompt>
               <TryoutQuestionBody body={body} />
-            </section>
-            <section className="my-8">
+            </PlayerQuestionPrompt>
+            <PlayerQuestionAnswer>
               <TryoutResponse
                 value={{ interaction: body.interaction, locked, question }}
               />
-            </section>
+            </PlayerQuestionAnswer>
           </PlayerQuestion>
         );
       })}

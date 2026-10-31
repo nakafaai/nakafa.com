@@ -43,7 +43,7 @@ export function FunctionIllustration({
             icon={ArrowDown02Icon}
           />
 
-          <div className="flex items-center justify-center rounded-md bg-accent p-8 text-accent-foreground">
+          <div className="bg-accent text-accent-foreground flex items-center justify-center rounded-md p-8">
             {machineLabel}
           </div>
 

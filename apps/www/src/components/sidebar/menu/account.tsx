@@ -89,7 +89,7 @@ export function AccountMenu({
         />
         <DropdownMenuContent
           align="end"
-          className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
+          className="w-(--anchor-width) max-w-[calc(100vw-2rem)] min-w-56 rounded-lg"
           keepMounted
           side={side}
           sideOffset={4}
@@ -99,11 +99,11 @@ export function AccountMenu({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <PersonAvatar mascot={account.mascot} photo={account.photo} />
                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium text-foreground">
+                  <span className="text-foreground truncate font-medium">
                     {name}
                   </span>
                   {(account.email ?? description) === undefined ? null : (
-                    <span className="truncate text-muted-foreground text-xs">
+                    <span className="text-muted-foreground truncate text-xs">
                       {account.email ?? description}
                     </span>
                   )}

@@ -40,7 +40,7 @@ function countSectionShifts(page: Page) {
     observer.observe({ buffered: true, type: "layout-shift" });
     const entries = observer.takeRecords();
     observer.disconnect();
-    const section = document.getElementById(sectionId);
+    const section = document.querySelector(`#${CSS.escape(sectionId)}`);
     return entries.filter((entry) => {
       const sources = Array.from<{ node: unknown }>(
         Reflect.get(entry, "sources") ?? []

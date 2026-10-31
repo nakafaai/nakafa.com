@@ -72,7 +72,7 @@ function decodeRegistryVersion(registry: string, source: string) {
 
 const OUTDATED_HEADER = "Package";
 const SEPARATOR_CELL = /^-+$/u;
-const PACKAGE_CELL = /^\|\s*([^|]+?)\s*\|/u;
+const PACKAGE_CELL = /^\|\s*(?<cell>[^|]+?)\s*\|/u;
 const PACKAGE_SUFFIX = /\s+\((?:dev|peer|optional)\)$/u;
 const NPM_ALIAS = /@npm:.*$/u;
 

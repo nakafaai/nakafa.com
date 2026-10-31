@@ -40,10 +40,12 @@ import {
   type ReactNode,
   Suspense,
   use,
+  useState,
   useTransition,
 } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { Authenticated } from "@/components/auth/gate";
+import { ShellLocksContext } from "@/components/sidebar/locks";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
 import { SidebarToggle } from "@/components/sidebar/toggle";
@@ -226,7 +228,10 @@ function TenantSwitcher() {
  * (`SchoolHeader`), so the frame draws none. The exam editor draws its own frame,
  * so on its route the pages render alone. No app header stands above a school's
  * pages, so the frame sets its height to none, and a page's sticky header, such
- * as the player's, stands at the top of the page. The
+ * as the player's, stands at the top of the page. A page that answers questions
+ * locks the frame with `ShellLock`, as a running try-out locks the app shell: the
+ * sidebar hides and ignores its toggles, so a student sees none of the school's
+ * navigation while answering, and it returns unchanged when the page goes. The
  * pathname is read here, not in the shell, so the shell's context value does not
  * change on navigation.
  */
@@ -236,6 +241,8 @@ function TenantFrame({ children }: { children: ReactNode }) {
   });
   const tCommon = useTranslations("Common");
   const locale = useLocale();
+  const [locks, setLocks] = useState(0);
+  const locked = locks > 0;
   // The sidebar sits at the start edge of the page: left for every left-to-right language.
   const side = textDirection(locale) === "rtl" ? "right" : "left";
 
@@ -244,24 +251,29 @@ function TenantFrame({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="icon" label={tCommon("sidebar")} side={side}>
-        <SidebarHeader className="border-b">
-          <SidebarMenu>
-            <TenantSwitcher />
-          </SidebarMenu>
-          <TenantSearch />
-        </SidebarHeader>
-        <SidebarContent>
-          <TenantNavigation />
-        </SidebarContent>
-        <SidebarToggle />
-        <TenantAccount />
-      </Sidebar>
-      <SidebarInset className="[--app-header-top:0rem]">
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+    <ShellLocksContext value={setLocks}>
+      <SidebarProvider data-locked={locked ? "" : undefined} locked={locked}>
+        {/* Hidden rather than unmounted, so the learner's open or closed choice returns with it. */}
+        <div className="contents group-data-locked/sidebar-wrapper:hidden">
+          <Sidebar collapsible="icon" label={tCommon("sidebar")} side={side}>
+            <SidebarHeader className="border-b">
+              <SidebarMenu>
+                <TenantSwitcher />
+              </SidebarMenu>
+              <TenantSearch />
+            </SidebarHeader>
+            <SidebarContent>
+              <TenantNavigation />
+            </SidebarContent>
+            <SidebarToggle />
+            <TenantAccount />
+          </Sidebar>
+        </div>
+        <SidebarInset className="[--app-header-top:0rem]">
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </ShellLocksContext>
   );
 }
 
@@ -275,6 +287,7 @@ export function TenantShell({
   account,
   canManage,
   canOpenExams,
+  canOpenGraduation,
   canOpenReports,
   children,
   home,
@@ -286,6 +299,7 @@ export function TenantShell({
   account: typeof ViewerAccount.Type;
   canManage: boolean;
   canOpenExams: boolean;
+  canOpenGraduation: boolean;
   canOpenReports: boolean;
   children: ReactNode;
   home: HomeAccess;
@@ -300,6 +314,7 @@ export function TenantShell({
         value={{
           canManage,
           canOpenExams,
+          canOpenGraduation,
           canOpenReports,
           logo: profile.logo,
           mascot: profile.mascot,

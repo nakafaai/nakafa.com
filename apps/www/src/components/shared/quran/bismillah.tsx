@@ -16,7 +16,7 @@ export function QuranBismillah({
 
   return (
     <div
-      className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm"
+      className="bg-card mb-20 flex flex-col items-center gap-4 rounded-xl border p-6 text-center shadow-sm"
       data-quran-bismillah
     >
       <QuranText>{bismillah.arabic}</QuranText>

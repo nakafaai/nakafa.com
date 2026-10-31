@@ -1,3 +1,4 @@
+import { elementById } from "@repo/design-system/lib/element";
 import { Option } from "effect";
 import { useEffect } from "react";
 
@@ -20,7 +21,7 @@ export function FragmentLanding() {
       return;
     }
     Option.map(decodeFragment(window.location.hash.slice(1)), (id) =>
-      document.getElementById(id)?.scrollIntoView({ block: "start" })
+      elementById(id)?.scrollIntoView({ block: "start" })
     );
   }, []);
 

@@ -248,7 +248,7 @@ describe("llms markdown content resolver", () => {
       const text = yield* readMarkdown("pricing");
 
       expect(text).toContain("# Nakafa Pricing: Free and Pro");
-      expect(text?.match(/^### /gm)).toHaveLength(10);
+      expect(text?.match(/^### /gmu)).toHaveLength(10);
       expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
       expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
       expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();

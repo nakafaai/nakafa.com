@@ -16,7 +16,7 @@ export function SheetConversation({ chatId }: { chatId: Id<"chats"> }) {
   return (
     <LearnerChatProvider chatId={chatId}>
       <ForgetDeletedChat />
-      <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
+      <div className="text-chat relative flex size-full min-w-0 flex-col overflow-hidden">
         <NinaTranscript />
 
         <ChatComposer autoFocus className="px-2 pb-2" />

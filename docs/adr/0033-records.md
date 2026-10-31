@@ -157,24 +157,25 @@ rows of the class.
   the routing rule is recorded before a school signs in the eu cell (What Stays
   Open).
 
-### Graduation and e-Ijazah readiness (planned, S6)
+### Graduation and e-Ijazah readiness (S6)
 
 - Graduation follows the last grade of each level: 6 for SD and MI, 9 for SMP and
   MTs, and 12 for SMA, MA, and SMK (ADR 0011).
-- The SKL and the transcript data come from the final grades, the e-Ijazah data,
-  and the Dapodik export. Nakafa prepares them and does not issue the SKL, which
-  the school issues (blueprint, Peran Nakafa).
-- The export columns need a pilot school's file. Neither the repository nor the
-  blueprint holds a Dapodik template, so S6 does not write the columns before the
-  pilot file is read.
+- The SKL and the transcript data come from the locked report cards and the roster.
+  Nakafa drafts the SKL for the head of the school, who signs it; the ijazah and its
+  transcript are issued in the Ministry's e-Ijazah system (blueprint, Peran Nakafa).
+- The columns and formats follow the official public formats, decided in the
+  amendment of 31 October 2026 below, without a pilot school's file.
 
-### Dapodik XLSX export (planned, S6)
+### Dapodik XLSX export (S6)
 
 - Records writes the export from the locked reports and the roster. The Dapodik
   adapter in `confect/connectors` keeps the import of the school's upload
   (ADR 0015).
 - Dapodik has no official data API until the Ministry signs (K13), so the export
-  is a file the school downloads and uploads to Dapodik itself.
+  is a file the school downloads and carries into Dapodik itself. The amendment of
+  31 October 2026 says why it is written for the school to paste into Dapodik's own
+  template.
 
 ### Libraries
 
@@ -235,6 +236,8 @@ Only the release and the lock are journaled.
 | `grade.released` | `grade` | IDs and the state `released` | Yes, to the notifications consumer and to webhooks |
 | `scheme.stored` | `tenant` | The ID of the stored version | No |
 | `report.locked` | `report` | IDs and the PDF hash | No, until the exports consumer exists |
+| `graduation.decided` | `period` | Nothing but the type (S6) | No |
+| `letter.locked` | `cohort` | The SKL's ID and its PDF hash (S6) | No |
 
 ## Consequences
 
@@ -274,7 +277,10 @@ Only the release and the lock are journaled.
 - The final retention numbers for each data type (K10, owner).
 - Counsel's review of the legal basis of report cards and the verification page
   (K20).
-- The Dapodik export columns, which need a pilot school's file.
+- A school's own rule for a transcript value (weights, a school exam), which
+  replaces the default mean of the amendment of 31 October 2026.
+- The order of the subjects in the curriculum. Nakafa holds no curriculum list, so
+  a transcript and an SKL list the subjects by name.
 - The routing of a verification request to the cell that issued the report, once
   the eu cell is live (ADR 0026).
 - Arabic script in a PDF needs shaping. The measurements did not test shaping or
@@ -294,7 +300,7 @@ Only the release and the lock are journaled.
 | Attendance | Planned, S3 |
 | Report cards, the homeroom note, hand-in, approval, and lock (`records/reports`) | Built, S4, see the amendment below |
 | The report PDF with its hash and QR (`records/prints`), and the verification page (`records/checks`, `/{locale}/verify/{hash}`) | Built, S5, see the amendment below |
-| SKL, transcript data, and the Dapodik export | Planned, S6 |
+| The graduation decision, the SKL with its PDF, hash, and QR (`records/graduations`, `records/letters`), the transcript data, the e-Ijazah readiness export, and the Dapodik export of report data | Built, S6, see the amendment of 31 October 2026 |
 | The import of a Dapodik upload in `confect/connectors` | Planned, ADR 0015 |
 
 ## Amendment: Report Cards And Their Check, 26 October 2026
@@ -336,3 +342,95 @@ attendance, and the extracurricular activities join with S3. Who may act:
 | Approve | The principal (ADR 0012: not the Deputy) |
 | Open the report pages from the sidebar (`report.open` on a unit) | Teachers, principals, Admins |
 
+
+## Amendment: Graduation, SKL, Transcript Data, And The Exports, 31 October 2026
+
+The owner decided on 30 October 2026 that S6 is built from the official public formats
+instead of a pilot school's file. These sources set the rules below:
+
+- Permendikbudristek 58/2024 on the ijazah of primary and secondary education
+  (https://peraturan.bpk.go.id/Details/305855): Pasal 3 ayat (3) lists the contents of an
+  ijazah, Pasal 4 ayat (1) joins a transcript to every ijazah, Pasal 4 ayat (2) lists the
+  contents of a transcript, and Pasal 3 ayat (4) and Pasal 4 ayat (3) require Indonesian.
+- Kepmendikdasmen 177/2026 of 8 June 2026, the guide to issuing an ijazah, a transcript,
+  and the letters (copy published by the NTT education office,
+  https://dindikbud.nttprov.go.id/wp-content/uploads/2026/06/SALINAN_KEPMEN_177_2026.pdf).
+  Lampiran I C sets the three steps of the e-Ijazah list (DNS from the Dapodik data, the
+  head's decision on graduation, DNT), the data a school checks at DNS (one NISN, one NIK,
+  and the name, place, and date of birth matched with Dukcapil, one active class group, the
+  year of graduation), the date of the decision (the first Monday of June for SD and SMP,
+  of May for SMA and SMK, or the next working day), and the SKL: issued on the date of the
+  decision, temporary until the ijazah, holding at least the student's identity and the
+  average of the values the transcript will hold. Lampiran I E.3 and Lampiran II B.12 print
+  the head's NIP for a civil servant and a dash for anyone else. Lampiran II B.6 writes each
+  transcript value on the 0 to 100 scale rounded to two decimals (72,495 becomes 72,50).
+- Dapodik's import of report grades works on a template the school downloads from its own
+  Dapodik for one class group and one subject (Nilai, Rapor, Unduh Format Excel untuk
+  Import). The template carries a token, and its number, name, NIS, and NISN columns must
+  stay as they are (panduandapodik.id, Cara Export dan Import Nilai Rapor; the Panduan
+  Aplikasi Dapodik versi 2026 at obj.pauddasmen.id describes the same menu).
+
+### Decisions
+
+1. **One graduation decision per unit and period.** The head's decision on graduation (SK
+   penetapan kelulusan) covers every graduating class group of the unit, so it is stored once
+   per period (`graduations`): its number, its date, the place of issue, and the head's name
+   as printed with their degrees and their NIP or none. The principal records it on the
+   unit's active period, and may change it until the first SKL is issued. The page suggests
+   the date of Lampiran I C, and the principal moves it for a holiday, because Nakafa holds
+   no holiday calendar. The record is journaled as `graduation.decided` on the period, with
+   no text (ADR 0016).
+2. **Graduating students.** A student graduates from a class group of the unit's last grade
+   (`lastGradeOf`) in the unit's active period. A unit with no last grade (PAUD, SLB, other)
+   has no graduation.
+3. **Transcript values.** Each subject's value is the mean of the subject's values on every
+   locked report card the student holds in the unit, on the 0 to 100 scale, rounded half up
+   to two decimals in integer hundredths, so 72,495 becomes 72,50 exactly. The average is the
+   mean of the subject values, rounded the same way. A subject is the class's subject: a
+   report subject line now copies it at approval (`subject`, optional as on the class), and a
+   line without one, from a homeroom class or approved before this change, counts under its
+   class name. Subjects are listed by name. Permendikbudristek 21/2022 leaves the rule to the
+   school, so this mean is Nakafa's default until a school sets its own (What Stays Open).
+4. **The SKL.** The principal issues the SKL of each graduating student who has a NISN on file
+   and a locked report card in the class group; the others stay out and the readiness list
+   says why. A letter copies the decision, the school, its NPSN, the class group, the
+   student's name, and the transcript values with their average, takes the SHA-256 of that
+   content with the graduation's ID (`records/letter.ts`), and is locked once its PDF is
+   stored, as a report card is. Its number is the decision's number and the letter's place in the period,
+   `{decision}/{001}`, so every student's number differs (Kepmendikdasmen 177/2026 asks for a
+   distinct number per student). The PDF is in Indonesian whatever the unit's language,
+   states the decision, the student's name, NISN, and class group, lists the subjects and the
+   average, and carries the head's name and NIP or a dash, the hash, and the QR of
+   `{SITE_ORIGIN}/{locale}/verify/{hash}`. It holds no place or date of birth: Nakafa stores
+   neither (ADR 0034), the NISN names the student nationally, and the e-Ijazah takes the
+   identity Dukcapil matched from Dapodik. An SKL is read through its class group's page, so
+   the lock is journaled on the class group as `letter.locked`, with the letter's ID and hash.
+   A correction of an issued letter is a later slice.
+5. **The check.** The public check answers a locked SKL as it answers a report: the school,
+   the kind `letter`, the period, and the date of issue, and nothing about the student.
+6. **The e-Ijazah readiness export.** For one class group, an XLSX file in Indonesian with one
+   row per graduating student, in the order of Permendikbudristek 58/2024 Pasal 4 ayat (2) for
+   the fields Nakafa holds: No, Nama Satuan Pendidikan, NPSN, Nama Lengkap, NISN, Rombel,
+   Nomor Keputusan Penetapan Kelulusan, Tanggal Kelulusan, Nomor SKL, one column per subject,
+   Rata-rata, and Kekurangan Data, which lists what is missing: the unit's NPSN, the decision,
+   the student's NISN, and a locked report card in the class group. A second sheet names the
+   fields the e-Ijazah system takes from Dapodik and that Nakafa never holds (NIK, place and
+   date of birth) and the numbers the system issues (the national ijazah number, the
+   transcript number). The page shows the same list per student.
+7. **The Dapodik export of report data.** Nakafa cannot write Dapodik's template, which
+   carries Dapodik's token and its own rows, so for one class group it writes an XLSX file of
+   the locked report cards to paste from: a Legger sheet with No, Nama Peserta Didik, NISN,
+   and one column per subject, and one sheet per subject with No, Nama Peserta Didik, NISN,
+   and Nilai, in the order of the students' names. The values are the report values as
+   locked. The Dapodik page of the School settings, where the Admin and Staff already import
+   and export the student list, saves it for any class group of the active period.
+
+Who may act:
+
+| Action | Who |
+| --- | --- |
+| Record or change the graduation decision (`graduation.decide` on a period) | The principal |
+| Issue the SKL of a class group (`graduation.issue` on a cohort) | The principal |
+| Open the graduation pages, the transcript data, the SKL files, and the readiness export (`graduation.view` on a cohort) | The principal, the Admin, and Staff (Staf TU), who keep the Dapodik and e-Ijazah data |
+| Offer the graduation pages in the sidebar (`graduation.open` on a unit) | The principal, the Admin, and Staff |
+| Export a class group's report data for Dapodik (`report.export` on a cohort) | The principal, the Admin, and Staff |

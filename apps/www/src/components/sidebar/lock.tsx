@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { keptStorage } from "@/components/player/storage";
+import { ShellLocksContext } from "@/components/sidebar/locks";
 import {
   forgetPrepaintLock,
   PREPAINT_LOCK_ATTRIBUTE,
@@ -24,11 +25,6 @@ import {
   rememberPrepaintLock,
 } from "@/components/sidebar/prepaint";
 import { reportClientException } from "@/lib/analytics/client";
-
-/** Changes the count of visible pages that hold the nearest shell locked. */
-const ShellLocksContext = createContext<Dispatch<
-  SetStateAction<number>
-> | null>(null);
 
 /** Changes the count of visible page headers that title the nearest shell. */
 const ShellTitlesContext = createContext<Dispatch<
@@ -109,7 +105,7 @@ export function LockableShell({
             would shrink every centered page column to its content, and a
             wrapper of their own would move when a lock change drops the
             header. */}
-          <SidebarInset className="block transition-[--app-sidebar-offset] duration-surface [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] lg:pl-(--app-shell-inset) group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-collapsible=icon]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(12)] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem]">
+          <SidebarInset className="duration-surface block transition-[--app-sidebar-offset] [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-collapsible=icon]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(12)] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem] lg:pl-(--app-shell-inset)">
             <SidebarScope>
               {locked ? null : (
                 <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">

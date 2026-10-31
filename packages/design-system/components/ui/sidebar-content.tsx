@@ -15,7 +15,7 @@ export function SidebarInput({
   return (
     <Input
       className={cn(
-        "h-8 w-full border-sidebar-border bg-background shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50",
+        "border-sidebar-border bg-background focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50 h-8 w-full shadow-none",
         className
       )}
       data-sidebar="input"
@@ -29,7 +29,7 @@ export function SidebarInput({
 export function SidebarHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-2 border-sidebar-border p-2", className)}
+      className={cn("border-sidebar-border flex flex-col gap-2 p-2", className)}
       data-sidebar="header"
       data-slot="sidebar-header"
       {...props}
@@ -41,7 +41,7 @@ export function SidebarHeader({ className, ...props }: ComponentProps<"div">) {
 export function SidebarFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-2 border-sidebar-border p-2", className)}
+      className={cn("border-sidebar-border flex flex-col gap-2 p-2", className)}
       data-sidebar="footer"
       data-slot="sidebar-footer"
       {...props}
@@ -56,7 +56,7 @@ export function SidebarSeparator({
 }: ComponentProps<typeof Separator>) {
   return (
     <Separator
-      className={cn("mx-2 w-auto bg-sidebar-border", className)}
+      className={cn("bg-sidebar-border", className)}
       data-sidebar="separator"
       data-slot="sidebar-separator"
       {...props}
@@ -66,12 +66,14 @@ export function SidebarSeparator({
 
 /**
  * Renders the scrollable content region between sidebar header and footer. Its bar overlays the rows and takes
- * no room, so a sidebar keeps its width on every system. A sidebar folded to its icons does not scroll; the
- * viewport scrolls by an inline style, so the fold overrides it.
+ * no room, so a sidebar keeps its width on every system. It scrolls down only: no bar runs across it, and nothing
+ * moves it sideways. A sidebar folded to its icons does not scroll; the viewport scrolls by an inline style, so the
+ * fold overrides it.
  */
 export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
   return (
     <ScrollArea
+      axis="vertical"
       className="flex-1"
       data-sidebar="content"
       data-slot="sidebar-content"
@@ -94,7 +96,10 @@ export function SidebarGroup({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-/** Labels a SidebarGroup while preserving readable text in every theme. */
+/**
+ * Labels a SidebarGroup while preserving readable text in every theme. A label keeps one line inside its group, so a
+ * long one, or one the rail folds away under its icons, never reaches past the sidebar's edge.
+ */
 export function SidebarGroupLabel({
   className,
   render,
@@ -105,7 +110,7 @@ export function SidebarGroupLabel({
     render,
     props: {
       className: cn(
-        "flex h-8 shrink-0 items-center rounded-md px-2 font-medium text-sidebar-foreground text-xs outline-hidden ring-sidebar-ring transition-[margin,opacity] duration-surface focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "text-sidebar-foreground ring-sidebar-ring duration-surface flex h-8 min-w-0 shrink-0 items-center overflow-hidden rounded-md px-2 text-xs font-medium whitespace-nowrap outline-hidden transition-[margin,opacity] focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
         className
       ),
@@ -127,7 +132,7 @@ export function SidebarGroupAction({
     render,
     props: {
       className: cn(
-        "pressable absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-hidden ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "pressable text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "after:absolute after:-inset-2 md:after:hidden",
         "group-data-[collapsible=icon]:hidden",
         className

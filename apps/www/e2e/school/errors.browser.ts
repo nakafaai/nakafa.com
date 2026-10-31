@@ -12,16 +12,16 @@ const NARROWEST_FIELD = 272;
 const LOCALES = ["en", "id", "de"] as const;
 
 /** A field's error line and what it holds, up to the line's close. */
-const FIELD_ERROR = /<FieldError\b[^>]*>([\s\S]*?)<\/FieldError>/g;
+const FIELD_ERROR = /<FieldError\b[^>]*>(?<content>[\s\S]*?)<\/FieldError>/gu;
 
 /** The namespace a component reads its words from. */
-const TRANSLATOR = /useTranslations\(\s*"([A-Za-z]+)"\s*\)/g;
+const TRANSLATOR = /useTranslations\(\s*"(?<namespace>[A-Za-z]+)"\s*\)/gu;
 
 /** A string literal that may name a message. */
-const LITERAL = /"([a-z][a-z0-9-]*)"/g;
+const LITERAL = /"(?<key>[a-z][a-z0-9-]*)"/gu;
 
 /** A simple placeholder of a message, by its name. */
-const PLACEHOLDER = /\{([A-Za-z]+)\}/g;
+const PLACEHOLDER = /\{(?<name>[A-Za-z]+)\}/gu;
 
 /**
  * What fills a placeholder: a count takes 200, three digits, as wide as the largest limit a School field

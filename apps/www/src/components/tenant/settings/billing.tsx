@@ -322,10 +322,10 @@ function SchoolTermOption({
   const locale = useLocale();
 
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-data-checked:border-primary">
+    <label className="has-data-checked:border-primary flex cursor-pointer items-start gap-3 rounded-lg border p-4">
       <Radio className="mt-0.5" value={quote.offer} />
       <span className="grid flex-1 gap-1">
-        <span className="flex items-baseline justify-between gap-3 font-medium text-sm">
+        <span className="flex items-baseline justify-between gap-3 text-sm font-medium">
           <span>{t(OFFER_LABELS[rail][quote.offer])}</span>
           <span className="tabular-nums">
             {formatMinorAmount(quote.total, currency)}

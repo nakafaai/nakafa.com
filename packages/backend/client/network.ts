@@ -44,7 +44,7 @@ export const NetworkRetryCodeSchema = Schema.Literals([
   "UND_ERR_SOCKET",
 ]);
 type NetworkRetryCode = typeof NetworkRetryCodeSchema.Type;
-const NETWORK_CODE_PATTERN = /^[A-Z][A-Z0-9_]{1,47}$/;
+const NETWORK_CODE_PATTERN = /^[A-Z][A-Z0-9_]{1,47}$/u;
 const NETWORK_CAUSE_LIMIT = 32;
 const networkRetryCodes = HashSet.fromIterable<string>(
   NetworkRetryCodeSchema.literals

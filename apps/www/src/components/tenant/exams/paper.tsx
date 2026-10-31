@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { statusIconVariants } from "@repo/design-system/lib/status";
 import { Array as Arr, Option } from "effect";
 import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
@@ -113,7 +114,7 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
         ) : (
           <span aria-hidden className="size-8 shrink-0" />
         )}
-        <h2 className="shrink-0 font-medium text-sm">
+        <h2 className="shrink-0 text-sm font-medium">
           {t("question", { number })}
         </h2>
         <QuestionType
@@ -123,10 +124,13 @@ function PageRow({ editing, index, question, saved }: PageRowProps) {
         />
         {editing.displayed.key === null &&
         needsKey(editing.displayed.template) ? (
-          <span className="flex items-center gap-1 text-muted-foreground text-xs">
+          <span className="text-muted-foreground flex items-center gap-1 text-xs">
             <HugeIcons
               aria-hidden="true"
-              className="size-3.5 text-primary"
+              className={statusIconVariants({
+                className: "size-3.5",
+                tone: "warning",
+              })}
               icon={Alert02Icon}
             />
             {t("page-no-key")}

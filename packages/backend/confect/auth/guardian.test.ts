@@ -17,7 +17,7 @@ import { Effect, Schema } from "effect";
 /** The school host of the test school, as the browser names it through the proxy. */
 const SCHOOL_HOST = "nf.localhost:3000";
 /** The session cookie that a successful sign-in sets. */
-const SESSION_COOKIE_PATTERN = /better-auth\.session_token=[^;]+;/;
+const SESSION_COOKIE_PATTERN = /better-auth\.session_token=[^;]+;/u;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });

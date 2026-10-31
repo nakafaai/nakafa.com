@@ -50,7 +50,7 @@ test("moving between two articles stays in the document and reads only static an
   await hydrated(firstArticle);
   await page.evaluate(() => Reflect.set(document, "nakafaDocumentMark", true));
   await firstArticle.click();
-  await expect(page).toHaveURL(new RegExp(`${firstHref ?? ""}$`));
+  await expect(page).toHaveURL(new RegExp(`${firstHref ?? ""}$`, "u"));
   await expect(page.locator("h1").first()).toBeVisible();
 
   const secondArticle = page
@@ -72,7 +72,7 @@ test("moving between two articles stays in the document and reads only static an
   await expect(page.locator("h1").first()).not.toHaveText(firstHeading ?? "");
   const shownAt = await page.evaluate(() => performance.now());
 
-  await expect(page).toHaveURL(new RegExp(`${secondHref ?? ""}$`));
+  await expect(page).toHaveURL(new RegExp(`${secondHref ?? ""}$`, "u"));
   expect(
     await page.evaluate(() => Reflect.get(document, "nakafaDocumentMark"))
   ).toBe(true);

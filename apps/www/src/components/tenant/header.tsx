@@ -6,9 +6,10 @@ import {
 } from "@repo/design-system/components/ui/breadcrumb";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
+import { SidebarContext } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import {
   type BreadcrumbHeaderItem,
@@ -42,23 +43,29 @@ export function SchoolHeader({
   title?: string;
 }) {
   const tCommon = useTranslations("Common");
+  const hasSidebar = use(SidebarContext) !== null;
 
   return (
     <header
-      className="sticky top-0 z-10 h-16 shrink-0 border-b bg-background"
+      className="bg-background sticky top-0 z-10 h-16 shrink-0 border-b"
       data-slot="page-header"
     >
       <div
         className={cn(
           contentWidthVariants({ width: "page" }),
-          "flex h-full w-full items-center gap-2 px-4"
+          "@container/header flex h-full w-full items-center gap-2 px-4"
         )}
       >
-        <SidebarTrigger
-          className="-ms-1 shrink-0 lg:hidden"
-          label={tCommon("toggle-sidebar")}
-        />
-        <Separator className="me-1 h-4 lg:hidden" orientation="vertical" />
+        {/* The exam editor draws no sidebar, so a page that shows in its place, such as its not-found page, has none to toggle. */}
+        {hasSidebar ? (
+          <>
+            <SidebarTrigger
+              className="-ms-1 shrink-0 lg:hidden"
+              label={tCommon("toggle-sidebar")}
+            />
+            <Separator className="me-1 h-4 lg:hidden" orientation="vertical" />
+          </>
+        ) : null}
         {title === undefined ? null : (
           <h1 className="sr-only" dir="auto">
             {title}

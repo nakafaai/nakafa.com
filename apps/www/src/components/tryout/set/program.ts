@@ -24,12 +24,14 @@ type StartAttemptMutation = (
 /** Continues the client flow with the result of a started attempt. */
 type StartAttemptSuccess = (result: StartAttemptResult) => Effect.Effect<void>;
 
-/** Runs the free start mutation and reports transport or source failures. */
+/** Runs the free start mutation and reports transport or source failures, then hands the page back. */
 export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
   (input: {
     readonly args: StartAttemptArgs;
     readonly failureMessage: ToastCopy;
     readonly mutation: StartAttemptMutation;
+    /** Returns the page the start replaced, once the failure is reported. */
+    readonly onFailure: Effect.Effect<void>;
     readonly onSuccess: StartAttemptSuccess;
   }) =>
     Effect.tryPromise({
@@ -43,7 +45,9 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
       ),
       Effect.tap((result) => input.onSuccess(result)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
-        reportRequestFailure(error, "tryout-start", input.failureMessage)
+        reportRequestFailure(error, "tryout-start", input.failureMessage).pipe(
+          Effect.andThen(input.onFailure)
+        )
       ),
       Effect.asVoid
     )

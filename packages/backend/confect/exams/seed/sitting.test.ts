@@ -138,6 +138,74 @@ describe("exams seed sitting", () => {
   );
 
   it.effect(
+    "ends the exam with the prose question when the seed asks for it, its prompt holding every block and mark",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const user = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("users")
+              .get(fixture.users.student.userId)
+              .pipe(Effect.orDie)
+          )
+        );
+        const made = yield* fixture.internal.mutation(seed, {
+          email: addressOf(user.email),
+          essay: true,
+          prose: true,
+          slug: nf,
+        });
+        const stored = yield* fixture.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const exam = yield* reader
+              .table("exams")
+              .get(made.examId)
+              .pipe(Effect.orDie);
+            const questions = yield* Effect.forEach(exam.questions, (id) =>
+              reader.table("examQuestions").get(id).pipe(Effect.orDie)
+            );
+            const last = Option.getOrThrow(Arr.last(questions));
+            const snapshot = yield* reader
+              .table("editorSnapshots")
+              .get("by_documentId", last.prompt)
+              .pipe(Effect.orDie);
+            return {
+              content: snapshot.content,
+              templates: Arr.map(questions, (question) => question.template),
+            };
+          })
+        );
+        expect(stored.templates).toEqual([
+          "choice",
+          "choice",
+          "essay",
+          "choice",
+        ]);
+        // Every block and mark the prompt holds, by its name in the stored document.
+        for (const name of [
+          '"heading"',
+          '"bold"',
+          '"link"',
+          '"code"',
+          '"subscript"',
+          '"superscript"',
+          '"mathInline"',
+          '"bulletList"',
+          '"orderedList"',
+          '"blockquote"',
+          '"tableHeader"',
+          '"tableCell"',
+          '"mathBlock"',
+        ]) {
+          expect(stored.content).toContain(name);
+        }
+      })
+  );
+
+  it.effect(
     "seats a crowd of numbered students with attempts in progress, more than one dashboard page holds",
     () =>
       Effect.gen(function* () {

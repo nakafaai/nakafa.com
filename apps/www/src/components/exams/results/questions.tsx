@@ -80,7 +80,7 @@ import { useKeptRows } from "@/lib/data/kept";
 /** The look of each verdict of an answer: a check, a cross, a half mark and a wait, each in its tone. */
 const VERDICT_LOOKS = {
   correct: { icon: CheckmarkCircle02Icon, tone: "success" },
-  incorrect: { icon: CancelCircleIcon, tone: "danger" },
+  incorrect: { icon: CancelCircleIcon, tone: "destructive" },
   partial: { icon: MinusSignCircleIcon, tone: "warning" },
   pending: { icon: HourglassIcon, tone: "neutral" },
 } as const satisfies Record<keyof typeof verdictKeys, StatusLook>;

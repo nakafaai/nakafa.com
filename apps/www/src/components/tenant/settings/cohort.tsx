@@ -116,9 +116,9 @@ function CohortUnavailable() {
 }
 
 /**
- * One cohort's page, drawn from the first paint: the path, the search, Add student and the homeroom card's frame are
- * there at once, and the cohort's name, its homeroom teacher and its students fill in when the cohort is read. Add
- * student waits disabled until then, and stays disabled for an archived cohort.
+ * One cohort's page, drawn from the first paint: the path with the cohort's place in it, the search, Add student and
+ * the homeroom card's frame are there at once and final, and the cohort's name, its homeroom teacher and its students
+ * fill in when the cohort is read. Add student's dialog waits for the cohort itself.
  */
 function SchoolCohortPage({
   cohortId,
@@ -157,15 +157,15 @@ function SchoolCohortPage({
             label: t(section.labelKey),
             target: section.target,
           },
-          ...(detail === undefined ? [] : [{ label: detail.name }]),
+          { label: detail === undefined ? "" : detail.name },
         ]}
         {...(detail === undefined ? {} : { title: detail.name })}
       >
         <TableSearch placeholder={t("cohort-members-search")} />
         <SchoolPlacementAdd
           cohortId={cohortId}
-          disabled={detail === undefined || detail.status === "archived"}
           slug={slug}
+          status={detail === undefined ? undefined : detail.status}
         />
       </SchoolHeader>
       <div

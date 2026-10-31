@@ -1,4 +1,5 @@
 import { useMutation } from "@confect/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   EXAM_TITLE_MAX_LENGTH,
@@ -13,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -91,13 +93,16 @@ function useExamDrafts() {
  */
 export function CreateExam({
   choices,
-  disabled = false,
   slug,
+  waiting = false,
 }: {
   choices: readonly ScopeChoice[];
-  /** Whether the action waits, such as while the list it adds to is first read. */
-  disabled?: boolean;
   slug: TenantSlug;
+  /**
+   * Whether the create waits, such as while the list it adds to is first read. The button stays ready, and the
+   * dialog's create holds until then.
+   */
+  waiting?: boolean;
 }) {
   const drafts = useExamDrafts();
   const t = useTranslations("Exams");
@@ -134,7 +139,7 @@ export function CreateExam({
    * press during the close cannot save a second exam.
    */
   const submit = () => {
-    if (!(ready && isSettled) || Option.isNone(choice)) {
+    if (!(ready && isSettled) || waiting || Option.isNone(choice)) {
       return;
     }
     const { scope } = choice.value;
@@ -176,8 +181,10 @@ export function CreateExam({
 
   return (
     <>
-      <Button disabled={disabled} onClick={() => setOpen(true)}>
-        {t("create")}
+      {/* The label gives way to the icon when the header has too little room for it, as at 200 percent text on a phone. */}
+      <Button onClick={() => setOpen(true)}>
+        <HugeIcons aria-hidden="true" icon={Add01Icon} />
+        <span className="@max-sm/header:sr-only">{t("create")}</span>
       </Button>
       <ResponsiveDialog
         description={t("create-description")}
@@ -187,7 +194,7 @@ export function CreateExam({
               {common("cancel")}
             </Button>
             <Button
-              disabled={!(ready && isSettled) || isPending}
+              disabled={!(ready && isSettled) || waiting || isPending}
               inert={isPending}
               onClick={submit}
             >

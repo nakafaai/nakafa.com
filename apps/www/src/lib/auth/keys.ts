@@ -12,6 +12,12 @@ export const KNOWN_SESSION_KEY = "nakafa-session";
 export const KNOWN_ACCOUNT_KEY = "nakafa-account";
 
 /**
+ * Where a school host keeps the frame its school layout last drew, with the
+ * session it drew it for (`lib/tenant/kept.ts`). It goes when the session does.
+ */
+export const KEPT_SCHOOL_KEY = "nakafa-school";
+
+/**
  * Stands for a session whose id the browser cannot know yet: the one a
  * sign-in that just left for the provider will come back with.
  */

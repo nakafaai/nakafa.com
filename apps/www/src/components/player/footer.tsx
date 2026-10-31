@@ -13,9 +13,11 @@ import { readNeighbor, readPosition } from "@/components/player/order";
 import { usePlayer } from "@/components/player/provider";
 
 /**
- * The controls under the questions in one row: previous at the start, the middle controls (the flag, and the
- * navigator opener below the large breakpoint) in the centre, and next at the end. The three zones
- * keep their places whatever the labels say, so nothing moves when next becomes review. It sticks to the
+ * The controls under the questions in one row: previous at the start, the navigator opener below the large
+ * breakpoint in the centre, with the flag of one question at a time beside it out of the row's flow
+ * (`PlayerFlag`), and next at the end. The outer zones take equal widths, so the centre sits on the
+ * screen's middle by construction, and previous and next keep their places whatever the labels say or the
+ * view shows, so nothing moves when next becomes review or the view changes. It sticks to the
  * bottom of the screen, so a learner moves on without scrolling back. The list measures it through
  * `data-player-footer`, so the end of the list counts as reached once it clears the footer.
  */
@@ -24,15 +26,17 @@ export function PlayerFooter({ children }: { children?: ReactNode }) {
 
   return (
     <footer
-      className="sticky bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom,0px)]"
+      className="bg-background sticky bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom,0px)]"
       data-player-footer=""
     >
-      <fieldset className="mx-auto grid h-16 w-full min-w-0 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 border-0 px-4 sm:px-6">
+      <fieldset className="mx-auto grid h-16 w-full max-w-7xl min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-0 px-4 sm:px-6">
         <legend className="sr-only">{t("controls")}</legend>
         <div className="flex justify-start">
           <PlayerPrevious />
         </div>
-        <div className="flex items-center gap-2">{children}</div>
+        <div className="relative flex items-center self-stretch">
+          {children}
+        </div>
         <div className="flex justify-end">
           <PlayerNext />
         </div>

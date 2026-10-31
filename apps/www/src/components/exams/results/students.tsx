@@ -72,7 +72,7 @@ const stateKeys = {
 const STATE_LOOKS = {
   closing: { icon: HourglassIcon, tone: "warning" },
   inProgress: { icon: Clock01Icon, tone: "info" },
-  locked: { icon: SquareLock01Icon, tone: "danger" },
+  locked: { icon: SquareLock01Icon, tone: "destructive" },
   submitted: { icon: CheckmarkCircle02Icon, tone: "success" },
 } as const satisfies Record<
   (typeof StudentRowSchema.Type)["state"],

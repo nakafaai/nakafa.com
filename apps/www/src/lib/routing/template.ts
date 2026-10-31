@@ -8,7 +8,7 @@ const SPLAT_SEGMENT = "$";
 const SERVER_FUNCTION_SEGMENT = "_serverFn";
 
 /** An address whose last segment names a file, such as `/assets/old.js`. */
-const FILE_ADDRESS = /\.[^/]*$/;
+const FILE_ADDRESS = /\.[^/]*$/u;
 
 /** The non-empty segments of a path or of a route template. */
 export function readPathSegments(path: string): readonly string[] {

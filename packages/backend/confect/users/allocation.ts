@@ -16,8 +16,8 @@ import {
  */
 const FALLBACK_NAME = "teman";
 const COMBINING_MARKS = /\p{M}/gu;
-const OUTSIDE_LATIN_ALPHANUMERIC = /[^a-z0-9]/g;
-const LEADING_DIGITS = /^[0-9]+/;
+const OUTSIDE_LATIN_ALPHANUMERIC = /[^a-z0-9]/gu;
+const LEADING_DIGITS = /^[0-9]+/u;
 
 /** The largest number a name takes in order: `siti`, `siti2`, and on to `siti9`. */
 const LAST_ORDERED_NUMBER = 9;

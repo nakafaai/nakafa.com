@@ -7,9 +7,12 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { ConvexIsland } from "@/components/providers/island";
+import {
+  useSetTryoutStartPhase,
+  useTryoutStartPhase,
+} from "@/components/tryout/runtime/start";
 import { START_PART_ERROR } from "@/components/tryout/set/copy";
 import { requireConvexOnline } from "@/lib/convex/online";
 
@@ -30,40 +33,45 @@ export function StartSectionButton(props: StartSectionButtonProps) {
   );
 }
 
-/** Starts this section timer through the page's client, and the Convex runtime subscription shows it. */
+/**
+ * Starts this section timer through the page's client. The page draws the player with the press, and
+ * the Convex runtime subscription runs it once the server answers; a start that fails returns the page.
+ */
 function StartSectionLive({ attemptId, sectionKey }: StartSectionButtonProps) {
   const startSection = useMutation(tryouts.mutations.sections.start);
   const convex = useConvex();
-  const [isPending, startTransition] = useTransition();
+  const phase = useTryoutStartPhase();
+  const setPhase = useSetTryoutStartPhase();
 
-  /** Starts this section timer and lets the Convex runtime subscription update. */
+  /** Opens the player at once, then starts this section timer on the server. */
   function onStart() {
-    if (isPending) {
+    if (phase !== "idle") {
       return;
     }
-
-    startTransition(async () => {
-      await Effect.runPromise(
-        requireConvexOnline(convex).pipe(
-          Effect.andThen(
-            Effect.tryPromise(() =>
-              startSection({
-                attemptId,
-                sectionKey,
-              })
-            ).pipe(Effect.flatMap(Effect.fromResult))
-          ),
-          Effect.catch(() =>
-            Effect.sync(() => {
-              toast.error(START_PART_ERROR, { position: "bottom-center" });
+    setPhase("opening");
+    Effect.runPromise(
+      requireConvexOnline(convex).pipe(
+        Effect.andThen(
+          Effect.tryPromise(() =>
+            startSection({
+              attemptId,
+              sectionKey,
             })
-          )
-        )
-      );
-    });
+          ).pipe(Effect.flatMap(Effect.fromResult))
+        ),
+        Effect.catch(() =>
+          Effect.sync(() => {
+            toast.error(START_PART_ERROR, { position: "bottom-center" });
+          })
+        ),
+        // Convex shows a mutation's result to the page's queries before it answers, so the section runs
+        // on the page by now, or it failed and the page returns.
+        Effect.ensuring(Effect.sync(() => setPhase("idle")))
+      )
+    );
   }
 
-  return <StartSectionControl inert={isPending} onStart={onStart} />;
+  return <StartSectionControl inert={phase !== "idle"} onStart={onStart} />;
 }
 
 /** The section start control. Without `onStart` it is only the page's first frame. */

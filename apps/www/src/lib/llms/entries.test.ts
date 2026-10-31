@@ -60,7 +60,7 @@ describe("llms entries", () => {
       [
         {
           description:
-            "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
+            "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online try outs.",
           route: "/pricing",
           title: "Pricing",
         },
@@ -72,7 +72,7 @@ describe("llms entries", () => {
       [
         {
           description:
-            "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
+            "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan try out online.",
           route: "/pricing",
           title: "Harga",
         },
@@ -96,7 +96,7 @@ describe("llms entries", () => {
       )
     ).toMatchObject({
       description:
-        "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
+        "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online try outs.",
       href: `${BASE_URL}/en/pricing`,
       section: "site",
       title: "Pricing",
@@ -129,7 +129,7 @@ describe("llms entries", () => {
       )
     ).toMatchObject({
       description:
-        "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
+        "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan try out online.",
       title: "Harga",
     });
     expect(Arr.some(englishEntries, (entry) => entry.route === "/")).toBe(

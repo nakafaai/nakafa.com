@@ -25,7 +25,7 @@ export function EntryShellArtwork() {
 
   return (
     <div
-      className="relative col-span-4 hidden bg-muted lg:block"
+      className="bg-muted relative col-span-4 hidden lg:block"
       data-slot="entry-artwork"
     >
       {isLargeScreen ? (

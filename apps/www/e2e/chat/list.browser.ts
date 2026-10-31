@@ -28,7 +28,7 @@ const LATER = 5;
 const ALL = PAGE + LATER + 1;
 const FIRST_TITLES = ["Limits of sine", "Limits of cosine", "Plan for Sunday"];
 /** The names a press that loads more of a list would go by. */
-const LOAD_MORE = /show more|load more/i;
+const LOAD_MORE = /show more|load more/iu;
 
 /** No list says it needs a press to load more. */
 const noButton = (page: Page) =>

@@ -6,6 +6,7 @@ import {
   signInClassTeacher,
   signInOwner,
 } from "@/e2e/support/school";
+import { expectNoSidewaysSidebar } from "@/e2e/support/sidebar";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 test("a school without a logo shows its animal beside its name, and its account menu lists its items", async ({
@@ -145,5 +146,23 @@ test("no two entries of the settings sidebar draw the same icon", async ({
   );
   expect(icons.length).toBeGreaterThan(4);
   expect(Arr.dedupe(icons)).toEqual(icons);
+  await context.close();
+});
+
+test("the settings sidebar keeps every part inside its own width at 320, 390, 768, 1024 and 1440 px, open and folded", async ({
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(240_000);
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+  // The settings hold the most groups, whose names fold away under the icons in the rail.
+  await Effect.runPromise(
+    expectNoSidewaysSidebar(page, address("/settings/profile"))
+  );
   await context.close();
 });

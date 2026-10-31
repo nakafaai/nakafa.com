@@ -13,7 +13,6 @@ import {
   Field,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
   FieldTitle,
 } from "@repo/design-system/components/ui/field";
 import {
@@ -276,7 +275,6 @@ export function TeacherLayer({
         points={question.points}
         questionId={question.id}
       />
-      <FieldSeparator />
       {shown.template === "short" ? (
         <AcceptedAnswers
           accepted={acceptedOf(shown.key)}
@@ -322,7 +320,6 @@ export function TeacherLayer({
           options={options}
         />
       ) : null}
-      {keyed ? <FieldSeparator /> : null}
       {takesRubric(shown.template) ? (
         <NoteField title={t("rubric")}>
           {live ? (
@@ -388,7 +385,7 @@ function NoteField({
       <div
         className={cn(
           fieldBoxVariants(),
-          "block h-auto min-h-16 py-2 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+          "focus-within:border-ring focus-within:ring-ring/50 block h-auto min-h-16 py-2 focus-within:ring-3"
         )}
       >
         {children}

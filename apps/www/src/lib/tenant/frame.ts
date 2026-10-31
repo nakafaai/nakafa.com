@@ -44,7 +44,7 @@ const MemberFrame = Schema.TaggedStruct("Member", {
  * stream starts. It holds no credential, so it crosses to the browser as route
  * context, and the browser never reads the session token.
  */
-const SchoolFrameSchema = Schema.Union([
+export const SchoolFrameSchema = Schema.Union([
   VisitorFrame,
   OutsiderFrame,
   MemberFrame,

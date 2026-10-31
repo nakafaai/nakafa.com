@@ -9,8 +9,7 @@ import {
 } from "@repo/backend/confect/assessment/response";
 import { ClientOnly } from "@tanstack/react-router";
 import { Option, Record as Rec } from "effect";
-import { lazy, Suspense, useId } from "react";
-import { useTranslations } from "use-intl";
+import { lazy, Suspense } from "react";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { PromptReserve } from "@/components/exams/sitting/document";
 import { SittingField } from "@/components/exams/sitting/field";
@@ -23,7 +22,13 @@ import {
 } from "@/components/exams/sitting/response";
 import { SittingTable } from "@/components/exams/sitting/table";
 import { PlayerQuestionFlag } from "@/components/player/flag";
-import { PlayerQuestion } from "@/components/player/question";
+import { readQuestionIds } from "@/components/player/ids";
+import {
+  PlayerQuestion,
+  PlayerQuestionAnswer,
+  PlayerQuestionHeader,
+  PlayerQuestionPrompt,
+} from "@/components/player/question";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExamTry, useTrySlug } from "@/components/tenant/exams/try/context";
 import { useLastValue } from "@/lib/data/kept";
@@ -53,9 +58,7 @@ export function ExamTryQuestion({
   number: number;
   question: Question;
 }) {
-  const t = useTranslations("Exams");
-  const titleId = useId();
-  const articleId = useId();
+  const ids = readQuestionIds(number);
   const response = useExamTry((state) => state.responses[question.id]);
   const choose = useExamTry((state) => state.choose);
   const flag = useExamTry((state) => state.flag);
@@ -67,8 +70,8 @@ export function ExamTryQuestion({
 
   return (
     <PlayerQuestion
-      id={articleId}
-      labelledBy={titleId}
+      id={ids.article}
+      labelledBy={ids.title}
       questionKey={question.id}
     >
       <PlayerQuestionFlag
@@ -77,15 +80,15 @@ export function ExamTryQuestion({
         onFlag={() => flag(question.id)}
         questionKey={question.id}
       />
-      <div className="grid gap-6">
-        <h2 className="font-medium" id={titleId}>
-          {t("question", { number })}
-        </h2>
+      <PlayerQuestionHeader number={number} />
+      <PlayerQuestionPrompt>
         <ExamTryPrompt documentId={question.prompt} />
+      </PlayerQuestionPrompt>
+      <PlayerQuestionAnswer>
         {Option.isSome(choice) ? (
           <SittingChoice
             choice={choice.value}
-            labelledBy={titleId}
+            labelledBy={ids.title}
             onChoose={(next) => choose(question.id, next)}
             response={chosenOptions(response ?? NO_RESPONSE)}
           />
@@ -93,14 +96,14 @@ export function ExamTryQuestion({
         {Option.isSome(entry) ? (
           <SittingField
             entry={entry.value}
-            labelledBy={titleId}
+            labelledBy={ids.title}
             onType={(text) => choose(question.id, { text })}
             text={typedText(response ?? NO_RESPONSE)}
           />
         ) : null}
         {Option.isSome(pairing) ? (
           <SittingPairs
-            labelledBy={titleId}
+            labelledBy={ids.title}
             match={pairing.value}
             onPair={(pairs) => choose(question.id, { pairs })}
             pairs={madePairs(response ?? NO_RESPONSE)}
@@ -113,7 +116,7 @@ export function ExamTryQuestion({
             table={table.value}
           />
         ) : null}
-      </div>
+      </PlayerQuestionAnswer>
     </PlayerQuestion>
   );
 }

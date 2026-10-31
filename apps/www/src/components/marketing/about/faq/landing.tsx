@@ -13,7 +13,7 @@ export function Faq({ children }: { children: ReactNode }) {
   return (
     <MarketingSection id="faq">
       <div className="mx-auto grid w-full max-w-2xl gap-10">
-        <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
+        <h2 className="text-center text-3xl tracking-tight text-balance sm:text-4xl">
           {t("faq-title")}
         </h2>
         {children}

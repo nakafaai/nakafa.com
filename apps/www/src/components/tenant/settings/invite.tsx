@@ -137,7 +137,7 @@ function SchoolInviteDialog({
       description={t("invite-dialog-description")}
       footer={
         <>
-          <p className="me-auto text-muted-foreground text-sm">
+          <p className="text-muted-foreground me-auto text-sm">
             {t("invite-footer")}
           </p>
           <Button

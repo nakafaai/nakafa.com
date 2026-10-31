@@ -105,7 +105,7 @@ export function AiSheet() {
           <button
             aria-label={t("resize")}
             className={cn(
-              "absolute top-0 bottom-0 left-0 z-10 hidden w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-ring focus-visible:bg-ring sm:block",
+              "hover:bg-ring focus-visible:bg-ring absolute top-0 bottom-0 left-0 z-10 hidden w-1 cursor-col-resize ring-0 outline-0 transition-colors sm:block",
               !!isResizing && "bg-ring"
             )}
             onKeyDown={resizerProps.onKeyDown}

@@ -250,7 +250,7 @@ export function OnboardingQuestionnaire({
               {Arr.map(onboardingItems, (item, index) => (
                 <span
                   className={cn(
-                    "h-1 rounded-full bg-muted transition-colors",
+                    "bg-muted h-1 rounded-full transition-colors",
                     index < current && "bg-primary"
                   )}
                   key={item.name}

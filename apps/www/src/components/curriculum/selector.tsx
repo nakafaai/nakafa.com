@@ -214,7 +214,7 @@ function CurriculumSelect({
           {Arr.map(options, (option) => (
             <SelectItem key={option.value} value={option.value}>
               <CountryFlagIcon countryCode={option.countryCode} />
-              <span className="min-w-0 whitespace-normal leading-snug sm:whitespace-nowrap">
+              <span className="min-w-0 leading-snug whitespace-normal sm:whitespace-nowrap">
                 {option.title}
               </span>
             </SelectItem>

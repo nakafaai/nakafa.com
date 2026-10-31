@@ -5,10 +5,10 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The editors of the first question's options, whose names carry each option's letter. */
-const OPTION_OF_FIRST = /^Question 1, option /;
+const OPTION_OF_FIRST = /^Question 1, option /u;
 
 /** The four options of the new question, written in Arabic: book, pen, house, door. */
 const WORDS = ["كتاب", "قلم", "بيت", "باب"] as const;

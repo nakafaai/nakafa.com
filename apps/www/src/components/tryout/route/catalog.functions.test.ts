@@ -46,7 +46,10 @@ vi.mock("@/lib/content/repository", () => ({
 vi.mock("@/lib/og/app", () => ({
   getAppSocialArtwork: catalog.getAppSocialArtwork,
 }));
-vi.mock("@/lib/seo/social", () => ({ getOgUrl: catalog.getOgUrl }));
+vi.mock("@/lib/seo/social", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/seo/social")>()),
+  getOgUrl: catalog.getOgUrl,
+}));
 vi.mock("@repo/internationalization/src/translator", () => ({
   readServerTranslator: catalog.readServerTranslator,
 }));

@@ -6,13 +6,13 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The address of an exam's rooms on the school host, where a schedule goes once it is saved. */
-const ROOMS_PATH = /\/exams\/[^/]+$/;
+const ROOMS_PATH = /\/exams\/[^/]+$/u;
 
 /** The thumbnail of the first question, whose name starts with its number. */
-const FIRST_QUESTION = /^Question 1\b/;
+const FIRST_QUESTION = /^Question 1\b/u;
 /** The key toggle of each option of the first question, which is pressed for the key. */
 const KEY_OF_FIRST_QUESTION = /^Mark option [A-D] of question 1 as correct$/u;
 /** A prompt with more steps than a fold waits for, so typing it moves the snapshot. */

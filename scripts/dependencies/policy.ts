@@ -51,7 +51,7 @@ export const VITEST_COHORT_VERSION = "5.0.5";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.157",
+  ai: "7.0.159",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
@@ -60,7 +60,7 @@ export const AI_SDK_COHORT = {
  * manifest that pins the cohort: the policy test reports each declaration that still
  * holds the old version, so none is missed.
  */
-const TIPTAP_COHORT_VERSION = "3.32.1";
+const TIPTAP_COHORT_VERSION = "3.32.2";
 /**
  * The Tiptap packages each manifest declares. The editor package holds the schema of
  * an assessment document, the design system holds the Memory editor, and the web app
@@ -123,14 +123,45 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
     ],
   ],
 ];
-/** Every Tiptap package that a manifest declares, each named once. */
-const TIPTAP_PACKAGES = Arr.dedupe(
-  Arr.flatMap(TIPTAP_DECLARATIONS, ([, packages]) => packages)
-);
+/**
+ * Confect moves with the Effect cohort: 10.5.0 admits only effect ~4.1.0, so every
+ * Confect package stays on 10.4.1 until the cohort reaches 4.1 (#1524). The catalog
+ * holds `@confect/core`, and each manifest pins the rest exactly.
+ */
+const CONFECT_COHORT_VERSION = "10.4.1";
+/** The Confect packages each manifest pins: the web app's client and the backend's server, CLI and tests. */
+const CONFECT_DECLARATIONS: readonly (readonly [string, readonly string[]])[] =
+  [
+    ["apps/www/package.json", ["@confect/js", "@confect/react"]],
+    [
+      "packages/backend/package.json",
+      ["@confect/cli", "@confect/server", "@confect/test"],
+    ],
+  ];
+
+/** Holds every package of one exact cohort at its version, in each manifest that declares it. */
+function exactCohortHolds(
+  version: string,
+  declarations: readonly (readonly [string, readonly string[]])[]
+): readonly DependencyHold[] {
+  return Arr.map(
+    Arr.dedupe(Arr.flatMap(declarations, ([, packages]) => packages)),
+    (dependency) => ({
+      approved: version,
+      declarationPaths: Arr.map(
+        Arr.filter(declarations, ([, packages]) =>
+          Arr.contains(packages, dependency)
+        ),
+        ([path]) => path
+      ),
+      dependency,
+    })
+  );
+}
 
 /**
  * Eight transitive overrides in the root `package.json` hold a version for a reason
- * that no manifest states. `seroval` and `seroval-plugins` 1.7.3 are one copy each
+ * that no manifest states. `seroval` 1.7.5 and `seroval-plugins` 1.7.6 are one copy each
  * for TanStack Start's serializer, its web plugins, and the prerender
  * (`apps/www/prerender.config.ts`): the TanStack packages declare `^1.6.7`, and Bun
  * kept their nested 1.6.8 copies, which GHSA-9wx9-5pv9-3349 and GHSA-f86p-h4j2-7qgj
@@ -138,7 +169,7 @@ const TIPTAP_PACKAGES = Arr.dedupe(
  * ProseMirror packages of `@tiptap/pm` and the backend's step folding share: Bun
  * kept the packages' nested 1.12.2 copies when the backend moved to 1.12.4, and a
  * step made by one copy fails `instanceof` checks against the other. `convex-helpers`
- * 0.1.131 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
+ * 0.1.133 keeps one copy for every Convex component: @convex-dev/aggregate 0.3.4 pins
  * 0.1.128 exactly, the Agent and Workflow peers need ^0.1.127, and the Workpool peer
  * needs ^0.1.94, so one copy satisfies every range. `lodash` 4.18.1 replaces the
  * 4.17.21 that chevrotain 10.5.0 pins exactly, which GHSA-f23m-r3pf-42rh,
@@ -146,8 +177,8 @@ const TIPTAP_PACKAGES = Arr.dedupe(
  * through @mrleebo/prisma-ast ^0.13.1, and `auth` 1.7 moves to prisma-ast ^0.16 on
  * chevrotain 12. KaTeX 0.19.1, the design system's own, replaces the ^0.16.0 that
  * micromark-extension-math 3.1.0, its latest release, declares: every 0.16 release is
- * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. `glob` 14.0.2 and `minimatch`
- * 11.0.1 replace the 13.0.6 and 10.2.6 that GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249
+ * affected by GHSA-238p-pmpm-9mq7, which 0.18.2 fixes. `glob` 14.0.3 and `minimatch`
+ * 11.0.3 replace the 13.0.6 and 10.2.6 that GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249
  * affect: react-email declares glob ^13.0.6, and the root sigstore reaches glob through
  * make-fetch-happen's cacache and minimatch through tuf-js's @tufjs/models, so one copy of
  * each serves every dependent. The other transitive versions come from their
@@ -162,6 +193,16 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "catalog:",
     dependency: "@effect/platform-browser",
+    minimumDeclarations: 1,
+  },
+  {
+    approved: "catalog:",
+    dependency: "@effect/platform-bun",
+    minimumDeclarations: 1,
+  },
+  {
+    approved: "catalog:",
+    dependency: "@confect/core",
     minimumDeclarations: 1,
   },
   {
@@ -221,16 +262,10 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "2.5.15",
-    dependency: "@biomejs/biome",
-    minimumDeclarations: 1,
-  },
-  {
     approved: "24.19.2",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "8.0.2", dependency: "ultracite", minimumDeclarations: 1 },
   // The marked that @tiptap/markdown lexes with. The Memory page reads stored
   // Markdown with the same lexer, so a row says what the editor shows; it moves
   // with the editor's lexer, which plain.test.ts checks, never with the latest.
@@ -239,7 +274,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
-  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.32.1 does not
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.32.2 does not
   // ship it. It is MIT, depends on prosemirror-state alone, and its last
   // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
   // design system installs its extension, and the sync loop of the web app
@@ -253,7 +288,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-collab",
   },
   // The model and the transform that the server folds stored steps with (ADR
-  // 0028). They are the versions that `@tiptap/pm` 3.32.1 resolves in
+  // 0028). They are the versions that `@tiptap/pm` 3.32.2 resolves in
   // `bun.lock` (the transform through its root override), so the server applies
   // a step with the code the editors run.
   {
@@ -266,16 +301,8 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-transform",
   },
-  ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
-    approved: TIPTAP_COHORT_VERSION,
-    declarationPaths: Arr.map(
-      Arr.filter(TIPTAP_DECLARATIONS, ([, packages]) =>
-        Arr.contains(packages, dependency)
-      ),
-      ([path]) => path
-    ),
-    dependency,
-  })),
+  ...exactCohortHolds(TIPTAP_COHORT_VERSION, TIPTAP_DECLARATIONS),
+  ...exactCohortHolds(CONFECT_COHORT_VERSION, CONFECT_DECLARATIONS),
 ];
 
 export const SCRIPT_DEPENDENCY_HOLDS = [

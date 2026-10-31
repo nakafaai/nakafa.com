@@ -281,7 +281,7 @@ function SchoolStartForm({ draft }: { draft: StartDraft }) {
                 {Arr.map(START_ITEMS, (name, index) => (
                   <span
                     className={cn(
-                      "h-1 rounded-full bg-muted transition-colors",
+                      "bg-muted h-1 rounded-full transition-colors",
                       index < current && "bg-primary"
                     )}
                     key={name}
@@ -302,10 +302,10 @@ function SchoolStartForm({ draft }: { draft: StartDraft }) {
         </QuestionnaireSteps>
       </Questionnaire>
       {limited ? (
-        <p className="text-pretty text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm text-pretty">
           {t("school-limit-line")}{" "}
           <a
-            className="font-medium text-foreground underline-offset-4 hover:underline"
+            className="text-foreground font-medium underline-offset-4 hover:underline"
             href={`mailto:${COMPANY_IDENTITY.email}`}
             rel="noopener noreferrer"
           >

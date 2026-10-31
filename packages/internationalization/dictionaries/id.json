@@ -99,7 +99,7 @@
     "link-add-description": "Orang tua meminta kode masuk sendiri di halaman orang tua sekolah.",
     "links-empty": "Belum ada orang tua yang ditautkan.",
     "links-empty-description": "Tautkan email orang tua ke siswa agar mereka dapat masuk.",
-    "links-search": "Cari siswa atau email orang tua",
+    "links-search": "Cari siswa atau email",
     "student": "Siswa",
     "guardian-name": "Nama orang tua",
     "guardian-name-placeholder": "Nama lengkap orang tua",
@@ -111,6 +111,9 @@
     "status-withdrawn": "Ditarik",
     "status-mismatch": "Data tidak cocok",
     "link-verify": "Verifikasi manual",
+    "link-readdress": "Ubah email",
+    "link-readdress-description": "Tautan tetap dengan masa berlakunya. Orang tua meminta kode dengan email baru.",
+    "link-readdress-save": "Simpan email",
     "link-revoke": "Akhiri tautan",
     "link-revoke-title": "Akhiri tautan ini?",
     "link-revoke-description": "Orang tua tidak dapat melihat data anak lagi.",
@@ -125,6 +128,11 @@
   "SchoolRoster": {
     "import": "Impor",
     "export": "Ekspor",
+    "export-grades": "Ekspor nilai",
+    "export-grades-label": "Nilai rapor satu rombel",
+    "export-grades-loading": "Memuat rombel",
+    "export-grades-no-period": "Belum ada periode aktif.",
+    "export-grades-empty": "Belum ada rombel di periode ini.",
     "file-label": "Daftar peserta didik Dapodik",
     "empty": "Impor siswa dari Dapodik.",
     "empty-description": "Pilih daftar peserta didik hasil ekspor Dapodik. File tetap di perangkat ini.",
@@ -652,6 +660,7 @@
     "cohort-edit-description": "Siswa, guru, dan nilai di kelas ini tetap sama.",
     "cohort-edit-save": "Simpan",
     "cohort-archive": "Arsipkan",
+    "cohort-add-no-period": "Buka periode dulu: rombel masuk ke periode aktif unitnya.",
     "cohort-add-footer": "Rombel baru langsung aktif.",
     "cohorts-empty": "Belum ada rombel.",
     "cohorts-search": "Cari rombel",
@@ -667,6 +676,7 @@
     "classes-unavailable": "Ruang kelas unit ini belum bisa ditampilkan.",
     "classes-unavailable-description": "Pilih unit lain untuk melihat ruang kelasnya.",
     "class-create": "Tambah ruang kelas",
+    "class-add-no-period": "Buka periode dulu: ruang kelas masuk ke rombel periode aktif.",
     "class-add-footer": "Ruang kelas baru langsung aktif, dengan nama mata pelajaran dan rombelnya.",
     "class-add-homeroom": "Rombel SD belajar di satu ruang kelas dengan nama rombelnya.",
     "class-cohort": "Rombel",
@@ -694,6 +704,7 @@
     "cohort-unavailable": "Rombel ini belum bisa dibuka di sini.",
     "cohort-unavailable-description": "Pilih rombel dari daftar, karena rombel ini sudah tidak ada atau milik sekolah lain.",
     "placement-add": "Tambah siswa",
+    "placement-add-archived": "Rombel ini diarsipkan. Pulihkan dulu untuk menambah siswa.",
     "placement-add-footer": "Setiap siswa masuk satu rombel dalam setiap periode.",
     "placement-student": "Siswa",
     "placement-move": "Pindahkan",
@@ -797,6 +808,12 @@
       },
       "report": {
         "locked": "Rapor dikunci"
+      },
+      "graduation": {
+        "decided": "Keputusan kelulusan dicatat"
+      },
+      "letter": {
+        "locked": "SKL diterbitkan"
       },
       "cohort": {
         "created": "Rombel ditambahkan",
@@ -929,7 +946,8 @@
         "started": "Orang tua ditautkan",
         "linked": "Tautan orang tua terverifikasi",
         "withdrawn": "Persetujuan orang tua ditarik",
-        "revoked": "Tautan orang tua diakhiri"
+        "revoked": "Tautan orang tua diakhiri",
+        "readdressed": "Alamat tautan orang tua diperbaiki"
       },
       "roster": {
         "set": "Data siswa diperbarui",
@@ -949,7 +967,7 @@
       "staff": "Melihat rencana, orang, dan kenaikan kelas sekolah.",
       "student": "Belajar di sekolah dan mengerjakan ujiannya sendiri.",
       "guardian": "Mengikuti siswa yang terhubung dengannya dan mencatat persetujuan untuk siswa tersebut.",
-      "proctor": "Mengawasi sesi ujian sekolah.",
+      "proctor": "Menjalankan ruang ujian sekolah: token, kunci, tambahan waktu, dan penutupan.",
       "auditor": "Melihat catatan dan jejak audit sekolah tanpa mengubahnya.",
       "integration": "Membaca data sekolah melalui aksi yang dimiliki kliennya."
     },
@@ -964,7 +982,7 @@
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
     "logins-empty": "Belum ada kartu masuk yang diterbitkan.",
-    "logins-search": "Cari nama masuk atau siswa",
+    "logins-search": "Cari login atau siswa",
     "members-empty": "Belum ada anggota yang bergabung.",
     "members-empty-description": "Tambahkan guru atau admin di halaman undangan, atau tambahkan siswa.",
     "members-search": "Cari nama",
@@ -1300,6 +1318,59 @@
     "own-empty": "Belum ada rapor yang dikunci.",
     "own-empty-description": "Rapor muncul di sini setelah kepala sekolah menyetujuinya."
   },
+  "SchoolGraduation": {
+    "title": "Kelulusan",
+    "cohort": "Rombel",
+    "unit": "Satuan pendidikan",
+    "period": "Periode",
+    "search-cohorts": "Cari rombel",
+    "cohorts-empty": "Belum ada rombel yang lulus.",
+    "cohorts-empty-description": "Rombel tingkat akhir tiap satuan pendidikan muncul di sini setelah periodenya aktif.",
+    "search-students": "Cari peserta didik",
+    "students-empty": "Belum ada peserta didik di rombel ini.",
+    "students-empty-description": "Peserta didik muncul di sini setelah ditempatkan di rombel.",
+    "student": "Peserta didik",
+    "nisn": "NISN",
+    "nisn-yes": "Tercatat",
+    "nisn-no": "Belum ada",
+    "average": "Rata-rata",
+    "average-none": "Belum ada nilai",
+    "letter": "SKL",
+    "letter-none": "Belum terbit",
+    "letter-issued": "Sedang dibuat",
+    "letter-locked": "Terbit",
+    "letter-number": "Nomor SKL",
+    "ready": "Kesiapan",
+    "ready-ready": "Siap",
+    "ready-npsn": "NPSN belum ada",
+    "ready-decision": "Belum ada keputusan",
+    "ready-nisn": "NISN belum ada",
+    "ready-report": "Rapor belum terkunci",
+    "detail": "Kelulusan peserta didik",
+    "detail-empty": "Pilih peserta didik untuk melihat data transkripnya.",
+    "transcript-empty": "Belum ada rapor terkunci, jadi belum ada data transkrip.",
+    "subject": "Mata pelajaran",
+    "value": "Nilai",
+    "open-letter": "Buka SKL",
+    "open-check": "Buka halaman periksa",
+    "decide": "Keputusan kelulusan",
+    "decide-description": "Keputusan kepala satuan pendidikan untuk {period}, yang berlaku bagi semua rombel tingkat akhir.",
+    "decision": "Nomor keputusan",
+    "decision-placeholder": "421.3/045/SMP.1/2027",
+    "date": "Tanggal kelulusan",
+    "date-placeholder": "Pilih tanggal",
+    "date-description": "Senin pertama Juni untuk SD dan SMP atau Mei untuk SMA dan SMK, digeser bila jatuh pada hari libur.",
+    "place": "Tempat terbit",
+    "place-placeholder": "Bandung",
+    "head": "Kepala satuan pendidikan",
+    "head-placeholder": "Nama dengan gelar",
+    "nip": "NIP",
+    "nip-placeholder": "18 digit",
+    "nip-description": "Kosongkan bila kepala satuan pendidikan bukan ASN.",
+    "save-decision": "Simpan keputusan",
+    "issue": "Terbitkan SKL",
+    "export-readiness": "Ekspor untuk e-Ijazah"
+  },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
     "metadata-description": "Jawab lima pertanyaan dan Nakafa School-mu siap dipakai.",
@@ -1567,7 +1638,7 @@
     "chat": "Obrolan",
     "no-chats": "Belum ada obrolan.",
     "try-out": "Try out",
-    "try-out-short": "Tryout",
+    "try-out-short": "Try out",
     "search-country-placeholder": "Cari negara...",
     "no-country-found": "Negara nggak ketemu.",
     "emoji-picker-placeholder": "Pilih emoji...",
@@ -1769,11 +1840,11 @@
     "start-dialog-description": "Try out aktif hingga 3 hari, dan setelah mulai kamu bebas memilih bagian yang ingin dikerjakan lebih dulu.",
     "free-dialog-title": "Mulai try out gratis",
     "free-dialog-description": "Kamu bebas mengerjakan dan mengulang semua try out, setiap percobaan aktif hingga 3 hari dan tetap mendapat skor, tetapi pembahasan tersedia dengan Nakafa Pro.",
-    "free-entry-dialog-description": "Kamu bebas mengerjakan dan mengulang semua try out, lengkap dengan skor, dan waktu set langsung berjalan setelah kamu mulai, tetapi pembahasan tersedia dengan Nakafa Pro.",
+    "free-entry-dialog-description": "Kamu bebas mengerjakan dan mengulang semua try out, lengkap dengan skor, dan waktu langsung berjalan setelah kamu mulai, tetapi pembahasan tersedia dengan Nakafa Pro.",
     "restart-dialog-title": "Mulai try out ini dari awal?",
     "restart-dialog-description": "Kamu akan mulai dari awal, dan hasil sebelumnya tetap tersimpan.",
-    "restart-entry-dialog-description": "Kamu akan mulai dari awal, waktu set langsung berjalan, dan hasil sebelumnya tetap tersimpan.",
-    "start-entry-dialog-description": "Waktu set langsung berjalan setelah kamu mulai.",
+    "restart-entry-dialog-description": "Kamu akan mulai dari awal, waktu langsung berjalan, dan hasil sebelumnya tetap tersimpan.",
+    "start-entry-dialog-description": "Waktu langsung berjalan setelah kamu mulai.",
     "paywall-title": "Lihat pembahasan {count} soal ini",
     "paywall-description": "Pahami langkah dan alasan di balik setiap jawaban, lalu tanya Nina kalau masih bingung.",
     "paywall-compare": "Lihat paket",
@@ -1835,7 +1906,6 @@
     "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
-    "number-count": "Nomor {count}",
     "prompt": "Soal",
     "reading": "Bacaan"
   },
@@ -1845,6 +1915,7 @@
     "controls": "Kontrol soal",
     "previous-question": "Soal sebelumnya",
     "next-question": "Soal berikutnya",
+    "question": "Soal {number}",
     "mode": "Tampilan",
     "mode-list": "Daftar",
     "mode-single": "Satu soal",
@@ -1867,7 +1938,7 @@
   "Utils": {
     "clear-search": "Hapus pencarian",
     "search-bar-placeholder": "Cari konten...",
-    "search-placeholder": "Temukan apa yang kamu inginkan...",
+    "search-placeholder": "Cari yang kamu mau...",
     "search-not-found": "Yah, nggak nemu apa-apa nih.",
     "search-loading": "Lagi nyari...",
     "search-help": "Ketik untuk mencari...",
@@ -2692,6 +2763,33 @@
     "school-own-role-ended": {
       "title": "Peranmu sudah berakhir."
     },
+    "school-letters-issued": {
+      "title": "SKL sudah diterbitkan.",
+      "description": "Tiap PDF siap setelah barisnya menunjukkan Terbit."
+    },
+    "school-letters-none": {
+      "title": "Tidak ada SKL yang diterbitkan.",
+      "description": "Kolom Kesiapan menunjukkan yang masih dibutuhkan tiap peserta didik."
+    },
+    "school-graduation-export-failed": {
+      "title": "Berkas tidak tersimpan."
+    },
+    "school-refusal-graduation-date": {
+      "title": "Tanggal ini tidak ada di kalender.",
+      "description": "Pilih hari yang ada untuk kelulusan."
+    },
+    "school-refusal-graduation-issued": {
+      "title": "Keputusan ini sudah dipakai.",
+      "description": "SKL sudah terbit dengan keputusan ini, jadi keputusannya tetap."
+    },
+    "school-refusal-graduation-not-final": {
+      "title": "Rombel ini bukan rombel kelulusan.",
+      "description": "Hanya tingkat akhir satuan pendidikan yang lulus."
+    },
+    "school-refusal-graduation-undecided": {
+      "title": "Belum ada keputusan kelulusan.",
+      "description": "Catat keputusannya sebelum menerbitkan SKL."
+    },
     "school-refusal-room-opened": {
       "title": "Ruang ini sudah dibuka.",
       "description": "Ruang yang sudah dibuka tetap pada waktu dan namanya."
@@ -2703,6 +2801,10 @@
     "school-refusal-scheme-not-later": {
       "title": "Ada versi yang lebih baru.",
       "description": "Muat ulang halaman untuk melihatnya, lalu simpan versimu."
+    },
+    "school-roster-no-period": {
+      "title": "Belum ada periode aktif.",
+      "description": "Buka periode untuk satuan ini dulu."
     }
   },
   "Ai": {
@@ -2959,7 +3061,7 @@
   },
   "PricingPage": {
     "metadata-title": "Harga Nakafa: Gratis dan Pro",
-    "metadata-description": "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
+    "metadata-description": "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan try out online.",
     "breadcrumb": "Harga",
     "checkout-line": "Harga saat ini dan pembayaran: {url}",
     "comparison-title": "{price} itu segini",
@@ -3205,14 +3307,18 @@
     "course-name": "{name} {section}"
   },
   "ReportCheck": {
-    "locked": "Rapor ini tercatat.",
-    "locked-description": "Kodenya milik rapor yang dikunci sekolah.",
-    "unknown": "Tidak ada rapor dengan kode ini.",
+    "locked-report": "Rapor ini tercatat.",
+    "locked-report-description": "Kodenya milik rapor yang dikunci sekolah.",
+    "locked-letter": "SKL ini tercatat.",
+    "locked-letter-description": "Kodenya milik SKL yang diterbitkan sekolah.",
+    "unknown": "Tidak ada dokumen dengan kode ini.",
     "unknown-description": "Periksa alamatnya, atau tanyakan sekolah yang menerbitkannya.",
     "school": "Sekolah",
     "kind": "Dokumen",
     "kind-report": "Rapor",
+    "kind-letter": "Surat Keterangan Lulus",
     "period": "Periode",
-    "approved": "Disetujui pada"
+    "approved": "Disetujui pada",
+    "issued": "Diterbitkan pada"
   }
 }

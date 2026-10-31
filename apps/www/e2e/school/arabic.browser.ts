@@ -4,7 +4,7 @@ import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The address of an exam's editor on the school host. */
-const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
 /** The toolbar that the editor draws above the question text. */
 const TOOLBAR = '[data-slot="editor-toolbar"]';
