@@ -50,7 +50,7 @@ export function TryoutReviewLocked({
   return (
     <section
       aria-labelledby="tryout-review-offer"
-      className="relative isolate -mx-6 -mb-6 flex flex-1 flex-col justify-end overflow-hidden md:min-h-104 md:items-center md:justify-center md:p-6"
+      className="relative isolate flex flex-1 flex-col justify-end overflow-hidden p-0.5 md:min-h-104 md:items-center md:justify-center md:p-6"
       data-slot="tryout-review-locked"
     >
       <div
@@ -88,8 +88,8 @@ export function TryoutReviewLocked({
       </div>
 
       {/*
-       * The section fills the page below the result and ends at the screen
-       * edge, so nothing scrolls; the offer in flow sets its smallest height.
+       * The section fills the page below the result, so nothing scrolls; the
+       * offer in flow sets its smallest height.
        * One blur covers the whole preview, and the page background rises from
        * the bottom until the preview melts into it.
        */}
@@ -102,10 +102,10 @@ export function TryoutReviewLocked({
        * The Pro offer, drawn as the pricing page draws the Pro plan: a card in
        * the brand ring with the price, both actions side by side, and the hint
        * beneath them. The actions stack only when large text leaves no room for
-       * both. It rises as a bottom sheet on phones and sits centered from the
-       * medium breakpoint up.
+       * both. It stands in the page's width on phones, with room for its ring,
+       * and sits centered from the medium breakpoint up.
        */}
-      <Card className="ring-primary relative w-full shadow-lg/5 ring-2 max-md:rounded-t-2xl max-md:rounded-b-none md:max-w-md">
+      <Card className="ring-primary relative w-full shadow-lg/5 ring-2 md:max-w-md">
         <CardHeader>
           <CardTitle>
             <h2 id="tryout-review-offer">
@@ -121,7 +121,7 @@ export function TryoutReviewLocked({
             plan="pro"
           />
         </CardContent>
-        <CardFooter className="grid gap-3 pb-[env(safe-area-inset-bottom,0px)]">
+        <CardFooter className="grid gap-3">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,--spacing(36)),1fr))] gap-2">
             <Link
               className={buttonVariants({ variant: "outline" })}

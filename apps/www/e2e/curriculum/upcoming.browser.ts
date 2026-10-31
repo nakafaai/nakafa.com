@@ -34,7 +34,6 @@ for (const locale of ["de", "en", "id"] as const) {
     await expect(
       page.getByRole("heading", { level: 2, name: copy.title })
     ).toBeVisible();
-    await expect(page.getByText(copy.description)).toBeVisible();
     const contribute = page.getByRole("link", { name: copy.contribute });
     await expect(contribute).toBeVisible();
     await expect

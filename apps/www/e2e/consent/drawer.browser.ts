@@ -6,7 +6,7 @@ import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import {
-  DRAWER_BAR,
+  DRAWER_HANDLE,
   DRAWER_PANEL,
   DRAWER_POPUP,
   DRAWER_TITLE,
@@ -38,7 +38,9 @@ const verifyCompactConsentDrawer = Effect.fn(
   const trigger = yield* prepareConsentPreferences(page);
   const drawer = page.locator(DRAWER_POPUP);
   yield* activateUntilVisible(trigger, drawer, readinessTimeoutMilliseconds);
-  yield* Effect.promise(() => expect(drawer.locator(DRAWER_BAR)).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(drawer.locator(DRAWER_HANDLE)).toBeVisible()
+  );
   yield* Effect.promise(() =>
     expect(drawer.locator(DRAWER_TITLE)).toHaveText(usageDataName)
   );

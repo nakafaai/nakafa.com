@@ -1,10 +1,10 @@
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
-  Sheet,
-  SheetHeader,
-  SheetPopup,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerPanel,
+  DrawerTitle,
+} from "@repo/design-system/components/ui/drawer";
 import { monospace } from "@repo/design-system/lib/monospace";
 import { cn } from "cn";
 import { type ReactNode, useRef } from "react";
@@ -12,11 +12,11 @@ import { useTranslations } from "use-intl";
 import { usePlayer } from "@/components/player/provider";
 
 /**
- * The navigator below the large breakpoint: a sheet that the footer opens, with
+ * The navigator below the large breakpoint: a drawer that the footer opens, with
  * the numbers and their legend in its body. It opens on the current number.
- * Picking a number closes the sheet first, and the question is revealed once
- * the sheet has finished closing, because the page cannot scroll while the
- * sheet holds it.
+ * Picking a number closes the drawer first, and the question is revealed once
+ * the drawer has finished closing, because the page cannot scroll while the
+ * drawer holds it.
  */
 export function PlayerSheet({ children }: { children: ReactNode }) {
   const t = useTranslations("Player");
@@ -28,7 +28,7 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
   const body = useRef<HTMLDivElement>(null);
 
   return (
-    <Sheet
+    <Drawer
       onOpenChange={(next) => (next ? open("navigator") : close())}
       onOpenChangeComplete={(next) => {
         if (!next) {
@@ -36,23 +36,22 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
         }
       }}
       open={overlay === "navigator"}
+      showSwipeHandle
     >
-      <SheetPopup
-        className="pb-[env(safe-area-inset-bottom,0px)]"
+      <DrawerContent
         finalFocus={!waiting}
         initialFocus={() =>
           body.current?.querySelector<HTMLElement>('[aria-current="step"]') ??
           true
         }
-        side="bottom"
       >
-        <SheetHeader>
-          <SheetTitle>{t("navigator")}</SheetTitle>
-        </SheetHeader>
-        <ScrollArea className="flex-1" ref={body}>
-          <div className={cn(monospace, "grid gap-4 p-4")}>{children}</div>
-        </ScrollArea>
-      </SheetPopup>
-    </Sheet>
+        <DrawerHeader>
+          <DrawerTitle>{t("navigator")}</DrawerTitle>
+        </DrawerHeader>
+        <DrawerPanel className={cn(monospace, "grid gap-4")} ref={body}>
+          {children}
+        </DrawerPanel>
+      </DrawerContent>
+    </Drawer>
   );
 }

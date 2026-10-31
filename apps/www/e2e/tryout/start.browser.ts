@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type Route, test } from "@playwright/test";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -8,7 +8,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import id from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
@@ -19,6 +19,9 @@ import { tryoutViewports } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const FRAMES_KEY = "nakafaStartFrames";
+
+/** Every script of the page, held back so a press lands before React takes the page over. */
+const SCRIPTS = /\/assets\/.*\.js/u;
 
 /**
  * The first section of SNBT 2027 set 1 in each locale, at its own address: a set and a section have their own
@@ -213,3 +216,49 @@ for (const viewport of tryoutViewports) {
     });
   }
 }
+
+/**
+ * A slow phone paints the start button seconds before the page can act. A learner's
+ * press in that moment shows the loader, and the confirmation opens once the page's
+ * client and its reads arrive, so the press is never lost.
+ */
+test("a press on the start before the page can act opens the confirmation", async ({
+  baseURL,
+  page,
+}) => {
+  const section = SECTIONS[0];
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const origin = yield* Effect.fromNullishOr(baseURL);
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* signInLearner(page.context(), origin);
+        yield* Effect.promise(async () => {
+          const held = MutableList.make<Route>();
+          await page.route(SCRIPTS, (route) => {
+            MutableList.append(held, route);
+          });
+          await page.goto(section.href, { waitUntil: "domcontentloaded" });
+          await page
+            .locator("main")
+            .getByRole("button", {
+              exact: true,
+              name: section.messages.Tryouts["start-cta"],
+            })
+            .click();
+          for (const route of MutableList.toArray(held)) {
+            await route.continue();
+          }
+          await page.unroute(SCRIPTS);
+          await expect(
+            page.getByRole("dialog").getByRole("button", {
+              exact: true,
+              name: section.messages.Tryouts["free-cta"],
+            })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        });
+      })
+    )
+  );
+});

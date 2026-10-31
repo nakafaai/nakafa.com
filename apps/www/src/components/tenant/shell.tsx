@@ -70,9 +70,9 @@ import type { SchoolViewer } from "@/lib/tenant/frame";
  * The schools of the viewer, which the school switcher lists. The list loads when the
  * switcher opens, as the account menu of Nakafa loads its own.
  */
-const SidebarSchoolMenuItems = lazy(() =>
-  import("@/components/sidebar/menu/schools").then((module) => ({
-    default: module.SidebarSchoolMenuItems,
+const SidebarMembershipGroup = lazy(() =>
+  import("@/components/sidebar/menu/memberships").then((module) => ({
+    default: module.SidebarMembershipGroup,
   }))
 );
 
@@ -188,7 +188,7 @@ function TenantSwitcher() {
             <Suspense fallback={null}>
               <ClientOnly fallback={null}>
                 <Authenticated>
-                  <SidebarSchoolMenuItems canOpenSchool={false} />
+                  <SidebarMembershipGroup canOpenSchool={false} />
                 </Authenticated>
               </ClientOnly>
             </Suspense>

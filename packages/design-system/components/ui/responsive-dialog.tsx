@@ -10,11 +10,11 @@ import {
 } from "@repo/design-system/components/ui/dialog";
 import {
   Drawer,
+  DrawerContent,
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerPanel,
-  DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
@@ -92,19 +92,20 @@ export function ResponsiveDialog({
       onOpenChange={setOpen}
       onOpenChangeComplete={onOpenChangeComplete}
       open={open}
+      showSwipeHandle
     >
-      <DrawerPopup finalFocus={finalFocus} showBar>
-        <DrawerHeader className={cn(hasBody && "border-b")}>
+      <DrawerContent finalFocus={finalFocus}>
+        <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        {hasBody ? (
-          <div className="min-h-0 flex-1">
-            <DrawerPanel>{children}</DrawerPanel>
-          </div>
-        ) : null}
-        {!!footer && <DrawerFooter>{footer}</DrawerFooter>}
-      </DrawerPopup>
+        {hasBody ? <DrawerPanel>{children}</DrawerPanel> : null}
+        {!!footer && (
+          <DrawerFooter className={cn(!hasBody && "pt-4")}>
+            {footer}
+          </DrawerFooter>
+        )}
+      </DrawerContent>
     </Drawer>
   );
 }
