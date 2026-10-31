@@ -162,6 +162,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-npsn-taken.description",
     title: "school-refusal-npsn-taken.title",
   },
+  PersonClassLimit: {
+    description: "school-refusal-person-class-limit.description",
+    title: "school-refusal-person-class-limit.title",
+  },
   PeriodActive: {
     description: "school-refusal-period-active.description",
     title: "school-refusal-period-active.title",

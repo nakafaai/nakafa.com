@@ -11,8 +11,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The cohort and the classroom that the class teacher's seed opens in the school's active period. */
 const SEEDED_COHORT = "X-1";
 const SEEDED_CLASS = "Fisika X-1";
+const SEEDED_TEACHER = "Acceptance Class Teacher";
 
-test("an admin adds, renames, archives and restores a classroom of a cohort, and a taken name is refused in words", async ({
+test("an admin adds, renames, archives and restores a classroom of a cohort, assigns and removes its teacher, and a taken name is refused in words", async ({
   baseURL,
   browser,
 }) => {
@@ -78,5 +79,32 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, and
     page.getByText("This classroom name is already used.")
   ).toBeVisible();
   await expect(page.getByRole("row", { name: SEEDED_CLASS })).toHaveCount(1);
+
+  // The seeded classroom lists its seeded teacher, and the renamed one starts with none: the admin assigns the
+  // seeded teacher to it, and removes them again.
+  await page
+    .getByRole("row", { name: SEEDED_CLASS })
+    .getByRole("button", { name: "More actions" })
+    .click();
+  await page.getByRole("menuitem", { name: "Teachers" }).click();
+  const teachers = page.getByRole("dialog");
+  await expect(
+    teachers.getByRole("list", { name: "Teachers" }).getByText(SEEDED_TEACHER)
+  ).toBeVisible();
+  await teachers.getByRole("button", { name: "Close" }).first().click();
+  await expect(teachers).toHaveCount(0);
+
+  await renamed.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Teachers" }).click();
+  await expect(teachers.getByText("No teacher yet.")).toBeVisible();
+  await teachers.getByRole("combobox", { name: "Teacher" }).click();
+  await page.getByRole("option", { exact: true, name: SEEDED_TEACHER }).click();
+  await teachers.getByRole("button", { name: "Add teacher" }).click();
+  const remove = teachers.getByRole("button", {
+    name: `Remove ${SEEDED_TEACHER}`,
+  });
+  await expect(remove).toBeVisible();
+  await remove.click();
+  await expect(teachers.getByText("No teacher yet.")).toBeVisible();
   await context.close();
 });

@@ -5,7 +5,9 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option, Schema } from "effect";
 import {
   archiveClassChange,
+  assignTeacherChange,
   createClassChange,
+  removeTeacherChange,
   renameClassChange,
   restoreClassChange,
   type SchoolClass,
@@ -19,12 +21,17 @@ import {
   pageOf,
   paging,
   period,
+  person,
   slug,
 } from "@/test/settings";
 
 const term = period("ganjil", "2026-07-13", "active").id;
 const other = period("genap", "2027-01-18", "planned").id;
 const seventh = cohort("c-7a", "7A", 7);
+const physics = Schema.decodeUnknownSync(Id("classes"))("k-fis");
+const biology = Schema.decodeUnknownSync(Id("classes"))("k-bio");
+const ani = person("p-ani", "Ani");
+const budi = person("p-budi", "Budi");
 
 /** One classroom of the period as the classrooms list shows it. */
 function lesson(
@@ -162,7 +169,6 @@ describe("components/tenant/settings/class/changes", () => {
         lesson("k-fis", "Fisika 7A", "Fisika"),
       ])
     );
-    const physics = lesson("k-fis", "Fisika 7A", "Fisika").id;
     renameClassChange(local.store, {
       classId: physics,
       name: "Fisika Lanjut 7A",
@@ -180,5 +186,116 @@ describe("components/tenant/settings/class/changes", () => {
       "active",
       "active",
     ]);
+  });
+
+  it("lists an assigned teacher at the end of the classroom's first page, named as the loaded people name them, once", () => {
+    const local = createLocalStore();
+    local.seed(
+      tenancy.people.list,
+      { paginationOpts: paging, slug, status: "suspended" },
+      undefined
+    );
+    local.seed(
+      tenancy.people.list,
+      { paginationOpts: paging, slug, status: "active" },
+      pageOf([ani, budi])
+    );
+    local.seed(
+      classroom.teachers.list,
+      { classId: physics, paginationOpts: paging, slug },
+      pageOf([{ id: ani.id, name: ani.name }])
+    );
+    local.seed(
+      classroom.teachers.list,
+      { classId: physics, paginationOpts: later, slug },
+      pageOf([])
+    );
+    local.seed(
+      classroom.teachers.list,
+      { classId: biology, paginationOpts: paging, slug },
+      pageOf([])
+    );
+    local.seed(
+      classroom.teachers.list,
+      { classId: physics, paginationOpts: paging, slug: otherSlug },
+      undefined
+    );
+    assignTeacherChange(local.store, {
+      classId: physics,
+      personId: budi.id,
+      slug,
+    });
+    assignTeacherChange(local.store, {
+      classId: physics,
+      personId: ani.id,
+      slug,
+    });
+    const teachersOf = (
+      classId: SchoolClass["id"],
+      paginationOpts: typeof paging | typeof later = paging
+    ) =>
+      Option.match(
+        local.store.getQuery(classroom.teachers.list, {
+          classId,
+          paginationOpts,
+          slug,
+        }),
+        {
+          onNone: () => [],
+          onSome: (value) => Arr.map(value.page, (row) => row.name),
+        }
+      );
+    expect(teachersOf(physics)).toEqual(["Ani", "Budi"]);
+    expect(teachersOf(physics, later)).toEqual([]);
+    expect(teachersOf(biology)).toEqual([]);
+  });
+
+  it("waits for the server when no loaded page of people names the teacher", () => {
+    const local = createLocalStore();
+    local.seed(
+      classroom.teachers.list,
+      { classId: physics, paginationOpts: paging, slug },
+      pageOf([])
+    );
+    assignTeacherChange(local.store, {
+      classId: physics,
+      personId: budi.id,
+      slug,
+    });
+    expect(local.written()).toEqual([]);
+  });
+
+  it("takes a removed teacher off every loaded page of the classroom, and leaves other classrooms", () => {
+    const local = createLocalStore();
+    const teacher = { id: ani.id, name: ani.name };
+    local.seed(
+      classroom.teachers.list,
+      { classId: physics, paginationOpts: paging, slug },
+      pageOf([teacher, { id: budi.id, name: budi.name }])
+    );
+    local.seed(
+      classroom.teachers.list,
+      { classId: biology, paginationOpts: paging, slug },
+      pageOf([teacher])
+    );
+    removeTeacherChange(local.store, {
+      classId: physics,
+      personId: ani.id,
+      slug,
+    });
+    const names = (classId: SchoolClass["id"]) =>
+      Option.match(
+        local.store.getQuery(classroom.teachers.list, {
+          classId,
+          paginationOpts: paging,
+          slug,
+        }),
+        {
+          onNone: () => [],
+          onSome: (value) => Arr.map(value.page, (row) => row.name),
+        }
+      );
+    expect(names(physics)).toEqual(["Budi"]);
+    expect(names(biology)).toEqual(["Ani"]);
   });
 });
