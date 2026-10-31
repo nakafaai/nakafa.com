@@ -211,10 +211,12 @@ export const courseStudents = (accessToken: string, courseId: string) =>
  */
 export const courseRoster = (accessToken: string, courseId: string) =>
   Effect.map(readStudents(accessToken, courseId), (students) =>
-    Arr.filterMap(students, (student) =>
-      Option.map(
-        Option.fromNullishOr(student.profile?.name?.fullName),
-        (name) => ({ name, userId: student.userId })
+    Arr.getSomes(
+      Arr.map(students, (student) =>
+        Option.map(
+          Option.fromNullishOr(student.profile?.name?.fullName),
+          (name) => ({ name, userId: student.userId })
+        )
       )
     )
   );

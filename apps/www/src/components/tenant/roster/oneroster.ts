@@ -10,6 +10,7 @@ import {
   Record as Rec,
   Schema,
   String as Str,
+  Tuple,
 } from "effect";
 import type { ReadRow, SheetRead } from "@/components/tenant/roster/dapodik";
 
@@ -98,26 +99,30 @@ const hasRole = (line: Line, role: string) =>
 
 /** The student enrollments of a bundle, one user to each of their classes. */
 const studentEnrollments = (lines: readonly Line[]) =>
-  Arr.filterMap(lines, (line) =>
-    isInForce(line) && hasRole(line, "student")
-      ? Option.all({
-          classId: fieldOf(line, "classsourcedid"),
-          userId: fieldOf(line, "usersourcedid"),
-        })
-      : Option.none()
+  Arr.getSomes(
+    Arr.map(lines, (line) =>
+      isInForce(line) && hasRole(line, "student")
+        ? Option.all({
+            classId: fieldOf(line, "classsourcedid"),
+            userId: fieldOf(line, "usersourcedid"),
+          })
+        : Option.none()
+    )
   );
 
 /** The homeroom classes of a bundle by their identity, each with its title. */
 const homeroomsOf = (lines: readonly Line[]) =>
   HashMap.fromIterable(
-    Arr.filterMap(lines, (line) =>
-      isInForce(line) &&
-      Option.contains(
-        Option.map(fieldOf(line, "classtype"), Str.toLowerCase),
-        "homeroom"
+    Arr.getSomes(
+      Arr.map(lines, (line) =>
+        isInForce(line) &&
+        Option.contains(
+          Option.map(fieldOf(line, "classtype"), Str.toLowerCase),
+          "homeroom"
+        )
+          ? Option.all([fieldOf(line, "sourcedid"), fieldOf(line, "title")])
+          : Option.none()
       )
-        ? Option.all([fieldOf(line, "sourcedid"), fieldOf(line, "title")])
-        : Option.none()
     )
   );
 
@@ -157,16 +162,22 @@ export function readOneRoster(
     Arr.map(enrollments, (enrollment) => enrollment.userId)
   );
   const cohorts = HashMap.fromIterable(
-    Arr.filterMap(enrollments, ({ classId, userId }) =>
-      Option.map(HashMap.get(homerooms, classId), (title) => [userId, title])
+    Arr.getSomes(
+      Arr.map(enrollments, ({ classId, userId }) =>
+        Option.map(HashMap.get(homerooms, classId), (title) =>
+          Tuple.make(userId, title)
+        )
+      )
     )
   );
-  const rows = Arr.filterMap(users, (user, index) =>
-    Option.flatMap(fieldOf(user, "sourcedid"), (sourcedId) =>
-      isInForce(user) &&
-      (HashSet.has(students, sourcedId) || hasRole(user, "student"))
-        ? Option.some(rowOf(user, sourcedId, cohorts, index + 2))
-        : Option.none()
+  const rows = Arr.getSomes(
+    Arr.map(users, (user, index) =>
+      Option.flatMap(fieldOf(user, "sourcedid"), (sourcedId) =>
+        isInForce(user) &&
+        (HashSet.has(students, sourcedId) || hasRole(user, "student"))
+          ? Option.some(rowOf(user, sourcedId, cohorts, index + 2))
+          : Option.none()
+      )
     )
   );
   if (Arr.isReadonlyArrayEmpty(rows)) {
