@@ -4,6 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
 import { AssignmentKind } from "@repo/backend/confect/tenancy/assignment";
+import { CohortGrade } from "@repo/backend/confect/tenancy/cohort";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
@@ -16,6 +17,8 @@ import {
   Npsn,
   PersonReason,
   TenantName,
+  UnitLevel,
+  UnitName,
 } from "@repo/backend/confect/tenancy/schema";
 import { SchoolSize } from "@repo/backend/confect/tenancy/start";
 import { Schema } from "effect";
@@ -128,6 +131,8 @@ export const unit = Kind.make("unit", "tenantUnits", {
       npsn: Npsn,
       type: Schema.Literal("unit.npsn.set"),
     }),
+    Schema.Struct({ name: UnitName, type: Schema.Literal("unit.name.set") }),
+    Schema.Struct({ level: UnitLevel, type: Schema.Literal("unit.level.set") }),
   ],
   published: ["unit.created"],
   relations: ["member"],
@@ -178,6 +183,7 @@ export const person = Kind.make("person", "tenantPeople", {
       type: Schema.Literal("person.removed"),
     }),
     Schema.Struct({ type: Schema.Literal("person.renamed") }),
+    Schema.Struct({ type: Schema.Literal("login.renamed") }),
     Schema.Struct({
       cohort: Id("tenantCohorts"),
       type: Schema.Literal("person.placed"),
@@ -282,6 +288,10 @@ export const cohort = Kind.make("cohort", "tenantCohorts", {
   changes: [
     Schema.Struct({ type: Schema.Literal("cohort.created") }),
     Schema.Struct({ type: Schema.Literal("cohort.renamed") }),
+    Schema.Struct({
+      grade: CohortGrade,
+      type: Schema.Literal("cohort.grade.set"),
+    }),
     Schema.Struct({ type: Schema.Literal("cohort.archived") }),
     Schema.Struct({ type: Schema.Literal("cohort.restored") }),
     Schema.Struct({

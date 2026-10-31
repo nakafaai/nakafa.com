@@ -1,6 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, FileSystem } from "effect";
+import { type Changes, saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
 import { giveRole, revokeRole } from "@/e2e/support/roles";
 import {
@@ -11,6 +12,7 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The Admin grant that the Owner gives an invited learner. */
@@ -32,6 +34,31 @@ async function addCohort(page: Page, name: string) {
   await page.getByRole("option", { exact: true, name: "7" }).click();
   await dialog.getByRole("button", { name: "Add cohort" }).click();
   await expect(page.getByRole("link", { name })).toBeVisible();
+}
+
+/**
+ * Adds the period `Semester 1` from the periods page and opens it, then waits until the server answered the open. A
+ * navigation right after Open closes the connection and drops the open while it is on its way, and a unit with no
+ * active period keeps Add cohort disabled.
+ */
+async function openSemester(page: Page, changes: Changes) {
+  const addPeriod = page
+    .locator("header")
+    .getByRole("button", { name: "Add period" });
+  await waitUntilTakenOver(addPeriod);
+  await addPeriod.click();
+  const periodDialog = page.getByRole("dialog");
+  await periodDialog.getByLabel("Name").fill("Semester 1");
+  await expect(periodDialog.locator('input[type="date"]')).toHaveCount(0);
+  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
+  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
+  await periodDialog.getByRole("button", { name: "Add period" }).click();
+  const periodRow = page.getByRole("row", { name: "Semester 1" });
+  await periodRow.getByRole("button", { name: "More actions" }).click();
+  const openedBefore = changes.sent;
+  await page.getByRole("menuitem", { name: "Open" }).click();
+  await expect(periodRow.getByText("Active")).toBeVisible();
+  await saved(changes, openedBefore);
 }
 
 test("an admin opens the profile and the periods of a school", async ({
@@ -110,6 +137,7 @@ test("an admin edits a period's name and dates in the dialog that added it, fill
   const context = await browser.newContext();
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
 
   await page.goto(address("/settings/periods"));
   const addPeriod = page
@@ -135,10 +163,12 @@ test("an admin edits a period's name and dates in the dialog that added it, fill
   await expect(editDialog.getByRole("button", { name: "Save" })).toBeDisabled();
   await editDialog.getByLabel("Name").fill("Semester Ganjil");
   await chooseDay(page, editDialog.getByLabel("Last day"), "2027-12-31");
+  const editedBefore = changes.sent;
   await editDialog.getByRole("button", { name: "Save" }).click();
   const edited = page.getByRole("row", { name: "Semester Ganjil" });
   await expect(edited).toContainText("31");
 
+  await saved(changes, editedBefore);
   await page.reload();
   await expect(
     page.getByRole("row", { name: "Semester Ganjil" })
@@ -147,7 +177,7 @@ test("an admin edits a period's name and dates in the dialog that added it, fill
   await context.close();
 });
 
-test("an admin opens a period, then creates and renames a cohort of it", async ({
+test("an admin opens a period, then creates a cohort of it and edits its name and grade", async ({
   browser,
   baseURL,
 }) => {
@@ -157,24 +187,11 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
   const context = await browser.newContext();
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
 
   // A cohort belongs to the active period, so the admin opens a period first.
   await page.goto(address("/settings/periods"));
-  const addPeriod = page
-    .locator("header")
-    .getByRole("button", { name: "Add period" });
-  await waitUntilTakenOver(addPeriod);
-  await addPeriod.click();
-  const periodDialog = page.getByRole("dialog");
-  await periodDialog.getByLabel("Name").fill("Semester 1");
-  await expect(periodDialog.locator('input[type="date"]')).toHaveCount(0);
-  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
-  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
-  await periodDialog.getByRole("button", { name: "Add period" }).click();
-  const periodRow = page.getByRole("row", { name: "Semester 1" });
-  await periodRow.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Open" }).click();
-  await expect(periodRow.getByText("Active")).toBeVisible();
+  await openSemester(page, changes);
 
   await page.goto(address("/settings/cohorts"));
   await expect(page).toHaveURL(address("/settings/cohorts"));
@@ -191,12 +208,33 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
   const cohortRow = page.getByRole("row", { name: "7A" });
   await expect(cohortRow).toBeVisible();
 
+  // Edit starts from the cohort's name and grade, and the row shows both changes at once.
   await cohortRow.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Rename" }).click();
-  const renameDialog = page.getByRole("dialog");
-  await renameDialog.getByLabel("Name").fill("7 Biru");
-  await renameDialog.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("row", { name: "7 Biru" })).toBeVisible();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  const editDialog = page.getByRole("dialog");
+  await expect(editDialog.getByLabel("Name")).toHaveValue("7A");
+  await expect(editDialog.getByRole("combobox", { name: "Grade" })).toHaveText(
+    "7"
+  );
+  await editDialog.getByLabel("Name").fill("8 Biru");
+  await editDialog.getByRole("combobox", { name: "Grade" }).click();
+  await page.getByRole("option", { exact: true, name: "8" }).click();
+  const editedBefore = changes.sent;
+  await editDialog.getByRole("button", { name: "Save" }).click();
+  const editedRow = page.getByRole("row", { name: "8 Biru" });
+  await expect(editedRow).toBeVisible();
+  await expect(
+    editedRow.getByRole("cell", { exact: true, name: "8" })
+  ).toBeVisible();
+
+  // The server kept both.
+  await saved(changes, editedBefore);
+  await page.reload();
+  await expect(
+    page
+      .getByRole("row", { name: "8 Biru" })
+      .getByRole("cell", { exact: true, name: "8" })
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });
 
@@ -222,23 +260,10 @@ test("an admin places a student in a cohort, then moves the student to another",
   const context = await browser.newContext();
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
 
   await page.goto(address("/settings/periods"));
-  const addPeriod = page
-    .locator("header")
-    .getByRole("button", { name: "Add period" });
-  await waitUntilTakenOver(addPeriod);
-  await addPeriod.click();
-  const periodDialog = page.getByRole("dialog");
-  await periodDialog.getByLabel("Name").fill("Semester 1");
-  await chooseDay(page, periodDialog.getByLabel("First day"), "2027-07-01");
-  await chooseDay(page, periodDialog.getByLabel("Last day"), "2027-12-20");
-  await periodDialog.getByRole("button", { name: "Add period" }).click();
-  await page
-    .getByRole("row", { name: "Semester 1" })
-    .getByRole("button", { name: "More actions" })
-    .click();
-  await page.getByRole("menuitem", { name: "Open" }).click();
+  await openSemester(page, changes);
 
   await page.goto(address("/settings/cohorts"));
   await addCohort(page, "7A");
@@ -263,9 +288,11 @@ test("an admin places a student in a cohort, then moves the student to another",
   const moveDialog = page.getByRole("dialog");
   await moveDialog.getByRole("combobox", { name: "Move to" }).click();
   await page.getByRole("option", { exact: true, name: "7B" }).click();
+  const movedBefore = changes.sent;
   await moveDialog.getByRole("button", { exact: true, name: "Move" }).click();
   await expect(page.getByText("No student yet.")).toBeVisible();
 
+  await saved(changes, movedBefore);
   await page.goto(address("/settings/cohorts"));
   await page.getByRole("link", { name: "7B" }).click();
   await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(

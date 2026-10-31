@@ -4,16 +4,18 @@ import { Option, Schema } from "effect";
 import { pageOf } from "@/components/notifications/destination";
 import type { ListNotification } from "@/components/notifications/state";
 
-/** An inbox row as the server sends it, of the given type, about the subject that it names, with its detail. */
+/** An inbox row as the server sends it, of the given type, about the subject that it names, with its detail and its sitting. */
 function row(
   changeType: string,
   subject: unknown,
-  detail: unknown = null
+  detail: unknown = null,
+  exam: unknown = null
 ): ListNotification {
   return Schema.decodeUnknownSync(NotificationView)({
     changeType,
     createdAt: 1,
     detail,
+    exam,
     id: "notification-1",
     subject,
     tenant: {
@@ -79,6 +81,28 @@ describe("inbox row destinations", () => {
       )
     ).toEqual(
       Option.some("https://harapan.nakafa.com/classes/fisika-x-1/tasks/latihan")
+    );
+  });
+
+  it("opens a coming sitting's entry for its student, and the parent home for a guardian's reminder", () => {
+    const sitting = { id: "sitting-1", kind: "sitting" };
+    const exam = (student: string | null) => ({
+      examTitle: "Ujian Fisika",
+      opensAt: 1,
+      room: "Lab 2",
+      sittingId: "sitting-1",
+      student,
+    });
+    expect(href(row("exam.starting", sitting, null, exam(null)))).toEqual(
+      Option.some("https://harapan.nakafa.com/sittings/sitting-1")
+    );
+    expect(href(row("exam.reminder", sitting, null, exam("Raka")))).toEqual(
+      Option.some("https://harapan.nakafa.com/orang-tua")
+    );
+    // A sitting that no longer waits gives its student's row no page; a guardian still opens the parent home.
+    expect(pageOf(row("exam.starting", sitting))).toEqual(Option.none());
+    expect(href(row("exam.reminder", sitting))).toEqual(
+      Option.some("https://harapan.nakafa.com/orang-tua")
     );
   });
 

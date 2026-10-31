@@ -85,8 +85,23 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   }).toPass({ timeout: readinessTimeoutMilliseconds });
   await expect(seats.getByRole("listitem")).toHaveCount(CROWD + 1);
   await expect(seat).toHaveAttribute("data-frame", "away");
+  // The away seat counts the time since the student left, each second, where a present seat shows its last activity.
+  const awaySeconds = async () => {
+    const away = (await seat.textContent())?.match(
+      /Away for (?:(\d+) min )?(\d+) s\./
+    );
+    return away === null || away === undefined
+      ? -1
+      : Number(away[1] ?? 0) * 60 + Number(away[2]);
+  };
+  const firstReading = await awaySeconds();
+  expect(firstReading).toBeGreaterThanOrEqual(0);
+  await expect.poll(awaySeconds).toBeGreaterThan(firstReading);
   await seat.click();
-  await expect(proctor.getByText("Left the exam")).toBeVisible();
+  // The panel counts the same exit on, until the student comes back.
+  await expect(
+    proctor.getByText(/^Left the exam for (?:\d+ min )?\d+ s$/)
+  ).toBeVisible();
 
   const dialog = proctor.getByRole("dialog");
 
@@ -114,6 +129,20 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect(
     student.getByRole("heading", { name: "Question 1" })
   ).toBeVisible();
+
+  // The panel says when a lost connection shows: only once the student is back online.
+  await expect(
+    proctor.getByText(
+      "A lost connection shows here, with how long it lasted, once the student is back online."
+    )
+  ).toBeVisible();
+  // The student's device loses the network and finds it again. Its disconnect reaches the server once it is back,
+  // with the moment it went offline, so the proctor's panel tells how long the student was offline.
+  await studentContext.setOffline(true);
+  await studentContext.setOffline(false);
+  await expect(
+    proctor.getByText(/^Lost the connection for (?:\d+ min )?\d+ s$/)
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
   await closeSitting(proctor);
   // The close moves the attempt to closing, and the student's screen says so at once; the

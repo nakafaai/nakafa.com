@@ -2,12 +2,22 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
-import { readLoginName } from "@repo/backend/confect/identity/logins";
+import { LoginNameRefused } from "@repo/backend/confect/identity/errors";
+import {
+  readLoginName,
+  renameLoginName,
+} from "@repo/backend/confect/identity/logins";
 import spec from "@repo/backend/confect/identity/logins.spec";
 import type { LoginUsername } from "@repo/backend/confect/identity/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { Person } from "@repo/backend/confect/tenancy/access";
+import { personActor } from "@repo/backend/confect/tenancy/actor";
+import {
+  personAccess,
+  personAuthority,
+} from "@repo/backend/confect/tenancy/authority";
 import { Effect, Layer, Number as Num, Option, Result, Struct } from "effect";
 
 /** The largest page one request reads. */
@@ -127,11 +137,38 @@ const usernameOf = FunctionImpl.make(
   })
 );
 
+/**
+ * Renames the school login of one Person, which its card signs in with: the name reads as a person typed it, and no
+ * other Person of the school may hold it. The student then signs in with the new name and the same password, and the
+ * rename is recorded on the Person. A name the login already holds writes and records nothing.
+ */
+const rename = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "rename",
+  Effect.fn("identity.logins.renameLogin")(function* ({ loginName }) {
+    const { person: actor } = yield* Member;
+    const person = yield* Person;
+    const name = readLoginName(loginName);
+    if (Result.isFailure(name)) {
+      return yield* new LoginNameRefused({ reason: name.failure });
+    }
+    if (yield* renameLoginName(person, name.success)) {
+      yield* personAuthority.record(personActor(actor), person, {
+        type: "login.renamed",
+      });
+    }
+    return name.success;
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(rename),
   Layer.provide(usernameOf),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(tenantAccess),
+  Layer.provide(personAccess),
   GroupImpl.finalize
 );

@@ -1,19 +1,24 @@
 import type { GenericId } from "@confect/core";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Authority } from "@repo/backend/confect/access/policy";
-import { blindGoogleAccount } from "@repo/backend/confect/connectors/account";
+import {
+  blindGoogleAccount,
+  countActiveGrants,
+} from "@repo/backend/confect/connectors/account";
 import { connection } from "@repo/backend/confect/connectors/kinds";
 import type { ConnectionInput } from "@repo/backend/confect/connectors/schema";
 import { sealRefreshToken } from "@repo/backend/confect/connectors/secret";
 import { type Actor, JournalEntry } from "@repo/backend/confect/journal/schema";
 import { Space } from "@repo/backend/confect/space";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
-import { Effect, Option, Schema } from "effect";
+import { Duration, Effect, Option, Schema } from "effect";
 
 type ConnectionDoc = Docs["connectorConnections"];
 
@@ -191,16 +196,24 @@ export const markReconnect = Effect.fn("connectors.connection.reconnect")(
 );
 
 /**
- * Ends a connection: destroys its sealed token and its Calendar mirror, marks it
- * disconnected, and journals one change. A connection that is already disconnected stays so with no second
- * entry, so a retried request succeeds.
+ * Ends a connection: destroys its Calendar mirror, marks it disconnected, and journals one change. Its sealed token
+ * goes with it. `grant` says what happens to the grant at Google: an owner who ends a connection revokes it when this
+ * is the last active connection of its Google account (the revoke rule, ADR 0015), and a connection that a new one of
+ * the same account replaces keeps it, since the new one holds the same grant. A revoke needs the token, so the token
+ * stays sealed until the revoke runs, which destroys it after; otherwise it is destroyed here. A connection that is
+ * already disconnected stays so with no second entry, so a retried request succeeds.
  */
 export const disconnect = Effect.fn("connectors.connection.disconnect")(
-  function* (actor: typeof Actor.Type, row: ConnectionDoc) {
+  function* (
+    actor: typeof Actor.Type,
+    row: ConnectionDoc,
+    grant: "keep" | "revoke"
+  ) {
     if (row.status === "disconnected") {
       return;
     }
-    yield* destroySecret(row._id);
+    const revoke =
+      grant === "revoke" && (yield* isLastGrant(row, row.googleAccountKey));
     yield* purgeMirror(row._id);
     yield* (yield* DatabaseWriter)
       .table("connectorConnections")
@@ -211,5 +224,30 @@ export const disconnect = Effect.fn("connectors.connection.disconnect")(
       connector: row.connector,
       type: "connection.disconnected",
     });
+    if (!revoke) {
+      yield* destroySecret(row._id);
+      return;
+    }
+    yield* (yield* Scheduler)
+      .runAfter(Duration.zero, refs.internal.connectors.sync.revoke, {
+        connectionId: row._id,
+      })
+      .pipe(Effect.orDie);
   }
 );
+
+/**
+ * Whether the connection is the last active one that holds the grant of its Google account. A connection that
+ * waits to reconnect is not active, so only the active others count. A connection without an account blind cannot be
+ * counted against the others, so it never revokes.
+ */
+const isLastGrant = Effect.fn("connectors.connection.lastGrant")(function* (
+  row: ConnectionDoc,
+  googleAccountKey: ConnectionDoc["googleAccountKey"]
+) {
+  if (googleAccountKey === null) {
+    return false;
+  }
+  const active = yield* countActiveGrants(googleAccountKey);
+  return active - (row.status === "active" ? 1 : 0) === 0;
+});

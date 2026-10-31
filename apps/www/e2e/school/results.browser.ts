@@ -63,7 +63,7 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
     .getByRole("dialog")
     .getByRole("button", { name: "Finish", exact: true })
     .click();
-  await expect(student.getByText("Your answers are in.")).toBeVisible();
+  await expect(student.getByText("You finished this exam.")).toBeVisible();
   await expect(
     student.getByText(
       "Your teacher releases the results after the sitting closes."

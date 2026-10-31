@@ -9,9 +9,9 @@ import {
   openedSitting,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-const { signal } = refs.public.exams.sittings;
+const { signal, signals } = refs.public.exams.sittings;
 
 describe("exams/sittings signal", () => {
   beforeEach(() => {
@@ -82,6 +82,50 @@ describe("exams/sittings signal", () => {
           })
           .pipe(Effect.flip);
         expect(otherMember).toMatchObject({ _tag: "NotInSitting" });
+      })
+  );
+
+  it.effect(
+    "records a disconnect when the device lost its connection, kept within the attempt, and every other signal at the server's time",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const startedAt = Date.now();
+        const send = (kind: "disconnect" | "return", since: number) =>
+          fixture.as("student").mutation(signal, {
+            attemptId: entered.attempt,
+            deviceId: deviceOf(1),
+            kind,
+            since,
+            slug: nf,
+          });
+        vi.setSystemTime(startedAt + 60_000);
+        yield* send("disconnect", startedAt + 20_000);
+        yield* send("return", startedAt + 20_000);
+        vi.setSystemTime(startedAt + 120_000);
+        yield* send("disconnect", startedAt - 5000);
+        vi.setSystemTime(startedAt + 180_000);
+        yield* send("disconnect", startedAt + 999_000);
+        const recorded = yield* fixture.as("teacher").query(signals, {
+          attemptId: entered.attempt,
+          paginationOpts: { cursor: null, numItems: 10 },
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(
+          Arr.map(recorded.page, (row) => [row.kind, row.at - startedAt])
+        ).toStrictEqual([
+          ["disconnect", 180_000],
+          ["return", 60_000],
+          ["disconnect", 20_000],
+          ["disconnect", 0],
+        ]);
       })
   );
 });

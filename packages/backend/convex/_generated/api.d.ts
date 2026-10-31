@@ -7028,6 +7028,12 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; personId: Id<"tenantPeople">; slug: string },
+        string
+      >;
     };
   };
   integrations: {
@@ -7336,6 +7342,7 @@ export declare const api: {
                 }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
+              | { grade: number; type: "cohort.grade.set" }
               | { type: "cohort.archived" }
               | { type: "cohort.restored" }
               | {
@@ -7451,6 +7458,7 @@ export declare const api: {
               | { type: "person.released" }
               | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
+              | { type: "login.renamed" }
               | { cohort: Id<"tenantCohorts">; type: "person.placed" }
               | {
                   from: Id<"tenantCohorts">;
@@ -7611,6 +7619,21 @@ export declare const api: {
               | { type: "unit.archived" }
               | { type: "unit.unarchived" }
               | { npsn: string; type: "unit.npsn.set" }
+              | { name: string; type: "unit.name.set" }
+              | {
+                  level:
+                    | "paud"
+                    | "sd"
+                    | "mi"
+                    | "smp"
+                    | "mts"
+                    | "sma"
+                    | "ma"
+                    | "smk"
+                    | "slb"
+                    | "other";
+                  type: "unit.level.set";
+                }
               | {
                   minutes: number;
                   reason: "support" | "onboarding" | "incident";
@@ -8119,7 +8142,9 @@ export declare const api: {
               | "person.invited"
               | "forum.mentioned"
               | "announcement.posted"
-              | "assignment.published";
+              | "assignment.published"
+              | "exam.starting"
+              | "exam.reminder";
             createdAt: number;
             detail: {
               actor: string;
@@ -8129,6 +8154,13 @@ export declare const api: {
               discussion: number | null;
               messageId: Id<"classroomMessages"> | null;
               task: string | null;
+            } | null;
+            exam: {
+              examTitle: string;
+              opensAt: number;
+              room: string;
+              sittingId: Id<"examSittings">;
+              student: string | null;
             } | null;
             id: Id<"notifications">;
             readAt?: number;
@@ -8174,7 +8206,9 @@ export declare const api: {
             | "person.invited"
             | "forum.mentioned"
             | "announcement.posted"
-            | "assignment.published";
+            | "assignment.published"
+            | "exam.starting"
+            | "exam.reminder";
           createdAt: number;
           detail: {
             actor: string;
@@ -8184,6 +8218,13 @@ export declare const api: {
             discussion: number | null;
             messageId: Id<"classroomMessages"> | null;
             task: string | null;
+          } | null;
+          exam: {
+            examTitle: string;
+            opensAt: number;
+            room: string;
+            sittingId: Id<"examSittings">;
+            student: string | null;
           } | null;
           id: Id<"notifications">;
           readAt?: number;
@@ -9090,6 +9131,22 @@ export declare const api: {
           status: "active" | "archived";
         }
       >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          grade: number;
+          name: string;
+          slug: string;
+        },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
       get: FunctionReference<
         "query",
         "public",
@@ -9135,17 +9192,6 @@ export declare const api: {
           page: Array<{ id: Id<"tenantPeople">; name: string }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
-        }
-      >;
-      rename: FunctionReference<
-        "mutation",
-        "public",
-        { cohortId: Id<"tenantCohorts">; name: string; slug: string },
-        {
-          grade: number;
-          id: Id<"tenantCohorts">;
-          name: string;
-          status: "active" | "archived";
         }
       >;
       restore: FunctionReference<
@@ -10393,6 +10439,40 @@ export declare const api: {
           npsn: string | null;
           status: "active" | "archived";
           timeZone: string;
+        }
+      >;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          slug: string;
+          unitId: Id<"tenantUnits">;
+        },
+        {
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
         }
       >;
       list: FunctionReference<
@@ -13889,8 +13969,26 @@ export declare const internal: {
       >;
     };
     sync: {
+      destroy: FunctionReference<
+        "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
       reconnect: FunctionReference<
         "mutation",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      revocable: FunctionReference<
+        "query",
+        "internal",
+        { connectionId: Id<"connectorConnections"> },
+        string | null
+      >;
+      revoke: FunctionReference<
+        "action",
         "internal",
         { connectionId: Id<"connectorConnections"> },
         null
@@ -17432,6 +17530,18 @@ export declare const internal: {
         "mutation",
         "internal",
         { cursor: string | null; personId: Id<"tenantPeople">; readAt: number },
+        null
+      >;
+    };
+    sittings: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          notice: "examStart" | "examGuardianReminder";
+          sittingId: Id<"examSittings">;
+        },
         null
       >;
     };
