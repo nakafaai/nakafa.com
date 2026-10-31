@@ -139,11 +139,15 @@ export function ItemTitle({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
+/**
+ * The line under an item's title, in the title's 14px text at every size: the muted colour carries the hierarchy,
+ * as the two lines of every list row do (`lib/row.ts`).
+ */
 export function ItemDescription({ className, ...props }: ComponentProps<"p">) {
   return (
     <p
       className={cn(
-        "text-muted-foreground [&>a:hover]:text-primary line-clamp-2 text-left text-sm leading-normal font-normal group-data-[size=xs]/item:text-xs [&>a]:underline [&>a]:underline-offset-4",
+        "text-muted-foreground [&>a:hover]:text-primary line-clamp-2 text-left text-sm leading-normal font-normal [&>a]:underline [&>a]:underline-offset-4",
         className
       )}
       data-slot="item-description"

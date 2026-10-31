@@ -1,6 +1,7 @@
 import { Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { rowLineVariants } from "@repo/design-system/lib/row";
 import { Equal, String as Str } from "effect";
 import { memo, useLayoutEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
@@ -89,12 +90,12 @@ export const MemoryRow = memo(
         >
           {/* The name follows the direction of its own words, and a name too
               long for the row keeps its start and its whole text in the title. */}
-          <span className="truncate text-sm" dir="auto" title={name}>
+          <span className={rowLineVariants()} dir="auto" title={name}>
             {name}
           </span>
           {/* A row says one fact: when a situation ends, the one fact a learner
               must not lose, and otherwise who wrote the memory. */}
-          <span className="text-muted-foreground truncate text-xs">
+          <span className={rowLineVariants({ line: "fact" })}>
             {memory.validUntil === undefined ? (
               <MemoryOrigin memory={memory} />
             ) : (

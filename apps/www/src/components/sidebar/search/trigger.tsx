@@ -1,11 +1,12 @@
 "use client";
 
-import { CommandIcon, Search02Icon } from "@hugeicons/core-free-icons";
+import { Search02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
 import { preloadSearchCommand } from "@/components/search/command/module";
+import { SearchShortcut } from "@/components/search/shortcut";
 import { SidebarSearchButton } from "@/components/sidebar/search/button";
 import { useSearch } from "@/lib/search/context";
 
@@ -73,13 +74,7 @@ export function HeaderSearch() {
           {t("search-bar-placeholder")}
         </span>
       </span>
-      <span className="hidden items-center gap-1 lg:flex">
-        <kbd className="rounded border p-0.75">
-          <HugeIcons className="size-3 shrink-0" icon={CommandIcon} />
-          <span className="sr-only">Command/Ctrl</span>
-        </kbd>
-        <kbd className="rounded border p-0.75">K</kbd>
-      </span>
+      <SearchShortcut className="hidden lg:inline-flex" />
     </Button>
   );
 }

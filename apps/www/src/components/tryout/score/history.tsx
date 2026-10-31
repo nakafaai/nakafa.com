@@ -34,6 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
@@ -86,8 +87,8 @@ function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
       value={value.attempt}
     >
       <div className="flex min-w-0 flex-1 flex-col">
-        <span>{value.attempt.label}</span>
-        <span className="text-muted-foreground truncate text-xs">
+        <span className={rowLineVariants()}>{value.attempt.label}</span>
+        <span className={rowLineVariants({ line: "fact" })}>
           {value.attempt.subtitle}
         </span>
       </div>

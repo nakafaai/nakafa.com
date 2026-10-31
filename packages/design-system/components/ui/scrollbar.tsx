@@ -1,3 +1,8 @@
+import {
+  scrollThumbVariants,
+  scrollTrackVariants,
+} from "@repo/design-system/lib/scrollbar";
+import { cn } from "cn";
 import { Option, Schema } from "effect";
 
 /** How long the bar stays shown after the page last moved, in milliseconds, as the ScrollArea bar does. */
@@ -135,9 +140,9 @@ function wirePageScrollbar(track: HTMLDivElement) {
 }
 
 /**
- * The page's own scrollbar. Native bars take no room (globals.css), so the page draws a thin overlay bar at the
- * window's inline end, as the design system's ScrollArea draws one for every other scroller: it shows on hover
- * and while the page moves, and shows without a fade where motion is reduced. It is decorative to assistive
+ * The page's own scrollbar. Native bars take no room (globals.css), so the page draws the overlay bar that the
+ * design system's ScrollArea draws for every other scroller (`lib/scrollbar.ts`), at the window's inline end: it
+ * shows on hover and while the page moves, and shows without a fade where motion is reduced. It is decorative to assistive
  * technology and takes no focus; the page scrolls by its own means. A touch screen keeps its own overlay bar, so
  * the page draws none there. Overlays such as sidebars and dialogs stand above it.
  */
@@ -145,12 +150,15 @@ export function PageScrollbar() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-e-0 top-0 z-10 flex h-svh w-2.5 touch-none p-0.5 opacity-0 transition-opacity delay-300 select-none hover:opacity-100 hover:delay-0 hover:duration-100 data-scrolling:opacity-100 data-scrolling:delay-0 data-scrolling:duration-100 motion-reduce:transition-none pointer-coarse:hidden"
+      className={cn(
+        scrollTrackVariants({ orientation: "vertical" }),
+        "fixed inset-e-0 top-0 z-10 h-svh pointer-coarse:hidden"
+      )}
       data-slot="page-scrollbar"
       hidden
       ref={wirePageScrollbar}
     >
-      <div className="bg-muted-foreground w-full rounded-full" />
+      <div className={scrollThumbVariants({ orientation: "vertical" })} />
     </div>
   );
 }
