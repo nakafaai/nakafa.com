@@ -142,7 +142,7 @@ function TenantLanguageSubmenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="cursor-pointer">
+      <DropdownMenuSubTrigger>
         <HugeIcons icon={TranslateIcon} />
         <span className="truncate">{t("language")}</span>
       </DropdownMenuSubTrigger>
@@ -153,7 +153,6 @@ function TenantLanguageSubmenu() {
         <DropdownMenuGroup>
           {Arr.map(languages, (language) => (
             <DropdownMenuItem
-              className="cursor-pointer"
               key={language.value}
               onClick={() => changeLanguage(language.value, router)}
             >

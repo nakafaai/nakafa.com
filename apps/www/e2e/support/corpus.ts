@@ -44,6 +44,12 @@ export const pinnedRoutes = {
     en: "/en/subjects/mathematics/analytic-geometry/hyperbola",
     id: "/id/materi/matematika/geometri-analitik/hiperbola",
   },
+  /** A lesson whose highlight holds a link, and which the acceptance runtime's content release serves. */
+  relative: {
+    de: "/de/faecher/physik/kinematik/relativbewegung",
+    en: "/en/subjects/physics/kinematics/relative-movement",
+    id: "/id/materi/fisika/kinematika/gerak-relatif",
+  },
   /** A curriculum subject that has no lesson in the acceptance content yet. */
   upcoming: {
     de: "/de/lehrplaene/merdeka/klasse-10/physik",
