@@ -84,6 +84,33 @@ describe("classroom/forum channels", () => {
       })
   );
 
+  it.effect("says a poll is a chat's newest message", () =>
+    Effect.gen(function* () {
+      const fixture = yield* keyedFixture;
+      const term = yield* period(fixture, fixture.units.smp);
+      const forum = yield* forumClass(fixture, term.id, "X-1");
+      yield* fixture.as("teacher").mutation(send, {
+        ...forum,
+        attachments: [],
+        clientKey: "poll-message",
+        mentions: [],
+        poll: {
+          multiple: false,
+          options: ["Ya", "Tidak"],
+          question: "Setuju?",
+        },
+        slug: nf,
+        text: "",
+      });
+      const listed = yield* fixture.as("student").query(list, {
+        ...firstPage,
+        classId: forum.classId,
+        slug: nf,
+      });
+      expect(listed.page[0]?.last).toMatchObject({ media: "poll", text: "" });
+    })
+  );
+
   it.effect(
     "lists the general channel first, to a student placed in the class",
     () =>

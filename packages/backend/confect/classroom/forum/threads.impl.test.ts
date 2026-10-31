@@ -9,6 +9,8 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { png } from "@repo/backend/test/exams";
+import { storeFile } from "@repo/backend/test/logo";
 import { slugOf, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
@@ -16,6 +18,7 @@ import { Array as Arr, Effect } from "effect";
 const { get, list, open, rename, replies, reply, start } =
   refs.public.classroom.forum.threads;
 const { hide, page, send } = refs.public.classroom.forum.messages;
+const { register } = refs.public.classroom.forum.files;
 const { setPolicy } = refs.public.tenancy.settings;
 
 describe("classroom/forum threads", () => {
@@ -120,6 +123,67 @@ describe("classroom/forum threads", () => {
           denied("resource"),
           { _tag: "MessageHidden" },
         ]);
+      })
+  );
+
+  it.effect(
+    "titles a thread from a photo without text, and keeps a file in a reply and an empty reply out",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-5");
+        const teacher = fixture.as("teacher");
+        const upload = (name: string) =>
+          Effect.gen(function* () {
+            return yield* teacher.action(register, {
+              classId: forum.classId,
+              height: 1,
+              name,
+              slug: nf,
+              storageId: yield* storeFile(fixture.convex, png()),
+              thumbnailId: null,
+              width: 1,
+            });
+          });
+        const photo = yield* upload("papan.png");
+        const sent = yield* teacher.mutation(send, {
+          ...forum,
+          attachments: [photo.id],
+          clientKey: "photo-alone",
+          mentions: [],
+          poll: null,
+          slug: nf,
+          text: "",
+        });
+        const args = { classId: forum.classId, slug: nf };
+        const { number } = yield* teacher.mutation(start, {
+          ...args,
+          messageId: sent.id,
+        });
+        const thread = yield* teacher.query(get, { ...args, number });
+        expect(thread.discussion.title).toBe("papan.png");
+        const second = yield* upload("jawaban.png");
+        const answer = yield* teacher.mutation(reply, {
+          ...args,
+          attachments: [second.id],
+          clientKey: "photo-answer",
+          mentions: [],
+          number,
+          text: "",
+        });
+        expect(answer.attachments[0]?.name).toBe("jawaban.png");
+        const refused = yield* teacher
+          .mutation(reply, {
+            ...args,
+            attachments: [],
+            clientKey: "empty-answer",
+            mentions: [],
+            number,
+            text: "",
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "MessageEmpty" });
       })
   );
 

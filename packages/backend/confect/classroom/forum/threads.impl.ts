@@ -378,34 +378,29 @@ const reply = FunctionImpl.make(
 
 /**
  * The title a thread takes from the message it starts from, as Discord names one:
- * the first line of its text, else its poll's question, else its first file's name,
- * cut to what a title holds.
+ * the first line of its text, else its poll's question, else its first file's
+ * name, cut to what a title holds. A message without text carries a poll or a file.
  */
 const titleOfMessage = Effect.fn("classroom.forum.threads.titleOf")(function* (
-  message: ClassroomMessagesDoc
+  message: ClassroomMessagesDoc,
+  sealedText: ArrayBuffer
 ) {
-  const keys = yield* schoolKeys(message.tenantId);
-  const text =
-    message.sealedText === null
-      ? ""
-      : yield* openText(keys, messageField(message), message.sealedText);
-  const line = Option.getOrElse(Arr.head(Str.split(text, "\n")), () => "");
-  if (line !== "") {
-    return Str.trim(Str.slice(0, TITLE_MAX_LENGTH)(line));
-  }
-  const view = yield* messageView(message);
-  return Str.trim(
-    Str.slice(
-      0,
-      TITLE_MAX_LENGTH
-    )(
-      view.poll?.question ??
-        Option.getOrElse(
-          Option.map(Arr.head(view.attachments), (file) => file.name),
-          () => "…"
-        )
+  const line = Arr.headNonEmpty(
+    Str.split(
+      yield* openText(
+        yield* schoolKeys(message.tenantId),
+        messageField(message),
+        sealedText
+      ),
+      "\n"
     )
   );
+  const view = yield* messageView(message);
+  const title =
+    line === ""
+      ? (view.poll?.question ?? Arr.getUnsafe(view.attachments, 0).name)
+      : line;
+  return Str.trim(Str.slice(0, TITLE_MAX_LENGTH)(title));
 }, Effect.orDie);
 
 /**
@@ -454,7 +449,7 @@ const start = FunctionImpl.make(
         sealedTitle: yield* sealText(
           yield* schoolKeys(row.tenantId),
           titleField(fields),
-          yield* titleOfMessage(message)
+          yield* titleOfMessage(message, message.sealedText)
         ).pipe(Effect.orDie),
         tenantId: row.tenantId,
       })

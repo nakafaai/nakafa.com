@@ -82,11 +82,12 @@ const placeTallies = Effect.fn("classroom.forum.tallies.place")(function* (
                 .eq("clientKey", thread.clientKey)
             )
             .first()
-            .pipe(Effect.orDie);
-          const first = yield* Option.match(opening, {
-            onNone: () => Effect.succeedNone,
-            onSome: (message) => tallyOf(message._id),
-          });
+            .pipe(
+              Effect.orDie,
+              Effect.flatMap(Effect.fromOption),
+              Effect.orDie
+            );
+          const first = yield* tallyOf(opening._id);
           return Arr.appendAll(Option.toArray(first), replies);
         }),
     })

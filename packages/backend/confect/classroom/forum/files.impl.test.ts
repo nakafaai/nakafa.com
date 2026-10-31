@@ -15,12 +15,13 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
+import { otherSchoolTeacher } from "@repo/backend/test/editor";
 import { png } from "@repo/backend/test/exams";
 import { storeFile } from "@repo/backend/test/logo";
 import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
-const { register, withdraw } = refs.public.classroom.forum.files;
+const { register, uploadUrl, withdraw } = refs.public.classroom.forum.files;
 const { sweep } = refs.internal.classroom.forum.files;
 const { hide, page, send } = refs.public.classroom.forum.messages;
 const channels = refs.public.classroom.forum.channels;
@@ -141,6 +142,90 @@ describe("classroom/forum files", () => {
           storageId: yield* storeFile(fixture.convex, docx()),
         });
         expect([paper.kind, word.kind]).toEqual(["document", "document"]);
+        const sent = yield* teacher.mutation(send, {
+          ...forum,
+          attachments: [paper.id],
+          clientKey: "paper-message",
+          mentions: [],
+          poll: null,
+          slug: nf,
+          text: "",
+        });
+        expect(sent.attachments).toEqual([
+          {
+            address: expect.any(String),
+            byteSize: pdf().size,
+            height: null,
+            kind: "document",
+            name: "soal.pdf",
+            thumbnail: null,
+            width: null,
+          },
+        ]);
+        const hidden = yield* teacher.mutation(hide, {
+          classId: forum.classId,
+          messageId: sent.id,
+          slug: nf,
+        });
+        expect(hidden.attachments).toEqual([]);
+      })
+  );
+
+  it.effect("shows a file the storage no longer holds without an address", () =>
+    Effect.gen(function* () {
+      const { fixture, forum } = yield* classForum;
+      const storageId = yield* storeFile(fixture.convex, pdf());
+      const teacher = fixture.as("teacher");
+      const upload = yield* teacher.action(register, {
+        classId: forum.classId,
+        height: null,
+        name: "soal.pdf",
+        slug: nf,
+        storageId,
+        thumbnailId: null,
+        width: null,
+      });
+      yield* teacher.mutation(send, {
+        ...forum,
+        attachments: [upload.id],
+        clientKey: "gone-file",
+        mentions: [],
+        poll: null,
+        slug: nf,
+        text: "",
+      });
+      yield* Effect.promise(() =>
+        fixture.convex.run((ctx) => ctx.storage.delete(storageId))
+      );
+      const listed = yield* fixture.as("student").query(page, {
+        ...firstPage,
+        ...forum,
+        slug: nf,
+      });
+      expect(listed.page[0]?.attachments[0]?.address).toBeNull();
+    })
+  );
+
+  it.effect(
+    "gives whoever writes in the class an upload address, and refuses an outsider",
+    () =>
+      Effect.gen(function* () {
+        const { fixture, forum } = yield* classForum;
+        const args = { classId: forum.classId, slug: nf };
+        const url = yield* fixture.as("teacher").mutation(uploadUrl, args);
+        expect(url.href.startsWith("http")).toBe(true);
+        const outsider = yield* otherSchoolTeacher(fixture);
+        const refused = yield* outsider
+          .action(register, {
+            ...args,
+            height: null,
+            name: "soal.pdf",
+            storageId: yield* storeFile(fixture.convex, pdf()),
+            thumbnailId: null,
+            width: null,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "AccessDenied" });
       })
   );
 

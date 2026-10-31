@@ -10,7 +10,6 @@ import {
   DatabaseWriter,
   MutationRunner,
   QueryRunner,
-  Scheduler,
   StorageActionWriter,
   StorageWriter,
 } from "@repo/backend/confect/_generated/services";
@@ -53,8 +52,8 @@ type StorageId = GenericId.GenericId<"_storage">;
 /** How long an upload may wait for its message, which covers a teacher who leaves a draft overnight. */
 const UNSENT_LIFETIME = Duration.days(1);
 
-/** How many unsent files one sweep deletes before it runs again. */
-const SWEEP_BATCH = 64;
+/** How many unsent files one daily sweep deletes. What stays waits for the next day, so a sweep's size stays bounded. */
+const SWEEP_BATCH = 256;
 
 /** The address that a file of a chat is uploaded to. The upload answers with the storage ID that `register` names. */
 const uploadUrl = FunctionImpl.make(
@@ -275,7 +274,7 @@ const withdraw = FunctionImpl.make(
   })
 );
 
-/** Deletes the uploads that stayed unsent past their lifetime, a batch at a time. */
+/** Deletes the uploads that stayed unsent past their lifetime. */
 const sweep = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -290,13 +289,6 @@ const sweep = FunctionImpl.make(
       .take(SWEEP_BATCH)
       .pipe(Effect.orDie);
     yield* Effect.forEach(stale, dropUpload);
-    if (stale.length === SWEEP_BATCH) {
-      yield* (yield* Scheduler).runAfter(
-        Duration.zero,
-        classroomInternal.forum.files.sweep,
-        {}
-      );
-    }
     return { deleted: stale.length };
   }, Effect.orDie)
 );

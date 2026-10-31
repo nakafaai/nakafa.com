@@ -96,6 +96,32 @@ describe("classroom/forum tallies", () => {
       })
   );
 
+  it.effect(
+    "keeps a message's other emoji when one is given or taken back",
+    () =>
+      Effect.gen(function* () {
+        const { fixture, forum, message } = yield* messaged;
+        const args = {
+          classId: forum.classId,
+          messageId: message.id,
+          slug: nf,
+        };
+        const student = fixture.as("student");
+        yield* student.mutation(react, { ...args, emoji: "👍" });
+        yield* student.mutation(react, { ...args, emoji: "🎉" });
+        yield* student.mutation(react, { ...args, emoji: "👍" });
+        const listed = yield* student.query(since, {
+          classId: forum.classId,
+          place: { _tag: "channel", channelId: forum.channelId },
+          since: 0,
+          slug: nf,
+        });
+        expect(listed[0]?.reactions).toEqual([
+          { count: 1, emoji: "🎉", mine: true },
+        ]);
+      })
+  );
+
   it.effect("keeps the tallies of a place to what the reader loaded", () =>
     Effect.gen(function* () {
       const { fixture, forum, message } = yield* messaged;
@@ -282,7 +308,36 @@ describe("classroom/forum tallies", () => {
           { count: 1, mine: true, option: 0 },
           { count: 1, mine: true, option: 1 },
         ]);
+        yield* several.fixture.as("teacher").mutation(vote, {
+          classId: several.forum.classId,
+          messageId: several.message.id,
+          options: [1],
+          slug: nf,
+        });
+        const joined = yield* several.fixture.as("teacher").query(since, {
+          classId: several.forum.classId,
+          place: { _tag: "channel", channelId: several.forum.channelId },
+          since: 0,
+          slug: nf,
+        });
+        expect(joined[0]?.votes).toEqual([
+          { count: 1, mine: false, option: 0 },
+          { count: 2, mine: true, option: 1 },
+        ]);
       })
+  );
+
+  it.effect("refuses a vote in a poll a teacher hid", () =>
+    Effect.gen(function* () {
+      const { fixture, forum, message } = yield* polled(false);
+      const args = { classId: forum.classId, messageId: message.id, slug: nf };
+      yield* fixture.as("teacher").mutation(hide, args);
+      const refused = yield* fixture
+        .as("student")
+        .mutation(vote, { ...args, options: [0] })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "MessageHidden" });
+    })
   );
 
   it.effect(
