@@ -41,8 +41,8 @@ const HARD_ADDRESS = "quran/999";
 
 /**
  * An address that the Worker answers not found before any route renders: the
- * school tree on the main host. The Worker renders the app's not-found page at
- * the address itself, in the locale that its path names.
+ * school tree on the main host. The Worker answers it with the release's static
+ * not-found page of the locale that its path names.
  */
 const SCHOOL_TREE_ADDRESS = "school/anything";
 
@@ -104,10 +104,9 @@ const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
 });
 
 /**
- * Opens the not-found page that the Worker answers, in one language, and waits
- * until React has taken it over: the browser hydrates the page that the server
- * sent at the same address, so a page drawn for another address would fail with
- * React #418 there.
+ * Opens the not-found page that the Worker answers, in one language. It is the
+ * release's static page, whose first HTML holds the whole page and which starts
+ * no app script, so the page the visitor reads is the one the server sent.
  */
 const openStandalone = Effect.fn("NakafaE2E.openStandalone")(function* (
   page: Page,
@@ -121,14 +120,14 @@ const openStandalone = Effect.fn("NakafaE2E.openStandalone")(function* (
     })
   );
   yield* Effect.sync(() => expect(response?.status()).toBe(404));
-  yield* Effect.promise(() =>
-    waitUntilTakenOver(
-      page.getByRole("link", {
-        exact: true,
-        name: dictionaries[locale].State["home-button"],
-      })
-    )
+  const html = yield* Effect.promise(
+    async () => (await response?.text()) ?? ""
   );
+  // The first HTML carries the page's own way home and no module of the app.
+  yield* Effect.sync(() => {
+    expect(html).toContain(`href="/${locale}"`);
+    expect(html).not.toContain('type="module"');
+  });
 });
 
 /**
@@ -192,7 +191,7 @@ test("an address that no page owns is answered with 404 in every language", asyn
   }
 });
 
-test("the server draws each not-found page before any script runs, and the scripts raise no error, in every language", async ({
+test("the server draws each not-found page whole before any script runs, and the page raises no error, in every language", async ({
   browser,
   baseURL,
   page,
@@ -223,12 +222,12 @@ test("the server draws each not-found page before any script runs, and the scrip
         for (const locale of ["de", "en", "id"] as const) {
           for (const address of addresses) {
             await page.goto(`/${locale}/${address}`);
-            await waitUntilTakenOver(
+            await expect(
               page.getByRole("heading", {
                 level: 1,
                 name: dictionaries[locale].NotFound.title,
               })
-            );
+            ).toBeVisible();
           }
         }
       })

@@ -5,7 +5,7 @@ import { createSchool, hostAddress } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The entry address that holds the school username form alone. */
-const USERNAME_ADDRESS = /masuk=username/;
+const USERNAME_ADDRESS = /sign-in=username/;
 
 /** The fill of the design system's primary button. */
 const PRIMARY = /(?:^|\s)bg-primary(?:\s|$)/;

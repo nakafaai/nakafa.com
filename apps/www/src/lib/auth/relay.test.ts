@@ -297,6 +297,25 @@ describe("answerAuthDeadline", () => {
 });
 
 describe("createAuthProxy", () => {
+  it.effect(
+    "rejects a write whose network failure is not repeated, so the server answers 500, after logging it",
+    () =>
+      Effect.gen(function* () {
+        handler.POST.mockRejectedValueOnce(networkFailure("ECONNRESET"));
+
+        const failed = yield* Effect.tryPromise(() =>
+          createAuthProxy(handler).POST(
+            new Request("https://nakafa.com/api/auth/delete-user", {
+              method: "POST",
+            })
+          )
+        ).pipe(Effect.flip);
+
+        expect(failed).toBeInstanceOf(Error);
+        expect(handler.POST).toHaveBeenCalledOnce();
+      })
+  );
+
   it.effect("forwards reads and writes through the route methods", () =>
     Effect.gen(function* () {
       const proxy = createAuthProxy(handler);

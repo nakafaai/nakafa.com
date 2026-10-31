@@ -15,16 +15,15 @@ import {
   periodAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import {
-  PeriodActive,
-  PeriodDatesInvalid,
-  PeriodOverlaps,
-} from "@repo/backend/confect/tenancy/errors";
+import { PeriodActive } from "@repo/backend/confect/tenancy/errors";
 import {
   type PeriodStatus,
-  parseCivilDate,
   periodView,
 } from "@repo/backend/confect/tenancy/period";
+import {
+  checkPeriodDates,
+  edit,
+} from "@repo/backend/confect/tenancy/periods.edit";
 import { restore } from "@repo/backend/confect/tenancy/periods.restore";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
 import { openTarget } from "@repo/backend/confect/tenancy/promotion/open";
@@ -63,29 +62,8 @@ const create = FunctionImpl.make(
   Effect.fn("tenancy.periods.create")(function* ({ end, name, start, unitId }) {
     const { person } = yield* Member;
     const unit = yield* unitAuthority.authorize("period.manage", unitId);
-    if (
-      Option.isNone(parseCivilDate(start, unit.timeZone)) ||
-      Option.isNone(parseCivilDate(end, unit.timeZone)) ||
-      start >= end
-    ) {
-      return yield* new PeriodDatesInvalid();
-    }
+    yield* checkPeriodDates(unit, start, end, Option.none());
     const reader = yield* DatabaseReader;
-    const before = yield* reader
-      .table("tenantPeriods")
-      .index(
-        "by_unitId_and_start",
-        (query) => query.eq("unitId", unit._id).lte("start", end),
-        "desc"
-      )
-      .first()
-      .pipe(Effect.orDie);
-    // The period that starts last on or before `end` is the only one that can
-    // overlap: periods of one school never overlap, so an earlier one ends before
-    // this one starts.
-    if (Option.exists(before, (found) => found.end >= start)) {
-      return yield* new PeriodOverlaps();
-    }
     const periodId = yield* (yield* DatabaseWriter)
       .table("tenantPeriods")
       .insert({
@@ -148,35 +126,6 @@ const open = FunctionImpl.make(
   })
 );
 
-/**
- * Renames one period in place. A name that the period already has writes and
- * records nothing, so a screen that sends it twice is done the first time. An
- * archived period refuses the rename, as it refuses every other write.
- */
-const rename = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "rename",
-  Effect.fn("tenancy.periods.rename")(function* ({ name }) {
-    const { person } = yield* Member;
-    const period = yield* Period;
-    if (period.name === name) {
-      return periodView(period);
-    }
-    yield* (yield* DatabaseWriter)
-      .table("tenantPeriods")
-      .replace(
-        period._id,
-        Struct.assign(Struct.omit(period, ["_creationTime", "_id"]), { name })
-      )
-      .pipe(Effect.orDie);
-    yield* periodAuthority.record(personActor(person), period, {
-      type: "period.rename",
-    });
-    return periodView(Struct.assign(period, { name }));
-  })
-);
-
 /** Archives an active period, which then stays readable and refuses writes. Only an active period can be archived. */
 const archive = FunctionImpl.make(
   databaseSchema,
@@ -195,7 +144,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
   Layer.provide(archive),
   Layer.provide(restore),
-  Layer.provide(rename),
+  Layer.provide(edit),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(tenantAccess),

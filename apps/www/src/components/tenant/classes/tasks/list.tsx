@@ -1,24 +1,40 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import {
+  Award02Icon,
+  Calendar03Icon,
+  Task01Icon,
+  TaskDone01Icon,
+  TimeQuarterPassIcon,
+} from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import {
+  TaskStanding as Standing,
+  standingOf,
+} from "@repo/backend/confect/classroom/tasks/task";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ColumnChoice } from "@/components/shared/table/column";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
+import { chosenOne } from "@/components/shared/table/filter";
 import { TableEmpty, TablePageBody } from "@/components/shared/table/frame";
 import {
   TableFiltersProvider,
   TableSearch,
+  useTableFilters,
 } from "@/components/shared/table/toolbar";
 import { ClassHeader } from "@/components/tenant/classes/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { NewTask } from "@/components/tenant/classes/tasks/create";
 import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { useKeptRows } from "@/lib/data/kept";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolClassTaskTarget } from "@/lib/routing/school/target";
 
@@ -29,21 +45,58 @@ const TASK_PAGE_SIZE = 20;
 const taskColumns = createColumnHelper<typeof dataTableFeatures, ClassTask>();
 
 /**
+ * The look of each standing of a task in its column's filter: a task still open, work handed in, work that came
+ * late, and work that has its points.
+ */
+const STANDING_ICONS = {
+  handedIn: TaskDone01Icon,
+  late: TimeQuarterPassIcon,
+  open: Task01Icon,
+  scored: Award02Icon,
+} as const satisfies Record<typeof Standing.Type, IconSvgElement>;
+
+/** The standing that a student's list shows: every task, or only the tasks where the student's work stands so. */
+const StandingFilter = Schema.Union([Schema.Literal("all"), Standing]);
+type StandingFilter = typeof StandingFilter.Type;
+
+/**
  * The tasks of a class: the class header with the search over the tasks' titles and New task for
- * its teachers, and the tasks by deadline, the soonest first, in the page's one table card. The
- * next page loads when the end comes into view, and nothing stands in the card while the first page
- * loads. A class with no task shows the empty state without a search, a failed read its sentence
- * and Try again, and a viewer who lost the school's access is sent to the refused page.
+ * its teachers, and the tasks by deadline, the soonest first, in the page's one table card. A
+ * student's Status head chooses the tasks where the student's work stands so, which the server
+ * reads, and the tasks already shown stay while a new standing's first page loads. The next page
+ * loads when the end comes into view, and nothing stands in the card while the first page loads. A
+ * class with no task shows the empty state without a search, a failed read its sentence and Try
+ * again, and a viewer who lost the school's access is sent to the refused page.
  */
 export function TaskList() {
+  return (
+    <TableFiltersProvider>
+      <TaskListBody />
+    </TableFiltersProvider>
+  );
+}
+
+/** The header and the table of the class's tasks, which read the standing the page's filters chose. */
+function TaskListBody() {
   const t = useTranslations("Classroom");
   const { can, classId, slug } = useClassScope();
   const columns = useTaskColumns();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const chosen = useTableFilters((state) => state.chosen);
+  const standing = Option.getOrElse(
+    chosenOne(chosen, "standing", Schema.is(StandingFilter)),
+    (): StandingFilter => "all"
+  );
   const pagination = usePaginatedQuery(
     classroom.tasks.list,
-    isSettled ? { classId, slug } : "skip",
+    isSettled
+      ? { classId, slug, ...(standing === "all" ? {} : { standing }) }
+      : "skip",
     { initialNumItems: TASK_PAGE_SIZE }
+  );
+  const kept = useKeptRows(
+    PaginatedQueryResult.isLoadingFirstPage(pagination),
+    pagination.results
   );
   if (
     PaginatedQueryResult.isFailure(pagination) &&
@@ -51,13 +104,15 @@ export function TaskList() {
   ) {
     throw pagination.error;
   }
-  const loadingFirst = pagination._tag === "LoadingFirstPage";
   const failed = PaginatedQueryResult.isFailure(pagination);
+  // A class with no task at all shows the empty state; a standing that holds no task keeps the table and its head.
   const empty =
-    !(loadingFirst || failed) && Arr.isReadonlyArrayEmpty(pagination.results);
+    !failed &&
+    standing === "all" &&
+    Option.exists(kept, Arr.isReadonlyArrayEmpty);
 
   return (
-    <TableFiltersProvider>
+    <>
       <ClassHeader>
         {empty ? null : <TableSearch placeholder={t("tasks-search")} />}
         {Arr.contains(can, "task.manage") ? <NewTask /> : null}
@@ -71,10 +126,10 @@ export function TaskList() {
           />
         ) : null}
         {failed ? <DataFailure onRetry={reloadPage} /> : null}
-        {loadingFirst || failed || empty ? null : (
+        {failed || empty || Option.isNone(kept) ? null : (
           <DataTable
             columns={columns}
-            data={pagination.results}
+            data={kept.value}
             rowId={(task) => task.id}
             search="title"
           />
@@ -85,7 +140,7 @@ export function TaskList() {
           />
         ) : null}
       </TablePageBody>
-    </TableFiltersProvider>
+    </>
   );
 }
 
@@ -96,6 +151,8 @@ export function TaskList() {
 function useTaskColumns() {
   const t = useTranslations("Classroom");
   const format = useFormatter();
+  const { can } = useClassScope();
+  const standingChoices = useStandingChoices();
 
   return taskColumns.columns([
     taskColumns.accessor((task) => task.title, {
@@ -118,16 +175,55 @@ function useTaskColumns() {
       header: t("task-deadline"),
       id: "deadline",
     }),
-    taskColumns.display({
+    // A student's standing, which the server filters by; the same rule keeps the rows the table shows.
+    taskColumns.accessor((task) => standingOf(task.mine), {
       cell: (info) => (
         <span className="text-muted-foreground">
           <TaskStanding task={info.row.original} />
         </span>
       ),
-      header: t("task-status"),
-      id: "status",
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: () =>
+        Arr.contains(can, "task.manage") ? (
+          t("task-status")
+        ) : (
+          <ColumnChoice
+            column="standing"
+            options={standingChoices}
+            title={t("task-status")}
+          />
+        ),
+      id: "standing",
     }),
   ]);
+}
+
+/**
+ * The values of a student's Status head, which chooses the tasks the server reads: every task, or only the tasks
+ * where the student's work stands so. Each value carries the icon of its standing.
+ */
+function useStandingChoices() {
+  const t = useTranslations("Classroom");
+  const labels = {
+    handedIn: t("task-handed-in"),
+    late: t("task-handed-in-late"),
+    open: t("task-not-handed-in"),
+    scored: t("task-standing-scored"),
+  } satisfies Record<typeof Standing.Type, string>;
+
+  return [
+    {
+      icon: Calendar03Icon,
+      label: t("tasks-filter-all"),
+      value: "all" as const,
+    },
+    ...Arr.map(Standing.literals, (value) => ({
+      icon: STANDING_ICONS[value],
+      label: labels[value],
+      value,
+    })),
+  ];
 }
 
 /** A task's title, which opens the task. */
@@ -152,11 +248,12 @@ export function TaskStanding({ task }: { task: ClassTask }) {
   if (Arr.contains(can, "task.manage")) {
     return t("task-handed-in-count", { count: task.handedIn });
   }
-  if (task.mine === null) {
-    return t("task-not-handed-in");
-  }
-  if (task.mine.score !== null) {
+  if (task.mine !== null && task.mine.score !== null) {
     return t("task-scored", { points: task.points, score: task.mine.score });
   }
-  return task.mine.late ? t("task-handed-in-late") : t("task-handed-in");
+  const standing = standingOf(task.mine);
+  if (standing === "open") {
+    return t("task-not-handed-in");
+  }
+  return standing === "late" ? t("task-handed-in-late") : t("task-handed-in");
 }
