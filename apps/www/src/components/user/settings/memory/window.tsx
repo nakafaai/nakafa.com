@@ -1,7 +1,14 @@
 import { useCallbackRef, useMergedRef } from "@mantine/hooks";
 import { cn } from "cn";
 import { Array as Arr, type Option } from "effect";
-import { type CSSProperties, useLayoutEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  createContext,
+  use,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   type CustomContainerComponentProps,
   type CustomItemComponentProps,
@@ -11,11 +18,12 @@ import { useMemoryActions } from "@/components/user/settings/memory/actions";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
   focusAfterDelete,
-  focusFirst,
+  handFocusOn,
   MEMORY_LIST_ID,
-  MEMORY_SEARCH_ID,
   memoryNeighbour,
   NO_NEIGHBOUR,
+  NOTHING_HANDED,
+  takeHandedFocus,
 } from "@/components/user/settings/memory/focus";
 import {
   MEMORY_PAGE,
@@ -31,6 +39,24 @@ import { MemoryRow } from "@/components/user/settings/memory/row";
  * up to one and a half times the usual size.
  */
 const ROW_SIZE = 72;
+
+/**
+ * Keeps the element of the list that held the focus as the list left the page,
+ * for the list that takes the leaving one's place: it stores what a list hands
+ * on and returns what was handed before.
+ */
+const HandedFocus = createContext<
+  ((next: Option.Option<string>) => Option.Option<string>) | null
+>(null);
+
+/** Reads the window's handed focus and rejects a list outside the window. */
+function useHandedFocus() {
+  const exchange = use(HandedFocus);
+  if (!exchange) {
+    throw new TypeError("MemoryItems must be used within MemoryWindow");
+  }
+  return exchange;
+}
 
 /**
  * The rows of the list. A list of a page or more is windowed: only the rows in
@@ -53,6 +79,13 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   // The memory after the one confirmed, or before it when it was the last, read
   // when the learner confirms. It takes the focus once the delete is confirmed.
   const neighbour = useRef<Option.Option<Memory["id"]>>(NO_NEIGHBOUR);
+  // The element that held the focus as one list left, for the list that takes its place.
+  const handed = useRef(NOTHING_HANDED);
+  const exchangeHanded = useCallbackRef((next: Option.Option<string>) => {
+    const before = handed.current;
+    handed.current = next;
+    return before;
+  });
   // Set when the learner confirms, so the question gives the focus to the neighbour.
   const confirmed = useRef(false);
   // One function for every row, so a row renders again only when its memory changes.
@@ -77,39 +110,41 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   }
 
   return (
-    <div>
-      {Arr.length(memories) < MEMORY_PAGE ? (
-        <MemoryItems>
-          {Arr.map(memories, (memory, index) => (
-            <MemoryItem index={index} key={memory.id}>
-              <MemoryRow askDelete={askRow} memory={memory} />
-            </MemoryItem>
-          ))}
-        </MemoryItems>
-      ) : (
-        <WindowVirtualizer
-          as={MemoryItems}
-          data={memories}
-          item={MemoryItem}
-          itemSize={ROW_SIZE}
-          ssrCount={MEMORY_PAGE}
-        >
-          {(memory) => (
-            <MemoryRow askDelete={askRow} key={memory.id} memory={memory} />
-          )}
-        </WindowVirtualizer>
-      )}
-      <MemoryDeleteDialog
-        finalFocus={focusAfterQuestion}
-        onConfirm={confirmDelete}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPending(null);
-          }
-        }}
-        open={pending !== null}
-      />
-    </div>
+    <HandedFocus value={exchangeHanded}>
+      <div>
+        {Arr.length(memories) < MEMORY_PAGE ? (
+          <MemoryItems>
+            {Arr.map(memories, (memory, index) => (
+              <MemoryItem index={index} key={memory.id}>
+                <MemoryRow askDelete={askRow} memory={memory} />
+              </MemoryItem>
+            ))}
+          </MemoryItems>
+        ) : (
+          <WindowVirtualizer
+            as={MemoryItems}
+            data={memories}
+            item={MemoryItem}
+            itemSize={ROW_SIZE}
+            ssrCount={MEMORY_PAGE}
+          >
+            {(memory) => (
+              <MemoryRow askDelete={askRow} key={memory.id} memory={memory} />
+            )}
+          </WindowVirtualizer>
+        )}
+        <MemoryDeleteDialog
+          finalFocus={focusAfterQuestion}
+          onConfirm={confirmDelete}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPending(null);
+            }
+          }}
+          open={pending !== null}
+        />
+      </div>
+    </HandedFocus>
   );
 }
 
@@ -124,8 +159,11 @@ type Placed<Props extends { style: CSSProperties }> = Omit<Props, "style"> &
  * The list the rows stand in. It can take the focus from a row that leaves the
  * page, but no press or Tab stops on it. When the list itself leaves the page
  * with the focus in it, the focus goes to the search field, which stays, so a
- * focus that a row handed to the list is not lost. A cancelled delete question
- * gives the focus back on its own, and a confirmed one moves it to the neighbour.
+ * focus that a row handed to the list is not lost. The short list and the
+ * window take each other's place as the list crosses a page, and the one that
+ * comes gives the focus back to the row that held it in the one that left. A
+ * cancelled delete question gives the focus back on its own, and a confirmed
+ * one moves it to the neighbour.
  */
 function MemoryItems({
   children,
@@ -134,16 +172,18 @@ function MemoryItems({
 }: Placed<CustomContainerComponentProps>) {
   const list = useRef<HTMLUListElement>(null);
   const listRef = useMergedRef(ref, list);
+  const exchangeHanded = useHandedFocus();
 
-  // The cleanup runs before the list leaves the page, while the focus is in it.
-  useLayoutEffect(
-    () => () => {
-      if (list.current?.contains(document.activeElement)) {
-        focusFirst([document.getElementById(MEMORY_SEARCH_ID)]);
-      }
-    },
-    []
-  );
+  // The list that leaves hands the focus on in its cleanup, which runs before it
+  // leaves the page, while the focus is in it; the list that takes its place
+  // mounts in the same commit and takes it back.
+  useLayoutEffect(() => {
+    const node = list.current;
+    NOTHING_HANDED.pipe(exchangeHanded, takeHandedFocus);
+    return () => {
+      exchangeHanded(handFocusOn(node));
+    };
+  }, [exchangeHanded]);
 
   return (
     <ul
