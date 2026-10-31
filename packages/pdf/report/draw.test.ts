@@ -22,6 +22,7 @@ const report = {
       value: 86,
     },
     { className: "Kimia X-1", kktp: "notReached" as const, value: 70 },
+    { className: "Biologi X-1", kktp: "reached" as const, value: 80 },
   ],
   verifyUrl: `https://nakafa.com/id/verify/${"a".repeat(64)}`,
 };

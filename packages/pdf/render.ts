@@ -92,35 +92,28 @@ const readFace = Effect.fn("pdf.font")(function* (
 });
 
 /** Draws one document as an A4 PDF, with the subsets it may need and its title in its properties. */
-export const renderPdf = Effect.fn("pdf.render")(
-  function* (document: ReactElement, details: typeof PdfDetails.Type) {
-    const fonts = yield* Effect.forEach(FACES, readFace);
-    const bytes = yield* Effect.tryPromise({
-      catch: (cause) =>
-        new PdfRenderError({
-          code: "PDF_RENDER_FAILED",
-          message: String(cause),
-        }),
-      try: () =>
-        render(document, {
-          fonts,
-          lang: details.language,
-          metadata: { authors: [PDF_AUTHOR], title: details.title },
-          size: "a4",
-        }),
-    });
-    return new Uint8Array(bytes);
-  },
-  (effect) =>
-    effect.pipe(
-      Effect.catchTag("PlatformError", (cause) =>
-        Effect.fail(
-          new PdfRenderError({
-            code: "PDF_RENDER_FAILED",
-            message: cause.message,
-          })
-        )
-      ),
-      Effect.provide(NodeServices.layer)
-    )
-);
+export const renderPdf = Effect.fn("pdf.render")(function* (
+  document: ReactElement,
+  details: typeof PdfDetails.Type
+) {
+  // The fonts ship with the renderer, so a font that cannot be read is a broken deployment.
+  const fonts = yield* Effect.forEach(FACES, readFace).pipe(
+    Effect.orDie,
+    Effect.provide(NodeServices.layer)
+  );
+  const bytes = yield* Effect.tryPromise({
+    catch: (cause) =>
+      new PdfRenderError({
+        code: "PDF_RENDER_FAILED",
+        message: String(cause),
+      }),
+    try: () =>
+      render(document, {
+        fonts,
+        lang: details.language,
+        metadata: { authors: [PDF_AUTHOR], title: details.title },
+        size: "a4",
+      }),
+  });
+  return new Uint8Array(bytes);
+});
