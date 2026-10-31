@@ -20,10 +20,12 @@ import { Array as Arr } from "effect";
 const single = newChoiceAnswers();
 
 /** The same choice taking up to two options, as a multiple-choice question. */
-const multiple: QuestionView["answers"] = Arr.map(single, (interaction): Interaction =>
-  interaction.kind === "choice"
-    ? { ...interaction, maxChoices: 2 }
-    : interaction
+const multiple: QuestionView["answers"] = Arr.map(
+  single,
+  (interaction): Interaction =>
+    interaction.kind === "choice"
+      ? { ...interaction, maxChoices: 2 }
+      : interaction
 );
 
 /** A text answer, which a person judges. */
@@ -59,10 +61,8 @@ const verdictOf = (
   key: QuestionView["key"],
   response: ExamResponse
 ) =>
-  scoreResponse(
-    { answers, key, points: 1, scoring: ALL_OR_NOTHING },
-    response
-  ).verdict;
+  scoreResponse({ answers, key, points: 1, scoring: ALL_OR_NOTHING }, response)
+    .verdict;
 
 /** The key of an answer and its reason. */
 const reasonKey: Arr.NonEmptyReadonlyArray<InteractionKey> = [
@@ -121,9 +121,9 @@ describe("exams/results/score", () => {
   it("scores a multiple-choice selection that misses a correct option or adds a wrong one incorrect", () => {
     const key = keyOf(["option-1", "option-3"]);
     expect(verdictOf(multiple, key, ["option-1"])).toBe("incorrect");
-    expect(
-      verdictOf(multiple, key, ["option-1", "option-3", "option-4"])
-    ).toBe("incorrect");
+    expect(verdictOf(multiple, key, ["option-1", "option-3", "option-4"])).toBe(
+      "incorrect"
+    );
   });
 
   it("scores a repeated option incorrect, even when it repeats a correct one", () => {
@@ -163,9 +163,9 @@ describe("exams/results/score", () => {
   });
 
   it("leaves a short answer that matches no accepted answer pending, so the teacher judges it", () => {
-    expect(
-      verdictOf([text], accepting("Jakarta"), { text: "Batavia" })
-    ).toBe("pending");
+    expect(verdictOf([text], accepting("Jakarta"), { text: "Batavia" })).toBe(
+      "pending"
+    );
   });
 
   it("scores a blank short answer incorrect, as an unanswered question", () => {
@@ -181,9 +181,7 @@ describe("exams/results/score", () => {
       kind: "extendedText",
       label: "Answer",
     };
-    expect(verdictOf([essay], null, { text: "Fotosintesis" })).toBe(
-      "pending"
-    );
+    expect(verdictOf([essay], null, { text: "Fotosintesis" })).toBe("pending");
     expect(verdictOf([essay], null, { text: "" })).toBe("incorrect");
     expect(verdictOf([essay], keyOf(["option-1"]), [])).toBe("incorrect");
   });
@@ -219,9 +217,7 @@ describe("exams/results/score", () => {
       })
     ).toBe("incorrect");
     expect(verdictOf([match], key, [])).toBe("incorrect");
-    expect(verdictOf([match], keyOf(["option-1"]), { pairs })).toBe(
-      "pending"
-    );
+    expect(verdictOf([match], keyOf(["option-1"]), { pairs })).toBe("pending");
   });
 
   it("scores a table correct when it marks every statement with the key's column, and incorrect otherwise", () => {
@@ -254,9 +250,7 @@ describe("exams/results/score", () => {
         ],
       })
     ).toBe("incorrect");
-    expect(verdictOf([table], keyOf(["option-1"]), { cells })).toBe(
-      "pending"
-    );
+    expect(verdictOf([table], keyOf(["option-1"]), { cells })).toBe("pending");
   });
 
   it("scores a choice that a text response answers incorrect, as it chooses no option", () => {

@@ -1,20 +1,7 @@
 import { ImportRow, Nisn } from "@repo/backend/confect/roster/schema";
 import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
-import {
-  Array as Arr,
-  DateTime,
-  Option,
-  Predicate,
-  Schema,
-  String as Str,
-} from "effect";
-
-/**
- * The age limit of the consent gate for Indonesia, UU 35/2014 Pasal 1 angka 1, read here
- * until the signed country profile gives it (ADR 0032, ADR 0034).
- */
-const AGE_LIMIT = 18;
+import { Array as Arr, Option, Predicate, Schema, String as Str } from "effect";
 
 /**
  * One cell as the sheet reader gives it: text, a number, a boolean, a date, or empty. The
@@ -25,7 +12,6 @@ export type Cell = unknown;
 
 /** The header texts that name each read column, in lowercase with single spaces. */
 const HEADERS = {
-  birth: ["tanggal lahir", "tgl lahir"],
   cohort: ["rombel saat ini", "rombel", "rombongan belajar"],
   name: ["nama", "nama peserta didik"],
   nisn: ["nisn"],
@@ -36,30 +22,6 @@ type Columns = Record<keyof typeof HEADERS, Option.Option<number>>;
 
 /** The digits of a NISN, which a number cell loses at the start. */
 const NISN_DIGITS = 10;
-/** Day zero of a spreadsheet date number, 30 December 1899. */
-const SERIAL_EPOCH = DateTime.makeUnsafe({ day: 30, month: 12, year: 1899 });
-/** The months as an Indonesian date text names them. */
-const MONTHS = [
-  "januari",
-  "februari",
-  "maret",
-  "april",
-  "mei",
-  "juni",
-  "juli",
-  "agustus",
-  "september",
-  "oktober",
-  "november",
-  "desember",
-];
-
-/** A date written as `YYYY-MM-DD`. */
-const ISO_DATE = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/u;
-/** A date written as `DD/MM/YYYY` or `DD-MM-YYYY`. */
-const LOCAL_DATE = /^(?<day>\d{2})[/-](?<month>\d{2})[/-](?<year>\d{4})$/u;
-/** A date written as `D Month YYYY`, with the month's Indonesian name. */
-const NAMED_DATE = /^(?<day>\d{1,2}) (?<month>[a-z]+) (?<year>\d{4})$/u;
 /** A run of white space inside a header text. */
 const SPACES = /\s+/gu;
 
@@ -75,7 +37,6 @@ const columnsOf = (row: readonly Cell[]): Option.Option<Columns> => {
   const position = (names: readonly string[]) =>
     Arr.findFirstIndex(keys, (key) => Arr.contains(names, key));
   const columns: Columns = {
-    birth: position(HEADERS.birth),
     cohort: position(HEADERS.cohort),
     name: position(HEADERS.name),
     nisn: position(HEADERS.nisn),
@@ -86,7 +47,7 @@ const columnsOf = (row: readonly Cell[]): Option.Option<Columns> => {
 };
 
 /** Why one row of the sheet is not imported. */
-export const RowProblem = Schema.Literals(["name", "nisn", "birth", "cohort"]);
+export const RowProblem = Schema.Literals(["name", "nisn", "cohort"]);
 
 /** One read row: the student it holds, or the problem that keeps it out, with its line in the sheet. */
 export const ReadRow = Schema.Union([
@@ -119,57 +80,11 @@ const nisnTextOf = (cell: Cell) =>
     ? Option.some(Str.padStart(NISN_DIGITS, "0")(String(cell)))
     : textOf(cell);
 
-/** The date of a `[year, month, day]` triple, when it names a real day. */
-const dayOf = (year: number, month: number, day: number) =>
-  Option.filter(
-    DateTime.make({ day, month, year }),
-    (date) => DateTime.getPartUtc(date, "day") === day
-  );
-
-/**
- * A birth date: a date cell, a spreadsheet date number, or text as `YYYY-MM-DD`,
- * `DD/MM/YYYY`, `DD-MM-YYYY`, or `D Month YYYY` with the month's Indonesian name.
- */
-const birthOf = (cell: Cell): Option.Option<DateTime.Utc> => {
-  if (Predicate.isDate(cell)) {
-    return DateTime.make(cell);
-  }
-  if (Predicate.isNumber(cell)) {
-    return cell > 0 && Number.isInteger(cell)
-      ? Option.some(DateTime.add(SERIAL_EPOCH, { days: cell }))
-      : Option.none();
-  }
-  const text = keyOf(cell);
-  const iso = ISO_DATE.exec(text);
-  if (iso) {
-    return dayOf(Number(iso[1]), Number(iso[2]), Number(iso[3]));
-  }
-  const local = LOCAL_DATE.exec(text);
-  if (local) {
-    return dayOf(Number(local[3]), Number(local[2]), Number(local[1]));
-  }
-  const named = NAMED_DATE.exec(text);
-  return Option.flatMap(Option.fromNullishOr(named), ([, day, month, year]) =>
-    Option.flatMap(
-      Arr.findFirstIndex(MONTHS, (name) => name === month),
-      (index) => dayOf(Number(year), index + 1, Number(day))
-    )
-  );
-};
-
-/**
- * Whether a student born on `birth` is under the age limit on `today`: the student has not
- * had the birthday of `AGE_LIMIT` years yet. Only this answer leaves the browser.
- */
-export const isUnderAgeLimit = (birth: DateTime.Utc, today: DateTime.Utc) =>
-  DateTime.isLessThan(today, DateTime.add(birth, { years: AGE_LIMIT }));
-
 /** Reads one data row of the sheet into a student, or the problem with it. */
 const readRow = (
   row: readonly Cell[],
   line: number,
-  columns: Columns,
-  today: DateTime.Utc
+  columns: Columns
 ): typeof ReadRow.Type => {
   const at = (column: Option.Option<number>) =>
     Option.flatMap(column, (index) => textOf(row[index]));
@@ -187,14 +102,6 @@ const readRow = (
   if (Option.isNone(nisn)) {
     return { line, outcome: "problem", problem: "nisn" };
   }
-  const birthCell = Option.filter(
-    Option.map(columns.birth, (index) => row[index]),
-    (cell) => Predicate.isDate(cell) || Option.isSome(textOf(cell))
-  );
-  const birth = Option.flatMap(birthCell, birthOf);
-  if (Option.isSome(birthCell) && Option.isNone(birth)) {
-    return { line, outcome: "problem", problem: "birth" };
-  }
   const cohortText = at(columns.cohort);
   const cohort = Option.flatMap(cohortText, Schema.decodeOption(CohortName));
   if (Option.isSome(cohortText) && Option.isNone(cohort)) {
@@ -207,11 +114,6 @@ const readRow = (
       ...(Option.isSome(cohort) ? { cohortName: cohort.value } : {}),
       name: name.value,
       nisn: nisn.value,
-      // A row without a birth date counts as under the limit, as a roster row without a flag does.
-      underAgeLimit: Option.match(birth, {
-        onNone: () => true,
-        onSome: (date) => isUnderAgeLimit(date, today),
-      }),
     },
   };
 };
@@ -240,14 +142,12 @@ const SheetRead = Schema.Union([
 /**
  * Reads the rows of a Dapodik student list (ADR 0015). The header row is the first row that
  * names both the student's name and NISN, so the title rows above it are skipped, and only
- * the name, the NISN, the class group, and the birth date are read. The birth date turns into
- * the under-age flag here and is dropped, and no other column, the NIK and the parents' data
- * included, is read. A row that holds neither a name nor a NISN is skipped. A sheet without
- * that header, or without a student row below it, is refused.
+ * the name, the NISN, and the class group are read. No other column, the birth date, the NIK,
+ * and the parents' data included, is read. A row that holds neither a name nor a NISN is
+ * skipped. A sheet without that header, or without a student row below it, is refused.
  */
 export function readDapodikSheet(
-  rows: readonly (readonly Cell[])[],
-  today: DateTime.Utc
+  rows: readonly (readonly Cell[])[]
 ): typeof SheetRead.Type {
   const header = Option.flatMap(
     Arr.findFirstIndex(rows, (row) => Option.isSome(columnsOf(row))),
@@ -267,7 +167,7 @@ export function readDapodikSheet(
   const read = Arr.getSomes(
     Arr.map(Arr.drop(rows, index + 1), (row, offset) =>
       holdsStudent(row, columns)
-        ? Option.some(readRow(row, index + offset + 2, columns, today))
+        ? Option.some(readRow(row, index + offset + 2, columns))
         : Option.none()
     )
   );

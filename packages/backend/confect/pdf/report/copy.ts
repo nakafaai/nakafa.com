@@ -1,0 +1,47 @@
+/** The words of a report PDF, in each language a school's unit may set. */
+export const REPORT_COPY = {
+  de: {
+    approved: "Genehmigt am",
+    check:
+      "Geprüft über seinen Hash. Keine zertifizierte elektronische Signatur.",
+    class: "Klasse",
+    grade: "Note",
+    kktpNotReached: "Unter dem KKTP",
+    kktpReached: "Erreicht das KKTP",
+    note: "Bemerkung der Klassenleitung",
+    period: "Zeitraum",
+    result: "Ergebnis",
+    student: "Schüler",
+    subject: "Fach",
+    title: "Zeugnis",
+  },
+  en: {
+    approved: "Approved on",
+    check: "Checked by its hash. Not a certified electronic signature.",
+    class: "Class group",
+    grade: "Grade",
+    kktpNotReached: "Below KKTP",
+    kktpReached: "Meets KKTP",
+    note: "Homeroom teacher's note",
+    period: "Period",
+    result: "Result",
+    student: "Student",
+    subject: "Subject",
+    title: "Report card",
+  },
+  id: {
+    approved: "Disetujui pada",
+    check:
+      "Diperiksa melalui hash-nya. Bukan tanda tangan elektronik tersertifikasi.",
+    class: "Rombel",
+    grade: "Nilai",
+    kktpNotReached: "Di bawah KKTP",
+    kktpReached: "Mencapai KKTP",
+    note: "Catatan wali kelas",
+    period: "Periode",
+    result: "Hasil",
+    student: "Peserta didik",
+    subject: "Mata pelajaran",
+    title: "Laporan Hasil Belajar",
+  },
+} as const;
